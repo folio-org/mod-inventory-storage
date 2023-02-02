@@ -9,13 +9,11 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-import lombok.SneakyThrows;
+
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
@@ -26,9 +24,12 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
-import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 /**
  *
@@ -84,11 +85,13 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
 
     clearData();
+
     createDefaultInstanceType();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
-    FakeKafkaConsumer.clearAllEvents();
+
+    kafkaConsumer.discardAllMessages();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }

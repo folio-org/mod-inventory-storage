@@ -1085,6 +1085,11 @@
       "run": "after",
       "snippetPath": "setDefaultMetadataForHrIdSettings.sql",
       "fromModuleVersion": "25.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "convertSeriesAndSubjects.sql",
+      "fromModuleVersion": "26.0.0"
     }
   ]
 }

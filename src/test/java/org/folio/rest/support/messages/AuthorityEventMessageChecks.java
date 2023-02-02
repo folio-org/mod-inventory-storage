@@ -1,50 +1,61 @@
 package org.folio.rest.support.messages;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.rest.support.kafka.FakeKafkaConsumer.getMessagesForAuthority;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
+import org.hamcrest.Matcher;
 
 import io.vertx.core.json.JsonObject;
 
 public class AuthorityEventMessageChecks {
-  private static final EventMessageMatchers eventMessageMatchers
+  private final EventMessageMatchers eventMessageMatchers
     = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+  private final FakeKafkaConsumer kafkaConsumer;
 
-  private AuthorityEventMessageChecks() { }
+  public AuthorityEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
+    this.kafkaConsumer = kafkaConsumer;
+  }
 
-  public static void authorityCreatedMessagePublished(JsonObject authority) {
+  public void createdMessagePublished(JsonObject authority) {
     final String authorityId = getId(authority);
 
-    awaitAtMost().until(() -> getMessagesForAuthority(authorityId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForAuthority(authorityId),
       eventMessageMatchers.hasCreateEventMessageFor(authority));
   }
 
-  public static void authorityUpdatedMessagePublished(JsonObject oldAuthority,
+  public void updatedMessagePublished(JsonObject oldAuthority,
     JsonObject newAuthority) {
 
     final String authorityId = getId(oldAuthority);
 
-    awaitAtMost().until(() -> getMessagesForAuthority(authorityId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForAuthority(authorityId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldAuthority, newAuthority));
   }
 
-  public static void authorityDeletedMessagePublished(JsonObject authority) {
+  public void deletedMessagePublished(JsonObject authority) {
     final String authorityId = getId(authority);
 
-    awaitAtMost().until(() -> getMessagesForAuthority(authorityId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForAuthority(authorityId),
       eventMessageMatchers.hasDeleteEventMessageFor(authority));
   }
 
-  public static void allAuthoritiesDeletedMessagePublished() {
-    awaitAtMost().until(() -> getMessagesForAuthority(NULL_ID),
+  public void allAuthoritiesDeletedMessagePublished() {
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForAuthority(NULL_ID),
       eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
-  private static String getId(JsonObject json) {
+  public Integer countOfAllPublishedAuthoritiesIs(Matcher<Integer> matcher) {
+    return await().atMost(10, SECONDS)
+      .until(kafkaConsumer::getAllPublishedAuthoritiesCount, matcher);
+  }
+
+  private String getId(JsonObject json) {
     return json.getString("id");
   }
 }

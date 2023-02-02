@@ -17,8 +17,6 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.SneakyThrows;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.Response;
@@ -40,6 +38,10 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
@@ -69,7 +71,7 @@ public abstract class TestBase {
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
   static StatisticalCodeFixture statisticalCodeFixture;
-  static FakeKafkaConsumer kafkaConsumer;
+  static final FakeKafkaConsumer kafkaConsumer = new FakeKafkaConsumer();
   static InstanceReindexFixture instanceReindex;
   static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -94,15 +96,16 @@ public abstract class TestBase {
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
-    instanceTypesClient = ResourceClient
-      .forInstanceTypes(getClient());
+    instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
-    kafkaConsumer = new FakeKafkaConsumer().consume(getVertx());
     instanceReindex = new InstanceReindexFixture(getClient());
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
-    FakeKafkaConsumer.clearAllEvents();
+
+    kafkaConsumer.discardAllMessages();
+    kafkaConsumer.consume(getVertx());
+
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
@@ -114,9 +117,7 @@ public abstract class TestBase {
   @SneakyThrows
   @Before
   public void removeAllEvents() {
-    kafkaConsumer.resetTimestamp();
-
-    FakeKafkaConsumer.clearAllEvents();
+    kafkaConsumer.discardAllMessages();
   }
 
   /**

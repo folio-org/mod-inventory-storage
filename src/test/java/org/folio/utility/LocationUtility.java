@@ -8,10 +8,6 @@ import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.utility.RestUtility.send;
 
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,10 +17,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class LocationUtility {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
@@ -37,26 +40,23 @@ public class LocationUtility {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
   }
 
+  @SneakyThrows
   public static void createLocationUnits(boolean force) {
+    if (force || institutionID == null) {
+      institutionID = UUID.randomUUID();
+      createInstitution(institutionID, "Primary Institution", "PI");
 
-    try {
-      if (force || institutionID == null) {
-        institutionID = UUID.randomUUID();
-        createInstitution(institutionID, "Primary Institution", "PI");
+      campusID = UUID.randomUUID();
+      createCampus(campusID, "Central Campus", "CC", institutionID);
 
-        campusID = UUID.randomUUID();
-        createCampus(campusID, "Central Campus", "CC", institutionID);
+      libraryID = UUID.randomUUID();
+      createLibrary(libraryID, "Main Library", "ML", campusID);
 
-        libraryID = UUID.randomUUID();
-        createLibrary(libraryID, "Main Library", "ML", campusID);
+      UUID spID = UUID.randomUUID();
+      servicePointIDs.add(spID);
+      String spName = "Service Point " + spID;
 
-        UUID spID = UUID.randomUUID();
-        servicePointIDs.add(spID);
-        String spName = "Service Point " + spID.toString();
-        createServicePoint(spID, spName, "SP" + spID.toString(), spName, "SP Description", 0, false, null);
-      }
-    } catch (Exception e) { // should not happen
-      throw new AssertionError("CreateLocUnits failed:", e);
+      createServicePoint(spID, spName, "SP" + spID, spName, "SP Description", 0, false, null);
     }
   }
 
