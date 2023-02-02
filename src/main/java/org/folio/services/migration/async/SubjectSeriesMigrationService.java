@@ -2,15 +2,13 @@ package org.folio.services.migration.async;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.folio.persist.InstanceRepository;
-import org.folio.rest.jaxrs.model.Instance;
+import org.folio.persist.entity.InstanceInternal;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
@@ -43,8 +41,7 @@ public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
   protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
     var instances = batch.stream()
       .map(row -> row.getJsonObject("jsonb"))
-      .map(this::migrateSeriesAndSubjects)
-      .map(json -> json.mapTo(Instance.class))
+      .map(json -> json.mapTo(InstanceInternal.class).toInstanceDto())
       .collect(Collectors.toList());
     return instanceRepository.updateBatch(instances, connection)
       .map(notUsed -> instances.size());
@@ -53,24 +50,6 @@ public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
   @Override
   public String getMigrationName() {
     return "subjectSeriesMigration";
-  }
-
-  private JsonObject migrateSeriesAndSubjects(JsonObject json) {
-    migrateStringList(json, "subjects");
-    migrateStringList(json, "series");
-    return json;
-  }
-
-  private void migrateStringList(JsonObject json, String jsonArrayKey) {
-    var stringArray = json.getJsonArray(jsonArrayKey);
-    if (stringArray != null && !stringArray.isEmpty()) {
-      var strings = stringArray.stream().map(Object::toString).collect(Collectors.toList());
-      var jsonObjects = strings.stream()
-        .map(s -> new JsonObject().put("value", s))
-        .collect(Collectors.toList());
-      var newObjectArray = new JsonArray(jsonObjects);
-      json.put(jsonArrayKey, newObjectArray);
-    }
   }
 
   private String selectSql() {
