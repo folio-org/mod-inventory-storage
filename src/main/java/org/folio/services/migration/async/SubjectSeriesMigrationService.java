@@ -15,7 +15,7 @@ import org.folio.rest.persist.SQLConnection;
 
 public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
 
-  private static final String SELECT_SQL = "SELECT migrate_series_and_subjects(jsonb) FROM %s WHERE %s FOR UPDATE";
+  private static final String SELECT_SQL = "SELECT migrate_series_and_subjects(jsonb) as jsonb FROM %s WHERE %s FOR UPDATE";
   private static final String WHERE_CONDITION = "id in (%s)";
 
   private final PostgresClientFuturized postgresClient;
