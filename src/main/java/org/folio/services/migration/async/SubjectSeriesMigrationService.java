@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.folio.persist.InstanceRepository;
-import org.folio.persist.entity.InstanceInternal;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 
 public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
 
-  private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE %s FOR UPDATE";
+  private static final String SELECT_SQL = "SELECT migrate_series_and_subjects(jsonb) FROM %s WHERE %s FOR UPDATE";
   private static final String WHERE_CONDITION = "id in (%s)";
 
   private final PostgresClientFuturized postgresClient;
@@ -43,7 +43,7 @@ public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
   protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
     var instances = batch.stream()
       .map(row -> row.getJsonObject("jsonb"))
-      .map(json -> json.mapTo(InstanceInternal.class).toInstanceDto())
+      .map(json -> json.mapTo(Instance.class))
       .collect(Collectors.toList());
     return instanceRepository.updateBatch(instances, connection)
       .map(notUsed -> instances.size());
