@@ -105,10 +105,41 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canMigrateInstanceSubjectsAndSeries() {
+      var numberOfRecords = 10;
+
+      IntStream.range(0, numberOfRecords).parallel().forEach(v ->
+        instancesClient.create(new JsonObject()
+          .put("title", "test" + v)
+          .put("source", "MARC")
+          .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+
+      var updateFuture = postgresClient(getContext(), okapiHeaders()).select(
+        "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
+          + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
+          + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;").result();
+
+      var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
+        .withMigrations(List.of("subjectSeriesMigration")));
+
+      await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+        .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
+
+      var job = asyncMigration.getMigrationJob(migrationJob.getId());
+
+      assertThat(job.getPublished().stream().map(Published::getCount)
+        .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+      assertThat(job.getProcessed().stream().map(Processed::getCount)
+        .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+      assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
+      assertThat(job.getSubmittedDate(), notNullValue());
+  }
+
+  @Test
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
+    assertEquals(Integer.valueOf(3), migrations.getTotalRecords());
     assertEquals("publicationPeriodMigration", migrations.getAsyncMigrations().get(0).getMigrations().get(0));
   }
 
