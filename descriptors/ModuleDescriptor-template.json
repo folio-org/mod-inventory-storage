@@ -1188,7 +1188,7 @@
     },
     {
       "id": "bound-with-parts-storage",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1210,6 +1210,14 @@
           "methods": ["DELETE"],
           "pathPattern": "/inventory-storage/bound-with-parts/{id}",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.delete"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-storage/bound-withs",
+          "permissionsRequired": [
+            "inventory-storage.bound-with-parts.collection.get",
+            "inventory-storage.bound-with-parts.item.post",
+            "inventory-storage.bound-with-parts.item.delete"
+          ]
         }
       ]
     },
