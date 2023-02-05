@@ -179,9 +179,12 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       boundWithPartsClient.getById(
         UUID.fromString(initiallyCreatedParts.get(1).getString("id"))));
 
-    // The published checks fail/pass erratically
-    //[ boundWithEventMessageChecks.createdMessagePublished(part1, instance1.getId());
-    //[ boundWithEventMessageChecks.createdMessagePublished(part2, instance2.getId());
+    // The published checks fail with ConditionTimeout more often than not on this developer's
+    // box. (Could it be a contributing factor that the box uses 90-100% of all four CPUs for
+    // most of the 14 minutes that Inventory Storage's tests take?)
+    // Increasing the wait from 10 to 30 seconds makes the tests pass more often than not.
+    //* boundWithEventMessageChecks.createdMessagePublished(part1, instance1.getId());
+    //* boundWithEventMessageChecks.createdMessagePublished(part2, instance2.getId());
 
     JsonObject boundWithFirstUpdate = createBoundWithCompositeJson(item.getId(),
       Arrays.asList(holdingsRecord1.getId(), holdingsRecord2.getId(), holdingsRecord3.getId()));
