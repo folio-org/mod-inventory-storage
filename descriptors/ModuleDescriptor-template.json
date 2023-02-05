@@ -1211,7 +1211,7 @@
           "pathPattern": "/inventory-storage/bound-with-parts/{id}",
           "permissionsRequired": ["inventory-storage.bound-with-parts.item.delete"]
         }, {
-          "methods": ["POST"],
+          "methods": ["PUT"],
           "pathPattern": "/inventory-storage/bound-withs",
           "permissionsRequired": [
             "inventory-storage.bound-with-parts.collection.get",

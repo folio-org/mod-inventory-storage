@@ -90,7 +90,7 @@ public class ResourceClient {
   }
 
   public static ResourceClient forBoundWithParts(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::boundWithStorageUrl,
+    return new ResourceClient(client, InterfaceUrls::boundWithPartsUrl,
       "bound with parts", "boundWithParts");
   }
 

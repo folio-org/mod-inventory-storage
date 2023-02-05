@@ -7,6 +7,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,24 +18,21 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.BoundWith;
 import org.folio.rest.jaxrs.model.BoundWithContent;
 import org.folio.rest.jaxrs.model.BoundWithPart;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.services.instance.BoundWithPartService;
 
 import static io.vertx.core.Future.succeededFuture;
 
 
-public class BoundWithAPI
-  implements org.folio.rest.jaxrs.resource.InventoryStorageBoundWiths {
+public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStorageBoundWiths {
 
   @Override
-  public void postInventoryStorageBoundWiths(
-    String lang,
-    BoundWith entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void putInventoryStorageBoundWiths(BoundWith entity,
+                                            Map<String, String> okapiHeaders,
+                                            Handler<AsyncResult<Response>> asyncResultHandler,
+                                            Context vertxContext) {
 
     Validation check = new Validation(vertxContext, okapiHeaders);
     check.isValid(entity).onComplete(
@@ -131,7 +129,7 @@ public class BoundWithAPI
           new BoundWithPart()
             .withItemId(itemId)
             .withHoldingsRecordId(holdingsId)
-            .withMetadata(MetadataUtil.createMetadata(okapiHeaders));
+            .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
         createFutures.add(service.create(part));
       }
     }
@@ -183,12 +181,17 @@ public class BoundWithAPI
     }
   }
 
+
   @Override
   public void getInventoryStorageBoundWiths(String lang, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
-                                            Context vertxContext) {
-    throw new UnsupportedOperationException();
-  }
+                                            Context vertxContext) {}
+
+  @Override
+  public void postInventoryStorageBoundWiths(String lang, BoundWith entity,
+                                             Map<String, String> okapiHeaders,
+                                             Handler<AsyncResult<Response>> asyncResultHandler,
+                                             Context vertxContext) {}
 
 }
 

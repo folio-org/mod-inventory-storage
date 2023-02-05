@@ -4,7 +4,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.JsonArrayHelper.toList;
 import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.http.InterfaceUrls.boundWithStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.boundWithPartsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -68,7 +68,7 @@ public class SampleDataTest extends TestBase {
 
   @Test
   public void boundWithPartsCount() {
-    assertCount(boundWithStorageUrl("?limit=100"), "boundWithParts", 10);
+    assertCount(boundWithPartsUrl("?limit=100"), "boundWithParts", 10);
   }
 
   /**

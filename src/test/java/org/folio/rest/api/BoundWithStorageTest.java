@@ -1,17 +1,22 @@
 package org.folio.rest.api;
 
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import java.util.concurrent.CompletableFuture;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
+import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
+import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.messages.BoundWithEventMessageChecks;
 import org.junit.After;
@@ -139,11 +144,139 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       partTwoUpdated, instance2.getId(), instance3.getId());
   }
 
+  @Test
+  public void canCreateAndOrDeleteBoundWithPartsByASetOfParts() {
+    IndividualResource instance1 = createInstance("Instance 1");
+    IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
+    IndividualResource item = createItem(holdingsRecord1.getId());
+
+    IndividualResource instance2 = createInstance("Instance 2");
+    IndividualResource holdingsRecord2 = createHoldingsRecord(instance2.getId());
+
+    IndividualResource instance3 = createInstance("Instance 3");
+    IndividualResource holdingsRecord3 = createHoldingsRecord(instance3.getId());
+
+    JsonObject initialBoundWith = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList(holdingsRecord1.getId(),holdingsRecord2.getId()));
+    logger.info("before initial put");
+    Response initialPut = putCompositeBoundWith(initialBoundWith);
+    logger.info("after initial put");
+
+    assertThat(
+      "Expected 204 - no content on initial boundWith create",
+      initialPut.getStatusCode(),is(204));
+    List<JsonObject> initiallyCreatedParts
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat(
+      "Expected initial boundWith to contain two parts.",
+      initiallyCreatedParts.size(),is(2));
+
+    IndividualResource part1 = new IndividualResource(
+      boundWithPartsClient.getById(
+        UUID.fromString(initiallyCreatedParts.get(0).getString("id"))));
+
+    IndividualResource part2 = new IndividualResource(
+      boundWithPartsClient.getById(
+        UUID.fromString(initiallyCreatedParts.get(1).getString("id"))));
+
+    // The published checks fail/pass erratically
+    //[ boundWithEventMessageChecks.createdMessagePublished(part1, instance1.getId());
+    //[ boundWithEventMessageChecks.createdMessagePublished(part2, instance2.getId());
+
+    JsonObject boundWithFirstUpdate = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList(holdingsRecord1.getId(), holdingsRecord2.getId(), holdingsRecord3.getId()));
+    Response firstUpdate = putCompositeBoundWith(boundWithFirstUpdate);
+    assertThat(
+      "Expected 204 - no content on initial boundWith create",
+      firstUpdate.getStatusCode(),is(204));
+    List<JsonObject> partsAfterFirstUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat(
+      "Expected three parts after first update.",
+      partsAfterFirstUpdate.size(),is(3));
+
+    JsonObject boundWithSecondUpdate = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList(holdingsRecord1.getId()));
+    Response secondUpdate = putCompositeBoundWith(boundWithSecondUpdate);
+    assertThat(
+      "Expected 204 - no content on second boundWith update",
+      secondUpdate.getStatusCode(),is(204));
+    List<JsonObject> partsAfterSecondUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat(
+      "Expected one part after second update.",
+      partsAfterSecondUpdate.size(),is(1));
+
+    JsonObject boundWithThirdUpdate = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList());
+    Response thirdUpdate = putCompositeBoundWith(boundWithThirdUpdate);
+    assertThat(
+      "Expected 204 - no content on third boundWith update",
+      thirdUpdate.getStatusCode(),is(204));
+    List<JsonObject> partsAfterThirdUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat(
+      "Expected no parts left after third update.",
+      partsAfterThirdUpdate.size(),is(0));
+  }
+
+  @Test
+  public void cannotUpdateBoundWithIfItemOrSomeHoldingsDoNotExist() {
+    IndividualResource instance1 = createInstance("Instance 1");
+    IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
+    IndividualResource item = createItem(holdingsRecord1.getId());
+
+    IndividualResource instance2 = createInstance("Instance 2");
+    IndividualResource holdingsRecord2 = createHoldingsRecord(instance2.getId());
+
+    UUID randomId = UUID.randomUUID();
+    JsonObject initialBoundWith = createBoundWithCompositeJson(randomId,
+      Arrays.asList(holdingsRecord1.getId(),holdingsRecord2.getId()));
+
+    Response initialCreate = putCompositeBoundWith(initialBoundWith);
+    assertThat(
+      "Expected 400 - item not found",
+      initialCreate.getStatusCode(),is(400));
+
+    List<JsonObject> boundWithParts
+      = boundWithPartsClient.getByQuery("?query=itemId==" + randomId);
+    assertThat(
+      "Expected no parts created for the given item.",
+      boundWithParts.size(),is(0));
+
+    JsonObject secondBoundWithAttempt = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList(holdingsRecord1.getId(), randomId, holdingsRecord1.getId()));
+
+    Response secondAttempt = putCompositeBoundWith(secondBoundWithAttempt);
+    assertThat("Expected 400 - a holdings record not found",
+      secondAttempt.getStatusCode(),is(400));
+
+    boundWithParts
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat(
+      "Expected no parts created for the given item.",
+      boundWithParts.size(),is(0));
+  }
+
   private JsonObject createBoundWithPartJson(UUID holdingsRecordId, UUID itemId) {
     JsonObject boundWithPart = new JsonObject();
     boundWithPart.put("holdingsRecordId", holdingsRecordId);
     boundWithPart.put("itemId", itemId);
     return boundWithPart;
+  }
+
+  private JsonObject createBoundWithCompositeJson(UUID itemId, List<UUID> holdingsRecordIds) {
+    JsonObject compositeBoundWith = new JsonObject();
+    if (itemId != null) {
+      compositeBoundWith.put("itemId", itemId);
+    }
+    compositeBoundWith.put("boundWithContents", new JsonArray());
+    for (UUID id : holdingsRecordIds) {
+      JsonObject boundWithContent = new JsonObject();
+      boundWithContent.put("holdingsRecordId", id.toString());
+      compositeBoundWith.getJsonArray("boundWithContents").add(boundWithContent);
+    }
+    return compositeBoundWith;
   }
 
   private IndividualResource createInstance(String title) {
@@ -165,4 +298,21 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
   }
+
+  /**
+   * Unconventionally, the composite API accepts a PUT but takes no ID on the path.
+   */
+  public Response putCompositeBoundWith(JsonObject body) {
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+
+    getClient().put(
+      InterfaceUrls.boundWithsUrl(),
+      body,
+      TENANT_ID,
+      ResponseHandler.any(putCompleted));
+
+    return TestBase.get(putCompleted);
+  }
+
 }

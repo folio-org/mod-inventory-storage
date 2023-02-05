@@ -90,8 +90,12 @@ public class InterfaceUrls {
     return vertxUrl("/instance-relationship-types" + subPath);
   }
 
-  public static URL boundWithStorageUrl(String subPath) {
+  public static URL boundWithPartsUrl(String subPath) {
     return vertxUrl("/inventory-storage/bound-with-parts" + subPath);
+  }
+
+  public static URL boundWithsUrl() {
+    return vertxUrl("/inventory-storage/bound-withs");
   }
 
   public static URL contributorTypesUrl(String subPath) {
