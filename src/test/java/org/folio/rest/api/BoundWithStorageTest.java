@@ -239,7 +239,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     Response initialCreate = putCompositeBoundWith(initialBoundWith);
     assertThat(
       "Expected 400 - item not found",
-      initialCreate.getStatusCode(),is(400));
+      initialCreate.getStatusCode(),is(422));
 
     List<JsonObject> boundWithParts
       = boundWithPartsClient.getByQuery("?query=itemId==" + randomId);
@@ -252,7 +252,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
     Response secondAttempt = putCompositeBoundWith(secondBoundWithAttempt);
     assertThat("Expected 400 - a holdings record not found",
-      secondAttempt.getStatusCode(),is(400));
+      secondAttempt.getStatusCode(),is(422));
 
     boundWithParts
       = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());

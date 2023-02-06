@@ -6,6 +6,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,7 +39,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
     Validation check = new Validation(vertxContext, okapiHeaders);
     check.isValid(entity).onComplete(
       validation -> {
-        if (validation.result()) {
+        if (Boolean.TRUE.equals(validation.result())) {
           Map<String, BoundWithContent> incomingParts = getIncomingParts(entity);
           getExistingParts(entity, vertxContext, okapiHeaders).onComplete(
             existing -> {
@@ -52,11 +54,11 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
                         vertxContext, okapiHeaders)).onComplete(
                           deleteResults -> asyncResultHandler.handle(
                             succeededFuture(
-                              PostInventoryStorageBoundWithsResponse.noContent().build()))));
+                              PutInventoryStorageBoundWithsResponse.respond204()))));
             });
         } else {
           asyncResultHandler.handle(succeededFuture(
-            PostInventoryStorageBoundWithsResponse.respond400WithTextPlain(check.message)));
+            PutInventoryStorageBoundWithsResponse.respond422WithApplicationJson(check.message)));
         }
       });
   }
@@ -97,6 +99,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
   /**
    * Bound-with parts not in incoming: Future deletes.
    */
+  @SuppressWarnings("rawtypes")
   private List<Future> getDeleteBoundWithPartFutures(
     Map<String, BoundWithPart> existingParts,
     Map<String, BoundWithContent> incomingParts,
@@ -104,9 +107,9 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
     Map<String,String> okapiHeaders) {
     List<Future> deleteFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
-    for (String holdingsId : existingParts.keySet()) {
-      if (!incomingParts.containsKey(holdingsId)) {
-        deleteFutures.add(service.delete(existingParts.get(holdingsId).getId()));
+    for (Map.Entry part : existingParts.entrySet()) {
+      if (!incomingParts.containsKey(part.getKey().toString())) {
+        deleteFutures.add(service.delete(((BoundWithPart) part.getValue()).getId()));
       }
     }
     return deleteFutures;
@@ -115,6 +118,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
   /**
    * Bound-with parts not existing: future creates.
    */
+  @SuppressWarnings("rawtypes")
   private static List<Future> getCreateBoundWithPartFutures(
     String itemId,
     Map<String, BoundWithContent> incomingParts,
@@ -143,7 +147,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
   static class Validation {
 
     private boolean valid = true;
-    private String message = "";
+    private final JsonObject message = new JsonObject();
     private final Context vertxContext;
     private final Map<String,String> okapiHeaders;
 
@@ -158,21 +162,26 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
       items.getById(requestEntity.getItemId()).onComplete(found -> {
         if (found.result() == null) {
           valid = false;
-          message = "Item " + requestEntity.getItemId() + " not found." + System.lineSeparator();
+          message.put("item", "Item " + requestEntity.getItemId() + " not found.");
         }
         HoldingsRepository holdings = new HoldingsRepository(vertxContext, okapiHeaders);
+        @SuppressWarnings("rawtypes")
         List<Future> holdingsFutures = new ArrayList<>();
         for (BoundWithContent entry : requestEntity.getBoundWithContents()) {
           holdingsFutures.add(holdings.getById(entry.getHoldingsRecordId()));
         }
         CompositeFuture.all(holdingsFutures).onComplete( holdingsFound -> {
+          JsonArray holdingsNotFound = new JsonArray();
           for (int i = 0; i < holdingsFound.result().size(); i++ ) {
             if (holdingsFound.result().resultAt(i) == null) {
               valid = false;
-              message = message.concat("Holdings record "
+              holdingsNotFound.add("Holdings record "
                 + requestEntity.getBoundWithContents().get(i).getHoldingsRecordId()
-                + " not found." + System.lineSeparator());
+                + " not found.");
             }
+          }
+          if (holdingsNotFound.size()>0) {
+            message.put("holdings", holdingsNotFound);
           }
           promise.complete(valid);
         });
@@ -185,13 +194,17 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
   @Override
   public void getInventoryStorageBoundWiths(String lang, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
-                                            Context vertxContext) {}
+                                            Context vertxContext) {
+    // Obsolete, implemented interface autogenerated by RMB.
+  }
 
   @Override
   public void postInventoryStorageBoundWiths(String lang, BoundWith entity,
                                              Map<String, String> okapiHeaders,
                                              Handler<AsyncResult<Response>> asyncResultHandler,
-                                             Context vertxContext) {}
+                                             Context vertxContext) {
+    // Obsolete, implemented interface autogenerated by RMB.
+  }
 
 }
 
