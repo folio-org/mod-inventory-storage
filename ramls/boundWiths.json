@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bound With collection does not apply; schema must exist for RMB build",
+  "type": "object",
+  "properties": {
+  }
+}

@@ -1,16 +1,18 @@
 #%RAML 1.0
 title: Bound-With API
-version: v1.0
+version: v1.1
 protocols: [ HTTP, HTTPS ]
-baseUri: http://github.com/org/folio/mod-inventory-storage
+baseUri: http://localhost:8081
 
 documentation:
   - title: Bound-With API
-    content: This documents the API calls that can be made to query and manage parts of bound-withs
+    content: API calls for querying and managing individual parts or all parts of bound-withs
 
 types:
   boundWithPart: !include bound-with-part.json
   boundWithParts: !include bound-with-parts.json
+  boundWith: !include boundWith.json
+  boundWiths: !include boundWiths.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -46,3 +48,22 @@ resourceTypes:
         exampleItem: !include examples/bound-with-part.json
         schema: boundWithPart
 
+/inventory-storage/bound-withs:
+  put:
+    description: Manage all parts (holdings references) of a bound-with item
+    body:
+      application/json:
+        description: ID of the bound-with Item and IDs of the holdings within it.
+        type: boundWith
+    responses:
+      204:
+        description: No content; updates processed.
+      400:
+        description: Constraint violation; referenced Item and/or holdings were not found.
+        body:
+          application/json:
+      422:
+        description: Schema violation, i.e. missing mandatory property or constraint violations.
+        body:
+          application/json:
+            example: {"errors":[{"message":"must not be null","type":"1","code":"javax.validation.constraints.NotNull.message","parameters":[{"key":"itemId","value":"null"}]}]}

@@ -7,7 +7,8 @@
 * provides `instance-storage-batch 2.0`
 * provides `instance-storage-batch-sync 2.0`
 * provides `instance-storage-batch-sync-unsafe 2.0`
-* 
+* provides `bound-with-parts-storage 1.1` [MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022)
+*
 ## 25.0.0 2022-10-25
 
 * Upgraded RMB to 35.0.0 ([MODINVSTOR-965](https://issues.folio.org/browse/MODINVSTOR-965))
