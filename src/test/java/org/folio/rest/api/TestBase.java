@@ -80,6 +80,8 @@ public abstract class TestBase {
   public static void beforeAll() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
 
+    StorageTestSuite.startupUnlessRunning();
+
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
     itemsClient = ResourceClient.forItems(getClient());
