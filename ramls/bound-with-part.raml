@@ -12,7 +12,6 @@ types:
   boundWithPart: !include bound-with-part.json
   boundWithParts: !include bound-with-parts.json
   boundWith: !include boundWith.json
-  boundWiths: !include boundWiths.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -55,6 +54,7 @@ resourceTypes:
       application/json:
         description: ID of the bound-with Item and IDs of the holdings within it.
         type: boundWith
+        example: !include examples/boundWith.json
     responses:
       204:
         description: No content; updates processed.
