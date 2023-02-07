@@ -79,7 +79,8 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
    * Existing BoundWithPart entities mapped by holdings record ID.
    */
   private Future<Map<String,BoundWithPart>> getExistingParts(
-    BoundWith entity, Context vertxContext, Map<String,String> okapiHeaders) {
+      BoundWith entity, Context vertxContext, Map<String,String> okapiHeaders) {
+
     Promise<Map<String,BoundWithPart>> promise = Promise.promise();
     Map<String, BoundWithPart> existingParts = new HashMap<>();
     Criterion criterion = new Criterion(new Criteria()
@@ -100,15 +101,16 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
    * Bound-with parts not in incoming: Future deletes.
    */
   private static List<Future<Response>> getDeleteBoundWithPartFutures(
-    Map<String, BoundWithPart> existingParts,
-    Map<String, BoundWithContent> incomingParts,
-    Context vertxContext,
-    Map<String,String> okapiHeaders) {
+      Map<String, BoundWithPart> existingParts,
+      Map<String, BoundWithContent> incomingParts,
+      Context vertxContext,
+      Map<String,String> okapiHeaders) {
+
     List<Future<Response>> deleteFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
     for (var part : existingParts.entrySet()) {
-      if (!incomingParts.containsKey(part.getKey().toString())) {
-        deleteFutures.add(service.delete(((BoundWithPart) part.getValue()).getId()));
+      if (!incomingParts.containsKey(part.getKey())) {
+        deleteFutures.add(service.delete(part.getValue().getId()));
       }
     }
     return deleteFutures;
@@ -118,11 +120,12 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
    * Bound-with parts not existing: future creates.
    */
   private static List<Future<Response>> getCreateBoundWithPartFutures(
-    String itemId,
-    Map<String, BoundWithContent> incomingParts,
-    Map<String, BoundWithPart> existingParts,
-    Map<String, String> okapiHeaders,
-    Context vertxContext) {
+      String itemId,
+      Map<String, BoundWithContent> incomingParts,
+      Map<String, BoundWithPart> existingParts,
+      Map<String, String> okapiHeaders,
+      Context vertxContext) {
+
     List<Future<Response>> createFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
     for (String holdingsId : incomingParts.keySet()) {
