@@ -101,6 +101,7 @@ import org.junit.runners.Suite;
 })
 public class StorageTestSuite {
   private static final Logger logger = LogManager.getLogger();
+  private static boolean running = false;
 
   private StorageTestSuite() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -118,6 +119,8 @@ public class StorageTestSuite {
     startKafka();
     startVerticleWebClientAndPrepareTenant(TENANT_ID);
 
+    running = true;
+
     logger.info("finished @BeforeClass before()");
   }
 
@@ -134,7 +137,20 @@ public class StorageTestSuite {
     stopKafka();
 
     PostgresClient.stopPostgresTester();
+
+    running = false;
+
     logger.info("finished @AfterClass after()");
+  }
+
+  /**
+   * Setup Postgres, Kafka, Verticle if needed. To be used when directly running one or more test classes
+   * (IDE or mvn test -Dtest=FooTest,BarTest), when not running the complete StorageTestSuite.
+   */
+  public static void startupUnlessRunning() {
+    if (! running) {
+      before();
+    }
   }
 
   static void deleteAll(URL rootUrl) {

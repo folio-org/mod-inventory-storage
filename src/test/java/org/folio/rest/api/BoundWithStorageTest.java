@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -236,10 +237,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     JsonObject initialBoundWith = createBoundWithCompositeJson(randomId,
       Arrays.asList(holdingsRecord1.getId(),holdingsRecord2.getId()));
 
-    Response initialCreate = putCompositeBoundWith(initialBoundWith);
-    assertThat(
-      "Expected 400 - item not found",
-      initialCreate.getStatusCode(),is(422));
+    Response response = putCompositeBoundWith(initialBoundWith);
+    assertThat(response, hasValidationError("Item not found.", "itemId", randomId.toString()));
 
     List<JsonObject> boundWithParts
       = boundWithPartsClient.getByQuery("?query=itemId==" + randomId);
@@ -250,9 +249,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     JsonObject secondBoundWithAttempt = createBoundWithCompositeJson(item.getId(),
       Arrays.asList(holdingsRecord1.getId(), randomId, holdingsRecord1.getId()));
 
-    Response secondAttempt = putCompositeBoundWith(secondBoundWithAttempt);
-    assertThat("Expected 400 - a holdings record not found",
-      secondAttempt.getStatusCode(),is(422));
+    response = putCompositeBoundWith(secondBoundWithAttempt);
+    assertThat(response, hasValidationError("Holdings record not found.", "holdingsRecordId", randomId.toString()));
 
     boundWithParts
       = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
