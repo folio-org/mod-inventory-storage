@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.BoundWithPart;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.persist.Criteria.Criteria;
@@ -46,18 +47,23 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
 
     Map<String, BoundWithContent> incomingParts = getIncomingParts(entity);
     AtomicReference<Map<String,BoundWithPart>> existingParts = new AtomicReference<>();
+    AtomicReference<Item> boundWithItem = new AtomicReference<>();
 
     validate(entity, vertxContext, okapiHeaders)
     .compose(x -> getExistingParts(entity, vertxContext, okapiHeaders))
     .onSuccess(existingParts::set)
+    .compose(x -> getMainPart(entity, vertxContext, okapiHeaders))
+    .onSuccess(boundWithItem::set)
     .compose(x -> {
       var futures = getCreateBoundWithPartFutures(
-          entity.getItemId(), incomingParts, existingParts.get(), okapiHeaders, vertxContext);
+        entity.getItemId(), boundWithItem.get().getHoldingsRecordId(),
+        incomingParts, existingParts.get(), okapiHeaders, vertxContext);
       return GenericCompositeFuture.all(futures);
     })
     .compose(x -> {
       var futures = getDeleteBoundWithPartFutures(
-          existingParts.get(), incomingParts, vertxContext, okapiHeaders);
+        boundWithItem.get().getHoldingsRecordId(),
+        existingParts.get(), incomingParts, vertxContext, okapiHeaders);
       return GenericCompositeFuture.all(futures);
     })
     .onSuccess(x -> asyncResultHandler.handle(succeededFuture(respond204())))
@@ -73,6 +79,17 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
       incomingParts.put(content.getHoldingsRecordId(), content);
     }
     return incomingParts;
+  }
+
+  /**
+   * Get mandatory, main holdings record; the one directly linked to by the item.
+   */
+  private Future<Item> getMainPart (
+    BoundWith entity, Context vertxContext, Map<String,String> okapiHeaders) {
+    Promise<Item> promise = Promise.promise();
+    return new ItemRepository(vertxContext, okapiHeaders)
+      .getById(entity.getItemId())
+      .onComplete(item -> promise.complete(item.result()));
   }
 
   /**
@@ -101,6 +118,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
    * Bound-with parts not in incoming: Future deletes.
    */
   private static List<Future<Response>> getDeleteBoundWithPartFutures(
+      String mainHoldingsRecordId,
       Map<String, BoundWithPart> existingParts,
       Map<String, BoundWithContent> incomingParts,
       Context vertxContext,
@@ -109,9 +127,15 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
     List<Future<Response>> deleteFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
     for (var part : existingParts.entrySet()) {
-      if (!incomingParts.containsKey(part.getKey())) {
+      if (!incomingParts.containsKey(part.getKey()) &&
+          !part.getKey().equals(mainHoldingsRecordId)) {
         deleteFutures.add(service.delete(part.getValue().getId()));
       }
+    }
+    if (existingParts.containsKey(mainHoldingsRecordId) &&
+      (incomingParts.size()==1 && incomingParts.containsKey(mainHoldingsRecordId)
+      || incomingParts.isEmpty())) {
+      deleteFutures.add(service.delete(existingParts.get(mainHoldingsRecordId).getId()));
     }
     return deleteFutures;
   }
@@ -121,6 +145,7 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
    */
   private static List<Future<Response>> getCreateBoundWithPartFutures(
       String itemId,
+      String mainHoldingsId,
       Map<String, BoundWithContent> incomingParts,
       Map<String, BoundWithPart> existingParts,
       Map<String, String> okapiHeaders,
@@ -138,6 +163,19 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
         createFutures.add(service.create(part));
       }
     }
+    // Add main holdings ID, but only if it doesn't exist already,
+    // wasn't provided in the request (and thus added above),
+    // and would not become the only part.
+    if (!existingParts.containsKey(mainHoldingsId) &&
+        !incomingParts.containsKey(mainHoldingsId) &&
+        !incomingParts.isEmpty()) {
+      BoundWithPart part =
+        new BoundWithPart()
+          .withItemId(itemId)
+          .withHoldingsRecordId(mainHoldingsId)
+          .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
+      createFutures.add(service.create(part));
+    }
     return createFutures;
   }
 
@@ -150,7 +188,8 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
     return items.getById(requestEntity.getItemId())
         .compose(item -> {
           if (item == null) {
-            addError(errors, "item.not-found", "Item not found.", "itemId", requestEntity.getItemId());
+            addError(errors,
+              "item.not-found", "Item not found.", "itemId", requestEntity.getItemId());
           }
           HoldingsRepository holdings = new HoldingsRepository(vertxContext, okapiHeaders);
           List<Future<HoldingsRecord>> holdingsFutures = new ArrayList<>();
@@ -163,7 +202,8 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
           for (int i = 0; i < holdingsFound.size(); i++) {
             if (holdingsFound.resultAt(i) == null) {
               var id = requestEntity.getBoundWithContents().get(i).getHoldingsRecordId();
-              addError(errors, "holding.not-found", "Holdings record not found.", "holdingsRecordId", id);
+              addError(errors,
+                "holding.not-found", "Holdings record not found.", "holdingsRecordId", id);
             }
           }
           if (errors.getErrors().isEmpty()) {
