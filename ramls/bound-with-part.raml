@@ -49,10 +49,20 @@ resourceTypes:
 
 /inventory-storage/bound-withs:
   put:
-    description: Manage all parts (holdings references) of a bound-with item
+    description: Manage the collective set of parts (holdings references) of a bound-with item
     body:
       application/json:
-        description: ID of the bound-with Item and IDs of the holdings within it.
+        description: The bound-with composite to PUT must contain the ID of the bound-with Item and a list of contents,
+          which contains the IDs of the holdings that should make up the bound-with.
+          The holdings record that the bound-with Item links directly to is by convention designated
+          as the main bound-with part. It is redundant to include this holdings record in the
+          list of contents but it can be very convenient for clients to have it there anyway.
+          The API will thus ensure that the main title is always stored in the parts list.
+          The client doesn't have to include it in the bound-with PUT request but it is allowed to do so.
+          The bound-with composite must include at least one other holdings ID in the list, or it will
+          not be considered a bound-with. If it _was_ a bound-with before a request including only the
+          main holdings ID (or a request including no holdings at all), then the list of contents will be emptied,
+          and the Item will become an ordinary Item.
         type: boundWith
         example: !include examples/boundWith.json
     responses:
