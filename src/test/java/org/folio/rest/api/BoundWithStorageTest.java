@@ -279,19 +279,70 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
 
     // Provide only the main holdings record in list of contents (does not qualify as a bound-with
-    JsonObject emptyListOfContents = createBoundWithCompositeJson(item.getId(),
+    JsonObject onlyMainHoldingsRecordInListOfContents = createBoundWithCompositeJson(item.getId(),
       Arrays.asList(holdingsRecord1.getId()));
-    Response responseOnEmptyListOfContents = putCompositeBoundWith(emptyListOfContents);
-    logger.info("Response on request with only the main holdings ID in: " + responseOnEmptyListOfContents.getBody());
+    Response responseOnOnlyMainHoldingsInListOfContents
+      = putCompositeBoundWith(onlyMainHoldingsRecordInListOfContents);
+    logger.info("Response on request with only the main holdings ID in: "
+      + responseOnOnlyMainHoldingsInListOfContents.getBody());
     assertThat(
       "Expected 204 - no content on request with only the main holdings ID in",
-      responseOnEmptyListOfContents.getStatusCode(),is(204));
+      responseOnOnlyMainHoldingsInListOfContents.getStatusCode(),is(204));
     List<JsonObject> partsAfterUpdate
       = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
     assertThat("Expected no parts left after update that only provided the main holdings ID in contents",
       partsAfterUpdate.size(),is(0));
   }
 
+  @Test
+  public void providingOnlyMainHoldingsRecordIdWhenBoundWithDoesNotExistYetHasNoEffect() {
+    IndividualResource instance1 = createInstance("Instance 1");
+    IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
+    IndividualResource item = createItem(holdingsRecord1.getId());
+
+    List<JsonObject> partsBeforeUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+
+    JsonObject onlyMainHoldingsRecordInListOfContents = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList(holdingsRecord1.getId()));
+    Response responseOnOnlyMainHoldingsInListOfContents
+      = putCompositeBoundWith(onlyMainHoldingsRecordInListOfContents);
+    logger.info("Response on request with only the main holdings ID in: "
+      + responseOnOnlyMainHoldingsInListOfContents.getBody());
+    assertThat(
+      "Expected 204 - no content on request with only the main holdings ID in",
+      responseOnOnlyMainHoldingsInListOfContents.getStatusCode(),is(204));
+    List<JsonObject> partsAfterUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat("Expected no parts before update", partsBeforeUpdate.size(),is(0));
+    assertThat("Expected no parts after update that only provided the main holdings ID in contents",
+      partsAfterUpdate.size(),is(0));
+  }
+
+  @Test
+  public void providingEmptyListOfPartsWhenBoundWithDoesNotExistYetHasNoEffect() {
+    IndividualResource instance1 = createInstance("Instance 1");
+    IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
+    IndividualResource item = createItem(holdingsRecord1.getId());
+
+    List<JsonObject> partsBeforeUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+
+    JsonObject emptyListOfContents = createBoundWithCompositeJson(item.getId(),
+      Arrays.asList());
+    Response responseOnEmptyListOfContents
+      = putCompositeBoundWith(emptyListOfContents);
+    logger.info("Response on request with empty list of part: "
+      + responseOnEmptyListOfContents.getBody());
+    assertThat(
+      "Expected 204 - no content on request on empty list of parts",
+      responseOnEmptyListOfContents.getStatusCode(),is(204));
+    List<JsonObject> partsAfterUpdate
+      = boundWithPartsClient.getByQuery("?query=itemId==" + item.getId());
+    assertThat("Expected no parts before update", partsBeforeUpdate.size(),is(0));
+    assertThat("Expected no parts after update with empty list",
+      partsAfterUpdate.size(),is(0));
+  }
 
   @Test
   public void cannotUpdateBoundWithIfItemOrSomeHoldingsDoNotExist() {

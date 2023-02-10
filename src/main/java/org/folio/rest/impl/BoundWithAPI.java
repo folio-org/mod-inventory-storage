@@ -153,14 +153,17 @@ public class BoundWithAPI implements org.folio.rest.jaxrs.resource.InventoryStor
 
     List<Future<Response>> createFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
-    for (String holdingsId : incomingParts.keySet()) {
-      if (!existingParts.containsKey(holdingsId)) {
-        BoundWithPart part =
-          new BoundWithPart()
-            .withItemId(itemId)
-            .withHoldingsRecordId(holdingsId)
-            .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
-        createFutures.add(service.create(part));
+    if (!incomingParts.containsKey(mainHoldingsId) || incomingParts.size()>1) {
+      for (String holdingsId : incomingParts.keySet()) {
+        if (!existingParts.containsKey(holdingsId)) {
+          BoundWithPart part =
+            new BoundWithPart()
+              .withItemId(itemId)
+              .withHoldingsRecordId(holdingsId)
+              .withMetadata(new Metadata().withCreatedDate(new Date())
+                .withUpdatedDate(new Date()));
+          createFutures.add(service.create(part));
+        }
       }
     }
     // Add main holdings ID, but only if it doesn't exist already,
