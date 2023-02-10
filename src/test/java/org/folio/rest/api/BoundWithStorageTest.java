@@ -243,7 +243,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
 
     // Provide empty list of contents
     JsonObject emptyListOfContents = createBoundWithCompositeJson(item.getId(),
-      Arrays.asList(holdingsRecord1.getId()));
+      Arrays.asList());
     Response responseOnEmptyListOfContents = putCompositeBoundWith(emptyListOfContents);
     assertThat(
       "Expected 204 - no content on request with empty list of contents",
