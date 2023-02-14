@@ -1,4 +1,5 @@
 ## 26.0.0 IN-PROGRESS
+* New PUT API where a single item ID and a list of holdings IDs can be created (MODINVSTOR-1022)
 * Extend subjects, alternativeTitles, series with authorityId ([MODINVSTOR-1010](https://issues.folio.org/browse/MODINVSTOR-1010))
 * provides `inventory-view 2.0`
 * provides `inventory-view-instance-set 2.0`
@@ -8,7 +9,7 @@
 * provides `instance-storage-batch-sync 2.0`
 * provides `instance-storage-batch-sync-unsafe 2.0`
 * provides `bound-with-parts-storage 1.1` [MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022)
-*
+
 ## 25.0.0 2022-10-25
 
 * Upgraded RMB to 35.0.0 ([MODINVSTOR-965](https://issues.folio.org/browse/MODINVSTOR-965))
