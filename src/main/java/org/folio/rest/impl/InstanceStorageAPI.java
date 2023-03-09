@@ -150,7 +150,7 @@ public class InstanceStorageAPI implements InstanceStorage {
 
       vertxContext.runOnContext(v -> {
         try {
-          postgresClient.get(preparedCql.getTableName(), InstanceInternal.class, fieldList, cql, true, false,
+          postgresClient.get(preparedCql.getTableName(), InstanceInternal.class, fieldList, cql, false, false,
             reply -> {
               try {
                 if (reply.succeeded()) {
