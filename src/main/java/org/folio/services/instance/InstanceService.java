@@ -3,6 +3,7 @@ package org.folio.services.instance;
 import static io.vertx.core.Promise.promise;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
@@ -54,6 +55,16 @@ public class InstanceService {
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     effectiveValuesService = new InstanceEffectiveValuesService();
+  }
+
+  public Future<Response> getInstance(String id) {
+    return instanceRepository.getById(id)
+        .map(instance -> {
+          if (instance == null) {
+            return GetInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain(null);
+          }
+          return GetInstanceStorageInstancesByInstanceIdResponse.respond200WithApplicationJson(instance);
+        });
   }
 
   @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"

@@ -135,67 +135,9 @@ public class InstanceStorageAPI implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = okapiHeaders.get(TENANT_HEADER);
-
-    try {
-      PostgresClient postgresClient = PostgresClient.getInstance(
-        vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-      String[] fieldList = {"*"};
-
-      PreparedCQL preparedCql = handleCQL(String.format("id==%s", instanceId), 1, 0);
-      CQLWrapper cql = preparedCql.getCqlWrapper();
-
-      log.info(String.format("SQL generated from CQL: %s", cql.toString()));
-
-      vertxContext.runOnContext(v -> {
-        try {
-          postgresClient.get(preparedCql.getTableName(), InstanceInternal.class, fieldList, cql, true, false,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  List<InstanceInternal> instanceList = reply.result().getResults();
-                  if (instanceList.size() == 1) {
-                    InstanceInternal instance = instanceList.get(0);
-
-                    asyncResultHandler.handle(
-                      io.vertx.core.Future.succeededFuture(
-                        GetInstanceStorageInstancesByInstanceIdResponse.
-                          respond200WithApplicationJson(instance.toInstanceDto())));
-                  }
-                  else {
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      GetInstanceStorageInstancesByInstanceIdResponse.
-                        respond404WithTextPlain("Not Found")));
-                  }
-                } else {
-                  asyncResultHandler.handle(
-                    Future.succeededFuture(
-                      GetInstanceStorageInstancesByInstanceIdResponse.
-                        respond500WithTextPlain(reply.cause().getMessage())));
-
-                }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetInstanceStorageInstancesByInstanceIdResponse.
-                    respond500WithTextPlain(e.getMessage())));
-              }
-            });
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-            GetInstanceStorageInstancesByInstanceIdResponse.
-              respond500WithTextPlain(e.getMessage())));
-        }
-      });
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        GetInstanceStorageInstancesByInstanceIdResponse.
-          respond500WithTextPlain(e.getMessage())));
-    }
+    new InstanceService(vertxContext, okapiHeaders).getInstance(instanceId)
+    .otherwise(EndpointFailureHandler::failureResponse)
+    .onComplete(asyncResultHandler);
   }
 
   @Validate
