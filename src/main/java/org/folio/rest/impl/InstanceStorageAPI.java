@@ -45,10 +45,6 @@ import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageAPI implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
-
-  // Has to be lowercase because raml-module-builder uses case sensitive
-  // lower case headers
-  private static final String TENANT_HEADER = "x-okapi-tenant";
   private final Messages messages = Messages.getInstance();
 
   PreparedCQL handleCQL(String query, int limit, int offset) throws FieldException {
