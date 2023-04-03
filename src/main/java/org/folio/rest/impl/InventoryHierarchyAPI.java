@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.ws.rs.core.Response;
@@ -19,6 +20,7 @@ import io.vertx.sqlclient.impl.ArrayTuple;
 public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements InventoryHierarchy {
 
   private static final String SQL_UPDATED_INSTANCES_IDS = "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5);";
+  private static final String SQL_UPDATED_INSTANCES_IDS_WITH_SOURCE = "select * from get_updated_instance_ids_view_with_source($1,$2,$3,$4,$5,$6);";
   private static final String SQL_INSTANCES = "select * from get_items_and_holdings_view($1,$2);";
   private static final String SUPPRESSED_TRUE_FILTER = " WHERE (instance.jsonb ->> 'discoverySuppress')::bool = false";
   private static final String SQL_INITIAL_LOAD = "SELECT id as \"instanceId\",\n" +
@@ -27,6 +29,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
     "       (instance.jsonb ->> 'discoverySuppress')::bool AS \"suppressFromDiscovery\",\n" +
     "       false AS deleted\n" +
     "FROM instance";
+  private static final String SQL_INSTANCES_SOURCE_FILTER = " WHERE (instance.jsonb ->> 'source')::varchar = '%s'";
   private static final String SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART = " UNION ALL\n" +
     "\tSELECT (jsonb #>> '{record,id}')::uuid            AS \"instanceId\",\n" +
     "        jsonb #>> '{record,source}'                 AS source,\n" +
@@ -38,10 +41,13 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
   @Validate
   @Override
   public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
-      boolean onlyInstanceUpdateDate, String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
+      boolean onlyInstanceUpdateDate, String source, String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
       String sql = SQL_INITIAL_LOAD;
+      if (Objects.nonNull(source)) {
+        sql+= String.format(SQL_INSTANCES_SOURCE_FILTER, source) + (skipSuppressedFromDiscoveryRecords ? "AND" : "");
+      }
       if(skipSuppressedFromDiscoveryRecords) {
         sql+=SUPPRESSED_TRUE_FILTER;
       }
@@ -52,9 +58,12 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
         routingContext, okapiHeaders, asyncResultHandler, vertxContext,
         "Get updated instances completed successfully");
     } else {
-      fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
+      fetchRecordsByQuery(Objects.nonNull(source)? SQL_UPDATED_INSTANCES_IDS_WITH_SOURCE : SQL_UPDATED_INSTANCES_IDS,
         () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, tuple -> {
           tuple.addBoolean(onlyInstanceUpdateDate);
+          if (Objects.nonNull(source)) {
+            tuple.addString(source);
+          }
         }),
         routingContext, okapiHeaders, asyncResultHandler, vertxContext,
         "Get updated instances completed successfully");
