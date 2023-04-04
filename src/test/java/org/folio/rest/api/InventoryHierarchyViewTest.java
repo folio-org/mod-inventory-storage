@@ -270,6 +270,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void testFilterByDatesWithSource() throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    params.put("source", "MARC");
     // given
     // one instance, 1 holding, 2 items
     // when
