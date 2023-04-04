@@ -133,7 +133,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   private JsonObject createInstance (String title, String instanceTypeId) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-    Instance requestObject = new Instance(title, "TEST", instanceTypeId);
+    Instance requestObject = new Instance(title, "MARC", instanceTypeId);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(
             instancesStorageUrl(""),

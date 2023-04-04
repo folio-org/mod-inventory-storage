@@ -77,7 +77,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
   }
 
   private JsonObject smallAngryPlanet() {
-    return createInstanceRequest(UUID.randomUUID(), "TEST",
+    return createInstanceRequest(UUID.randomUUID(), "MARC",
       "Long Way to a Small Angry Planet", new JsonArray(), new JsonArray(),
       UUID_INSTANCE_TYPE, new JsonArray());
   }

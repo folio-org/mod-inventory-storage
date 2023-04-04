@@ -400,7 +400,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private IndividualResource createInstance(String title) {
-    return instancesClient.create(createInstanceRequest(UUID.randomUUID(), "TEST",
+    return instancesClient.create(createInstanceRequest(UUID.randomUUID(), "MARC",
       title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray()));
   }
 

@@ -46,7 +46,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
     if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
       String sql = SQL_INITIAL_LOAD;
       if (Objects.nonNull(source)) {
-        sql+=String.format(SQL_INSTANCES_SOURCE_FILTER, source);
+        sql+=String.format(SQL_INSTANCES_SOURCE_FILTER, source.name());
       }
       if(skipSuppressedFromDiscoveryRecords) {
         sql+=(Objects.nonNull(source) ? " AND ": " WHERE ") + SUPPRESSED_TRUE_FILTER;
