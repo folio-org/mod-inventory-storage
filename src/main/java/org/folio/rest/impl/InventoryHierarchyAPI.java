@@ -19,8 +19,7 @@ import io.vertx.sqlclient.impl.ArrayTuple;
 
 public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements InventoryHierarchy {
 
-  private static final String SQL_UPDATED_INSTANCES_IDS = "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5);";
-  private static final String SQL_UPDATED_INSTANCES_IDS_WITH_SOURCE = "select * from get_updated_instance_ids_view_with_source($1,$2,$3,$4,$5,$6);";
+  private static final String SQL_UPDATED_INSTANCES_IDS = "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5,$6);";
   private static final String SQL_INSTANCES = "select * from get_items_and_holdings_view($1,$2);";
   private static final String SUPPRESSED_TRUE_FILTER = "(instance.jsonb ->> 'discoverySuppress')::bool = false";
   private static final String SQL_INITIAL_LOAD = "SELECT id as \"instanceId\",\n" +
@@ -58,11 +57,13 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
         routingContext, okapiHeaders, asyncResultHandler, vertxContext,
         "Get updated instances completed successfully");
     } else {
-      fetchRecordsByQuery(Objects.nonNull(source)? SQL_UPDATED_INSTANCES_IDS_WITH_SOURCE : SQL_UPDATED_INSTANCES_IDS,
+      fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
         () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, tuple -> {
           tuple.addBoolean(onlyInstanceUpdateDate);
           if (Objects.nonNull(source)) {
             tuple.addString(source);
+          } else {
+            tuple.addValue(null);
           }
         }),
         routingContext, okapiHeaders, asyncResultHandler, vertxContext,

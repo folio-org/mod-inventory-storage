@@ -1,5 +1,6 @@
--- Creates function returned instances with records updates/deleted/added in specified period o time with filtering by source
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_view_with_source(startDate                          timestamptz,
+drop function if exists ${myuniversity}_${mymodule}.get_updated_instance_ids_view;
+-- Correct joining(JOIN -> LEFT JOIN line 28) operation for holdings and items tables to get instances ids also when they have holdings being updated only
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_view(startDate                          timestamptz,
                                                                                      endDate                            timestamptz,
                                                                                      deletedRecordSupport               bool DEFAULT TRUE,
                                                                                      skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE,
@@ -18,19 +19,24 @@ $BODY$
 WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                     (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
                              FROM ${myuniversity}_${mymodule}.instance inst
-                             WHERE inst.jsonb ->> 'source' = $6
+                             WHERE ($6 IS NULL OR inst.jsonb ->> 'source' = $6)
                              AND (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
 
                              UNION ALL
-                             SELECT instanceid,
-                                    greatest((strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')),
-                                             (strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate'))) AS maxDate
-                             FROM ${myuniversity}_${mymodule}.holdings_record hr
-                                      JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
-                             WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
-                                    (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND NOT EXISTS (SELECT NULL WHERE $5)
-
+                             SELECT instanceid, MAX(maxdate) as maxdate
+                               FROM (
+                                     SELECT instanceid,(strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) as maxdate
+                                       FROM ${myuniversity}_${mymodule}.holdings_record hr
+                                      WHERE ((strToTimestamp(hr.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
+                                        AND NOT EXISTS (SELECT NULL WHERE $5))
+                                     UNION
+                                     SELECT instanceid, (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
+                                       FROM ${myuniversity}_${mymodule}.holdings_record hr
+                                              INNER JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
+                                      WHERE (strToTimestamp(item.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
+                                        AND NOT EXISTS (SELECT NULL WHERE $5)
+                                    ) AS related_hr_items
+                                    GROUP BY instanceid
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
                                     greatest((strToTimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),

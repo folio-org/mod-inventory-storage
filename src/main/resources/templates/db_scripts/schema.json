@@ -1093,7 +1093,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/createRecordsViewFunctionWithSource.sql",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSource.sql",
       "fromModuleVersion": "26.0.1"
     }
   ]
