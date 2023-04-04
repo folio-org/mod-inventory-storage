@@ -16,15 +16,14 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
-import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.*;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -66,10 +65,7 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.LastCheckIn;
+import org.folio.rest.jaxrs.model.*;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -717,6 +713,86 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(postResponse.getBody(),
         containsString("Cannot set item.materialtypeid"));
+  }
+
+  @Test
+  public void creatingItemLimitNoteMaximumLength() throws Exception{
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", UUID.randomUUID().toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
+    itemToCreate.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void creatingItemLimitAdministrativeNoteMaximumLength() throws Exception{
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", UUID.randomUUID().toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", UUID.randomUUID().toString());
+    itemToCreate.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingItemLimitAdministrativeNoteMaximumLength() throws Exception {
+
+    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    JsonObject itemToCreate = new JsonObject();
+    String itemId = UUID.randomUUID().toString();
+    itemToCreate.put("id", itemId);
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    itemToCreate.put("hrid", "testHRID");
+    createItem(itemToCreate);
+
+    itemToCreate = getById(itemId).getJson();
+    itemToCreate.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
+
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
+      ResponseHandler.text(completed));
+    Response response = completed.get(10, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(500));
+  }
+
+  @Test
+  public void updatingItemLimitNoteMaximumLength() throws Exception {
+    final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
+
+    createItem(itemToCreate);
+    JsonObject item = getById(id).getJson();
+    item.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    assertThat(update(item).getStatusCode(), is(500));
   }
 
   @Test

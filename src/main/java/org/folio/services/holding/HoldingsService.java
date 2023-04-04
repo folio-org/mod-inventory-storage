@@ -15,15 +15,18 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
+import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
@@ -86,6 +89,7 @@ public class HoldingsService {
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
     return hridManager.populateHrid(entity)
+      .compose(hr -> refuseIfNoteMaxLengthExceed(hr))
       .compose(hr -> {
         final Promise<Response> postResponse = promise();
 
@@ -105,6 +109,7 @@ public class HoldingsService {
     }
 
     return refuseWhenHridChanged(oldHoldings, newHoldings)
+      .compose(notUsed -> refuseIfNoteMaxLengthExceed(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
 
@@ -137,8 +142,8 @@ public class HoldingsService {
   public Future<Response> deleteHoldings(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(
-          DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
-              "Expected CQL but query parameter is empty"));
+        DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
+          "Expected CQL but query parameter is empty"));
     }
     if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
@@ -146,12 +151,12 @@ public class HoldingsService {
     // do not add curly braces for readability, this is to comply with
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return holdingsRepository.delete(cql)
-        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-          rowSet.iterator().forEachRemaining(row ->
-            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
-          )
-        ))
-        .map(Response.noContent().build());
+      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+        rowSet.iterator().forEachRemaining(row ->
+          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+        )
+      ))
+      .map(Response.noContent().build());
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
@@ -160,11 +165,12 @@ public class HoldingsService {
     }
 
     return hridManager.populateHridForHoldings(holdings)
+      .compose(result -> refuseIfNoteMaxLengthExceed(result))
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
-          okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+        okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
+        .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {

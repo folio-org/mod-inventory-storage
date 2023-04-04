@@ -25,7 +25,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private JsonArray holdingsStatementsForSupplements;
   private List<UUID> statisticalCodeIds;
   private final UUID sourceId;
-
+  private List<String> administrativeNotes;
   public HoldingRequestBuilder() {
     this(
       null,
@@ -43,7 +43,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       null,
       null,
       new ArrayList<>(),
-      null);
+      null,
+      new ArrayList<>());
   }
 
   private HoldingRequestBuilder(
@@ -62,7 +63,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     JsonArray holdingsStatementsForIndexes,
     JsonArray holdingsStatementsForSupplements,
     List<UUID> statsticalCodeIds,
-    UUID sourceId) {
+    UUID sourceId,
+    List<String> administrativeNotes) {
 
     this.id = id;
     this.instanceId = instanceId;
@@ -80,6 +82,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.holdingsStatementsForSupplements = holdingsStatementsForSupplements;
     this.statisticalCodeIds = statsticalCodeIds;
     this.sourceId = sourceId;
+    this.administrativeNotes = administrativeNotes;
   }
 
   @Override
@@ -102,6 +105,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "holdingsStatementsForSupplements", holdingsStatementsForSupplements);
     put(request, "statisticalCodeIds", new JsonArray(statisticalCodeIds));
     put(request, "sourceId", sourceId);
+    put(request, "administrativeNotes", new JsonArray(administrativeNotes));
 
     return request;
   }
@@ -123,7 +127,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withTemporaryLocation(UUID temporaryLocationId) {
@@ -143,7 +148,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder forInstance(UUID instanceId) {
@@ -163,7 +169,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withId(UUID id) {
@@ -183,7 +190,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withTags(JsonObject tags) {
@@ -203,7 +211,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withCallNumber(String callNumber) {
@@ -223,7 +232,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withCallNumberPrefix(String callNumberPrefix) {
@@ -243,7 +253,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withCallNumberSuffix(String callNumberSuffix) {
@@ -263,7 +274,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withCallNumberTypeId(String callNumberTypeId) {
@@ -283,7 +295,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withHrid(String hrid) {
@@ -303,7 +316,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withDiscoverySuppress(Boolean discoverySuppress) {
@@ -323,7 +337,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withHoldingsStatements(JsonArray holdingsStatements) {
@@ -343,7 +358,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withHoldingsStatementsForIndexes(JsonArray holdingsStatementsForIndexes) {
@@ -363,7 +379,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withHoldingsStatementsForSupplements(JsonArray holdingsStatementsForSupplements) {
@@ -383,7 +400,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withStatisticalCodeIds(List<UUID> statisticalCodeIds) {
@@ -403,7 +421,8 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       statisticalCodeIds,
-      this.sourceId);
+      this.sourceId,
+      this.administrativeNotes);
   }
 
   public HoldingRequestBuilder withSource(UUID holdingsRecordsSourceId) {
@@ -423,6 +442,28 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
       this.statisticalCodeIds,
-      holdingsRecordsSourceId);
+      holdingsRecordsSourceId,
+      this.administrativeNotes);
+  }
+
+  public HoldingRequestBuilder withAdministrativeNotes(List<String> administrativeNotes) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix,
+      this.callNumberTypeId,
+      this.hrid,
+      this.discoverySuppress,
+      this.holdingsStatements,
+      this.holdingsStatementsForIndexes,
+      this.holdingsStatementsForSupplements,
+      this.statisticalCodeIds,
+      this.sourceId,
+      administrativeNotes);
   }
 }

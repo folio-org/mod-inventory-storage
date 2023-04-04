@@ -21,6 +21,8 @@ import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
+import static org.folio.validator.NotesValidators.refuseIfItemNoteMaxLengthExceed;
+import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -92,6 +94,7 @@ public class ItemService {
     entity.getStatus().setDate(new Date());
 
     return hridManager.populateHrid(entity)
+      .compose(result -> refuseIfNoteMaxLengthExceed(result))
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
@@ -111,6 +114,7 @@ public class ItemService {
       .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
     return hridManager.populateHridForItems(items)
+      .compose(result -> refuseIfItemNoteMaxLengthExceed(result))
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
@@ -127,6 +131,7 @@ public class ItemService {
     PutData putData = new PutData();
     return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
       .onSuccess(putData::set)
+      .compose(notUsed -> refuseIfNoteMaxLengthExceed(newItem))
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
       .compose(x -> {
         if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {

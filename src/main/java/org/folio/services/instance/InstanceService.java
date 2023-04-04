@@ -14,6 +14,8 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
+import static org.folio.validator.NotesValidators.refuseIfInstanceNoteMaxLengthExceed;
+import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -83,6 +85,7 @@ public class InstanceService {
     effectiveValuesService.populateEffectiveValues(entity);
 
     return hridManager.populateHrid(entity)
+      .compose(instance -> refuseIfNoteMaxLengthExceed(instance))
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
 
@@ -105,6 +108,7 @@ public class InstanceService {
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
     return hridManager.populateHridForInstances(instances)
+      .compose(result-> refuseIfInstanceNoteMaxLengthExceed(result))
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
       .compose(batchOperation -> {
@@ -119,6 +123,7 @@ public class InstanceService {
   public Future<Response> updateInstance(String id, Instance newInstance) {
     return instanceRepository.getById(id)
       .compose(CommonValidators::refuseIfNotFound)
+      .compose(notUsed -> refuseIfNoteMaxLengthExceed(newInstance))
       .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
