@@ -15,7 +15,6 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -40,6 +39,7 @@ import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.ItemService;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
@@ -89,7 +89,7 @@ public class HoldingsService {
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
     return hridManager.populateHrid(entity)
-      .compose(hr -> refuseIfNoteMaxLengthExceed(hr))
+      .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
         final Promise<Response> postResponse = promise();
 
@@ -109,7 +109,7 @@ public class HoldingsService {
     }
 
     return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> refuseIfNoteMaxLengthExceed(newHoldings))
+      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
 
@@ -165,7 +165,7 @@ public class HoldingsService {
     }
 
     return hridManager.populateHridForHoldings(holdings)
-      .compose(result -> refuseIfNoteMaxLengthExceed(result))
+      .compose(NotesValidators::refuseHoldingLongNotes)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,

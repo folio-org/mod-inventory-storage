@@ -14,8 +14,7 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-import static org.folio.validator.NotesValidators.refuseIfInstanceNoteMaxLengthExceed;
-import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
+import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -35,6 +34,7 @@ import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.NotesValidators;
 
 public class InstanceService {
   private final HridManager hridManager;
@@ -85,7 +85,7 @@ public class InstanceService {
     effectiveValuesService.populateEffectiveValues(entity);
 
     return hridManager.populateHrid(entity)
-      .compose(instance -> refuseIfNoteMaxLengthExceed(instance))
+      .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
 
@@ -108,7 +108,7 @@ public class InstanceService {
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
     return hridManager.populateHridForInstances(instances)
-      .compose(result-> refuseIfInstanceNoteMaxLengthExceed(result))
+      .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
       .compose(batchOperation -> {
@@ -121,7 +121,7 @@ public class InstanceService {
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
-    return refuseIfNoteMaxLengthExceed(newInstance)
+    return refuseLongNotes(newInstance)
       .compose(notUsed->instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))

@@ -22,110 +22,79 @@ public final class NotesValidators {
   private NotesValidators() {
   }
 
-  private static boolean isToLong(String note) {
+  private static boolean isTooLong(String note) {
     return StringUtils.length(note) > MAX_NOTE_LENGTH;
   }
 
-  private static <T> void checkNotes(T entity, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
+  private static <T> Future<T> checkNotes(T entity, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
     //both notes and administrativeNotes
-    for (String administrativeNote : getAdministrativeNotes.apply(entity)) {
-      if (isToLong(administrativeNote)) {
-        //should return note? min MAX_NOTE_LENGTH + 1 chars, will someone ned this?
-        throw new ValidationException(createValidationErrorMessage("administrativeNotes", administrativeNote,
-          String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH)));
+    if (entity != null) {
+      for (String administrativeNote : getAdministrativeNotes.apply(entity)) {
+        if (isTooLong(administrativeNote)) {
+          //should return note? min MAX_NOTE_LENGTH + 1 chars, will someone ned this?
+          return failedFuture(new ValidationException(createValidationErrorMessage("administrativeNotes", administrativeNote, String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
+        }
+      }
+
+      for (Note note : getNotes.apply(entity)) {
+        if (isTooLong(note.getNote())) {
+          return failedFuture(new ValidationException(createValidationErrorMessage("notes", note.getNote(), String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
+        }
       }
     }
 
-    for (Note note : getNotes.apply(entity)) {
-      if (isToLong(note.getNote())) {
-        //same here
-        throw new ValidationException(createValidationErrorMessage("notes", note.getNote(),
-          String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH)));
+    return succeededFuture(entity);
+  }
+
+  private static <T> Future<List<T>> checkNotesList(List<T> list, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
+    for (T entity : list) {
+      var e = checkNotes(entity, getAdministrativeNotes, getNotes);
+      if (e.failed()) {
+        return failedFuture(e.cause());
       }
     }
+    return succeededFuture(list);
+  }
+
+  public static Future<HoldingsRecord> refuseLongNotes(HoldingsRecord holdingsRecord) {
+    return checkNotes(holdingsRecord, HoldingsRecord::getAdministrativeNotes, HoldingsRecord::getNotes);
+  }
+
+  public static Future<Instance> refuseLongNotes(Instance instance) {
+    return checkNotes(instance, Instance::getAdministrativeNotes, Instance::getNotes);
+  }
+
+  public static Future<Item> refuseLongNotes(Item item) {
+    return checkNotes(item, Item::getAdministrativeNotes, Item::getNotes);
   }
 
   /**
-   * For batch update
+   * For batch updates
+   *
+   * @param items
+   * @return
+   */
+  public static Future<List<Item>> refuseItemLongNotes(List<Item> items) {
+    return checkNotesList(items, Item::getAdministrativeNotes, Item::getNotes);
+  }
+
+  /**
+   * For batch updates
+   *
+   * @param instances
+   * @return
+   */
+  public static Future<List<Instance>> refuseInstanceLongNotes(List<Instance> instances) {
+    return checkNotesList(instances, Instance::getAdministrativeNotes, Instance::getNotes);
+  }
+
+  /**
+   * For batch updates
    *
    * @param holdingsRecords
    * @return
    */
-  public static Future<List<HoldingsRecord>> refuseIfNoteMaxLengthExceed(List<HoldingsRecord> holdingsRecords) {
-    try {
-      for (HoldingsRecord holdingsRecord : holdingsRecords) {
-        if (holdingsRecord != null) {
-          checkNotes(holdingsRecord, HoldingsRecord::getAdministrativeNotes, HoldingsRecord::getNotes);
-        }
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(holdingsRecords);
-  }
-
-  public static Future<HoldingsRecord> refuseIfNoteMaxLengthExceed(HoldingsRecord holdingsRecord) {
-    try {
-      if (holdingsRecord != null) {
-        checkNotes(holdingsRecord, HoldingsRecord::getAdministrativeNotes, HoldingsRecord::getNotes);
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(holdingsRecord);
-  }
-
-  public static Future<Instance> refuseIfNoteMaxLengthExceed(Instance instance) {
-    try {
-      if (instance != null) {
-        checkNotes(instance, Instance::getAdministrativeNotes, Instance::getNotes);
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(instance);
-  }
-
-  public static Future<List<Instance>> refuseIfInstanceNoteMaxLengthExceed(List<Instance> instances) {
-    try {
-      for (Instance instance : instances) {
-        if (instance != null) {
-          checkNotes(instance, Instance::getAdministrativeNotes, Instance::getNotes);
-        }
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(instances);
-  }
-
-  public static Future<Item> refuseIfNoteMaxLengthExceed(Item item) {
-    try {
-      if (item != null) {
-        checkNotes(item, Item::getAdministrativeNotes, Item::getNotes);
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(item);
-  }
-
-  public static Future<List<Item>> refuseIfItemNoteMaxLengthExceed(List<Item> items) {
-    try {
-      for (Item item : items) {
-        if (item != null) {
-          checkNotes(item, Item::getAdministrativeNotes, Item::getNotes);
-        }
-      }
-    } catch (ValidationException ex) {
-      return failedFuture(ex);
-    }
-
-    return succeededFuture(items);
+  public static Future<List<HoldingsRecord>> refuseHoldingLongNotes(List<HoldingsRecord> holdingsRecords) {
+    return checkNotesList(holdingsRecords, HoldingsRecord::getAdministrativeNotes, HoldingsRecord::getNotes);
   }
 }

@@ -21,8 +21,7 @@ import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
-import static org.folio.validator.NotesValidators.refuseIfItemNoteMaxLengthExceed;
-import static org.folio.validator.NotesValidators.refuseIfNoteMaxLengthExceed;
+import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -59,6 +58,7 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.NotesValidators;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
@@ -95,7 +95,7 @@ public class ItemService {
     entity.getStatus().setDate(new Date());
 
     return hridManager.populateHrid(entity)
-      .compose(result -> refuseIfNoteMaxLengthExceed(result))
+      .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
@@ -115,7 +115,7 @@ public class ItemService {
       .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
     return hridManager.populateHridForItems(items)
-      .compose(result -> refuseIfItemNoteMaxLengthExceed(result))
+      .compose(NotesValidators::refuseItemLongNotes)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
@@ -130,7 +130,7 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return refuseIfNoteMaxLengthExceed(newItem)
+    return refuseLongNotes(newItem)
       .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
