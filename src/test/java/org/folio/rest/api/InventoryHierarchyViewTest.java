@@ -296,6 +296,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void testFilterByDatesWithNonExistingSource() throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    // In case of invalid source parameter it will be used as null, i.e. all the records will be returned.
     params.put("source", "invalid");
     // given
     // one instance, 1 holding, 2 items
@@ -305,7 +306,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.size(), is(0));
+    assertThat(instancesData.size(), is(1));
   }
 
   /**

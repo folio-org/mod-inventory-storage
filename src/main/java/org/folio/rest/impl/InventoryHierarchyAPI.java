@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.InventoryHierarchyUpdatedInstanceIdsGetSource;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.jaxrs.resource.InventoryHierarchy;
 
@@ -40,7 +41,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
   @Validate
   @Override
   public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
-      boolean onlyInstanceUpdateDate, String source, String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
+      boolean onlyInstanceUpdateDate, InventoryHierarchyUpdatedInstanceIdsGetSource source, String lang, RoutingContext routingContext, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
       String sql = SQL_INITIAL_LOAD;
@@ -61,7 +62,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
         () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords, tuple -> {
           tuple.addBoolean(onlyInstanceUpdateDate);
           if (Objects.nonNull(source)) {
-            tuple.addString(source);
+            tuple.addString(source.name());
           } else {
             tuple.addValue(null);
           }
