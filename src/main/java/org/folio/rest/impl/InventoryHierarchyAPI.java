@@ -22,7 +22,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
   private static final String SQL_UPDATED_INSTANCES_IDS = "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5);";
   private static final String SQL_UPDATED_INSTANCES_IDS_WITH_SOURCE = "select * from get_updated_instance_ids_view_with_source($1,$2,$3,$4,$5,$6);";
   private static final String SQL_INSTANCES = "select * from get_items_and_holdings_view($1,$2);";
-  private static final String SUPPRESSED_TRUE_FILTER = " WHERE (instance.jsonb ->> 'discoverySuppress')::bool = false";
+  private static final String SUPPRESSED_TRUE_FILTER = "(instance.jsonb ->> 'discoverySuppress')::bool = false";
   private static final String SQL_INITIAL_LOAD = "SELECT id as \"instanceId\",\n" +
     "       instance.jsonb ->> 'source' AS source,\n" +
     "       strToTimestamp(instance.jsonb -> 'metadata' ->> 'updatedDate') AS \"updatedDate\",\n" +
@@ -46,10 +46,10 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
     if(StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
       String sql = SQL_INITIAL_LOAD;
       if (Objects.nonNull(source)) {
-        sql+= String.format(SQL_INSTANCES_SOURCE_FILTER, source) + (skipSuppressedFromDiscoveryRecords ? "AND" : "");
+        sql+=String.format(SQL_INSTANCES_SOURCE_FILTER, source);
       }
       if(skipSuppressedFromDiscoveryRecords) {
-        sql+=SUPPRESSED_TRUE_FILTER;
+        sql+=(Objects.nonNull(source) ? " AND ": " WHERE ") + SUPPRESSED_TRUE_FILTER;
       }
       if(deletedRecordSupport) {
         sql+=SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART;
