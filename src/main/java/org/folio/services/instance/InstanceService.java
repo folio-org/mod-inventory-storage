@@ -121,9 +121,9 @@ public class InstanceService {
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
-    return instanceRepository.getById(id)
+    return refuseIfNoteMaxLengthExceed(newInstance)
+      .compose(notUsed->instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(notUsed -> refuseIfNoteMaxLengthExceed(newInstance))
       .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();

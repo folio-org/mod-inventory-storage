@@ -358,7 +358,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
     instance.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
-    // updating with current _version 1 succeeds and increments _version to 2
     assertThat(update(instance).getStatusCode(), is(422));
   }
 
@@ -368,7 +367,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
     instance.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
-    // updating with current _version 1 succeeds and increments _version to 2
     assertThat(update(instance).getStatusCode(), is(422));
   }
 
