@@ -48,9 +48,9 @@ public final class NotesValidators {
 
   private static <T> Future<List<T>> checkNotesList(List<T> list, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
     for (T entity : list) {
-      var e = checkNotes(entity, getAdministrativeNotes, getNotes);
-      if (e.failed()) {
-        return failedFuture(e.cause());
+      var result = checkNotes(entity, getAdministrativeNotes, getNotes);
+      if (result.failed()) {
+        return failedFuture(result.cause());
       }
     }
     return succeededFuture(list);
