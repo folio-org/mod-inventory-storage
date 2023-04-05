@@ -63,9 +63,9 @@ import org.folio.validator.NotesValidators;
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
-    ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
+      ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
-    ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
+      ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -95,32 +95,32 @@ public class ItemService {
     entity.getStatus().setDate(new Date());
 
     return hridManager.populateHrid(entity)
-      .compose(NotesValidators::refuseLongNotes)
-      .compose(effectiveValuesService::populateEffectiveValues)
-      .compose(item -> {
-        final Promise<Response> postResponse = promise();
+        .compose(NotesValidators::refuseLongNotes)
+        .compose(effectiveValuesService::populateEffectiveValues)
+        .compose(item -> {
+          final Promise<Response> postResponse = promise();
 
-        post(ITEM_TABLE, item, okapiHeaders, vertxContext,
-          PostItemStorageItemsResponse.class, postResponse);
+          post(ITEM_TABLE, item, okapiHeaders, vertxContext,
+              PostItemStorageItemsResponse.class, postResponse);
 
-        return postResponse.future()
-          .onSuccess(domainEventService.publishCreated());
-      });
+          return postResponse.future()
+              .onSuccess(domainEventService.publishCreated());
+        });
   }
 
   public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {
     final Date itemStatusDate = new java.util.Date();
     items.stream()
-      .filter(item -> item.getStatus().getDate() == null)
-      .forEach(item -> item.getStatus().setDate(itemStatusDate));
+        .filter(item -> item.getStatus().getDate() == null)
+        .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
     return hridManager.populateHridForItems(items)
-      .compose(NotesValidators::refuseItemLongNotes)
-      .compose(result -> effectiveValuesService.populateEffectiveValues(items))
-      .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
-      .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
-        okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
+        .compose(NotesValidators::refuseItemLongNotes)
+        .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+        .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
+        .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
+            okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
+            .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
   }
 
   public Future<Response> updateItems(List<Item> items) {
@@ -131,33 +131,33 @@ public class ItemService {
     newItem.setId(itemId);
     PutData putData = new PutData();
     return refuseLongNotes(newItem)
-      .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
-      .onSuccess(putData::set)
-      .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
-      .compose(x -> {
-        if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
-          return Future.succeededFuture(putData.newHoldings);
-        }
-        return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
-      })
-      .compose(oldHoldings -> {
-        putData.oldHoldings = oldHoldings;
-        effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        return updateItem(newItem);
-      })
-      .onSuccess(finalItem ->
-        domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-      .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
-      .otherwise(e -> {
-        if (e instanceof ResponseException) {
-          return ((ResponseException) e).getResponse();
-        }
-        if (e instanceof BadRequestException) {
-          return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
-        }
-        log.error(e.getMessage(), e);
-        return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
-      });
+        .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
+        .onSuccess(putData::set)
+        .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
+        .compose(x -> {
+          if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
+            return Future.succeededFuture(putData.newHoldings);
+          }
+          return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
+        })
+        .compose(oldHoldings -> {
+          putData.oldHoldings = oldHoldings;
+          effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
+          return updateItem(newItem);
+        })
+        .onSuccess(finalItem ->
+            domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
+        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
+        .otherwise(e -> {
+          if (e instanceof ResponseException) {
+            return ((ResponseException) e).getResponse();
+          }
+          if (e instanceof BadRequestException) {
+            return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
+          }
+          log.error(e.getMessage(), e);
+          return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
+        });
   }
 
   public Future<Response> deleteItem(String itemId) {
@@ -177,8 +177,8 @@ public class ItemService {
   public Future<Response> deleteItems(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(
-        DeleteItemStorageItemsResponse.respond400WithTextPlain(
-          "Expected CQL but query parameter is empty"));
+          DeleteItemStorageItemsResponse.respond400WithTextPlain(
+              "Expected CQL but query parameter is empty"));
     }
     if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllItems();  // faster: sends only one domain event (Kafka) message
@@ -186,12 +186,12 @@ public class ItemService {
     // do not add curly braces for readability, this is to comply with
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return itemRepository.delete(cql)
-      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventService.publishRemoved(row.getString(0), row.getString(1))
-        )
-      ))
-      .map(Response.noContent().build());
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventService.publishRemoved(row.getString(0), row.getString(1))
+          )
+        ))
+        .map(Response.noContent().build());
   }
 
   /**
@@ -208,7 +208,7 @@ public class ItemService {
    * @return items before update.
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
-                                                        HoldingsRecord holdingsRecord) {
+    HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
@@ -245,7 +245,6 @@ public class ItemService {
     private Item oldItem;
     private HoldingsRecord oldHoldings;
     private HoldingsRecord newHoldings;
-
     public void set(PutData other) {
       oldItem = other.oldItem;
       newHoldings = other.newHoldings;
@@ -254,27 +253,27 @@ public class ItemService {
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
-      + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
-      + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
-      + "  ON holdings_record.id = $2 "
-      + "WHERE item.id = $1";
+        + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
+        + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+        + "  ON holdings_record.id = $2 "
+        + "WHERE item.id = $1";
     return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
-      .compose(rowSet -> {
-        if (rowSet.size() == 0) {
-          return Future.failedFuture(new ResponseException(
-            PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Not found")));
-        }
-        var row = rowSet.iterator().next();
-        if (row.getString(1) == null) {
-          return Future.failedFuture(new ResponseException(
-            PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(
-              "holdingsRecordId not found: " + holdingsId)));
-        }
-        PutData putData = new PutData();
-        putData.oldItem = readValue(row.getString(0), Item.class);
-        putData.newHoldings = readValue(row.getString(1), HoldingsRecord.class);
-        return Future.succeededFuture(putData);
-      });
+        .compose(rowSet -> {
+          if (rowSet.size() == 0) {
+            return Future.failedFuture(new ResponseException(
+                PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Not found")));
+          }
+          var row = rowSet.iterator().next();
+          if (row.getString(1) == null) {
+            return Future.failedFuture(new ResponseException(
+                PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(
+                    "holdingsRecordId not found: " + holdingsId)));
+          }
+          PutData putData = new PutData();
+          putData.oldItem = readValue(row.getString(0), Item.class);
+          putData.newHoldings = readValue(row.getString(1), HoldingsRecord.class);
+          return Future.succeededFuture(putData);
+        });
   }
 
   private Future<Item> updateItem(Item item) {
@@ -283,7 +282,7 @@ public class ItemService {
     }
 
     JsonObject itemJson;
-    try {
+    try{
       itemJson = pojo2JsonObject(item);
     } catch (Exception e) {
       return Future.failedFuture(e);
@@ -295,7 +294,7 @@ public class ItemService {
       .compose(rowSet -> {
         if (rowSet.size() != 1) {
           return Future.failedFuture(new ResponseException(
-            PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found")));
+              PutItemStorageItemsByItemIdResponse.respond404WithTextPlain("Record not Found")));
         }
         return Future.succeededFuture(readValue(rowSet.iterator().next().getString(0), Item.class));
       })
@@ -316,7 +315,7 @@ public class ItemService {
       String value = matcher.group(2);
       String refTable = matcher.group(3);
       msg = "Cannot set item " + field + " = " + value
-        + " because it does not exist in " + refTable + ".id.";
+          + " because it does not exist in " + refTable + ".id.";
     } else {
       matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
       if (matcher.find()) {

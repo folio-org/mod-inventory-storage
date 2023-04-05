@@ -85,22 +85,22 @@ public class InstanceService {
     effectiveValuesService.populateEffectiveValues(entity);
 
     return hridManager.populateHrid(entity)
-      .compose(NotesValidators::refuseLongNotes)
-      .compose(instance -> {
-        final Promise<Response> postResponse = promise();
+        .compose(NotesValidators::refuseLongNotes)
+        .compose(instance -> {
+          final Promise<Response> postResponse = promise();
 
-        post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
-          InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
+          post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
+              InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
 
-        return postResponse.future()
-            // Return the response without waiting for a domain event publish
-            // to complete. Units of work performed by this service is the same
-            // but the ordering of the units of work provides a benefit to the
-            // api client invoking this endpoint. The response is returned
-            // a little earlier so the api client can continue its processing
-            // while the domain event publish is satisfied.
-            .onSuccess(domainEventPublisher.publishCreated());
-      });
+          return postResponse.future()
+              // Return the response without waiting for a domain event publish
+              // to complete. Units of work performed by this service is the same
+              // but the ordering of the units of work provides a benefit to the
+              // api client invoking this endpoint. The response is returned
+              // a little earlier so the api client can continue its processing
+              // while the domain event publish is satisfied.
+              .onSuccess(domainEventPublisher.publishCreated());
+        });
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
@@ -108,33 +108,33 @@ public class InstanceService {
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
     return hridManager.populateHridForInstances(instances)
-      .compose(NotesValidators::refuseInstanceLongNotes)
-      .compose(notUsed -> buildBatchOperationContext(upsert, instances,
-        instanceRepository, Instance::getId))
-      .compose(batchOperation -> {
-        effectiveValuesService.populateEffectiveValues(instances, batchOperation);
-        // Can use instances list here directly because the class is stateful
-        return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
-            vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-            .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      });
+        .compose(NotesValidators::refuseInstanceLongNotes)
+        .compose(notUsed -> buildBatchOperationContext(upsert, instances,
+            instanceRepository, Instance::getId))
+        .compose(batchOperation -> {
+          effectiveValuesService.populateEffectiveValues(instances, batchOperation);
+          // Can use instances list here directly because the class is stateful
+          return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
+              vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
+              .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+        });
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
     return refuseLongNotes(newInstance)
-      .compose(notUsed->instanceRepository.getById(id))
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
-      .compose(oldInstance -> {
-        final Promise<Response> putResult = promise();
+        .compose(notUsed -> instanceRepository.getById(id))
+        .compose(CommonValidators::refuseIfNotFound)
+        .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
+        .compose(oldInstance -> {
+          final Promise<Response> putResult = promise();
 
-        effectiveValuesService.populateEffectiveValues(newInstance, oldInstance);
-        put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
-          InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
+          effectiveValuesService.populateEffectiveValues(newInstance, oldInstance);
+          put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
+              InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
-        return putResult.future()
-          .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-      });
+          return putResult.future()
+              .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+        });
   }
 
   /**

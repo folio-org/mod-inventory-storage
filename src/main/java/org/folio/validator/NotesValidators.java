@@ -1,20 +1,19 @@
 package org.folio.validator;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
+
 import io.vertx.core.Future;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Note;
-
-import java.util.List;
-import java.util.Locale;
-import java.util.function.Function;
-
-import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 public final class NotesValidators {
   public static final int MAX_NOTE_LENGTH = 32000;

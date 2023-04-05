@@ -38,7 +38,11 @@ import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -636,25 +640,25 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(instanceId2));
 
     var h1 = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId1)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withHrid("1234")).getJson();
+        .forInstance(instanceId1)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("1234")).getJson();
     var h2 = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId1)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withHrid("21234")).getJson();
+        .forInstance(instanceId1)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("21234")).getJson();
     var h3 = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withHrid("12")).getJson();
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("12")).getJson();
     var h4 = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withHrid("3123")).getJson();
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("3123")).getJson();
     var h5 = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withHrid("123")).getJson();
+        .forInstance(instanceId2)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withHrid("123")).getJson();
 
     var response = getClient().delete(holdingsStorageUrl("?query=hrid==12*"), TENANT_ID).get(10, SECONDS);
 
@@ -755,7 +759,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(holding).getStatusCode(), is(409));
     // this allow should not apply to single holding PUT, only to batch unsafe
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
     holding.put("_version", -1);
     assertThat(update(holding).getStatusCode(), is(409));
   }
@@ -771,10 +775,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setHoldingsSequence(1);
 
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+    .withId(holdingId)
+    .forInstance(instanceId)
+    .withPermanentLocation(mainLibraryLocationId)
+    .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
     assertThat(holding.getString("effectiveLocationId"), is(mainLibraryLocationId.toString()));
 
@@ -900,10 +904,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumberSuffix", suffix);
     itemToCreate.put("itemLevelCallNumberPrefix", prefix);
     itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
-    itemToCreate.put("volume", volume);
-    itemToCreate.put("enumeration", enumeration);
-    itemToCreate.put("chronology", chronology);
-    itemToCreate.put("copyNumber", copy);
+    itemToCreate.put("volume",volume);
+    itemToCreate.put("enumeration",enumeration);
+    itemToCreate.put("chronology",chronology);
+    itemToCreate.put("copyNumber",copy);
 
     Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
     Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
@@ -969,8 +973,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumber()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1057,7 +1061,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+      throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1123,7 +1127,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
-    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+      throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1188,10 +1192,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @SneakyThrows
   public void creatingHoldingsLimitAdministrativeNoteMaximumLength()
-    throws MalformedURLException, ExecutionException,
-    InterruptedException, TimeoutException {
+      throws  ExecutionException, InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1200,11 +1202,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingId = UUID.randomUUID();
 
     final JsonObject invalidHolding = new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withAdministrativeNotes(Arrays.asList("x".repeat(MAX_NOTE_LENGTH + 1)))
-      .create();
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withAdministrativeNotes(Arrays.asList("x".repeat(MAX_NOTE_LENGTH + 1)))
+        .create();
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1216,10 +1218,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @SneakyThrows
   public void creatingHoldingsLimitNoteMaximumLength()
-    throws MalformedURLException, ExecutionException,
-    InterruptedException, TimeoutException {
+      throws ExecutionException, InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1228,10 +1228,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingId = UUID.randomUUID();
 
     final JsonObject invalidHolding = new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .create();
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .create();
 
     invalidHolding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
 
@@ -1245,10 +1245,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @SneakyThrows
   public void updatingHoldingsLimitAdministrativeNoteMaximumLength()
-    throws MalformedURLException, ExecutionException,
-    InterruptedException, TimeoutException {
+      throws ExecutionException, InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
     UUID holdingId = UUID.randomUUID();
@@ -1258,9 +1256,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setHoldingsSequence(1);
 
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)).getJson();
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)).getJson();
 
     holding.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
     Response response = update(holdingsUrl, holding);
@@ -1269,10 +1267,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  @SneakyThrows
   public void updatingHoldingsLimitNoteMaximumLength()
-    throws MalformedURLException, ExecutionException,
-    InterruptedException, TimeoutException {
+      throws ExecutionException, InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
     UUID holdingId = UUID.randomUUID();
@@ -1282,16 +1278,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setHoldingsSequence(1);
 
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)).getJson();
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)).getJson();
 
     holding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
     Response response = update(holdingsUrl, holding);
 
     assertThat(response.getStatusCode(), is(422));
   }
-
 
   @Test
   public void updatingHoldingsDoesNotUpdateItemsOnAnotherHoldings()
@@ -1500,7 +1495,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+      throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1566,7 +1561,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
-    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+      throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1632,8 +1627,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefix()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+      throws MalformedURLException, InterruptedException,
+      ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1721,7 +1716,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
-    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+      throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1787,7 +1782,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
-    throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
+      throws MalformedURLException, InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1877,10 +1872,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAHoldingsWhenHRIDIsSupplied()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
     log.info("Starting canCreateAHoldingsWhenHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1913,10 +1908,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
     log.info("Starting cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1944,12 +1939,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holdingsFromGet.getString("hrid"), is("ho00000000001"));
 
     final JsonObject duplicateHoldings = new HoldingRequestBuilder()
-      .withId(UUID.randomUUID())
-      .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
-      .withHrid("ho00000000001")
-      .create();
+        .withId(UUID.randomUUID())
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+        .withHrid("ho00000000001")
+        .create();
 
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
 
@@ -1962,14 +1957,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors().size(), is(1));
     assertThat(errors.getErrors().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getMessage(),
-      containsString("value already exists in table holdings_record: ho00000000001"));
+        containsString("value already exists in table holdings_record: ho00000000001"));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().size(), is(1));
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+        is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
-      is("ho00000000001"));
+        is("ho00000000001"));
 
     log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
   }
@@ -2050,10 +2045,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotChangeHRIDAfterCreation()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
     log.info("Starting cannotChangeHRIDAfterCreation");
 
     final UUID instanceId = UUID.randomUUID();
@@ -2076,23 +2071,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
 
     getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
-      text(updateCompleted));
+        text(updateCompleted));
 
     final Response response = updateCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-      is("The hrid field cannot be changed: new=ABC123, old=ho00000000001"));
+        is("The hrid field cannot be changed: new=ABC123, old=ho00000000001"));
 
     log.info("Finished cannotChangeHRIDAfterCreation");
   }
 
   @Test
   public void cannotRemoveHRIDAfterCreation()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+      throws MalformedURLException,
+      InterruptedException,
+      ExecutionException,
+      TimeoutException {
     log.info("Starting cannotRemoveHRIDAfterCreation");
 
     final UUID instanceId = UUID.randomUUID();
@@ -2115,13 +2110,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
 
     getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
-      text(updateCompleted));
+        text(updateCompleted));
 
     final Response response = updateCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-      is("The hrid field cannot be changed: new=null, old=ho00000000001"));
+        is("The hrid field cannot be changed: new=null, old=ho00000000001"));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -2172,15 +2167,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
 
     holdingsArray.stream()
-      .map(o -> (JsonObject) o)
-      .forEach(holdings -> {
-        final Response response = getById(holdings.getString("id"));
-        assertExists(response, holdings);
-        assertHRIDRange(response, "ho00000000001", "ho00000000003");
-        JsonObject body = response.getJson();
-        assertEquals(body.getString("effectiveLocationId"), body.getString("permanentLocationId"));
+        .map(o -> (JsonObject) o)
+        .forEach(holdings -> {
+          final Response response = getById(holdings.getString("id"));
+          assertExists(response, holdings);
+          assertHRIDRange(response, "ho00000000001", "ho00000000003");
+          JsonObject body = response.getJson();
+          assertEquals(body.getString("effectiveLocationId"), body.getString("permanentLocationId"));
 
-      });
+        });
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
   }
@@ -2224,9 +2219,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsArray.getJsonObject(1).put("hrid", duplicateHRID);
 
     assertThat(postSynchronousBatch(holdingsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
-      errorParametersValueIs(duplicateHRID)));
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
+        errorParametersValueIs(duplicateHRID)));
 
     for (int i = 0; i < holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
@@ -2332,9 +2327,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canFilterByInstanceProperty() {
     IndividualResource instancePlanet = instancesClient
-      .create(smallAngryPlanet(UUID.randomUUID()));
+        .create(smallAngryPlanet(UUID.randomUUID()));
     IndividualResource instanceUprooted = instancesClient
-      .create(uprooted(UUID.randomUUID()));
+        .create(uprooted(UUID.randomUUID()));
     UUID holdingPlanet = createHolding(instancePlanet.getId(), mainLibraryLocationId, null);
     UUID holdingUprooted = createHolding(instanceUprooted.getId(), mainLibraryLocationId, null);
 
@@ -2349,7 +2344,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private void setHoldingsSequence(long sequenceNumber) {
     final PostgresClient postgresClient =
-      PostgresClient.getInstance(getVertx(), TENANT_ID);
+        PostgresClient.getInstance(getVertx(), TENANT_ID);
     final CompletableFuture<Void> sequenceSet = new CompletableFuture<>();
 
     getVertx().runOnContext(v ->
@@ -2375,14 +2370,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
    */
   private JsonArray threeHoldings() {
     JsonArray holdingsArray = new JsonArray();
-    for (int i = 0; i < 3; i++) {
+    for (int i=0; i<3; i++) {
       UUID instanceId = UUID.randomUUID();
       instancesClient.create(smallAngryPlanet(instanceId));
       holdingsArray.add(new JsonObject()
-        .put("id", UUID.randomUUID().toString())
-        .put("instanceId", instanceId.toString())
-        .put("_version", 1)
-        .put("permanentLocationId", mainLibraryLocationId.toString()));
+          .put("id", UUID.randomUUID().toString())
+          .put("instanceId", instanceId.toString())
+          .put("_version", 1)
+          .put("permanentLocationId", mainLibraryLocationId.toString()));
     }
     return holdingsArray;
   }
@@ -2420,7 +2415,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatchUnsafe() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+        Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
     // insert
     JsonArray holdings = threeHoldings();
@@ -2452,11 +2447,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String duplicateId = holdingsArray.getJsonObject(0).getString("id");
     holdingsArray.getJsonObject(1).put("id", duplicateId);
     assertThat(postSynchronousBatch(holdingsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
-      errorParametersValueIs(duplicateId)));
+        statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
+        anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
+        errorParametersValueIs(duplicateId)));
 
-    for (int i = 0; i < holdingsArray.size(); i++) {
+    for (int i=0; i<holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
     }
   }
@@ -2788,7 +2783,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertNotExists(JsonObject holding) {
     try {
       Response response = getClient().get(holdingsStorageUrl("/" + holding.getString("id")), TENANT_ID)
-        .get(10, SECONDS);
+          .get(10, SECONDS);
       assertThat(response, statusCodeIs(HttpStatus.HTTP_NOT_FOUND));
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
@@ -2797,7 +2792,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private void assertHRIDRange(Response response, String minHRID, String maxHRID) {
     assertThat(response.getJson().getString("hrid"),
-      is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
+        is(both(greaterThanOrEqualTo(minHRID)).and(lessThanOrEqualTo(maxHRID))));
   }
 
   private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
@@ -2823,7 +2818,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     return holdingsClient
       .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR callNumber==\"%1$s\"",
-        searchTerm)
+      searchTerm)
       .stream()
       .map(IndividualResource::getId)
       .collect(Collectors.toList());

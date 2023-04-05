@@ -71,7 +71,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstancesBatchResponse;
+import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.model.NatureOfContentTerm;
+import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.Publication;
+import org.folio.rest.jaxrs.model.PublicationPeriod;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -321,7 +328,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingInstanceLimitNoteMaximumLength() throws Exception{
+  public void creatingInstanceLimitNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
@@ -329,7 +336,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     getClient().post(instancesStorageUrl(""), instanceToCreate,
-      TENANT_ID, json(createCompleted));
+        TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
 
@@ -337,7 +344,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingInstanceLimitAdministrativeNoteMaximumLength() throws Exception{
+  public void creatingInstanceLimitAdministrativeNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
@@ -345,7 +352,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     getClient().post(instancesStorageUrl(""), instanceToCreate,
-      TENANT_ID, json(createCompleted));
+        TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
 
@@ -353,7 +360,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingInstanceLimitAdministrativeNoteMaximumLength() throws Exception {
+  public void updatingInstanceLimitAdministrativeNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
     UUID id = UUID.randomUUID();
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
@@ -362,7 +369,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingInstanceLimitNoteMaximumLength() throws Exception {
+  public void updatingInstanceLimitNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
     UUID id = UUID.randomUUID();
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();

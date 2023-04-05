@@ -16,7 +16,9 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
-import static org.folio.rest.support.http.InterfaceUrls.*;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.util.StringUtil.urlEncode;
@@ -65,7 +67,11 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Items;
+import org.folio.rest.jaxrs.model.LastCheckIn;
+import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -716,7 +722,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingItemLimitNoteMaximumLength() throws Exception{
+  public void creatingItemLimitNoteMaximumLength() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", UUID.randomUUID().toString());
@@ -729,7 +735,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      ResponseHandler.json(createCompleted));
+        ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
 
@@ -737,7 +743,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingItemLimitAdministrativeNoteMaximumLength() throws Exception{
+  public void creatingItemLimitAdministrativeNoteMaximumLength() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", UUID.randomUUID().toString());
@@ -750,7 +756,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      ResponseHandler.json(createCompleted));
+        ResponseHandler.json(createCompleted));
 
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
 
@@ -758,7 +764,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingItemLimitAdministrativeNoteMaximumLength() throws Exception {
+  public void updatingItemLimitAdministrativeNoteMaximumLength() throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     JsonObject itemToCreate = new JsonObject();
@@ -776,14 +782,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
-      ResponseHandler.text(completed));
+        ResponseHandler.text(completed));
     Response response = completed.get(10, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(500));
   }
 
   @Test
-  public void updatingItemLimitNoteMaximumLength() throws Exception {
+  public void updatingItemLimitNoteMaximumLength() {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
     final UUID id = UUID.randomUUID();
 

@@ -142,8 +142,8 @@ public class HoldingsService {
   public Future<Response> deleteHoldings(String cql) {
     if (StringUtils.isBlank(cql)) {
       return Future.succeededFuture(
-        DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
-          "Expected CQL but query parameter is empty"));
+          DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
+              "Expected CQL but query parameter is empty"));
     }
     if (new CqlQuery(cql).isMatchingAll()) {
       return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
@@ -151,12 +151,12 @@ public class HoldingsService {
     // do not add curly braces for readability, this is to comply with
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return holdingsRepository.delete(cql)
-      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
-        )
-      ))
-      .map(Response.noContent().build());
+        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+          rowSet.iterator().forEachRemaining(row ->
+            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+          )
+        ))
+        .map(Response.noContent().build());
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
@@ -169,8 +169,8 @@ public class HoldingsService {
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
-        okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+          okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
