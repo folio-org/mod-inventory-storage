@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_
                                                                                      deletedRecordSupport               bool DEFAULT TRUE,
                                                                                      skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE,
                                                                                      onlyInstanceUpdateDate             bool DEFAULT TRUE,
-                                                                                     source                             varchar DEFAULT '')
+                                                                                     source                             varchar DEFAULT NULL)
     RETURNS TABLE
             (
                 "instanceId"            uuid,
