@@ -21,6 +21,7 @@ import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
+import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -39,6 +40,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
@@ -56,6 +58,7 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.NotesValidators;
 
 public class ItemService {
   private static final Logger log = getLogger(ItemService.class);
@@ -92,30 +95,32 @@ public class ItemService {
     entity.getStatus().setDate(new Date());
 
     return hridManager.populateHrid(entity)
-      .compose(effectiveValuesService::populateEffectiveValues)
-      .compose(item -> {
-        final Promise<Response> postResponse = promise();
+        .compose(NotesValidators::refuseLongNotes)
+        .compose(effectiveValuesService::populateEffectiveValues)
+        .compose(item -> {
+          final Promise<Response> postResponse = promise();
 
-        post(ITEM_TABLE, item, okapiHeaders, vertxContext,
-          PostItemStorageItemsResponse.class, postResponse);
+          post(ITEM_TABLE, item, okapiHeaders, vertxContext,
+              PostItemStorageItemsResponse.class, postResponse);
 
-        return postResponse.future()
-          .onSuccess(domainEventService.publishCreated());
-      });
+          return postResponse.future()
+              .onSuccess(domainEventService.publishCreated());
+        });
   }
 
   public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {
     final Date itemStatusDate = new java.util.Date();
     items.stream()
-      .filter(item -> item.getStatus().getDate() == null)
-      .forEach(item -> item.getStatus().setDate(itemStatusDate));
+        .filter(item -> item.getStatus().getDate() == null)
+        .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
     return hridManager.populateHridForItems(items)
-      .compose(result -> effectiveValuesService.populateEffectiveValues(items))
-      .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
-      .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
-          okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
+        .compose(NotesValidators::refuseItemLongNotes)
+        .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+        .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
+        .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
+            okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
+            .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
   }
 
   public Future<Response> updateItems(List<Item> items) {
@@ -125,33 +130,34 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
-      .onSuccess(putData::set)
-      .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
-      .compose(x -> {
-        if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
-          return Future.succeededFuture(putData.newHoldings);
-        }
-        return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
-      })
-      .compose(oldHoldings -> {
-        putData.oldHoldings = oldHoldings;
-        effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        return updateItem(newItem);
-      })
-      .onSuccess(finalItem ->
-        domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-      .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
-      .otherwise(e -> {
-        if (e instanceof ResponseException) {
-          return ((ResponseException) e).getResponse();
-        }
-        if (e instanceof BadRequestException) {
-          return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
-        }
-        log.error(e.getMessage(), e);
-        return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
-      });
+    return refuseLongNotes(newItem)
+        .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
+        .onSuccess(putData::set)
+        .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
+        .compose(x -> {
+          if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
+            return Future.succeededFuture(putData.newHoldings);
+          }
+          return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
+        })
+        .compose(oldHoldings -> {
+          putData.oldHoldings = oldHoldings;
+          effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
+          return updateItem(newItem);
+        })
+        .onSuccess(finalItem ->
+            domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
+        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
+        .otherwise(e -> {
+          if (e instanceof ResponseException) {
+            return ((ResponseException) e).getResponse();
+          }
+          if (e instanceof BadRequestException) {
+            return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
+          }
+          log.error(e.getMessage(), e);
+          return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
+        });
   }
 
   public Future<Response> deleteItem(String itemId) {

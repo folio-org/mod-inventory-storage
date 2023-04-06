@@ -21,9 +21,11 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
@@ -37,6 +39,7 @@ import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.ItemService;
 import org.folio.validator.CommonValidators;
+import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
@@ -86,6 +89,7 @@ public class HoldingsService {
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
     return hridManager.populateHrid(entity)
+      .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
         final Promise<Response> postResponse = promise();
 
@@ -105,6 +109,7 @@ public class HoldingsService {
     }
 
     return refuseWhenHridChanged(oldHoldings, newHoldings)
+      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
 
@@ -160,6 +165,7 @@ public class HoldingsService {
     }
 
     return hridManager.populateHridForHoldings(holdings)
+      .compose(NotesValidators::refuseHoldingLongNotes)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
