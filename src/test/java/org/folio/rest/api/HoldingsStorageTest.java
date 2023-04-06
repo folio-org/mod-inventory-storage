@@ -33,10 +33,12 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +56,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -1189,9 +1192,106 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void creatingHoldingsLimitAdministrativeNoteMaximumLength()
+      throws  ExecutionException, InterruptedException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    final JsonObject invalidHolding = new HoldingRequestBuilder()
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .withAdministrativeNotes(Arrays.asList("x".repeat(MAX_NOTE_LENGTH + 1)))
+        .create();
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(holdingsStorageUrl(""), invalidHolding, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    final Response response = createCompleted.get(10, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void creatingHoldingsLimitNoteMaximumLength()
+      throws ExecutionException, InterruptedException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    final JsonObject invalidHolding = new HoldingRequestBuilder()
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)
+        .create();
+
+    invalidHolding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(holdingsStorageUrl(""), invalidHolding, TENANT_ID, ResponseHandler.json(createCompleted));
+
+    final Response response = createCompleted.get(10, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingHoldingsLimitAdministrativeNoteMaximumLength()
+      throws ExecutionException, InterruptedException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+    UUID holdingId = UUID.randomUUID();
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+    setHoldingsSequence(1);
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)).getJson();
+
+    holding.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
+    Response response = update(holdingsUrl, holding);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingHoldingsLimitNoteMaximumLength()
+      throws ExecutionException, InterruptedException, TimeoutException {
+
+    UUID instanceId = UUID.randomUUID();
+    UUID holdingId = UUID.randomUUID();
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+    setHoldingsSequence(1);
+
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+        .withId(holdingId)
+        .forInstance(instanceId)
+        .withPermanentLocation(mainLibraryLocationId)).getJson();
+
+    holding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    Response response = update(holdingsUrl, holding);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
   public void updatingHoldingsDoesNotUpdateItemsOnAnotherHoldings()
-      throws MalformedURLException, ExecutionException,
-      InterruptedException, TimeoutException {
+    throws MalformedURLException, ExecutionException,
+    InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1307,8 +1407,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix()
-      throws MalformedURLException, InterruptedException,
-      ExecutionException, TimeoutException {
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 

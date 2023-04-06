@@ -24,6 +24,7 @@ import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -75,6 +76,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
+import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.PublicationPeriod;
 import org.folio.rest.persist.PgUtil;
@@ -323,6 +325,56 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
     assertGetNotFound(url);
+  }
+
+  @Test
+  public void creatingInstanceLimitNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate,
+        TENANT_ID, json(createCompleted));
+
+    Response response = createCompleted.get(2, SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void creatingInstanceLimitAdministrativeNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate,
+        TENANT_ID, json(createCompleted));
+
+    Response response = createCompleted.get(2, SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingInstanceLimitAdministrativeNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
+    UUID id = UUID.randomUUID();
+    createInstance(smallAngryPlanet(id));
+    JsonObject instance = getById(id).getJson();
+    instance.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
+    assertThat(update(instance).getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingInstanceLimitNoteMaximumLength() throws ExecutionException, InterruptedException, TimeoutException {
+    UUID id = UUID.randomUUID();
+    createInstance(smallAngryPlanet(id));
+    JsonObject instance = getById(id).getJson();
+    instance.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    assertThat(update(instance).getStatusCode(), is(422));
   }
 
   @Test
