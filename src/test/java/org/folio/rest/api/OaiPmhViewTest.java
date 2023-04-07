@@ -151,6 +151,58 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     assertThat(data.size(), is(0));
   }
 
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var dateTimeOfItemsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    var instances = instancesClient.getAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
+    var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
+    var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    holdingsClient.delete(holdingUUID);
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var dateTimeOfItemsAndHoldingsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    holdingsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = requestOaiPmhViewUpdatedInstanceIds(params);
+    assertThat(data.size(), is(1));
+  }
+
   private List<JsonObject> getOiaPmhViewInstances(Map<String, String> queryParams)
       throws InterruptedException, ExecutionException, TimeoutException {
     return getOiaPmhViewInstances(queryParams, response -> {
