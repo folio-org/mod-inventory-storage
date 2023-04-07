@@ -358,6 +358,63 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       ));
   }
 
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    Thread.sleep(5000); // To make sure the last updated date for instance
+    // is before the date of item deletion for more than 2 seconds.
+    var dateTimeOfItemsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
+    var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
+    Thread.sleep(5000); // To make sure the last updated date for instance
+    // is before the date of holding deletion for more than 2 seconds.
+    var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    holdingsClient.delete(holdingUUID);
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    Thread.sleep(5000); // To make sure the last updated date for instance
+    // is before the date of item and holding deletion for more than 2 seconds.
+    var dateTimeOfItemsAndHoldingsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    holdingsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
   /**
    * The decode exception is thrown when we try to parse the response, but the only relevant thing is the correct response status of
    * 400.
