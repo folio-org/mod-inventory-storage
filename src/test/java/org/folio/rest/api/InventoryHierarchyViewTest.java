@@ -361,7 +361,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
     // given
-    Thread.sleep(5000); // To make sure the last updated date for instance
+    TimeUnit.SECONDS.sleep(5); // To make sure the last updated date for instance
     // is before the date of item deletion for more than 2 seconds.
     var dateTimeOfItemsDeletion = LocalDateTime.now(ZoneOffset.UTC);
     itemsClient.deleteAll();
@@ -381,7 +381,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // given
     var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
     var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
-    Thread.sleep(5000); // To make sure the last updated date for instance
+    TimeUnit.SECONDS.sleep(5); // To make sure the last updated date for instance
     // is before the date of holding deletion for more than 2 seconds.
     var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
     holdingsClient.delete(holdingUUID);
@@ -399,7 +399,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
     // given
-    Thread.sleep(5000); // To make sure the last updated date for instance
+    TimeUnit.SECONDS.sleep(5); // To make sure the last updated date for instance
     // is before the date of item and holding deletion for more than 2 seconds.
     var dateTimeOfItemsAndHoldingsDeletion = LocalDateTime.now(ZoneOffset.UTC);
     itemsClient.deleteAll();
