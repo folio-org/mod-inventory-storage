@@ -286,7 +286,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instanceToCreate = new JsonObject();
 
     instanceToCreate.put("id", id);
-    instanceToCreate.put("source", "MARC");
+    instanceToCreate.put("source", "TEST");
     instanceToCreate.put("title", "Long Way to a Small Angry Planet");
     instanceToCreate.put("identifiers", identifiers);
     instanceToCreate.put("contributors", contributors);

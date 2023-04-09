@@ -326,7 +326,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
       JsonArray langs = new JsonArray();
       langs.add(new String("eng"));
 
-      JsonObject jsonb = createInstanceRequest(uuid, "MARC", "Moon #" + i,
+      JsonObject jsonb = createInstanceRequest(uuid, "TEST", "Moon #" + i,
         identifiers, contributors, UUID_INSTANCE_TYPE, tags, hrid, langs);
       moons.put(id, jsonb);
     }

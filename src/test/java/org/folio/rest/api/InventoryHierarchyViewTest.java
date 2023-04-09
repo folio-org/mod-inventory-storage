@@ -202,7 +202,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // one instance, 1 holding, 2 items
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
-    params.put("source", "MARC");
+    params.put("source", "TEST");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
     verifyInstancesDataWithoutParameters(instancesData);
@@ -270,7 +270,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void testFilterByDatesWithSource() throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
-    params.put("source", "MARC");
+    params.put("source", "TEST");
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -307,7 +307,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.size(), is(1));
+    assertThat(instancesData.size(), is(0));
   }
 
   /**
@@ -321,7 +321,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .withDiscoverySuppress(true));
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
-    params.put("source", "MARC");
+    params.put("source", "TEST");
     List<JsonObject> data = getInventoryHierarchyInstances(params);
     // then
     assertThat(data.get(0), allOf(

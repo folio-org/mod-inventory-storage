@@ -205,7 +205,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static JsonObject instance(UUID id) {
     return createInstanceRequest(
       id,
-      "MARC",
+      "TEST",
       "Long Way to a Small Angry Planet",
       new JsonArray().add(identifier(UUID_ISBN, "9781473619777")),
       new JsonArray().add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky")),

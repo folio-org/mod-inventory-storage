@@ -355,7 +355,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   private IndividualResource createInstance(String title) {
-    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "MARC",
+    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "TEST",
       title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
 
     return instancesClient.create(instanceRequest);

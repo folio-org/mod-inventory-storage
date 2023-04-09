@@ -198,7 +198,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
     JsonArray tags = new JsonArray();
 
-    return createInstanceRequest(id, "MARC", "Long Way to a Small Angry Planet",
+    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
