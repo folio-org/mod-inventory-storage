@@ -1269,7 +1269,7 @@
     },
     {
       "id": "inventory-hierarchy",
-      "version": "0.2",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],

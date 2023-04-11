@@ -285,7 +285,7 @@ CREATE FUNCTION lotus_mod_inventory_storage.authority_set_ol_version() RETURNS t
         IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
             RAISE 'Cannot update record % because it has been changed (optimistic locking): '
                 'Stored _version is %, _version of request is %',
-                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version' 
+                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
                 USING ERRCODE = '23F09', TABLE = 'authority', SCHEMA = 'lotus_mod_inventory_storage';
         END IF;
         NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
@@ -1197,7 +1197,7 @@ CREATE FUNCTION lotus_mod_inventory_storage.holdings_record_set_ol_version() RET
         IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
             RAISE 'Cannot update record % because it has been changed (optimistic locking): '
                 'Stored _version is %, _version of request is %',
-                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version' 
+                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
                 USING ERRCODE = '23F09', TABLE = 'holdings_record', SCHEMA = 'lotus_mod_inventory_storage';
         END IF;
         NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
@@ -1505,7 +1505,7 @@ CREATE FUNCTION lotus_mod_inventory_storage.instance_set_ol_version() RETURNS tr
         IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
             RAISE 'Cannot update record % because it has been changed (optimistic locking): '
                 'Stored _version is %, _version of request is %',
-                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version' 
+                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
                 USING ERRCODE = '23F09', TABLE = 'instance', SCHEMA = 'lotus_mod_inventory_storage';
         END IF;
         NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
@@ -1708,7 +1708,7 @@ CREATE FUNCTION lotus_mod_inventory_storage.item_set_ol_version() RETURNS trigge
         IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
             RAISE 'Cannot update record % because it has been changed (optimistic locking): '
                 'Stored _version is %, _version of request is %',
-                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version' 
+                OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
                 USING ERRCODE = '23F09', TABLE = 'item', SCHEMA = 'lotus_mod_inventory_storage';
         END IF;
         NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
