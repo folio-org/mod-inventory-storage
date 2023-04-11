@@ -4,7 +4,8 @@ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_updated_instance_ids_
                                                                                      endDate                            timestamptz,
                                                                                      deletedRecordSupport               bool DEFAULT TRUE,
                                                                                      skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE,
-                                                                                     onlyInstanceUpdateDate             bool DEFAULT TRUE)
+                                                                                     onlyInstanceUpdateDate             bool DEFAULT TRUE,
+                                                                                     source                             varchar DEFAULT NULL)
     RETURNS TABLE
             (
                 "instanceId"            uuid,
@@ -18,7 +19,8 @@ $BODY$
 WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                     (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) AS maxDate
                              FROM ${myuniversity}_${mymodule}.instance inst
-                             WHERE (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
+                             WHERE ($6 IS NULL OR inst.jsonb ->> 'source' = $6)
+                             AND (strToTimestamp(inst.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2)
 
                              UNION ALL
                              SELECT instanceid, MAX(maxdate) as maxdate
