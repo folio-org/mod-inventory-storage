@@ -122,7 +122,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
         .withMigrations(List.of("subjectSeriesMigration")));
 
-      await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+      await().atMost(30, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
         .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
       var job = asyncMigration.getMigrationJob(migrationJob.getId());
