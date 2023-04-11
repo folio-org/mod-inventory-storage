@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import org.awaitility.Awaitility;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -341,6 +342,76 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
         hasAggregatedNumberOfItems(3),
         hasEffectiveLocationInstitutionNameForItems("Primary Institution")
       ));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of item deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfItemsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
+    var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of holding deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    holdingsClient.delete(holdingUUID);
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of item and holding deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfItemsAndHoldingsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    holdingsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
   }
 
   /**
