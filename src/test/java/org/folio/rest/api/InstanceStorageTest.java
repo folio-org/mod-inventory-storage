@@ -2980,7 +2980,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
 
-    return createInstanceRequest(id, "TEST", "Long Way to a Small Angry Planet",
+    return createInstanceRequest(id, "MARC", "Long Way to a Small Angry Planet",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
@@ -2992,7 +2992,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
 
-    return createInstanceRequest(id, "TEST", "Nod",
+    return createInstanceRequest(id, "MARC", "Nod",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
@@ -3007,7 +3007,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
 
-    return createInstanceRequest(id, "TEST", "Uprooted",
+    return createInstanceRequest(id, "MARC", "Uprooted",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
@@ -3022,7 +3022,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
-    return createInstanceRequest(id, "TEST", "Temeraire",
+    return createInstanceRequest(id, "MARC", "Temeraire",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 
@@ -3037,7 +3037,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonArray tags = new JsonArray();
     tags.add("test-tag");
-    return createInstanceRequest(id, "TEST", "Interesting Times",
+    return createInstanceRequest(id, "MARC", "Interesting Times",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
   }
 

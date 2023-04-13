@@ -1093,6 +1093,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSource.sql",
+      "fromModuleVersion": "26.0.1"
+    },
+        {
+      "run": "after",
       "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsViewToSupportDeletion.sql",
       "fromModuleVersion": "26.0.1"
     }
