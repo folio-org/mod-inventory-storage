@@ -1,6 +1,8 @@
 package org.folio.rest.api;
 
 import org.awaitility.Awaitility;
+
+import static java.util.Optional.empty;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -65,6 +67,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -280,6 +283,9 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     verifyInstancesDataFilteredBySource(instancesData);
+
+    params.put("source", "FAKE_SOURCE");
+    assertThat(getInventoryHierarchyInstances(params).size(), is(0));
   }
 
   @Test
