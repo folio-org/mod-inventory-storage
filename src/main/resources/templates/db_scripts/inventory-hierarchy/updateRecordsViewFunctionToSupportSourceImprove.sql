@@ -38,15 +38,31 @@ WITH instanceIdsInRange AS ( SELECT inst.id AS instanceId,
                                     GROUP BY instanceid
                              UNION ALL
                              SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
-                                    greatest((strToTimestamp(audit_item.jsonb -> 'record' ->> 'updatedDate')),
-                                             (strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate'))) AS maxDate
+                                    greatest((strToTimestamp(audit_item.jsonb ->> 'createdDate')),
+                                             (strToTimestamp(audit_holdings_record.jsonb ->> 'createdDate'))) AS maxDate
                              FROM ${myuniversity}_${mymodule}.audit_holdings_record audit_holdings_record
                                       JOIN ${myuniversity}_${mymodule}.audit_item audit_item
                                            ON (audit_item.jsonb ->> '{record,holdingsRecordId}')::uuid =
-                                              audit_holdings_record.id
-                             WHERE ((strToTimestamp(audit_holdings_record.jsonb -> 'record' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
-                                    (strToTimestamp(audit_item.jsonb #>> '{record,updatedDate}')) BETWEEN dateOrMin($1) AND dateOrMax($2))
-                                    AND NOT EXISTS (SELECT NULL WHERE $5) )
+                                              (audit_holdings_record.jsonb ->> '{record,id}')::uuid
+                             WHERE ((strToTimestamp(audit_holdings_record.jsonb ->> 'createdDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
+                                    (strToTimestamp(audit_item.jsonb ->> 'createdDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
+                                    AND NOT EXISTS (SELECT NULL WHERE $5)
+                             UNION ALL -- case when only item was deleted
+            						     SELECT hold_rec.instanceId,
+                                    greatest((strToTimestamp(audit_item.jsonb ->> 'createdDate')),
+                                             (strToTimestamp(hold_rec.jsonb -> 'metadata' ->> 'updatedDate'))) AS maxDate
+                             FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
+                                      JOIN ${myuniversity}_${mymodule}.audit_item audit_item
+                                          ON (audit_item.jsonb -> 'record' ->> 'holdingsRecordId')::uuid = hold_rec.id
+                             WHERE ((strToTimestamp(hold_rec.jsonb -> 'metadata' ->> 'updatedDate')) BETWEEN dateOrMin($1) AND dateOrMax($2) OR
+                                    (strToTimestamp(audit_item.jsonb ->> 'createdDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
+                                    AND NOT EXISTS (SELECT NULL WHERE $5)
+            						     UNION ALL -- case when only holding was deleted
+            						     SELECT (audit_holdings_record.jsonb #>> '{record,instanceId}')::uuid,
+                                     strToTimestamp(audit_holdings_record.jsonb ->> 'createdDate') AS maxDate
+                             FROM ${myuniversity}_${mymodule}.audit_holdings_record audit_holdings_record
+                             WHERE ((strToTimestamp(audit_holdings_record.jsonb ->> 'createdDate')) BETWEEN dateOrMin($1) AND dateOrMax($2))
+                                     AND NOT EXISTS (SELECT NULL WHERE $5) )
 SELECT instanceId,
        instance.jsonb ->> 'source' AS source,
        MAX(instanceIdsInRange.maxDate) AS maxDate,
