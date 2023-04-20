@@ -1090,6 +1090,21 @@
       "run": "after",
       "snippetPath": "convertSeriesAndSubjects.sql",
       "fromModuleVersion": "26.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSource.sql",
+      "fromModuleVersion": "26.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsViewToSupportDeletion.sql",
+      "fromModuleVersion": "26.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceImprove.sql",
+      "fromModuleVersion": "26.0.1"
     }
   ]
 }

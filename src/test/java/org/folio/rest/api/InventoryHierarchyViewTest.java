@@ -1,5 +1,8 @@
 package org.folio.rest.api;
 
+import org.awaitility.Awaitility;
+
+import static java.util.Optional.empty;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -64,6 +67,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -186,22 +190,26 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     );
   }
   @Test
-  public void canRequestInventoryHierarchyItemsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyItemsWithoutParametersWithoutSource() throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(
-      instancesData.get(0),
-      allOf(
-        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
-        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
-        hasAggregatedNumberOfItems(2)
-      )
-    );
+    verifyInstancesDataWithoutParameters(instancesData);
+  }
+
+  @Test
+  public void canRequestInventoryHierarchyItemsWithoutParametersWithSource() throws InterruptedException, ExecutionException, TimeoutException {
+    // given
+    // one instance, 1 holding, 2 items
+    // when
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    params.put("source", "TEST");
+    final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    // then
+    verifyInstancesDataWithoutParameters(instancesData);
   }
 
   @Test
@@ -264,7 +272,24 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDates() throws InterruptedException, ExecutionException, TimeoutException {
+  public void testFilterByDatesWithSource() throws InterruptedException, ExecutionException, TimeoutException {
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    params.put("source", "TEST");
+    // given
+    // one instance, 1 holding, 2 items
+    // when
+    LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
+      .toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    verifyInstancesDataFilteredBySource(instancesData);
+
+    params.put("source", "FAKE_SOURCE");
+    assertThat(getInventoryHierarchyInstances(params).size(), is(0));
+  }
+
+  @Test
+  public void testFilterByDatesWithoutSource() throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     // given
     // one instance, 1 holding, 2 items
@@ -273,55 +298,21 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
       .toString());
     List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    verifyInstancesDataFilteredBySource(instancesData);
+  }
 
+  @Test
+  public void testFilterByDatesWithNonExistingSource() throws InterruptedException, ExecutionException, TimeoutException {
+    params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
+    // In case of invalid source parameter it will be used as null, i.e. all the records will be returned.
+    params.put("source", "invalid");
+    // given
+    // one instance, 1 holding, 2 items
     // when
-    LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
-
-    // when
-    startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
+    LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
     params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
       .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.size(), is(0));
-
-    // when
-    endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.size(), is(0));
-
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
-
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2001, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     // then
     assertThat(instancesData.size(), is(0));
   }
@@ -337,6 +328,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .withDiscoverySuppress(true));
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
+    params.put("source", "TEST");
     List<JsonObject> data = getInventoryHierarchyInstances(params);
     // then
     assertThat(data.get(0), allOf(
@@ -356,6 +348,76 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
         hasAggregatedNumberOfItems(3),
         hasEffectiveLocationInstitutionNameForItems("Primary Institution")
       ));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of item deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfItemsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    // given
+    var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
+    var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of holding deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    holdingsClient.delete(holdingUUID);
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
+  }
+
+  @Test
+  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+    var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
+    Awaitility.await().until(() -> {
+      // To make sure the last updated date for instance
+      // is before the date of item and holding deletion for more than 2 seconds.
+      return timeWhenRecordsCreated.plusSeconds(5).isAfter(LocalDateTime.now(ZoneOffset.UTC));
+    });
+    // given
+    var dateTimeOfItemsAndHoldingsDeletion = LocalDateTime.now(ZoneOffset.UTC);
+    itemsClient.deleteAll();
+    holdingsClient.deleteAll();
+    // when
+    params.put("startDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.minusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(dateTimeOfItemsAndHoldingsDeletion.plusSeconds(2), ZoneOffset.UTC)
+      .toString());
+    params.put("onlyInstanceUpdateDate", "false");
+    // then
+    List<JsonObject> data = getInventoryHierarchyInstances(params);
+    assertThat(data.size(), is(1));
   }
 
   /**
@@ -514,5 +576,72 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     }
 
     return results;
+  }
+
+  private static void verifyInstancesDataWithoutParameters(List<JsonObject> instancesData) {
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
+        hasAggregatedNumberOfItems(2)
+      )
+    );
+  }
+
+  private void verifyInstancesDataFilteredBySource(List<JsonObject> instancesData) throws InterruptedException, ExecutionException, TimeoutException {
+    LocalDateTime startDate;
+    // then
+    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+
+    // when
+    LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
+      .toString());
+    instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+
+    // when
+    startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
+      .toString());
+    instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(instancesData.size(), is(0));
+
+    // when
+    endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
+      .toString());
+    instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(instancesData.size(), is(0));
+
+    // when
+    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    endDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
+      .toString());
+    instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+
+    // when
+    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    endDate = LocalDateTime.of(2001, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
+      .toString());
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
+      .toString());
+    instancesData = getInventoryHierarchyInstances(params);
+    // then
+    assertThat(instancesData.size(), is(0));
   }
 }
