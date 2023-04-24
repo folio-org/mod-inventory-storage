@@ -31,12 +31,13 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
     "FROM instance\n" +
     "WHERE (CAST($1 as varchar) IS NULL OR (instance.jsonb ->> 'source')::varchar = $1)";
   private static final String SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART = " UNION ALL\n" +
-    "\tSELECT (jsonb #>> '{record,id}')::uuid            AS \"instanceId\",\n" +
+    "\t(SELECT (jsonb #>> '{record,id}')::uuid            AS \"instanceId\",\n" +
     "        jsonb #>> '{record,source}'                 AS source,\n" +
     "        strToTimestamp(jsonb ->> 'createdDate')     AS \"updatedDate\",\n" +
     "        false                                       AS \"suppressFromDiscovery\",\n" +
     "        true                                        AS deleted\n" +
-    "\tFROM audit_instance";
+    "\tFROM audit_instance" +
+    "\tWHERE (CAST($1 as varchar) IS NULL OR (instance.jsonb ->> 'source')::varchar = $1))";
 
   @Validate
   @Override
