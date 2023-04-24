@@ -47,7 +47,6 @@ import lombok.SneakyThrows;
 import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.AuthorityNoteType;
 import org.folio.rest.api.entities.AuthoritySourceFile;
-import org.folio.rest.api.entities.CallNumberType;
 import org.folio.rest.api.entities.ClassificationType;
 import org.folio.rest.api.entities.ContributorNameType;
 import org.folio.rest.api.entities.ContributorType;
@@ -133,27 +132,6 @@ public class ReferenceTablesTest extends TestBase {
     URL apiUrl = callNumberTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("call number types", searchResponse, 5, 40);
-  }
-
-  @Test
-  public void callNumberTypesBasicCrud()
-
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
-
-    String entityPath = "/call-number-types";
-    CallNumberType entity = new CallNumberType("Test call number type", "test source");
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUUID = postResponse.getJson().getString("id");
-
-    String updateProperty = CallNumberType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
   }
 
   @Test

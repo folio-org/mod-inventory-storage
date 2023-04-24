@@ -58,7 +58,7 @@ public abstract class TestBase {
   protected static ResourceClient itemsClient;
   protected static ResourceClient authoritiesClient;
   static ResourceClient locationsClient;
-  static ResourceClient callNumberTypesClient;
+  protected static ResourceClient callNumberTypesClient;
   static ResourceClient modesOfIssuanceClient;
   static ResourceClient precedingSucceedingTitleClient;
   static ResourceClient instanceRelationshipsClient;
