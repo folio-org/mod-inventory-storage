@@ -37,7 +37,7 @@ public class InventoryHierarchyAPI extends AbstractInstanceRecordsAPI implements
     "        false                                       AS \"suppressFromDiscovery\",\n" +
     "        true                                        AS deleted\n" +
     "\tFROM audit_instance" +
-    "\tWHERE (CAST($1 as varchar) IS NULL OR (instance.jsonb ->> 'source')::varchar = $1))";
+    "\tWHERE (CAST($1 as varchar) IS NULL OR (jsonb ->> 'source')::varchar = $1))";
 
   @Validate
   @Override
