@@ -1105,6 +1105,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceImprove.sql",
       "fromModuleVersion": "26.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceFix.sql",
+      "fromModuleVersion": "26.0.1"
     }
   ]
 }
