@@ -55,7 +55,7 @@ public final class EndpointFailureHandler {
   }
 
   public static Response failureResponse(Throwable error) {
-    log.error("An error occurred", error);
+    log.warn("An error occurred", error);
 
     if (error instanceof BadRequestException || error instanceof CQLQueryValidationException) {
       return textPlainResponse(400, error);

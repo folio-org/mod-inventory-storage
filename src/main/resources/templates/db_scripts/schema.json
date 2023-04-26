@@ -1110,6 +1110,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceFix.sql",
       "fromModuleVersion": "26.0.1"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateCallNumberSource.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }
