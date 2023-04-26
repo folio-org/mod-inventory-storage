@@ -45,7 +45,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
-import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -147,17 +146,7 @@ public class ItemService {
         })
         .onSuccess(finalItem ->
             domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
-        .otherwise(e -> {
-          if (e instanceof ResponseException) {
-            return ((ResponseException) e).getResponse();
-          }
-          if (e instanceof BadRequestException) {
-            return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
-          }
-          log.error(e.getMessage(), e);
-          return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
-        });
+        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204());
   }
 
   public Future<Response> deleteItem(String itemId) {
