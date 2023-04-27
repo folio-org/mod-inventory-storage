@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
+import org.folio.rest.impl.CallNumberTypeAPITest;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
@@ -37,6 +38,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  CallNumberTypeAPITest.class,
   AsyncMigrationTest.class,
   PublicationPeriodMigrationTest.class,
   CallNumberUtilsTest.class,
