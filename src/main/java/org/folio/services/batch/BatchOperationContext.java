@@ -4,7 +4,7 @@ import static java.util.Collections.unmodifiableCollection;
 
 import java.util.Collection;
 
-public final class BatchOperationContext<T>{
+public final class BatchOperationContext<T> {
   private final Collection<T> recordsToBeCreated;
   /**
    * Existing records from database, without update.

@@ -25,8 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
-  private final static String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
-  final static String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
+  static final String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
+  private static final String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
 
   @SneakyThrows
   @Before
@@ -51,28 +51,28 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createRelationshipCompleted = new CompletableFuture<>();
 
     InstanceRelationship instanceRelationshipRequestObject = new InstanceRelationship(
-            instance1Response.getString(Instance.ID_KEY),
-            instance2Response.getString(Instance.ID_KEY),
-            INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
+      instance1Response.getString(Instance.ID_KEY),
+      instance2Response.getString(Instance.ID_KEY),
+      INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
     getClient().post(
-            instanceRelationshipsUrl(""),
-            instanceRelationshipRequestObject.getJson(),
-            TENANT_ID,
-            ResponseHandler.json(createRelationshipCompleted)
+      instanceRelationshipsUrl(""),
+      instanceRelationshipRequestObject.getJson(),
+      TENANT_ID,
+      ResponseHandler.json(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     CompletableFuture<Response> createRelationshipCompleted2 = new CompletableFuture<>();
     InstanceRelationship instanceRelationshipRequestObject2 = new InstanceRelationship(
-            instance1Response.getString(Instance.ID_KEY),
-            instance3Response.getString(Instance.ID_KEY),
-            INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
+      instance1Response.getString(Instance.ID_KEY),
+      instance3Response.getString(Instance.ID_KEY),
+      INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
     getClient().post(
-            instanceRelationshipsUrl(""),
-            instanceRelationshipRequestObject2.getJson(),
-            TENANT_ID,
-            ResponseHandler.json(createRelationshipCompleted2)
+      instanceRelationshipsUrl(""),
+      instanceRelationshipRequestObject2.getJson(),
+      TENANT_ID,
+      ResponseHandler.json(createRelationshipCompleted2)
     );
     Response relationshipPostResponse2 = createRelationshipCompleted2.get(10, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -80,11 +80,11 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateRelationshipWithNonExistingInstance ()
+  public void cannotCreateRelationshipWithNonExistingInstance()
     throws MalformedURLException,
     InterruptedException,
     ExecutionException,
-    TimeoutException{
+    TimeoutException {
 
     final String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
 
@@ -92,14 +92,14 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createRelationshipCompleted = new CompletableFuture<>();
     InstanceRelationship instanceRelationshipRequestObject = new InstanceRelationship(
-            instance1Response.getString(Instance.ID_KEY),
-            nonExistingInstanceId,
-            INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
+      instance1Response.getString(Instance.ID_KEY),
+      nonExistingInstanceId,
+      INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
     getClient().post(
-            instanceRelationshipsUrl(""),
-            instanceRelationshipRequestObject.getJson(),
-            TENANT_ID,
-            ResponseHandler.text(createRelationshipCompleted)
+      instanceRelationshipsUrl(""),
+      instanceRelationshipRequestObject.getJson(),
+      TENANT_ID,
+      ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
 
@@ -108,8 +108,8 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateRelationshipOfNonExistingRelationshipType ()
-          throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  public void cannotCreateRelationshipOfNonExistingRelationshipType()
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     final String nonExistingRelationshipTypeId = "28b65645-2e49-4a85-8dc1-43d444710570";
 
@@ -118,28 +118,29 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createRelationshipCompleted = new CompletableFuture<>();
     InstanceRelationship instanceRelationshipRequestObject = new InstanceRelationship(
-            instance1Response.getString(Instance.ID_KEY),
-            instance2Response.getString(Instance.ID_KEY),
-            nonExistingRelationshipTypeId);
+      instance1Response.getString(Instance.ID_KEY),
+      instance2Response.getString(Instance.ID_KEY),
+      nonExistingRelationshipTypeId);
     getClient().post(
-            instanceRelationshipsUrl(""),
-            instanceRelationshipRequestObject.getJson(),
-            TENANT_ID,
-            ResponseHandler.text(createRelationshipCompleted)
+      instanceRelationshipsUrl(""),
+      instanceRelationshipRequestObject.getJson(),
+      TENANT_ID,
+      ResponseHandler.text(createRelationshipCompleted)
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
   }
 
-  private JsonObject createInstance (String title, String instanceTypeId) throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  private JsonObject createInstance(String title, String instanceTypeId)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
     Instance requestObject = new Instance(title, "TEST", instanceTypeId);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(
-            instancesStorageUrl(""),
-            requestObject.getJson(),
-            TENANT_ID,
-            ResponseHandler.json(createCompleted)
+      instancesStorageUrl(""),
+      requestObject.getJson(),
+      TENANT_ID,
+      ResponseHandler.json(createCompleted)
     );
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));

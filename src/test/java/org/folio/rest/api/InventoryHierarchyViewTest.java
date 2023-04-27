@@ -1,8 +1,5 @@
 package org.folio.rest.api;
 
-import org.awaitility.Awaitility;
-
-import static java.util.Optional.empty;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -60,6 +57,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.awaitility.Awaitility;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
@@ -67,7 +65,6 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,16 +72,26 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
-
-  private static final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
+  private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS =
+    "skipSuppressedFromDiscoveryRecords";
+  private final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
     TenantTool.calculateTenantId(TENANT_ID));
-
-  private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS = "skipSuppressedFromDiscoveryRecords";
-
   private UUID holdingsRecordIdPredefined;
   private Map<String, String> params;
   private JsonObject predefinedInstance;
   private JsonObject predefinedHoldings;
+
+  private static void verifyInstancesDataWithoutParameters(List<JsonObject> instancesData) {
+    assertThat(
+      instancesData.get(0),
+      allOf(
+        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
+        hasAggregatedNumberOfItems(2)
+      )
+    );
+  }
 
   @SneakyThrows
   @Before
@@ -96,13 +103,13 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     params = new HashMap<>();
 
-    holdingsRecordIdPredefined = createInstanceAndHolding(mainLibraryLocationId);
+    holdingsRecordIdPredefined = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     predefinedHoldings = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
 
     predefinedInstance = instancesClient.getAll().get(0);
 
-    createItem(mainLibraryLocationId, "item barcode", "item effective call number 1", journalMaterialTypeId);
-    createItem(thirdFloorLocationId, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+    createItem(MAIN_LIBRARY_LOCATION_ID, "item barcode", "item effective call number 1", journalMaterialTypeId);
+    createItem(THIRD_FLOOR_LOCATION_ID, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
 
     removeAllEvents();
   }
@@ -113,21 +120,24 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     withFaultyViewFunction(() -> {
       params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
 
-      List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params, response -> assertThat(response.getStatusCode(), is(200)));
+      List<JsonObject> instances = requestInventoryHierarchyViewUpdatedInstanceIds(params,
+        response -> assertThat(response.getStatusCode(), is(200)));
       UUID[] instanceIds = instances.stream()
-          .map(json -> UUID.fromString(json.getString("instanceId")))
-          .toArray(UUID[]::new);
+        .map(json -> UUID.fromString(json.getString("instanceId")))
+        .toArray(UUID[]::new);
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
         assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
-        assertThat(response.getBody(), containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+        assertThat(response.getBody(),
+          containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
       });
       return null;
     });
   }
 
   @Test
-  public void canRequestInventoryHierarchyInstanceWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyInstanceWithoutParameters()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -144,7 +154,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyHoldingsWithoutParameters() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyHoldingsWithoutParameters()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -169,7 +180,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject record = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
-    record.put("temporaryLocationId", annexLibraryLocationId.toString());
+    record.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     holdingsClient.replace(holdingsRecordIdPredefined, record);
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
@@ -189,8 +200,10 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       )
     );
   }
+
   @Test
-  public void canRequestInventoryHierarchyItemsWithoutParametersWithoutSource() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyItemsWithoutParametersWithoutSource()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -201,7 +214,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyItemsWithoutParametersWithSource() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyItemsWithoutParametersWithSource()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -213,7 +227,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyViewWhenEmptyDB() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRequestInventoryHierarchyViewWhenEmptyDb()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
@@ -244,31 +259,6 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     data = requestInventoryHierarchyViewUpdatedInstanceIds(params);
     // then
     assertThat(data.size(), is(0));
-  }
-
-  private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)
-      throws InterruptedException, ExecutionException, TimeoutException {
-    return getInventoryHierarchyInstances(queryParams, response -> assertThat(response.getStatusCode(), is(200)));
-  }
-
-  private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams, Handler<Response> responseMatcher)
-      throws InterruptedException, ExecutionException, TimeoutException {
-
-    // Get updated instances ids
-    List<JsonObject> updatedInstanceData = requestInventoryHierarchyViewUpdatedInstanceIds(queryParams, responseMatcher);
-
-    // Extract instances ids
-    UUID[] instanceIds = updatedInstanceData.stream()
-      .map(json -> UUID.fromString(json.getString("instanceId")))
-      .toArray(UUID[]::new);
-
-    // Retrieves instances with items and holdings data
-    List<JsonObject> instancesWithItemsAndHoldings = new ArrayList<>();
-    if (ArrayUtils.isNotEmpty(instanceIds)) {
-      instancesWithItemsAndHoldings = requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds,
-        Boolean.parseBoolean(queryParams.get(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS)), responseMatcher);
-    }
-    return instancesWithItemsAndHoldings;
   }
 
   @Test
@@ -302,7 +292,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDatesWithNonExistingSource() throws InterruptedException, ExecutionException, TimeoutException {
+  public void testFilterByDatesWithNonExistingSource()
+    throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     // In case of invalid source parameter it will be used as null, i.e. all the records will be returned.
     params.put("source", "invalid");
@@ -318,14 +309,15 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * By default we skip discovery suppressed records
+   * By default we skip discovery suppressed records.
    */
   @Test
   public void canGetFromInventoryHierarchyViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
-    super.createItem(createItemRequest(thirdFloorLocationId, "item barcode 3", "item effective call number 3", bookMaterialTypeId)
-      .withDiscoverySuppress(true));
+    super.createItem(
+      createItemRequest(THIRD_FLOOR_LOCATION_ID, "item barcode 3", "item effective call number 3", bookMaterialTypeId)
+        .withDiscoverySuppress(true));
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     params.put("source", "TEST");
@@ -344,14 +336,16 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // then
     assertThat(data.get(0),
       allOf(
-        hasCallNumberForItems("item effective call number 1", "item effective call number 3", "item effective call number 2"),
+        hasCallNumberForItems("item effective call number 1", "item effective call number 3",
+          "item effective call number 2"),
         hasAggregatedNumberOfItems(3),
         hasEffectiveLocationInstitutionNameForItems("Primary Institution")
       ));
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime()
+    throws InterruptedException, TimeoutException, ExecutionException {
     var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
     Awaitility.await().until(() -> {
       // To make sure the last updated date for instance
@@ -373,10 +367,11 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime()
+    throws InterruptedException, TimeoutException, ExecutionException {
     // given
     var instanceId = UUID.fromString(instancesClient.getAll().get(0).getString("id"));
-    var holdingUUID = createHolding(instanceId, mainLibraryLocationId, mainLibraryLocationId);
+    var holdingUuid = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, MAIN_LIBRARY_LOCATION_ID);
     var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
     Awaitility.await().until(() -> {
       // To make sure the last updated date for instance
@@ -385,7 +380,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     });
     // given
     var dateTimeOfHoldingDeletion = LocalDateTime.now(ZoneOffset.UTC);
-    holdingsClient.delete(holdingUUID);
+    holdingsClient.delete(holdingUuid);
     // when
     params.put("startDate", OffsetDateTime.of(dateTimeOfHoldingDeletion.minusSeconds(2), ZoneOffset.UTC)
       .toString());
@@ -398,7 +393,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime() throws InterruptedException, TimeoutException, ExecutionException {
+  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime()
+    throws InterruptedException, TimeoutException, ExecutionException {
     var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
     Awaitility.await().until(() -> {
       // To make sure the last updated date for instance
@@ -421,12 +417,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * The decode exception is thrown when we try to parse the response, but the only relevant thing is the correct response status of
-   * 400.
+   * The decode exception is thrown when we try to parse the response,
+   * but the only relevant thing is the correct response status of 400.
    */
   @Test(expected = DecodeException.class)
   public void testResponseStatus400WhenRequestingWithInvalidDates()
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -436,12 +432,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * The decode exception is thrown when we try to parse the response, but the only relevant thing is the correct response status of
-   * 400.
+   * The decode exception is thrown when we try to parse the response,
+   * but the only relevant thing is the correct response status of 400.
    */
   @Test(expected = DecodeException.class)
   public void testResponseStatus400WhenRequestingWithInvalidUntilDate()
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -451,15 +447,16 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetHoldingWhenAllItemForItAreSuppressed() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canGetHoldingWhenAllItemForItAreSuppressed()
+    throws InterruptedException, ExecutionException, TimeoutException {
     // given
     // one instance, 1 holding with 2 not suppressed items, 1 holding with 1 suppressed item
 
     UUID instanceId = UUID.fromString(predefinedInstance.getString("id"));
-    UUID holdingId = createHolding(instanceId, mainLibraryLocationId, null);
+    UUID holdingId = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null);
     JsonObject item = new ItemRequestBuilder().forHolding(holdingId)
       .withBarcode("21734")
-      .withTemporaryLocation(mainLibraryLocationId)
+      .withTemporaryLocation(MAIN_LIBRARY_LOCATION_ID)
       .withItemLevelCallNumber("item suppressed call number")
       .withMaterialType(journalMaterialTypeId)
       .withPermanentLoanType(canCirculateLoanTypeId)
@@ -469,25 +466,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     JsonObject instancesData = getInventoryHierarchyInstances(params).get(0);
-    JsonArray holdings  = (JsonArray)instancesData.getValue("holdings");
-    JsonArray items = (JsonArray)instancesData.getValue("items");
+    JsonArray holdings = (JsonArray) instancesData.getValue("holdings");
+    JsonArray items = (JsonArray) instancesData.getValue("items");
 
     // then
     assertEquals(2, holdings.getList().size());
     assertEquals(2, items.getList().size());
-  }
-
-  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
-    super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
-  }
-
-  private ItemRequestBuilder createItemRequest(UUID locationId, String barcode, String callNumber, UUID materialTypeId) {
-    return new ItemRequestBuilder().forHolding(holdingsRecordIdPredefined)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withTemporaryLocation(locationId)
-      .withBarcode(barcode)
-      .withItemLevelCallNumber(callNumber)
-      .withMaterialType(materialTypeId);
   }
 
   void clearAuditTables() {
@@ -505,15 +489,59 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     });
   }
 
-  private List<JsonObject> requestInventoryHierarchyItemsAndHoldingsViewInstance(UUID[] instanceIds, boolean skipSuppressedFromDiscoveryRecords,
-      Handler<Response> responseMatcher) throws InterruptedException, ExecutionException, TimeoutException {
+  private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    return getInventoryHierarchyInstances(queryParams, response -> assertThat(response.getStatusCode(), is(200)));
+  }
+
+  private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams,
+                                                          Handler<Response> responseMatcher)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    // Get updated instances ids
+    List<JsonObject> updatedInstanceData =
+      requestInventoryHierarchyViewUpdatedInstanceIds(queryParams, responseMatcher);
+
+    // Extract instances ids
+    UUID[] instanceIds = updatedInstanceData.stream()
+      .map(json -> UUID.fromString(json.getString("instanceId")))
+      .toArray(UUID[]::new);
+
+    // Retrieves instances with items and holdings data
+    List<JsonObject> instancesWithItemsAndHoldings = new ArrayList<>();
+    if (ArrayUtils.isNotEmpty(instanceIds)) {
+      instancesWithItemsAndHoldings = requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds,
+        Boolean.parseBoolean(queryParams.get(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS)),
+        responseMatcher);
+    }
+    return instancesWithItemsAndHoldings;
+  }
+
+  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
+    super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
+  }
+
+  private ItemRequestBuilder createItemRequest(UUID locationId, String barcode, String callNumber,
+                                               UUID materialTypeId) {
+    return new ItemRequestBuilder().forHolding(holdingsRecordIdPredefined)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withTemporaryLocation(locationId)
+      .withBarcode(barcode)
+      .withItemLevelCallNumber(callNumber)
+      .withMaterialType(materialTypeId);
+  }
+
+  private List<JsonObject> requestInventoryHierarchyItemsAndHoldingsViewInstance(UUID[] instanceIds,
+                                                                                 boolean skipSuppressedFromDiscovery,
+                                                                                 Handler<Response> responseMatcher)
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
 
     InventoryInstanceIds instanceIdsPayload = new InventoryInstanceIds();
     instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
-    instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscoveryRecords);
+    instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscovery);
 
     getClient().post(inventoryHierarchyItemsAndHoldings(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
@@ -535,26 +563,27 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private void withFaultyViewFunction(Callable<Void> callable) throws Exception {
     String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.get_items_and_holdings_view RENAME TO x";
     PostgresClient.getInstance(getVertx()).execute(sql)
-    .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+      .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
 
     try {
       callable.call();
-    }
-    finally {
+    } finally {
       sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
       PostgresClient.getInstance(getVertx()).execute(sql)
-      .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+        .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
     }
   }
 
   private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
-    return requestInventoryHierarchyViewUpdatedInstanceIds(queryParamsMap, response -> assertThat(response.getStatusCode(), is(200)));
+    return requestInventoryHierarchyViewUpdatedInstanceIds(queryParamsMap,
+      response -> assertThat(response.getStatusCode(), is(200)));
   }
 
-  private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap, Handler<Response> responseMatcher)
-      throws InterruptedException, ExecutionException, TimeoutException {
+  private List<JsonObject> requestInventoryHierarchyViewUpdatedInstanceIds(Map<String, String> queryParamsMap,
+                                                                           Handler<Response> responseMatcher)
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     final String queryParams = queryParamsMap.entrySet()
       .stream()
@@ -568,7 +597,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(2, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh updated instances view:", response);
+    log.info("response from oai pmh updated instances view: {}", response);
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body)) {
@@ -578,23 +607,13 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return results;
   }
 
-  private static void verifyInstancesDataWithoutParameters(List<JsonObject> instancesData) {
-    assertThat(
-      instancesData.get(0),
-      allOf(
-        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
-        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
-        hasAggregatedNumberOfItems(2)
-      )
-    );
-  }
+  private void verifyInstancesDataFilteredBySource(List<JsonObject> instancesData)
+    throws InterruptedException, ExecutionException, TimeoutException {
 
-  private void verifyInstancesDataFilteredBySource(List<JsonObject> instancesData) throws InterruptedException, ExecutionException, TimeoutException {
-    LocalDateTime startDate;
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    assertThat(instancesData.get(0),
+      allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
 
     // when
     LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
@@ -602,11 +621,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    assertThat(instancesData.get(0),
+      allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
 
     // when
-    startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
+    LocalDateTime startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
     params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
       .toString());
     instancesData = getInventoryHierarchyInstances(params);
@@ -630,8 +650,9 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .toString());
     instancesData = getInventoryHierarchyInstances(params);
     // then
-    assertThat(instancesData.get(0), allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    assertThat(instancesData.get(0),
+      allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
 
     // when
     startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);

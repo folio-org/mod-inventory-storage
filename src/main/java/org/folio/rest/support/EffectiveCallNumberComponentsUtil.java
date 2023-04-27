@@ -2,20 +2,19 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.CallNumberUtils;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public final class EffectiveCallNumberComponentsUtil {
 
-  private EffectiveCallNumberComponentsUtil() {}
+  private EffectiveCallNumberComponentsUtil() { }
 
   public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
     item.setEffectiveCallNumberComponents(buildComponents(item, hr));
@@ -26,18 +25,18 @@ public final class EffectiveCallNumberComponentsUtil {
       Optional<String> shelfKey
         = CallNumberUtils.getShelfKeyFromCallNumber(
         Stream.of(
-          item.getEffectiveCallNumberComponents().getCallNumber(),
-          item.getVolume(),
-          item.getEnumeration(),
-          item.getChronology(),
-          item.getCopyNumber()
-        ).filter(StringUtils::isNotBlank)
+            item.getEffectiveCallNumberComponents().getCallNumber(),
+            item.getVolume(),
+            item.getEnumeration(),
+            item.getChronology(),
+            item.getCopyNumber()
+          ).filter(StringUtils::isNotBlank)
           .map(StringUtils::trim)
           .collect(Collectors.joining(" "))
       );
       String suffixValue =
         Objects.toString(Optional.ofNullable(item.getEffectiveCallNumberComponents())
-          .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
+            .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
           .trim();
 
       String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;

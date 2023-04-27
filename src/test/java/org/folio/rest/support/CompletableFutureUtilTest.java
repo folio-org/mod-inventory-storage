@@ -6,7 +6,6 @@ import static org.folio.rest.support.CompletableFutureUtil.mapFutureResultToJava
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CompletableFuture;
-
 import org.junit.Test;
 
 public class CompletableFutureUtilTest {

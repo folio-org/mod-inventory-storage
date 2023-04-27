@@ -2,11 +2,10 @@ package org.folio.persist;
 
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
-import java.util.Map;
-import java.util.function.UnaryOperator;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import java.util.Map;
+import java.util.function.UnaryOperator;
 import org.folio.rest.jaxrs.model.IterationJob;
 
 public class IterationJobRepository extends AbstractRepository<IterationJob> {

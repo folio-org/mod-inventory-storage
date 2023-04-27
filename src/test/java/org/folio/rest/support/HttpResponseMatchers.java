@@ -1,11 +1,10 @@
 package org.folio.rest.support;
 
+import io.vertx.core.json.JsonObject;
 import org.folio.HttpStatus;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-
-import io.vertx.core.json.JsonObject;
 
 public class HttpResponseMatchers {
   public static Matcher<Response> statusCodeIs(int statusCode) {
@@ -20,9 +19,9 @@ public class HttpResponseMatchers {
       protected boolean matchesSafely(Response response, Description description) {
         boolean matches = response.getStatusCode() == statusCode;
 
-        if(!matches) {
+        if (!matches) {
           description.appendText(String.format("Response: %s",
-            response.toString()));
+            response));
         }
 
         return matches;
@@ -36,6 +35,7 @@ public class HttpResponseMatchers {
 
   /**
    * Expect that the body is a JSON where errors[0].message contains the substring.
+   *
    * @param substring the expected substring
    * @return the matcher
    */
@@ -54,14 +54,16 @@ public class HttpResponseMatchers {
         try {
           jsonObject = response.getJson();
         } catch (Exception e) {
-          description.appendText("Response where body has no or invalid JSON (" + e.getMessage() + "): " + response.getBody());
+          description.appendText(
+            "Response where body has no or invalid JSON (" + e.getMessage() + "): " + response.getBody());
           return false;
         }
         String message;
         try {
-          message = jsonObject.getJsonArray("errors").getJsonObject(0).getString("message").toString();
+          message = jsonObject.getJsonArray("errors").getJsonObject(0).getString("message");
         } catch (Exception e) {
-          description.appendText("Response JSON body doesn't have errors[0].message element: " + jsonObject.encodePrettily());
+          description.appendText(
+            "Response JSON body doesn't have errors[0].message element: " + jsonObject.encodePrettily());
           return false;
         }
         if (message.contains(substring)) {
@@ -75,6 +77,7 @@ public class HttpResponseMatchers {
 
   /**
    * Expect that the body is a JSON where errors[0].parameters[0].value equals the expected value.
+   *
    * @param value the expected string
    * @return the matcher
    */
@@ -93,15 +96,20 @@ public class HttpResponseMatchers {
         try {
           jsonObject = response.getJson();
         } catch (Exception e) {
-          description.appendText("Response where body has no or invalid JSON (" + e.getMessage() + "): " + response.getBody());
+          description.appendText(
+            "Response where body has no or invalid JSON (" + e.getMessage() + "): " + response.getBody());
           return false;
         }
         String actualValue;
         try {
-          actualValue = jsonObject.getJsonArray("errors").getJsonObject(0).getJsonArray("parameters").getJsonObject(0).getString("value");
+          actualValue = jsonObject.getJsonArray("errors")
+            .getJsonObject(0)
+            .getJsonArray("parameters")
+            .getJsonObject(0)
+            .getString("value");
         } catch (Exception e) {
           description.appendText("Response where JSON body does not have errors[0].parameters[0].value ("
-              + e.getMessage() + "): " + jsonObject.encodePrettily());
+            + e.getMessage() + "): " + jsonObject.encodePrettily());
           return false;
         }
         if (value.equals(actualValue)) {

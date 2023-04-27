@@ -8,10 +8,10 @@ import org.apache.logging.log4j.Logger;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-public class KafkaUtility {
+public final class KafkaUtility {
   private static final Logger logger = LogManager.getLogger();
 
-  private static final KafkaContainer kafkaContainer
+  private static final KafkaContainer KAFKA_CONTAINER
     = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
 
   private KafkaUtility() {
@@ -19,28 +19,28 @@ public class KafkaUtility {
   }
 
   public static void startKafka() {
-    kafkaContainer.start();
+    KAFKA_CONTAINER.start();
 
     logger.info("starting Kafka host={} port={}",
-      kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+      KAFKA_CONTAINER.getHost(), KAFKA_CONTAINER.getFirstMappedPort());
 
-    var kafkaHost = kafkaContainer.getHost();
-    var kafkaPort = String.valueOf(kafkaContainer.getFirstMappedPort());
+    var kafkaHost = KAFKA_CONTAINER.getHost();
+    var kafkaPort = String.valueOf(KAFKA_CONTAINER.getFirstMappedPort());
     logger.info("Starting Kafka host={} port={}", kafkaHost, kafkaPort);
     System.setProperty("kafka-port", kafkaPort);
     System.setProperty("kafka-host", kafkaHost);
 
-    await().atMost(ofMinutes(1)).until(() -> kafkaContainer.isRunning());
+    await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
 
     logger.info("finished starting Kafka");
   }
 
   public static void stopKafka() {
-    if (kafkaContainer.isRunning()) {
+    if (KAFKA_CONTAINER.isRunning()) {
       logger.info("stopping Kafka host={} port={}",
-        kafkaContainer.getHost(), kafkaContainer.getFirstMappedPort());
+        KAFKA_CONTAINER.getHost(), KAFKA_CONTAINER.getFirstMappedPort());
 
-      kafkaContainer.stop();
+      KAFKA_CONTAINER.stop();
       logger.info("finished stopping Kafka");
     } else {
       logger.info("Kafka container already stopped");

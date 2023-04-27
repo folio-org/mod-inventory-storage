@@ -1,11 +1,10 @@
 package org.folio.rest.support.builders;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -72,7 +71,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     put(itemRequest, "holdingsRecordId", holdingId);
     put(itemRequest, "materialTypeId", materialTypeId);
 
-    if(status != null) {
+    if (status != null) {
       itemRequest.put("status", new JsonObject().put("name", status));
     }
 

@@ -44,36 +44,47 @@ public class InstanceInternal {
   @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
   private String id;
   /**
-   * Record version for optimistic locking
+   * Record version for optimistic locking.
    */
   @JsonProperty("_version")
   @JsonPropertyDescription("Record version for optimistic locking")
   private Integer version;
   /**
-   * The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the InstanceInternal ID
+   * The human readable ID, also called eye readable ID. A system-assigned
+   * sequential ID which maps to the InstanceInternal ID
    */
   @JsonProperty("hrid")
   @JsonPropertyDescription(
-    "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the InstanceInternal ID")
+    "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the "
+      + "InstanceInternal ID")
   private String hrid;
   /**
-   * A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same InstanceInternal in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records
+   * A unique instance identifier matching a client-side bibliographic record identification scheme,
+   * in particular for a scenario where multiple separate catalogs with no shared record identifiers
+   * contribute to the same InstanceInternal in Inventory. A match key is typically generated from select,
+   * normalized pieces of metadata in bibliographic records
    */
   @JsonProperty("matchKey")
   @JsonPropertyDescription(
-    "A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same InstanceInternal in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records")
+    "A unique instance identifier matching a client-side bibliographic record identification scheme, "
+      + "in particular for a scenario where multiple separate catalogs with no shared record identifiers "
+      + "contribute to the same InstanceInternal in Inventory. A match key is typically generated from select, "
+      + "normalized pieces of metadata in bibliographic records")
   private String matchKey;
   /**
-   * The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * The metadata source and its format of the underlying record to the instance record.
+   * (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in
+   * MARCcat or EPKB if it's a record coming from eHoldings)
    * (Required)
    */
   @JsonProperty("source")
-  @JsonPropertyDescription(
-    "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)")
+  @JsonPropertyDescription("The metadata source and its format of the underlying record to the instance record. "
+    + "(e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created "
+    + "in MARCcat or EPKB if it's a record coming from eHoldings)")
   @NotNull
   private String source;
   /**
-   * The primary title (or label) associated with the resource
+   * The primary title (or label) associated with the resource.
    * (Required)
    */
   @JsonProperty("title")
@@ -81,7 +92,7 @@ public class InstanceInternal {
   @NotNull
   private String title;
   /**
-   * Title normalized for browsing and searching; based on the title with articles removed
+   * Title normalized for browsing and searching; based on the title with articles removed.
    */
   @JsonProperty("indexTitle")
   @JsonPropertyDescription("Title normalized for browsing and searching; based on the title with articles removed")
@@ -96,7 +107,7 @@ public class InstanceInternal {
   @Valid
   private Set<AlternativeTitle> alternativeTitles = new LinkedHashSet<>();
   /**
-   * The edition statement, imprint and other publication source information
+   * The edition statement, imprint and other publication source information.
    */
   @JsonProperty("editions")
   @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -112,21 +123,21 @@ public class InstanceInternal {
   @Valid
   private Set<Series> series = new LinkedHashSet<>();
   /**
-   * An extensible set of name-value pairs of identifiers associated with the resource
+   * An extensible set of name-value pairs of identifiers associated with the resource.
    */
   @JsonProperty("identifiers")
   @JsonPropertyDescription("An extensible set of name-value pairs of identifiers associated with the resource")
   @Valid
   private List<Identifier> identifiers = new ArrayList<>();
   /**
-   * List of contributors
+   * List of contributors.
    */
   @JsonProperty("contributors")
   @JsonPropertyDescription("List of contributors")
   @Valid
   private List<Contributor> contributors = new ArrayList<>();
   /**
-   * List of subject headings
+   * List of subject headings.
    */
   @JsonProperty("subjects")
   @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -134,14 +145,14 @@ public class InstanceInternal {
   @Valid
   private Set<Subject> subjects = new LinkedHashSet<>();
   /**
-   * List of classifications
+   * List of classifications.
    */
   @JsonProperty("classifications")
   @JsonPropertyDescription("List of classifications")
   @Valid
   private List<Classification> classifications = new ArrayList<>();
   /**
-   * List of publication items
+   * List of publication items.
    */
   @JsonProperty("publication")
   @JsonPropertyDescription("List of publication items")
@@ -156,7 +167,7 @@ public class InstanceInternal {
   @Valid
   private Set<String> publicationFrequency = new LinkedHashSet<>();
   /**
-   * The range of sequential designation/chronology of publication, or date range
+   * The range of sequential designation/chronology of publication, or date range.
    */
   @JsonProperty("publicationRange")
   @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -164,31 +175,34 @@ public class InstanceInternal {
   @Valid
   private Set<String> publicationRange = new LinkedHashSet<>();
   /**
-   * Publication period
+   * Publication period.
    */
   @JsonProperty("publicationPeriod")
   @JsonPropertyDescription("Publication period")
   @Valid
   private PublicationPeriod publicationPeriod;
   /**
-   * List of electronic access items
+   * List of electronic access items.
    */
   @JsonProperty("electronicAccess")
   @JsonPropertyDescription("List of electronic access items")
   @Valid
   private List<ElectronicAccess> electronicAccess = new ArrayList<>();
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify
+   * a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f;
+   * the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
    * (Required)
    */
   @JsonProperty("instanceTypeId")
-  @JsonPropertyDescription(
-    "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/")
+  @JsonPropertyDescription("A universally unique identifier (UUID), this is a 128-bit number used to identify "
+    + "a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; "
+    + "the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/")
   @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
   @NotNull
   private String instanceTypeId;
   /**
-   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined
+   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined.
    */
   @JsonProperty("instanceFormatIds")
   @JsonPropertyDescription(
@@ -196,22 +210,24 @@ public class InstanceInternal {
   @Valid
   private List<String> instanceFormatIds = new ArrayList<>();
   /**
-   * List of dereferenced instance formats
+   * List of dereferenced instance formats.
    */
   @JsonProperty("instanceFormats")
   @JsonPropertyDescription("List of dereferenced instance formats")
   @Valid
   private List<InstanceFormat> instanceFormats = new ArrayList<>();
   /**
-   * Physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size
+   * Physical description of the described resource, including its extent, dimensions,
+   * and such other physical details as a description of any accompanying materials and unit type and size.
    */
   @JsonProperty("physicalDescriptions")
   @JsonPropertyDescription(
-    "Physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size")
+    "Physical description of the described resource, including its extent, dimensions, and such other "
+      + "physical details as a description of any accompanying materials and unit type and size")
   @Valid
   private List<String> physicalDescriptions = new ArrayList<>();
   /**
-   * The set of languages used by the resource
+   * The set of languages used by the resource.
    */
   @JsonProperty("languages")
   @JsonPropertyDescription("The set of languages used by the resource")
@@ -225,22 +241,26 @@ public class InstanceInternal {
   @Valid
   private List<Note> notes = new ArrayList<>();
   /**
-   * Administrative notes
+   * Administrative notes.
    */
   @JsonProperty("administrativeNotes")
   @JsonPropertyDescription("Administrative notes")
   @Valid
   private List<String> administrativeNotes = new ArrayList<>();
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is
+   * shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("modeOfIssuanceId")
   @JsonPropertyDescription(
-    "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/")
+    "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is "
+      + "shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; "
+      + "the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/")
   @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
   private String modeOfIssuanceId;
   /**
-   * Date or timestamp on an instance for when is was considered cataloged
+   * Date or timestamp on an instance for when is was considered cataloged.
    */
   @JsonProperty("catalogedDate")
   @JsonPropertyDescription("Date or timestamp on an instance for when is was considered cataloged")
@@ -253,19 +273,19 @@ public class InstanceInternal {
     "Records the fact that the resource was previously held by the library for things like Hathi access, etc.")
   private Boolean previouslyHeld = false;
   /**
-   * Records the fact that the record should not be displayed for others than catalogers
+   * Records the fact that the record should not be displayed for others than catalogers.
    */
   @JsonProperty("staffSuppress")
   @JsonPropertyDescription("Records the fact that the record should not be displayed for others than catalogers")
   private Boolean staffSuppress;
   /**
-   * Records the fact that the record should not be displayed in a discovery system
+   * Records the fact that the record should not be displayed in a discovery system.
    */
   @JsonProperty("discoverySuppress")
   @JsonPropertyDescription("Records the fact that the record should not be displayed in a discovery system")
   private Boolean discoverySuppress = false;
   /**
-   * List of statistical code IDs
+   * List of statistical code IDs.
    */
   @JsonProperty("statisticalCodeIds")
   @JsonDeserialize(as = java.util.LinkedHashSet.class)
@@ -273,39 +293,41 @@ public class InstanceInternal {
   @Valid
   private Set<String> statisticalCodeIds = new LinkedHashSet<>();
   /**
-   * Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,
+   * MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
    */
   @JsonProperty("sourceRecordFormat")
-  @JsonPropertyDescription(
-    "Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)")
+  @JsonPropertyDescription("Format of the instance source record, if a source record exists "
+    + "(e.g. FOLIO if it's a record created in Inventory, MARC if it's a MARC record created in MARCcat "
+    + "or EPKB if it's a record coming from eHoldings)")
   private Instance.SourceRecordFormat sourceRecordFormat;
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in
+   * hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("statusId")
   @JsonPropertyDescription(
-    "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/")
+    "A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in "
+      + "hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; "
+      + "see https://dev.folio.org/guides/uuids/")
   @Pattern(regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
   private String statusId;
   /**
-   * Date [or timestamp] for when the instance status was updated
+   * Date [or timestamp] for when the instance status was updated.
    */
   @JsonProperty("statusUpdatedDate")
   @JsonPropertyDescription("Date [or timestamp] for when the instance status was updated")
   private String statusUpdatedDate;
   /**
-   * tags
-   * <p>
-   * List of simple tags that can be added to an object
+   * List of simple tags that can be added to an object.
    */
   @JsonProperty("tags")
   @JsonPropertyDescription("List of simple tags that can be added to an object")
   @Valid
   private Tags tags;
   /**
-   * Metadata Schema
-   * <p>
-   * Metadata about creation and changes to records, provided by the server (client should not provide)
+   * Metadata about creation and changes to records, provided by the server (client should not provide).
    */
   @JsonProperty("metadata")
   @JsonPropertyDescription(
@@ -313,24 +335,27 @@ public class InstanceInternal {
   @Valid
   private Metadata metadata;
   /**
-   * List of holdings records
+   * List of holdings records.
    */
   @JsonProperty("holdingsRecords2")
   @JsonPropertyDescription("List of holdings records")
   @Valid
   private List<HoldingsRecords2> holdingsRecords2 = new ArrayList<>();
   /**
-   * Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)
+   * Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue,
+   * festschrift, newspaper, proceedings, research report, thesis or website)
    */
   @JsonProperty("natureOfContentTermIds")
   @JsonDeserialize(as = java.util.LinkedHashSet.class)
-  @JsonPropertyDescription(
-    "Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)")
+  @JsonPropertyDescription("Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, "
+    + "exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)")
   @Valid
   private Set<String> natureOfContentTermIds = new LinkedHashSet<>();
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and
+   * is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("id")
   public String getId() {
@@ -338,7 +363,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and
+   * is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("id")
   public void setId(String id) {
@@ -346,7 +373,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Record version for optimistic locking
+   * Record version for optimistic locking.
    */
   @JsonProperty("_version")
   public Integer getVersion() {
@@ -354,7 +381,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Record version for optimistic locking
+   * Record version for optimistic locking.
    */
   @JsonProperty("_version")
   public void setVersion(Integer version) {
@@ -362,7 +389,8 @@ public class InstanceInternal {
   }
 
   /**
-   * The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the InstanceInternal ID
+   * The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the
+   * InstanceInternal ID.
    */
   @JsonProperty("hrid")
   public String getHrid() {
@@ -370,7 +398,8 @@ public class InstanceInternal {
   }
 
   /**
-   * The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the InstanceInternal ID
+   * The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the
+   * InstanceInternal ID.
    */
   @JsonProperty("hrid")
   public void setHrid(String hrid) {
@@ -378,7 +407,10 @@ public class InstanceInternal {
   }
 
   /**
-   * A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same InstanceInternal in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records
+   * A unique instance identifier matching a client-side bibliographic record identification scheme,
+   * in particular for a scenario where multiple separate catalogs with no shared record identifiers
+   * contribute to the same InstanceInternal in Inventory. A match key is typically generated from select,
+   * normalized pieces of metadata in bibliographic records
    */
   @JsonProperty("matchKey")
   public String getMatchKey() {
@@ -386,7 +418,10 @@ public class InstanceInternal {
   }
 
   /**
-   * A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same InstanceInternal in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records
+   * A unique instance identifier matching a client-side bibliographic record identification scheme,
+   * in particular for a scenario where multiple separate catalogs with no shared record
+   * identifiers contribute to the same InstanceInternal in Inventory. A match key is
+   * typically generated from select, normalized pieces of metadata in bibliographic records
    */
   @JsonProperty("matchKey")
   public void setMatchKey(String matchKey) {
@@ -394,7 +429,9 @@ public class InstanceInternal {
   }
 
   /**
-   * The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * The metadata source and its format of the underlying record to the instance record.
+   * (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in
+   * MARCcat or EPKB if it's a record coming from eHoldings)
    * (Required)
    */
   @JsonProperty("source")
@@ -403,7 +440,9 @@ public class InstanceInternal {
   }
 
   /**
-   * The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * The metadata source and its format of the underlying record to the instance record.
+   * (e.g. FOLIO if it's a record created in Inventory;  MARC if it's a MARC record created
+   * in MARCcat or EPKB if it's a record coming from eHoldings)
    * (Required)
    */
   @JsonProperty("source")
@@ -412,7 +451,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The primary title (or label) associated with the resource
+   * The primary title (or label) associated with the resource.
    * (Required)
    */
   @JsonProperty("title")
@@ -421,7 +460,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The primary title (or label) associated with the resource
+   * The primary title (or label) associated with the resource.
    * (Required)
    */
   @JsonProperty("title")
@@ -430,7 +469,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Title normalized for browsing and searching; based on the title with articles removed
+   * Title normalized for browsing and searching; based on the title with articles removed..
    */
   @JsonProperty("indexTitle")
   public String getIndexTitle() {
@@ -438,7 +477,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Title normalized for browsing and searching; based on the title with articles removed
+   * Title normalized for browsing and searching; based on the title with articles removed.
    */
   @JsonProperty("indexTitle")
   public void setIndexTitle(String indexTitle) {
@@ -462,7 +501,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The edition statement, imprint and other publication source information
+   * The edition statement, imprint and other publication source information.
    */
   @JsonProperty("editions")
   public Set<String> getEditions() {
@@ -470,7 +509,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The edition statement, imprint and other publication source information
+   * The edition statement, imprint and other publication source information.
    */
   @JsonProperty("editions")
   public void setEditions(Set<String> editions) {
@@ -494,7 +533,7 @@ public class InstanceInternal {
   }
 
   /**
-   * An extensible set of name-value pairs of identifiers associated with the resource
+   * An extensible set of name-value pairs of identifiers associated with the resource.
    */
   @JsonProperty("identifiers")
   public List<Identifier> getIdentifiers() {
@@ -502,7 +541,7 @@ public class InstanceInternal {
   }
 
   /**
-   * An extensible set of name-value pairs of identifiers associated with the resource
+   * An extensible set of name-value pairs of identifiers associated with the resource.
    */
   @JsonProperty("identifiers")
   public void setIdentifiers(List<Identifier> identifiers) {
@@ -510,7 +549,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of contributors
+   * List of contributors.
    */
   @JsonProperty("contributors")
   public List<Contributor> getContributors() {
@@ -518,7 +557,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of contributors
+   * List of contributors.
    */
   @JsonProperty("contributors")
   public void setContributors(List<Contributor> contributors) {
@@ -526,7 +565,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of subject headings
+   * List of subject headings.
    */
   @JsonProperty("subjects")
   public Set<Subject> getSubjects() {
@@ -534,7 +573,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of subject headings
+   * List of subject headings.
    */
   @JsonProperty("subjects")
   public void setSubjects(Set<Object> subjects) {
@@ -542,7 +581,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of classifications
+   * List of classifications.
    */
   @JsonProperty("classifications")
   public List<Classification> getClassifications() {
@@ -550,7 +589,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of classifications
+   * List of classifications.
    */
   @JsonProperty("classifications")
   public void setClassifications(List<Classification> classifications) {
@@ -558,7 +597,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of publication items
+   * List of publication items.
    */
   @JsonProperty("publication")
   public List<Publication> getPublication() {
@@ -566,7 +605,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of publication items
+   * List of publication items.
    */
   @JsonProperty("publication")
   public void setPublication(List<Publication> publication) {
@@ -590,7 +629,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The range of sequential designation/chronology of publication, or date range
+   * The range of sequential designation/chronology of publication, or date range.
    */
   @JsonProperty("publicationRange")
   public Set<String> getPublicationRange() {
@@ -598,7 +637,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The range of sequential designation/chronology of publication, or date range
+   * The range of sequential designation/chronology of publication, or date range.
    */
   @JsonProperty("publicationRange")
   public void setPublicationRange(Set<String> publicationRange) {
@@ -606,7 +645,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Publication period
+   * Publication period.
    */
   @JsonProperty("publicationPeriod")
   public PublicationPeriod getPublicationPeriod() {
@@ -614,7 +653,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Publication period
+   * Publication period.
    */
   @JsonProperty("publicationPeriod")
   public void setPublicationPeriod(PublicationPeriod publicationPeriod) {
@@ -622,7 +661,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of electronic access items
+   * List of electronic access items.
    */
   @JsonProperty("electronicAccess")
   public List<ElectronicAccess> getElectronicAccess() {
@@ -630,7 +669,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of electronic access items
+   * List of electronic access items.
    */
   @JsonProperty("electronicAccess")
   public void setElectronicAccess(List<ElectronicAccess> electronicAccess) {
@@ -638,7 +677,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and
+   * is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f;
+   * the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
    * (Required)
    */
   @JsonProperty("instanceTypeId")
@@ -647,7 +688,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify
+   * a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f;
+   * the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
    * (Required)
    */
   @JsonProperty("instanceTypeId")
@@ -656,7 +699,7 @@ public class InstanceInternal {
   }
 
   /**
-   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined
+   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined.
    */
   @JsonProperty("instanceFormatIds")
   public List<String> getInstanceFormatIds() {
@@ -664,7 +707,7 @@ public class InstanceInternal {
   }
 
   /**
-   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined
+   * UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined.
    */
   @JsonProperty("instanceFormatIds")
   public void setInstanceFormatIds(List<String> instanceFormatIds) {
@@ -672,7 +715,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of dereferenced instance formats
+   * List of dereferenced instance formats.
    */
   @JsonProperty("instanceFormats")
   public List<InstanceFormat> getInstanceFormats() {
@@ -680,7 +723,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of dereferenced instance formats
+   * List of dereferenced instance formats.
    */
   @JsonProperty("instanceFormats")
   public void setInstanceFormats(List<InstanceFormat> instanceFormats) {
@@ -688,7 +731,8 @@ public class InstanceInternal {
   }
 
   /**
-   * Physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size
+   * Physical description of the described resource, including its extent, dimensions, and such other physical
+   * details as a description of any accompanying materials and unit type and size.
    */
   @JsonProperty("physicalDescriptions")
   public List<String> getPhysicalDescriptions() {
@@ -696,7 +740,8 @@ public class InstanceInternal {
   }
 
   /**
-   * Physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size
+   * Physical description of the described resource, including its extent, dimensions, and such other
+   * physical details as a description of any accompanying materials and unit type and size.
    */
   @JsonProperty("physicalDescriptions")
   public void setPhysicalDescriptions(List<String> physicalDescriptions) {
@@ -704,7 +749,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The set of languages used by the resource
+   * The set of languages used by the resource.
    */
   @JsonProperty("languages")
   public List<String> getLanguages() {
@@ -712,7 +757,7 @@ public class InstanceInternal {
   }
 
   /**
-   * The set of languages used by the resource
+   * The set of languages used by the resource.
    */
   @JsonProperty("languages")
   public void setLanguages(List<String> languages) {
@@ -736,7 +781,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Administrative notes
+   * Administrative notes.
    */
   @JsonProperty("administrativeNotes")
   public List<String> getAdministrativeNotes() {
@@ -744,7 +789,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Administrative notes
+   * Administrative notes.
    */
   @JsonProperty("administrativeNotes")
   public void setAdministrativeNotes(List<String> administrativeNotes) {
@@ -752,7 +797,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and
+   * is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("modeOfIssuanceId")
   public String getModeOfIssuanceId() {
@@ -760,7 +807,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown
+   * in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5;
+   * see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("modeOfIssuanceId")
   public void setModeOfIssuanceId(String modeOfIssuanceId) {
@@ -768,7 +817,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Date or timestamp on an instance for when is was considered cataloged
+   * Date or timestamp on an instance for when was considered cataloged.
    */
   @JsonProperty("catalogedDate")
   public String getCatalogedDate() {
@@ -776,7 +825,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Date or timestamp on an instance for when is was considered cataloged
+   * Date or timestamp on an instance for when was considered cataloged.
    */
   @JsonProperty("catalogedDate")
   public void setCatalogedDate(String catalogedDate) {
@@ -800,7 +849,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Records the fact that the record should not be displayed for others than catalogers
+   * Records the fact that the record should not be displayed for others than catalogers.
    */
   @JsonProperty("staffSuppress")
   public Boolean getStaffSuppress() {
@@ -808,7 +857,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Records the fact that the record should not be displayed for others than catalogers
+   * Records the fact that the record should not be displayed for others than catalogers.
    */
   @JsonProperty("staffSuppress")
   public void setStaffSuppress(Boolean staffSuppress) {
@@ -816,7 +865,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Records the fact that the record should not be displayed in a discovery system
+   * Records the fact that the record should not be displayed in a discovery system.
    */
   @JsonProperty("discoverySuppress")
   public Boolean getDiscoverySuppress() {
@@ -824,7 +873,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Records the fact that the record should not be displayed in a discovery system
+   * Records the fact that the record should not be displayed in a discovery system.
    */
   @JsonProperty("discoverySuppress")
   public void setDiscoverySuppress(Boolean discoverySuppress) {
@@ -832,7 +881,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of statistical code IDs
+   * List of statistical code IDs.
    */
   @JsonProperty("statisticalCodeIds")
   public Set<String> getStatisticalCodeIds() {
@@ -840,7 +889,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of statistical code IDs
+   * List of statistical code IDs.
    */
   @JsonProperty("statisticalCodeIds")
   public void setStatisticalCodeIds(Set<String> statisticalCodeIds) {
@@ -848,7 +897,9 @@ public class InstanceInternal {
   }
 
   /**
-   * Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * Format of the instance source record, if a source record exists
+   * (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in
+   * MARCcat or EPKB if it's a record coming from eHoldings)
    */
   @JsonProperty("sourceRecordFormat")
   public Instance.SourceRecordFormat getSourceRecordFormat() {
@@ -856,7 +907,9 @@ public class InstanceInternal {
   }
 
   /**
-   * Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)
+   * Format of the instance source record, if a source record exists
+   * (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in
+   * MARCcat or EPKB if it's a record coming from eHoldings)
    */
   @JsonProperty("sourceRecordFormat")
   public void setSourceRecordFormat(Instance.SourceRecordFormat sourceRecordFormat) {
@@ -864,7 +917,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record
+   * and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f;
+   * the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("statusId")
   public String getStatusId() {
@@ -872,7 +927,9 @@ public class InstanceInternal {
   }
 
   /**
-   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f; the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
+   * A universally unique identifier (UUID), this is a 128-bit number used to identify a record
+   * and is shown in hex with dashes, for example 6312d172-f0cf-40f6-b27d-9fa8feaf332f;
+   * the UUID version must be from 1-5; see https://dev.folio.org/guides/uuids/
    */
   @JsonProperty("statusId")
   public void setStatusId(String statusId) {
@@ -880,7 +937,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Date [or timestamp] for when the instance status was updated
+   * Date [or timestamp] for when the instance status was updated.
    */
   @JsonProperty("statusUpdatedDate")
   public String getStatusUpdatedDate() {
@@ -888,7 +945,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Date [or timestamp] for when the instance status was updated
+   * Date [or timestamp] for when the instance status was updated.
    */
   @JsonProperty("statusUpdatedDate")
   public void setStatusUpdatedDate(String statusUpdatedDate) {
@@ -896,9 +953,7 @@ public class InstanceInternal {
   }
 
   /**
-   * tags
-   * <p>
-   * List of simple tags that can be added to an object
+   * List of simple tags that can be added to an object.
    */
   @JsonProperty("tags")
   public Tags getTags() {
@@ -906,9 +961,7 @@ public class InstanceInternal {
   }
 
   /**
-   * tags
-   * <p>
-   * List of simple tags that can be added to an object
+   * List of simple tags that can be added to an object.
    */
   @JsonProperty("tags")
   public void setTags(Tags tags) {
@@ -916,9 +969,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Metadata Schema
-   * <p>
-   * Metadata about creation and changes to records, provided by the server (client should not provide)
+   * Metadata about creation and changes to records, provided by the server (client should not provide).
    */
   @JsonProperty("metadata")
   public Metadata getMetadata() {
@@ -926,9 +977,7 @@ public class InstanceInternal {
   }
 
   /**
-   * Metadata Schema
-   * <p>
-   * Metadata about creation and changes to records, provided by the server (client should not provide)
+   * Metadata about creation and changes to records, provided by the server (client should not provide).
    */
   @JsonProperty("metadata")
   public void setMetadata(Metadata metadata) {
@@ -936,7 +985,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of holdings records
+   * List of holdings records.
    */
   @JsonProperty("holdingsRecords2")
   public List<HoldingsRecords2> getHoldingsRecords2() {
@@ -944,7 +993,7 @@ public class InstanceInternal {
   }
 
   /**
-   * List of holdings records
+   * List of holdings records.
    */
   @JsonProperty("holdingsRecords2")
   public void setHoldingsRecords2(List<HoldingsRecords2> holdingsRecords2) {
@@ -952,7 +1001,9 @@ public class InstanceInternal {
   }
 
   /**
-   * Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)
+   * Array of UUID for the InstanceInternal nature of content
+   * (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings,
+   * research report, thesis or website)
    */
   @JsonProperty("natureOfContentTermIds")
   public Set<String> getNatureOfContentTermIds() {
@@ -960,7 +1011,8 @@ public class InstanceInternal {
   }
 
   /**
-   * Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)
+   * Array of UUID for the InstanceInternal nature of content (e.g. bibliography,
+   * biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)
    */
   @JsonProperty("natureOfContentTermIds")
   public void setNatureOfContentTermIds(Set<String> natureOfContentTermIds) {
@@ -969,8 +1021,7 @@ public class InstanceInternal {
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder()
-      .append(metadata)
+    return new HashCodeBuilder().append(metadata)
       .append(notes)
       .append(previouslyHeld)
       .append(instanceFormats)
@@ -1020,7 +1071,7 @@ public class InstanceInternal {
     if (!(other instanceof InstanceInternal)) {
       return false;
     }
-    InstanceInternal rhs = ((InstanceInternal) other);
+    InstanceInternal rhs = (InstanceInternal) other;
     return new EqualsBuilder().append(metadata, rhs.metadata)
       .append(notes, rhs.notes)
       .append(previouslyHeld, rhs.previouslyHeld)
@@ -1064,8 +1115,7 @@ public class InstanceInternal {
   }
 
   public Instance toInstanceDto() {
-    return new Instance()
-      .withMetadata(metadata)
+    return new Instance().withMetadata(metadata)
       .withNotes(notes)
       .withPreviouslyHeld(previouslyHeld)
       .withInstanceFormats(instanceFormats)
@@ -1112,8 +1162,7 @@ public class InstanceInternal {
       if (subject instanceof String) {
         subjectSet.add(new Subject().withValue(subject.toString()));
       } else if (subject instanceof Map) {
-        @SuppressWarnings("unchecked")
-        var map = (Map<String, String>) subject;
+        @SuppressWarnings("unchecked") var map = (Map<String, String>) subject;
         subjectSet.add(new Subject().withValue(map.get("value")).withAuthorityId(map.get("authorityId")));
       }
     }
@@ -1126,8 +1175,7 @@ public class InstanceInternal {
       if (seriesItem instanceof String) {
         seriesSet.add(new Series().withValue(seriesItem.toString()));
       } else if (seriesItem instanceof Map) {
-        @SuppressWarnings("unchecked")
-        var map = (Map<String, String>) seriesItem;
+        @SuppressWarnings("unchecked") var map = (Map<String, String>) seriesItem;
         seriesSet.add(new Series().withValue(map.get("value")).withAuthorityId(map.get("authorityId")));
       }
     }

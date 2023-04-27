@@ -10,7 +10,7 @@ import java.util.function.Function;
 import org.folio.persist.AbstractRepository;
 
 public final class BatchOperationContextFactory {
-  private BatchOperationContextFactory() {}
+  private BatchOperationContextFactory() { }
 
   public static <T> Future<BatchOperationContext<T>> buildBatchOperationContext(
     boolean upsert, List<T> all, AbstractRepository<T> repository, Function<T, String> idGetter) {
@@ -21,7 +21,7 @@ public final class BatchOperationContextFactory {
 
     return repository.getById(all, idGetter).map(found -> {
       final var toBeCreated = all.stream()
-        .filter(record -> !found.containsKey(idGetter.apply(record)))
+        .filter(entity -> !found.containsKey(idGetter.apply(entity)))
         .collect(toList());
 
       return new BatchOperationContext<>(toBeCreated, found.values());

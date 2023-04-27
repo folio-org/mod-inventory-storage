@@ -27,7 +27,7 @@ public class InstanceEffectiveValuesService {
   }
 
   public void populateEffectiveValues(List<Instance> allInstances,
-    BatchOperationContext<Instance> context) {
+                                      BatchOperationContext<Instance> context) {
 
     var existingInstancesMap = context.getExistingRecords().stream()
       .collect(toMap(Instance::getId, identity()));
@@ -42,6 +42,10 @@ public class InstanceEffectiveValuesService {
     }
   }
 
+  public void populatePublicationPeriod(Instance instance) {
+    instance.withPublicationPeriod(parsePublicationPeriod(instance.getPublication()));
+  }
+
   private boolean instancePublicationsChanged(Instance newInstance, Instance oldInstance) {
     var newPublications = newInstance.getPublication();
     var oldPublications = oldInstance.getPublication();
@@ -54,7 +58,7 @@ public class InstanceEffectiveValuesService {
       return true;
     }
 
-    if (newPublications.size() == 0) {
+    if (newPublications.isEmpty()) {
       return false;
     }
 
@@ -66,9 +70,5 @@ public class InstanceEffectiveValuesService {
 
   private boolean dateOfPublicationChanged(Publication first, Publication second) {
     return !Objects.equals(first.getDateOfPublication(), second.getDateOfPublication());
-  }
-
-  public void populatePublicationPeriod(Instance instance) {
-    instance.withPublicationPeriod(parsePublicationPeriod(instance.getPublication()));
   }
 }

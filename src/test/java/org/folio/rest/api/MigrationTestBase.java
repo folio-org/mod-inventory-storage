@@ -41,9 +41,6 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
    * Executes multiply SQL statements separated by a line separator (either CRLF|CR|LF).
    *
    * @param allStatements - Statements to execute (separated by a line separator).
-   * @throws InterruptedException
-   * @throws ExecutionException
-   * @throws TimeoutException
    */
   void executeMultipleSqlStatements(String allStatements)
     throws InterruptedException, ExecutionException, TimeoutException {
@@ -63,8 +60,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     get(result);
   }
 
-  RowSet<Row> executeSql(String sql)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  RowSet<Row> executeSql(String sql) {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
 
@@ -79,9 +75,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     return get(result);
   }
 
-  void updateJsonbProperty(
-    String tableName, UUID id, String postgresPropertyPath, String postgresPropertyValue)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updateJsonbProperty(String tableName, UUID id, String postgresPropertyPath, String postgresPropertyValue) {
 
     executeSql(String.format(
       "UPDATE %s.%s as tbl SET jsonb = jsonb_set(tbl.jsonb, '{%s}', to_jsonb(%s)) WHERE id::text = '%s'",

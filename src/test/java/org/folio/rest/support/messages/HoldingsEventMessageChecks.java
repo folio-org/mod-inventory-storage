@@ -7,10 +7,9 @@ import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
-
-import io.vertx.core.json.JsonObject;
 
 public class HoldingsEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers
@@ -22,6 +21,14 @@ public class HoldingsEventMessageChecks {
     this.kafkaConsumer = kafkaConsumer;
   }
 
+  private static String getId(JsonObject holdings) {
+    return holdings.getString("id");
+  }
+
+  private static String getInstanceId(JsonObject holdings) {
+    return holdings.getString("instanceId");
+  }
+
   public void createdMessagePublished(JsonObject holdings) {
     final var holdingsId = getId(holdings);
     final var instanceId = getInstanceId(holdings);
@@ -31,7 +38,7 @@ public class HoldingsEventMessageChecks {
   }
 
   public void updatedMessagePublished(JsonObject oldHoldings,
-    JsonObject newHoldings) {
+                                      JsonObject newHoldings) {
 
     final var holdingsId = getId(newHoldings);
     final var instanceId = getInstanceId(newHoldings);
@@ -41,7 +48,7 @@ public class HoldingsEventMessageChecks {
   }
 
   public void noHoldingsUpdatedMessagePublished(String instanceId,
-    String holdingsId) {
+                                                String holdingsId) {
 
     awaitDuring(1, SECONDS)
       .until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
@@ -60,13 +67,5 @@ public class HoldingsEventMessageChecks {
     awaitAtMost()
       .until(() -> kafkaConsumer.getMessagesForHoldings(NULL_ID, null),
         eventMessageMatchers.hasDeleteAllEventMessage());
-  }
-
-  private static String getId(JsonObject holdings) {
-    return holdings.getString("id");
-  }
-
-  private static String getInstanceId(JsonObject holdings) {
-    return holdings.getString("instanceId");
   }
 }

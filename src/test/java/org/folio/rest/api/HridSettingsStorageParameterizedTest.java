@@ -30,6 +30,31 @@ import org.junit.runners.Parameterized.Parameters;
 @Parameterized.UseParametersRunnerFactory(VertxUnitRunnerWithParametersFactory.class)
 public class HridSettingsStorageParameterizedTest extends TestBase {
   private static final Logger log = LogManager.getLogger();
+  private final String instancePrefix;
+  private final long instanceStartNumber;
+  private final String holdingPrefix;
+  private final long holdingStartNumber;
+  private final String itemPrefix;
+  private final long itemStartNumber;
+  private final String keyPart;
+  private final String testField;
+  private final String expectedValue;
+
+  public HridSettingsStorageParameterizedTest(
+    String instancePrefix, long instanceStartNumber,
+    String holdingPrefix, long holdingStartNumber,
+    String itemPrefix, long itemStartNumber,
+    String keyPart, String testField, String expectedValue) {
+    this.instancePrefix = instancePrefix;
+    this.instanceStartNumber = instanceStartNumber;
+    this.holdingPrefix = holdingPrefix;
+    this.holdingStartNumber = holdingStartNumber;
+    this.itemPrefix = itemPrefix;
+    this.itemStartNumber = itemStartNumber;
+    this.keyPart = keyPart;
+    this.testField = testField;
+    this.expectedValue = expectedValue;
+  }
 
   @Parameters(name = "{index}: test validation failure {6}.{7} = {8}")
   public static Collection<Object[]> data() {
@@ -49,48 +74,22 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
     });
   }
 
-  private final String instancePrefix;
-  private final long instanceStartNumber;
-  private final String holdingPrefix;
-  private final long holdingStartNumber;
-  private final String itemPrefix;
-  private final long itemStartNumber;
-  private final String keyPart;
-  private final String testField;
-  private final String expectedValue;
-
-  public HridSettingsStorageParameterizedTest(
-      String instancePrefix, long instanceStartNumber,
-      String holdingPrefix, long holdingStartNumber,
-      String itemPrefix, long itemStartNumber,
-      String keyPart, String testField, String expectedValue) {
-    this.instancePrefix = instancePrefix;
-    this.instanceStartNumber = instanceStartNumber;
-    this.holdingPrefix = holdingPrefix;
-    this.holdingStartNumber = holdingStartNumber;
-    this.itemPrefix = itemPrefix;
-    this.itemStartNumber = itemStartNumber;
-    this.keyPart = keyPart;
-    this.testField = testField;
-    this.expectedValue = expectedValue;
-  }
-
   @Test
   public void cannotUpdateHridSettingsWithBadData()
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting cannotUpdateHridSettingsWithBadData()");
 
     final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
     final HridSettings newHridSettings = new HridSettings()
-        .withInstances(new HridSetting().withPrefix(instancePrefix)
-            .withStartNumber(instanceStartNumber))
-        .withHoldings(new HridSetting().withPrefix(holdingPrefix)
-            .withStartNumber(holdingStartNumber))
-        .withItems(new HridSetting().withPrefix(itemPrefix).withStartNumber(itemStartNumber));
+      .withInstances(new HridSetting().withPrefix(instancePrefix)
+        .withStartNumber(instanceStartNumber))
+      .withHoldings(new HridSetting().withPrefix(holdingPrefix)
+        .withStartNumber(holdingStartNumber))
+      .withItems(new HridSetting().withPrefix(itemPrefix).withStartNumber(itemStartNumber));
 
     getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
-        json(putCompleted));
+      json(putCompleted));
 
     final Response putResponse = putCompleted.get(10, SECONDS);
 

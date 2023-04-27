@@ -1,22 +1,21 @@
 package org.folio.services.authority;
 
+import static io.vertx.core.Promise.promise;
+import static org.folio.rest.impl.AuthorityRecordsApi.AUTHORITY_TABLE;
+import static org.folio.rest.persist.PgUtil.deleteById;
+import static org.folio.rest.persist.PgUtil.post;
+import static org.folio.rest.persist.PgUtil.put;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import java.util.Map;
+import javax.ws.rs.core.Response;
 import org.folio.persist.AuthorityRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.resource.AuthorityStorage;
 import org.folio.services.domainevent.AuthorityDomainEventPublisher;
 import org.folio.validator.CommonValidators;
-
-import javax.ws.rs.core.Response;
-import java.util.Map;
-
-import static io.vertx.core.Promise.promise;
-import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
-import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.put;
 
 public class AuthorityService {
 

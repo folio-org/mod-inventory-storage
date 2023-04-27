@@ -10,7 +10,7 @@ public class DomainEventRawTest {
   @Test
   public void updateEventIncludesOldAndNewRecordRespresentationsAndEventTypeAndTenant() {
     assertThat(DomainEventRaw.updateEvent("myold", "mynew", "mytenant").toString(),
-        endsWith("[oldEntity=myold,newEntity=mynew,type=UPDATE,tenant=mytenant]"));
+      endsWith("[oldEntity=myold,newEntity=mynew,type=UPDATE,tenant=mytenant]"));
   }
 
 }

@@ -41,9 +41,9 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
-import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.PublicationPeriodMigrationJobRunner;
@@ -55,14 +55,30 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   private final AsyncMigrationJobRepository repository = getRepository();
 
+  private static Map<String, String> okapiHeaders() {
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+  }
+
+  private static Context getContext() {
+    return getVertx().getOrCreateContext();
+  }
+
+  private static AsyncMigrationJob migrationJob() {
+    return new AsyncMigrationJob()
+      .withJobStatus(IN_PROGRESS)
+      .withId(UUID.randomUUID().toString())
+      .withMigrations(Collections.singletonList("publicationPeriodMigration"))
+      .withSubmittedDate(new Date());
+  }
+
   @Test
   public void canMigrateItemsInstances() {
     var numberOfRecords = 101;
 
-    var holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-      itemsClient.create(JsonObject.mapFrom(buildItem(holdingsRecordId, onlineLocationId, annexLibraryLocationId)
+      itemsClient.create(JsonObject.mapFrom(buildItem(holdingsRecordId, ONLINE_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
         .withItemLevelCallNumber("K1 .M44")
         .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
 
@@ -81,7 +97,8 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
             .put("dateOfPublication", "©2018"))
         )));
 
-    String sql = "update " + getPostgresClientFuturized().getFullTableName("instance") + " set jsonb = jsonb - 'publicationPeriod' where jsonb->> 'title' like 'test%'";
+    String sql = "update " + getPostgresClientFuturized().getFullTableName("instance")
+      + " set jsonb = jsonb - 'publicationPeriod' where jsonb->> 'title' like 'test%'";
     postgresClient(getContext(), okapiHeaders()).execute(sql);
     await().atMost(10, SECONDS)
       .until(() -> instancesClient.getByQuery("?query=publicationPeriod.start==2018").isEmpty());
@@ -101,38 +118,39 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());
 
-    postgresClient(getContext(), okapiHeaders()).delete("instances", new Criterion().addCriterion(new Criteria().addField("title").setOperation("like").setVal("test%"))).result();
+    postgresClient(getContext(), okapiHeaders()).delete("instances",
+      new Criterion().addCriterion(new Criteria().addField("title").setOperation("like").setVal("test%"))).result();
   }
 
   @Test
   public void canMigrateInstanceSubjectsAndSeries() {
-      var numberOfRecords = 10;
+    var numberOfRecords = 10;
 
-      IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-        instancesClient.create(new JsonObject()
-          .put("title", "test" + v)
-          .put("source", "MARC")
-          .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
+      instancesClient.create(new JsonObject()
+        .put("title", "test" + v)
+        .put("source", "MARC")
+        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
 
-      var updateFuture = postgresClient(getContext(), okapiHeaders()).select(
-        "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
-          + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
-          + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;").result();
+    var updateFuture = postgresClient(getContext(), okapiHeaders()).select(
+      "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
+        + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
+        + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;").result();
 
-      var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-        .withMigrations(List.of("subjectSeriesMigration")));
+    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
+      .withMigrations(List.of("subjectSeriesMigration")));
 
-      await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-        .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
+    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
-      var job = asyncMigration.getMigrationJob(migrationJob.getId());
+    var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
-      assertThat(job.getPublished().stream().map(Published::getCount)
-        .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-      assertThat(job.getProcessed().stream().map(Processed::getCount)
-        .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-      assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-      assertThat(job.getSubmittedDate(), notNullValue());
+    assertThat(job.getPublished().stream().map(Published::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+    assertThat(job.getProcessed().stream().map(Processed::getCount)
+      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
+    assertThat(job.getSubmittedDate(), notNullValue());
   }
 
   @Test
@@ -182,27 +200,11 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     return new PostgresClientFuturized(postgresClient);
   }
 
-  private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
-  }
-
   private PublicationPeriodMigrationJobRunner jobRunner() {
     return new PublicationPeriodMigrationJobRunner();
   }
 
   private AsyncMigrationJobRepository getRepository() {
     return new AsyncMigrationJobRepository(getContext(), okapiHeaders());
-  }
-
-  private static AsyncMigrationJob migrationJob() {
-    return new AsyncMigrationJob()
-      .withJobStatus(IN_PROGRESS)
-      .withId(UUID.randomUUID().toString())
-      .withMigrations(Collections.singletonList("publicationPeriodMigration"))
-      .withSubmittedDate(new Date());
   }
 }

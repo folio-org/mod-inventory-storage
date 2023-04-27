@@ -1,7 +1,7 @@
 package org.folio.rest.support.matchers;
 
+import io.vertx.core.json.DecodeException;
 import java.util.Objects;
-
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Parameter;
@@ -10,13 +10,17 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
-import io.vertx.core.json.DecodeException;
-
 public class ResponseMatcher {
 
   public static Matcher<Response> hasValidationError(String expectedValue) {
 
     return new TypeSafeMatcher<Response>() {
+      @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("Response has 422 status and error message parameter 'value' - ").appendValue(expectedValue);
+      }
+
       @Override
       protected boolean matchesSafely(Response response) {
         try {
@@ -38,12 +42,6 @@ public class ResponseMatcher {
           return false;
         }
       }
-
-      @Override
-      public void describeTo(Description description) {
-        description
-        .appendText("Response has 422 status and error message parameter 'value' - ").appendValue(expectedValue);
-      }
     };
   }
 
@@ -51,6 +49,14 @@ public class ResponseMatcher {
     String expectedMessage, String expectedKey, String expectedValue) {
 
     return new TypeSafeMatcher<Response>() {
+      @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("Response has 422 status and 'message' - ").appendValue(expectedMessage)
+          .appendText(", 'key' - ").appendValue(expectedKey)
+          .appendText(" and 'value' - ").appendValue(expectedValue);
+      }
+
       @Override
       protected boolean matchesSafely(Response response) {
         if (response.getStatusCode() != 422) {
@@ -75,14 +81,6 @@ public class ResponseMatcher {
         } catch (DecodeException ex) {
           return false;
         }
-      }
-
-      @Override
-      public void describeTo(Description description) {
-        description
-          .appendText("Response has 422 status and 'message' - ").appendValue(expectedMessage)
-          .appendText(", 'key' - ").appendValue(expectedKey)
-          .appendText(" and 'value' - ").appendValue(expectedValue);
       }
     };
   }

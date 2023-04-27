@@ -33,21 +33,19 @@ import org.junit.runner.RunWith;
 public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventoryUtil {
   private static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
   private static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
-
-  private static Vertx vertx = Vertx.vertx();
-  private static UUID instanceId = UUID.randomUUID();
   private static final String POPULATE_EFFECTIVE_CALL_NUMBER_SQL = ResourceUtil
-      .asString("templates/db_scripts/populateEffectiveCallNumberComponentsForExistingItems.sql")
-      .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
-
-  private ObjectMapper mapper = new ObjectMapper();
+    .asString("templates/db_scripts/populateEffectiveCallNumberComponentsForExistingItems.sql")
+    .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
+  private static final Vertx VERTX = Vertx.vertx();
+  private static final UUID INSTANCE_ID = UUID.randomUUID();
+  private final ObjectMapper mapper = new ObjectMapper();
 
   @SneakyThrows
   @BeforeClass
   public static void beforeAll() {
     TestBase.beforeAll();
 
-    instancesClient.create(instance(instanceId));
+    instancesClient.create(instance(INSTANCE_ID));
 
     callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
     callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);
@@ -66,7 +64,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumber() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumber(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
     item.setEffectiveCallNumberComponents(components);
@@ -89,7 +87,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberAfterHoldingsChange() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumber(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
@@ -98,8 +96,9 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumber"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumber}', '\"%s\"') WHERE id = '%s';";
-    String query = String.format(template, "updatedCallNumber", holding.toString());
+    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+      + "SET jsonb = jsonb_set(jsonb, '{callNumber}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumber", holding);
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumber(), is("updatedCallNumber"));
@@ -117,16 +116,17 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberToItemLevelWhenPresent() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumber(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumber(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
     assertThat(getItem(
-      item.getId()).getEffectiveCallNumberComponents().getCallNumber(),
+        item.getId()).getEffectiveCallNumberComponents().getCallNumber(),
       is("testCallNumber"));
 
     // Update item directly without updating item effective call number
-    String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumber}', '\"%s\"') WHERE id = '%s';";
+    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+      + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumber}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumber", item.getId());
     runSql(query);
 
@@ -149,13 +149,13 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberPrefix() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
     item.setEffectiveCallNumberComponents(components);
 
     String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
-        item.getId(), mapper.writeValueAsString(item));
+      item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
     assertThat(
@@ -171,7 +171,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberPrefixAfterHoldingsChange() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
@@ -180,8 +180,9 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberPrefix"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberPrefix}', '\"%s\"') WHERE id = '%s';";
-    String query = String.format(template, "updatedCallNumberPrefix", holding.toString());
+    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+      + "SET jsonb = jsonb_set(jsonb, '{callNumberPrefix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberPrefix", holding);
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumberPrefix(), is("updatedCallNumberPrefix"));
@@ -199,7 +200,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberPrefixToItemLevelWhenPresent() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberPrefix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
@@ -208,7 +209,8 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberPrefix"));
 
     // Update item directly without updating item effective call number prefix
-    String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberPrefix}', '\"%s\"') WHERE id = '%s';";
+    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+      + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberPrefix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberPrefix", item.getId());
     runSql(query);
 
@@ -231,13 +233,13 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberSuffix() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
     item.setEffectiveCallNumberComponents(components);
 
     String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
-        item.getId(), mapper.writeValueAsString(item));
+      item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
     assertThat(
@@ -253,7 +255,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberSuffixAfterHoldingsChange() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
@@ -262,8 +264,9 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberSuffix"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb_set(jsonb, '{callNumberSuffix}', '\"%s\"') WHERE id = '%s';";
-    String query = String.format(template, "updatedCallNumberSuffix", holding.toString());
+    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+      + "SET jsonb = jsonb_set(jsonb, '{callNumberSuffix}', '\"%s\"') WHERE id = '%s';";
+    String query = String.format(template, "updatedCallNumberSuffix", holding);
     runSql(query);
 
     assertThat(getHoldings(holding).getCallNumberSuffix(), is("updatedCallNumberSuffix"));
@@ -281,7 +284,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   public void canInitializeEffectiveCallNumberSuffixToItemLevelWhenPresent() throws Exception {
-    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(mainLibraryLocationId);
+    UUID holding = createInstanceAndHoldingWithCallNumberSuffix(MAIN_LIBRARY_LOCATION_ID);
     Item item = buildItem(holding, null, null);
     createItem(item);
 
@@ -290,7 +293,8 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberSuffix"));
 
     // Update item directly without updating item effective call number suffix
-    String template = "UPDATE test_tenant_mod_inventory_storage.item SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberSuffix}', '\"%s\"') WHERE id = '%s';";
+    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+      + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberSuffix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberSuffix", item.getId());
     runSql(query);
 
@@ -313,13 +317,13 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
   @Test
   @Parameters(method = "initializeCallNumberTypeParams")
-  public void canInitializeEffectiveCallNumberTypeId(
-    String itemLevelCallNumberType, String holdingsRecordCallNumberType) throws Exception {
+  public void canInitializeEffectiveCallNumberTypeId(String itemLevelCallNumberType,
+                                                     String holdingsRecordCallNumberType) throws Exception {
 
-    String expectedTypeId = StringUtils
+    final String expectedTypeId = StringUtils
       .firstNonBlank(itemLevelCallNumberType, holdingsRecordCallNumberType);
 
-    UUID holding = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+    UUID holding = createInstanceAndHoldingWithBuilder(MAIN_LIBRARY_LOCATION_ID,
       builder -> builder.withCallNumberTypeId(holdingsRecordCallNumberType));
 
     String itemId = createItem(new ItemRequestBuilder()
@@ -337,18 +341,18 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
 
     assertNotNull(populatedItem.getEffectiveCallNumberComponents());
     assertThat(populatedItem
-        .getEffectiveCallNumberComponents().getTypeId(), is(expectedTypeId)
+      .getEffectiveCallNumberComponents().getTypeId(), is(expectedTypeId)
     );
   }
 
   @SuppressWarnings("unused")
   private String[][] initializeCallNumberTypeParams() {
-    return new String[][]{
+    return new String[][] {
       {ITEM_LEVEL_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE},
       {ITEM_LEVEL_CALL_NUMBER_TYPE, null},
       {null, HOLDINGS_CALL_NUMBER_TYPE},
       {null, null},
-    };
+      };
   }
 
   private void removeEffectiveCallNumberComponents(String itemId) throws Exception {
@@ -372,7 +376,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   private void runSql(String sql) {
     CompletableFuture<Void> future = new CompletableFuture<>();
 
-    PostgresClient.getInstance(vertx).execute(sql, handler -> {
+    PostgresClient.getInstance(VERTX).execute(sql, handler -> {
       if (handler.failed()) {
         future.completeExceptionally(handler.cause());
         return;

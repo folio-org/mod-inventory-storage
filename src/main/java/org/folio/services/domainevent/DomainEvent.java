@@ -7,10 +7,9 @@ import static org.folio.services.domainevent.DomainEventType.MIGRATION;
 import static org.folio.services.domainevent.DomainEventType.REINDEX;
 import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DomainEvent<T> {
@@ -26,6 +25,34 @@ public class DomainEvent<T> {
     this.newEntity = newEntity;
     this.type = type;
     this.tenant = tenant;
+  }
+
+  public static <T> DomainEvent<T> updateEvent(T oldEntity, T newEntity, String tenant) {
+    return new DomainEvent<>(oldEntity, newEntity, UPDATE, tenant);
+  }
+
+  public static <T> DomainEvent<T> createEvent(T newEntity, String tenant) {
+    return new DomainEvent<>(null, newEntity, CREATE, tenant);
+  }
+
+  public static <T> DomainEvent<T> deleteEvent(T oldEntity, String tenant) {
+    return new DomainEvent<>(oldEntity, null, DELETE, tenant);
+  }
+
+  public static <T> DomainEvent<T> deleteAllEvent(String tenant) {
+    return new DomainEvent<>(null, null, DELETE_ALL, tenant);
+  }
+
+  public static <T> DomainEvent<T> reindexEvent(String tenant) {
+    return new DomainEvent<>(null, null, REINDEX, tenant);
+  }
+
+  public static <T> DomainEvent<T> reindexEvent(String tenant, T newEntity) {
+    return new DomainEvent<>(null, newEntity, REINDEX, tenant);
+  }
+
+  public static <T> DomainEvent<T> asyncMigrationEvent(T job, String tenant) {
+    return new DomainEvent<>(null, job, MIGRATION, tenant);
   }
 
   public T getOldEntity() {
@@ -68,33 +95,5 @@ public class DomainEvent<T> {
       .append("type", type)
       .append("tenant", tenant)
       .toString();
-  }
-
-  public static <T> DomainEvent<T> updateEvent(T oldEntity, T newEntity, String tenant) {
-    return new DomainEvent<>(oldEntity, newEntity, UPDATE, tenant);
-  }
-
-  public static <T> DomainEvent<T> createEvent(T newEntity, String tenant) {
-    return new DomainEvent<>(null, newEntity, CREATE, tenant);
-  }
-
-  public static <T> DomainEvent<T> deleteEvent(T oldEntity, String tenant) {
-    return new DomainEvent<>(oldEntity, null, DELETE, tenant);
-  }
-
-  public static <T> DomainEvent<T> deleteAllEvent(String tenant) {
-    return new DomainEvent<>(null, null, DELETE_ALL, tenant);
-  }
-
-  public static <T> DomainEvent<T> reindexEvent(String tenant) {
-    return new DomainEvent<>(null, null, REINDEX, tenant);
-  }
-
-  public static <T> DomainEvent<T> reindexEvent(String tenant, T newEntity) {
-    return new DomainEvent<>(null, newEntity, REINDEX, tenant);
-  }
-
-  public static <T> DomainEvent<T> asyncMigrationEvent(T job, String tenant) {
-    return new DomainEvent<>(null, job, MIGRATION, tenant);
   }
 }

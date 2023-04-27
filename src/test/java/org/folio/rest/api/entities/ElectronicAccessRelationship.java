@@ -3,16 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
-public class ElectronicAccessRelationship extends JsonEntity {
-   public static final String NAME_KEY = "name";
 
-  public ElectronicAccessRelationship (String name) {
+public class ElectronicAccessRelationship extends JsonEntity {
+  public static final String NAME_KEY = "name";
+
+  public ElectronicAccessRelationship(String name) {
     super.setProperty(NAME_KEY, name);
   }
 

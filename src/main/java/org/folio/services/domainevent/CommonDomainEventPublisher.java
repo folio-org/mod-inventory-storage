@@ -9,13 +9,18 @@ import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.streams.ReadStream;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.function.LongFunction;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -24,12 +29,6 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.streams.ReadStream;
-import io.vertx.kafka.client.producer.KafkaProducer;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -41,7 +40,7 @@ public class CommonDomainEventPublisher<T> {
   private final String kafkaTopic;
 
   CommonDomainEventPublisher(Map<String, String> okapiHeaders, String kafkaTopic,
-    KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
+                             KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
 
     this.okapiHeaders = okapiHeaders;
     this.kafkaTopic = kafkaTopic;
@@ -50,10 +49,65 @@ public class CommonDomainEventPublisher<T> {
   }
 
   public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
-    String kafkaTopic) {
+                                    String kafkaTopic) {
 
     this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext),
       new LogToDbFailureHandler(vertxContext, okapiHeaders));
+  }
+
+  private static KafkaProducerManager createProducerManager(Context vertxContext) {
+    var kafkaConfig = KafkaConfig.builder()
+      .kafkaPort(KafkaEnvironmentProperties.port())
+      .kafkaHost(KafkaEnvironmentProperties.host())
+      .build();
+
+    return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
+  }
+
+  public <R> Future<Long> publishStream(ReadStream<R> readStream,
+                                        Function<R, KafkaProducerRecordBuilder<String, Object>> mapper,
+                                        LongFunction<Future<?>> progressHandler) {
+
+    var promise = Promise.<Long>promise();
+    var kafkaProducer = getOrCreateProducer("stream_");
+    var recordsProcessed = new AtomicLong(0);
+
+    readStream.exceptionHandler(error -> {
+      log.error("Unable to publish stream", error);
+      promise.tryFail(error);
+    }).endHandler(notUsed -> promise.tryComplete(recordsProcessed.get())).handler(rec -> {
+      var producerRecord = mapper.apply(rec)
+        .topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders).build();
+
+      kafkaProducer.send(producerRecord)
+        .onFailure(error -> {
+          log.error("Unable to send event [{}]", producerRecord.value(), error);
+
+          failureHandler.handleFailure(error, producerRecord);
+          recordsProcessed.decrementAndGet();
+        });
+
+      progressHandler.apply(recordsProcessed.incrementAndGet())
+        .onFailure(error -> {
+          log.warn("Error occurred when progress tracked", error);
+
+          readStream.pause();
+          promise.tryFail(error);
+        });
+
+      if (kafkaProducer.writeQueueFull()) {
+        log.info("Producer write queue full...");
+        readStream.pause();
+
+        kafkaProducer.drainHandler(notUsed -> {
+          log.info("Producer write queue empty again...");
+          readStream.resume();
+        });
+      }
+    });
+
+    return promise.future()
+      .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
   Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
@@ -68,7 +122,7 @@ public class CommonDomainEventPublisher<T> {
     }
 
     return all(updatedRecords.stream()
-      .map(record -> publishRecordUpdated(record.getLeft(), record.getMiddle(), record.getRight()))
+      .map(triple -> publishRecordUpdated(triple.getLeft(), triple.getMiddle(), triple.getRight()))
       .collect(Collectors.toList()))
       .map(notUsed -> null);
   }
@@ -85,7 +139,7 @@ public class CommonDomainEventPublisher<T> {
     }
 
     return all(records.stream()
-      .map(record -> publishRecordCreated(record.getKey(), record.getValue()))
+      .map(pair -> publishRecordCreated(pair.getKey(), pair.getValue()))
       .collect(Collectors.toList()))
       .map(notUsed -> null);
   }
@@ -104,53 +158,6 @@ public class CommonDomainEventPublisher<T> {
 
   Future<Void> publishAllRecordsRemoved() {
     return publish(NULL_ID, deleteAllEvent(tenantId(okapiHeaders)));
-  }
-
-  public <R> Future<Long> publishStream(ReadStream<R> readStream,
-    Function<R, KafkaProducerRecordBuilder<String, Object>> mapper,
-    Function<Long, Future<?>> progressHandler) {
-
-    var promise = Promise.<Long>promise();
-    var kafkaProducer = getOrCreateProducer("stream_");
-    var recordsProcessed = new AtomicLong(0);
-
-    readStream.exceptionHandler(error -> {
-      log.error("Unable to publish stream", error);
-      promise.tryFail(error);
-    }).endHandler(notUsed -> promise.tryComplete(recordsProcessed.get()))
-      .handler(record -> {
-        var producerRecord = mapper.apply(record)
-          .topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders).build();
-
-        kafkaProducer.send(producerRecord)
-          .onFailure(error -> {
-            log.error("Unable to send event [{}]", producerRecord.value(), error);
-
-            failureHandler.handleFailure(error, producerRecord);
-            recordsProcessed.decrementAndGet();
-          });
-
-        progressHandler.apply(recordsProcessed.incrementAndGet())
-          .onFailure(error -> {
-            log.warn("Error occurred when progress tracked", error);
-
-            readStream.pause();
-            promise.tryFail(error);
-          });
-
-        if (kafkaProducer.writeQueueFull()) {
-          log.info("Producer write queue full...");
-          readStream.pause();
-
-          kafkaProducer.drainHandler(notUsed -> {
-            log.info("Producer write queue empty again...");
-            readStream.resume();
-          });
-        }
-      });
-
-    return promise.future()
-      .onSuccess(records -> log.info("Total records published from stream {}", records));
   }
 
   private Future<Void> publish(String key, Object value) {
@@ -180,14 +187,5 @@ public class CommonDomainEventPublisher<T> {
 
   private KafkaProducer<String, String> getOrCreateProducer(String prefix) {
     return producerManager.createShared(prefix + kafkaTopic);
-  }
-
-  private static KafkaProducerManager createProducerManager(Context vertxContext) {
-    var kafkaConfig = KafkaConfig.builder()
-      .kafkaPort(KafkaEnvironmentProperties.port())
-      .kafkaHost(KafkaEnvironmentProperties.host())
-      .build();
-
-    return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
   }
 }

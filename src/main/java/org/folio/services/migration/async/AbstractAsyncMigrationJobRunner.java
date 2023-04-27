@@ -1,5 +1,9 @@
 package org.folio.services.migration.async;
 
+import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
+
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
@@ -11,10 +15,6 @@ import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-
-import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
 
 public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJobRunner {
 
@@ -31,17 +31,21 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
     var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());
-    var publisher = new CommonDomainEventPublisher<AsyncMigrationJob>(context.getVertxContext(), context.getOkapiHeaders(),
-      ASYNC_MIGRATION.fullTopicName( tenantId(context.getOkapiHeaders())));
+    var publisher =
+      new CommonDomainEventPublisher<AsyncMigrationJob>(context.getVertxContext(), context.getOkapiHeaders(),
+        ASYNC_MIGRATION.fullTopicName(tenantId(context.getOkapiHeaders())));
     var streamingContext = new StreamingContext(migrationJob, context, migrationService, publisher);
 
     return streamIdsForMigration(streamingContext)
-      .onSuccess(records -> log.info("All ids for the class has been " +
-        "sent [class={}, idsCount={}]", getClass(), records))
+      .onSuccess(records -> log.info("All ids for the class has been sent [class={}, idsCount={}]",
+        getClass(), records))
       .onFailure(error -> log.error("Unable to complete migration for the class [class={}]",
         getClass(), error))
       .mapEmpty();
   }
+
+  protected abstract Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient,
+                                                       SQLConnection connection);
 
   private Future<Long> streamIdsForMigration(StreamingContext context) {
     var postgresClient = context.getMigrationContext().getPostgresClient();
@@ -61,7 +65,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
         } else {
           log.info("Publishing records for migration completed");
           context.getAsyncMigrationService()
-            .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(), context.getJobId());
+            .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(),
+              context.getJobId());
         }
       });
   }
@@ -76,12 +81,13 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {
     return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
-      .value(asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
+      .value(
+        asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
       .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())
       .header(ASYNC_MIGRATION_JOB_NAME, context.getMigrationContext().getMigrationName());
   }
 
-  private static class StreamingContext {
+  private static final class StreamingContext {
     private final AsyncMigrationJob job;
     private final AsyncMigrationContext migrationContext;
     private final AsyncMigrationJobService migrationService;
@@ -96,6 +102,18 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
       this.migrationContext = migrationContext;
       this.migrationService = migrationService;
       this.publisher = publisher;
+    }
+
+    public AsyncMigrationContext getMigrationContext() {
+      return migrationContext;
+    }
+
+    public AsyncMigrationJobService getAsyncMigrationService() {
+      return migrationService;
+    }
+
+    public CommonDomainEventPublisher<AsyncMigrationJob> getPublisher() {
+      return publisher;
     }
 
     private AbstractAsyncMigrationJobRunner.StreamingContext withConnection(SQLConnection connection) {
@@ -115,20 +133,6 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
     private AsyncMigrationJob getJob() {
       return job;
     }
-
-    public AsyncMigrationContext getMigrationContext() {
-      return migrationContext;
-    }
-
-    public AsyncMigrationJobService getAsyncMigrationService() {
-      return migrationService;
-    }
-
-    public CommonDomainEventPublisher<AsyncMigrationJob> getPublisher() {
-      return publisher;
-    }
   }
-
-  protected abstract Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient, SQLConnection connection);
 
 }

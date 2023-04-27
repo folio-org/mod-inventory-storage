@@ -9,17 +9,15 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasProperty;
 
+import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.Map;
-
+import lombok.NonNull;
+import lombok.Value;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.messages.EventMessage;
 import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
-
-import io.vertx.core.json.JsonObject;
-import lombok.NonNull;
-import lombok.Value;
 
 @Value
 public class EventMessageMatchers {
@@ -27,6 +25,21 @@ public class EventMessageMatchers {
   String expectedTenantId;
   @NonNull
   URL expectedUrl;
+
+  @NotNull
+  private static Matcher<EventMessage> hasType(String type) {
+    return hasProperty("type", is(type));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("oldRepresentation", matcher);
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("newRepresentation", matcher);
+  }
 
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
@@ -40,7 +53,7 @@ public class EventMessageMatchers {
 
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasUpdateEventMessageFor(JsonObject oldRepresentation,
-    JsonObject newRepresentation) {
+                                                                          JsonObject newRepresentation) {
 
     return hasItem(allOf(
       isUpdateEvent(),
@@ -81,28 +94,8 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private Matcher<EventMessage> isCreateEvent() {
-    return hasType("CREATE");
-  }
-
-  @NotNull
   public Matcher<EventMessage> isUpdateEvent() {
     return hasType("UPDATE");
-  }
-
-  @NotNull
-  private Matcher<EventMessage> isDeleteEvent() {
-    return hasType("DELETE");
-  }
-
-  @NotNull
-  private Matcher<EventMessage> isDeleteAllEvent() {
-    return hasType("DELETE_ALL");
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasType(String type) {
-    return hasProperty("type", is(type));
   }
 
   @NotNull
@@ -118,6 +111,27 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<EventMessage> hasNewRepresentation(
+    JsonObject expectedRepresentation) {
+    return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isCreateEvent() {
+    return hasType("CREATE");
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isDeleteEvent() {
+    return hasType("DELETE");
+  }
+
+  @NotNull
+  private Matcher<EventMessage> isDeleteAllEvent() {
+    return hasType("DELETE_ALL");
+  }
+
+  @NotNull
   private Matcher<Map<? extends String, ? extends String>> hasUrlHeader() {
     return hasEntry(XOkapiHeaders.URL.toLowerCase(), expectedUrl.toString());
   }
@@ -127,7 +141,6 @@ public class EventMessageMatchers {
     // Needs to be lower case because keys are mapped to lower case
     return hasEntry(XOkapiHeaders.TENANT.toLowerCase(), expectedTenantId);
   }
-
 
   @NotNull
   private Matcher<EventMessage> hasOldRepresentation(JsonObject expectedRepresentation) {
@@ -140,23 +153,7 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("oldRepresentation", matcher);
-  }
-
-  @NotNull
-  public Matcher<EventMessage> hasNewRepresentation(
-    JsonObject expectedRepresentation) {
-    return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
-  }
-
-  @NotNull
   private Matcher<EventMessage> hasNoNewRepresentation() {
     return hasNewRepresentationThat(is(nullValue()));
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("newRepresentation", matcher);
   }
 }

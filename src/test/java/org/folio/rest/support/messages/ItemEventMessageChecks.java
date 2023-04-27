@@ -7,63 +7,19 @@ import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
-
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
-import io.vertx.core.json.JsonObject;
-
 public class ItemEventMessageChecks {
-  private static final EventMessageMatchers eventMessageMatchers
+  private static final EventMessageMatchers EVENT_MESSAGE_MATCHERS
     = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
 
   private final FakeKafkaConsumer kafkaConsumer;
 
   public ItemEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
     this.kafkaConsumer = kafkaConsumer;
-  }
-
-  public void createdMessagePublished(JsonObject item) {
-    final var itemId = getId(item);
-    final var instanceId = getInstanceIdForItem(item);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
-      eventMessageMatchers.hasCreateEventMessageFor(
-        addInstanceIdToItem(item, instanceId)));
-  }
-
-  public void updatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
-    final var oldInstanceId = getInstanceIdForItem(oldItem);
-
-    updatedMessagePublished(oldItem, newItem, oldInstanceId);
-  }
-
-  public void updatedMessagePublished(JsonObject oldItem,
-    JsonObject newItem, String oldInstanceId) {
-
-    final var itemId = getId(newItem);
-    final var newInstanceId = getInstanceIdForItem(newItem);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(newInstanceId, itemId),
-      eventMessageMatchers.hasUpdateEventMessageFor(
-        addInstanceIdToItem(oldItem, oldInstanceId),
-        addInstanceIdToItem(newItem, newInstanceId)));
-  }
-
-  public void deletedMessagePublished(JsonObject item) {
-    final var itemId = getId(item);
-    final var instanceId = getInstanceIdForItem(item);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
-      eventMessageMatchers.hasDeleteEventMessageFor(
-        addInstanceIdToItem(item, instanceId)));
-  }
-
-  public void allItemsDeletedMessagePublished() {
-    awaitAtMost()
-      .until(() -> kafkaConsumer.getMessagesForItem(NULL_ID, null),
-        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
   private static String getId(JsonObject item) {
@@ -85,5 +41,47 @@ public class ItemEventMessageChecks {
     final UUID holdingsRecordId = fromString(getHoldingsRecordIdForItem(newItem));
 
     return holdingsClient.getById(holdingsRecordId).getJson().getString("instanceId");
+  }
+
+  public void createdMessagePublished(JsonObject item) {
+    final var itemId = getId(item);
+    final var instanceId = getInstanceIdForItem(item);
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
+      EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(
+        addInstanceIdToItem(item, instanceId)));
+  }
+
+  public void updatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
+    final var oldInstanceId = getInstanceIdForItem(oldItem);
+
+    updatedMessagePublished(oldItem, newItem, oldInstanceId);
+  }
+
+  public void updatedMessagePublished(JsonObject oldItem,
+                                      JsonObject newItem, String oldInstanceId) {
+
+    final var itemId = getId(newItem);
+    final var newInstanceId = getInstanceIdForItem(newItem);
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(newInstanceId, itemId),
+      EVENT_MESSAGE_MATCHERS.hasUpdateEventMessageFor(
+        addInstanceIdToItem(oldItem, oldInstanceId),
+        addInstanceIdToItem(newItem, newInstanceId)));
+  }
+
+  public void deletedMessagePublished(JsonObject item) {
+    final var itemId = getId(item);
+    final var instanceId = getInstanceIdForItem(item);
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
+      EVENT_MESSAGE_MATCHERS.hasDeleteEventMessageFor(
+        addInstanceIdToItem(item, instanceId)));
+  }
+
+  public void allItemsDeletedMessagePublished() {
+    awaitAtMost()
+      .until(() -> kafkaConsumer.getMessagesForItem(NULL_ID, null),
+        EVENT_MESSAGE_MATCHERS.hasDeleteAllEventMessage());
   }
 }

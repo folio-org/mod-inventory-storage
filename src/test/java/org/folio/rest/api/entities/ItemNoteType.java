@@ -3,17 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class ItemNoteType extends JsonEntity {
   public static final String NAME_KEY = "name";
   public static final String SOURCE_KEY = "source";
 
-  public ItemNoteType (String name, String source) {
+  public ItemNoteType(String name, String source) {
     super.setProperty(NAME_KEY, name);
     super.setProperty(SOURCE_KEY, source);
   }

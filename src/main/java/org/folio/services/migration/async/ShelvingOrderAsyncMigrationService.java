@@ -4,14 +4,13 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
-
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrationService {
 

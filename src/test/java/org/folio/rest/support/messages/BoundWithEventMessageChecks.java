@@ -5,8 +5,8 @@ import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
-
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
@@ -14,8 +14,6 @@ import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
-
-import io.vertx.core.json.JsonObject;
 
 public class BoundWithEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers
@@ -40,14 +38,14 @@ public class BoundWithEventMessageChecks {
   }
 
   public void updatedMessagePublished(IndividualResource oldBoundWith,
-    Response newBoundWith, UUID oldInstanceId, UUID newInstanceId) {
+                                      Response newBoundWith, UUID oldInstanceId, UUID newInstanceId) {
 
     updatedMessagePublished(oldBoundWith.getJson(), newBoundWith.getJson(),
       oldInstanceId.toString(), newInstanceId.toString());
   }
 
   public void updatedMessagePublished(JsonObject oldBoundWith,
-    JsonObject newBoundWith, String oldInstanceId, String newInstanceId) {
+                                      JsonObject newBoundWith, String oldInstanceId, String newInstanceId) {
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForBoundWith(newInstanceId),
       hasBoundWithUpdateMessageFor(oldBoundWith, newBoundWith, oldInstanceId, newInstanceId));
@@ -67,9 +65,9 @@ public class BoundWithEventMessageChecks {
       eventMessageMatchers.hasHeaders(),
       eventMessageMatchers.hasNewRepresentation(newRepresentation)));
 
-      // There is a potential bug with the old representation in these message
-      // until this is investigated further, this check is removed
-      // eventMessageMatchers.hasOldRepresentation(oldRepresentation)));
+    // There is a potential bug with the old representation in these message
+    // until this is investigated further, this check is removed
+    // eventMessageMatchers.hasOldRepresentation(oldRepresentation)));
   }
 
   private JsonObject addInstanceIdToBoundWith(JsonObject boundWith, String instanceId) {

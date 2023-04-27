@@ -11,10 +11,10 @@ import org.folio.rest.jaxrs.model.AffectedEntity;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
 
-public class SubjectSeriesMigrationJobRunner  extends AbstractAsyncMigrationJobRunner {
+public class SubjectSeriesMigrationJobRunner extends AbstractAsyncMigrationJobRunner {
 
-  private static final String SELECT_SQL = "SELECT id FROM %s " +
-    "WHERE jsonb->'subjects' <> '[]' OR jsonb->'series' <> '[]'";
+  private static final String SELECT_SQL = "SELECT id FROM %s "
+    + "WHERE jsonb->'subjects' <> '[]' OR jsonb->'series' <> '[]'";
 
   @Override
   public String getMigrationName() {

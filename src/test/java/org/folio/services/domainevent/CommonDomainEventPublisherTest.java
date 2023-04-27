@@ -16,10 +16,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
-
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import java.util.Map;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
@@ -34,16 +33,19 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
-  @Mock private KafkaProducer<String, String> producer;
-  @Mock private KafkaProducerManager producerManager;
-  @Mock private FailureHandler failureHandler;
+  @Mock
+  private KafkaProducer<String, String> producer;
+  @Mock
+  private KafkaProducerManager producerManager;
+  @Mock
+  private FailureHandler failureHandler;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
       new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName("foo-tenant"),
-        producerManager, failureHandler);
+      producerManager, failureHandler);
   }
 
   @Test
@@ -129,8 +131,8 @@ public class CommonDomainEventPublisherTest {
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any())).thenReturn(failedFuture(causeError));
 
-    var e = assertThrows(RuntimeException.class,
-        () -> get(eventPublisher.publishAllRecordsRemoved()));
+    var future = eventPublisher.publishAllRecordsRemoved();
+    var e = assertThrows(RuntimeException.class, () -> get(future));
     assertThat(e.getCause().getCause(), is(instanceOf(IllegalArgumentException.class)));
 
     verify(failureHandler, times(1)).handleFailure(eq(causeError), any());
@@ -144,7 +146,7 @@ public class CommonDomainEventPublisherTest {
     return null;
   }
 
-  private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value){
+  private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
     return new KafkaProducerRecordBuilder<String, Object>().value(value);
   }
 }

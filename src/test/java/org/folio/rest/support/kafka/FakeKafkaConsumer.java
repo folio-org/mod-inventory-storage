@@ -1,27 +1,25 @@
 package org.folio.rest.support.kafka;
 
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.folio.rest.support.messages.EventMessage;
 import org.jetbrains.annotations.NotNull;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 public final class FakeKafkaConsumer {
   // These definitions are deliberately separate to the production definitions
   // This is so these can be changed independently to demonstrate
   // tests failing for the right reason prior to changing the production code
-  final static String INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
-  final static String HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
-  final static String ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
-  final static String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
-  final static String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
+  static final String INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
+  static final String HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
+  static final String ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
+  static final String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
+  static final String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
 
   private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
@@ -30,6 +28,20 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
 
   private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
+
+  private static String instanceAndIdKey(String instanceId, String itemId) {
+    return instanceId + "_" + itemId;
+  }
+
+  private static String instanceAndIdKey(KafkaConsumerRecord<String, JsonObject> message) {
+    final JsonObject payload = message.value();
+    final var oldOrNew = payload.containsKey("new")
+                         ? payload.getJsonObject("new") : payload.getJsonObject("old");
+
+    final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
+
+    return instanceAndIdKey(message.key(), id);
+  }
 
   public void consume(Vertx vertx) {
     consumer.subscribe(vertx);
@@ -80,20 +92,6 @@ public final class FakeKafkaConsumer {
 
   public Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
     return collectedBoundWithMessages.messagesByGroupKey(instanceId);
-  }
-
-  private static String instanceAndIdKey(String instanceId, String itemId) {
-    return instanceId + "_" + itemId;
-  }
-
-  private static String instanceAndIdKey(KafkaConsumerRecord<String, JsonObject> message) {
-    final JsonObject payload = message.value();
-    final var oldOrNew = payload.containsKey("new")
-      ? payload.getJsonObject("new") : payload.getJsonObject("old");
-
-    final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
-
-    return instanceAndIdKey(message.key(), id);
   }
 
   private VertxMessageCollectingTopicConsumer createConsumer() {

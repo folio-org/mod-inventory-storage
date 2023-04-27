@@ -9,13 +9,12 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.FAILED;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import java.util.Map;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
@@ -46,7 +45,6 @@ public class IterationJobRunner {
   private final InstanceInternalRepository instanceRepository;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
-
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
     this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
       new IterationJobRepository(vertxContext, okapiHeaders),
@@ -56,7 +54,8 @@ public class IterationJobRunner {
   }
 
   public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
-                            InstanceInternalRepository instanceRepository, Context vertxContext, Map<String, String> okapiHeaders) {
+                            InstanceInternalRepository instanceRepository, Context vertxContext,
+                            Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
@@ -67,14 +66,25 @@ public class IterationJobRunner {
     initWorker(vertxContext);
   }
 
+  private static void initWorker(Context vertxContext) {
+    if (workerExecutor == null) {
+      synchronized (IterationJobRunner.class) {
+        if (workerExecutor == null) {
+          workerExecutor = vertxContext.owner()
+            .createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
+        }
+      }
+    }
+  }
+
   public void startIteration(IterationJob job) {
     String fullTopicName = join(".", environment(), tenantId(okapiHeaders), job.getJobParams().getTopicName());
     eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, fullTopicName);
 
     workerExecutor.executeBlocking(
-      promise -> streamInstanceIds(new IterationContext(job))
-        .map(notUsed -> null)
-        .onComplete(promise))
+        promise -> streamInstanceIds(new IterationContext(job))
+          .map(notUsed -> null)
+          .onComplete(promise))
       .map(notUsed -> null);
   }
 
@@ -141,8 +151,8 @@ public class IterationJobRunner {
     jobRepository.fetchAndUpdate(context.getJobId(),
       resp -> {
         var finalStatus = resp.getJobStatus() == CANCELLATION_PENDING
-          ? CANCELLED
-          : FAILED;
+                          ? CANCELLED
+                          : FAILED;
 
         return resp.withJobStatus(finalStatus);
       });
@@ -159,18 +169,7 @@ public class IterationJobRunner {
     return new DomainEvent<>(null, null, DomainEventType.valueOf(eventType), tenantId(okapiHeaders));
   }
 
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (IterationJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
-        }
-      }
-    }
-  }
-
-  private static class IterationContext {
+  private static final class IterationContext {
 
     private final IterationJob job;
     private SQLConnection connection;

@@ -27,169 +27,11 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- *
- * @author kurt
- */
 public class ServicePointsUserTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
-  @SneakyThrows
-  @Before
-  public void beforeEach() {
-    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
-    StorageTestSuite.deleteAll(servicePointsUrl(""));
-
-    removeAllEvents();
-  }
-
-  //BEGIN TESTS
-  @Test
-  public void emptyTest() {
-    assertThat(true, is(true));
-  }
-
-  @Test
-  public void canCreateServicePointUser() throws InterruptedException, ExecutionException,
-    TimeoutException {
-
-    Response response = createServicePointUser(UUID.randomUUID(), UUID.randomUUID(),
-      null, null);
-    assertThat(response.getStatusCode(), is(201));
-  }
-
-  @Test
-  public void canRetrieveCreatedSPU() throws InterruptedException, ExecutionException,
-    TimeoutException {
-
-    Response postResponse = createServicePointUser(UUID.randomUUID(),
-      UUID.randomUUID(), null, null);
-    String id = postResponse.getJson().getString("id");
-    Response getResponse = getServicePointUserById(UUID.fromString(id));
-    assertThat(getResponse.getStatusCode(), is(200));
-    assertThat(getResponse.getJson().getString("id"), is(id));
-  }
-
-  @Test
-  public void cannotCreateSPUWithNonExistantDefaultSP() throws InterruptedException,
-    ExecutionException, TimeoutException {
-
-    Response response = createServicePointUser(UUID.randomUUID(),
-        UUID.randomUUID(), null, UUID.randomUUID());
-    assertThat(response.getStatusCode(), is(422));
-  }
-
-  @Test
-  public void canCreateSPUWithExistingDefaultSP()
-      throws MalformedURLException, InterruptedException, ExecutionException,
-      TimeoutException {
-    UUID spID = UUID.randomUUID();
-    createServicePoint(spID, "Circ Desk 1", "cd1",
-        "Circulation Desk -- Hallway", null,
-        20, true, createHoldShelfExpiryPeriod());
-    Response response = createServicePointUser(UUID.randomUUID(),
-        UUID.randomUUID(), null, spID);
-    assertThat(response.getStatusCode(), is(201));
-  }
-
-  @Test
-  public void canGetSPUS() throws InterruptedException, ExecutionException, TimeoutException {
-    createServicePointUser(null, UUID.randomUUID(), null, null);
-    createServicePointUser(null, UUID.randomUUID(), null, null);
-    Response response = getServicePointUsers(null);
-    assertThat(response.getJson().getInteger("totalRecords"), is(2));
-  }
-
-   @Test
-  public void canDeleteAllSPUS() throws InterruptedException, ExecutionException, TimeoutException {
-    createServicePointUser(null, UUID.randomUUID(), null, null);
-    createServicePointUser(null, UUID.randomUUID(), null, null);
-    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
-    Response response = getServicePointUsers(null);
-    assertThat(response.getJson().getInteger("totalRecords"), is(0));
-  }
-
-
-  @Test
-  public void canQuerySPUS() throws MalformedURLException, InterruptedException, ExecutionException,
-      TimeoutException {
-    UUID spId1 = UUID.randomUUID();
-    UUID spId2 = UUID.randomUUID();
-    UUID spId3 = UUID.randomUUID();
-    createServicePoint(spId1, "Circ Desk 1", "cd1",
-        "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
-    createServicePoint(spId2, "Circ Desk 2", "cd2",
-        "Circulation Desk -- Stairs", null, 20, true, createHoldShelfExpiryPeriod());
-    createServicePoint(spId3, "Circ Desk 3", "cd3",
-        "Circulation Desk -- Basement", null, 20, true, createHoldShelfExpiryPeriod());
-    List<UUID> spList1 = new ArrayList<>();
-    spList1.add(spId1);
-    spList1.add(spId2);
-    List<UUID> spList2 = new ArrayList<>();
-    spList2.add(spId2);
-    spList2.add(spId3);
-    UUID spuId = UUID.randomUUID();
-    createServicePointUser(null, UUID.randomUUID(), spList1, spId1);
-    createServicePointUser(spuId, UUID.randomUUID(), spList2, spId2);
-    //Response response = getServicePointUsers(null);
-    Response response = getServicePointUsers(String.format("servicePointsIds=%s",spId3.toString()));
-    System.out.println(response.toString());
-    assertThat(response.getJson().getInteger("totalRecords"), is(1));
-    assertThat(response.getJson().getJsonArray("servicePointsUsers")
-        .getJsonObject(0).getString("id"), is(spuId.toString()));
-  }
-
-  @Test
-  public void canUpdateServicePointUser() throws InterruptedException, ExecutionException,
-    TimeoutException {
-
-    UUID userId1 = UUID.randomUUID();
-    UUID userId2 = UUID.randomUUID();
-    UUID spuId = UUID.randomUUID();
-    createServicePointUser(spuId, userId1, null, null);
-    JsonObject entity = new JsonObject()
-        .put("id", spuId.toString())
-        .put("userId", userId2.toString());
-    Response response = updateServicePointUserById(spuId, entity);
-    assertThat(response.getStatusCode(), is(204));
-    Response getResponse = getServicePointUserById(spuId);
-    assertThat(getResponse.getJson().getString("userId"), is(userId2.toString()));
-  }
-
-  @Test
-  public void canDeleteServicePointUser() throws InterruptedException, ExecutionException,
-    TimeoutException {
-
-    UUID spuId = UUID.randomUUID();
-    createServicePointUser(spuId, UUID.randomUUID(), null, null);
-    Response getResponse = getServicePointUserById(spuId);
-    assertThat(getResponse.getStatusCode(), is(200));
-    deleteServicePointUserById(spuId);
-    Response getResponseAgain = getServicePointUserById(spuId);
-    assertThat(getResponseAgain.getStatusCode(), is(404));
-  }
-
-  @Test
-  public void cannotCreateServicePointUserIfUserAlreadyExists() throws Exception {
-    final var firstId = UUID.randomUUID();
-    final var secondId = UUID.randomUUID();
-    final var userId = UUID.randomUUID();
-    final var servicePoints = List.of(UUID.randomUUID());
-
-    final var firstCreateResponse = createServicePointUser(firstId, userId,
-      servicePoints, null);
-    assertThat(firstCreateResponse.getStatusCode(), is(201));
-
-    final var secondCreateResponse = createServicePointUser(secondId, userId,
-      servicePoints, null);
-
-    assertThat(secondCreateResponse.getStatusCode(), is(422));
-  }
-
-  //END TESTS
-
   public static Response createServicePointUser(UUID id, UUID userId,
-    List<UUID> servicePointsIds, UUID defaultServicePointId)
+                                                List<UUID> servicePointsIds, UUID defaultServicePointId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject request = new JsonObject();
@@ -258,12 +100,165 @@ public class ServicePointsUserTest extends TestBase {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     final URL url = query != null
-      ? servicePointsUsersUrl("?query=" + urlEncode(query))
-      : servicePointsUsersUrl("");
+                    ? servicePointsUsersUrl("?query=" + urlEncode(query))
+                    : servicePointsUsersUrl("");
 
     send(url, HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
     return getCompleted.get(10, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  @Before
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    StorageTestSuite.deleteAll(servicePointsUrl(""));
+
+    removeAllEvents();
+  }
+
+  //BEGIN TESTS
+  @Test
+  public void emptyTest() {
+    assertThat(true, is(true));
+  }
+
+  @Test
+  public void canCreateServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    Response response = createServicePointUser(UUID.randomUUID(), UUID.randomUUID(),
+      null, null);
+    assertThat(response.getStatusCode(), is(201));
+  }
+
+  @Test
+  public void canRetrieveCreatedSpu() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    Response postResponse = createServicePointUser(UUID.randomUUID(),
+      UUID.randomUUID(), null, null);
+    String id = postResponse.getJson().getString("id");
+    Response getResponse = getServicePointUserById(UUID.fromString(id));
+    assertThat(getResponse.getStatusCode(), is(200));
+    assertThat(getResponse.getJson().getString("id"), is(id));
+  }
+
+  @Test
+  public void cannotCreateSpuWithNonExistantDefaultSp() throws InterruptedException,
+    ExecutionException, TimeoutException {
+
+    Response response = createServicePointUser(UUID.randomUUID(),
+      UUID.randomUUID(), null, UUID.randomUUID());
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void canCreateSpuWithExistingDefaultSp()
+    throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+    UUID spId = UUID.randomUUID();
+    createServicePoint(spId, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null,
+      20, true, createHoldShelfExpiryPeriod());
+    Response response = createServicePointUser(UUID.randomUUID(),
+      UUID.randomUUID(), null, spId);
+    assertThat(response.getStatusCode(), is(201));
+  }
+
+  @Test
+  public void canGetSpus() throws InterruptedException, ExecutionException, TimeoutException {
+    createServicePointUser(null, UUID.randomUUID(), null, null);
+    createServicePointUser(null, UUID.randomUUID(), null, null);
+    Response response = getServicePointUsers(null);
+    assertThat(response.getJson().getInteger("totalRecords"), is(2));
+  }
+
+  //END TESTS
+
+  @Test
+  public void canDeleteAllSpus() throws InterruptedException, ExecutionException, TimeoutException {
+    createServicePointUser(null, UUID.randomUUID(), null, null);
+    createServicePointUser(null, UUID.randomUUID(), null, null);
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
+    Response response = getServicePointUsers(null);
+    assertThat(response.getJson().getInteger("totalRecords"), is(0));
+  }
+
+  @Test
+  public void canQuerySpus() throws MalformedURLException, InterruptedException, ExecutionException,
+    TimeoutException {
+    UUID spId1 = UUID.randomUUID();
+    UUID spId2 = UUID.randomUUID();
+    UUID spId3 = UUID.randomUUID();
+    createServicePoint(spId1, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
+    createServicePoint(spId2, "Circ Desk 2", "cd2",
+      "Circulation Desk -- Stairs", null, 20, true, createHoldShelfExpiryPeriod());
+    createServicePoint(spId3, "Circ Desk 3", "cd3",
+      "Circulation Desk -- Basement", null, 20, true, createHoldShelfExpiryPeriod());
+    List<UUID> spList1 = new ArrayList<>();
+    spList1.add(spId1);
+    spList1.add(spId2);
+    List<UUID> spList2 = new ArrayList<>();
+    spList2.add(spId2);
+    spList2.add(spId3);
+    UUID spuId = UUID.randomUUID();
+    createServicePointUser(null, UUID.randomUUID(), spList1, spId1);
+    createServicePointUser(spuId, UUID.randomUUID(), spList2, spId2);
+    //Response response = getServicePointUsers(null);
+    Response response = getServicePointUsers(String.format("servicePointsIds=%s", spId3));
+    System.out.println(response.toString());
+    assertThat(response.getJson().getInteger("totalRecords"), is(1));
+    assertThat(response.getJson().getJsonArray("servicePointsUsers")
+      .getJsonObject(0).getString("id"), is(spuId.toString()));
+  }
+
+  @Test
+  public void canUpdateServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    UUID userId1 = UUID.randomUUID();
+    UUID userId2 = UUID.randomUUID();
+    UUID spuId = UUID.randomUUID();
+    createServicePointUser(spuId, userId1, null, null);
+    JsonObject entity = new JsonObject()
+      .put("id", spuId.toString())
+      .put("userId", userId2.toString());
+    Response response = updateServicePointUserById(spuId, entity);
+    assertThat(response.getStatusCode(), is(204));
+    Response getResponse = getServicePointUserById(spuId);
+    assertThat(getResponse.getJson().getString("userId"), is(userId2.toString()));
+  }
+
+  @Test
+  public void canDeleteServicePointUser() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    UUID spuId = UUID.randomUUID();
+    createServicePointUser(spuId, UUID.randomUUID(), null, null);
+    Response getResponse = getServicePointUserById(spuId);
+    assertThat(getResponse.getStatusCode(), is(200));
+    deleteServicePointUserById(spuId);
+    Response getResponseAgain = getServicePointUserById(spuId);
+    assertThat(getResponseAgain.getStatusCode(), is(404));
+  }
+
+  @Test
+  public void cannotCreateServicePointUserIfUserAlreadyExists() throws Exception {
+    final var firstId = UUID.randomUUID();
+    final var secondId = UUID.randomUUID();
+    final var userId = UUID.randomUUID();
+    final var servicePoints = List.of(UUID.randomUUID());
+
+    final var firstCreateResponse = createServicePointUser(firstId, userId,
+      servicePoints, null);
+    assertThat(firstCreateResponse.getStatusCode(), is(201));
+
+    final var secondCreateResponse = createServicePointUser(secondId, userId,
+      servicePoints, null);
+
+    assertThat(secondCreateResponse.getStatusCode(), is(422));
   }
 }

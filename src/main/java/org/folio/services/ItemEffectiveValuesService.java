@@ -9,19 +9,17 @@ import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.setCallNu
 import static org.folio.rest.support.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 
 public class ItemEffectiveValuesService {
   private final HoldingsRepository holdingsRepository;

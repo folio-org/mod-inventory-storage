@@ -14,10 +14,12 @@ import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.Objects;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.impl.InstanceStorageBatchAPI;
+import org.folio.rest.impl.InstanceStorageBatchApi;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -26,19 +28,12 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 
-import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
 public class HridManager {
+  public static final String HRID_SETTINGS_TABLE = "hrid_settings";
   private static final Logger log = LogManager.getLogger();
-
-  public static final String HRID_SETTINGS_TABLE  = "hrid_settings";
-
   private static final String HRID_INSTANCES_SEQUENCE_NAME = "hrid_instances_seq";
   private static final String HRID_ITEMS_SEQUENCE_NAME = "hrid_items_seq";
   private static final String HRID_HOLDINGS_SEQUENCE_NAME = "hrid_holdings_seq";
-
 
   private final Context context;
   private final PostgresClient postgresClient;
@@ -49,7 +44,9 @@ public class HridManager {
   }
 
   /**
-   * @deprecated Remove after deprecated {@link InstanceStorageBatchAPI} has been removed.
+   * Deprecated.
+   *
+   * @deprecated Remove after deprecated {@link InstanceStorageBatchApi} has been removed
    */
   @Deprecated
   public Future<String> getNextInstanceHrid() {
@@ -68,37 +65,16 @@ public class HridManager {
     return populateHridForHoldings(List.of(hr)).map(hr);
   }
 
-  private <T> Future<List<T>> populateHrids(InventoryType inventoryType, List<T> list,
-      Function<T, String> getHrid, BiConsumer<T, String> setHrid) {
-
-    int n = 0;
-    for (T t : list) {
-      if (isBlank(getHrid.apply(t))) {
-        n++;
-      }
-    }
-    return getNextHrids(inventoryType, n)
-        .map(List::iterator)
-        .map(hrids -> {
-          for (T t : list) {
-            if (isBlank(getHrid.apply(t))) {
-              setHrid.accept(t, hrids.next());
-            }
-          }
-          return list;
-        });
-  }
-
   public Future<List<Instance>> populateHridForInstances(List<Instance> instances) {
-    return populateHrids(InventoryType.Instances, instances, Instance::getHrid, Instance::setHrid);
+    return populateHrids(InventoryType.INSTANCES, instances, Instance::getHrid, Instance::setHrid);
   }
 
   public Future<List<Item>> populateHridForItems(List<Item> items) {
-    return populateHrids(InventoryType.Items, items, Item::getHrid, Item::setHrid);
+    return populateHrids(InventoryType.ITEMS, items, Item::getHrid, Item::setHrid);
   }
 
   public Future<List<HoldingsRecord>> populateHridForHoldings(List<HoldingsRecord> hrs) {
-    return populateHrids(InventoryType.Holdings, hrs, HoldingsRecord::getHrid, HoldingsRecord::setHrid);
+    return populateHrids(InventoryType.HOLDINGS, hrs, HoldingsRecord::getHrid, HoldingsRecord::setHrid);
   }
 
   public Future<HridSettings> getHridSettings() {
@@ -108,7 +84,7 @@ public class HridManager {
       context.runOnContext(v -> postgresClient.startTx(res -> {
         if (res.succeeded()) {
           try {
-            getHridSettings(res)
+            fetchHridSettings(res)
               .onComplete(hridSettingsResult ->
                 postgresClient.endTx(res, done -> {
                   if (hridSettingsResult.succeeded()) {
@@ -116,7 +92,8 @@ public class HridManager {
                   } else {
                     fail(promise, "Failed to retrieve the HRID settings",
                       hridSettingsResult.cause());
-                  }})
+                  }
+                })
               );
           } catch (Exception e) {
             postgresClient.rollbackTx(res, done -> fail(promise, "Failed retrieving the HRID settings", e));
@@ -140,9 +117,9 @@ public class HridManager {
         try {
           postgresClient.startTx(conn -> {
             try {
-              getHridSettings(conn)
-                .compose(existingHridSettings -> updateHridSettings(
-                    conn, existingHridSettings, hridSettings))
+              fetchHridSettings(conn)
+                .compose(existingHridSettings -> doUpdateHridSettings(
+                  conn, existingHridSettings, hridSettings))
                 .map(success -> endTransaction(conn, promise))
                 .otherwise(error -> rollback(conn, promise, error));
             } catch (Exception e) {
@@ -160,7 +137,28 @@ public class HridManager {
     return promise.future();
   }
 
-  private Future<HridSettings> getHridSettings(AsyncResult<SQLConnection> conn) {
+  private <T> Future<List<T>> populateHrids(InventoryType inventoryType, List<T> list,
+                                            Function<T, String> getHrid, BiConsumer<T, String> setHrid) {
+
+    int n = 0;
+    for (T t : list) {
+      if (isBlank(getHrid.apply(t))) {
+        n++;
+      }
+    }
+    return getNextHrids(inventoryType, n)
+      .map(List::iterator)
+      .map(hrids -> {
+        for (T t : list) {
+          if (isBlank(getHrid.apply(t))) {
+            setHrid.accept(t, hrids.next());
+          }
+        }
+        return list;
+      });
+  }
+
+  private Future<HridSettings> fetchHridSettings(AsyncResult<SQLConnection> conn) {
     final String sql = "SELECT jsonb FROM " + HRID_SETTINGS_TABLE;
     final Promise<Row> promise = Promise.promise();
 
@@ -182,8 +180,8 @@ public class HridManager {
       });
   }
 
-  private Future<Void> updateHridSettings(AsyncResult<SQLConnection> conn,
-      HridSettings existingHridSettings, HridSettings hridSettings) {
+  private Future<Void> doUpdateHridSettings(AsyncResult<SQLConnection> conn,
+                                            HridSettings existingHridSettings, HridSettings hridSettings) {
     hridSettings.setId(existingHridSettings.getId());
 
     final Promise<RowSet<Row>> promise = Promise.promise();
@@ -197,11 +195,11 @@ public class HridManager {
       // update the instance sequence, then update the holdings sequence and finally update
       // the item sequence.
       return promise.future().compose(v -> updateSequence(conn, "instances",
-          existingHridSettings.getInstances(), hridSettings.getInstances())
-          .compose(v1 -> updateSequence(conn, "holdings", existingHridSettings.getHoldings(),
-                  hridSettings.getHoldings())
-              .compose(v2 -> updateSequence(conn, "items", existingHridSettings.getItems(),
-                      hridSettings.getItems()))));
+        existingHridSettings.getInstances(), hridSettings.getInstances())
+        .compose(v1 -> updateSequence(conn, "holdings", existingHridSettings.getHoldings(),
+          hridSettings.getHoldings())
+          .compose(v2 -> updateSequence(conn, "items", existingHridSettings.getItems(),
+            hridSettings.getItems()))));
     } catch (Exception e) {
       fail(promise, "Failed to update the HRID settings and sequences", e);
     }
@@ -210,13 +208,13 @@ public class HridManager {
   }
 
   private Future<Void> updateSequence(AsyncResult<SQLConnection> conn, String field,
-      HridSetting existingHridSetting, HridSetting hridSetting) {
+                                      HridSetting existingHridSetting, HridSetting hridSetting) {
     final Promise<RowSet<Row>> promise = Promise.promise();
 
     // Only update the sequence if the start number has changed
     if (!Objects.equals(existingHridSetting.getStartNumber(), hridSetting.getStartNumber())) {
       final String sql = String.format("select setval('hrid_%s_seq',%d,FALSE)",
-          field, hridSetting.getStartNumber());
+        field, hridSetting.getStartNumber());
       try {
         postgresClient.select(conn, sql, promise);
       } catch (Exception e) {
@@ -242,24 +240,24 @@ public class HridManager {
     }
     sql.append(" FROM hrid_settings");
     return postgresClient.selectSingle(sql.toString(), Tuple.of(type.getSequenceName()))
-        .map(row -> {
-          HridSettings hridSettings = Json.decodeValue(row.getString(0), HridSettings.class);
-          final String hridPrefix = type.getPrefix(hridSettings);
-          final String formatter = getHridFormatter(hridSettings);
-          List<String> list = new ArrayList<>(n);
-          for (int i = 1; i <= n; i++) {
-            String hrid = String.format(
-                formatter,
-                Objects.toString(hridPrefix, ""),
-                row.getLong(i));
-            list.add(hrid);
-          }
-          return list;
-        });
+      .map(row -> {
+        HridSettings hridSettings = Json.decodeValue(row.getString(0), HridSettings.class);
+        final String hridPrefix = type.getPrefix(hridSettings);
+        final String formatter = getHridFormatter(hridSettings);
+        List<String> list = new ArrayList<>(n);
+        for (int i = 1; i <= n; i++) {
+          String hrid = String.format(
+            formatter,
+            Objects.toString(hridPrefix, ""),
+            row.getLong(i));
+          list.add(hrid);
+        }
+        return list;
+      });
   }
 
   private String getHridFormatter(HridSettings hridSettings) {
-    return hridSettings.getCommonRetainLeadingZeroes() ? "%s%011d" : "%s%d";
+    return Boolean.TRUE.equals(hridSettings.getCommonRetainLeadingZeroes()) ? "%s%011d" : "%s%d";
   }
 
   private Void endTransaction(AsyncResult<SQLConnection> conn, Promise<Void> promise) {
@@ -297,14 +295,8 @@ public class HridManager {
     promise.fail(t);
   }
 
-  private interface Inventory<H> {
-    String getPrefix(HridSettings hridSettings);
-
-    String getSequenceName();
-  }
-
   private enum InventoryType implements Inventory<HridSettings> {
-    Holdings {
+    HOLDINGS {
       @Override
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getHoldings().getPrefix();
@@ -316,7 +308,7 @@ public class HridManager {
       }
     },
 
-    Instances {
+    INSTANCES {
       @Override
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getInstances().getPrefix();
@@ -328,7 +320,7 @@ public class HridManager {
       }
     },
 
-    Items {
+    ITEMS {
       @Override
       public String getPrefix(HridSettings hridSettings) {
         return hridSettings.getItems().getPrefix();
@@ -339,5 +331,11 @@ public class HridManager {
         return HRID_ITEMS_SEQUENCE_NAME;
       }
     }
+  }
+
+  private interface Inventory<H> {
+    String getPrefix(HridSettings hridSettings);
+
+    String getSequenceName();
   }
 }

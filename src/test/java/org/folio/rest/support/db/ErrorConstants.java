@@ -12,7 +12,6 @@ public class ErrorConstants {
   public static final String DATA_LENGTH_MISMATCH_ERROR_CODE = "22001";
   public static final String INVALID_PASSWORD_ERROR_CODE = "28P01";
 
-
   public static final String SCHEMA_NAME = "fs_mod_notes";
 
   public static final String CHILD_TABLE_NAME = "child";

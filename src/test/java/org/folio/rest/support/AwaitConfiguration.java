@@ -4,10 +4,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
 import java.util.concurrent.TimeUnit;
-
 import org.awaitility.core.ConditionFactory;
 
-public class AwaitConfiguration {
+public final class AwaitConfiguration {
+
   private AwaitConfiguration() { }
 
   public static ConditionFactory awaitAtMost() {

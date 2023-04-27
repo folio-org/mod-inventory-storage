@@ -3,16 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class ModeOfIssuance extends JsonEntity {
   public static final String NAME_KEY = "name";
 
-  public ModeOfIssuance (String name) {
+  public ModeOfIssuance(String name) {
     super.setProperty(NAME_KEY, name);
   }
 

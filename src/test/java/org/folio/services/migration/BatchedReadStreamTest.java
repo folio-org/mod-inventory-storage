@@ -11,14 +11,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.streams.ReadStream;
 import io.vertx.sqlclient.Row;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
 import org.folio.rest.support.sql.TestRowStream;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +50,6 @@ public class BatchedReadStreamTest {
     captor.getAllValues().stream().limit(numberOfBatches - 1)
       .forEach(list -> assertThat(list.size(), is(batchSize)));
 
-
     var ids = new HashSet<UUID>(numberOfRecords);
     captor.getAllValues().forEach(
       list -> list.forEach(
@@ -75,7 +73,7 @@ public class BatchedReadStreamTest {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
-    batchedReadStream.exceptionHandler(error -> {});
+    batchedReadStream.exceptionHandler(error -> { });
 
     verify(delegate, times(1)).exceptionHandler(any());
   }
@@ -85,7 +83,7 @@ public class BatchedReadStreamTest {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
-    batchedReadStream.endHandler(error -> {});
+    batchedReadStream.endHandler(error -> { });
 
     verify(delegate, times(1)).endHandler(any());
   }

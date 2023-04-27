@@ -3,12 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class InstanceRelationshipType extends JsonEntity {
 
   public static final String NAME_KEY = "name";

@@ -7,10 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.net.URL;
-import java.util.concurrent.CompletableFuture;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -20,6 +16,10 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.net.URL;
+import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HttpClient {
   private static final Logger LOG = LogManager.getLogger();
@@ -34,22 +34,17 @@ public class HttpClient {
     client = WebClient.create(vertx);
   }
 
-  public WebClient getWebClient() {
-    return client;
+  public static CompletableFuture<Response> asResponse(Future<HttpResponse<Buffer>> future) {
+
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    future
+      .onSuccess(ResponseHandler.any(completableFuture))
+      .onFailure(completableFuture::completeExceptionally);
+    return completableFuture;
   }
 
-  private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
-    if (isNotBlank(tenantId)) {
-      request.putHeader(TENANT_HEADER, tenantId);
-    }
-    if (url != null) {
-      // FIXME: Several institutions have a Okapi URL with path, for example https://folio-demo.gbv.de/okapi
-      // see https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#replace-port-9130
-      String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-      request.putHeader(X_OKAPI_URL, baseUrl);
-      request.putHeader(X_OKAPI_URL_TO, baseUrl);
-    }
-    request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
+  public WebClient getWebClient() {
+    return client;
   }
 
   public Future<HttpResponse<Buffer>> request(
@@ -67,7 +62,7 @@ public class HttpClient {
         return request.send();
       }
       String encodedBody = Json.encodePrettily(body);
-      LOG.info(format("%s %s, Request: %s", method.name(), url.toString(), encodedBody));
+      LOG.info(format("%s %s, Request: %s", method.name(), url, encodedBody));
       return request.sendBuffer(Buffer.buffer(encodedBody));
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
@@ -76,9 +71,9 @@ public class HttpClient {
   }
 
   public Future<HttpResponse<Buffer>> request(
-      HttpMethod method,
-      URL url,
-      String tenantId) {
+    HttpMethod method,
+    URL url,
+    String tenantId) {
 
     try {
       HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
@@ -91,21 +86,9 @@ public class HttpClient {
   }
 
   /**
-   * Convert Future<HttpResponse<Buffer>> into CompletableFuture<Response>
-   */
-  public static CompletableFuture<Response> asResponse(Future<HttpResponse<Buffer>> future) {
-
-    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
-    future
-    .onSuccess(ResponseHandler.any(completableFuture))
-    .onFailure(completableFuture::completeExceptionally);
-    return completableFuture;
-  }
-
-  /**
    * Warning: The responseHandler gets null on error, use
-   * {@link #doPost(URL, Object, String)} or {@link #post(URL, Object, String)}
-   * for better error reporting
+   * doPost(URL, Object, String) or {@link #post(URL, Object, String)}
+   * for better error reporting.
    */
   public void post(
     URL url,
@@ -114,11 +97,11 @@ public class HttpClient {
     Handler<HttpResponse<Buffer>> responseHandler) {
 
     request(HttpMethod.POST, url, body, tenantId)
-    .recover(error -> {
-      LOG.error(error.getMessage(), error);
-      return null;
-    })
-    .onSuccess(responseHandler);
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> post(URL url, Object body, String tenantId) {
@@ -127,21 +110,21 @@ public class HttpClient {
 
   /**
    * Warning: The responseHandler gets null on error, use
-   * {@link #doPut(URL, Object, String)} or {@link #put(URL, Object, String)}
+   * doPut(URL, Object, String) or {@link #put(URL, Object, String)}
    * for better error reporting.
    */
   public void put(
-      URL url,
-      Object body,
-      String tenantId,
-      Handler<HttpResponse<Buffer>> responseHandler) {
+    URL url,
+    Object body,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
     request(HttpMethod.PUT, url, body, tenantId)
-    .recover(error -> {
-      LOG.error(error.getMessage(), error);
-      return null;
-    })
-    .onSuccess(responseHandler);
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> put(URL url, Object body, String tenantId) {
@@ -149,9 +132,9 @@ public class HttpClient {
   }
 
   public void get(
-      String url,
-      String tenantId,
-      Handler<HttpResponse<Buffer>> responseHandler) {
+    String url,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
 
     URL finalUrl = null;
     try {
@@ -164,7 +147,7 @@ public class HttpClient {
 
   /**
    * Warning: The responseHandler gets null on error, use
-   * {@link #doGet(URL, String)} or {@link #get(URL, String)}
+   * doGet(URL, String) or {@link #get(URL, String)}
    * for better error reporting.
    */
   public void get(
@@ -173,11 +156,11 @@ public class HttpClient {
     Handler<HttpResponse<Buffer>> responseHandler) {
 
     request(HttpMethod.GET, url, tenantId)
-    .recover(error -> {
-      LOG.error(error.getMessage(), error);
-      return null;
-    })
-    .onSuccess(responseHandler);
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> get(URL url, String tenantId) {
@@ -186,7 +169,7 @@ public class HttpClient {
 
   /**
    * Warning: The responseHandler gets null on error, use
-   * {@link #doDelete(URL, String)} or {@link #delete(URL, String)}
+   * doDelete(URL, String) or {@link #delete(URL, String)}
    * for better error reporting.
    */
   public void delete(
@@ -195,11 +178,11 @@ public class HttpClient {
     Handler<HttpResponse<Buffer>> responseHandler) {
 
     request(HttpMethod.DELETE, url, tenantId)
-    .recover(error -> {
-      LOG.error(error.getMessage(), error);
-      return null;
-    })
-    .onSuccess(responseHandler);
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
   }
 
   public void delete(
@@ -222,5 +205,19 @@ public class HttpClient {
 
   public CompletableFuture<Response> patch(URL url, Object body, String tenantId) {
     return asResponse(request(HttpMethod.PATCH, url, body, tenantId));
+  }
+
+  private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
+    if (isNotBlank(tenantId)) {
+      request.putHeader(TENANT_HEADER, tenantId);
+    }
+    if (url != null) {
+      // FIXME: Several institutions have a Okapi URL with path, for example https://folio-demo.gbv.de/okapi
+      // see https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#replace-port-9130
+      String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
+      request.putHeader(X_OKAPI_URL, baseUrl);
+      request.putHeader(X_OKAPI_URL_TO, baseUrl);
+    }
+    request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
   }
 }

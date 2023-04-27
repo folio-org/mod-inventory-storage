@@ -29,7 +29,7 @@ public class ContributorTypesTest extends TestBase {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<Response>();
 
-    String url = contributorTypesUrl("").toString() + "?limit=400&query="
+    String url = contributorTypesUrl("") + "?limit=400&query="
       + urlEncode("cql.allRecords=1");
 
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));

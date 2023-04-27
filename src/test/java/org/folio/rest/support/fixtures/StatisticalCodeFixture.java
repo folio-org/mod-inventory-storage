@@ -4,7 +4,6 @@ import static org.folio.rest.support.http.ResourceClient.forStatisticalCodeTypes
 import static org.folio.rest.support.http.ResourceClient.forStatisticalCodes;
 
 import java.util.UUID;
-
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;

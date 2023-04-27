@@ -2,7 +2,7 @@ package org.folio.services.holding;
 
 import static io.vertx.core.Promise.promise;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
+import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsResponse;
@@ -21,11 +21,9 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
@@ -101,6 +99,54 @@ public class HoldingsService {
       });
   }
 
+  public Future<Response> deleteHolding(String hrId) {
+    return holdingsRepository.getById(hrId)
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(hr -> {
+        final Promise<Response> deleteResult = promise();
+
+        deleteById(HOLDINGS_RECORD_TABLE, hrId, okapiHeaders, vertxContext,
+          DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class, deleteResult);
+
+        return deleteResult.future()
+          .onSuccess(domainEventPublisher.publishRemoved(hr));
+      });
+  }
+
+  public Future<Response> deleteHoldings(String cql) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.succeededFuture(
+        DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
+          "Expected CQL but query parameter is empty"));
+    }
+    if (new CqlQuery(cql).isMatchingAll()) {
+      return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
+    }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
+    return holdingsRepository.delete(cql)
+      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+        rowSet.iterator().forEachRemaining(row ->
+          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+        )
+      ))
+      .map(Response.noContent().build());
+  }
+
+  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
+    for (HoldingsRecord holdingsRecord : holdings) {
+      holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
+    }
+
+    return hridManager.populateHridForHoldings(holdings)
+      .compose(NotesValidators::refuseHoldingLongNotes)
+      .compose(result -> buildBatchOperationContext(upsert, holdings,
+        holdingsRepository, HoldingsRecord::getId))
+      .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
+        okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
+        .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+  }
+
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
@@ -123,54 +169,6 @@ public class HoldingsService {
           .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
           .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
       });
-  }
-
-  public Future<Response> deleteHolding(String hrId) {
-    return holdingsRepository.getById(hrId)
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(hr -> {
-        final Promise<Response> deleteResult = promise();
-
-        deleteById(HOLDINGS_RECORD_TABLE, hrId, okapiHeaders, vertxContext,
-          DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class, deleteResult);
-
-        return deleteResult.future()
-          .onSuccess(domainEventPublisher.publishRemoved(hr));
-      });
-  }
-
-  public Future<Response> deleteHoldings(String cql) {
-    if (StringUtils.isBlank(cql)) {
-      return Future.succeededFuture(
-          DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
-              "Expected CQL but query parameter is empty"));
-    }
-    if (new CqlQuery(cql).isMatchingAll()) {
-      return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
-    }
-    // do not add curly braces for readability, this is to comply with
-    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
-    return holdingsRepository.delete(cql)
-        .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-          rowSet.iterator().forEachRemaining(row ->
-            domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
-          )
-        ))
-        .map(Response.noContent().build());
-  }
-
-  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
-    for (HoldingsRecord holdingsRecord : holdings) {
-      holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-    }
-
-    return hridManager.populateHridForHoldings(holdings)
-      .compose(NotesValidators::refuseHoldingLongNotes)
-      .compose(result -> buildBatchOperationContext(upsert, holdings,
-        holdingsRepository, HoldingsRecord::getId))
-      .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
-          okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {

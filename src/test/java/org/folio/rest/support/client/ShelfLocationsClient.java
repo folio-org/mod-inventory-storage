@@ -12,10 +12,6 @@ import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 
-/**
- *
- * @author kurt
- */
 public class ShelfLocationsClient {
   private final HttpClient client;
   private final URL shelfLocationsUrl;

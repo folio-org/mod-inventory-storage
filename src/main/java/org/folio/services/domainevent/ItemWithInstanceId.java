@@ -1,9 +1,8 @@
 package org.folio.services.domainevent;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.folio.rest.jaxrs.model.Item;
-
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 public class ItemWithInstanceId {
   private final String instanceId;

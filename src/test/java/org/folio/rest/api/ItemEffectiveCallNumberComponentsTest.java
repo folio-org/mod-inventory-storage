@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-
 import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
@@ -12,10 +11,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.Objects;
 import java.util.UUID;
-
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.naming.TestCaseName;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
@@ -27,12 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
-
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventoryUtil {
   public static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
@@ -41,7 +38,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   public static final String ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(kafkaConsumer);
+    = new ItemEventMessageChecks(KAFKA_CONSUMER);
 
   @BeforeClass
   public static void createCallNumberTypes() {
@@ -113,19 +110,19 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
   @Test
   public void canCalculateEffectiveCallNumberPropertyOnBatchCreate() {
-    final UUID firstHoldingsId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+    final UUID firstHoldingsId = createInstanceAndHoldingWithBuilder(MAIN_LIBRARY_LOCATION_ID,
       builder -> builder.withCallNumber("firstHRCallNumber")
         .withCallNumberPrefix("firstHRPrefix")
         .withCallNumberSuffix("firstHRSuffix")
         .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE));
 
-    final UUID secondHoldingsId = createInstanceAndHoldingWithBuilder(mainLibraryLocationId,
+    final UUID secondHoldingsId = createInstanceAndHoldingWithBuilder(MAIN_LIBRARY_LOCATION_ID,
       builder -> builder.withCallNumber("secondHRCallNumber")
         .withCallNumberPrefix("secondHRPrefix")
         .withCallNumberSuffix("secondHRSuffix")
         .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE_SECOND));
 
-    final UUID thirdHoldingsId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID thirdHoldingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     final JsonObject useFirstHoldingsComponents = nodWithNoBarcode(firstHoldingsId);
     final JsonObject useOwnCallNumber = nodWithNoBarcode(secondHoldingsId)
@@ -189,7 +186,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
   @Test
   public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() {
-    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID holdingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     final JsonObject useAllOwnComponents = nodWithNoBarcode(holdingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
@@ -276,7 +273,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     IndividualResource holdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instance.getId())
-      .withPermanentLocation(mainLibraryLocationId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create()
       .put(propertyName, propertyValue)
     );

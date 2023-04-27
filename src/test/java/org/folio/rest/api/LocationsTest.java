@@ -3,13 +3,13 @@ package org.folio.rest.api;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
-import static org.folio.utility.LocationUtility.clearServicePointIDs;
+import static org.folio.utility.LocationUtility.clearServicePointIds;
 import static org.folio.utility.LocationUtility.createLocation;
 import static org.folio.utility.LocationUtility.createLocationUnits;
-import static org.folio.utility.LocationUtility.getCampusID;
-import static org.folio.utility.LocationUtility.getInstitutionID;
-import static org.folio.utility.LocationUtility.getLibraryID;
-import static org.folio.utility.LocationUtility.getServicePointIDs;
+import static org.folio.utility.LocationUtility.getCampusId;
+import static org.folio.utility.LocationUtility.getInstitutionId;
+import static org.folio.utility.LocationUtility.getLibraryId;
+import static org.folio.utility.LocationUtility.getServicePointIds;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.send;
 import static org.hamcrest.CoreMatchers.is;
@@ -50,15 +50,15 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       loanTypesStorageUrl("")).create("Can Circulate");
 
     setupMaterialTypes();
-    clearServicePointIDs();
+    clearServicePointIds();
     createLocationUnits(true);
     removeAllEvents();
   }
 
   @Test
   public void canCreateLocation() {
-    Response response = createLocation(null, "Main Library", getInstitutionID(),
-        getCampusID(), getLibraryID(), "PI/CC/ML/X", getServicePointIDs());
+    Response response = createLocation(null, "Main Library", getInstitutionId(),
+      getCampusId(), getLibraryId(), "PI/CC/ML/X", getServicePointIds());
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("name"), is("Main Library"));
@@ -67,31 +67,31 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotCreateLocationWithoutUnits() {
     Response response = createLocation(null, "Main Library", null, null, null,
-        "PI/CC/ML/X", getServicePointIDs());
+      "PI/CC/ML/X", getServicePointIds());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
   public void cannotCreateLocationWithoutCode() {
-    Response response = createLocation(null, "Main Library", getInstitutionID(),
-        getCampusID(), getLibraryID(), null, getServicePointIDs());
+    Response response = createLocation(null, "Main Library", getInstitutionId(),
+      getCampusId(), getLibraryId(), null, getServicePointIds());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
   public void cannotCreateLocationWithSameName() {
     createLocation(null, "Main Library", "PI/CC/ML/X");
-    Response response = createLocation(null, "Main Library", getInstitutionID(),
-        getCampusID(), getLibraryID(), "AA/BB", getServicePointIDs());
+    Response response = createLocation(null, "Main Library", getInstitutionId(),
+      getCampusId(), getLibraryId(), "AA/BB", getServicePointIds());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
   public void cannotCreateLocationWithSameCode() {
     createLocation(null, "Main Library", "PI/CC/ML/X");
-    Response response = createLocation(null, "Some Other Library", getInstitutionID(),
-        getCampusID(), getLibraryID(), "PI/CC/ML/X",
-        getServicePointIDs());
+    Response response = createLocation(null, "Some Other Library", getInstitutionId(),
+      getCampusId(), getLibraryId(), "PI/CC/ML/X",
+      getServicePointIds());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
@@ -99,13 +99,13 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   public void cannotCreateLocationWithSameId() {
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
-    Response response = createLocation(id, "Some Other Library", getInstitutionID(),
-        getCampusID(), getLibraryID(), "AA/BB", getServicePointIDs());
+    Response response = createLocation(id, "Some Other Library", getInstitutionId(),
+      getCampusId(), getLibraryId(), "AA/BB", getServicePointIds());
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void canGetALocationById() {
+  public void canGetLocationById() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -133,22 +133,22 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateALocation() {
+  public void canUpdateLocation() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
     JsonObject updateRequest = new JsonObject()
-        .put("id", id.toString())
+      .put("id", id.toString())
       .put("name", "Annex Library")
-      .put("institutionId", getInstitutionID().toString())
-      .put("campusId", getCampusID().toString())
-      .put("libraryId", getLibraryID().toString())
+      .put("institutionId", getInstitutionId().toString())
+      .put("campusId", getCampusId().toString())
+      .put("libraryId", getLibraryId().toString())
       .put("isActive", true)
       .put("code", "AA/BB")
-        .put("primaryServicePoint", getServicePointIDs().get(0).toString())
-        .put("servicePointIds", new JsonArray(getServicePointIDs()));
+      .put("primaryServicePoint", getServicePointIds().get(0).toString())
+      .put("servicePointIds", new JsonArray(getServicePointIds()));
     CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locationsStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -168,14 +168,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     JsonObject updateRequest = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", "Annex Library")
-      .put("institutionId", getInstitutionID().toString())
-      .put("campusId", getCampusID().toString())
-      .put("libraryId", getLibraryID().toString())
+      .put("institutionId", getInstitutionId().toString())
+      .put("campusId", getCampusId().toString())
+      .put("libraryId", getLibraryId().toString())
       .put("isActive", true)
-        .put("code", "AA/BB").put("primaryServicePoint", getServicePointIDs().get(0).toString())
-        .put("servicePointIds", new JsonArray(getServicePointIDs()));
+      .put("code", "AA/BB").put("primaryServicePoint", getServicePointIds().get(0).toString())
+      .put("servicePointIds", new JsonArray(getServicePointIds()));
     CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locationsStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -183,18 +183,18 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteALocation() {
+  public void canDeleteLocation() {
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locationsStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locationsStorageUrl("/" + id), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   @Test
-  public void cannotDeleteALocationAssociatedWithAnItem() {
+  public void cannotDeleteLocationAssociatedWithAnItem() {
 
     UUID id = UUID.randomUUID();
     createLocation(id, "Main Library", "PI/CC/ML/X");
@@ -206,7 +206,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     Response createItemResponse = get(createItemCompleted);
     assertThat(createItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locationsStorageUrl("/" + id.toString()),
+    send(locationsStorageUrl("/" + id),
       HttpMethod.DELETE, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
@@ -219,9 +219,9 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     final UUID secondServicePointId = UUID.randomUUID();
     final UUID expectedLocationId = UUID.randomUUID();
 
-    createLocation(expectedLocationId, "Main", getInstitutionID(), getCampusID(), getLibraryID(), "main",
+    createLocation(expectedLocationId, "Main", getInstitutionId(), getCampusId(), getLibraryId(), "main",
       Collections.singletonList(firstServicePointId));
-    createLocation(null, "Main two", getInstitutionID(), getCampusID(), getLibraryID(), "main/tw",
+    createLocation(null, "Main two", getInstitutionId(), getCampusId(), getLibraryId(), "main/tw",
       Collections.singletonList(secondServicePointId));
 
     final List<JsonObject> locations = getMany("primaryServicePoint==\"%s\"", firstServicePointId);

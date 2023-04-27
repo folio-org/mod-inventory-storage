@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.http.InterfaceUrls.ShelfLocationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -13,13 +12,14 @@ import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
-import static org.folio.utility.LocationUtility.clearServicePointIDs;
+import static org.folio.rest.support.http.InterfaceUrls.shelfLocationsStorageUrl;
+import static org.folio.utility.LocationUtility.clearServicePointIds;
 import static org.folio.utility.LocationUtility.createLocation;
 import static org.folio.utility.LocationUtility.createLocationUnits;
-import static org.folio.utility.LocationUtility.getCampusID;
-import static org.folio.utility.LocationUtility.getInstitutionID;
-import static org.folio.utility.LocationUtility.getLibraryID;
-import static org.folio.utility.LocationUtility.getServicePointIDs;
+import static org.folio.utility.LocationUtility.getCampusId;
+import static org.folio.utility.LocationUtility.getInstitutionId;
+import static org.folio.utility.LocationUtility.getLibraryId;
+import static org.folio.utility.LocationUtility.getServicePointIds;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.send;
 import static org.hamcrest.CoreMatchers.is;
@@ -70,21 +70,17 @@ public class ShelfLocationsTest extends TestBase {
       new HttpClient(getVertx()),
       materialTypesStorageUrl("")).create("Journal");
 
-    clearServicePointIDs();
+    clearServicePointIds();
     createLocationUnits(true);
     removeAllEvents();
   }
 
   @Test
-  public void canCreateShelfLocation()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+  public void canCreateShelfLocation() {
 
     Response response = createLocation(null, "Main Library",
-        getInstitutionID(), getCampusID(), getLibraryID(), "PI/CC/ML/X",
-        getServicePointIDs());
+      getInstitutionId(), getCampusId(), getLibraryId(), "PI/CC/ML/X",
+      getServicePointIds());
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(response.getJson().getString("id"), notNullValue());
@@ -92,16 +88,16 @@ public class ShelfLocationsTest extends TestBase {
   }
 
   @Test
-  public void canGetAShelfLocationById()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+  public void canGetShelfLocationById()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
 
     UUID id = UUID.randomUUID();
     Response createResponse = createLocation(id, "Main Library",
-        getInstitutionID(), getCampusID(), getLibraryID(), "PI/CC/ML/X",
-        getServicePointIDs());
+      getInstitutionId(), getCampusId(), getLibraryId(), "PI/CC/ML/X",
+      getServicePointIds());
     assertThat(createResponse, statusCodeIs(201));
 
     Response getResponse = getById(id);
@@ -112,14 +108,14 @@ public class ShelfLocationsTest extends TestBase {
   }
 
   private Response getById(UUID id)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException,
-      MalformedURLException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException,
+    MalformedURLException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(ShelfLocationsStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(shelfLocationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
     return getCompleted.get(10, TimeUnit.SECONDS);

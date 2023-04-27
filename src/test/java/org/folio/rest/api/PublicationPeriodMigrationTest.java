@@ -11,10 +11,9 @@ import org.junit.Test;
 
 public class PublicationPeriodMigrationTest extends MigrationTestBase {
   private static final String MIGRATION_SCRIPT =
-      "SET search_path TO " + getSchemaName() + ";\n" +
-      loadScript("populatePublicationPeriod.sql");
+    "SET search_path TO " + getSchemaName() + ";\n" + loadScript("populatePublicationPeriod.sql");
 
-  TestCase [] testCases = {
+  TestCase[] testCases = {
     new TestCase(null, null, null, null),
     new TestCase("1990", null, 1990, null),
     new TestCase("[1990]", null, 1990, null),
@@ -35,7 +34,7 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     new TestCase(null, "[19uu]", null, null),
     new TestCase("hafniae MCMLXX", null, null, null),
     new TestCase(null, "hafniae MCMLXX", null, null),
-  };
+    };
 
   @Test
   public void canMigrate() throws Throwable {
@@ -59,8 +58,8 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     final Integer expectedStart;
     final Integer expectedEnd;
 
-    public TestCase(String dateOfPublication1, String dateOfPublication2,
-        Integer expectedStart, Integer expectedEnd) {
+    TestCase(String dateOfPublication1, String dateOfPublication2,
+                    Integer expectedStart, Integer expectedEnd) {
       id = UUID.randomUUID();
       this.dateOfPublication1 = dateOfPublication1;
       this.dateOfPublication2 = dateOfPublication2;

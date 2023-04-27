@@ -23,28 +23,25 @@ import org.folio.persist.AbstractRepository;
 import org.folio.rest.support.CollectionUtil;
 import org.folio.services.batch.BatchOperationContext;
 
-abstract class AbstractDomainEventPublisher<DomainType, EventType> {
+abstract class AbstractDomainEventPublisher<D, E> {
   private static final Logger log = getLogger(AbstractDomainEventPublisher.class);
 
-  protected final AbstractRepository<DomainType> repository;
-  protected final CommonDomainEventPublisher<EventType> domainEventService;
+  protected final AbstractRepository<D> repository;
+  protected final CommonDomainEventPublisher<E> domainEventService;
 
-  public AbstractDomainEventPublisher(AbstractRepository<DomainType> repository,
-    CommonDomainEventPublisher<EventType> domainEventService) {
+  protected AbstractDomainEventPublisher(AbstractRepository<D> repository,
+                                         CommonDomainEventPublisher<E> domainEventService) {
 
     this.repository = repository;
     this.domainEventService = domainEventService;
   }
 
-  public Handler<Response> publishUpdated(DomainType oldRecord) {
-    return response -> {
-      if (!isUpdateSuccessResponse(response)) {
-        log.warn("Record update failed, skipping event publishing");
-        return;
-      }
+  static <L, R> Pair<L, R> pair(L left, R right) {
+    return new ImmutablePair<>(left, right);
+  }
 
-      publishUpdated(singletonList(oldRecord));
-    };
+  static <L, M, R> Triple<L, M, R> triple(L left, M middle, R right) {
+    return new ImmutableTriple<>(left, middle, right);
   }
 
   @SuppressWarnings("unchecked")
@@ -55,12 +52,11 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
         return;
       }
 
-      publishCreated(singletonList((DomainType) response.getEntity()));
+      publishRecordsCreated(singletonList((D) response.getEntity()));
     };
   }
 
-  public Handler<Response> publishCreatedOrUpdated(
-    BatchOperationContext<DomainType> batchOperation) {
+  public Handler<Response> publishCreatedOrUpdated(BatchOperationContext<D> batchOperation) {
 
     return response -> {
       if (!isCreateSuccessResponse(response)) {
@@ -68,25 +64,23 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
         return;
       }
 
-      log.info("Records created {}, records updated {}",
-        batchOperation.getRecordsToBeCreated().size(),
+      log.info("Records created {}, records updated {}", batchOperation.getRecordsToBeCreated().size(),
         batchOperation.getExistingRecords().size());
 
-      publishCreated(batchOperation.getRecordsToBeCreated())
-        .compose(notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
+        notUsed -> publishUpdated(batchOperation.getExistingRecords()));
     };
   }
 
-  public Handler<Response> publishRemoved(DomainType removedRecord) {
+  public Handler<Response> publishRemoved(D removedRecord) {
     return response -> {
       if (!isDeleteSuccessResponse(response)) {
         log.warn("Record removal failed, no event will be sent");
         return;
       }
 
-      getInstanceId(removedRecord)
-        .compose(instanceId -> domainEventService.publishRecordRemoved(instanceId,
-          convertDomainToEvent(instanceId, removedRecord)));
+      getInstanceId(removedRecord).compose(instanceId -> domainEventService.publishRecordRemoved(instanceId,
+        convertDomainToEvent(instanceId, removedRecord)));
     };
   }
 
@@ -98,7 +92,18 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
     return domainEventService.publishAllRecordsRemoved();
   }
 
-  protected Future<Void> publishUpdated(Collection<DomainType> oldRecords) {
+  public Handler<Response> publishUpdated(D oldRecord) {
+    return response -> {
+      if (!isUpdateSuccessResponse(response)) {
+        log.warn("Record update failed, skipping event publishing");
+        return;
+      }
+
+      publishUpdated(singletonList(oldRecord));
+    };
+  }
+
+  protected Future<Void> publishUpdated(Collection<D> oldRecords) {
     if (oldRecords.isEmpty()) {
       log.info("No records were updated, skipping event sending");
       return succeededFuture();
@@ -111,58 +116,42 @@ abstract class AbstractDomainEventPublisher<DomainType, EventType> {
       .compose(domainEventService::publishRecordsUpdated);
   }
 
-  private Future<Void> publishCreated(Collection<DomainType> records) {
-    return convertDomainsToEvents(records)
-      .compose(domainEventService::publishRecordsCreated);
+  protected abstract Future<List<Pair<String, D>>> getInstanceIds(Collection<D> domainTypes);
+
+  protected abstract E convertDomainToEvent(String instanceId, D domain);
+
+  protected abstract String getId(D entity);
+
+  protected List<Triple<String, E, E>> mapOldRecordsToNew(List<Pair<String, D>> oldRecords,
+                                                          List<Pair<String, D>> newRecords) {
+
+    var idToOldRecordPairMap = oldRecords.stream().collect(toMap(pair -> getId(pair.getValue()), pair -> pair));
+
+    return newRecords.stream().map(newRecordPair -> {
+      var oldRecordPair = idToOldRecordPairMap.get(getId(newRecordPair.getValue()));
+      return triple(newRecordPair.getKey(), convertDomainToEvent(oldRecordPair.getKey(), oldRecordPair.getValue()),
+        convertDomainToEvent(newRecordPair.getKey(), newRecordPair.getValue()));
+    }).collect(toList());
   }
 
-  protected abstract Future<List<Pair<String, DomainType>>> getInstanceIds(
-    Collection<DomainType> domainTypes);
-
-  protected abstract EventType convertDomainToEvent(String instanceId, DomainType domain);
-
-  protected abstract String getId(DomainType record);
-
-  private Future<List<Pair<String, EventType>>> convertDomainsToEvents(Collection<DomainType> domains) {
-    return getInstanceIds(domains)
-      .map(pairs -> pairs.stream()
-        .map(pair -> pair(pair.getKey(), convertDomainToEvent(pair.getKey(), pair.getValue())))
-        .collect(toList()));
+  private Future<Void> publishRecordsCreated(Collection<D> records) {
+    return convertDomainsToEvents(records).compose(domainEventService::publishRecordsCreated);
   }
 
-  private Future<List<Triple<String, EventType, EventType>>> convertDomainsToEvents(
-    Collection<DomainType> newRecords, Collection<DomainType> oldRecords) {
-
-    return getInstanceIds(oldRecords)
-      .compose(oldRecordsInstanceIds -> getInstanceIds(newRecords)
-        .map(newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
+  private Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains) {
+    return getInstanceIds(domains).map(pairs -> pairs.stream()
+      .map(pair -> pair(pair.getKey(), convertDomainToEvent(pair.getKey(), pair.getValue())))
+      .collect(toList()));
   }
 
-  protected List<Triple<String, EventType, EventType>> mapOldRecordsToNew(
-    List<Pair<String, DomainType>> oldRecords, List<Pair<String, DomainType>> newRecords) {
+  private Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
+                                                                    Collection<D> oldRecords) {
 
-    var idToOldRecordPairMap = oldRecords.stream()
-      .collect(toMap(pair -> getId(pair.getValue()), pair -> pair));
-
-    return newRecords.stream()
-      .map(newRecordPair -> {
-        var oldRecordPair = idToOldRecordPairMap.get(getId(newRecordPair.getValue()));
-        return triple(newRecordPair.getKey(),
-          convertDomainToEvent(oldRecordPair.getKey(), oldRecordPair.getValue()),
-          convertDomainToEvent(newRecordPair.getKey(), newRecordPair.getValue()));
-      }).collect(toList());
+    return getInstanceIds(oldRecords).compose(oldRecordsInstanceIds -> getInstanceIds(newRecords).map(
+      newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
   }
 
-  private Future<String> getInstanceId(DomainType domainType) {
-    return getInstanceIds(List.of(domainType))
-      .map(CollectionUtil::getFirst)
-      .map(Pair::getKey);
-  }
-  static <L, R> Pair<L, R> pair(L left, R right) {
-    return new ImmutablePair<>(left, right);
-  }
-
-  static <L, M, R> Triple<L, M, R> triple(L left, M middle, R right) {
-    return new ImmutableTriple<>(left, middle, right);
+  private Future<String> getInstanceId(D domainType) {
+    return getInstanceIds(List.of(domainType)).map(CollectionUtil::getFirst).map(Pair::getKey);
   }
 }

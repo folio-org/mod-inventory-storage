@@ -1,9 +1,8 @@
 package org.folio.rest.support.kafka;
 
-import java.util.List;
-
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.List;
 import lombok.NonNull;
 
 public class AggregateMessageCollector implements MessageCollector {

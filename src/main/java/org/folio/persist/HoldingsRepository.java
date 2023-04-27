@@ -1,16 +1,16 @@
 package org.folio.persist;
 
-import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
+import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
-import java.util.Map;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.persist.cql.CQLWrapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.Map;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.persist.cql.CQLWrapper;
 
 public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   public HoldingsRepository(Context context, Map<String, String> okapiHeaders) {
@@ -25,8 +25,8 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
       String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
-          + " " + cqlWrapper.getWhereClause()
-          + " RETURNING instanceId::text, jsonb::text";
+        + " " + cqlWrapper.getWhereClause()
+        + " RETURNING instanceId::text, jsonb::text";
       return postgresClient.execute(sql);
     } catch (Exception e) {
       return Future.failedFuture(e);

@@ -3,12 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class Instance extends JsonEntity {
 
   public static final String TITLE_KEY = "title";
@@ -18,7 +16,7 @@ public class Instance extends JsonEntity {
   public static final String IDENTIFIERS_KEY = "identifiers";
   public static final String CONTRIBUTORS_KEY = "contributors";
 
-  public Instance() {}
+  public Instance() { }
 
   public Instance(String title, String source, String instanceTypeId) {
     super.setProperty(TITLE_KEY, title);
@@ -27,7 +25,7 @@ public class Instance extends JsonEntity {
   }
 
   @Override
-  public Instance put (String key, Object value) {
+  public Instance put(String key, Object value) {
     setProperty(key, value);
     return this;
   }

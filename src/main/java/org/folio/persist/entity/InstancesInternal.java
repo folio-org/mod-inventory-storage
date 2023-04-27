@@ -17,9 +17,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.folio.rest.jaxrs.model.ResultInfo;
 
-/**
- * A collection of instance records
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
   "instances",
@@ -28,65 +25,38 @@ import org.folio.rest.jaxrs.model.ResultInfo;
 })
 public class InstancesInternal {
 
-  /**
-   * List of instance records
-   * (Required)
-   */
   @JsonProperty("instances")
   @JsonPropertyDescription("List of instance records")
   @Valid
   @NotNull
   private List<InstanceInternal> instances = new ArrayList<>();
-  /**
-   * Estimated or exact total number of records
-   * (Required)
-   */
   @JsonProperty("totalRecords")
   @JsonPropertyDescription("Estimated or exact total number of records")
   @NotNull
   private Integer totalRecords;
-  /**
-   * Faceting of result sets
-   */
   @JsonProperty("resultInfo")
   @JsonPropertyDescription("Faceting of result sets")
   @Valid
   private ResultInfo resultInfo;
   @JsonIgnore
   @Valid
-  private Map<String, Object> additionalProperties = new HashMap<>();
+  private final Map<String, Object> additionalProperties = new HashMap<>();
 
-  /**
-   * List of instance records
-   * (Required)
-   */
   @JsonProperty("instances")
   public List<InstanceInternal> getInstances() {
     return instances;
   }
 
-  /**
-   * List of instance records
-   * (Required)
-   */
   @JsonProperty("instances")
   public void setInstances(List<InstanceInternal> instances) {
     this.instances = instances;
   }
 
-  /**
-   * Estimated or exact total number of records
-   * (Required)
-   */
   @JsonProperty("totalRecords")
   public Integer getTotalRecords() {
     return totalRecords;
   }
 
-  /**
-   * Estimated or exact total number of records
-   * (Required)
-   */
   @JsonProperty("totalRecords")
   public void setTotalRecords(Integer totalRecords) {
     this.totalRecords = totalRecords;
@@ -97,17 +67,11 @@ public class InstancesInternal {
     return this;
   }
 
-  /**
-   * Faceting of result sets
-   */
   @JsonProperty("resultInfo")
   public ResultInfo getResultInfo() {
     return resultInfo;
   }
 
-  /**
-   * Faceting of result sets
-   */
   @JsonProperty("resultInfo")
   public void setResultInfo(ResultInfo resultInfo) {
     this.resultInfo = resultInfo;
@@ -145,7 +109,7 @@ public class InstancesInternal {
     if (!(other instanceof InstancesInternal)) {
       return false;
     }
-    InstancesInternal rhs = ((InstancesInternal) other);
+    InstancesInternal rhs = (InstancesInternal) other;
     return new EqualsBuilder().append(totalRecords, rhs.totalRecords)
       .append(additionalProperties, rhs.additionalProperties)
       .append(instances, rhs.instances)

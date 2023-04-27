@@ -17,6 +17,8 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
@@ -24,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.Response;
@@ -39,26 +41,24 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
-
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
  * StorageTestSuite.after() to allow to run a single test class, for example from within an
  * IDE during development.
  */
 public abstract class TestBase {
-  protected static final Logger logger = LogManager.getLogger();
-  /** timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS) */
+  /**
+   * timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS)
+   */
   public static final long TIMEOUT = 10;
-
-  protected static ResourceClient instancesClient;
   public static ResourceClient holdingsClient;
+  protected static final Logger logger = LogManager.getLogger();
+  protected static ResourceClient instancesClient;
   protected static ResourceClient itemsClient;
   protected static ResourceClient authoritiesClient;
-  static ResourceClient locationsClient;
   protected static ResourceClient callNumberTypesClient;
+  static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
+  static ResourceClient locationsClient;
   static ResourceClient modesOfIssuanceClient;
   static ResourceClient precedingSucceedingTitleClient;
   static ResourceClient instanceRelationshipsClient;
@@ -71,7 +71,6 @@ public abstract class TestBase {
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
   static StatisticalCodeFixture statisticalCodeFixture;
-  static final FakeKafkaConsumer kafkaConsumer = new FakeKafkaConsumer();
   static InstanceReindexFixture instanceReindex;
   static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -105,30 +104,24 @@ public abstract class TestBase {
     authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
 
-    kafkaConsumer.discardAllMessages();
-    kafkaConsumer.consume(getVertx());
+    KAFKA_CONSUMER.discardAllMessages();
+    KAFKA_CONSUMER.consume(getVertx());
 
     logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
   @AfterClass
   public static void afterAll() {
-    kafkaConsumer.unsubscribe();
-  }
-
-  @SneakyThrows
-  @Before
-  public void removeAllEvents() {
-    kafkaConsumer.discardAllMessages();
+    KAFKA_CONSUMER.unsubscribe();
   }
 
   /**
    * Clear as much data as is safely possible.
    *
-   * The intended use of this function is to clear as much data as possible
+   * <p>The intended use of this function is to clear as much data as possible
    * with the goal of maintaining isolated states between tests.
    *
-   * This does not clear all possible data due to observed problems with
+   * <p>This does not clear all possible data due to observed problems with
    * several tests. Through rigorous testing the data cleared here has been
    * found to work reasonably well across all tests. Clearing some data, such
    * as with StorageTestSuite.deleteAll(authoritiesStorageUrl("")) has been
@@ -136,7 +129,7 @@ public abstract class TestBase {
    * problematic data clearing sets are located within the tests that need
    * them rather than in this function.
    *
-   * Once all tests are properly implemented to safely work with completely
+   * <p>Once all tests are properly implemented to safely work with completely
    * isolated starting states, then this should be updated or removed
    * accordingly.
    */
@@ -187,9 +180,16 @@ public abstract class TestBase {
     return get(future.toCompletionStage().toCompletableFuture());
   }
 
+  @SneakyThrows
+  @Before
+  public void removeAllEvents() {
+    KAFKA_CONSUMER.discardAllMessages();
+  }
+
   /**
    * Assert that a GET at the url returns 404 status code (= not found).
-   * @param url  endpoint where to execute a GET request
+   *
+   * @param url endpoint where to execute a GET request
    */
   void assertGetNotFound(URL url) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();

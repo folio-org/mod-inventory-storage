@@ -7,11 +7,10 @@ import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.hamcrest.Matcher;
-
-import io.vertx.core.json.JsonObject;
 
 public class AuthorityEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers
@@ -30,7 +29,7 @@ public class AuthorityEventMessageChecks {
   }
 
   public void updatedMessagePublished(JsonObject oldAuthority,
-    JsonObject newAuthority) {
+                                      JsonObject newAuthority) {
 
     final String authorityId = getId(oldAuthority);
 

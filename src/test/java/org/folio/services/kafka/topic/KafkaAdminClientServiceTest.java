@@ -15,16 +15,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
@@ -35,12 +34,12 @@ import org.mockito.ArgumentCaptor;
 
 @RunWith(VertxUnitRunner.class)
 public class KafkaAdminClientServiceTest {
+  private static final String STUB_TENANT = "foo-tenant";
+
   private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
     "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item",
     "folio.foo-tenant.inventory.instance-contribution", "folio.foo-tenant.inventory.authority",
     "folio.foo-tenant.inventory.bound-with", "folio.foo-tenant.inventory.async-migration");
-
-  private final String STUB_TENANT = "foo-tenant";
   private KafkaAdminClient mockClient;
   private Vertx vertx;
 
@@ -104,8 +103,7 @@ public class KafkaAdminClientServiceTest {
     createKafkaTopicsAsync(mockClient)
       .onComplete(testContext.asyncAssertSuccess(notUsed -> {
 
-        @SuppressWarnings("unchecked")
-        final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
+        @SuppressWarnings("unchecked") final ArgumentCaptor<List<NewTopic>> createTopicsCaptor = forClass(List.class);
 
         verify(mockClient, times(1)).createTopics(createTopicsCaptor.capture());
         verify(mockClient, times(1)).close();
