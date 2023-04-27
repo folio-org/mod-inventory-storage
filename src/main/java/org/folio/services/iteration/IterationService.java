@@ -4,12 +4,11 @@ import static java.util.UUID.randomUUID;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;

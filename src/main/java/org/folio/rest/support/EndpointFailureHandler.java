@@ -3,10 +3,10 @@ package org.folio.rest.support;
 import static io.vertx.core.Future.succeededFuture;
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import java.util.function.Function;
-
 import javax.ws.rs.core.Response;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
@@ -15,13 +15,11 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 
 public final class EndpointFailureHandler {
   private static final Logger log = LogManager.getLogger();
 
-  private EndpointFailureHandler() {}
+  private EndpointFailureHandler() { }
 
   public static void handleFailure(
     Throwable error,
@@ -80,7 +78,7 @@ public final class EndpointFailureHandler {
 
   private static Response textPlainResponse(int status, String message) {
     return Response.status(status).header(CONTENT_TYPE, "text/plain")
-        .entity(message).build();
+      .entity(message).build();
   }
 
   private static Response failedValidationResponse(Object jsonEntity) {

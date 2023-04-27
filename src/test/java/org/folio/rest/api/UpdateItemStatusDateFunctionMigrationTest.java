@@ -23,6 +23,24 @@ import org.junit.runner.RunWith;
 public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase {
   private static final String OLD_DATETIME = "0001-01-01T01:01:01.01Z";
 
+  private static String getPreviousFunctionSql() {
+    String sql = "CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_item_status_date() RETURNS TRIGGER"
+      + " AS $$"
+      + "  DECLARE"
+      + "  newStatus text;"
+      + "  BEGIN"
+      + "  newStatus = NEW.jsonb->'status'->>'name';"
+      + "  IF (newStatus IS DISTINCT FROM OLD.jsonb->'status'->>'name') THEN"
+      + "      NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}',"
+      + "       to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', '" + OLD_DATETIME + "')), true);"
+      + "  END IF;"
+      + "  RETURN NEW;"
+      + "  END;"
+      + "  $$ LANGUAGE 'plpgsql';";
+
+    return replaceSchema(sql);
+  }
+
   @Parameters({
     // Here only the "from" version is in play, since 18.2.3 < 19.2.0 (fromModuleVersion of the script)
     // then the upgrade will be executed and new version of the function will be deployed.
@@ -32,8 +50,7 @@ public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase
     "19.1.1, 20.0.0",
   })
   @Test
-  public void canMigrateStatusUpdateDateFunctionBetweenReleases(
-    String fromVersion, String toVersion) throws Exception {
+  public void canMigrateStatusUpdateDateFunctionBetweenReleases(String fromVersion, String toVersion) throws Exception {
 
     executeMultipleSqlStatements(getPreviousFunctionSql());
 
@@ -62,26 +79,8 @@ public class UpdateItemStatusDateFunctionMigrationTest extends MigrationTestBase
       "mod-inventory-storage-" + toVersion, false);
   }
 
-  private static String getPreviousFunctionSql() {
-    String sql = "CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.update_item_status_date() RETURNS TRIGGER" +
-      " AS $$" +
-      "  DECLARE" +
-      "  newStatus text;" +
-      "  BEGIN" +
-      "  newStatus = NEW.jsonb->'status'->>'name';" +
-      "  IF (newStatus IS DISTINCT FROM OLD.jsonb->'status'->>'name') THEN" +
-      "      NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}'," +
-      "       to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', '" + OLD_DATETIME + "')), true);" +
-      "  END IF;" +
-      "  RETURN NEW;" +
-      "  END;" +
-      "  $$ LANGUAGE 'plpgsql';";
-
-    return replaceSchema(sql);
-  }
-
   private UUID createAndChangeItemStatus() {
-    final UUID holdingsId = createInstanceAndHolding(mainLibraryLocationId);
+    final UUID holdingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     final IndividualResource item = itemsClient.create(new ItemRequestBuilder()
       .available()
       .withMaterialType(bookMaterialTypeId)

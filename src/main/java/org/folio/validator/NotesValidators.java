@@ -25,19 +25,23 @@ public final class NotesValidators {
     return StringUtils.length(note) > MAX_NOTE_LENGTH;
   }
 
-  private static <T> Future<T> checkNotes(T entity, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
+  private static <T> Future<T> checkNotes(T entity, Function<T, List<String>> getAdministrativeNotes,
+                                          Function<T, List<Note>> getNotes) {
     //both notes and administrativeNotes
     if (entity != null) {
       for (String administrativeNote : getAdministrativeNotes.apply(entity)) {
         if (isTooLong(administrativeNote)) {
           //should return note? min MAX_NOTE_LENGTH + 1 chars, will someone ned this?
-          return failedFuture(new ValidationException(createValidationErrorMessage("administrativeNotes", administrativeNote, String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
+          return failedFuture(new ValidationException(
+            createValidationErrorMessage("administrativeNotes", administrativeNote,
+              String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
         }
       }
 
       for (Note note : getNotes.apply(entity)) {
         if (isTooLong(note.getNote())) {
-          return failedFuture(new ValidationException(createValidationErrorMessage("notes", note.getNote(), String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
+          return failedFuture(new ValidationException(createValidationErrorMessage("notes", note.getNote(),
+            String.format(Locale.US, "A note has exceeded the %,d character limit.", MAX_NOTE_LENGTH))));
         }
       }
     }
@@ -45,7 +49,8 @@ public final class NotesValidators {
     return succeededFuture(entity);
   }
 
-  private static <T> Future<List<T>> checkNotesList(List<T> list, Function<T, List<String>> getAdministrativeNotes, Function<T, List<Note>> getNotes) {
+  private static <T> Future<List<T>> checkNotesList(List<T> list, Function<T, List<String>> getAdministrativeNotes,
+                                                    Function<T, List<Note>> getNotes) {
     for (T entity : list) {
       var result = checkNotes(entity, getAdministrativeNotes, getNotes);
       if (result.failed()) {
@@ -68,30 +73,21 @@ public final class NotesValidators {
   }
 
   /**
-   * For batch updates
-   *
-   * @param items
-   * @return
+   * For batch updates.
    */
   public static Future<List<Item>> refuseItemLongNotes(List<Item> items) {
     return checkNotesList(items, Item::getAdministrativeNotes, Item::getNotes);
   }
 
   /**
-   * For batch updates
-   *
-   * @param instances
-   * @return
+   * For batch updates.
    */
   public static Future<List<Instance>> refuseInstanceLongNotes(List<Instance> instances) {
     return checkNotesList(instances, Instance::getAdministrativeNotes, Instance::getNotes);
   }
 
   /**
-   * For batch updates
-   *
-   * @param holdingsRecords
-   * @return
+   * For batch updates.
    */
   public static Future<List<HoldingsRecord>> refuseHoldingLongNotes(List<HoldingsRecord> holdingsRecords) {
     return checkNotesList(holdingsRecords, HoldingsRecord::getAdministrativeNotes, HoldingsRecord::getNotes);

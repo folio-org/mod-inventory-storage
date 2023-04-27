@@ -1,9 +1,8 @@
 package org.folio.services.migration.async;
 
+import java.util.List;
 import org.folio.rest.jaxrs.model.AffectedEntity;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
-
-import java.util.List;
 
 public interface AsyncMigrationJobRunner {
 

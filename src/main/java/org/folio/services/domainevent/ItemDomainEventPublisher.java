@@ -6,10 +6,11 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -17,9 +18,6 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
@@ -34,7 +32,8 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
   }
 
-  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings, HoldingsRecord oldHoldings) {
+  public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings,
+                                     HoldingsRecord oldHoldings) {
     ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, oldHoldings.getInstanceId());
     ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, newHoldings.getInstanceId());
 
@@ -61,11 +60,6 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected String getId(Item item) {
-    return item.getId();
-  }
-
-  @Override
   protected Future<List<Pair<String, Item>>> getInstanceIds(Collection<Item> items) {
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
@@ -76,6 +70,11 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   @Override
   protected ItemWithInstanceId convertDomainToEvent(String instanceId, Item item) {
     return new ItemWithInstanceId(item, instanceId);
+  }
+
+  @Override
+  protected String getId(Item item) {
+    return item.getId();
   }
 
   private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldItemsToNew(

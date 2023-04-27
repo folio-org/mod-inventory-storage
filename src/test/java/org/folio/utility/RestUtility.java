@@ -12,7 +12,7 @@ import java.net.URL;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RestUtility {
+public final class RestUtility {
   public static final String TENANT_ID = "test_tenant";
 
   private static final Logger logger = LogManager.getLogger();
@@ -22,31 +22,31 @@ public class RestUtility {
   }
 
   public static void send(URL url, HttpMethod method, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
+                          String contentType, Handler<HttpResponse<Buffer>> handler) {
 
     send(url, method, null, content, contentType, handler);
   }
 
   public static void send(URL url, HttpMethod method, String userId, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
+                          String contentType, Handler<HttpResponse<Buffer>> handler) {
 
     send(url.toString(), method, userId, content, contentType, handler);
   }
 
   public static Future<HttpResponse<Buffer>> send(URL url, HttpMethod method, String content,
-      String contentType) {
+                                                  String contentType) {
 
     return Future.future(promise -> send(url, method, content, contentType, promise::complete));
   }
 
   public static void send(String url, HttpMethod method, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
+                          String contentType, Handler<HttpResponse<Buffer>> handler) {
 
     send(url, method, null, content, contentType, handler);
   }
 
   public static void send(String url, HttpMethod method, String userId, String content,
-      String contentType, Handler<HttpResponse<Buffer>> handler) {
+                          String contentType, Handler<HttpResponse<Buffer>> handler) {
 
     Buffer body = Buffer.buffer(content == null ? "" : content);
     MultiMap headers = MultiMap.caseInsensitiveMultiMap();

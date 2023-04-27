@@ -1,21 +1,35 @@
 package org.folio.rest.api.testdata;
 
-
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.HOLDINGS_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.HOLDINGS_CALL_NUMBER_TYPE_SECOND;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class ItemEffectiveCallNumberComponentsTestData {
+
+  private static CallNumberComponentPropertyNames forProperty(String effectivePropertyName) {
+    if (effectivePropertyName.equals("callNumber")) {
+      return new CallNumberComponentPropertyNames(
+        "callNumber", "itemLevelCallNumber", effectivePropertyName
+      );
+    }
+
+    final String holdingsPropertyName = "callNumber" + StringUtils.capitalize(effectivePropertyName);
+    final String itemPropertyName = "itemLevel" + StringUtils.capitalize(holdingsPropertyName);
+
+    return new CallNumberComponentPropertyNames(
+      holdingsPropertyName, itemPropertyName, effectivePropertyName
+    );
+  }
 
   @SuppressWarnings("unused")
   public Object[][] createPropertiesParams() {
     // Format:
     // CallNumber component names, holdings value, item value
-    return new Object[][]{
+    return new Object[][] {
       // Call Number
       {forProperty("callNumber"), "hrCallNumber", "itCallNumber"},
       {forProperty("callNumber"), null, "itCallNumber"},
@@ -36,14 +50,14 @@ public class ItemEffectiveCallNumberComponentsTestData {
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null},
       {forProperty("typeId"), null, ITEM_LEVEL_CALL_NUMBER_TYPE},
       {forProperty("typeId"), null, null},
-    };
+      };
   }
 
   @SuppressWarnings("unused")
   public Object[][] updatePropertiesParams() {
     // Format:
     // CallNumber component names, init holdings value, target holdings value, init item value, target item value
-    return new Object[][]{
+    return new Object[][] {
       // CallNumber
       {forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", "targetItCN"},
       {forProperty("callNumber"), "initHrCN", null, "initItCN", "targetItCN"},
@@ -82,24 +96,24 @@ public class ItemEffectiveCallNumberComponentsTestData {
       {forProperty("prefix"), null, "targetHrCNPrefix", "initItCNPrefix", null},
       // CallNumberTypeId
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND,
-        ITEM_LEVEL_CALL_NUMBER_TYPE, ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
+       ITEM_LEVEL_CALL_NUMBER_TYPE, ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
       },
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE,
-        ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
+       ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
       },
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND,
-        ITEM_LEVEL_CALL_NUMBER_TYPE, null
+       ITEM_LEVEL_CALL_NUMBER_TYPE, null
       },
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE, null},
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE,
-        ITEM_LEVEL_CALL_NUMBER_TYPE
+       ITEM_LEVEL_CALL_NUMBER_TYPE
       },
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE,
-        ITEM_LEVEL_CALL_NUMBER_TYPE, null
+       ITEM_LEVEL_CALL_NUMBER_TYPE, null
       },
       {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND, null, null},
       {forProperty("typeId"), null, HOLDINGS_CALL_NUMBER_TYPE_SECOND, ITEM_LEVEL_CALL_NUMBER_TYPE, null},
-    };
+      };
   }
 
   public static final class CallNumberComponentPropertyNames {
@@ -123,20 +137,5 @@ public class ItemEffectiveCallNumberComponentsTestData {
         .append(effectivePropertyName)
         .toString();
     }
-  }
-
-  private static CallNumberComponentPropertyNames forProperty(String effectivePropertyName) {
-    if (effectivePropertyName.equals("callNumber")) {
-      return new CallNumberComponentPropertyNames(
-        "callNumber", "itemLevelCallNumber", effectivePropertyName
-      );
-    }
-
-    final String holdingsPropertyName = "callNumber" + StringUtils.capitalize(effectivePropertyName);
-    final String itemPropertyName = "itemLevel" + StringUtils.capitalize(holdingsPropertyName);
-
-    return new CallNumberComponentPropertyNames(
-      holdingsPropertyName, itemPropertyName, effectivePropertyName
-    );
   }
 }

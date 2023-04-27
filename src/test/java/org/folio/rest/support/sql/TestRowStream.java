@@ -4,8 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.UUID;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -13,6 +11,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.UUID;
 
 public class TestRowStream implements RowStream<Row> {
 
@@ -22,7 +21,6 @@ public class TestRowStream implements RowStream<Row> {
   private Handler<Void> endHandler;
   private volatile boolean paused;
   private volatile boolean closed;
-
 
   public TestRowStream(int numberOfRecords) {
     this.numberOfRecords = numberOfRecords;

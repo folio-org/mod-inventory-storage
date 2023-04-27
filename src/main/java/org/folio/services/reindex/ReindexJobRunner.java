@@ -5,7 +5,7 @@ import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.impl.AuthorityRecordsAPI.AUTHORITY_TABLE;
+import static org.folio.rest.impl.AuthorityRecordsApi.AUTHORITY_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
@@ -13,13 +13,12 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 
-import java.util.Map;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
@@ -69,6 +68,17 @@ public class ReindexJobRunner {
     initWorker(vertxContext);
   }
 
+  private static void initWorker(Context vertxContext) {
+    if (workerExecutor == null) {
+      synchronized (ReindexJobRunner.class) {
+        if (workerExecutor == null) {
+          workerExecutor = vertxContext.owner()
+            .createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
+        }
+      }
+    }
+  }
+
   public void startReindex(ReindexJob reindexJob, ReindexResourceName reindexResourceName) {
     workerExecutor.executeBlocking(
         promise -> {
@@ -84,7 +94,8 @@ public class ReindexJobRunner {
                 .onComplete(promise);
               break;
             default:
-              throw new UnsupportedOperationException("Unknown resource name. Reindex job was not started for: " + reindexResourceName.name());
+              throw new UnsupportedOperationException(
+                "Unknown resource name. Reindex job was not started for: " + reindexResourceName.name());
           }
         })
       .map(notUsed -> null);
@@ -175,37 +186,28 @@ public class ReindexJobRunner {
     reindexJobRepository.fetchAndUpdate(context.getJobId(),
       resp -> {
         var finalStatus = resp.getJobStatus() == PENDING_CANCEL
-          ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
+                          ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
         return resp.withJobStatus(finalStatus);
       });
   }
 
-  private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(Row row, ReindexContext reindexContext) {
+  private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(Row row,
+                                                                                 ReindexContext reindexContext) {
     return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 
-  private KafkaProducerRecordBuilder<String, Object> rowToAuthorityProducerRecord(Row row, ReindexContext reindexContext) {
+  private KafkaProducerRecordBuilder<String, Object> rowToAuthorityProducerRecord(Row row,
+                                                                                  ReindexContext reindexContext) {
     return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId, readValue(row.getValue("jsonb").toString(), Authority.class)))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (ReindexJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
-        }
-      }
-    }
-  }
-
-  private static class ReindexContext {
+  private static final class ReindexContext {
     private final ReindexJob reindexJob;
     private SQLConnection connection;
     private RowStream<Row> stream;

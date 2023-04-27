@@ -12,7 +12,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.folio.rest.jaxrs.model.HoldingsItem;
 import org.folio.rest.jaxrs.model.HoldingsRecords2;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
@@ -26,8 +25,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   public void shouldReturnInstanceWithRecords() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var holdingsForOne = List.of(
-      createHolding(instanceOne.getId(), mainLibraryLocationId, null),
-      createHolding(instanceOne.getId(), secondFloorLocationId, null)
+      createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(instanceOne.getId(), SECOND_FLOOR_LOCATION_ID, null)
     );
     var itemsForOne = List.of(
       createItem(nodWithNoBarcode(holdingsForOne.get(0))).getString("id"),
@@ -36,10 +35,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
     var instanceTwo = instancesClient.create(instance(randomUUID()));
     var holdingsForTwo = List.of(
-      createHolding(instanceTwo.getId(), mainLibraryLocationId, null),
-      createHolding(instanceTwo.getId(), secondFloorLocationId, null),
-      createHolding(instanceTwo.getId(), fourthFloorLocationId, null));
-    var itemsForTwo = List.of(
+      createHolding(instanceTwo.getId(), MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(instanceTwo.getId(), SECOND_FLOOR_LOCATION_ID, null),
+      createHolding(instanceTwo.getId(), FOURTH_FLOOR_LOCATION_ID, null));
+    final var itemsForTwo = List.of(
       createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
       createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
       createItem(nodWithNoBarcode(holdingsForTwo.get(1))).getString("id"),
@@ -63,13 +62,13 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldReturnInstanceEvenIfNoItems() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
-    var holdingForOne = createHolding(instanceOne.getId(), mainLibraryLocationId, null);
+    var holdingForOne = createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null);
 
     var instanceTwo = instancesClient.create(instance(randomUUID()));
     var holdingsForTwo = List.of(
-      createHolding(instanceTwo.getId(), mainLibraryLocationId, null),
-      createHolding(instanceTwo.getId(), secondFloorLocationId, null),
-      createHolding(instanceTwo.getId(), fourthFloorLocationId, null));
+      createHolding(instanceTwo.getId(), MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(instanceTwo.getId(), SECOND_FLOOR_LOCATION_ID, null),
+      createHolding(instanceTwo.getId(), FOURTH_FLOOR_LOCATION_ID, null));
 
     var instances = inventoryViewClient.getMany("id==(%s or %s)",
       instanceTwo.getId(), instanceOne.getId());
@@ -124,13 +123,13 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
   private <T> Matcher<Iterable<? extends T>> matchesInAnyOrder(List<T> records) {
     return containsInAnyOrder(records.stream()
-    .map(Matchers::is)
-    .collect(Collectors.toList()));
+      .map(Matchers::is)
+      .collect(Collectors.toList()));
   }
 
-  private void isNonNullEmpty(List<?> aList) {
-    assertThat(aList, notNullValue());
-    assertThat(aList.size(), is(0));
+  private void isNonNullEmpty(List<?> list) {
+    assertThat(list, notNullValue());
+    assertThat(list.size(), is(0));
   }
 
   private InventoryViewInstance getInstanceById(List<IndividualResource> instances, UUID id) {

@@ -14,7 +14,7 @@ public final class PublicationPeriodParser {
   private static final Pattern END_YEAR = compile("(-\\s?|and\\s|,\\s?)\\w{0,2}(?<year>\\d{4})");
   private static final Pattern ANY_YEAR = compile("(?<year>\\d{4})");
 
-  private PublicationPeriodParser() {}
+  private PublicationPeriodParser() { }
 
   public static PublicationPeriod parsePublicationPeriod(List<Publication> publications) {
     if (publications == null || publications.isEmpty()) {

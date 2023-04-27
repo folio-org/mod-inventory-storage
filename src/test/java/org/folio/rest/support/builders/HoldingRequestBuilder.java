@@ -1,11 +1,10 @@
 package org.folio.rest.support.builders;
 
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -13,19 +12,20 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final UUID instanceId;
   private final UUID permanentLocationId;
   private final UUID temporaryLocationId;
-  private JsonObject tags;
-  private String callNumber;
-  private String callNumberPrefix;
-  private String callNumberSuffix;
-  private String callNumberTypeId;
   private final String hrid;
   private final Boolean discoverySuppress;
-  private JsonArray holdingsStatements;
-  private JsonArray holdingsStatementsForIndexes;
-  private JsonArray holdingsStatementsForSupplements;
-  private List<UUID> statisticalCodeIds;
   private final UUID sourceId;
-  private List<String> administrativeNotes;
+  private final JsonObject tags;
+  private final String callNumber;
+  private final String callNumberPrefix;
+  private final String callNumberSuffix;
+  private final String callNumberTypeId;
+  private final JsonArray holdingsStatements;
+  private final JsonArray holdingsStatementsForIndexes;
+  private final JsonArray holdingsStatementsForSupplements;
+  private final List<UUID> statisticalCodeIds;
+  private final List<String> administrativeNotes;
+
   public HoldingRequestBuilder() {
     this(
       null,

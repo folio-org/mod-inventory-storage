@@ -1,12 +1,10 @@
 package org.folio.rest.support;
 
+import io.vertx.core.json.JsonObject;
 import java.util.List;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-
-import io.vertx.core.json.JsonObject;
 
 public class JsonObjectMatchers {
   public static Matcher<JsonObject> identifierMatches(String identifierTypeId, String value) {
@@ -38,8 +36,8 @@ public class JsonObjectMatchers {
         List<JsonObject> parameters = JsonArrayHelper.toList(
           entry.getJsonArray("parameters"));
 
-        return entry.getString("message").equals(message) &&
-          parameters.stream().anyMatch(p -> p.getString("key").equals(property));
+        return entry.getString("message").equals(message)
+          && parameters.stream().anyMatch(p -> p.getString("key").equals(property));
       }
     };
   }
@@ -54,21 +52,20 @@ public class JsonObjectMatchers {
 
       @Override
       protected boolean matchesSafely(List<JsonObject> errors) {
-        if(errors.size() == 1) {
+        if (errors.size() == 1) {
           return errors.get(0).getString("message").contains(message);
-        }
-        else
+        } else {
           return false;
         }
+      }
     };
   }
 
   /**
    * Ignores change metadata because created and updated date might be represented
-   * with either +00:00 or Z due to differences in serialization / deserialization
+   * with either +00:00 or Z due to differences in serialization / deserialization.
    *
    * @param expectedRepresentation expected representation of the record
-   *
    * @return a Hamcrest matcher
    */
   public static Matcher<JsonObject> equalsIgnoringMetadata(JsonObject expectedRepresentation) {

@@ -18,17 +18,15 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
-
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
 
 public class SampleDataTest extends TestBase {
 
@@ -44,6 +42,11 @@ public class SampleDataTest extends TestBase {
 
     removeTenant(TENANT_ID);
     prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
+  }
+
+  private static Predicate<JsonObject> hasId(String id) {
+    return (JsonObject instanceRelationship) ->
+      Objects.equals(instanceRelationship.getString("id"), id);
   }
 
   @Test
@@ -69,19 +72,6 @@ public class SampleDataTest extends TestBase {
   @Test
   public void boundWithPartsCount() {
     assertCount(boundWithPartsUrl("?limit=100"), "boundWithParts", 10);
-  }
-
-  /**
-   * Assert that entity has a metadata property where createdDate and updatedDate are not null
-   * and createdByUserId and updatedByUserId are null.
-   */
-  private void assertMetadata(JsonObject entity) {
-    JsonObject metadata = entity.getJsonObject("metadata");
-    assertThat(metadata, is(notNullValue()));
-    assertThat(metadata.getString("createdDate"), is(notNullValue()));
-    assertThat(metadata.getString("createdByUserId"), is(nullValue()));
-    assertThat(metadata.getString("updatedDate"), is(notNullValue()));
-    assertThat(metadata.getString("updatedByUserId"), is(nullValue()));
   }
 
   @Test
@@ -122,6 +112,19 @@ public class SampleDataTest extends TestBase {
     assertMetadata(ir);
   }
 
+  /**
+   * Assert that entity has a metadata property where createdDate and updatedDate are not null
+   * and createdByUserId and updatedByUserId are null.
+   */
+  private void assertMetadata(JsonObject entity) {
+    JsonObject metadata = entity.getJsonObject("metadata");
+    assertThat(metadata, is(notNullValue()));
+    assertThat(metadata.getString("createdDate"), is(notNullValue()));
+    assertThat(metadata.getString("createdByUserId"), is(nullValue()));
+    assertThat(metadata.getString("updatedDate"), is(notNullValue()));
+    assertThat(metadata.getString("updatedByUserId"), is(nullValue()));
+  }
+
   @SneakyThrows
   private JsonObject get(URL url) {
     final var getCompleted = new CompletableFuture<Response>();
@@ -151,11 +154,6 @@ public class SampleDataTest extends TestBase {
       .filter(hasId(id))
       .findFirst()
       .orElse(null);
-  }
-
-  private static Predicate<JsonObject> hasId(String id) {
-    return (JsonObject instanceRelationship) ->
-      Objects.equals(instanceRelationship.getString("id"), id);
   }
 
   @SneakyThrows

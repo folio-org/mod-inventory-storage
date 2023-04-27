@@ -3,16 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class IdentifierType extends JsonEntity {
   public static final String NAME_KEY = "name";
 
-  public IdentifierType (String name) {
+  public IdentifierType(String name) {
     super.setProperty(NAME_KEY, name);
   }
 

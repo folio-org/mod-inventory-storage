@@ -38,6 +38,31 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
+  private static JsonObject createInstanceRequest(
+    UUID id,
+    String source,
+    String title,
+    JsonArray identifiers,
+    JsonArray contributors,
+    UUID instanceTypeId,
+    JsonArray tags,
+    String hrid,
+    JsonArray languages) {
+
+    JsonObject instanceToCreate = createInstanceRequest(
+      id, source, title, identifiers, contributors, instanceTypeId, tags);
+
+    if (hrid != null) {
+      instanceToCreate.put("hrid", hrid);
+    }
+
+    if (languages != null) {
+      instanceToCreate.put("languages", languages);
+    }
+
+    return instanceToCreate;
+  }
+
   @SneakyThrows
   @Before
   public void beforeEach() {
@@ -50,16 +75,16 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @After
   public void checkIdsAfterEach() {
-    StorageTestSuite.checkForMismatchedIDs("instance");
-    StorageTestSuite.checkForMismatchedIDs("holdings_record");
+    StorageTestSuite.checkForMismatchedIds("instance");
+    StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
   @Test
   public void canGetInstanceBulkUsingDefaults()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     int totalMoons = 2;
     int expectedMatches = totalMoons;
@@ -77,10 +102,10 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetInstanceBulkOfId()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     int totalMoons = 2;
     int expectedMatches = totalMoons;
@@ -122,19 +147,20 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   @Test
   public void canGetInstanceIdsByEffectiveLocation() throws ExecutionException, InterruptedException, TimeoutException {
     var expectedInstanceId = UUID.randomUUID();
-    var effectiveLocationId = mainLibraryLocationId;
+    var effectiveLocationId = MAIN_LIBRARY_LOCATION_ID;
     instancesClient.create(instance(expectedInstanceId));
     var holdingId = createHolding(expectedInstanceId, effectiveLocationId, null);
     createItem(buildItem(holdingId, null, null));
 
     var secondInstanceId = UUID.randomUUID();
-    var secondLocationId = annexLibraryLocationId;
+    var secondLocationId = ANNEX_LIBRARY_LOCATION_ID;
     instancesClient.create(instance(secondInstanceId));
     var secondHoldingId = createHolding(expectedInstanceId, secondLocationId, null);
     createItem(buildItem(secondHoldingId, null, null));
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    URL getInstanceUrl = recordBulkUrl(String.format("/ids?query=(items.effectiveLocationId==\"%s\")", effectiveLocationId));
+    URL getInstanceUrl =
+      recordBulkUrl(String.format("/ids?query=(items.effectiveLocationId==\"%s\")", effectiveLocationId));
     getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
     Response response = getCompleted.get(10, SECONDS);
 
@@ -149,10 +175,10 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetInstanceBulkOfIdWithQueryExact()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     int totalMoons = 10;
     int expectedMatches = 1;
@@ -172,10 +198,10 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotGetInstanceBulkOfNonExistentId()
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     int totalMoons = 2;
     int expectedMatches = 0;
@@ -232,13 +258,13 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void validateMoonsResponseWithTotal(Response response, int expectedMatches,
-      Map<String, JsonObject> moons) {
+                                              Map<String, JsonObject> moons) {
     assertThat(response.getStatusCode(), is(HTTP_OK));
     validateMoonsResponseWithTotal(response.getJson(), expectedMatches, moons);
   }
 
   private void validateMoonsResponseWithTotal(JsonObject collection,
-      int expectedMatches, Map<String, JsonObject> moons) {
+                                              int expectedMatches, Map<String, JsonObject> moons) {
     JsonArray ids = collection.getJsonArray("ids");
     assertThat(ids.size(), is(expectedMatches));
     assertThat(collection.getInteger("totalRecords"), is(expectedMatches));
@@ -250,13 +276,13 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void validateMoonsResponse(Response response, int expectedMatches,
-      Map<String, JsonObject> moons) {
+                                     Map<String, JsonObject> moons) {
     assertThat(response.getStatusCode(), is(HTTP_OK));
     validateMoonsResponse(response.getJson(), expectedMatches, moons);
   }
 
   private void validateMoonsResponse(JsonObject collection,
-       int expectedMatches, Map<String, JsonObject> moons) {
+                                     int expectedMatches, Map<String, JsonObject> moons) {
     JsonArray ids = collection.getJsonArray("ids");
     assertThat(ids.size(), is(expectedMatches));
     for (int i = 0; i < ids.size(); i++) {
@@ -266,7 +292,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void validateHoldingsResponse(Response response, List<String> holdingsIds,
-     int expectedMatches) {
+                                        int expectedMatches) {
     JsonArray ids = response.getJson().getJsonArray("ids");
     assertThat(response.getStatusCode(), is(HTTP_OK));
     assertThat(ids.size(), is(expectedMatches));
@@ -277,7 +303,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void validateHoldingsResponseWithTotals(Response response, List<String> holdingsIds,
-      int expectedMatches) {
+                                                  int expectedMatches) {
     JsonArray ids = response.getJson().getJsonArray("ids");
     assertThat(response.getStatusCode(), is(HTTP_OK));
     assertThat(ids.size(), is(expectedMatches));
@@ -289,10 +315,10 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private void createManyMoons(Map<String, JsonObject> instancesToCreate)
-      throws MalformedURLException,
-      InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws MalformedURLException,
+    InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     for (String id : instancesToCreate.keySet()) {
       instancesClient.create(instancesToCreate.get(id));
@@ -304,12 +330,12 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   private Map<String, JsonObject> manyMoons(int total,
-      RecordBulkIdsGetField field) {
+                                            RecordBulkIdsGetField field) {
     Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
 
     for (int i = 0; i < total; i++) {
       UUID uuid = UUID.randomUUID();
-      String hrid = String.format("in%011d", i + 1);
+      final String hrid = String.format("in%011d", i + 1);
 
       String id = "";
       if (field.compareTo(RecordBulkIdsGetField.ID) == 0) {
@@ -324,7 +350,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
       tags.add("test-tag");
 
       JsonArray langs = new JsonArray();
-      langs.add(new String("eng"));
+      langs.add("eng");
 
       JsonObject jsonb = createInstanceRequest(uuid, "TEST", "Moon #" + i,
         identifiers, contributors, UUID_INSTANCE_TYPE, tags, hrid, langs);
@@ -337,34 +363,9 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   private List<String> createAndGetHoldingsIds(int totalCount) {
     List<String> holdingIds = new ArrayList<>();
     for (int i = 0; i < totalCount; i++) {
-      String id = createInstanceAndHolding(mainLibraryLocationId).toString();
+      String id = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
       holdingIds.add(id);
     }
     return holdingIds;
-  }
-
-  private static JsonObject createInstanceRequest(
-      UUID id,
-      String source,
-      String title,
-      JsonArray identifiers,
-      JsonArray contributors,
-      UUID instanceTypeId,
-      JsonArray tags,
-      String hrid,
-      JsonArray languages) {
-
-    JsonObject instanceToCreate = createInstanceRequest(
-      id, source, title, identifiers, contributors, instanceTypeId, tags);
-
-    if (hrid != null) {
-      instanceToCreate.put("hrid", hrid);
-    }
-
-    if (languages != null) {
-      instanceToCreate.put("languages", languages);
-    }
-
-    return instanceToCreate;
   }
 }

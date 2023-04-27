@@ -1,22 +1,21 @@
 package org.folio.persist;
 
-import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
+import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
-import java.util.List;
-import java.util.Map;
-
 import io.vertx.core.AsyncResult;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.cql.CQLWrapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.List;
+import java.util.Map;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.persist.cql.CQLWrapper;
 
 public class ItemRepository extends AbstractRepository<Item> {
   public ItemRepository(Context context, Map<String, String> okapiHeaders) {
@@ -38,8 +37,8 @@ public class ItemRepository extends AbstractRepository<Item> {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
       String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
-          + " " + cqlWrapper.getWhereClause()
-          + " RETURNING (SELECT instanceId::text FROM holdings_record WHERE id = holdingsRecordId), jsonb::text";
+        + " " + cqlWrapper.getWhereClause()
+        + " RETURNING (SELECT instanceId::text FROM holdings_record WHERE id = holdingsRecordId), jsonb::text";
       return postgresClient.execute(sql);
     } catch (Exception e) {
       return Future.failedFuture(e);

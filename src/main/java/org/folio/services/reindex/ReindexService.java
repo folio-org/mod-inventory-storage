@@ -39,12 +39,13 @@ public final class ReindexService {
   }
 
   public Future<ReindexJob> cancelReindex(String jobId) {
-    return reindexJobRepository.fetchAndUpdate(jobId, resp -> {
-        if (resp.getJobStatus() == IDS_PUBLISHED) {
-          throw new IllegalStateException("The job has been finished");
-        }
-        return resp.withJobStatus(PENDING_CANCEL);
-      })
+    return reindexJobRepository.fetchAndUpdate(jobId,
+        resp -> {
+          if (resp.getJobStatus() == IDS_PUBLISHED) {
+            throw new IllegalStateException("The job has been finished");
+          }
+          return resp.withJobStatus(PENDING_CANCEL);
+        })
       .onFailure(throwable -> {
         throw new BadRequestException(throwable.getMessage());
       });

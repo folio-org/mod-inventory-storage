@@ -47,34 +47,33 @@ public class InstallUpgradeIT {
   @ClassRule
   public static final KafkaContainer KAFKA =
     new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.3"))
-    .withNetwork(NETWORK)
-    .withNetworkAliases("mykafka");
-
+      .withNetwork(NETWORK)
+      .withNetworkAliases("mykafka");
 
   @ClassRule
   public static final PostgreSQLContainer<?> POSTGRES =
     new PostgreSQLContainer<>("postgres:12-alpine")
-    .withClasspathResourceMapping("lotus-23.0.0.sql", "/lotus-23.0.0.sql", BindMode.READ_ONLY)
-    .withNetwork(NETWORK)
-    .withNetworkAliases("mypostgres")
-    .withExposedPorts(5432)
-    .withUsername("username")
-    .withPassword("password")
-    .withDatabaseName("postgres");
+      .withClasspathResourceMapping("lotus-23.0.0.sql", "/lotus-23.0.0.sql", BindMode.READ_ONLY)
+      .withNetwork(NETWORK)
+      .withNetworkAliases("mypostgres")
+      .withExposedPorts(5432)
+      .withUsername("username")
+      .withPassword("password")
+      .withDatabaseName("postgres");
 
   @ClassRule
   public static final GenericContainer<?> MOD_MIS =
     new GenericContainer<>(
       new ImageFromDockerfile("mod-inventory-storage").withFileFromPath(".", Path.of(".")))
-    .withNetwork(NETWORK)
-    .withExposedPorts(8081)
-    .withEnv("DB_HOST", "mypostgres")
-    .withEnv("DB_PORT", "5432")
-    .withEnv("DB_USERNAME", "username")
-    .withEnv("DB_PASSWORD", "password")
-    .withEnv("DB_DATABASE", "postgres")
-    .withEnv("KAFKA_HOST", "mykafka")
-    .withEnv("KAFKA_PORT", "9092");
+      .withNetwork(NETWORK)
+      .withExposedPorts(8081)
+      .withEnv("DB_HOST", "mypostgres")
+      .withEnv("DB_PORT", "5432")
+      .withEnv("DB_USERNAME", "username")
+      .withEnv("DB_PASSWORD", "password")
+      .withEnv("DB_DATABASE", "postgres")
+      .withEnv("KAFKA_HOST", "mykafka")
+      .withEnv("KAFKA_PORT", "9092");
 
   @BeforeClass
   public static void beforeClass() {
@@ -87,6 +86,15 @@ public class InstallUpgradeIT {
     }
   }
 
+  static void postgresExec(String... command) {
+    try {
+      ExecResult execResult = POSTGRES.execInContainer(command);
+      assertThat(execResult.getStdout() + "\n" + execResult.getStderr(), execResult.getExitCode(), is(0));
+    } catch (InterruptedException | IOException | UnsupportedOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @Before
   public void beforeEach() {
     RestAssured.requestSpecification = null;
@@ -95,11 +103,11 @@ public class InstallUpgradeIT {
   @Test
   public void health() {
     // request without X-Okapi-Tenant
-    when().
-      get("/admin/health").
-    then().
-      statusCode(200).
-      body(is("\"OK\""));
+    when()
+      .get("/admin/health")
+      .then()
+      .statusCode(200)
+      .body(is("\"OK\""));
   }
 
   @Test
@@ -107,10 +115,10 @@ public class InstallUpgradeIT {
     setTenant("latest");
 
     JsonObject body = new JsonObject()
-        .put("module_to", "999999.0.0")
-        .put("parameters", new JsonArray()
-            .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-            .add(new JsonObject().put("key", "loadSample").put("value", "true")));
+      .put("module_to", "999999.0.0")
+      .put("parameters", new JsonArray()
+        .add(new JsonObject().put("key", "loadReference").put("value", "true"))
+        .add(new JsonObject().put("key", "loadSample").put("value", "true")));
 
     postTenant(body);
 
@@ -125,17 +133,17 @@ public class InstallUpgradeIT {
   public void upgradeFromLotus() {
     // load database dump of Lotus (R3 2021) version of mod-inventory-storage
     postgresExec("psql", "-U", POSTGRES.getUsername(), "-d", POSTGRES.getDatabaseName(),
-        "-f", "lotus-23.0.0.sql");
+      "-f", "lotus-23.0.0.sql");
 
     setTenant("lotus");
 
     // migrate
     postTenant(new JsonObject()
-        .put("module_from", "23.0.0")
-        .put("module_to", "999999.0.0")
-        .put("parameters", new JsonArray()
-            .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-            .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
+      .put("module_from", "23.0.0")
+      .put("module_to", "999999.0.0")
+      .put("parameters", new JsonArray()
+        .add(new JsonObject().put("key", "loadReference").put("value", "true"))
+        .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
 
     smokeTest();
   }
@@ -149,58 +157,49 @@ public class InstallUpgradeIT {
   public void canLog() {
     setTenant("logtenant");
 
-    given().
-      header("X-Okapi-Request-Id", "987654321").
-      header("X-Okapi-User-Id", "itsme").
-    when().
-      get("/location-units/libraries").
-    then().
-      statusCode(400);  // tenant hasn't been created
+    given()
+      .header("X-Okapi-Request-Id", "987654321")
+      .header("X-Okapi-User-Id", "itsme")
+      .when()
+      .get("/location-units/libraries")
+      .then()
+      .statusCode(400);  // tenant hasn't been created
 
     assertThat(MOD_MIS.getLogs(), containsString("[987654321] [logtenant] [itsme] [mod_inventory_storage]"));
   }
 
   private void setTenant(String tenant) {
     RestAssured.requestSpecification = new RequestSpecBuilder()
-        .addHeader("X-Okapi-Url", "http://localhost:8081")
-        .addHeader("X-Okapi-Tenant", tenant)
-        .setContentType(ContentType.JSON)
-        .build();
+      .addHeader("X-Okapi-Url", "http://localhost:8081")
+      .addHeader("X-Okapi-Tenant", tenant)
+      .setContentType(ContentType.JSON)
+      .build();
   }
 
   private void postTenant(JsonObject body) {
     String location =
-        given().
-          body(body.encodePrettily()).
-        when().
-          post("/_/tenant").
-        then().
-          statusCode(201).
-        extract().
-          header("Location");
+      given()
+        .body(body.encodePrettily())
+        .when()
+        .post("/_/tenant")
+        .then()
+        .statusCode(201)
+        .extract()
+        .header("Location");
 
-    when().
-      get(location + "?wait=60000").
-    then().
-      statusCode(200).
-      body("complete", is(true));
+    when()
+      .get(location + "?wait=60000")
+      .then()
+      .statusCode(200)
+      .body("complete", is(true));
   }
 
   private void smokeTest() {
-    when().
-      get("/instance-storage/instances?limit=1000").
-    then().
-      statusCode(200).
-      body("instances.size()", is(36));
-  }
-
-  static void postgresExec(String... command) {
-    try {
-      ExecResult execResult = POSTGRES.execInContainer(command);
-      assertThat(execResult.getStdout() + "\n" + execResult.getStderr(), execResult.getExitCode(), is(0));
-    } catch (InterruptedException | IOException | UnsupportedOperationException e) {
-      throw new RuntimeException(e);
-    }
+    when()
+      .get("/instance-storage/instances?limit=1000")
+      .then()
+      .statusCode(200)
+      .body("instances.size()", is(36));
   }
 
 }

@@ -59,12 +59,6 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
   }
 
   @Override
-  public Future<Instance> getById(String id) {
-    return postgresClientFuturized.getById(tableName, id, InstanceInternal.class)
-      .map(instanceInternal -> Objects.nonNull(instanceInternal) ? instanceInternal.toInstanceDto() : null);
-  }
-
-  @Override
   public Future<List<Instance>> get(Criterion criterion) {
     return postgresClientFuturized.get(tableName, InstanceInternal.class, criterion)
       .map(InstanceInternalRepository::toInstanceList);
@@ -77,6 +71,12 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
     postgresClient.get(connection, tableName, InstanceInternal.class, criterion, false, true, getItemsResult);
 
     return getItemsResult.future().map(Results::getResults).map(InstanceInternalRepository::toInstanceList);
+  }
+
+  @Override
+  public Future<Instance> getById(String id) {
+    return postgresClientFuturized.getById(tableName, id, InstanceInternal.class)
+      .map(instanceInternal -> Objects.nonNull(instanceInternal) ? instanceInternal.toInstanceDto() : null);
   }
 
   @Override
@@ -139,20 +139,19 @@ public class InstanceInternalRepository extends AbstractRepository<Instance> {
 
       var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
       var cqlWrapper = new CQLWrapper(field, query, limit, offset, "none");
-      sql.append(cqlWrapper.toString());
+      sql.append(cqlWrapper);
 
       return postgresClient.select(sql.toString())
         .map(rowSet -> {
           StringBuilder json = new StringBuilder("{\"instanceSets\":[\n");
           boolean first = true;
-          var iterator = rowSet.iterator();
-          while (iterator.hasNext()) {
+          for (Row row : rowSet) {
             if (first) {
               first = false;
             } else {
               json.append(",\n");
             }
-            json.append(iterator.next().getString(0));
+            json.append(row.getString(0));
           }
           json.append("\n]}");
           return Response.ok(json.toString(), MediaType.APPLICATION_JSON_TYPE).build();

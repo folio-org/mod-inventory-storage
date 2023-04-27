@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 
-public class GetInstanceStorageInstancesResponseInternal extends ResponseDelegate {
+public final class GetInstanceStorageInstancesResponseInternal extends ResponseDelegate {
 
   public static final String CONTENT_TYPE = "Content-Type";
   public static final String TEXT_PLAIN = "text/plain";
@@ -13,10 +13,6 @@ public class GetInstanceStorageInstancesResponseInternal extends ResponseDelegat
 
   private GetInstanceStorageInstancesResponseInternal(Response response, Object entity) {
     super(response, entity);
-  }
-
-  private GetInstanceStorageInstancesResponseInternal(Response response) {
-    super(response);
   }
 
   public static GetInstanceStorageInstancesResponseInternal respond200WithApplicationJson(

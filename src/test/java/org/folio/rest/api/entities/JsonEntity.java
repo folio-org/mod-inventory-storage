@@ -3,14 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
 import io.vertx.core.json.JsonObject;
 
-/**
- *
- * @author ne
- */
+
 public abstract class JsonEntity {
 
   public static final String ID_KEY = "id";
@@ -18,17 +16,14 @@ public abstract class JsonEntity {
   protected final JsonObject json = new JsonObject();
 
   /**
-   * Sets JSON property
+   * Sets JSON property.
    * (hint: override in subclass with method that returns the specific subclass instead)
+   *
    * @param propertyKey JSON property name
-   * @param value JSON value (ie String, JSON object, JSON array)
+   * @param value       JSON value (ie String, JSON object, JSON array)
    * @return Wrapped JSON representation of the entity
    */
-  public abstract JsonEntity put(String propertyKey,  Object value);
-
-  protected void setProperty (String propertyKey, Object value) {
-    json.put(propertyKey, value);
-  }
+  public abstract JsonEntity put(String propertyKey, Object value);
 
   public String getString(String propertyKey) {
     return json.getString(propertyKey);
@@ -36,6 +31,10 @@ public abstract class JsonEntity {
 
   public JsonObject getJson() {
     return json;
+  }
+
+  protected void setProperty(String propertyKey, Object value) {
+    json.put(propertyKey, value);
   }
 
 }

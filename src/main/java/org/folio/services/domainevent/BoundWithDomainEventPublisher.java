@@ -1,20 +1,19 @@
 package org.folio.services.domainevent;
 
+import static java.util.stream.Collectors.toList;
+import static org.folio.InventoryKafkaTopic.BOUND_WITH;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.BoundWithRepository;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.BoundWithPart;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import static java.util.stream.Collectors.toList;
-import static org.folio.InventoryKafkaTopic.BOUND_WITH;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<BoundWithPart, BoundWithInstanceId> {
 
@@ -35,10 +34,6 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
         .collect(toList()));
   }
 
-  private String getInstanceId(Map<String, HoldingsRecord> holdings, BoundWithPart bound) {
-    return holdings.get(bound.getHoldingsRecordId()).getInstanceId();
-  }
-
   @Override
   protected BoundWithInstanceId convertDomainToEvent(String instanceId, BoundWithPart domain) {
     return new BoundWithInstanceId(domain, instanceId);
@@ -47,5 +42,9 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
   @Override
   protected String getId(BoundWithPart boundWithPart) {
     return boundWithPart.getId();
+  }
+
+  private String getInstanceId(Map<String, HoldingsRecord> holdings, BoundWithPart bound) {
+    return holdings.get(bound.getHoldingsRecordId()).getInstanceId();
   }
 }

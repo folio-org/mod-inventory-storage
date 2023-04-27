@@ -31,10 +31,30 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
-  private static final String INVALID_UUID_ERROR_MESSAGE = "Invalid UUID format of id, should be " +
-    "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
+  private static final String INVALID_UUID_ERROR_MESSAGE = "Invalid UUID format of id, should be "
+    + "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
   private static final String HRID = "inst000000000022";
   private static final String TITLE = "A web primer";
+
+  /**
+   * Delete all data to prevent potential constraint violations.
+   * The preceding_succeeding_title, instance_relationship, and
+   * bound_with_part may cause constraint violations when other classes
+   * attempt to delete or modify data.
+   * If isolation between test classes gets fixed then this afterAll() should
+   * not be necessary anymore.
+   */
+  @AfterClass
+  public static void afterAll() {
+    TestBase.afterAll();
+
+    // Prevent tests from other classes from being affected by this data.
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
+
+    deleteAllById(precedingSucceedingTitleClient);
+  }
 
   @SneakyThrows
   @Before
@@ -50,28 +70,6 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     setupLoanTypes();
     setupLocations();
     removeAllEvents();
-  }
-
-  /**
-   * Delete all data to prevent potential constraint violations.
-   *
-   * The preceding_succeeding_title, instance_relationship, and
-   * bound_with_part may cause constraint violations when other classes
-   * attempt to delete or modify data.
-   *
-   * If isolation between test classes gets fixed then this afterAll() should
-   * not be necessary anymore.
-   */
-  @AfterClass
-  public static void afterAll() {
-    TestBase.afterAll();
-
-    // Prevent tests from other classes from being affected by this data.
-    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
-    StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
-    StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
-
-    deleteAllById(precedingSucceedingTitleClient);
   }
 
   @Test
@@ -213,8 +211,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
       .getJson());
 
     assertThat(response.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
-    assertErrors(response, "Cannot set preceding_succeeding_title.precedinginstanceid = " +
-      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
+    assertErrors(response, "Cannot set preceding_succeeding_title.precedinginstanceid = "
+      + "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
   }
 
   @Test
@@ -231,8 +229,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     Response response = precedingSucceedingTitleClient.attemptToCreate(precedingSucceedingTitle.getJson());
 
     assertThat(response.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
-    assertErrors(response, "Cannot set preceding_succeeding_title.succeedinginstanceid = " +
-      "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
+    assertErrors(response, "Cannot set preceding_succeeding_title.succeedinginstanceid = "
+      + "14b65645-2e49-4a85-8dc1-43d444710570 because it does not exist in instance.id.");
   }
 
   @Test
@@ -367,8 +365,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   private void assertPrecedingSucceedingTitle(IndividualResource response,
-    String precedingSucceedingTitleId, String succeedingTitleId, String title,
-    String hrid, JsonArray identifiers) {
+                                              String precedingSucceedingTitleId, String succeedingTitleId, String title,
+                                              String hrid, JsonArray identifiers) {
 
     Response getResponse = precedingSucceedingTitleClient.getById(response.getId());
     JsonObject precedingSucceedingTitleResponse = getResponse.getJson();
@@ -377,7 +375,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   private void assertPrecedingSucceedingTitle(JsonObject precedingSucceedingTitleResponse, String id,
-    String precedingSucceedingTitleId, String succeedingTitleId, String title, String hrid, JsonArray identifiers) {
+                                              String precedingSucceedingTitleId, String succeedingTitleId, String title,
+                                              String hrid, JsonArray identifiers) {
     assertThat(precedingSucceedingTitleResponse.getString(PrecedingSucceedingTitle.ID_KEY), is(id));
     assertThat(precedingSucceedingTitleResponse.getString(PrecedingSucceedingTitle.PRECEDING_INSTANCE_ID_KEY),
       is(precedingSucceedingTitleId));

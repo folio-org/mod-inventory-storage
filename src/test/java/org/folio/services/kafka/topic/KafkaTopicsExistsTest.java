@@ -36,9 +36,9 @@ public class KafkaTopicsExistsTest {
 
   @BeforeClass
   public static void beforeAll()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
@@ -50,9 +50,9 @@ public class KafkaTopicsExistsTest {
 
   @AfterClass
   public static void afterAll(TestContext context)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     removeTenant(TENANT_ID);
     stopVerticleAndWebClient();
@@ -70,9 +70,9 @@ public class KafkaTopicsExistsTest {
 
   @After
   public void afterEach(TestContext context)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     kafkaAdminClient.deleteTopics(List.of("T1", "T2", "T3"))
       .compose(x -> kafkaAdminClient.close())

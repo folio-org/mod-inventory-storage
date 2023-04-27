@@ -57,17 +57,7 @@ public class LocationUnitTest extends TestBase {
     removeAllEvents();
   }
 
-  private Response getInstById(UUID id) {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
-      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-
-    return get(getCompleted);
-  }
-
-/////////////////////// Inst tests
+  /////////////////////// Inst tests
   @Test
   public void canCreateAnInst() {
 
@@ -125,7 +115,7 @@ public class LocationUnitTest extends TestBase {
     createInstitution(null, "Institute of MetaPhysics", "MPI");
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locInstitutionStorageUrl("/" + id), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
     Response getResponse = get(getCompleted);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
@@ -189,7 +179,7 @@ public class LocationUnitTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locInstitutionStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
 
@@ -215,7 +205,7 @@ public class LocationUnitTest extends TestBase {
       .put("name", "The Other Institute")
       .put("code", "MPA");
     CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locInstitutionStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -228,27 +218,15 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     createInstitution(id, "Institute of MetaPhysics", "MPI");
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locInstitutionStorageUrl("/" + id), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-////////////////////////////////////// Campus test helpers
-
-  private Response getCampById(UUID id) {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
-      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-
-    return get(getCompleted);
-  }
-
-////////////// Campus tests
+  ////////////// Campus tests
   @Test
-  public void canCreateACamp() {
+  public void canCreateCamp() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -292,7 +270,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateACampWithoutCode() {
+  public void cannotCreateCampWithoutCode() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -304,7 +282,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canGetACampById() {
+  public void canGetCampById() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -322,7 +300,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void cannotGetACampWrongId() {
+  public void cannotGetCampWrongId() {
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
 
@@ -330,7 +308,7 @@ public class LocationUnitTest extends TestBase {
 
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locCampusStorageUrl("/" + id), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
     Response getResponse = get(getCompleted);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
@@ -356,7 +334,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canUpdateACamp() {
+  public void canUpdateCamp() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -372,7 +350,7 @@ public class LocationUnitTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locCampusStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -388,7 +366,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void cannotUpdateACampId() {
+  public void cannotUpdateCampId() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -402,7 +380,7 @@ public class LocationUnitTest extends TestBase {
       .put("code", "MPA");
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locCampusStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -410,14 +388,14 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canDeleteACamp() {
+  public void canDeleteCamp() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID id = UUID.randomUUID();
     createCampus(id, "Riverside Campus", "RS", instId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locCampusStorageUrl("/" + id), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -430,27 +408,14 @@ public class LocationUnitTest extends TestBase {
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
     createCampus(null, "Riverside Campus", "RS", instId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locInstitutionStorageUrl("/" + instId.toString()), HttpMethod.DELETE, null,
+    send(locInstitutionStorageUrl("/" + instId), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
-////////////////////////////////////// Library test helpers
-
-  private Response getLibById(UUID id) {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
-      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-
-    return get(getCompleted);
-  }
-
-////////////// Library tests
   @Test
-  public void canCreateALib() {
+  public void canCreateLib() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -493,7 +458,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateALibWithoutCode() {
+  public void cannotCreateLibWithoutCode() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -507,7 +472,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canGetALibById() {
+  public void canGetLibById() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -527,7 +492,8 @@ public class LocationUnitTest extends TestBase {
       is("test_user"));  // The userId header triggers creation of metadata
   }
 
-  public void cannotGetALibWrongId() {
+  @Test
+  public void cannotGetLibWrongId() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -536,7 +502,7 @@ public class LocationUnitTest extends TestBase {
     createLibrary(null, "Main Library", "ML", campId);
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+    send(locLibraryStorageUrl("/" + id), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(getCompleted));
     Response getResponse = get(getCompleted);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
@@ -564,7 +530,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canUpdateALib() {
+  public void canUpdateLib() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -581,7 +547,7 @@ public class LocationUnitTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
 
-    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locLibraryStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -596,7 +562,8 @@ public class LocationUnitTest extends TestBase {
     assertThat(item.getString("code"), is("MPA"));
   }
 
-  public void cannotUpdateALibId() {
+  @Test
+  public void cannotUpdateLibId() {
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
     UUID campId = UUID.randomUUID();
@@ -608,7 +575,7 @@ public class LocationUnitTest extends TestBase {
       .put("id", UUID.randomUUID().toString());
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
-    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.PUT,
+    send(locInstitutionStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
@@ -616,7 +583,7 @@ public class LocationUnitTest extends TestBase {
   }
 
   @Test
-  public void canDeleteALib() {
+  public void canDeleteLib() {
 
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");
@@ -629,7 +596,7 @@ public class LocationUnitTest extends TestBase {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
-    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.DELETE, null,
+    send(locLibraryStorageUrl("/" + id), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
 
     Response deleteResponse = get(deleteCompleted);
@@ -645,10 +612,40 @@ public class LocationUnitTest extends TestBase {
     createCampus(campId, "Riverside Campus", "RS", instId);
     createLibrary(null, "Main Library", "RS", campId);
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    send(locCampusStorageUrl("/" + campId.toString()), HttpMethod.DELETE, null,
+    send(locCampusStorageUrl("/" + campId), HttpMethod.DELETE, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleteCompleted));
     Response deleteResponse = get(deleteCompleted);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+  }
+
+  private Response getInstById(UUID id) {
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(locInstitutionStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    return get(getCompleted);
+  }
+
+  private Response getCampById(UUID id) {
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(locCampusStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    return get(getCompleted);
+  }
+
+  private Response getLibById(UUID id) {
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    send(locLibraryStorageUrl("/" + id.toString()), HttpMethod.GET,
+      null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
+
+    return get(getCompleted);
   }
 
 }

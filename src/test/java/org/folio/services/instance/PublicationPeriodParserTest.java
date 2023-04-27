@@ -1,8 +1,8 @@
 package org.folio.services.instance;
 
+import static org.folio.services.instance.PublicationPeriodParser.parsePublicationPeriod;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.folio.services.instance.PublicationPeriodParser.parsePublicationPeriod;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.List;

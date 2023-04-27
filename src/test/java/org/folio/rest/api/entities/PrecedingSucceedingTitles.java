@@ -1,8 +1,7 @@
 package org.folio.rest.api.entities;
 
-import java.util.List;
-
 import io.vertx.core.json.JsonArray;
+import java.util.List;
 
 public class PrecedingSucceedingTitles extends JsonEntity {
   public static final String TITLES_KEY = "precedingSucceedingTitles";

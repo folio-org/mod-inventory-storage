@@ -20,6 +20,13 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   private static final String HOLDINGS_SEQ = "hrid_holdings_seq";
   private static final String ITEMS_SEQ = "hrid_items_seq";
 
+  private static String loadCreateSequenceSqlFile() {
+    return loadScript("hridSettings.sql",
+      MigrationTestBase::replaceSchema,
+      resource -> resource.replace("${table.tableName}", "hrid_settings")
+    );
+  }
+
   @SneakyThrows
   @Before
   public void beforeEach() {
@@ -106,12 +113,5 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
 
   private String dropSequenceSql(String sequenceName) {
     return String.format("DROP SEQUENCE %s.%s", getSchemaName(), sequenceName);
-  }
-
-  private static String loadCreateSequenceSqlFile() {
-    return loadScript("hridSettings.sql",
-      MigrationTestBase::replaceSchema,
-      resource -> resource.replace("${table.tableName}", "hrid_settings")
-    );
   }
 }

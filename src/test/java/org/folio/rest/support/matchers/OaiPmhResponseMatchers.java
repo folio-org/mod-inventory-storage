@@ -1,16 +1,14 @@
 package org.folio.rest.support.matchers;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 
 public final class OaiPmhResponseMatchers {
 
@@ -22,6 +20,12 @@ public final class OaiPmhResponseMatchers {
   private static <T> Matcher<JsonObject> hasElement(JsonPointer jsonPointer, String[] expectedValue) {
 
     return new TypeSafeMatcher<JsonObject>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Expected: ")
+          .appendValue(expectedValue);
+      }
+
       @Override
       protected boolean matchesSafely(JsonObject jsonObject) {
         final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
@@ -35,12 +39,6 @@ public final class OaiPmhResponseMatchers {
         return Arrays.asList(expectedValue)
           .containsAll(actualValues);
       }
-
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Expected: ")
-          .appendValue(expectedValue);
-      }
     };
   }
 
@@ -48,15 +46,15 @@ public final class OaiPmhResponseMatchers {
 
     return new TypeSafeMatcher<JsonObject>() {
       @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
-        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
-      }
-
-      @Override
       public void describeTo(Description description) {
         description.appendText("Has number of items ")
           .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
+        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
       }
     };
   }
@@ -65,16 +63,16 @@ public final class OaiPmhResponseMatchers {
 
     return new TypeSafeMatcher<JsonObject>() {
       @Override
+      public void describeTo(Description description) {
+        description.appendText("Is deleted ")
+          .appendValue(true);
+      }
+
+      @Override
       protected boolean matchesSafely(JsonObject jsonObject) {
         final Object deleted = JsonPointer.from("/deleted")
           .queryJson(jsonObject);
         return Boolean.parseBoolean(deleted.toString());
-      }
-
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Is deleted ")
-          .appendValue(true);
       }
     };
   }
@@ -85,8 +83,8 @@ public final class OaiPmhResponseMatchers {
 
   /**
    * Verify the size of items. All that belong to one holding and one instance are grouped together.
-   * @param size - size of expected aggregated items
    *
+   * @param size - size of expected aggregated items
    */
   public static Matcher<JsonObject> hasAggregatedNumberOfItems(int size) {
     return hasItemsCount(size);

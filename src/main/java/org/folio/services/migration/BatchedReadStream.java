@@ -69,12 +69,10 @@ public class BatchedReadStream<T> implements ReadStream<List<T>> {
         // If any records remaining - process them
         // Vert.x does not has any way to identify end of stream right now
         // have to process in this way
-        if (buffer.size() > 0 && handler != null) {
-          // If an error occurred on last handle do not call end handler
-          // exception handler should be called in this case
-          if (!handleBuffer()) {
-            return;
-          }
+        // If an error occurred on last handle do not call end handler
+        // exception handler should be called in this case
+        if (!buffer.isEmpty() && handler != null && !handleBuffer()) {
+          return;
         }
         endHandler.handle(notUsed);
       }
@@ -83,11 +81,11 @@ public class BatchedReadStream<T> implements ReadStream<List<T>> {
     return this;
   }
 
-  private synchronized void processRecord(T record) {
-      buffer.add(record);
-      if (buffer.size() >= batchSize) {
-        handleBuffer();
-      }
+  private synchronized void processRecord(T r) {
+    buffer.add(r);
+    if (buffer.size() >= batchSize) {
+      handleBuffer();
+    }
   }
 
   /**
@@ -100,7 +98,7 @@ public class BatchedReadStream<T> implements ReadStream<List<T>> {
       handler.handle(List.copyOf(buffer));
       buffer.clear();
       return true;
-    } catch (Throwable ex) {
+    } catch (Exception ex) {
       if (exceptionHandler != null) {
         delegate.pause();
         exceptionHandler.handle(ex);

@@ -1,18 +1,17 @@
 package org.folio.persist;
 
+import static java.lang.String.format;
+import static org.folio.rest.persist.PgUtil.postgresClient;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
-import org.folio.rest.jaxrs.model.AsyncMigrationJob;
-import org.folio.rest.persist.SQLConnection;
-
 import java.util.Map;
 import java.util.function.UnaryOperator;
-
-import static java.lang.String.format;
-import static org.folio.rest.persist.PgUtil.postgresClient;
+import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.persist.SQLConnection;
 
 public class AsyncMigrationJobRepository extends AbstractRepository<AsyncMigrationJob> {
   public static final String TABLE_NAME = "async_migration_job";
@@ -24,7 +23,8 @@ public class AsyncMigrationJobRepository extends AbstractRepository<AsyncMigrati
   public Future<AsyncMigrationJob> fetchAndUpdate(String id, UnaryOperator<AsyncMigrationJob> builder) {
 
     Promise<AsyncMigrationJob> result = Promise.promise();
-    String selectForUpdate = format("SELECT jsonb FROM %s WHERE id = $1 LIMIT 1 FOR UPDATE", postgresClientFuturized.getFullTableName(TABLE_NAME));
+    String selectForUpdate = format("SELECT jsonb FROM %s WHERE id = $1 LIMIT 1 FOR UPDATE",
+      postgresClientFuturized.getFullTableName(TABLE_NAME));
     Promise<SQLConnection> txPromise = Promise.promise();
 
     Future.succeededFuture()

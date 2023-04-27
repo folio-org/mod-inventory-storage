@@ -56,7 +56,6 @@ public final class AsyncMigrationFixture {
       .thenApply(json -> json.mapTo(AsyncMigrationJob.class)));
   }
 
-
   @SneakyThrows
   public Response postMigrationJobRequest(AsyncMigrationJobRequest job) {
     return get(client.post(migrationJobsUrl(""), job, TENANT_ID));

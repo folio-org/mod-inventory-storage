@@ -10,12 +10,18 @@ import static org.hamcrest.Matchers.emptyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
@@ -30,27 +36,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.sqlclient.Row;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import lombok.SneakyThrows;
-
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
  * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql)
  */
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
-  private static final UUID instanceId = UUID.randomUUID();
+  private static final UUID INSTANCE_ID = UUID.randomUUID();
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
-    = new HoldingsEventMessageChecks(kafkaConsumer);
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(kafkaConsumer);
+    = new ItemEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
   @Before
@@ -63,19 +61,19 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     // Create once to be used by the many parameterized unit test in
     // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
     // canCalculateEffectiveLocationOnItemUpdate(PermTemp, PermTemp, PermTemp)
-    instancesClient.create(instance(instanceId));
+    instancesClient.create(instance(INSTANCE_ID));
 
     removeAllEvents();
   }
 
   @After
   public void checkIdsAfterEach() {
-    StorageTestSuite.checkForMismatchedIDs("item");
-    StorageTestSuite.checkForMismatchedIDs("holdings_record");
+    StorageTestSuite.checkForMismatchedIds("item");
+    StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
   public void canCalculateEffectiveLocationOnHoldingUpdate() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
       buildItem(holdingsRecordId, null, null),
@@ -89,18 +87,18 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     }
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
-    holding.put("temporaryLocationId", secondFloorLocationId.toString());
+    holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
-      assertEquals(fetchedItem.getEffectiveLocationId(), secondFloorLocationId.toString());
+      assertEquals(fetchedItem.getEffectiveLocationId(), SECOND_FLOOR_LOCATION_ID.toString());
     }
   }
 
   @Test
   public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
       buildItem(holdingsRecordId, null, null),
@@ -119,24 +117,24 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
-      assertEquals(fetchedItem.toString(), fetchedItem.getEffectiveLocationId(), mainLibraryLocationId.toString());
+      assertEquals(fetchedItem.toString(), fetchedItem.getEffectiveLocationId(), MAIN_LIBRARY_LOCATION_ID.toString());
     }
   }
 
   @Test
   public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    Item itemWithPermLocation = buildItem(holdingsRecordId, onlineLocationId, null);
+    Item itemWithPermLocation = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
     Item itemNoLocation = buildItem(holdingsRecordId, null, null);
-    Item itemWithTempLocation = buildItem(holdingsRecordId, null, annexLibraryLocationId);
+    Item itemWithTempLocation = buildItem(holdingsRecordId, null, ANNEX_LIBRARY_LOCATION_ID);
 
     createItem(itemWithPermLocation);
     createItem(itemNoLocation);
     createItem(itemWithTempLocation);
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
-    holding.put("temporaryLocationId", secondFloorLocationId.toString());
+    holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     // fetch items
@@ -145,33 +143,32 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     Item itemWithTempLocationFetched = getItem(itemWithTempLocation.getId());
 
     // Assert that itemWithPermLocationFetched was not updated
-    assertEquals(itemWithPermLocationFetched.getEffectiveLocationId(), onlineLocationId.toString());
+    assertEquals(itemWithPermLocationFetched.getEffectiveLocationId(), ONLINE_LOCATION_ID.toString());
 
     // Assert that itemNoLocationFetched was updated
-    assertEquals(itemNoLocationFetched.getEffectiveLocationId(), secondFloorLocationId.toString());
+    assertEquals(itemNoLocationFetched.getEffectiveLocationId(), SECOND_FLOOR_LOCATION_ID.toString());
 
     // Assert that itemWithPermLocationFetched was not updated
-    assertEquals(itemWithTempLocationFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+    assertEquals(itemWithTempLocationFetched.getEffectiveLocationId(), ANNEX_LIBRARY_LOCATION_ID.toString());
   }
 
   /**
    * Test that creating an item and updating an item correctly sets the effectiveLocationId.
-   *
    * This only succeeds if the two triggers update_effective_location and
    * update_item_references (assigning item.effectiveLocationId = item.jsonb->>'effectiveLocationId')
    * run in correct order.
    *
-   * @param holdingLoc permanent and temporary location of the holding
+   * @param holdingLoc   permanent and temporary location of the holding
    * @param itemStartLoc permanent and temporary location of the item before the update
-   * @param itemEndLoc permanent and temporary location of the item after the update
+   * @param itemEndLoc   permanent and temporary location of the item after the update
    */
   @Test
   @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
-  method = "canCalculateEffectiveLocationOnItemUpdateParams")
+              method = "canCalculateEffectiveLocationOnItemUpdateParams")
   public void canCalculateEffectiveLocationOnItemUpdate(
-      PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) throws Exception {
+    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) throws Exception {
 
-    UUID holdingsRecordId = createHolding(instanceId, holdingLoc.perm, holdingLoc.temp);
+    UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingLoc.perm, holdingLoc.temp);
 
     Item item = buildItem(holdingsRecordId, itemStartLoc.perm, itemStartLoc.temp);
     UUID itemId = UUID.fromString(item.getId());
@@ -190,15 +187,15 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
   @Test
   @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
-    method = "canCalculateEffectiveLocationOnHoldingUpdateParams")
-  public void canCalculateEffectiveLocationOnHoldingUpdate(
-      PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) {
+              method = "canCalculateEffectiveLocationOnHoldingUpdateParams")
+  public void canCalculateEffectiveLocationHoldingUpdate(
+    PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) {
 
-    UUID holdingsRecordId = createHolding(instanceId, holdingStartLoc.perm, holdingStartLoc.temp);
+    UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingStartLoc.perm, holdingStartLoc.temp);
     JsonObject createdHolding = holdingsClient.getById(holdingsRecordId).getJson();
 
     Item item = buildItem(holdingsRecordId, itemLoc.perm, itemLoc.temp);
-    UUID itemId = UUID.fromString(item.getId());
+    final UUID itemId = UUID.fromString(item.getId());
 
     JsonObject createdItem = createItem(item).getJson();
     assertThat(createdItem.getString(EFFECTIVE_LOCATION_ID_KEY),
@@ -220,14 +217,14 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void responseContainsAllRequiredHeaders() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     CompletableFuture<HttpResponse<Buffer>> createCompleted = new CompletableFuture<>();
     Item item = buildItem(holdingsRecordId, null, null);
 
     getClient()
       .post(InterfaceUrls.itemsStorageUrl(""), item, TENANT_ID,
-          createCompleted::complete);
+        createCompleted::complete);
 
     HttpResponse<Buffer> response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
@@ -237,40 +234,40 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() throws Exception {
-    UUID initialHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-    UUID updatedHoldingRecordId = createInstanceAndHolding(onlineLocationId, secondFloorLocationId);
+    UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
+    UUID updatedHoldingRecordId = createInstanceAndHolding(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID);
 
     Item item = buildItem(initialHoldingsRecordId, null, null);
     createItem(item);
 
     Item itemFetched = getItem(item.getId());
-    assertEquals(itemFetched.getEffectiveLocationId(), annexLibraryLocationId.toString());
+    assertEquals(itemFetched.getEffectiveLocationId(), ANNEX_LIBRARY_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
       JsonObject.mapFrom(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
-    assertEquals(getItem(item.getId()).getEffectiveLocationId(), secondFloorLocationId.toString());
+    assertEquals(getItem(item.getId()).getEffectiveLocationId(), SECOND_FLOOR_LOCATION_ID.toString());
   }
 
   @Test
   public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() throws Exception {
-    UUID initialHoldingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-    UUID updatedHoldingRecordId = createInstanceAndHolding(secondFloorLocationId);
+    UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
+    UUID updatedHoldingRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
 
-    Item item = buildItem(initialHoldingsRecordId, onlineLocationId, null);
+    Item item = buildItem(initialHoldingsRecordId, ONLINE_LOCATION_ID, null);
     createItem(item);
 
     Item itemFetched = getItem(item.getId());
-    assertEquals(itemFetched.getEffectiveLocationId(), onlineLocationId.toString());
+    assertEquals(itemFetched.getEffectiveLocationId(), ONLINE_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
       JsonObject.mapFrom(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
-    assertEquals(getItem(item.getId()).getEffectiveLocationId(), onlineLocationId.toString());
+    assertEquals(getItem(item.getId()).getEffectiveLocationId(), ONLINE_LOCATION_ID.toString());
   }
 
   /**
@@ -278,22 +275,22 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
    */
   @Test
   public void canSetTableFieldOnItemUpdate() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId, annexLibraryLocationId);
-    Item item = buildItem(holdingsRecordId, onlineLocationId, null);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
+    Item item = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
     createItem(item);
     item = getItem(item.getId());
 
-    item.setTemporaryLocationId(secondFloorLocationId.toString());
+    item.setTemporaryLocationId(SECOND_FLOOR_LOCATION_ID.toString());
     itemsClient.replace(UUID.fromString(item.getId()), JsonObject.mapFrom(item));
 
     Row result = runSql(
-          "SELECT jsonb, effectiveLocationId "
+      "SELECT jsonb, effectiveLocationId "
         + "FROM test_tenant_mod_inventory_storage.item "
         + "WHERE id='" + item.getId() + "'");
     JsonObject jsonb = (JsonObject) result.getValue(0);
     String effectiveLocationId = result.getUUID(1).toString();
-    assertThat(jsonb.getString("effectiveLocationId"), is(secondFloorLocationId.toString()));
-    assertThat(effectiveLocationId, is(secondFloorLocationId.toString()));
+    assertThat(jsonb.getString("effectiveLocationId"), is(SECOND_FLOOR_LOCATION_ID.toString()));
+    assertThat(effectiveLocationId, is(SECOND_FLOOR_LOCATION_ID.toString()));
   }
 
   private Row runSql(String sql) {

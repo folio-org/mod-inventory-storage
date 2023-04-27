@@ -72,7 +72,7 @@ public class CallNumberUtilsTest extends TestCase {
     item.setItemLevelCallNumberSuffix(suffix);
 
     HoldingsRecord holdingsRecord = new HoldingsRecord();
-    EffectiveCallNumberComponentsUtil.setCallNumberComponents(item,holdingsRecord);
+    EffectiveCallNumberComponentsUtil.setCallNumberComponents(item, holdingsRecord);
     EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
 
     assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));

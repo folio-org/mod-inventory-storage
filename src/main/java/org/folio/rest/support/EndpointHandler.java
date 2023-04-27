@@ -1,13 +1,13 @@
 package org.folio.rest.support;
 
 import static io.vertx.core.Future.succeededFuture;
-import javax.ws.rs.core.Response;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import javax.ws.rs.core.Response;
 
 public final class EndpointHandler {
-  private EndpointHandler() {}
+  private EndpointHandler() { }
 
   /**
    * On success pass the result to asyncResultHandler. On failure use

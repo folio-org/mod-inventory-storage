@@ -13,7 +13,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 
 public final class HridValidators {
-  private HridValidators() {}
+  private HridValidators() { }
 
   public static Future<Instance> refuseWhenHridChanged(Instance oldEntity, Instance newEntity) {
     return refuseWhenHridChanged(oldEntity, newEntity, Instance::getHrid);

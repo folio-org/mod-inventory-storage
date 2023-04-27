@@ -22,12 +22,34 @@ import org.folio.rest.support.builders.Builder;
 import org.folio.util.PercentCodec;
 import org.folio.util.StringUtil;
 
-public class ResourceClient {
+public final class ResourceClient {
 
   private final HttpClient client;
   private final UrlMaker urlMaker;
   private final String resourceName;
   private final String collectionArrayPropertyName;
+
+  private ResourceClient(
+    HttpClient client,
+    UrlMaker urlMaker, String resourceName,
+    String collectionArrayPropertyName) {
+
+    this.client = client;
+    this.urlMaker = urlMaker;
+    this.resourceName = resourceName;
+    this.collectionArrayPropertyName = collectionArrayPropertyName;
+  }
+
+  private ResourceClient(
+    HttpClient client,
+    UrlMaker urlMaker,
+    String resourceName) {
+
+    this.client = client;
+    this.urlMaker = urlMaker;
+    this.resourceName = resourceName;
+    this.collectionArrayPropertyName = resourceName;
+  }
 
   public static ResourceClient forItems(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::itemsStorageUrl,
@@ -100,7 +122,7 @@ public class ResourceClient {
   }
 
   public static ResourceClient forLocations(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::ShelfLocationsStorageUrl,
+    return new ResourceClient(client, InterfaceUrls::shelfLocationsStorageUrl,
       "locations", "shelflocations");
   }
 
@@ -152,28 +174,6 @@ public class ResourceClient {
   public static ResourceClient forInstanceReindex(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::instanceReindex,
       "Instance reindex", "reindex");
-  }
-
-  private ResourceClient(
-    HttpClient client,
-    UrlMaker urlMaker, String resourceName,
-    String collectionArrayPropertyName) {
-
-    this.client = client;
-    this.urlMaker = urlMaker;
-    this.resourceName = resourceName;
-    this.collectionArrayPropertyName = collectionArrayPropertyName;
-  }
-
-  private ResourceClient(
-    HttpClient client,
-    UrlMaker urlMaker,
-    String resourceName) {
-
-    this.client = client;
-    this.urlMaker = urlMaker;
-    this.resourceName = resourceName;
-    this.collectionArrayPropertyName = resourceName;
   }
 
   public IndividualResource create(Builder builder) {
@@ -233,19 +233,6 @@ public class ResourceClient {
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  /**
-   * Return urlMaker.combine(String.format("/%s", id)).
-   *
-   * <p>Wrap MalformedURLException into RuntimeException.
-   */
-  private URL urlMakerWithId(String id) {
-    try {
-      return urlMaker.combine(String.format("/%s", id));
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   public Response attemptToReplace(UUID id, JsonObject request) {
     return attemptToReplace(id.toString(), request);
   }
@@ -282,7 +269,7 @@ public class ResourceClient {
     Response response = deleteIfPresent(id != null ? id.toString() : null);
 
     assertThat(String.format(
-      "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
+        "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
       response.getStatusCode(), is(204));
   }
 
@@ -297,7 +284,7 @@ public class ResourceClient {
     try {
       var cql = PercentCodec.encode("cql.allRecords=1");
       client.delete(urlMaker.combine("?query=" + cql), TENANT_ID,
-          ResponseHandler.any(deleteAllFinished));
+        ResponseHandler.any(deleteAllFinished));
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
@@ -309,7 +296,7 @@ public class ResourceClient {
     final Response response = attemptDeleteAll();
 
     assertThat(String.format(
-      "Failed to delete %s: %s", resourceName, response.getBody()),
+        "Failed to delete %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(204));
   }
 
@@ -327,12 +314,12 @@ public class ResourceClient {
         Response deleteResponse = TestBase.get(deleteFinished);
 
         assertThat(String.format(
-          "Failed to delete %s: %s", resourceName, deleteResponse.getBody()),
+            "Failed to delete %s: %s", resourceName, deleteResponse.getBody()),
           deleteResponse.getStatusCode(), is(204));
 
       } catch (Throwable e) {
         assertThat(String.format("Exception whilst deleting %s individually: %s",
-          resourceName, e.toString()),
+            resourceName, e),
           true, is(false));
       }
     });
@@ -383,9 +370,22 @@ public class ResourceClient {
       response.getStatusCode(), is(200));
 
     return JsonArrayHelper.toList(response.getJson()
-      .getJsonArray(collectionArrayPropertyName)).stream()
+        .getJsonArray(collectionArrayPropertyName)).stream()
       .map(IndividualResource::new)
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Return urlMaker.combine(String.format("/%s", id)).
+   *
+   * <p>Wrap MalformedURLException into RuntimeException.
+   */
+  private URL urlMakerWithId(String id) {
+    try {
+      return urlMaker.combine(String.format("/%s", id));
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @FunctionalInterface

@@ -18,10 +18,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
+import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.IterationJobRepository;
@@ -36,9 +37,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.vertx.core.Context;
-import lombok.SneakyThrows;
-
 public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
   // use usual instance topic for testing purposes, because it doesn't matter
@@ -47,19 +45,35 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private static final String TEST_TOPIC = "inventory.instance";
 
   private static InstanceIterationFixture instanceIteration;
-
+  private final InstanceEventMessageChecks instanceMessageChecks
+    = new InstanceEventMessageChecks(KAFKA_CONSUMER);
   private IterationJobRepository jobRepository;
   private InstanceInternalRepository instanceRepository;
   private IterationJobRunner jobRunner;
-
-  private final InstanceEventMessageChecks instanceMessageChecks
-    = new InstanceEventMessageChecks(kafkaConsumer);;
 
   @BeforeClass
   public static void beforeClass() {
     TestBase.beforeAll();
 
     instanceIteration = new InstanceIterationFixture(getClient());
+  }
+
+  private static IterationJob iterationJob() {
+    return new IterationJob()
+      .withId(UUID.randomUUID().toString())
+      .withJobStatus(IN_PROGRESS)
+      .withSubmittedDate(new Date())
+      .withJobParams(
+        new IterationJobParams().withTopicName(TEST_TOPIC)
+      );
+  }
+
+  private static Map<String, String> okapiHeaders() {
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+  }
+
+  private static Context getContext() {
+    return getVertx().getOrCreateContext();
   }
 
   @SneakyThrows
@@ -70,7 +84,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
     var postgresClient = postgresClient(getContext(), okapiHeaders());
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
-        jobRepository, instanceRepository, getContext(), okapiHeaders());
+      jobRepository, instanceRepository, getContext(), okapiHeaders());
 
     removeAllEvents();
   }
@@ -82,7 +96,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     var iterationJob = iterationJob();
 
     when(instanceRepository.getAllIds(any()))
-        .thenReturn(succeededFuture(rowStream));
+      .thenReturn(succeededFuture(rowStream));
 
     get(jobRepository.save(iterationJob.getId(), iterationJob));
 
@@ -108,7 +122,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     var iterationJob = iterationJob();
 
     when(instanceRepository.getAllIds(any()))
-        .thenReturn(succeededFuture(rowStream));
+      .thenReturn(succeededFuture(rowStream));
 
     get(jobRepository.save(iterationJob.getId(), iterationJob));
 
@@ -126,24 +140,6 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
-  }
-
-  private static IterationJob iterationJob() {
-    return new IterationJob()
-      .withId(UUID.randomUUID().toString())
-      .withJobStatus(IN_PROGRESS)
-      .withSubmittedDate(new Date())
-      .withJobParams(
-        new IterationJobParams().withTopicName(TEST_TOPIC)
-      );
-  }
-
-  private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
   }
 
 }

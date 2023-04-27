@@ -20,10 +20,10 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import io.vertx.core.Context;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Authority;
@@ -38,8 +38,6 @@ import org.folio.services.reindex.ReindexJobRunner;
 import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
 
-import io.vertx.core.Context;
-
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
@@ -50,9 +48,24 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
       AUTHORITY.fullTopicName(TENANT_ID));
 
   private final AuthorityEventMessageChecks authorityMessageChecks
-    = new AuthorityEventMessageChecks(kafkaConsumer);
+    = new AuthorityEventMessageChecks(KAFKA_CONSUMER);
   private final InstanceEventMessageChecks instanceMessageChecks
-    = new InstanceEventMessageChecks(kafkaConsumer);
+    = new InstanceEventMessageChecks(KAFKA_CONSUMER);
+
+  private static ReindexJob reindexJob() {
+    return new ReindexJob()
+      .withJobStatus(IN_PROGRESS)
+      .withId(UUID.randomUUID().toString())
+      .withSubmittedDate(new Date());
+  }
+
+  private static Map<String, String> okapiHeaders() {
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+  }
+
+  private static Context getContext() {
+    return getVertx().getOrCreateContext();
+  }
 
   @Test
   public void canReindexInstances() {
@@ -173,21 +186,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
     return new ReindexJobRunner(postgresClientFuturized,
       repository, getContext(), instanceEventPublisher, authorityEventPublisher, TENANT_ID);
-  }
-
-  private static ReindexJob reindexJob() {
-    return new ReindexJob()
-      .withJobStatus(IN_PROGRESS)
-      .withId(UUID.randomUUID().toString())
-      .withSubmittedDate(new Date());
-  }
-
-  private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {

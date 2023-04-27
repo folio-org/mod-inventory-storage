@@ -2,14 +2,14 @@ package org.folio.rest.support;
 
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
+import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import io.vertx.core.Handler;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.ext.web.client.HttpResponse;
 
 public class ResponseHandler {
   private static final Logger log = LogManager.getLogger();
@@ -30,8 +30,7 @@ public class ResponseHandler {
         int statusCode = response.statusCode();
 
         completed.complete(new Response(statusCode, null, null));
-      }
-      catch(Exception e) {
+      } catch (Exception e) {
         completed.completeExceptionally(e);
       }
     };
@@ -55,9 +54,9 @@ public class ResponseHandler {
     return response -> {
       try {
         completed.complete(new JsonErrorResponse(
-            response.statusCode(),
-            response.bodyAsString(),
-            response.headers().get(CONTENT_TYPE)));
+          response.statusCode(),
+          response.bodyAsString(),
+          response.headers().get(CONTENT_TYPE)));
       } catch (Exception e) {
         completed.completeExceptionally(e);
       }
@@ -72,8 +71,7 @@ public class ResponseHandler {
       responseToCheck ->
         responseToCheck.getContentType().contains(expectedContentType),
       failingResponse -> new Exception(
-        String.format("Expected Content Type: '%s' Actual Content Type: '%s' " +
-            "(Status Code: '%s', Body: '%s')",
+        String.format("Expected Content Type: '%s' Actual Content Type: '%s' (Status Code: '%s', Body: '%s')",
           expectedContentType, failingResponse.getContentType(),
           failingResponse.getStatusCode(), failingResponse.getBody())));
   }
@@ -90,12 +88,11 @@ public class ResponseHandler {
         log.debug("Received Response: {}: {}", response.getStatusCode(), response.getContentType());
         log.debug("Received Response Body: {}", response.getBody());
 
-        if(expectation.test(response)) {
+        if (expectation.test(response)) {
           completed.complete(response);
-        }
-        else {
+        } else {
           completed.completeExceptionally(
-              expectationFailed.apply(response));
+            expectationFailed.apply(response));
         }
       } catch (Throwable e) {
         completed.completeExceptionally(e);

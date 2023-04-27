@@ -25,8 +25,8 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   private static final String MIGRATION_SCRIPT = loadScript("migratePrecedingSucceedingTitles.sql");
   private static final String REMOVE_OLD_PRECEDING_SUCCEEDING_TITLES_SCRIPT =
     loadScript("removeOldPrecedingSucceedingTitles.sql");
-  private final static String PRECEDING_SUCCEEDING_RELATIONSHIP_TYPE_ID = "cde80cc2-0c8b-4672-82d4-721e51dcb990";
-  private final static String BOUND_WITH_INSTANCE_RELATIONSHIP_TYPE_ID = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
+  private static final String PRECEDING_SUCCEEDING_RELATIONSHIP_TYPE_ID = "cde80cc2-0c8b-4672-82d4-721e51dcb990";
+  private static final String BOUND_WITH_INSTANCE_RELATIONSHIP_TYPE_ID = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
   private IndividualResource instanceRelationship1;
   private IndividualResource instanceRelationship2;
 
@@ -99,7 +99,8 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   }
 
   private IndividualResource createInstanceRelationship(UUID instance1Id, UUID instance2Id,
-    String instanceRelationTypeId) throws MalformedURLException, InterruptedException,
+                                                        String instanceRelationTypeId)
+    throws MalformedURLException, InterruptedException,
     ExecutionException, TimeoutException {
 
     JsonObject instanceRelationshipRequestObject = new InstanceRelationship(
@@ -109,7 +110,7 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   }
 
   private void assertPrecedingSucceedingTitle(JsonObject precedingSucceedingTitle,
-    IndividualResource instanceRelationship) {
+                                              IndividualResource instanceRelationship) {
 
     JsonObject instanceRelationshipJson = instanceRelationship.getJson();
     assertThat(precedingSucceedingTitle.getString("id"), is(instanceRelationshipJson.getString("id")));

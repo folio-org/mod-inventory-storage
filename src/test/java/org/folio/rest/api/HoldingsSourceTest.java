@@ -11,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -37,16 +36,14 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingsSource()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public void canCreateHoldingsSource() {
 
     UUID sourceId = UUID.randomUUID();
 
     JsonObject source = holdingsSourceClient.create(
       new JsonObject()
-      .put("id", sourceId.toString())
-      .put("name", "test source")
+        .put("id", sourceId.toString())
+        .put("name", "test source")
     ).getJson();
 
     assertThat(source.getString("id"), is(sourceId.toString()));
@@ -63,57 +60,49 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingsSourceWithDuplicateId()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void cannotCreateHoldingsSourceWithDuplicateId() {
     UUID sourceId = UUID.randomUUID();
 
     holdingsSourceClient.create(
       new JsonObject()
-          .put("id", sourceId.toString())
-          .put("name", "source with id")
+        .put("id", sourceId.toString())
+        .put("name", "source with id")
     ).getJson();
 
     Response response = holdingsSourceClient.attemptToCreate(
-        new JsonObject()
-            .put("id", sourceId.toString())
-            .put("name", "new source with duplicate id")
-    	);
+      new JsonObject()
+        .put("id", sourceId.toString())
+        .put("name", "new source with duplicate id")
+    );
     assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
-  public void cannotCreateHoldingsSourceWithDuplicateName()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+  public void cannotCreateHoldingsSourceWithDuplicateName() {
     UUID sourceId = UUID.randomUUID();
 
     JsonObject source = holdingsSourceClient.create(
       new JsonObject()
-      .put("id", sourceId.toString())
-      .put("name", "original source name")
+        .put("id", sourceId.toString())
+        .put("name", "original source name")
     ).getJson();
 
     assertThat(source.getString("id"), is(sourceId.toString()));
     assertThat(source.getString("name"), is("original source name"));
 
     Response response = holdingsSourceClient.attemptToCreate(
-    	      new JsonObject()
-    	      .put("name", "original source name")
-    	    );
+      new JsonObject()
+        .put("name", "original source name")
+    );
     assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
-  public void canCreateHoldingsSourcesWithoutProvidingAnId()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+  public void canCreateHoldingsSourcesWithoutProvidingAnId() {
 
     IndividualResource sourceResponse = holdingsSourceClient.create(
       new JsonObject()
-      .put("name", "test source without id")
+        .put("name", "test source without id")
     );
 
     JsonObject source = sourceResponse.getJson();
@@ -134,14 +123,13 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateAHoldingsSourceWithIDThatIsNotUUID()
-    throws InterruptedException,
+  public void cannotCreateHoldingsSourceWithIdThatIsNotUuid() throws InterruptedException,
     ExecutionException, TimeoutException {
 
-    String nonUUIDId = "1234567";
+    String nonUuidId = "1234567";
 
     JsonObject request = new JsonObject()
-      .put("id", nonUUIDId)
+      .put("id", nonUuidId)
       .put("name", "source with invalid id");
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -162,11 +150,11 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReplaceAHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  public void canReplaceHoldingsSource() {
     IndividualResource sourceResponse = holdingsSourceClient.create(
-    	      new JsonObject()
-    	      .put("name", "replaceable source")
-    	    );
+      new JsonObject()
+        .put("name", "replaceable source")
+    );
 
     JsonObject source = sourceResponse.getJson();
 
@@ -174,9 +162,9 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     assertThat(source.getString("name"), is("replaceable source"));
 
     sourceResponse = holdingsSourceClient.create(
-  	      new JsonObject()
-  	      .put("name", "replacement source")
-  	    );
+      new JsonObject()
+        .put("name", "replacement source")
+    );
 
     source = sourceResponse.getJson();
 
@@ -185,64 +173,64 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canQueryForMultipleHoldingsSources() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-	holdingsSourceClient.create(
-			new JsonObject()
-				.put("name", "multisource 1")
-		    );
+  public void canQueryForMultipleHoldingsSources() {
+    holdingsSourceClient.create(
+      new JsonObject()
+        .put("name", "multisource 1")
+    );
 
-	holdingsSourceClient.create(
-			new JsonObject()
-				.put("name", "multisource 2")
-	    );
+    holdingsSourceClient.create(
+      new JsonObject()
+        .put("name", "multisource 2")
+    );
 
     final List<IndividualResource> sources = holdingsSourceClient
-    	      .getMany("name==\"multisource*\"");
+      .getMany("name==\"multisource*\"");
 
     assertThat(sources.size(), is(2));
   }
 
   @Test
-  public void cannotReplaceANonexistentHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-	  Response sourceResponse = holdingsSourceClient.attemptToReplace(UUID.randomUUID().toString(), new JsonObject()
-		      .put("name", "updated source name"));
-	  assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  public void cannotReplaceNonexistentHoldingsSource() {
+    Response sourceResponse = holdingsSourceClient.attemptToReplace(UUID.randomUUID().toString(), new JsonObject()
+      .put("name", "updated source name"));
+    assertThat(sourceResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
-  public void canRemoveAHoldingsSource() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-	  IndividualResource holdingsSource = holdingsSourceClient.create(
-			  new JsonObject()
-			  	.put("name", "deleteable source")
-			  );
-	  UUID deleteableHoldingsSourceId = holdingsSource.getId();
-	  holdingsSourceClient.delete(deleteableHoldingsSourceId);
+  public void canRemoveHoldingsSource() {
+    IndividualResource holdingsSource = holdingsSourceClient.create(
+      new JsonObject()
+        .put("name", "deleteable source")
+    );
+    UUID deleteableHoldingsSourceId = holdingsSource.getId();
+    holdingsSourceClient.delete(deleteableHoldingsSourceId);
 
-	  Response deleteResponse = holdingsSourceClient.getById(deleteableHoldingsSourceId);
-	  assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    Response deleteResponse = holdingsSourceClient.getById(deleteableHoldingsSourceId);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
   }
 
   @Test
-  public void canNotRemoveSpecialHoldingsSources() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-      IndividualResource holdingsSource = holdingsSourceClient.create(
-              new JsonObject()
-                .put("name", "source with folio source")
-                .put("source", "folio")
-              );
+  public void canNotRemoveSpecialHoldingsSources() {
+    IndividualResource holdingsSource = holdingsSourceClient.create(
+      new JsonObject()
+        .put("name", "source with folio source")
+        .put("source", "folio")
+    );
 
-      UUID folioHoldingsSourceId = holdingsSource.getId();
+    UUID folioHoldingsSourceId = holdingsSource.getId();
 
-      Response folioDeleteResponse = holdingsSourceClient.attemptToDelete(folioHoldingsSourceId);
+    Response folioDeleteResponse = holdingsSourceClient.attemptToDelete(folioHoldingsSourceId);
 
-      //it should not have been deleted:
-      assertThat(folioDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    //it should not have been deleted:
+    assertThat(folioDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
-  public void canNotRemoveHoldingsSourcesAttachedToHoldings() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
-    UUID sourceId = UUID.randomUUID();
+  public void canNotRemoveHoldingsSourcesAttachedToHoldings() {
+    final UUID instanceId = UUID.randomUUID();
+    final UUID sourceId = UUID.randomUUID();
 
     JsonObject instanceToCreate = new JsonObject();
 
@@ -254,50 +242,49 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     instancesClient.create(instanceToCreate);
 
     holdingsSourceClient.create(
-              new JsonObject()
-              .put("id", sourceId.toString())
-              .put("name", "associated source")
-            ).getJson();
+      new JsonObject()
+        .put("id", sourceId.toString())
+        .put("name", "associated source")
+    ).getJson();
 
     holdingsClient.create(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withSource(sourceId));
 
+    Response sourceDeleteResponse = holdingsSourceClient.attemptToDelete(sourceId);
 
-      Response sourceDeleteResponse = holdingsSourceClient.attemptToDelete(sourceId);
-
-      //the associated source should not have been deleted:
-      assertThat(sourceDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
+    //the associated source should not have been deleted:
+    assertThat(sourceDeleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
-  public void canAssociateSourceWithHolding() throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-	    UUID instanceId = UUID.randomUUID();
-	    UUID sourceId = UUID.randomUUID();
+  public void canAssociateSourceWithHolding() {
+    final UUID instanceId = UUID.randomUUID();
+    final UUID sourceId = UUID.randomUUID();
 
-	    JsonObject instanceToCreate = new JsonObject();
+    JsonObject instanceToCreate = new JsonObject();
 
-	    instanceToCreate.put("id", instanceId.toString());
-	    instanceToCreate.put("source", "Test Source");
-	    instanceToCreate.put("title", "Test Instance");
-	    instanceToCreate.put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
+    instanceToCreate.put("id", instanceId.toString());
+    instanceToCreate.put("source", "Test Source");
+    instanceToCreate.put("title", "Test Instance");
+    instanceToCreate.put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
 
-	    instancesClient.create(instanceToCreate);
+    instancesClient.create(instanceToCreate);
 
-	    holdingsSourceClient.create(
-	    	      new JsonObject()
-	    	      .put("id", sourceId.toString())
-	    	      .put("name", "associatable source")
-	    	    ).getJson();
+    holdingsSourceClient.create(
+      new JsonObject()
+        .put("id", sourceId.toString())
+        .put("name", "associatable source")
+    ).getJson();
 
-	    IndividualResource holdingsResponse = holdingsClient.create(new HoldingRequestBuilder()
-	      .withId(UUID.randomUUID())
-	      .forInstance(instanceId)
-	      .withPermanentLocation(mainLibraryLocationId)
-	      .withSource(sourceId));
+    IndividualResource holdingsResponse = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(UUID.randomUUID())
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withSource(sourceId));
 
-	    assertThat(holdingsResponse.getJson().getString("sourceId"), is(sourceId.toString()));
+    assertThat(holdingsResponse.getJson().getString("sourceId"), is(sourceId.toString()));
   }
 }

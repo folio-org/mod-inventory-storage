@@ -14,7 +14,7 @@ public class InterfaceUrls {
     return vertxUrl("/loan-types" + subPath);
   }
 
-  public static URL ShelfLocationsStorageUrl(String subPath) {
+  public static URL shelfLocationsStorageUrl(String subPath) {
     return vertxUrl("/shelf-locations" + subPath);
   }
 
@@ -218,7 +218,7 @@ public class InterfaceUrls {
     return vertxUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
 
-  /** TODO: These entries will be removed soon */
+  // TODO: These entries will be removed soon
   public static URL oaiPmhView(String subPath) {
     return vertxUrl("/oai-pmh-view/instances" + subPath);
   }
@@ -230,8 +230,10 @@ public class InterfaceUrls {
   public static URL oaiPmhViewEnrichedInstances() {
     return vertxUrl("/oai-pmh-view/enrichedInstances");
   }
-  /** EoF - these entries will be removed soon */
 
+  /**
+   * EoF - these entries will be removed soon.
+   */
   public static URL inventoryHierarchyUpdatedInstanceIds(String subPath) {
     return vertxUrl("/inventory-hierarchy/updated-instance-ids" + subPath);
   }

@@ -102,7 +102,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced from table \"instance\"."));
+      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
+        + "is still referenced from table \"instance\"."));
   }
 
   @Test
@@ -126,7 +127,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     final var holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withStatisticalCodeIds(codes);
 
     holdingsClient.create(holdingToCreate);
@@ -140,7 +141,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced from table \"holdings record\"."));
+      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
+        + "is still referenced from table \"holdings record\"."));
   }
 
   @Test
@@ -161,7 +163,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     final var holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
-      .withPermanentLocation(mainLibraryLocationId);
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     holdingsClient.create(holdingToCreate);
 
@@ -188,7 +190,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced from table \"item\"."));
+      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
+        + "is still referenced from table \"item\"."));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {

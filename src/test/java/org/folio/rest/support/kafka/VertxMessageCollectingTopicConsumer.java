@@ -1,16 +1,14 @@
 package org.folio.rest.support.kafka;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 public class VertxMessageCollectingTopicConsumer {
   private final Set<String> topicNames;
@@ -18,23 +16,10 @@ public class VertxMessageCollectingTopicConsumer {
   private KafkaConsumer<String, JsonObject> consumer;
 
   public VertxMessageCollectingTopicConsumer(Set<String> topicNames,
-    MessageCollector messageCollector) {
+                                             MessageCollector messageCollector) {
 
     this.topicNames = topicNames;
     this.messageCollector = messageCollector;
-  }
-
-  void subscribe(Vertx vertx) {
-    consumer = KafkaConsumer.create(vertx, consumerProperties());
-
-    consumer.handler(messageCollector::acceptMessage);
-    consumer.subscribe(topicNames);
-  }
-
-  void unsubscribe() {
-    if (consumer != null) {
-      consumer.unsubscribe();
-    }
   }
 
   private static Map<String, String> consumerProperties() {
@@ -48,5 +33,18 @@ public class VertxMessageCollectingTopicConsumer {
     config.put("enable.auto.commit", "false");
 
     return config;
+  }
+
+  void subscribe(Vertx vertx) {
+    consumer = KafkaConsumer.create(vertx, consumerProperties());
+
+    consumer.handler(messageCollector::acceptMessage);
+    consumer.subscribe(topicNames);
+  }
+
+  void unsubscribe() {
+    if (consumer != null) {
+      consumer.unsubscribe();
+    }
   }
 }

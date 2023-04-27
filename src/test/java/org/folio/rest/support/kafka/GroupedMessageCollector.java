@@ -1,11 +1,9 @@
 package org.folio.rest.support.kafka;
 
-import java.util.function.Function;
-
-import org.folio.rest.support.messages.EventMessage;
-
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.function.Function;
+import org.folio.rest.support.messages.EventMessage;
 
 class GroupedMessageCollector implements MessageCollector {
   private final Function<KafkaConsumerRecord<String, JsonObject>, String> groupKeyMap;

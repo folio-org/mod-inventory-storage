@@ -520,7 +520,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.19.1</version>
+        <version>3.0.0</version>
         <configuration>
           <excludes>
             <exclude>org/folio/rest/api/*Test.java</exclude>
@@ -534,11 +534,40 @@
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
           -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
-          <!-- TODO: update to version 3.0.0 and remove useSystemClassLoader
-               https://issues.folio.org/browse/FOLIO-1609
-               https://issues.apache.org/jira/browse/SUREFIRE-1588
-          -->
-          <useSystemClassLoader>false</useSystemClassLoader>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.2.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>10.4</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>verify-style</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+          <failsOnError>true</failsOnError>
+          <violationSeverity>warning</violationSeverity>
+          <failOnViolation>true</failOnViolation>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <configLocation>checkstyle/checkstyle.xml</configLocation>
+          <cacheFile>${basedir}/target/cachefile</cacheFile>
         </configuration>
       </plugin>
 

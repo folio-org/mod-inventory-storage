@@ -4,5 +4,4 @@ public enum ReindexResourceName {
   INSTANCE,
   AUTHORITY
 
-
 }

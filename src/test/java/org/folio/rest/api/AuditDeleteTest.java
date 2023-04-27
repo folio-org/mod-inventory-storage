@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -11,7 +10,6 @@ import io.vertx.core.json.pointer.JsonPointer;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import java.net.MalformedURLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,7 +35,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   private static final int TIMEOUT_MILLIS = 1000;
 
-  private final static PostgresClient postgresClient =
+  private static final PostgresClient POSTGRES_CLIENT =
     PostgresClient.getInstance(
       getVertx(), TenantTool.calculateTenantId(TENANT_ID));
 
@@ -52,7 +50,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     setupLoanTypes();
     setupLocations();
 
-    holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     removeAllEvents();
   }
@@ -81,10 +79,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void testOnlyDeletedInstancesAreStoredInAuditTable()
-      throws InterruptedException,
-      MalformedURLException,
-      TimeoutException,
-      ExecutionException {
+    throws InterruptedException,
+    TimeoutException,
+    ExecutionException {
 
     //given
     final JsonObject record = instancesClient.getAll().get(0);
@@ -104,15 +101,14 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void testOnlyDeletedHoldingsAreStoredInAuditTable()
-      throws InterruptedException,
-      MalformedURLException,
-      TimeoutException,
-      ExecutionException {
+    throws InterruptedException,
+    TimeoutException,
+    ExecutionException {
 
     //given
     final JsonObject record = holdingsClient.getAll().get(0);
     //when
-    record.put("permanentLocationId", annexLibraryLocationId.toString());
+    record.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     holdingsClient.replace(holdingsRecordId, record);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));
@@ -123,9 +119,9 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private Object getRecordIdFromAuditTable(String tableName)
-      throws InterruptedException,
-      TimeoutException,
-      ExecutionException {
+    throws InterruptedException,
+    TimeoutException,
+    ExecutionException {
 
     final Row row = getRecordsFromAuditTable(tableName).iterator().next();
     final JsonPointer jsonPointer = JsonPointer.from(RECORD_ID_JSON_PATH);
@@ -133,26 +129,26 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   private RowSet<Row> getRecordsFromAuditTable(String tableName)
-      throws InterruptedException,
-      TimeoutException,
-      ExecutionException {
+    throws InterruptedException,
+    TimeoutException,
+    ExecutionException {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
-    postgresClient.select(getAuditSQL(tableName), h ->
+    POSTGRES_CLIENT.select(getAuditSql(tableName), h ->
       result.complete(h.result()));
     return result.get(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
   }
 
-  private String getAuditSQL(String table) {
+  private String getAuditSql(String table) {
     return "SELECT * FROM " + table;
   }
 
   private void clearAuditTables() {
     CompletableFuture<Row> future = new CompletableFuture<>();
-    final String sql = Stream.of(AUDIT_INSTANCE, AUDIT_HOLDINGS_RECORD, AUDIT_ITEM).
-      map(s-> "DELETE FROM "+s).collect(Collectors.joining(";"));
+    final String sql = Stream.of(AUDIT_INSTANCE, AUDIT_HOLDINGS_RECORD, AUDIT_ITEM)
+      .map(s -> "DELETE FROM " + s).collect(Collectors.joining(";"));
 
-    postgresClient.selectSingle(sql, handler -> {
+    POSTGRES_CLIENT.selectSingle(sql, handler -> {
       if (handler.failed()) {
         future.completeExceptionally(handler.cause());
         return;

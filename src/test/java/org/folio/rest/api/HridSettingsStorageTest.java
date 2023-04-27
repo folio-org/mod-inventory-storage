@@ -217,7 +217,7 @@ public class HridSettingsStorageTest extends TestBase {
   }
 
   @Test
-  public void cannotUpdateHridSettingsID()
+  public void cannotUpdateHridSettingsId()
     throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting cannotUpdateHridSettingsID()");
 
@@ -316,7 +316,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
         hridSettingsResult -> getNextInstanceHrid().compose(
-          hrid -> validateHrid(hrid, "in00000000250", testContext))
+            hrid -> validateHrid(hrid, "in00000000250", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumber()")))));
   }
@@ -334,7 +334,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
         hridSettingsResult -> getNextInstanceHrid().compose(
-          hrid -> validateHrid(hrid, "in250", testContext))
+            hrid -> validateHrid(hrid, "in250", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextInstanceHridAfterSettingStartNumberWithoutLeadingZeroes()")))));
   }
@@ -374,7 +374,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
         hridSettings -> getNextHoldingsHrid().compose(
-          hrid -> validateHrid(hrid, "ho00000007890", testContext))
+            hrid -> validateHrid(hrid, "ho00000007890", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumber()")))));
   }
@@ -392,7 +392,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
         hridSettings -> getNextHoldingsHrid().compose(
-          hrid -> validateHrid(hrid, "ho7890", testContext))
+            hrid -> validateHrid(hrid, "ho7890", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextHoldingHridAfterSettingStartNumberWithoutLeadingZeroes()")))));
   }
@@ -418,7 +418,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings).onComplete(
       testContext.asyncAssertSuccess(
         hridSettings -> getNextItemHrid().compose(
-          hrid -> validateHrid(hrid, "it00087654321", testContext))
+            hrid -> validateHrid(hrid, "it00087654321", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextItemHridAfterSettingStartNumber()")))));
   }
@@ -452,7 +452,7 @@ public class HridSettingsStorageTest extends TestBase {
     hridManager.updateHridSettings(newHridSettings)
       .onComplete(testContext.asyncAssertSuccess(
         hridSettings -> getNextItemHrid().compose(
-          hrid -> validateHrid(hrid, "00000000300", testContext))
+            hrid -> validateHrid(hrid, "00000000300", testContext))
           .onComplete(testContext.asyncAssertSuccess(
             v -> log.info("Finished canGetNextItemHridWithNoPrefix()")))));
   }

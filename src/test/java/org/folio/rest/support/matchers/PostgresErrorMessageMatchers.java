@@ -1,18 +1,17 @@
 package org.folio.rest.support.matchers;
 
-import org.hamcrest.Matcher;
-
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
+
+import org.hamcrest.Matcher;
 
 /**
  * Matchers that use the SQLSTATE error codes
  * <a href="https://www.postgresql.org/docs/current/errcodes-appendix.html">https://www.postgresql.org/docs/current/errcodes-appendix.html</a>.
- * <p>
  * SQLSTATE error codes are stable, whereas the error description may change when switching the PostgreSQL version,
  * and the order of the error elements may change.
  */
-public class PostgresErrorMessageMatchers {
+public final class PostgresErrorMessageMatchers {
   private PostgresErrorMessageMatchers() { }
 
   public static Matcher<String> isMaximumSequenceValueError(final String sequenceName) {

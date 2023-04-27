@@ -9,16 +9,16 @@ import org.folio.rest.tools.utils.ResourceUtils;
  * Report optimistic locking configuration of schema.json.
  */
 public class OptimisticLocking {
-  private static final JsonArray tables =
-      new JsonObject(ResourceUtils.resource2String("templates/db_scripts/schema.json"))
+  private static final JsonArray TABLES =
+    new JsonObject(ResourceUtils.resource2String("templates/db_scripts/schema.json"))
       .getJsonArray("tables");
 
   /**
    * true if tableName has failOnConflict or failOnConflictUnlessSuppressed, false otherwise.
    */
   public static boolean hasFailOnConflict(String tableName) {
-    for (int i = 0; i < tables.size(); i++) {
-      JsonObject table = tables.getJsonObject(i);
+    for (int i = 0; i < TABLES.size(); i++) {
+      JsonObject table = TABLES.getJsonObject(i);
       if (tableName.equals(table.getString("tableName"))) {
         switch (table.getString("withOptimisticLocking", "")) {
           case "failOnConflict":

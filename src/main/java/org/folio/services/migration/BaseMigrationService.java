@@ -1,21 +1,20 @@
 package org.folio.services.migration;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.dbschema.ObjectMapperTool.readValue;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
-
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
 
 public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
@@ -25,6 +24,12 @@ public abstract class BaseMigrationService {
   protected BaseMigrationService(String fromVersion, PostgresClientFuturized client) {
     this.version = versioned(fromVersion);
     this.postgresClient = client;
+  }
+
+  private static Versioned versioned(String version) {
+    var versioned = new Versioned() { };
+    versioned.setFromModuleVersion(version);
+    return versioned;
   }
 
   public boolean shouldExecuteMigration(TenantAttributes tenantAttributes) {
@@ -37,20 +42,24 @@ public abstract class BaseMigrationService {
 
     return postgresClient.startTx()
       .compose(con -> openStream(con)
-        .compose(rows-> handleUpdate(rows, con))
-        .onSuccess(records -> log.info("Migration for the class has been " +
-          "completed [class={}, recordsProcessed={}]", getClass(), records))
+        .compose(rows -> handleUpdate(rows, con))
+        .onSuccess(records -> log.info("Migration for the class has been "
+          + "completed [class={}, recordsProcessed={}]", getClass(), records))
         .onFailure(error -> log.error("Unable to complete migration for class [class={}]",
           getClass(), error))
         .onComplete(result -> postgresClient.endTx(con)))
       .mapEmpty();
   }
 
+  public abstract String getMigrationName();
+
   protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
 
   protected abstract Future<Integer> updateBatch(List<Row> batch, SQLConnection connection);
 
-  public abstract String getMigrationName();
+  protected <T> T rowToClass(Row row, Class<T> clazz) {
+    return readValue(row.getValue("jsonb").toString(), clazz);
+  }
 
   private Future<Integer> handleUpdate(RowStream<Row> stream, SQLConnection connection) {
     var batchStream = new BatchedReadStream<>(stream);
@@ -78,15 +87,5 @@ public abstract class BaseMigrationService {
       });
 
     return promise.future().onComplete(notUsed -> stream.close());
-  }
-
-  protected <T> T rowToClass(Row row, Class<T> clazz) {
-    return readValue(row.getValue("jsonb").toString(), clazz);
-  }
-
-  private static Versioned versioned(String version) {
-    var versioned = new Versioned() {};
-    versioned.setFromModuleVersion(version);
-    return versioned;
   }
 }

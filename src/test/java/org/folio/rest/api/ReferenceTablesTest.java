@@ -28,6 +28,7 @@ import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.UnsupportedEncodingException;
@@ -72,10 +73,7 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- *
- * @author ne
- */
+
 public class ReferenceTablesTest extends TestBase {
 
   @SneakyThrows
@@ -87,11 +85,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void alternativeTitleTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = alternativeTitleTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("alternative title types", searchResponse, 11, 40);
@@ -99,36 +97,36 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void alternativeTitleTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
     String entityPath = "/alternative-title-types";
 
     AlternativeTitleType entity =
-            new AlternativeTitleType("Test alternative title type", "test source");
+      new AlternativeTitleType("Test alternative title type", "test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
 
     String updateProperty = AlternativeTitleType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
 
   }
 
   @Test
   public void callNumberTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = callNumberTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("call number types", searchResponse, 5, 40);
@@ -136,11 +134,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void classificationTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = classificationTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("classification types", searchResponse, 2, 20);
@@ -148,11 +146,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void classificationTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
     String entityPath = "/classification-types";
     ClassificationType entity = new ClassificationType("Test classfication type");
@@ -160,19 +158,19 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ClassificationType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void contributorNameTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = contributorNameTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -181,30 +179,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void contributorNameTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/contributor-name-types";
     ContributorNameType entity = new ContributorNameType("Test contributor name type", "100");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ContributorNameType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void contributorTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = contributorTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -213,30 +211,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void contributorTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/contributor-types";
     ContributorType entity = new ContributorType("Test contributor type", "Test Code", "Test Source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ContributorType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void electronicAccessRelationshipsLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = electronicAccessRelationshipsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -245,30 +243,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void electronicAccessRelationshipsBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/electronic-access-relationships";
     ElectronicAccessRelationship entity = new ElectronicAccessRelationship("Test electronic access relationship type");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ElectronicAccessRelationship.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void holdingsNoteTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = holdingsNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -277,30 +275,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void holdingsNoteTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/holdings-note-types";
     HoldingsNoteType entity = new HoldingsNoteType("Test holdings note type", "test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = HoldingsNoteType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void holdingsTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = holdingsTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -309,31 +307,31 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void holdingsTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/holdings-types";
     HoldingsType entity = new HoldingsType("Test holdings note type", "test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = HoldingsType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
 
   }
 
   @Test
   public void identifierTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = identifierTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -342,31 +340,31 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void identifierTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/identifier-types";
-    IdentifierType entity = new IdentifierType("Test identifier type") ;
+    IdentifierType entity = new IdentifierType("Test identifier type");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = IdentifierType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void illPoliciesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = illPoliciesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -375,30 +373,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void illPoliciesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/ill-policies";
     IllPolicy entity = new IllPolicy("Test ILL policy", "Test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = IllPolicy.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void instanceFormatsLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = instanceFormatsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -407,11 +405,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void instanceFormatsBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/instance-formats";
     InstanceFormat entity = new InstanceFormat("Test instance format", "Test Code", "Test Source");
 
@@ -419,19 +417,19 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceFormat.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void natureOfContentTermsLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = natureOfContentTermsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -440,11 +438,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void natureOfContentTermsBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/nature-of-content-terms";
     NatureOfContentTerm entity = new NatureOfContentTerm("Test Term", "Test Source");
 
@@ -452,20 +450,19 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceFormat.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
-
 
   @Test
   public void instanceStatusesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = instanceStatusesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -474,30 +471,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void instanceStatusesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/instance-statuses";
     InstanceStatus entity = new InstanceStatus("Test instance status", "Test Code", "Test Source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceStatus.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void instanceTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = instanceTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -516,10 +513,10 @@ public class ReferenceTablesTest extends TestBase {
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -545,11 +542,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void itemNoteTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = itemNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -558,30 +555,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void itemNoteTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/item-note-types";
     ItemNoteType entity = new ItemNoteType("Test item note type", "Test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ItemNoteType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void instanceNoteTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = instanceNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -590,21 +587,21 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void instanceNoteTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/instance-note-types";
     InstanceNoteType entity = new InstanceNoteType("Test instance note type", "Test source");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceNoteType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -628,16 +625,16 @@ public class ReferenceTablesTest extends TestBase {
     ExecutionException {
     String entityPath = "/authority-source-files";
     AuthoritySourceFile entity = new AuthoritySourceFile("Test authority source file", List.of("test"),
-        "Subjects", "example.com/sources/", "folio");
+      "Subjects", "example.com/sources/", "folio");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(),
       is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = AuthoritySourceFile.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -666,19 +663,19 @@ public class ReferenceTablesTest extends TestBase {
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = AuthorityNoteType.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void modesOfIssuanceLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL apiUrl = modesOfIssuanceUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -687,30 +684,30 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void modesOfIssuanceBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     String entityPath = "/modes-of-issuance";
     ModeOfIssuance entity = new ModeOfIssuance("Test mode of issuance");
 
     Response postResponse = createReferenceRecord(entityPath, entity);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUID = postResponse.getJson().getString("id");
+    String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = ModeOfIssuance.NAME_KEY;
 
-    testGetPutDeletePost(entityPath, entityUUID, entity, updateProperty);
+    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
   public void statisticalCodeTypesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL statisticalCodeTypesUrl = statisticalCodeTypesUrl("");
 
     Response searchResponseCodeTypes = getReferenceRecords(statisticalCodeTypesUrl);
@@ -719,11 +716,11 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void statisticalCodesLoaded()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
     URL statisticalCodesUrl = statisticalCodesUrl("");
 
     Response searchResponseCodes = getReferenceRecords(statisticalCodesUrl);
@@ -732,18 +729,20 @@ public class ReferenceTablesTest extends TestBase {
 
   @Test
   public void statisticalCodesAndCodeTypesBasicCrud()
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
     String statisticalCodeTypesPath = "/statistical-code-types";
     String statisticalCodesPath = "/statistical-codes";
 
     String statisticalCodeTypeId = "8c5b634a-0a4a-47ec-b9b2-d66980656ffd";
-    StatisticalCodeType statisticalCodeType = new StatisticalCodeType(statisticalCodeTypeId, "Test statistical code type", "Test source");
-    StatisticalCode statisticalCode = new StatisticalCode("Test statistical name", "Test statistical code", statisticalCodeTypeId, "Test source");
+    StatisticalCodeType statisticalCodeType =
+      new StatisticalCodeType(statisticalCodeTypeId, "Test statistical code type", "Test source");
+    StatisticalCode statisticalCode =
+      new StatisticalCode("Test statistical name", "Test statistical code", statisticalCodeTypeId, "Test source");
 
     Response postResponseCodeType = createReferenceRecord(statisticalCodeTypesPath, statisticalCodeType);
     assertThat(postResponseCodeType.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -751,15 +750,15 @@ public class ReferenceTablesTest extends TestBase {
     Response postResponseCode = createReferenceRecord(statisticalCodesPath, statisticalCode);
     assertThat(postResponseCode.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String entityUUIDCode = postResponseCode.getJson().getString("id");
+    String entityUuidCode = postResponseCode.getJson().getString("id");
     String updatePropertyCode = StatisticalCode.NAME_KEY;
 
-    testGetPutDeletePost(statisticalCodesPath, entityUUIDCode, statisticalCode, updatePropertyCode);
+    testGetPutDeletePost(statisticalCodesPath, entityUuidCode, statisticalCode, updatePropertyCode);
 
-    String entityUUIDCodeType = postResponseCodeType.getJson().getString("id");
+    String entityUuidCodeType = postResponseCodeType.getJson().getString("id");
     String updatePropertyCodeType = StatisticalCodeType.NAME_KEY;
 
-    testGetPutDeletePost(statisticalCodeTypesPath, entityUUIDCodeType, statisticalCodeType, updatePropertyCodeType);
+    testGetPutDeletePost(statisticalCodeTypesPath, entityUuidCodeType, statisticalCodeType, updatePropertyCodeType);
 
   }
 
@@ -793,15 +792,15 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   private Response getReferenceRecords(URL baseUrl)
-          throws InterruptedException,
-          MalformedURLException,
-          TimeoutException,
-          ExecutionException,
-          UnsupportedEncodingException {
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
 
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     String url = baseUrl.toString() + "?limit=400&query="
-            + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8.name());
+      + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8);
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
     return searchResponse;
@@ -809,9 +808,11 @@ public class ReferenceTablesTest extends TestBase {
 
   private void validateNumberOfReferenceRecords(String dataDescription, Response searchResponse, int min, int max) {
     Integer totalRecords = searchResponse.getJson().getInteger("totalRecords");
-    assertTrue(String.format("Could not retrieve record count for %s", dataDescription), totalRecords != null);
-    assertTrue(String.format("Expected <=%s \"%s\", found %s", max, dataDescription, totalRecords), max >= totalRecords);
-    assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords), min <= totalRecords);
+    assertNotNull(String.format("Could not retrieve record count for %s", dataDescription), totalRecords);
+    assertTrue(String.format("Expected <=%s \"%s\", found %s", max, dataDescription, totalRecords),
+      max >= totalRecords);
+    assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords),
+      min <= totalRecords);
   }
 
   private Response createReferenceRecord(String path, JsonEntity referenceObject)
@@ -820,10 +821,10 @@ public class ReferenceTablesTest extends TestBase {
     URL referenceUrl = vertxUrl(path);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(
-            referenceUrl,
-            referenceObject.getJson(),
+      referenceUrl,
+      referenceObject.getJson(),
       TENANT_ID,
-            ResponseHandler.any(createCompleted)
+      ResponseHandler.any(createCompleted)
     );
     Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
     return postResponse;
@@ -844,8 +845,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   private Response getByQuery(URL getByQueryUrl)
-          throws MalformedURLException, InterruptedException,
-          ExecutionException, TimeoutException {
+    throws MalformedURLException, InterruptedException,
+    ExecutionException, TimeoutException {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     getClient().get(getByQueryUrl, TENANT_ID,
@@ -857,44 +858,44 @@ public class ReferenceTablesTest extends TestBase {
 
   }
 
-  private Response deleteReferenceRecordById (URL entityUrl)
-  throws ExecutionException, InterruptedException, TimeoutException {
+  private Response deleteReferenceRecordById(URL entityUrl)
+    throws ExecutionException, InterruptedException, TimeoutException {
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
     getClient().delete(
-            entityUrl,
+      entityUrl,
       TENANT_ID,
-            ResponseHandler.any(deleteCompleted)
+      ResponseHandler.any(deleteCompleted)
     );
     Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
     return deleteResponse;
   }
 
-  private Response updateRecord (URL entityUrl, JsonEntity referenceObject)
-  throws ExecutionException, InterruptedException, TimeoutException {
+  private Response updateRecord(URL entityUrl, JsonEntity referenceObject)
+    throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
     getClient().put(
-            entityUrl,
-            referenceObject.getJson(),
+      entityUrl,
+      referenceObject.getJson(),
       TENANT_ID,
-            ResponseHandler.any(updateCompleted)
+      ResponseHandler.any(updateCompleted)
     );
     Response putResponse = updateCompleted.get(10, TimeUnit.SECONDS);
     return putResponse;
   }
 
-  private void testGetPutDeletePost (String path, String entityId, JsonEntity entity, String updateProperty)
-          throws ExecutionException,
-          InterruptedException,
-          MalformedURLException,
-          TimeoutException {
+  private void testGetPutDeletePost(String path, String entityId, JsonEntity entity, String updateProperty)
+    throws ExecutionException,
+    InterruptedException,
+    MalformedURLException,
+    TimeoutException {
 
-    entity.put(updateProperty, entity.getString(updateProperty)+" UPDATED");
+    entity.put(updateProperty, entity.getString(updateProperty) + " UPDATED");
 
-    URL url = vertxUrl(path + "/" + entityId);
-    URL urlWithBadUUID = vertxUrl(path + "/baduuid");
-    URL urlWithBadParameter = vertxUrl(path+"?offset=-3");
-    URL urlWithBadCql = vertxUrl(path + "?query=badcql");
+    final URL url = vertxUrl(path + "/" + entityId);
+    final URL urlWithBadUuid = vertxUrl(path + "/baduuid");
+    final URL urlWithBadParameter = vertxUrl(path + "?offset=-3");
+    final URL urlWithBadCql = vertxUrl(path + "?query=badcql");
 
     Response putResponse = updateRecord(url, entity);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -919,10 +920,10 @@ public class ReferenceTablesTest extends TestBase {
     Response badQueryResponse = getByQuery(urlWithBadCql);
     assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    Response putResponse2 = updateRecord(urlWithBadUUID, entity);
+    Response putResponse2 = updateRecord(urlWithBadUuid, entity);
     assertThat(putResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
-    Response deleteResponse = deleteReferenceRecordById (url);
+    Response deleteResponse = deleteReferenceRecordById(url);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -930,17 +931,18 @@ public class ReferenceTablesTest extends TestBase {
 
     assertThat(getResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
-    Response deleteResponse2 = deleteReferenceRecordById (url);
+    Response deleteResponse2 = deleteReferenceRecordById(url);
 
     assertThat(deleteResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
-    Response deleteResponse3 = deleteReferenceRecordById (urlWithBadUUID);
+    Response deleteResponse3 = deleteReferenceRecordById(urlWithBadUuid);
 
-    assertThat(deleteResponse3.getStatusCode(), (is(HttpURLConnection.HTTP_BAD_REQUEST)));
+    assertThat(deleteResponse3.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/authority-source-files", "/nature-of-content-terms").contains(path)) {
+    if (Arrays.asList("/instance-note-types", "/authority-note-types", "/authority-source-files",
+      "/nature-of-content-terms").contains(path)) {
       assertThat(postResponse2.getStatusCode(), is(422)); // unprocessable entity, fails UUID pattern
     } else {
       assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));

@@ -1,11 +1,9 @@
 package org.folio.rest.support;
 
+import io.vertx.core.Context;
 import java.util.Map;
-
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
-
-import io.vertx.core.Context;
 
 public class PostgresClientFactory {
   /**

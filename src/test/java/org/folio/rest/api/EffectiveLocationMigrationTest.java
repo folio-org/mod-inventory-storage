@@ -23,78 +23,82 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
-  private static Vertx vertx = Vertx.vertx();
-  private static UUID instanceId = UUID.randomUUID();
-  private static UUID holdingsId = UUID.randomUUID();
   private static final String SET_EFFECTIVE_LOCATION = ResourceUtil
     .asString("templates/db_scripts/setEffectiveHoldingsLocation.sql")
     .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
-  private static String removeExistingField = "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
-  private static String query = "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + holdingsId.toString() + "';";
+  private static final Vertx VERTX = Vertx.vertx();
+  private static final UUID INSTANCE_ID = UUID.randomUUID();
+  private static final UUID HOLDINGS_ID = UUID.randomUUID();
+  private static final String REMOVE_EXISTING_FIELD =
+    "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
+  private static final String QUERY =
+    "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + HOLDINGS_ID + "';";
 
   @Before
   public void beforeEach() {
-    instancesClient.create(instance(instanceId));
+    instancesClient.create(instance(INSTANCE_ID));
   }
 
   @After
   public void afterEach() {
-    holdingsClient.delete(holdingsId);
-    instancesClient.delete(instanceId);
+    holdingsClient.delete(HOLDINGS_ID);
+    instancesClient.delete(INSTANCE_ID);
   }
 
   @Test
-  public void canMigrateToEffectiveLocationForItemsWithPermanentLocationOnly() throws 
-    InterruptedException, ExecutionException, TimeoutException{
+  public void canMigrateToEffectiveLocationForItemsWithPermanentLocationOnly() throws
+    InterruptedException, ExecutionException, TimeoutException {
     holdingsClient.create(new HoldingRequestBuilder()
-    .withId(holdingsId)
-    .forInstance(instanceId)
-    .withPermanentLocation(mainLibraryLocationId));
+      .withId(HOLDINGS_ID)
+      .forInstance(INSTANCE_ID)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
-    runSql(removeExistingField);
+    runSql(REMOVE_EXISTING_FIELD);
 
-    RowSet<Row> result = runSql(query);
-    assertEquals(result.rowCount(), 1);
+    RowSet<Row> result = runSql(QUERY);
+    assertEquals(1, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
     assertNull(entry.getJsonObject("jsonb").getString("effectiveLocationId"));
 
     runSql(SET_EFFECTIVE_LOCATION);
 
-    RowSet<Row> migrationResult = runSql(query);
-    assertEquals(migrationResult.rowCount(), 1);
+    RowSet<Row> migrationResult = runSql(QUERY);
+    assertEquals(1, migrationResult.rowCount());
     JsonObject migrationEntry = migrationResult.iterator().next().toJson();
-    assertEquals(mainLibraryLocationId.toString(), migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId")); 
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
+      migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId"));
   }
 
   @Test
-  public void canMigrateToEffectiveLocationForItemsWithTemporaryLocation() throws 
-    InterruptedException, ExecutionException, TimeoutException{
+  public void canMigrateToEffectiveLocationForItemsWithTemporaryLocation() throws
+    InterruptedException, ExecutionException, TimeoutException {
     holdingsClient.create(new HoldingRequestBuilder()
-    .withId(holdingsId)
-    .forInstance(instanceId)
-    .withTemporaryLocation(annexLibraryLocationId)
-    .withPermanentLocation(mainLibraryLocationId));
+      .withId(HOLDINGS_ID)
+      .forInstance(INSTANCE_ID)
+      .withTemporaryLocation(ANNEX_LIBRARY_LOCATION_ID)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
-    runSql(removeExistingField);
+    runSql(REMOVE_EXISTING_FIELD);
 
-    RowSet<Row> result = runSql(query);
-    assertEquals(result.rowCount(), 1);
+    RowSet<Row> result = runSql(QUERY);
+    assertEquals(1, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
     assertNull(entry.getJsonObject("jsonb").getString("effectiveLocationId"));
 
     runSql(SET_EFFECTIVE_LOCATION);
 
-    RowSet<Row> migrationResult = runSql(query);
-    assertEquals(migrationResult.rowCount(), 1);
+    RowSet<Row> migrationResult = runSql(QUERY);
+    assertEquals(1, migrationResult.rowCount());
     JsonObject migrationEntry = migrationResult.iterator().next().toJson();
-    assertEquals(annexLibraryLocationId.toString(), migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId")); 
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
+      migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId"));
   }
 
-  private RowSet<Row> runSql(String sql) throws 
+  private RowSet<Row> runSql(String sql) throws
     InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
 
-    PostgresClient.getInstance(vertx).execute(sql, handler -> {
+    PostgresClient.getInstance(VERTX).execute(sql, handler -> {
       if (handler.failed()) {
         future.completeExceptionally(handler.cause());
       }

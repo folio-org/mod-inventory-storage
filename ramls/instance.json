@@ -219,7 +219,6 @@
             "type": "object",
             "description": "Dereferenced classification schema",
             "javaType": "org.folio.rest.jaxrs.model.classificationTypeVirtual",
-            "readonly": true,
             "folio:$ref": "classificationtype.json",
             "readonly": true,
             "folio:isVirtual": true,

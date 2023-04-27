@@ -21,7 +21,7 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.tools.utils.NetworkUtils;
 
-public class ModuleUtility {
+public final class ModuleUtility {
   private static final Logger logger = LogManager.getLogger();
   private static Vertx vertx;
   private static HttpClient client;
@@ -36,9 +36,9 @@ public class ModuleUtility {
   }
 
   public static void startVerticleWebClientAndPrepareTenant(String tenantId)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     logger.info("starting RestVerticle");
 
@@ -55,8 +55,8 @@ public class ModuleUtility {
   }
 
   public static void stopVerticleAndWebClient()
-      throws InterruptedException,
-      ExecutionException {
+    throws InterruptedException,
+    ExecutionException {
 
     try {
       vertx.close()
@@ -80,9 +80,9 @@ public class ModuleUtility {
   }
 
   public static void startVerticle(DeploymentOptions options)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     vertx.deployVerticle(RestVerticle.class, options)
       .toCompletionStage()
@@ -109,14 +109,14 @@ public class ModuleUtility {
   }
 
   public static void prepareTenant(String tenantId, boolean loadSample)
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
   public static void removeTenant(String tenantId)
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject jo = new JsonObject();
     jo.put("purge", Boolean.TRUE);
@@ -125,17 +125,17 @@ public class ModuleUtility {
   }
 
   public static void tenantOp(String tenantId, JsonObject job)
-      throws InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
 
     HttpClient client = new HttpClient(vertx);
     client.post(vertxUrl("/_/tenant"), job, tenantId,
-        ResponseHandler.any(tenantPrepared));
+      ResponseHandler.any(tenantPrepared));
 
     Response response = tenantPrepared.get(60, TimeUnit.SECONDS);
 
     String failureMessage = String.format("Tenant post failed: %s: %s",
-        response.getStatusCode(), response.getBody());
+      response.getStatusCode(), response.getBody());
 
     // wait if not complete ...
     if (response.getStatusCode() == 201) {
@@ -143,13 +143,13 @@ public class ModuleUtility {
 
       tenantPrepared = new CompletableFuture<>();
       client.get(vertxUrl("/_/tenant/" + id + "?wait=60000"), tenantId,
-          ResponseHandler.any(tenantPrepared));
+        ResponseHandler.any(tenantPrepared));
       // The extra 1 in 61 is intentionally added to rule out potential
       // real-time timing issues with the 60 second wait above.
       response = tenantPrepared.get(61, TimeUnit.SECONDS);
 
       failureMessage = String.format("Tenant get failed: %s: %s",
-          response.getStatusCode(), response.getBody());
+        response.getStatusCode(), response.getBody());
 
       if (response.getStatusCode() == 200 && response.getJson().containsKey("error")) {
         throw new IllegalStateException(response.getJson().getString("error"));

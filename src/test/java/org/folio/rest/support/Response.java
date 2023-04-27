@@ -1,11 +1,11 @@
 package org.folio.rest.support;
 
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
-
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 public class Response {
   protected final String body;
@@ -24,6 +24,10 @@ public class Response {
       convertNullToEmpty(response.getHeader(CONTENT_TYPE.toString())));
   }
 
+  private static String convertNullToEmpty(String text) {
+    return text != null ? text : "";
+  }
+
   public boolean hasBody() {
     return getBody() != null && getBody().trim() != "";
   }
@@ -37,16 +41,15 @@ public class Response {
   }
 
   public JsonObject getJson() {
-    if(hasBody()) {
+    if (hasBody()) {
       return new JsonObject(getBody());
-    }
-    else {
+    } else {
       return new JsonObject();
     }
   }
 
   public Boolean isJsonContent() {
-    if(!hasBody()) {
+    if (!hasBody()) {
       return false;
     }
 
@@ -54,8 +57,7 @@ public class Response {
     try {
       new JsonObject(getBody());
       return true;
-    }
-    catch(DecodeException e) {
+    } catch (DecodeException e) {
       return false;
     }
   }
@@ -67,9 +69,5 @@ public class Response {
   @Override
   public String toString() {
     return "[statusCode=" + statusCode + ", contentType=" + contentType + ", body=" + body + "]";
-  }
-
-  private static String convertNullToEmpty(String text) {
-    return text != null ? text : "";
   }
 }

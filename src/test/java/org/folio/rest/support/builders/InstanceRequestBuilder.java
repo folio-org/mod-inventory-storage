@@ -1,7 +1,6 @@
 package org.folio.rest.support.builders;
 
 import io.vertx.core.json.JsonObject;
-
 import java.util.UUID;
 
 public class InstanceRequestBuilder implements Builder {

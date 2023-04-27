@@ -14,10 +14,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Future;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
-
-import io.vertx.core.Future;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
@@ -40,7 +39,7 @@ public class IterationServiceTest {
   @Test
   public void canSubmitIteration() {
     when(repository.save(any(), any()))
-        .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
+      .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
     IterationJobParams jobParams = new IterationJobParams()
       .withEventType("ITERATE")
@@ -75,7 +74,7 @@ public class IterationServiceTest {
     var jobId = UUID.randomUUID().toString();
     IterationJob existing = new IterationJob().withId(jobId);
 
-    when(repository.getById(eq(jobId)))
+    when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(existing));
 
     var job = get(service.getIteration(jobId));
@@ -88,7 +87,7 @@ public class IterationServiceTest {
   public void canGetEmptyIteration() {
     var jobId = UUID.randomUUID().toString();
 
-    when(repository.getById(eq(jobId)))
+    when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(null));
 
     var job = get(service.getIteration(jobId));

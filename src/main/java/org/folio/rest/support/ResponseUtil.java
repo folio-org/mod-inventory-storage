@@ -4,11 +4,10 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 
 import javax.ws.rs.core.Response;
-
 import org.folio.HttpStatus;
 
 public final class ResponseUtil {
-  private ResponseUtil() {}
+  private ResponseUtil() { }
 
   public static boolean isUpdateSuccessResponse(Response response) {
     return responseHasStatus(response, HTTP_NO_CONTENT);

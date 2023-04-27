@@ -1,6 +1,5 @@
 package org.folio.rest.support.db;
 
-import java.util.Map;
 import static org.folio.rest.support.db.ErrorConstants.CHECK_VIOLATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.CHILD_TABLE_NAME;
 import static org.folio.rest.support.db.ErrorConstants.DATATYPE_MISMATCH_ERROR_CODE;
@@ -17,7 +16,9 @@ import static org.folio.rest.support.db.ErrorConstants.PARENT_TABLE_NAME;
 import static org.folio.rest.support.db.ErrorConstants.SCHEMA_NAME;
 import static org.folio.rest.support.db.ErrorConstants.UNIQUE_VIOLATION_ERROR_CODE;
 
-public class ErrorFactory {
+import java.util.Map;
+
+public final class ErrorFactory {
 
   private ErrorFactory() {
   }
@@ -52,7 +53,7 @@ public class ErrorFactory {
       .setSeverity(ERROR_TYPE).build();
   }
 
-  public static Map<Character, String> getUUIDErrorMap() {
+  public static Map<Character, String> getUuidErrorMap() {
     return new ErrorBuilder()
       .setMessage("invalid input syntax for type uuid: \"INVALID\"")
       .setLine("137")
@@ -126,8 +127,8 @@ public class ErrorFactory {
   public static Map<Character, String> getExclusionViolationErrorMap() {
     return new ErrorBuilder()
       .setMessage("conflicting key value violates exclusion constraint \"exclude_overlapping_bookings\"")
-      .setDetail("Key (daterange(from_date, to_date, '[]'::text))=([2017-04-20,2017-05-01)) " +
-        "conflicts with existing key (daterange(from_date, to_date, '[]'::text))=([2017-04-20,2017-04-22))")
+      .setDetail("Key (daterange(from_date, to_date, '[]'::text))=([2017-04-20,2017-05-01)) "
+        + "conflicts with existing key (daterange(from_date, to_date, '[]'::text))=([2017-04-20,2017-04-22))")
       .setSchema(SCHEMA_NAME)
       .setTable("booking")
       .setLine("839")

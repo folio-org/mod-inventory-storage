@@ -1,16 +1,14 @@
 package org.folio.services.migration.async;
 
 import io.vertx.core.Context;
-import org.folio.rest.persist.PostgresClientFuturized;
-
 import java.util.Map;
+import org.folio.rest.persist.PostgresClientFuturized;
 
 public class AsyncMigrationContext {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClientFuturized postgresClient;
   private String migrationName;
-
 
   public AsyncMigrationContext(AsyncMigrationContext context, String migrationName) {
     this.vertxContext = context.getVertxContext();

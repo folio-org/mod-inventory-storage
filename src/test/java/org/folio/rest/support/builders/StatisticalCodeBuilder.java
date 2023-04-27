@@ -1,8 +1,7 @@
 package org.folio.rest.support.builders;
 
-import java.util.UUID;
-
 import io.vertx.core.json.JsonObject;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.ToString;
 import lombok.With;

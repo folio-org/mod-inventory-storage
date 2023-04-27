@@ -7,20 +7,18 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import io.vertx.core.json.JsonObject;
 import java.util.UUID;
-
+import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.vertx.core.json.JsonObject;
-import lombok.SneakyThrows;
-
 public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   private final InstanceEventMessageChecks instanceMessageChecks
-    = new InstanceEventMessageChecks(kafkaConsumer);
+    = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
   @Before
@@ -68,7 +66,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     // create a holding so that instance is not allowed to be removed
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instance.getId())
-      .withPermanentLocation(mainLibraryLocationId));
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
@@ -86,11 +84,12 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     // create a holding so that instance is not allowed to be removed
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instance.getId())
-      .withPermanentLocation(mainLibraryLocationId));
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     final Response removeResponse = instancesClient.attemptDeleteAll();
 
     assertThat(removeResponse.getStatusCode(), is(400));
 
     instanceMessageChecks.noDeletedMessagePublished(instance.getId().toString());
-  }}
+  }
+}

@@ -2,7 +2,6 @@ package org.folio.rest.support.matchers;
 
 import java.time.Instant;
 import java.util.function.Function;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -56,6 +55,13 @@ public final class DateTimeMatchers {
 
     return new TypeSafeMatcher<String>() {
       @Override
+      public void describeTo(Description description) {
+        description
+          .appendText("Has ISO-8601 format:")
+          .appendValue(acceptableFormat);
+      }
+
+      @Override
       protected boolean matchesSafely(String dateTimeAsString) {
         try {
           DateTimeFormat.forPattern(acceptableFormat)
@@ -65,13 +71,6 @@ public final class DateTimeMatchers {
         }
 
         return true;
-      }
-
-      @Override
-      public void describeTo(Description description) {
-        description
-          .appendText("Has ISO-8601 format:")
-          .appendValue(acceptableFormat);
       }
     };
   }

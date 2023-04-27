@@ -33,7 +33,7 @@ public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventor
 
   private NotificationSendingErrorRepository createRepository() {
     var postgresClient = PgUtil.postgresClient(getVertx().getOrCreateContext(),
-    new CaseInsensitiveMap<>(Map.of("x-okapi-tenant", TENANT_ID)));
+      new CaseInsensitiveMap<>(Map.of("x-okapi-tenant", TENANT_ID)));
 
     return new NotificationSendingErrorRepository(postgresClient);
   }

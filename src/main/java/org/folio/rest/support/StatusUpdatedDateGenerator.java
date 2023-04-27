@@ -5,8 +5,13 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public final class StatusUpdatedDateGenerator {
-    private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-    public static String generateStatusUpdatedDate() {
-      return df.format(ZonedDateTime.now(ZoneOffset.UTC));
-    }
+
+  private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+
+  private StatusUpdatedDateGenerator() {
+  }
+
+  public static String generateStatusUpdatedDate() {
+    return FORMATTER.format(ZonedDateTime.now(ZoneOffset.UTC));
+  }
 }

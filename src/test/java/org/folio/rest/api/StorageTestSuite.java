@@ -22,13 +22,13 @@ import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.impl.CallNumberTypeAPITest;
+import org.folio.rest.impl.CallNumberTypeApiTest;
 import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.unit.ItemDamagedStatusAPIUnitTest;
+import org.folio.rest.unit.ItemDamagedStatusApiUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -38,7 +38,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-  CallNumberTypeAPITest.class,
+  CallNumberTypeApiTest.class,
   AsyncMigrationTest.class,
   PublicationPeriodMigrationTest.class,
   CallNumberUtilsTest.class,
@@ -59,8 +59,8 @@ import org.junit.runners.Suite;
   StorageHelperTest.class,
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
-  ItemDamagedStatusAPITest.class,
-  ItemDamagedStatusAPIUnitTest.class,
+  ItemDamagedStatusApiTest.class,
+  ItemDamagedStatusApiUnitTest.class,
   ItemEffectiveLocationTest.class,
   HridSettingsStorageTest.class,
   HridSettingsStorageParameterizedTest.class,
@@ -69,7 +69,7 @@ import org.junit.runners.Suite;
   ItemEffectiveCallNumberDataUpgradeTest.class,
   ModesOfIssuanceMigrationScriptTest.class,
   PrecedingSucceedingTitleTest.class,
-  AbstractInstanceRecordsAPITest.class,
+  AbstractInstanceRecordsApiTest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
   HoldingsSourceTest.class,
@@ -86,7 +86,7 @@ import org.junit.runners.Suite;
   IterationJobRunnerTest.class,
   AuthorityStorageTest.class,
   SampleDataTest.class,
-  AuthoritySourceFileAPITest.class,
+  AuthoritySourceFileApiTest.class,
   AuditDeleteTest.class,
   HridSettingsIncreaseMaxValueMigrationTest.class,
   IllMigrationScriptTest.class,
@@ -101,7 +101,7 @@ import org.junit.runners.Suite;
   //ReferenceTablesTest.class,
   //UpdateItemStatusDateFunctionMigrationTest.class,
 })
-public class StorageTestSuite {
+public final class StorageTestSuite {
   private static final Logger logger = LogManager.getLogger();
   private static boolean running = false;
 
@@ -128,9 +128,9 @@ public class StorageTestSuite {
 
   @AfterClass
   public static void after()
-      throws InterruptedException,
-      ExecutionException,
-      TimeoutException {
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
 
     logger.info("starting @AfterClass after()");
 
@@ -150,7 +150,7 @@ public class StorageTestSuite {
    * (IDE or mvn test -Dtest=FooTest,BarTest), when not running the complete StorageTestSuite.
    */
   public static void startupUnlessRunning() {
-    if (! running) {
+    if (!running) {
       before();
     }
   }
@@ -167,29 +167,14 @@ public class StorageTestSuite {
       Response response = TestBase.get(deleteAllFinished);
 
       if (response.getStatusCode() != 204) {
-        Assert.fail("Delete all preparation failed: " +
-          response.getBody());
+        Assert.fail("Delete all preparation failed: " + response.getBody());
       }
     } catch (Exception e) {
       throw new RuntimeException("WARNING!!!!! Unable to delete all: " + e.getMessage(), e);
     }
   }
 
-  static void checkForMismatchedIDs(String table) {
-    try {
-      RowSet<Row> results = getRecordsWithUnmatchedIds(
-        TENANT_ID, table);
-
-      Integer mismatchedRowCount = results.rowCount();
-
-      assertThat(mismatchedRowCount, is(0));
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      throw new RuntimeException("WARNING!!!!! Unable to determine mismatched ID rows" + e.getMessage(), e);
-    }
-  }
-
-  protected static Boolean deleteAll(String tenantId, String tableName) {
+  static Boolean deleteAll(String tenantId, String tableName) {
     CompletableFuture<Boolean> cf = new CompletableFuture<>();
 
     try {
@@ -209,14 +194,27 @@ public class StorageTestSuite {
     }
   }
 
-  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId, String tableName){
+  static void checkForMismatchedIds(String table) {
+    try {
+      RowSet<Row> results = getRecordsWithUnmatchedIds(
+        TENANT_ID, table);
+
+      Integer mismatchedRowCount = results.rowCount();
+
+      assertThat(mismatchedRowCount, is(0));
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      throw new RuntimeException("WARNING!!!!! Unable to determine mismatched ID rows" + e.getMessage(), e);
+    }
+  }
+
+  private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId, String tableName) {
     PostgresClient dbClient = PostgresClient.getInstance(
       getVertx(), tenantId);
 
     CompletableFuture<RowSet<Row>> selectCompleted = new CompletableFuture<>();
 
-    String sql = String.format("SELECT null FROM %s_%s.%s" +
-        " WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",
+    String sql = String.format("SELECT null FROM %s_%s.%s WHERE CAST(id AS VARCHAR(50)) != jsonb->>'id'",
       tenantId, "mod_inventory_storage", tableName);
 
     dbClient.select(sql, result -> {

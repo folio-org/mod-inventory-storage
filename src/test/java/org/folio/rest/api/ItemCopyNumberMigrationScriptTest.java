@@ -92,9 +92,9 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   public void shouldTakeFirstElementFromCopyNumbersArray() throws Exception {
     List<IndividualResource> sixItems = createItems(6);
 
-    UUID[] itemIdsWithoutCopyNumbers = {sixItems.get(0).getId(), sixItems.get(5).getId()};
-    UUID[] itemIdsWithCopyNumbers = {sixItems.get(1).getId(), sixItems.get(3).getId()};
-    UUID[] itemIdsWithTwoComponentCopyNumbers = {sixItems.get(2).getId(), sixItems.get(4).getId()};
+    final UUID[] itemIdsWithoutCopyNumbers = {sixItems.get(0).getId(), sixItems.get(5).getId()};
+    final UUID[] itemIdsWithCopyNumbers = {sixItems.get(1).getId(), sixItems.get(3).getId()};
+    final UUID[] itemIdsWithTwoComponentCopyNumbers = {sixItems.get(2).getId(), sixItems.get(4).getId()};
 
     setEmptyCopyNumbersArray(itemIdsWithoutCopyNumbers[0]);
     setEmptyCopyNumbersArray(itemIdsWithoutCopyNumbers[1]);
@@ -116,7 +116,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   }
 
   private IndividualResource createItem() throws Exception {
-    UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject itemToCreate = new JsonObject()
       .put("id", UUID.randomUUID().toString())
@@ -158,7 +158,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   private void setNullCopyNumbersArray(UUID id) throws Exception {
     final CompletableFuture<Void> result = new CompletableFuture<>();
     final JsonObject item = itemsClient.getById(id).getJson().copy()
-      .put("copyNumbers", (String[]) null);
+      .put("copyNumbers", null);
 
     PostgresClient.getInstance(getVertx(), TENANT_ID)
       .update("item", item, id.toString(), reply -> {

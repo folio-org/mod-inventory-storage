@@ -10,10 +10,10 @@ public class NotificationSendingError {
   private String error;
   private Date incidentDateTime;
 
-  public NotificationSendingError() {}
+  public NotificationSendingError() { }
 
   public NotificationSendingError(String id, String topicName, String partitionKey,
-    String payload, String error, Date incidentDateTime) {
+                                  String payload, String error, Date incidentDateTime) {
 
     this.id = id;
     this.topicName = topicName;
@@ -27,28 +27,28 @@ public class NotificationSendingError {
     return topicName;
   }
 
-  public String getPartitionKey() {
-    return partitionKey;
-  }
-
-  public String getPayload() {
-    return payload;
-  }
-
-  public String getError() {
-    return error;
-  }
-
   public void setTopicName(String topicName) {
     this.topicName = topicName;
+  }
+
+  public String getPartitionKey() {
+    return partitionKey;
   }
 
   public void setPartitionKey(String partitionKey) {
     this.partitionKey = partitionKey;
   }
 
+  public String getPayload() {
+    return payload;
+  }
+
   public void setPayload(String payload) {
     this.payload = payload;
+  }
+
+  public String getError() {
+    return error;
   }
 
   public void setError(String error) {

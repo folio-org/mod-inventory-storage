@@ -3,12 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package org.folio.rest.api.entities;
 
-/**
- *
- * @author ne
- */
+
 public class Contributor extends JsonEntity {
   // JSON property names
   public static final String CONTRIBUTOR_NAME_TYPE_ID_KEY = "contributorNameTypeId";
@@ -16,7 +14,7 @@ public class Contributor extends JsonEntity {
   public static final String CONTRIBUTOR_TYPE_ID_KEY = "contributorTypeId";
   public static final String CONTRIBUTOR_TYPE_TEXT_KEY = "contributorTypeText";
 
-  public Contributor() {}
+  public Contributor() { }
 
   public Contributor(String name, String nameTypeId) {
     super.setProperty(NAME_KEY, name);
@@ -24,7 +22,7 @@ public class Contributor extends JsonEntity {
   }
 
   @Override
-  public Contributor put (String key, Object value) {
+  public Contributor put(String key, Object value) {
     setProperty(key, value);
     return this;
   }

@@ -21,7 +21,7 @@ public final class CqlQuery {
     } catch (Exception e) {
       return false;
     }
-    if (! (cqlNode instanceof CQLTermNode)) {
+    if (!(cqlNode instanceof CQLTermNode)) {
       return false;
     }
     var node = (CQLTermNode) cqlNode;
