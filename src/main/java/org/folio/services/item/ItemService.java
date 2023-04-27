@@ -3,7 +3,6 @@ package org.folio.services.item;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.stream.Collectors.toList;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.HoldingsStorageAPI.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageAPI.ITEM_TABLE;
@@ -42,10 +41,8 @@ import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
-import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -61,7 +58,6 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class ItemService {
-  private static final Logger log = getLogger(ItemService.class);
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
       ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
@@ -147,17 +143,7 @@ public class ItemService {
         })
         .onSuccess(finalItem ->
             domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
-        .otherwise(e -> {
-          if (e instanceof ResponseException) {
-            return ((ResponseException) e).getResponse();
-          }
-          if (e instanceof BadRequestException) {
-            return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(e.getMessage());
-          }
-          log.error(e.getMessage(), e);
-          return PutItemStorageItemsByItemIdResponse.respond500WithTextPlain(e.getMessage());
-        });
+        .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204());
   }
 
   public Future<Response> deleteItem(String itemId) {

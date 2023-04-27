@@ -17,6 +17,7 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import org.folio.rest.tools.client.exceptions.ResponseException;
 
 public final class EndpointFailureHandler {
   private static final Logger log = LogManager.getLogger();
@@ -66,6 +67,8 @@ public final class EndpointFailureHandler {
       return failedValidationResponse(errors);
     } else if (PgExceptionUtil.isVersionConflict(error)) {
       return textPlainResponse(409, error);
+    } else if (error instanceof ResponseException) {
+      return ((ResponseException) error).getResponse();
     }
     String message = PgExceptionUtil.badRequestMessage(error);
     if (message != null) {
