@@ -953,7 +953,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
       is(callNumber));
   }
-
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumber()
     throws MalformedURLException, InterruptedException,
@@ -964,6 +963,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
+
+    final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("testCallNumber")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
     JsonObject itemToCreate = new JsonObject();
 
@@ -1010,12 +1016,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("testCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
     holding.put("callNumber", "updatedCallNumber");
 
     Response putResponse = update(holdingsUrl, holding);
@@ -1024,17 +1024,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getString("callNumber"), is("updatedCallNumber"));
 
     Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
 
     JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
+    final JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
 
     assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
     assertThat(
       firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
       is("updatedCallNumber"));
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
     assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
     assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
     assertThat(
       secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),

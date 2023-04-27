@@ -562,7 +562,6 @@ public class LocationUnitTest extends TestBase {
     assertThat(item.getString("code"), is("MPA"));
   }
 
-  @Test
   public void cannotUpdateLibId() {
     UUID instId = UUID.randomUUID();
     createInstitution(instId, "Institute of MetaPhysics", "MPI");

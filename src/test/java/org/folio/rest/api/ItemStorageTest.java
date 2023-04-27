@@ -863,10 +863,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
-      ResponseHandler.text(completed));
+      ResponseHandler.json(completed));
     Response response = completed.get(10, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(500));
+    assertThat(response.getStatusCode(), is(422));
   }
 
   @Test
@@ -879,7 +879,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
     JsonObject item = getById(id).getJson();
     item.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
-    assertThat(update(item).getStatusCode(), is(500));
+    assertThat(update(item).getStatusCode(), is(422));
   }
 
   @Test
