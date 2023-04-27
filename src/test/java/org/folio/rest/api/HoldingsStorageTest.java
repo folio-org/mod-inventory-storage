@@ -953,6 +953,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
       is(callNumber));
   }
+
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumber()
     throws MalformedURLException, InterruptedException,
