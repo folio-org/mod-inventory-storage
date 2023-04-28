@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -132,10 +133,15 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
         .put("source", "MARC")
         .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
 
-    var updateFuture = postgresClient(getContext(), okapiHeaders()).select(
-      "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
-        + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
-        + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;").result();
+    var countDownLatch = new CountDownLatch(1);
+
+    postgresClient(getContext(), okapiHeaders()).execute(
+        "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
+          + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
+          + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;")
+      .onSuccess(event -> countDownLatch.countDown());
+
+    await().atMost(5, SECONDS).until(() -> countDownLatch.getCount() == 0L);
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
       .withMigrations(List.of("subjectSeriesMigration")));
