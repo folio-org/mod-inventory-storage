@@ -22,14 +22,6 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -37,12 +29,15 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.core.Response;
+
 import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -55,11 +50,21 @@ import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+
 public class ItemService {
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
+  private static final String OKAPI_USERID_HEADER = "X-Okapi-User-Id";
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -160,6 +165,7 @@ public class ItemService {
       .compose(oldHoldings -> {
         putData.oldHoldings = oldHoldings;
         effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
+        populateMetadata(newItem);
         return doUpdateItem(newItem);
       })
       .onSuccess(finalItem ->
@@ -216,7 +222,7 @@ public class ItemService {
    * Return items before update.
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
-                                                        HoldingsRecord holdingsRecord) {
+    HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
@@ -308,5 +314,17 @@ public class ItemService {
       oldItem = other.oldItem;
       newHoldings = other.newHoldings;
     }
+  }
+
+  private void populateMetadata(Item item) {
+    var oldMetadata = item.getMetadata();
+    var updatedMetadata = new Metadata()
+      .withCreatedByUserId(oldMetadata.getCreatedByUserId())
+      .withCreatedByUsername(oldMetadata.getCreatedByUsername())
+      .withCreatedDate(oldMetadata.getCreatedDate())
+      .withUpdatedByUsername(okapiHeaders.get(OKAPI_USERID_HEADER))
+      .withUpdatedDate(new Date());
+
+    item.setMetadata(updatedMetadata);
   }
 }
