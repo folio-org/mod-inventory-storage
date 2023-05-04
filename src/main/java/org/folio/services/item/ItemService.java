@@ -22,6 +22,14 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,9 +37,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.ws.rs.core.Response;
-
 import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -49,15 +55,6 @@ import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 
 public class ItemService {
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
@@ -305,17 +302,6 @@ public class ItemService {
       .recover(e -> Future.failedFuture(new ResponseException(putFailure(e))));
   }
 
-  private static class PutData {
-    private Item oldItem;
-    private HoldingsRecord oldHoldings;
-    private HoldingsRecord newHoldings;
-
-    public void set(PutData other) {
-      oldItem = other.oldItem;
-      newHoldings = other.newHoldings;
-    }
-  }
-
   private void populateMetadata(Item item) {
     var oldMetadata = item.getMetadata();
     var updatedMetadata = new Metadata()
@@ -326,5 +312,16 @@ public class ItemService {
       .withUpdatedDate(new Date());
 
     item.setMetadata(updatedMetadata);
+  }
+
+  private static class PutData {
+    private Item oldItem;
+    private HoldingsRecord oldHoldings;
+    private HoldingsRecord newHoldings;
+
+    public void set(PutData other) {
+      oldItem = other.oldItem;
+      newHoldings = other.newHoldings;
+    }
   }
 }
