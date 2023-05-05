@@ -219,7 +219,7 @@ public class ItemService {
    * Return items before update.
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
-    HoldingsRecord holdingsRecord) {
+                                                        HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
