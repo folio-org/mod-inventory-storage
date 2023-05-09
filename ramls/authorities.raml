@@ -55,3 +55,18 @@ resourceTypes:
               exampleAuthority: !include examples/authority.json
               schema: authority
           get:
+        /batch:
+          post:
+            description: "Update authorities by authorities from file"
+            queryParameters:
+              authoritiesFilePath:
+                description: File system path to file with authorities (one json authority per line)
+                type: string
+                required: true
+              batchSize:
+                description: Batch size which is used to write multiple authorities to database at once
+                type: integer
+                required: false
+                default: 100
+                minimum: 10
+                maximum: 2147483647

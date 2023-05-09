@@ -18,7 +18,7 @@
     },
     {
       "id": "authority-storage",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -44,6 +44,10 @@
           "methods": ["DELETE"],
           "pathPattern": "/authority-storage/authorities",
           "permissionsRequired": ["inventory-storage.authorities.collection.delete"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/authorities/batch",
+          "permissionsRequired": []
         }
       ]
     },

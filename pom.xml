@@ -36,6 +36,7 @@
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <raml-module-builder-version>35.0.4</raml-module-builder-version> <!-- also update vertx.version -->
     <vertx.version>4.3.5</vertx.version>
+    <mockito.version>5.3.1</mockito.version>
     <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal*</sonar.exclusions>
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/authority-storage/authorities,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
@@ -156,6 +157,18 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
       <version>4.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
