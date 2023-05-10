@@ -33,6 +33,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import io.vertx.core.json.JsonArray;
@@ -1172,6 +1173,72 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
       is("itemLevelCallNumber"));
+  }
+
+  @Test
+  public void updateHoldingsCallNumberUpdatesItemLevelMetadata()
+    throws InterruptedException, TimeoutException, ExecutionException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+
+    final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("holdingsCallNumber")
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+
+    JsonObject itemToCreate = new JsonObject();
+
+    itemToCreate.put("holdingsRecordId", holdingId.toString());
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    itemToCreate.put("itemLevelCallNumber", "itemLevelCallNumber");
+
+    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postItemResponse.getJson();
+
+    String itemId = itemFromPost.getString("id");
+
+    assertThat(itemId, is(notNullValue()));
+
+    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
+
+    Response getItemResponse = get(getItemUrl);
+
+    JsonObject itemFromGet = getItemResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(itemId));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(
+      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is("itemLevelCallNumber"));
+
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+
+    holding.put("callNumber", "updatedHoldingCallNumber");
+
+    Response putResponse = update(holdingsUrl, holding);
+
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    Response getUpdatedItemResponse = get(getItemUrl);
+
+    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
+
+    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(updatedItemFromGet.getString("id"), is(itemId));
+    assertNotEquals(
+      updatedItemFromGet.getJsonObject("metadata").getString("updatedDate"),
+      itemFromGet.getJsonObject("metadata").getString("updatedDate"));
   }
 
   @Test

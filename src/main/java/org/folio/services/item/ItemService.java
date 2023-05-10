@@ -162,7 +162,6 @@ public class ItemService {
       .compose(oldHoldings -> {
         putData.oldHoldings = oldHoldings;
         effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        populateMetadata(newItem);
         return doUpdateItem(newItem);
       })
       .onSuccess(finalItem ->
@@ -234,7 +233,11 @@ public class ItemService {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
-      .map(item -> effectiveValuesService.populateEffectiveValues(item, holdingsRecord))
+      .map(item -> {
+        effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
+        populateMetadata(item);
+        return item;
+      })
       .map(this::updateSingleItemBatchFactory)
       .collect(toList());
 
