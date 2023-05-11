@@ -39,6 +39,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -61,7 +62,6 @@ public class ItemService {
     ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
-  private static final String OKAPI_USERID_HEADER = "X-Okapi-User-Id";
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -311,7 +311,7 @@ public class ItemService {
       .withCreatedByUserId(oldMetadata.getCreatedByUserId())
       .withCreatedByUsername(oldMetadata.getCreatedByUsername())
       .withCreatedDate(oldMetadata.getCreatedDate())
-      .withUpdatedByUsername(okapiHeaders.get(OKAPI_USERID_HEADER))
+      .withUpdatedByUsername(okapiHeaders.get(XOkapiHeaders.USER_ID))
       .withUpdatedDate(new Date());
 
     item.setMetadata(updatedMetadata);
