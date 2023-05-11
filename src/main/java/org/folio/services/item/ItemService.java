@@ -39,10 +39,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -231,7 +233,11 @@ public class ItemService {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
-      .map(item -> effectiveValuesService.populateEffectiveValues(item, holdingsRecord))
+      .map(item -> {
+        effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
+        populateMetadata(item);
+        return item;
+      })
       .map(this::updateSingleItemBatchFactory)
       .collect(toList());
 
@@ -297,6 +303,18 @@ public class ItemService {
         return Future.succeededFuture(readValue(rowSet.iterator().next().getString(0), Item.class));
       })
       .recover(e -> Future.failedFuture(new ResponseException(putFailure(e))));
+  }
+
+  private void populateMetadata(Item item) {
+    var oldMetadata = item.getMetadata();
+    var updatedMetadata = new Metadata()
+      .withCreatedByUserId(oldMetadata.getCreatedByUserId())
+      .withCreatedByUsername(oldMetadata.getCreatedByUsername())
+      .withCreatedDate(oldMetadata.getCreatedDate())
+      .withUpdatedByUsername(okapiHeaders.get(XOkapiHeaders.USER_ID))
+      .withUpdatedDate(new Date());
+
+    item.setMetadata(updatedMetadata);
   }
 
   private static class PutData {
