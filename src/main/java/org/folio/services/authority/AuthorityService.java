@@ -127,6 +127,7 @@ public class AuthorityService {
             authoritiesFilePath, getSeconds(readTimeMs.get()), getSeconds(parseTimeMs.get()), getSeconds(durationDbMs),
             getSeconds(durationTotal));
           promise.complete();
+          return;
         }
 
         log.warn("Db write failed for file {}: ", authoritiesFilePath, result.cause());
