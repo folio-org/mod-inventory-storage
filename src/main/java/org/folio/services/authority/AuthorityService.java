@@ -136,13 +136,13 @@ public class AuthorityService {
   }
 
   private Integer updateAuthorities(String authoritiesFilePath, Integer currentBatchNumber,
-                                                List<Authority> authorities,
-                                                LinkedList<Future<RowSet<Row>>> updateFutures) {
+                                    List<Authority> authorities,
+                                    LinkedList<Future<RowSet<Row>>> updateFutures) {
 
     var updateFuture = authorityRepository.update(List.copyOf(authorities))
       .onFailure(throwable -> {
         log.warn("Failed to write batch number {} to db for file {} with error ",
-        currentBatchNumber, authoritiesFilePath, throwable);
+          currentBatchNumber, authoritiesFilePath, throwable);
         throw new IllegalStateException("Unable to write authorities batch to db.");
       });
     updateFutures.add(updateFuture);
