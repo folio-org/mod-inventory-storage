@@ -88,7 +88,7 @@ public class AuthorityService {
 
   public Future<Void> saveAuthoritiesToFile(Integer count, Integer version) {
     var fileName = count / 1_000 + "k-" + System.currentTimeMillis() + ".csv";
-    var batchSize = 1;
+    var batchSize = 2_000;
     var batches = count < batchSize ? 1 : count / batchSize;
     log.info("Count: {}, version {}, batches: {}", count, version, batches);
 
