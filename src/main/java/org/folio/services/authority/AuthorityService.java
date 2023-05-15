@@ -38,6 +38,7 @@ import org.folio.rest.jaxrs.resource.AuthorityStorage;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.Criteria.Order;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.services.domainevent.AuthorityDomainEventPublisher;
@@ -95,7 +96,7 @@ public class AuthorityService {
     var futures = Stream.iterate(0, i -> i < batches, i -> ++i)
       .map(i -> {
         log.info("Get auth batch number: {}", i);
-        return getAuthorities(batchSize, version);
+        return getAuthorities(batchSize, batchSize * i, version);
       })
       .map(authFuture -> authFuture.compose(authList -> saveAuthorities(fileName, authList)))
       .collect(Collectors.toList());
@@ -132,11 +133,12 @@ public class AuthorityService {
     return Future.succeededFuture();
   }
 
-  private Future<List<Authority>> getAuthorities(Integer count, Integer version) {
+  private Future<List<Authority>> getAuthorities(Integer count, Integer offset, Integer version) {
     Criterion criterion = new Criterion(new Criteria()
       .setJSONB(true).addField("'_version'").setOperation("=").setArray(false)
       .setVal(String.valueOf(version)))
       .setOrder(new Order("id", Order.ORDER.ASC))
+      .setOffset(new Offset(offset))
       .setLimit(new Limit(count));
 
     return postgresClient.get(AUTHORITY_TABLE, Authority.class, criterion);
