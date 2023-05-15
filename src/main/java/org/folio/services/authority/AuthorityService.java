@@ -207,9 +207,10 @@ public class AuthorityService {
   private Integer updateAuthorities(String authoritiesFilePath, Integer currentBatchNumber,
                                     List<Authority> authorities,
                                     LinkedList<Future<Response>> updateFutures) {
+    var authoritiesToUpdate = new LinkedList<>(authorities);
     var updateFuture =  buildBatchOperationContext(true, authorities, authorityRepository, Authority::getId)
       .compose(batchOperation ->
-        authorityRepository.update(List.copyOf(authorities))
+        authorityRepository.update(authoritiesToUpdate)
           .map(rows -> Response.status(201).build())
           .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation))
       )
