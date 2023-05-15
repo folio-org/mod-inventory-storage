@@ -209,10 +209,16 @@ public class AuthorityService {
                                     LinkedList<Future<Response>> updateFutures) {
     var authoritiesToUpdate = new LinkedList<>(authorities);
     var updateFuture =  buildBatchOperationContext(true, authorities, authorityRepository, Authority::getId)
-      .compose(batchOperation ->
-        authorityRepository.update(authoritiesToUpdate)
-          .map(rows -> Response.status(201).build())
-          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation))
+      .compose(batchOperation -> {
+        log.info("Success retrieving auths for batchContext for file {}", authoritiesFilePath);
+          return authorityRepository.update(authoritiesToUpdate)
+            .map(rows -> {
+              log.info("Success writing {} auth to db for file {}",
+                authoritiesToUpdate.size(), authoritiesFilePath);
+              return Response.status(201).build();
+            })
+            .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation));
+        }
       )
       .onFailure(throwable -> {
         log.warn("Failed to write batch number {} to db for file {} with error ",
