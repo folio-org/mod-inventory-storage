@@ -101,4 +101,13 @@ public class AuthorityRecordsApi implements AuthorityStorage {
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(Response.noContent().build())))
       .onFailure(handleFailure(asyncResultHandler));
   }
+
+  @Override
+  public void postAuthorityStorageAuthoritiesFile(int count, int version, Map<String, String> okapiHeaders,
+                                                  Handler<AsyncResult<Response>> asyncResultHandler,
+                                                  Context vertxContext) {
+    new AuthorityService(vertxContext, okapiHeaders).saveAuthoritiesToFile(count, version)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(Response.noContent().build())))
+      .onFailure(handleFailure(asyncResultHandler));
+  }
 }

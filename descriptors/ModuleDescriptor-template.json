@@ -48,6 +48,10 @@
           "methods": ["POST"],
           "pathPattern": "/authority-storage/authorities/batch",
           "permissionsRequired": []
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/authority-storage/authorities/file",
+          "permissionsRequired": []
         }
       ]
     },

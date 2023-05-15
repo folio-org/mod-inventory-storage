@@ -1,20 +1,23 @@
 package org.folio.services.authority;
 
 import static io.vertx.core.Promise.promise;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.impl.AuthorityRecordsApi.AUTHORITY_TABLE;
 import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
+import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +25,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +35,11 @@ import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.AuthorityRepository;
 import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.resource.AuthorityStorage;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
+import org.folio.rest.persist.Criteria.Limit;
+import org.folio.rest.persist.Criteria.Order;
+import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.services.domainevent.AuthorityDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 
@@ -42,6 +52,7 @@ public class AuthorityService {
   private final AuthorityRepository authorityRepository;
   private final AuthorityDomainEventPublisher domainEventService;
   private final ObjectMapper objectMapper;
+  private final PostgresClientFuturized postgresClient;
 
   public AuthorityService(Context vertxContext,
                           Map<String, String> okapiHeaders) {
@@ -50,6 +61,7 @@ public class AuthorityService {
     domainEventService = new AuthorityDomainEventPublisher(vertxContext, okapiHeaders);
     authorityRepository = new AuthorityRepository(vertxContext, okapiHeaders);
     objectMapper = ObjectMapperTool.getMapper();
+    postgresClient = new PostgresClientFuturized(postgresClient(vertxContext, okapiHeaders));
   }
 
   public Future<Response> createAuthority(Authority entity) {
@@ -74,8 +86,64 @@ public class AuthorityService {
       });
   }
 
+  public Future<Void> saveAuthoritiesToFile(Integer count, Integer version) {
+    var fileName = count / 1_000 + "k-" + System.currentTimeMillis() + ".csv";
+    var batchSize = 1;
+    var batches = count < batchSize ? 1 : count / batchSize;
+    log.info("Count: {}, version {}, batches: {}", count, version, batches);
+
+    var futures = Stream.iterate(0, i -> i < batches, i -> ++i)
+      .map(i -> {
+        log.info("Get auth batch number: {}", i);
+        return getAuthorities(batchSize, version);
+      })
+      .map(authFuture -> authFuture.compose(authList -> saveAuthorities(fileName, authList)))
+      .collect(Collectors.toList());
+
+    var promise = Promise.<Void>promise();
+    GenericCompositeFuture.join(futures)
+      .onComplete(result -> {
+        if (result.succeeded()) {
+          log.info("Success for count {}, version {}, fileName {}", count, version, fileName);
+          promise.complete();
+          return;
+        }
+
+        log.warn("Failed for count {}, version {}, fileName {}", count, version, fileName, result.cause());
+        promise.fail(result.cause());
+      });
+    return promise.future();
+  }
+
+  private Future<Void> saveAuthorities(String fileName, List<Authority> authorities) {
+    try (var writer = new BufferedWriter(new FileWriter(fileName, true))) {
+      authorities.forEach(authority -> {
+        try {
+          writer.write(objectMapper.writeValueAsString(authority) + System.lineSeparator());
+        } catch (IOException e) {
+          throw new IllegalStateException(e);
+        }
+      });
+    } catch (Exception ex) {
+      log.warn("Unable to save to file.", ex);
+      return Future.failedFuture(ex);
+    }
+
+    return Future.succeededFuture();
+  }
+
+  private Future<List<Authority>> getAuthorities(Integer count, Integer version) {
+    Criterion criterion = new Criterion(new Criteria()
+      .setJSONB(true).addField("'_version'").setOperation("=").setArray(false)
+      .setVal(String.valueOf(version)))
+      .setOrder(new Order("id", Order.ORDER.ASC))
+      .setLimit(new Limit(count));
+
+    return postgresClient.get(AUTHORITY_TABLE, Authority.class, criterion);
+  }
+
   public Future<Void> updateAuthorities(String authoritiesFilePath, Integer batchSize) {
-    var updateFutures = new LinkedList<Future<RowSet<Row>>>();
+    var updateFutures = new LinkedList<Future<Response>>();
 
     var wholeStart = System.nanoTime();
     var readTimeMs = new AtomicLong();
@@ -88,7 +156,7 @@ public class AuthorityService {
       var batchCounter = 0;
       var recordCounter = 0;
 
-      while ((line = executeTimed(() -> readLine(reader), readTimeMs)) != null) {
+      while (isNotBlank(line = executeTimed(() -> readLine(reader), readTimeMs))) {
         var finalLine = line;
         var authority = executeTimed(() -> parseAuthority(finalLine), parseTimeMs);
         authorities.add(authority);
@@ -138,9 +206,13 @@ public class AuthorityService {
 
   private Integer updateAuthorities(String authoritiesFilePath, Integer currentBatchNumber,
                                     List<Authority> authorities,
-                                    LinkedList<Future<RowSet<Row>>> updateFutures) {
-
-    var updateFuture = authorityRepository.update(List.copyOf(authorities))
+                                    LinkedList<Future<Response>> updateFutures) {
+    var updateFuture =  buildBatchOperationContext(true, authorities, authorityRepository, Authority::getId)
+      .compose(batchOperation ->
+        authorityRepository.update(List.copyOf(authorities))
+          .map(rows -> Response.status(201).build())
+          .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation))
+      )
       .onFailure(throwable -> {
         log.warn("Failed to write batch number {} to db for file {} with error ",
           currentBatchNumber, authoritiesFilePath, throwable);

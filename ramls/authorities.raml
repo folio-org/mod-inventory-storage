@@ -70,3 +70,16 @@ resourceTypes:
                 default: 100
                 minimum: 10
                 maximum: 2147483647
+        /file:
+          post:
+            description: "Update authorities by authorities from file"
+            queryParameters:
+              count:
+                type: integer
+                required: true
+              version:
+                type: integer
+                required: false
+                default: 1
+                minimum: 1
+                maximum: 2147483647
