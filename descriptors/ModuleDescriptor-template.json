@@ -58,6 +58,11 @@
         },
         {
           "methods": ["GET"],
+          "pathPattern": "/authority-storage/reindex",
+          "permissionsRequired": ["authority-storage.authority.reindex.collection.get"]
+        },
+        {
+          "methods": ["GET"],
           "pathPattern": "/authority-storage/reindex/{id}",
           "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
         },
@@ -1312,6 +1317,11 @@
           "methods": ["POST"],
           "pathPattern": "/instance-storage/reindex",
           "permissionsRequired": ["inventory-storage.instance.reindex.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/reindex",
+          "permissionsRequired": ["inventory-storage.instance.reindex.collection.get"]
         },
         {
           "methods": ["GET"],

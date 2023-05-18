@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of reindex jobs",
+  "type": "object",
+  "properties": {
+    "reindexJobs": {
+      "description": "List of reindex jobs",
+      "id": "reindexJob",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "get-job-by-id-response.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "reindexJobs",
+    "totalRecords"
+  ]
+}

@@ -10,11 +10,18 @@ documentation:
 
 types:
   reindexJob: !include reindex/get-job-by-id-response.json
+  reindexJobs: !include reindex/reindex-jobs.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
   language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection-get.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /instance-storage/reindex:
   displayName: Reindex instances
@@ -31,6 +38,18 @@ traits:
         body:
           text/plain:
             example: Internal server error
+  type:
+    collection:
+      exampleCollection: !include examples/reindexJobs.json
+      exampleItem: !include examples/reindexJob.json
+      schemaCollection: reindexJobs
+      schemaItem: reindexJob
+  get:
+    is: [
+      searchable: { description: "with valid searchable fields", example: "name=aaa" },
+      pageable
+    ]
+    description: Get all reindex jobs
   /{id}:
     get:
       description: Get reindex job by id
