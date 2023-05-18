@@ -2,7 +2,10 @@ package org.folio.services.item;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -185,7 +188,7 @@ public class ItemService {
   }
 
   public Future<Response> deleteItems(String cql) {
-    if (StringUtils.isBlank(cql)) {
+    if (isBlank(cql)) {
       return Future.succeededFuture(
         DeleteItemStorageItemsResponse.respond400WithTextPlain(
           "Expected CQL but query parameter is empty"));
@@ -221,11 +224,29 @@ public class ItemService {
                                                         HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
-      .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
-        // have to make deep clone of the items because the items are stateful
-        // so that domain events will have proper 'old' item state.
-        deepCopy(items, Item.class), holdingsRecord)
-        .map(items));
+      .compose(items -> {
+        Future<List<Item>> map = updateEffectiveCallNumbersAndLocation(connection,
+          // have to make deep clone of the items because the items are stateful
+          // so that domain events will have proper 'old' item state.
+          deepCopy(items, Item.class), holdingsRecord)
+          .map(items);
+
+        if (isItemFieldsAffected(holdingsRecord, items)){
+          items.forEach(item-> {
+            populateMetadata(item);
+            updateSingleItemBatchFactory(item);
+          });
+        }
+        return map;
+      });
+  }
+
+  private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, List<Item> items) {
+    return (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumber())) && isNotBlank(holdingsRecord.getCallNumber()))
+      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberPrefix())) && isNotBlank(holdingsRecord.getCallNumberPrefix()))
+      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberSuffix())) && isNotBlank(holdingsRecord.getCallNumberSuffix()))
+      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberTypeId())) && isNotBlank(holdingsRecord.getCallNumberTypeId()))
+      || (items.stream().allMatch(item -> isNull(item.getPermanentLocationId())) && (items.stream().allMatch(item -> isNull(item.getTemporaryLocationId()))));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
