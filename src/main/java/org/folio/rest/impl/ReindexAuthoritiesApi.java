@@ -35,6 +35,7 @@ public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
   @Validate
   @Override
   public void getAuthorityStorageReindex(String query, int offset, int limit,
+                                         String lang,
                                          Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {

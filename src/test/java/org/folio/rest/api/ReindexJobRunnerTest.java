@@ -127,6 +127,62 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canGetAllAuthoritiesReindexJobs() {
+    var numberOfRecords = 2;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+
+    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == IDS_PUBLISHED);
+
+    var jobs = authorityReindex.getReindexJobs();
+
+    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(numberOfRecords));
+    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(jobs.getTotalRecords(), notNullValue());
+
+    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
+      greaterThanOrEqualTo(numberOfRecords));
+  }
+
+  @Test
+  public void canGetAllInstancesReindexJobs() {
+    var numberOfRecords = 2;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob();
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
+
+    await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
+      .getJobStatus() == IDS_PUBLISHED);
+
+    var jobs = instanceReindex.getReindexJobs();
+
+    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(numberOfRecords));
+    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(jobs.getTotalRecords(), notNullValue());
+
+    instanceMessageChecks.countOfAllPublishedInstancesIs(
+      greaterThanOrEqualTo(numberOfRecords));
+  }
+
+  @Test
   public void canStartAuthoritiesReindex() {
     ReindexJob res = authorityReindex.postReindexJob(reindexJob());
     assertThat(res, notNullValue());
