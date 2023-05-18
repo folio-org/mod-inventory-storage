@@ -41,7 +41,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -224,29 +223,22 @@ public class ItemService {
                                                         HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
-      .compose(items -> {
-        Future<List<Item>> map = updateEffectiveCallNumbersAndLocation(connection,
-          // have to make deep clone of the items because the items are stateful
-          // so that domain events will have proper 'old' item state.
-          deepCopy(items, Item.class), holdingsRecord)
-          .map(items);
-
-        if (isItemFieldsAffected(holdingsRecord, items)){
-          items.forEach(item-> {
-            populateMetadata(item);
-            updateSingleItemBatchFactory(item);
-          });
-        }
-        return map;
-      });
+      .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
+        // have to make deep clone of the items because the items are stateful
+        // so that domain events will have proper 'old' item state.
+        deepCopy(items, Item.class), holdingsRecord)
+        .map(items));
   }
 
-  private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, List<Item> items) {
-    return (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumber())) && isNotBlank(holdingsRecord.getCallNumber()))
-      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberPrefix())) && isNotBlank(holdingsRecord.getCallNumberPrefix()))
-      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberSuffix())) && isNotBlank(holdingsRecord.getCallNumberSuffix()))
-      || (items.stream().allMatch(item -> isBlank(item.getItemLevelCallNumberTypeId())) && isNotBlank(holdingsRecord.getCallNumberTypeId()))
-      || (items.stream().allMatch(item -> isNull(item.getPermanentLocationId())) && (items.stream().allMatch(item -> isNull(item.getTemporaryLocationId()))));
+  private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
+    return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
+      || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
+      || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
+      || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
+      || isNull(item.getPermanentLocationId())
+          && isNull(item.getTemporaryLocationId())
+          && (!isNull(holdingsRecord.getTemporaryLocationId())
+          || !isNull(holdingsRecord.getPermanentLocationId()));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
@@ -256,7 +248,9 @@ public class ItemService {
     final var batchFactories = items.stream()
       .map(item -> {
         effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
-        populateMetadata(item);
+        if (isItemFieldsAffected(holdingsRecord, item)) {
+          populateMetadata(item);
+        }
         return item;
       })
       .map(this::updateSingleItemBatchFactory)
