@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.is;
 
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.rest.jaxrs.model.ReindexJobs;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 
@@ -30,5 +31,12 @@ public final class InstanceReindexFixture {
     return get(client.get(instanceReindex("/" + id), TENANT_ID)
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(ReindexJob.class)));
+  }
+
+  @SneakyThrows
+  public ReindexJobs getReindexJobs() {
+    return get(client.get(instanceReindex(""), TENANT_ID)
+      .thenApply(Response::getJson)
+      .thenApply(json -> json.mapTo(ReindexJobs.class)));
   }
 }
