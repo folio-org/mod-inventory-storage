@@ -1302,7 +1302,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updateHoldingsFieldsNotRelatedToItemShouldNotChangeItemMetadata()
+  public void updateHoldingsFieldsNotRelatedToItemShouldChangeItemMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
 
@@ -1361,7 +1361,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertEquals(
+    assertNotEquals(
       updatedItemFromGet.getJsonObject("metadata").getString("updatedDate"),
       itemFromGet.getJsonObject("metadata").getString("updatedDate"));
   }
