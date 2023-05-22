@@ -2,8 +2,10 @@ package org.folio.services.item;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -218,7 +220,7 @@ public class ItemService {
    * Return items before update.
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
-                                                        HoldingsRecord holdingsRecord) {
+    HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
@@ -228,6 +230,17 @@ public class ItemService {
         .map(items));
   }
 
+  private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
+    return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
+      || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
+      || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
+      || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
+      || isNull(item.getPermanentLocationId())
+      && isNull(item.getTemporaryLocationId())
+      && (!isNull(holdingsRecord.getTemporaryLocationId())
+      || !isNull(holdingsRecord.getPermanentLocationId()));
+  }
+
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
     AsyncResult<SQLConnection> connectionResult, Collection<Item> items, HoldingsRecord holdingsRecord) {
 
@@ -235,7 +248,9 @@ public class ItemService {
     final var batchFactories = items.stream()
       .map(item -> {
         effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
-        populateMetadata(item, holdingsRecord.getMetadata());
+        if (isItemFieldsAffected(holdingsRecord, item)) {
+          populateMetadata(item, holdingsRecord.getMetadata());
+        }
         return item;
       })
       .map(this::updateSingleItemBatchFactory)
