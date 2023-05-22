@@ -220,7 +220,7 @@ public class ItemService {
    * Return items before update.
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
-    HoldingsRecord holdingsRecord) {
+                                                        HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
@@ -236,9 +236,9 @@ public class ItemService {
       || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
       || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
       || isNull(item.getPermanentLocationId())
-      && isNull(item.getTemporaryLocationId())
-      && (!isNull(holdingsRecord.getTemporaryLocationId())
-      || !isNull(holdingsRecord.getPermanentLocationId()));
+          && isNull(item.getTemporaryLocationId())
+          && (!isNull(holdingsRecord.getTemporaryLocationId())
+          || !isNull(holdingsRecord.getPermanentLocationId()));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
