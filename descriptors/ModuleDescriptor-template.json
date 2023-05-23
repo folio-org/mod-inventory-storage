@@ -1496,6 +1496,11 @@
       "description": "submit reindex authority job"
     },
     {
+      "permissionName": "authority-storage.authority.reindex.collection.get",
+      "displayName": "inventory storage - get reindex authority jobs",
+      "description": "get reindex authority jobs"
+    },
+    {
       "permissionName": "inventory-storage.authorities.all",
       "displayName": "inventory storage module - all authorities permissions",
       "description": "Entire set of permissions needed to use authorities in the inventory storage module",
@@ -1507,7 +1512,8 @@
         "inventory-storage.authorities.collection.delete",
         "authority-storage.authority.reindex.post",
         "authority-storage.authority.reindex.item.get",
-        "authority-storage.authority.reindex.item.delete"
+        "authority-storage.authority.reindex.item.delete",
+        "authority-storage.authority.reindex.collection.get"
       ]
     },
     {
@@ -2577,6 +2583,11 @@
       "description": "submit reindex instance job"
     },
     {
+      "permissionName": "inventory-storage.instance.reindex.collection.get",
+      "displayName": "inventory storage - get reindex instance jobs",
+      "description": "get reindex instance jobs"
+    },
+    {
       "permissionName": "inventory-storage.instance.iteration.post",
       "displayName": "inventory storage - submit iteration instance job",
       "description": "submit iteration instance job"
@@ -2658,6 +2669,7 @@
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
         "authority-storage.authority.reindex.post",
+        "authority-storage.authority.reindex.collection.get",
         "authority-storage.authority.reindex.item.get",
         "authority-storage.authority.reindex.item.delete",
         "inventory-storage-dereferenced.items.item.get",
@@ -2887,6 +2899,7 @@
         "inventory-storage.instance.reindex.item.delete",
         "inventory-storage.instance.reindex.item.get",
         "inventory-storage.instance.reindex.post",
+        "inventory-storage.instance.reindex.collection.get",
         "inventory-storage.instance.iteration.post",
         "inventory-storage.instance.iteration.item.get",
         "inventory-storage.instance.iteration.item.delete",
