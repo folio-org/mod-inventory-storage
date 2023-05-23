@@ -249,7 +249,7 @@ public class ItemService {
       .map(item -> {
         effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
         if (isItemFieldsAffected(holdingsRecord, item)) {
-          populateMetadata(item);
+          populateMetadata(item, holdingsRecord.getMetadata());
         }
         return item;
       })
@@ -320,13 +320,14 @@ public class ItemService {
       .recover(e -> Future.failedFuture(new ResponseException(putFailure(e))));
   }
 
-  private void populateMetadata(Item item) {
+  private void populateMetadata(Item item, Metadata metadata) {
     var oldMetadata = item.getMetadata();
     var updatedMetadata = new Metadata()
       .withCreatedByUserId(oldMetadata.getCreatedByUserId())
       .withCreatedByUsername(oldMetadata.getCreatedByUsername())
       .withCreatedDate(oldMetadata.getCreatedDate())
-      .withUpdatedByUsername(okapiHeaders.get(XOkapiHeaders.USER_ID))
+      .withUpdatedByUsername(metadata.getUpdatedByUsername())
+      .withUpdatedByUserId(okapiHeaders.get(XOkapiHeaders.USER_ID))
       .withUpdatedDate(new Date());
 
     item.setMetadata(updatedMetadata);
