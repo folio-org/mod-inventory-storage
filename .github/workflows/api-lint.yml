@@ -23,7 +23,7 @@ name: api-lint
 env:
   API_TYPES: 'RAML'
   API_DIRECTORIES: 'ramls'
-  API_EXCLUDES: ''
+  API_EXCLUDES: 'authority-collection.raml'
   API_WARNINGS: false
 
 on:

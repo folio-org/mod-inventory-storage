@@ -19,7 +19,7 @@ name: api-doc
 env:
   API_TYPES: 'RAML'
   API_DIRECTORIES: 'ramls'
-  API_EXCLUDES: ''
+  API_EXCLUDES: 'authority-collection.raml'
   OUTPUT_DIR: 'folio-api-docs'
   AWS_S3_BUCKET: 'foliodocs'
   AWS_S3_FOLDER: 'api'
