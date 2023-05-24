@@ -2,13 +2,6 @@
 
 buildMvn {
   publishModDescriptor = 'yes'
-
-  doApiDoc = true
-  doApiLint = true
-  apiTypes = 'RAML'
-  apiDirectories = 'ramls'
-  apiExcludes = 'authority-collection.raml'
-
   mvnDeploy = 'yes'
   doKubeDeploy = true
   publishPreview = false
