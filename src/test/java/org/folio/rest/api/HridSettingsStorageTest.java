@@ -462,9 +462,9 @@ public class HridSettingsStorageTest extends TestBase {
     log.info("Starting canRollbackFailedTransaction()");
 
     final HridSettings newHridSettings = new HridSettings()
-      .withInstances(new HridSetting().withStartNumber(999_999_999_999L))
+      .withInstances(new HridSetting().withStartNumber(111L))
       .withHoldings(new HridSetting().withStartNumber(200L))
-      .withItems(new HridSetting().withStartNumber(300L));
+      .withItems(new HridSetting().withStartNumber(999_999_999_999L));
 
     hridManager.getHridSettings()
       .compose(originalHridSettings -> {

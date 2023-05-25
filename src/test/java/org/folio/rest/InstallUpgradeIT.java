@@ -172,6 +172,7 @@ public class InstallUpgradeIT {
     RestAssured.requestSpecification = new RequestSpecBuilder()
       .addHeader("X-Okapi-Url", "http://localhost:8081")
       .addHeader("X-Okapi-Tenant", tenant)
+      .addHeader("X-Okapi-User-Id", "67e1ce93-e358-46ea-aed8-96e2fa73520f")
       .setContentType(ContentType.JSON)
       .build();
   }
@@ -200,6 +201,20 @@ public class InstallUpgradeIT {
       .then()
       .statusCode(200)
       .body("instances.size()", is(36));
+
+    given()
+      .body("{'instances':{'startNumber':9}, 'holdings':{'startNumber':7}, 'items':{'startNumber':5}}"
+          .replace('\'', '"'))
+      .when()
+      .put("/hrid-settings-storage/hrid-settings")
+      .then()
+      .statusCode(204);
+
+    when()
+      .get("/hrid-settings-storage/hrid-settings")
+      .then()
+      .statusCode(200)
+      .body("holdings.currentNumber", is(6));
   }
 
 }
