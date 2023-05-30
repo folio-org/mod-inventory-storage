@@ -9,7 +9,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   AUTHORITY("authority"),
   INSTANCE_CONTRIBUTION("instance-contribution"),
   BOUND_WITH("bound-with"),
-  ASYNC_MIGRATION("async-migration");
+  ASYNC_MIGRATION("async-migration"),
+  SERVICE_POINT("service-point");
 
   private final String topic;
 

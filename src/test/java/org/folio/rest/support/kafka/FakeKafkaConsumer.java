@@ -20,12 +20,14 @@ public final class FakeKafkaConsumer {
   static final String ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
   static final String AUTHORITY_TOPIC_NAME = "folio.test_tenant.inventory.authority";
   static final String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
+  static final String SERVICE_POINT_TOPIC_NAME = "folio.test_tenant.inventory.service-point";
 
   private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedItemMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedAuthorityMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedServicePointMessages = new GroupedCollectedMessages();
 
   private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
 
@@ -57,6 +59,7 @@ public final class FakeKafkaConsumer {
     collectedItemMessages.empty();
     collectedAuthorityMessages.empty();
     collectedBoundWithMessages.empty();
+    collectedServicePointMessages.empty();
   }
 
   public int getAllPublishedAuthoritiesCount() {
@@ -94,10 +97,14 @@ public final class FakeKafkaConsumer {
     return collectedBoundWithMessages.messagesByGroupKey(instanceId);
   }
 
+  public Collection<EventMessage> getMessagesForServicePoint(String servicePointId) {
+    return collectedServicePointMessages.messagesByGroupKey(servicePointId);
+  }
+
   private VertxMessageCollectingTopicConsumer createConsumer() {
     return new VertxMessageCollectingTopicConsumer(
       Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
-        AUTHORITY_TOPIC_NAME, BOUND_WITH_TOPIC_NAME),
+        AUTHORITY_TOPIC_NAME, BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME),
       new AggregateMessageCollector(
         filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
           KafkaConsumerRecord::key, collectedInstanceMessages),
@@ -108,7 +115,9 @@ public final class FakeKafkaConsumer {
         filteredAndGroupedCollector(AUTHORITY_TOPIC_NAME,
           KafkaConsumerRecord::key, collectedAuthorityMessages),
         filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedBoundWithMessages)));
+          KafkaConsumerRecord::key, collectedBoundWithMessages),
+        filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
+          KafkaConsumerRecord::key, collectedServicePointMessages)));
   }
 
   @NotNull
