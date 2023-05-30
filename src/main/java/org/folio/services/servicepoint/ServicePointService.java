@@ -9,11 +9,14 @@ import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.services.domainevent.ServicePointDomainEventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServicePointService {
 
   private final ServicePointRepository servicePointRepository;
   private final ServicePointDomainEventPublisher servicePointDomainEventPublisher;
+  private static final Logger log = LoggerFactory.getLogger(ServicePointService.class);
 
   public ServicePointService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.servicePointRepository = new ServicePointRepository(vertxContext, okapiHeaders);
@@ -21,18 +24,22 @@ public class ServicePointService {
   }
 
   public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
+    log.debug("updateServicePoint:: parameters servicePointId: {}, entity: {}", servicePointId,
+      entity.getName());
     entity.setId(servicePointId);
 
     return servicePointRepository.getById(servicePointId)
       .compose(servicePoint -> {
         if (servicePoint != null) {
+          log.info("updateServicePoint:: servicePoint is found");
           return servicePointRepository.update(servicePointId, entity)
             .map(rowSet -> servicePoint);
         }
+        log.warn("updateServicePoint:: servicePoint was not found");
         return Future.failedFuture(new NotFoundException("ServicePoint was not found"));
       })
       .onSuccess(oldServicePoint -> servicePointDomainEventPublisher
         .publishUpdated(oldServicePoint, entity))
-      .<Response>map(x -> ItemStorage.PutItemStorageItemsByItemIdResponse.respond204());
+      .map(x -> ItemStorage.PutItemStorageItemsByItemIdResponse.respond204());
   }
 }
