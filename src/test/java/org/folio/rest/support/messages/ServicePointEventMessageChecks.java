@@ -4,10 +4,9 @@ import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
-
-import io.vertx.core.json.JsonObject;
 
 public class ServicePointEventMessageChecks {
 

@@ -1,10 +1,12 @@
 package org.folio.rest.impl;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.ws.rs.core.Response;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -17,11 +19,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.domainevent.ServicePointDomainEventPublisher;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 
 public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoints {
   public static final String SERVICE_POINT_TABLE = "service_point";
