@@ -192,7 +192,7 @@ public class ServicePointTest extends TestBase {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod()).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
@@ -369,7 +369,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
       false, null).getJson();
     JsonObject request = new JsonObject()
@@ -405,7 +405,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
       false, null).getJson();
     JsonObject request = new JsonObject()
@@ -445,7 +445,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
       false, null).getJson();
     JsonObject request = new JsonObject()
@@ -475,7 +475,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod())
       .getJson();
     JsonObject request = new JsonObject()
@@ -504,7 +504,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 102", "cd102",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 102", "cd102",
       "Circulation Desk -- Hallway", null, 20, false, null).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
@@ -533,7 +533,7 @@ public class ServicePointTest extends TestBase {
 
     UUID id = UUID.randomUUID();
     HoldShelfExpiryPeriod defaultHoldShelfExpiryPeriod = createHoldShelfExpiryPeriod();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, defaultHoldShelfExpiryPeriod).getJson();
 
     JsonObject request = new JsonObject()
@@ -564,7 +564,7 @@ public class ServicePointTest extends TestBase {
 
     UUID id = UUID.randomUUID();
     HoldShelfExpiryPeriod defaultHoldShelfExpiryPeriod = createHoldShelfExpiryPeriod();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, false, null).getJson();
 
     JsonObject request = new JsonObject()
@@ -594,7 +594,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
       true, createHoldShelfExpiryPeriod()).getJson();
     JsonObject request = new JsonObject()
@@ -630,7 +630,7 @@ public class ServicePointTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
       true, createHoldShelfExpiryPeriod()).getJson();
 
@@ -707,7 +707,7 @@ public class ServicePointTest extends TestBase {
     String staffSlipId = UUID.randomUUID().toString();
     List<StaffSlip> staffSlips = new ArrayList<>(2);
     staffSlips.add(new StaffSlip().withId(staffSlipId).withPrintByDefault(Boolean.TRUE));
-    JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips)
       .getJson();
     JsonObject request = new JsonObject()
