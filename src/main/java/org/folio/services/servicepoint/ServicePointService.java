@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 
 public class ServicePointService {
 
+  private static final Logger log = LoggerFactory.getLogger(ServicePointService.class);
   private final ServicePointRepository servicePointRepository;
   private final ServicePointDomainEventPublisher servicePointDomainEventPublisher;
-  private static final Logger log = LoggerFactory.getLogger(ServicePointService.class);
 
   public ServicePointService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.servicePointRepository = new ServicePointRepository(vertxContext, okapiHeaders);
