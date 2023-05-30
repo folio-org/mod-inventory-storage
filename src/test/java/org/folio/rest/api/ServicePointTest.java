@@ -643,7 +643,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
