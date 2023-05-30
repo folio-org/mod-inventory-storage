@@ -1,9 +1,9 @@
 package org.folio.services.servicepoint;
 
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import java.util.Map;
+
 import javax.ws.rs.core.Response;
+
 import org.folio.persist.ServicePointRepository;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -11,6 +11,9 @@ import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.services.domainevent.ServicePointDomainEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 
 public class ServicePointService {
 
@@ -24,8 +27,8 @@ public class ServicePointService {
   }
 
   public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
-    log.debug("updateServicePoint:: parameters servicePointId: {}, entity: {}", servicePointId,
-      entity.getName());
+    log.debug("updateServicePoint:: parameters servicePointId: {}, entity: " +
+        "Servicepoint(id={}, name={})", servicePointId, entity.getId(), entity.getName());
     entity.setId(servicePointId);
 
     return servicePointRepository.getById(servicePointId)
