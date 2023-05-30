@@ -1,12 +1,10 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.ws.rs.core.Response;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -18,6 +16,12 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.services.domainevent.ServicePointDomainEventPublisher;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
 public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoints {
   public static final String SERVICE_POINT_TABLE = "service_point";
@@ -127,13 +131,12 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void putServicePointsByServicepointId(String servicepointId,
-                                               String lang, Servicepoint entity, Map<String, String> okapiHeaders,
-                                               Handler<AsyncResult<Response>> asyncResultHandler,
-                                               Context vertxContext) {
+  public void putServicePointsByServicepointId(String servicepointId, String lang,
+    Servicepoint entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     vertxContext.runOnContext(v -> {
       try {
-
         String validateSvcptResult = validateServicePoint(entity);
         if (validateSvcptResult != null) {
           asyncResultHandler.handle(Future.succeededFuture(
@@ -143,9 +146,36 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
           return;
         }
 
-        PgUtil.put(SERVICE_POINT_TABLE, entity, servicepointId, okapiHeaders, vertxContext,
-          PutServicePointsByServicepointIdResponse.class, asyncResultHandler);
-
+        PgUtil.getById(SERVICE_POINT_TABLE, Servicepoint.class, servicepointId, okapiHeaders,
+          vertxContext, GetServicePointsByServicepointIdResponse.class)
+          .onComplete(result -> {
+            if (result.failed()) {
+              asyncResultHandler.handle(Future.failedFuture(result.cause()));
+              return;
+            }
+            Response response = result.result();
+            if (response.getStatus() != 200) {
+              asyncResultHandler.handle(Future.succeededFuture(response));
+              return;
+            }
+            Servicepoint oldServicePoint = (Servicepoint) response.getEntity();
+            PgUtil.put(SERVICE_POINT_TABLE, entity, servicepointId, okapiHeaders, vertxContext,
+              PutServicePointsByServicepointIdResponse.class)
+              .onComplete(updateResult -> {
+                if (updateResult.failed()) {
+                  asyncResultHandler.handle(Future.failedFuture(updateResult.cause()));
+                  return;
+                }
+                if (updateResult.result().getStatus() == 204) {
+                  new ServicePointDomainEventPublisher(vertxContext, okapiHeaders)
+                    .publishUpdated(oldServicePoint, entity);
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    PutServicePointsByServicepointIdResponse.respond204()));
+                } else {
+                  asyncResultHandler.handle(Future.succeededFuture(response));
+                }
+              });
+          });
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
