@@ -24,8 +24,8 @@ public class ServicePointService {
   }
 
   public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
-    log.debug("updateServicePoint:: parameters servicePointId: {}, entity: " +
-        "Servicepoint(id={}, name={})", servicePointId, entity.getId(), entity.getName());
+    log.debug("updateServicePoint:: parameters servicePointId: {}, entity: "
+      + "Servicepoint(id={}, name={})", servicePointId, entity.getId(), entity.getName());
     entity.setId(servicePointId);
 
     return servicePointRepository.getById(servicePointId)
