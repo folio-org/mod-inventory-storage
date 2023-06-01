@@ -45,8 +45,8 @@ public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
     var searchQuery = Objects.isNull(query) ? AUTHORITY_REINDEX_JOBS_QUERY :
       AUTHORITY_REINDEX_JOBS_QUERY + " and " + query;
 
-      get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
-        searchQuery, offset, limit, okapiHeaders, vertxContext,
+    get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
+      searchQuery, offset, limit, okapiHeaders, vertxContext,
       GetAuthorityStorageReindexResponse.class, asyncResultHandler);
 
   }
