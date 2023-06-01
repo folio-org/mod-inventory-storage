@@ -9,6 +9,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.Map;
+import java.util.Objects;
 import javax.ws.rs.core.Response;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.annotations.Validate;
@@ -38,8 +39,12 @@ public class ReindexInstanceApi implements InstanceStorageReindex {
                                         Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
+
+    var searchQuery = Objects.isNull(query) ? INSTANCE_REINDEX_JOBS_QUERY :
+      INSTANCE_REINDEX_JOBS_QUERY + " and " + query;
+
     get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
-      INSTANCE_REINDEX_JOBS_QUERY, offset, limit, okapiHeaders, vertxContext,
+      searchQuery, offset, limit, okapiHeaders, vertxContext,
       GetInstanceStorageReindexResponse.class, asyncResultHandler);
   }
 

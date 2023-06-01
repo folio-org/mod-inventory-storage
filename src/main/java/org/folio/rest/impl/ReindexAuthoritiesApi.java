@@ -9,6 +9,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.Map;
+import java.util.Objects;
 import javax.ws.rs.core.Response;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.annotations.Validate;
@@ -41,8 +42,11 @@ public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {
 
-    get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
-      AUTHORITY_REINDEX_JOBS_QUERY, offset, limit, okapiHeaders, vertxContext,
+    var searchQuery = Objects.isNull(query) ? AUTHORITY_REINDEX_JOBS_QUERY :
+      AUTHORITY_REINDEX_JOBS_QUERY + " and " + query;
+
+      get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
+        searchQuery, offset, limit, okapiHeaders, vertxContext,
       GetAuthorityStorageReindexResponse.class, asyncResultHandler);
 
   }
