@@ -2,7 +2,6 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import io.vertx.sqlclient.Row;
@@ -34,11 +33,9 @@ public class HridManager {
   private static final String HRID_ITEMS_SEQUENCE_NAME = "hrid_items_seq";
   private static final String HRID_HOLDINGS_SEQUENCE_NAME = "hrid_holdings_seq";
 
-  private final Context context;
   private final PostgresClient postgresClient;
 
-  public HridManager(Context context, PostgresClient postgresClient) {
-    this.context = Objects.requireNonNull(context, "Context cannot be null");
+  public HridManager(PostgresClient postgresClient) {
     this.postgresClient = Objects.requireNonNull(postgresClient, "PostgresClient cannot be null");
   }
 

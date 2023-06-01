@@ -57,7 +57,7 @@ public class HoldingsService {
 
     itemService = new ItemService(context, okapiHeaders);
     postgresClient = postgresClient(context, okapiHeaders);
-    hridManager = new HridManager(context, postgresClient);
+    hridManager = new HridManager(postgresClient);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);

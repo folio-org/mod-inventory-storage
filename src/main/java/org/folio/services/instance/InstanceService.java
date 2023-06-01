@@ -51,7 +51,7 @@ public class InstanceService {
     this.okapiHeaders = okapiHeaders;
 
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    hridManager = new HridManager(vertxContext, postgresClient);
+    hridManager = new HridManager(postgresClient);
     domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
     instanceRepository = new InstanceInternalRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);

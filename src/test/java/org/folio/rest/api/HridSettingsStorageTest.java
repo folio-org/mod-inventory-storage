@@ -5,7 +5,6 @@ import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.utility.ModuleUtility.getClient;
-import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -69,9 +68,8 @@ public class HridSettingsStorageTest extends TestBase {
   public void beforeEach(TestContext testContext) {
     log.info("Initializing values");
     final Async async = testContext.async();
-    vertx = getVertx();
     postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    hridManager = new HridManager(vertx.getOrCreateContext(), postgresClient);
+    hridManager = new HridManager(postgresClient);
     hridManager.updateHridSettings(initialHridSettings).onComplete(hridSettings -> {
       // We need to do this in cases where tests do not update the start number. In this
       // case, calling updateHridSettings will not update the sequences since the start number

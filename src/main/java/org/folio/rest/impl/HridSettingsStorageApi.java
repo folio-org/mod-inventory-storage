@@ -28,7 +28,7 @@ public class HridSettingsStorageApi implements HridSettingsStorage {
         try {
           final PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
             TenantTool.tenantId(okapiHeaders));
-          final HridManager hridManager = new HridManager(vertxContext, postgresClient);
+          final HridManager hridManager = new HridManager(postgresClient);
           hridManager.getHridSettings()
             .map(hridSettings -> successGet(asyncResultHandler, hridSettings))
             .otherwise(error -> internalErrorGet(asyncResultHandler, error));
@@ -52,7 +52,7 @@ public class HridSettingsStorageApi implements HridSettingsStorage {
         try {
           final PostgresClient postgresClient = PostgresClient.getInstance(
             vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-          final HridManager hridManager = new HridManager(vertxContext, postgresClient);
+          final HridManager hridManager = new HridManager(postgresClient);
           hridManager.updateHridSettings(hridSettings)
             .map(success -> successPut(asyncResultHandler))
             .otherwise(error -> internalErrorPut(asyncResultHandler, error));
