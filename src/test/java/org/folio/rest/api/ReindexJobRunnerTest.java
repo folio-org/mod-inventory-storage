@@ -174,7 +174,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     var jobs = instanceReindex.getReindexJobs();
 
-    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(numberOfRecords));
+    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(0));
     assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
     assertThat(jobs.getTotalRecords(), notNullValue());
 
@@ -185,6 +185,14 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   @Test
   public void canStartAuthoritiesReindex() {
     ReindexJob res = authorityReindex.postReindexJob(
+      reindexJob(ReindexJob.ResourceName.INSTANCE));
+    assertThat(res, notNullValue());
+    assertThat(res.getId(), notNullValue());
+  }
+
+  @Test
+  public void canStartInstanceReindex() {
+    ReindexJob res = instanceReindex.postReindexJob(
       reindexJob(ReindexJob.ResourceName.INSTANCE));
     assertThat(res, notNullValue());
     assertThat(res.getId(), notNullValue());
@@ -238,6 +246,31 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+  }
+
+  @Test
+  public void canReindexAuthorities1() {
+    var numberOfRecords = 2;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob(ReindexJob.ResourceName.UNKNOWN);
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+
+    var job = authorityReindex.getReindexJob(reindexJob.getId());
+
+    assertThat(job.getPublished(), is(numberOfRecords));
+    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(job.getSubmittedDate(), notNullValue());
+
+    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
+      greaterThanOrEqualTo(numberOfRecords));
   }
 
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {

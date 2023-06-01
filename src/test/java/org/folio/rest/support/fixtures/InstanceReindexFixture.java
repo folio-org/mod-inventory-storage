@@ -34,8 +34,15 @@ public final class InstanceReindexFixture {
   }
 
   @SneakyThrows
+  public ReindexJob postReindexJob(ReindexJob job) {
+    return get(client.post(instanceReindex(""), job, TENANT_ID)
+      .thenApply(Response::getJson)
+      .thenApply(json -> json.mapTo(ReindexJob.class)));
+  }
+
+  @SneakyThrows
   public ReindexJobs getReindexJobs() {
-    return get(client.get(instanceReindex(""), TENANT_ID)
+    return get(client.get(instanceReindex("?query=published>=0"), TENANT_ID)
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(ReindexJobs.class)));
   }
