@@ -35,7 +35,6 @@ import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
-import org.folio.services.reindex.ReindexResourceName;
 import org.junit.Test;
 
 public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
@@ -52,9 +51,10 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final InstanceEventMessageChecks instanceMessageChecks
     = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
-  private static ReindexJob reindexJob() {
+  private static ReindexJob reindexJob(ReindexJob.ResourceName reindexResourceName) {
     return new ReindexJob()
       .withJobStatus(IN_PROGRESS)
+      .withResourceName(reindexResourceName)
       .withId(UUID.randomUUID().toString())
       .withSubmittedDate(new Date());
   }
@@ -71,7 +71,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canReindexInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -80,7 +80,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -102,7 +102,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canReindexAuthorities() {
     var numberOfRecords = 500;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -111,7 +111,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -130,7 +130,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canGetAllAuthoritiesReindexJobs() {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -139,15 +139,15 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
 
     var jobs = authorityReindex.getReindexJobs();
 
-    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(numberOfRecords));
-    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
+    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(1000));
+    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(jobs.getTotalRecords(), notNullValue());
 
     authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
@@ -158,7 +158,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canGetAllInstancesReindexJobs() {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -167,7 +167,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -184,7 +184,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canStartAuthoritiesReindex() {
-    ReindexJob res = authorityReindex.postReindexJob(reindexJob());
+    ReindexJob res = authorityReindex.postReindexJob(
+      reindexJob(ReindexJob.ResourceName.INSTANCE));
     assertThat(res, notNullValue());
     assertThat(res.getId(), notNullValue());
   }
@@ -192,7 +193,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCancelAuthoritiesReindex() {
     var rowStream = new TestRowStream(10_000_000);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -201,7 +202,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.AUTHORITY);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     authorityReindex.cancelReindexJob(reindexJob.getId());
 
@@ -217,7 +218,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
-    var reindexJob = reindexJob();
+    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -226,7 +227,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob, ReindexResourceName.INSTANCE);
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
 
     instanceReindex.cancelReindexJob(reindexJob.getId());
 

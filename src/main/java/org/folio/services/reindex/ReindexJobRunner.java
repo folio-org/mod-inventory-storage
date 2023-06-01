@@ -79,10 +79,10 @@ public class ReindexJobRunner {
     }
   }
 
-  public void startReindex(ReindexJob reindexJob, ReindexResourceName reindexResourceName) {
+  public void startReindex(ReindexJob reindexJob) {
     workerExecutor.executeBlocking(
         promise -> {
-          switch (reindexResourceName) {
+          switch (reindexJob.getResourceName()) {
             case AUTHORITY:
               streamAuthorities(new ReindexContext(reindexJob))
                 .map(notUsed -> null)
@@ -95,7 +95,8 @@ public class ReindexJobRunner {
               break;
             default:
               throw new UnsupportedOperationException(
-                "Unknown resource name. Reindex job was not started for: " + reindexResourceName.name());
+                "Unknown resource name. Reindex job was not started for: "
+                  + reindexJob.getResourceName().name());
           }
         })
       .map(notUsed -> null);

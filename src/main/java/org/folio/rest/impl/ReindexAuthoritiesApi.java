@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.persist.ReindexJobRepository.AUTHORITY_REINDEX_JOBS_QUERY;
 import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.getById;
 
@@ -14,7 +15,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.jaxrs.model.ReindexJobs;
 import org.folio.rest.jaxrs.resource.AuthorityStorageReindex;
-import org.folio.services.reindex.ReindexResourceName;
 import org.folio.services.reindex.ReindexService;
 
 public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
@@ -25,7 +25,8 @@ public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
 
-    new ReindexService(vertxContext, okapiHeaders).submitReindex(ReindexResourceName.AUTHORITY)
+    new ReindexService(vertxContext, okapiHeaders).submitReindex(
+        ReindexJob.ResourceName.AUTHORITY)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         PostAuthorityStorageReindexResponse.respond200WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
@@ -41,7 +42,7 @@ public class ReindexAuthoritiesApi implements AuthorityStorageReindex {
                                          Context vertxContext) {
 
     get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
-      query, offset, limit, okapiHeaders, vertxContext,
+      AUTHORITY_REINDEX_JOBS_QUERY, offset, limit, okapiHeaders, vertxContext,
       GetAuthorityStorageReindexResponse.class, asyncResultHandler);
 
   }

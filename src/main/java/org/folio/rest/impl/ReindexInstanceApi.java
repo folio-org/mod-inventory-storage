@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.persist.ReindexJobRepository.INSTANCE_REINDEX_JOBS_QUERY;
 import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.getById;
 
@@ -14,7 +15,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.jaxrs.model.ReindexJobs;
 import org.folio.rest.jaxrs.resource.InstanceStorageReindex;
-import org.folio.services.reindex.ReindexResourceName;
 import org.folio.services.reindex.ReindexService;
 
 public class ReindexInstanceApi implements InstanceStorageReindex {
@@ -23,7 +23,8 @@ public class ReindexInstanceApi implements InstanceStorageReindex {
   public void postInstanceStorageReindex(Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    new ReindexService(vertxContext, okapiHeaders).submitReindex(ReindexResourceName.INSTANCE)
+    new ReindexService(vertxContext, okapiHeaders).submitReindex(
+        ReindexJob.ResourceName.INSTANCE)
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         PostInstanceStorageReindexResponse.respond200WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
@@ -38,7 +39,7 @@ public class ReindexInstanceApi implements InstanceStorageReindex {
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
     get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
-      query, offset, limit, okapiHeaders, vertxContext,
+      INSTANCE_REINDEX_JOBS_QUERY, offset, limit, okapiHeaders, vertxContext,
       GetInstanceStorageReindexResponse.class, asyncResultHandler);
   }
 
