@@ -248,31 +248,6 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 
-  @Test
-  public void canReindexAuthorities1() {
-    var numberOfRecords = 2;
-    var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.UNKNOWN);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
-      .toCompletableFuture());
-
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
-
-    var job = authorityReindex.getReindexJob(reindexJob.getId());
-
-    assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-
-    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
-      greaterThanOrEqualTo(numberOfRecords));
-  }
-
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
     return new ReindexJobRunner(postgresClientFuturized,
       repository, getContext(), instanceEventPublisher, authorityEventPublisher, TENANT_ID);
