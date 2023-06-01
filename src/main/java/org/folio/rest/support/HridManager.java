@@ -2,10 +2,8 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.json.Json;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -27,7 +25,6 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
 
 public class HridManager {
   private static final String HRID_SETTINGS_TABLE = "hrid_settings";
@@ -159,41 +156,6 @@ public class HridManager {
 
   private String getHridFormatter(HridSettings hridSettings) {
     return Boolean.TRUE.equals(hridSettings.getCommonRetainLeadingZeroes()) ? "%s%011d" : "%s%d";
-  }
-
-  private Void endTransaction(AsyncResult<SQLConnection> conn, Promise<Void> promise) {
-    try {
-      postgresClient.endTx(conn, promise);
-    } catch (Exception e) {
-      fail(promise, "Failed ending the database transaction", e);
-    }
-
-    return null;
-  }
-
-  private Void rollback(AsyncResult<SQLConnection> conn, Promise<Void> promise,
-                        Throwable error) {
-    log.error("Error updating HRID settings, rolling back transaction", error);
-
-    try {
-      postgresClient.rollbackTx(conn, rollback -> {
-        if (rollback.failed()) {
-          log.error("Rollback failed", rollback.cause());
-        } else {
-          log.error("Rollback completed");
-        }
-        promise.fail(error);
-      });
-    } catch (Exception e) {
-      fail(promise, "Failed rolling back the transaction", e);
-    }
-
-    return null;
-  }
-
-  private <T> void fail(Promise<T> promise, String message, Throwable t) {
-    log.error(message, t);
-    promise.fail(t);
   }
 
   private enum InventoryType implements Inventory<HridSettings> {
