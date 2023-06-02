@@ -27,12 +27,13 @@ public final class ReindexService {
     this.jobRunner = runner;
   }
 
-  public Future<ReindexJob> submitReindex(ReindexResourceName reindexResourceName) {
-    var reindexResponse = buildInitialJob();
+  public Future<ReindexJob> submitReindex(
+    ReindexJob.ResourceName reindexResourceName) {
+    var reindexResponse = buildInitialJob(reindexResourceName);
 
     return reindexJobRepository.save(reindexResponse.getId(), reindexResponse)
       .map(notUsed -> {
-        jobRunner.startReindex(reindexResponse, reindexResourceName);
+        jobRunner.startReindex(reindexResponse);
 
         return reindexResponse;
       });
@@ -51,9 +52,10 @@ public final class ReindexService {
       });
   }
 
-  private ReindexJob buildInitialJob() {
+  private ReindexJob buildInitialJob(ReindexJob.ResourceName reindexResourceName) {
     return new ReindexJob()
       .withJobStatus(IN_PROGRESS)
+      .withResourceName(reindexResourceName)
       .withPublished(0)
       .withSubmittedDate(new Date())
       .withId(randomUUID().toString());
