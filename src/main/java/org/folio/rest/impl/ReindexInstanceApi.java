@@ -41,7 +41,7 @@ public class ReindexInstanceApi implements InstanceStorageReindex {
                                         Context vertxContext) {
 
     var searchQuery = Objects.isNull(query) ? INSTANCE_REINDEX_JOBS_QUERY :
-      INSTANCE_REINDEX_JOBS_QUERY + " and " + query;
+      INSTANCE_REINDEX_JOBS_QUERY + " and (" + query + ")";
 
     get(ReindexJobRepository.TABLE_NAME, ReindexJob.class, ReindexJobs.class,
       searchQuery, offset, limit, okapiHeaders, vertxContext,
