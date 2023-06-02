@@ -41,8 +41,8 @@ public final class AuthorityReindexFixture {
   }
 
   @SneakyThrows
-  public ReindexJobs getReindexJobs() {
-    return get(client.get(authorityReindexUrl("?query=published>=0"), TENANT_ID)
+  public ReindexJobs getReindexJobs(String query) {
+    return get(client.get(authorityReindexUrl(query), TENANT_ID)
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(ReindexJobs.class)));
   }

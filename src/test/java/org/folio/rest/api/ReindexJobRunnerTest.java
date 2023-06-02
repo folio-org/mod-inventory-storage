@@ -144,7 +144,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
 
-    var jobs = authorityReindex.getReindexJobs();
+    var jobs = authorityReindex.getReindexJobs("?query=published>=0");
 
     assertThat(jobs.getReindexJobs().get(0).getPublished(), is(1000));
     assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(ID_PUBLISHING_CANCELLED));
@@ -246,6 +246,26 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+  }
+
+  @Test
+  public void canNotReindexUnknown() {
+    var numberOfRecords = 2;
+    var rowStream = new TestRowStream(numberOfRecords);
+    var reindexJob = reindexJob(ReindexJob.ResourceName.UNKNOWN);
+    var postgresClientFuturized = spy(getPostgresClientFuturized());
+
+    doReturn(succeededFuture(rowStream))
+      .when(postgresClientFuturized).selectStream(any(), anyString());
+
+    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
+      .toCompletableFuture());
+
+    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+
+    var job = authorityReindex.getReindexJobs("");
+
+    assertThat(job.getReindexJobs().size(), is(0));
   }
 
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
