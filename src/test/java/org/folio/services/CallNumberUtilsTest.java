@@ -3,19 +3,16 @@ package org.folio.services;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import junit.framework.TestCase;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-@RunWith(JUnitParamsRunner.class)
-public class CallNumberUtilsTest extends TestCase {
+public class CallNumberUtilsTest {
 
-  @Parameters({
+  @ParameterizedTest
+  @CsvSource({
     "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
     "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
     "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
@@ -47,10 +44,11 @@ public class CallNumberUtilsTest extends TestCase {
     "19 A2 C 6444218 MUSIC CD,,,9A2 C0444218 Music CD,,,,,",
     "GROUP Smith,,,GROUP Smith,,,,,",
     "free-text,,,free-text,,,,,",
-    "RR 3718,,,RR 718,,,,,"
+    "RR 3718,,,RR 718,,,,,",
+    "QS 211 G A1 E53 42005 42005,QS11 .GA1 E53 2005,,QS 11 .GA1 E53 2005,,,2005,,",
+    "WB 3102.5 B62 42018 42018,WB102.5 .B62 2018,,WB 102.5 B62 2018,,,2018,,"
   })
-  @Test
-  public void inputForShelvingNumber(
+  void inputForShelvingNumber(
     String desiredShelvingOrder,
     String initiallyDesiredShelvesOrder,
     String prefix,
