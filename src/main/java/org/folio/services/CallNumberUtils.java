@@ -4,6 +4,7 @@ import java.util.Optional;
 import org.marc4j.callnum.CallNumber;
 import org.marc4j.callnum.DeweyCallNumber;
 import org.marc4j.callnum.LCCallNumber;
+import org.marc4j.callnum.NlmCallNumber;
 
 public final class CallNumberUtils {
 
@@ -11,7 +12,8 @@ public final class CallNumberUtils {
 
   public static Optional<String> getShelfKeyFromCallNumber(String callNumber) {
     return Optional.ofNullable(callNumber)
-      .flatMap(cn -> getValidShelfKey(new LCCallNumber(cn))
+      .flatMap(cn -> getValidShelfKey(new NlmCallNumber(cn))
+        .or(() -> getValidShelfKey(new LCCallNumber(cn)))
         .or(() -> getValidShelfKey(new DeweyCallNumber(cn))))
       .or(() -> Optional.ofNullable(callNumber))
       .map(String::trim);
