@@ -1,6 +1,7 @@
 ## 26.0.0 IN-PROGRESS
-* New PUT API where a single item ID and a list of holdings IDs can be created (MODINVSTOR-1022)
+* New PUT API where a single item ID and a list of holdings IDs can be created ([MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022))
 * Extend subjects, alternativeTitles, series with authorityId ([MODINVSTOR-1010](https://issues.folio.org/browse/MODINVSTOR-1010))
+* API to get the current maximum assigned HRID ([MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921))
 * provides `inventory-view 2.0`
 * provides `inventory-view-instance-set 2.0`
 * provides `item-storage-dereferenced 1.0`
@@ -9,6 +10,7 @@
 * provides `instance-storage-batch-sync 2.0`
 * provides `instance-storage-batch-sync-unsafe 2.0`
 * provides `bound-with-parts-storage 1.1` [MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022)
+* provides `hrid-settings-storage 1.3` [MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921)
 
 ## 25.0.0 2022-10-25
 

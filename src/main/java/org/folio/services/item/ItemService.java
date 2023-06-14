@@ -81,7 +81,7 @@ public class ItemService {
 
     postgresClient = postgresClient(vertxContext, okapiHeaders);
     postgresClientFuturized = new PostgresClientFuturized(postgresClient);
-    hridManager = new HridManager(vertxContext, postgresClient);
+    hridManager = new HridManager(postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
