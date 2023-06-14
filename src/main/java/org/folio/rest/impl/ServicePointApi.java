@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -18,6 +21,7 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.services.servicepoint.ServicePointService;
 
 public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoints {
   public static final String SERVICE_POINT_TABLE = "service_point";
@@ -127,13 +131,12 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void putServicePointsByServicepointId(String servicepointId,
-                                               String lang, Servicepoint entity, Map<String, String> okapiHeaders,
-                                               Handler<AsyncResult<Response>> asyncResultHandler,
-                                               Context vertxContext) {
+  public void putServicePointsByServicepointId(String servicepointId, String lang,
+    Servicepoint entity, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+
     vertxContext.runOnContext(v -> {
       try {
-
         String validateSvcptResult = validateServicePoint(entity);
         if (validateSvcptResult != null) {
           asyncResultHandler.handle(Future.succeededFuture(
@@ -142,10 +145,10 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                 entity.getName(), validateSvcptResult))));
           return;
         }
-
-        PgUtil.put(SERVICE_POINT_TABLE, entity, servicepointId, okapiHeaders, vertxContext,
-          PutServicePointsByServicepointIdResponse.class, asyncResultHandler);
-
+        new ServicePointService(vertxContext, okapiHeaders)
+          .updateServicePoint(servicepointId, entity)
+          .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+          .onFailure(handleFailure(asyncResultHandler));
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(

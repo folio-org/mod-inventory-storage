@@ -30,14 +30,14 @@ public class ReindexServiceTest {
     when(repository.save(any(), any()))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
-    var reindexJob = get(reindexService.submitReindex(ReindexResourceName.INSTANCE));
+    var reindexJob = get(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
 
     assertThat(reindexJob.getJobStatus(), is(IN_PROGRESS));
     assertThat(reindexJob.getId(), notNullValue());
     assertThat(reindexJob.getPublished(), is(0));
     assertThat(reindexJob.getSubmittedDate(), notNullValue());
 
-    verify(runner, times(1)).startReindex(any(), any());
+    verify(runner, times(1)).startReindex(any());
   }
 
   @Test(expected = BadRequestException.class)

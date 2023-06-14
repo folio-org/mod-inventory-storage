@@ -1118,6 +1118,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "addReindexJobResourceName.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "hridSettingsView.sql",
       "fromModuleVersion": "26.1.0"
     }
