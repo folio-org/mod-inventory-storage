@@ -11,7 +11,7 @@
       "type": "string"
     },
     "source": {
-      "description": "Origin of the loan type record, i.e. 'System', 'User', 'Consortium' etc.",
+      "description": "Origin of the loan type record, e.g. 'System', 'User', 'Consortium' etc.",
       "type": "string"
     },
     "metadata": {
