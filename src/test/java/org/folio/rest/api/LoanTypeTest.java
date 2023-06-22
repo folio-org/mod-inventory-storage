@@ -176,19 +176,19 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     throws MalformedURLException {
 
     // post new loan type with 'source' field populated
-    JsonObject response = send(loanTypesStorageUrl(""), HttpMethod.POST,
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
       POST_READING_ROOM, HTTP_CREATED);
 
     // get id of created loan type
-    String loanTypeId = response.getString("id");
+    String loanTypeId = createResponse.getString("id");
 
     // get saved loan type by id and verify all fields have been populated
     JsonObject getResponse = send(loanTypesStorageUrl("/" + loanTypeId), HttpMethod.GET,
       null, HTTP_OK);
 
     assertThat(getResponse.getString("id"), is(loanTypeId));
-    assertThat(response.getString("name"), is("Reading room"));
-    assertThat(response.getString("source"), is("System"));
+    assertThat(getResponse.getString("name"), is("Reading room"));
+    assertThat(getResponse.getString("source"), is("System"));
   }
 
   @Test
