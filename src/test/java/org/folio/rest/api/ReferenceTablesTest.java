@@ -268,7 +268,6 @@ public class ReferenceTablesTest extends TestBase {
     TimeoutException,
     ExecutionException,
     UnsupportedEncodingException {
-    String entityId;
     String entityName = "Electronic access relationship with 'source' field";
     String entitySource = "Consortium";
 
@@ -284,7 +283,7 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(postResponse.getJson().getString("source"), is(entitySource));
 
     // get saved electronic access relationship by id and verify all fields have been populated
-    entityId = postResponse.getJson().getString("id");
+    String entityId = postResponse.getJson().getString("id");
 
     Response getResponse = getById(vertxUrl(apiUrl + "/" + entityId));
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
