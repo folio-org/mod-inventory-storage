@@ -271,7 +271,7 @@ public class ReferenceTablesTest extends TestBase {
     String entityName = "Electronic access relationship with 'source' field";
     String entitySource = "Consortium";
 
-    String apiUrl = electronicAccessRelationshipsUrl("").toString();
+    String apiUrl = "/electronic-access-relationships";
     ElectronicAccessRelationship entity = new ElectronicAccessRelationship(entityName);
     entity.put("source", entitySource);
 
@@ -290,6 +290,9 @@ public class ReferenceTablesTest extends TestBase {
     assertThat(getResponse.getJson().getString("id"), is(entityId));
     assertThat(getResponse.getJson().getString("name"), is(entityName));
     assertThat(getResponse.getJson().getString("source"), is(entitySource));
+
+    // delete created resource
+    deleteReferenceRecordById(vertxUrl(apiUrl + "/" + entityId));
   }
 
   @Test
