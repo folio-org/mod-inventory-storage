@@ -27,6 +27,7 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -258,6 +259,38 @@ public class ReferenceTablesTest extends TestBase {
     String updateProperty = ElectronicAccessRelationship.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
+  }
+
+  @Test
+  public void canCreateAndGetElectronicAccessRelationshipWithSourceFieldPopulated()
+    throws InterruptedException,
+    MalformedURLException,
+    TimeoutException,
+    ExecutionException,
+    UnsupportedEncodingException {
+    String entityId;
+    String entityName = "Electronic access relationship with 'source' field";
+    String entitySource = "Consortium";
+
+    String apiUrl = electronicAccessRelationshipsUrl("").toString();
+    ElectronicAccessRelationship entity = new ElectronicAccessRelationship(entityName);
+    entity.put("source", entitySource);
+
+    // post new electronic access relationship with 'source' field populated
+    Response postResponse = createReferenceRecord(apiUrl, entity);
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postResponse.getJson().getString("id"), notNullValue());
+    assertThat(postResponse.getJson().getString("name"), is(entityName));
+    assertThat(postResponse.getJson().getString("source"), is(entitySource));
+
+    // get saved electronic access relationship by id and verify all fields have been populated
+    entityId = postResponse.getJson().getString("id");
+
+    Response getResponse = getById(vertxUrl(apiUrl + "/" + entityId));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getJson().getString("id"), is(entityId));
+    assertThat(getResponse.getJson().getString("name"), is(entityName));
+    assertThat(getResponse.getJson().getString("source"), is(entitySource));
   }
 
   @Test
