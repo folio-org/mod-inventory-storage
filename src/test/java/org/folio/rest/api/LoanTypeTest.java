@@ -39,6 +39,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
 
   private static final String POST_REQUEST_CIRCULATE = "{\"name\": \"Can circulate\"}";
   private static final String POST_REQUEST_COURSE = "{\"name\": \"Course reserve\"}";
+  private static final String POST_READING_ROOM = "{\"name\": \"Reading room\", \"source\": \"System\"}";
   private static final String PUT_REQUEST = "{\"name\": \"Reading room\"}";
 
   /**
@@ -106,6 +107,20 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canCreateLoanTypeWithSourceFieldPopulated()
+    throws MalformedURLException {
+
+    // post new loan type with 'source' field populated
+    JsonObject response = send(loanTypesStorageUrl(""), HttpMethod.POST,
+      POST_READING_ROOM, HTTP_CREATED);
+
+    // verify all fields have been saved
+    assertThat(response.getString("id"), notNullValue());
+    assertThat(response.getString("name"), is("Reading room"));
+    assertThat(response.getString("source"), is("System"));
+  }
+
+  @Test
   public void cannotCreateLoanTypeWithAdditionalProperties()
     throws MalformedURLException {
 
@@ -154,6 +169,26 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
 
     assertThat(getResponse.getString("id"), is(loanTypeId));
     assertThat(getResponse.getString("name"), is("Can circulate"));
+  }
+
+  @Test
+  public void canGetLoanTypeByIdWithSourceFieldPopulated()
+    throws MalformedURLException {
+
+    // post new loan type with 'source' field populated
+    JsonObject createResponse = send(loanTypesStorageUrl(""), HttpMethod.POST,
+      POST_READING_ROOM, HTTP_CREATED);
+
+    // get id of created loan type
+    String loanTypeId = createResponse.getString("id");
+
+    // get saved loan type by id and verify all fields have been populated
+    JsonObject getResponse = send(loanTypesStorageUrl("/" + loanTypeId), HttpMethod.GET,
+      null, HTTP_OK);
+
+    assertThat(getResponse.getString("id"), is(loanTypeId));
+    assertThat(getResponse.getString("name"), is("Reading room"));
+    assertThat(getResponse.getString("source"), is("System"));
   }
 
   @Test

@@ -10,6 +10,10 @@
       "description": "label for the loan type",
       "type": "string"
     },
+    "source": {
+      "description": "Origin of the loan type record, e.g. 'System', 'User', 'Consortium' etc.",
+      "type": "string"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

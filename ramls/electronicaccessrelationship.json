@@ -10,6 +10,10 @@
       "description": "label for the type of relationship between a URL and an Instance",
       "type": "string"
     },
+    "source": {
+      "description": "Origin of the electronic access relationship record, e.g. 'System', 'User', 'Consortium', 'folio', 'local' etc.",
+      "type": "string"
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

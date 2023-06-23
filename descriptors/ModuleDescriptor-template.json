@@ -312,7 +312,7 @@
     },
     {
       "id": "loan-types",
-      "version": "2.2",
+      "version": "2.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -799,7 +799,7 @@
     },
     {
       "id": "electronic-access-relationships",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
