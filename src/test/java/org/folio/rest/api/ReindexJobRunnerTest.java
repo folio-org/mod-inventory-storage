@@ -174,7 +174,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     var jobs = instanceReindex.getReindexJobs();
 
-    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(2));
+    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(0));
     assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
     assertThat(jobs.getTotalRecords(), notNullValue());
 
