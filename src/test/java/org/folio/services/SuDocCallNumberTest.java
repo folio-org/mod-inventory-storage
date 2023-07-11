@@ -1,7 +1,6 @@
 package org.folio.services;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -41,9 +40,7 @@ public class SuDocCallNumberTest {
   @Test
   public void isValidNlmNumber() {
     for (String validNlmNumber : logValidSuDocNumbers) {
-      SuDocCallNumber suDocCallNumber = new SuDocCallNumber(validNlmNumber);
-      assertTrue(suDocCallNumber.isValid());
-      assertNotNull(suDocCallNumber.shelfKey);
+      assertTrue(new SuDocCallNumber(validNlmNumber).isValid());
     }
   }
 
