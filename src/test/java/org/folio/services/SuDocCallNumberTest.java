@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class SuDocCallNumberTest {
+class SuDocCallNumberTest {
 
   private static final List<String> logValidSuDocNumbers = Arrays.asList(
     "T22.19:M54",
@@ -38,14 +38,14 @@ public class SuDocCallNumberTest {
   );
 
   @Test
-  public void isValidNlmNumber() {
+  void isValidNlmNumber() {
     for (String validNlmNumber : logValidSuDocNumbers) {
       assertTrue(new SuDocCallNumber(validNlmNumber).isValid());
     }
   }
 
   @Test
-  public void isInvalidNlmNumber() {
+  void isInvalidNlmNumber() {
     for (String validNlmNumber : logInvalidSuDocNumbers) {
       assertFalse(new SuDocCallNumber(validNlmNumber).isValid());
     }

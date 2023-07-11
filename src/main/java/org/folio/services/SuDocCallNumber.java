@@ -7,7 +7,7 @@ import org.marc4j.callnum.AbstractCallNumber;
 public class SuDocCallNumber extends AbstractCallNumber {
 
   protected static Pattern stemPattern =
-    Pattern.compile("^([A-Za-z]+)\\s*(\\d*.*\\d*)(\\d*-*\\d*)(\\d*/*\\d*)(:([A-Za-z]*\\s*\\d*/*\\d*\\S*))");
+    Pattern.compile("^([A-Za-z]+)\\s*(\\d*.*\\d*)(\\d*-*\\d*)(\\d*/*\\d*)(:([A-Za-z]*\\s*\\S*))");
   protected static Pattern suffixPattern = Pattern.compile("^:([A-Za-z]*\\s*\\d*/*\\d*\\S*)");
   protected String authorSymbol;
   protected String subordinateOffice;
