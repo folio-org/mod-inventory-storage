@@ -1,11 +1,10 @@
 package org.folio.services;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SuDocCallNumberTest {
 
@@ -32,13 +31,17 @@ public class SuDocCallNumberTest {
     "QG 124 B811m 1875",
     "W 250 M56 2011",
     "Z 250 M6 2011",
-    "1Z 250 M6 2011"
+    "1Z 250 M6 2011",
+    "2A250:M62011",
+    null
   );
 
   @Test
   public void isValidNlmNumber() {
     for (String validNlmNumber : logValidSuDocNumbers) {
-      assertTrue(new SuDocCallNumber(validNlmNumber).isValid());
+      SuDocCallNumber suDocCallNumber = new SuDocCallNumber(validNlmNumber);
+      assertTrue(suDocCallNumber.isValid());
+      assertNotNull(suDocCallNumber.shelfKey);
     }
   }
 
