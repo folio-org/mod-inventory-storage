@@ -91,9 +91,7 @@ public class SuDocCallNumber extends AbstractCallNumber {
     } else {
       char firstChar = this.authorSymbol.charAt(0);
       // SuDoc call numbers can't begin with numbers
-      if (firstChar == '0' || firstChar == '1' || firstChar == '2'
-        || firstChar == '3' || firstChar == '4' || firstChar == '5' || firstChar == '6'
-        || firstChar == '7' || firstChar == '8' || firstChar == '9') {
+      if (Character.isDigit(firstChar)) {
         valid = false;
       }
     }
