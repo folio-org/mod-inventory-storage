@@ -2,12 +2,22 @@ package org.folio.services;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import java.text.Collator;
+import java.text.ParseException;
+import java.text.RuleBasedCollator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class CallNumberUtilsTest {
 
@@ -46,7 +56,8 @@ public class CallNumberUtilsTest {
     "free-text,,,free-text,,,,,",
     "RR 3718,,,RR 718,,,,,",
     "QS 211 G A1 E53 42005 42005,QS11 .GA1 E53 2005,,QS 11 .GA1 E53 2005,,,2005,,",
-    "WB 3102.5 B62 42018 42018,WB102.5 .B62 2018,,WB 102.5 B62 2018,,,2018,,"
+    "WB 3102.5 B62 42018 42018,WB102.5 .B62 2018,,WB 102.5 B62 2018,,,2018,,",
+    "T22.19:M54 T22.19:M54/990,,,T22.19:M54,,,,,"
   })
   void inputForShelvingNumber(
     String desiredShelvingOrder,
@@ -74,5 +85,34 @@ public class CallNumberUtilsTest {
     EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
 
     assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "T22.19/2:P94/2,T22.19:M54,T22.19:M54/990,T22.19:M54 T22.19:M54/990 T22.19/2:P94/2",
+    "T22.19/2:V88/retest/989,T22.19/2:V88/retest,T22.19/2:P94/2,T22.19/2:P94/2 T22.19/2:V88/retest T22.19/2:V88/retest/989",
+    "T22.19/2:V88/989/student/spanish,T22.19/2:V88/test/989,T22.19/2:V88/989/student/militia,T22.19/2:V88/test/989 T22.19/2:V88/989/student/militia T22.19/2:V88/989/student/spanish",
+    "T22.19/2:V88/2/989,T22.19:M54,T22.19:M54/990,T22.19:M54 T22.19:M54/990 T22.19/2:V88/2/989",
+    "C 55.309/2-8,C 55.309/2,C 55.309/2-2,C 55.309/2 C 55.309/2-2 C 55.309/2-8",
+    "D 3.186/3,C 55.309/2-10,D 3.186,C 55.309/2-10 D 3.186 D 3.186/3",
+    "EP 1.23:91-44,D 3.186/7-3,EP 1.23:A 62 A 1.35,D 3.186/7-3 EP 1.23:A 62 A 1.35 EP 1.23:91-44"
+  })
+  void checkSuDocShelvingOrder(
+    String firstCallNumber,
+    String secondCallNumber,
+    String thirdCallNumber,
+    String expectedOrderedShelvingKeys
+  ) throws ParseException {
+    List<String> shelvingKeys = new ArrayList<>();
+    shelvingKeys.add(new SuDocCallNumber(firstCallNumber).getShelfKey());
+    shelvingKeys.add(new SuDocCallNumber(secondCallNumber).getShelfKey());
+    shelvingKeys.add(new SuDocCallNumber(thirdCallNumber).getShelfKey());
+    String rule = "< a,A < b,B < c,C < d,D < e,E < f,F " +
+      "< g,G < h,H < i,I < j,J < k,K < l,L " +
+      "< m,M < n,N < o,O < p,P < q,Q < r,R " +
+      "< s,S < t,T < u,U < v,V < w,W < x,X " +
+      "< y,Y < z,Z < ':' < '-' < '.'<'/'";
+    shelvingKeys.sort(new RuleBasedCollator(rule));
+    assertEquals(expectedOrderedShelvingKeys, String.join(" ", shelvingKeys));
   }
 }
