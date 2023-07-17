@@ -2,18 +2,21 @@ package org.folio.services;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang.StringUtils;
 import org.marc4j.callnum.AbstractCallNumber;
+import org.marc4j.callnum.Utils;
 
 public class SuDocCallNumber extends AbstractCallNumber {
 
   protected static Pattern stemPattern =
-    Pattern.compile("^([A-Za-z]+\\s*)(\\d*.*\\d*)(\\d*-*\\d*)(\\d*/*\\d*)(:([A-Za-z]*\\s*\\S*))");
-  protected static Pattern suffixPattern = Pattern.compile("^:([A-Za-z]*\\s*\\d*/*\\d*\\S*)");
+    Pattern.compile("^([A-Za-z]+\\s*)(\\d+)(\\.[A-Za-z]*\\d*)(/*[A-Za-z]*\\d*-*\\d*)(:*(.*))");
+  protected static Pattern suffixPattern = Pattern.compile("^:(.*)");
   protected String authorSymbol;
   protected String subordinateOffice;
   protected String series;
   protected String subSeries;
 
+  protected String stem;
   protected String suffix;
   protected String shelfKey;
 
@@ -101,25 +104,36 @@ public class SuDocCallNumber extends AbstractCallNumber {
   private void buildShelfKey() {
     StringBuilder key = new StringBuilder();
     if (authorSymbol != null) {
-      key.append(authorSymbol);
+      key.append(authorSymbol.trim());
     }
 
-    if (subordinateOffice != null) {
-      key.append(subordinateOffice);
-    }
-
-    if (series != null) {
-      key.append(series);
-    }
-
-    if (subSeries != null) {
-      key.append(subSeries);
-    }
-
-    if (suffix != null) {
-      key.append(suffix);
-    }
+    appendWithSymbolIfNeeded(key, subordinateOffice);
+    appendWithSymbolIfNeeded(key, series);
+    appendWithSymbolIfNeeded(key, subSeries);
+    appendWithSymbolIfNeeded(key, suffix);
 
     shelfKey = key.toString();
+  }
+
+  private void appendWithSymbolIfNeeded(StringBuilder key, String cnPart) {
+    if (StringUtils.isBlank(cnPart)) {
+      return;
+    }
+
+    if (cnPart.startsWith(".") || cnPart.startsWith("/") || cnPart.startsWith("-") || cnPart.startsWith(":")) {
+      cnPart = cnPart.substring(1);
+    }
+    var parts = cnPart.split("[./ -]");
+    for (String part : parts) {
+      if (key.length() > 0) {
+        key.append(' ');
+      }
+      part = part.trim();
+      if (Character.isAlphabetic(part.charAt(0))) {
+        key.append("!");
+      }
+
+      Utils.appendNumericallySortable(key, part);
+    }
   }
 }
