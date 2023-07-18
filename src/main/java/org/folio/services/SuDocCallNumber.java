@@ -130,6 +130,8 @@ public class SuDocCallNumber extends AbstractCallNumber {
       }
       part = part.trim();
       if (Character.isAlphabetic(part.charAt(0))) {
+        key.append(" !");
+      } else if (part.length() >= 3) {
         key.append("!");
       }
 
