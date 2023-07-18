@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -104,5 +106,42 @@ public class CallNumberUtilsTest {
     shelvingKeys.add(new SuDocCallNumber(thirdCallNumber).getShelfKey());
     shelvingKeys = shelvingKeys.stream().sorted().toList();
     assertEquals(expectedOrderedShelvingKeys, String.join(" ", shelvingKeys));
+  }
+
+  @Test
+  void testSudocSortingOrder() {
+    var expected = Stream.of(
+      "J29.2:D84/982",
+      "J29.2:D84/2",
+      "L36.202:F15/990",
+      "L36.202:F15/991",
+      "L36.202:F15/2",
+      "L37.2:Oc1/2/conversion",
+      "L37.s:Oc1/2/991",
+      "T22.19:M54",
+      "T22.19:M54/990",
+      "T22.19/2:P94",
+      "T22.19/2:P94/2",
+      "Y4.F76/2:Af8/12",
+      "Y4.F76/2:Af8/12/rev."
+    ).map(SuDocCallNumber::new).map(SuDocCallNumber::getShelfKey).toList();
+    var tested = List.of(
+      "Y4.F76/2:Af8/12/rev.",
+      "L37.2:Oc1/2/conversion",
+      "T22.19/2:P94/2",
+      "L37.s:Oc1/2/991",
+      "T22.19:M54/990",
+      "L36.202:F15/991",
+      "L36.202:F15/2",
+      "Y4.F76/2:Af8/12",
+      "L36.202:F15/990",
+      "T22.19:M54",
+      "J29.2:D84/982",
+      "T22.19/2:P94",
+      "J29.2:D84/2"
+    );
+    var actual = tested.stream().map(SuDocCallNumber::new).map(SuDocCallNumber::getShelfKey).sorted().toList();
+
+    assertEquals(expected, actual);
   }
 }
