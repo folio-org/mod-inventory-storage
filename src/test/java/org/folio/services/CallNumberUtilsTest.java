@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
@@ -81,34 +82,6 @@ public class CallNumberUtilsTest {
     assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
   }
 
-  @ParameterizedTest
-  @CsvSource({
-    "Y3.M58/summ,Y3.M58/2,T22.19:M54/990,T 222 219  !M 254 !3990 Y 13  !M 258  !SUMM Y 13  !M 258 12",
-    "T22.19/2:V88/retest/989,T22.19/2:V88/retest,T22.19/2:P94/2,"
-      + "T 222 219 12  !P 294 12 T 222 219 12  !V 288  !RETEST T 222 219 12  !V 288  !RETEST !3989",
-    "T22.19/2:V88/989/student/spanish,T22.19/2:V88/test/989,T22.19/2:V88/989/student/militia,"
-      + "T 222 219 12  !V 288  !TEST !3989 T 222 219 12  !V 288 !3989  !STUDENT  !MILITIA "
-      + "T 222 219 12  !V 288 !3989  !STUDENT  !SPANISH",
-    "T22.19/2:V88/2/989,T22.19:M54,T22.19:M54/990,T 222 219  !M 254 T 222 219  !M 254 !3990 "
-      + "T 222 219 12  !V 288 12 !3989",
-    "C 55.309/2-8,C 55.309/2,C 55.309/2-2,C 255 !3309 12 C 255 !3309 12 12 C 255 !3309 12 18",
-    "D 3.186/3,C 55.309/2-10,D 3.186,C 255 !3309 12 210 D 13 !3186 D 13 !3186 13",
-    "EP 1.23:91-44,D 3.186/7-3,EP 1.23:A 62 A 1.35,D 13 !3186 17 13 EP 11 223  !A 262  !A 11 235 EP 11 223 291 244"
-  })
-  void checkSuDocShelvingOrder(
-    String firstCallNumber,
-    String secondCallNumber,
-    String thirdCallNumber,
-    String expectedOrderedShelvingKeys
-  ) {
-    List<String> shelvingKeys = new ArrayList<>();
-    shelvingKeys.add(new SuDocCallNumber(firstCallNumber).getShelfKey());
-    shelvingKeys.add(new SuDocCallNumber(secondCallNumber).getShelfKey());
-    shelvingKeys.add(new SuDocCallNumber(thirdCallNumber).getShelfKey());
-    shelvingKeys = shelvingKeys.stream().sorted().toList();
-    assertEquals(expectedOrderedShelvingKeys, String.join(" ", shelvingKeys));
-  }
-
   @Test
   void testSudocSortingOrder() {
     var expected = Stream.of(
@@ -144,5 +117,37 @@ public class CallNumberUtilsTest {
     var actual = tested.stream().map(SuDocCallNumber::new).map(SuDocCallNumber::getShelfKey).sorted().toList();
 
     assertEquals(expected, actual);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "D 3.186,D 13 !3186",
+    "D 3.186/3,D 13 !3186 13",
+    "Y3.M58/2,Y 13  !M 258 12",
+    "C 55.309/2,C 255 !3309 12",
+    "D 3.186/7-3,D 13 !3186 17 13",
+    "T22.19:M54,T 222 219  !M 254",
+    "C 55.309/2-2,C 255 !3309 12 12",
+    "C 55.309/2-8,C 255 !3309 12 18",
+    "EP 1.23:91-44,EP 11 223 291 244",
+    "Y3.M58/summ,Y 13  !M 258  !SUMM",
+    "C 55.309/2-10,C 255 !3309 12 210",
+    "T22.19:M54/990,T 222 219  !M 254 !3990",
+    "T22.19/2:P94/2,T 222 219 12  !P 294 12",
+    "T22.19:M54/990,T 222 219  !M 254 !3990",
+    "EP 1.23:A 62 A 1.35,EP 11 223  !A 262  !A 11 235",
+    "T22.19/2:V88/2/989,T 222 219 12  !V 288 12 !3989",
+    "T22.19/2:V88/retest,T 222 219 12  !V 288  !RETEST",
+    "T22.19/2:V88/test/989,T 222 219 12  !V 288  !TEST !3989",
+    "T22.19/2:V88/retest/989, T 222 219 12  !V 288  !RETEST !3989",
+    "T22.19/2:V88/989/student/militia,T 222 219 12  !V 288 !3989  !STUDENT  !MILITIA",
+    "T22.19/2:V88/989/student/spanish,T 222 219 12  !V 288 !3989  !STUDENT  !SPANISH",
+  })
+  void checkSuDocShelvingKey(
+    String callNumber,
+    String expectedShelvingKey
+  ) {
+    var shelvingKey = new SuDocCallNumber(callNumber).getShelfKey();
+    assertEquals(expectedShelvingKey, shelvingKey);
   }
 }

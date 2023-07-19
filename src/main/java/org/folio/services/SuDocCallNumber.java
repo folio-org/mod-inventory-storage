@@ -129,6 +129,10 @@ public class SuDocCallNumber extends AbstractCallNumber {
         key.append(' ');
       }
       part = part.trim();
+
+      if (StringUtils.isBlank(part)){
+        continue;
+      }
       if (Character.isAlphabetic(part.charAt(0))) {
         key.append(" !");
       } else if (part.length() >= 3) {
