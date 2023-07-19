@@ -7,16 +7,16 @@ import org.marc4j.callnum.AbstractCallNumber;
 import org.marc4j.callnum.Utils;
 
 public class SuDocCallNumber extends AbstractCallNumber {
-  public static final String STEM_PATTERN = "^([A-Za-z]+\\s*)(\\d+)(\\.[A-Za-z]*\\d*)(/*[A-Za-z]*\\d*-*\\d*)";
+  public static final String SU_DOC_PATTERN = "^(?:([A-Za-z]+\\s*)(\\d+)(\\.(?:[A-Za-z]+\\d*|\\d+))"
+    + "(/(?:[A-Za-z]+(?:\\d+(?:-\\d+)?)?|\\d+(?:-\\d+)?))?)?:?(.*)";
   protected static Pattern stemPattern =
-    Pattern.compile(STEM_PATTERN + "(:*(.*))");
+    Pattern.compile(SU_DOC_PATTERN);
   protected static Pattern suffixPattern = Pattern.compile("^:(.*)");
   protected String authorSymbol;
   protected String subordinateOffice;
   protected String series;
   protected String subSeries;
 
-  protected String stem;
   protected String suffix;
   protected String shelfKey;
 
@@ -54,14 +54,14 @@ public class SuDocCallNumber extends AbstractCallNumber {
   }
 
   protected void parseCallNumber() {
-    String everythingElse = null;
+    String everythingElse;
     var stemMatcher = stemPattern.matcher(rawCallNum);
     if (stemMatcher.matches()) {
-      authorSymbol = stemMatcher.group(1) == null ? null : stemMatcher.group(1);
-      subordinateOffice = stemMatcher.group(2) == null ? null : stemMatcher.group(2);
-      series = stemMatcher.group(3) == null ? null : stemMatcher.group(3);
-      subSeries = stemMatcher.group(4) == null ? null : stemMatcher.group(4);
-      everythingElse = stemMatcher.group(5) == null ? null : stemMatcher.group(5);
+      authorSymbol = stemMatcher.group(1);
+      subordinateOffice = stemMatcher.group(2);
+      series = stemMatcher.group(3);
+      subSeries = stemMatcher.group(4);
+      everythingElse = stemMatcher.group(5);
     } else {
       everythingElse = rawCallNum;
     }
@@ -69,8 +69,7 @@ public class SuDocCallNumber extends AbstractCallNumber {
     if (everythingElse != null) {
       Matcher suffixMatcher = suffixPattern.matcher(everythingElse);
       if (suffixMatcher.find()) {
-        int start = suffixMatcher.start(1);
-        suffix = start > 0 ? suffixMatcher.group() : null;
+        suffix = suffixMatcher.group(1);
       } else {
         suffix = everythingElse;
       }
@@ -88,17 +87,7 @@ public class SuDocCallNumber extends AbstractCallNumber {
 
   @Override
   public boolean isValid() {
-    boolean valid = true;
-    if (this.authorSymbol == null) {
-      valid = false;
-    } else {
-      char firstChar = this.authorSymbol.charAt(0);
-      // SuDoc call numbers can't begin with numbers
-      if (Character.isDigit(firstChar)) {
-        valid = false;
-      }
-    }
-    return valid;
+    return authorSymbol != null;
   }
 
   private void buildShelfKey() {
@@ -130,7 +119,7 @@ public class SuDocCallNumber extends AbstractCallNumber {
       }
       part = part.trim();
 
-      if (StringUtils.isBlank(part)){
+      if (StringUtils.isBlank(part)) {
         continue;
       }
       if (Character.isAlphabetic(part.charAt(0))) {
