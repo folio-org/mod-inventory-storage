@@ -12,10 +12,10 @@ public final class CallNumberUtils {
 
   public static Optional<String> getShelfKeyFromCallNumber(String callNumber) {
     return Optional.ofNullable(callNumber)
-      .flatMap(cn -> getValidShelfKey(new NlmCallNumber(cn))
+      .flatMap(cn -> getValidShelfKey(new SuDocCallNumber(cn))
+        .or(() -> getValidShelfKey(new NlmCallNumber(cn)))
         .or(() -> getValidShelfKey(new LCCallNumber(cn)))
-        .or(() -> getValidShelfKey(new DeweyCallNumber(cn)))
-        .or(() -> getValidShelfKey(new SuDocCallNumber(cn))))
+        .or(() -> getValidShelfKey(new DeweyCallNumber(cn))))
       .or(() -> Optional.ofNullable(callNumber))
       .map(String::trim);
   }
