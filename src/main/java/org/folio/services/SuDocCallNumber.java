@@ -1,17 +1,18 @@
 package org.folio.services;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.marc4j.callnum.AbstractCallNumber;
 import org.marc4j.callnum.Utils;
 
 public class SuDocCallNumber extends AbstractCallNumber {
-  public static final String SU_DOC_PATTERN = "^(?:([A-Za-z]+\\s*)(\\d+)(\\.(?:[A-Za-z]+\\d*|\\d+))"
-    + "(/(?:[A-Za-z]+(?:\\d+(?:-\\d+)?)?|\\d+(?:-\\d+)?))?)?:?(.*)";
-  protected static Pattern stemPattern =
-    Pattern.compile(SU_DOC_PATTERN);
-  protected static Pattern suffixPattern = Pattern.compile("^:(.*)");
+  private static final String GROUP1 = "([A-Za-z]+\\s*)";
+  private static final String GROUP2 = "(\\d+)";
+  private static final String GROUP3 = "(\\.(?:[A-Za-z]+\\d*|\\d+))";
+  private static final String GROUP4 = "(/(?:[A-Za-z]+(?:\\d+(?:-\\d+)?)?|\\d+(?:-\\d+)?))?";
+  private static final String GROUP5 = "(.*)";
+  public static final String SU_DOC_PATTERN = "^(?:" + GROUP1 + GROUP2 + GROUP3 + GROUP4 + ")?:?" + GROUP5;
+  protected static Pattern stemPattern = Pattern.compile(SU_DOC_PATTERN);
   protected String authorSymbol;
   protected String subordinateOffice;
   protected String series;
@@ -54,27 +55,16 @@ public class SuDocCallNumber extends AbstractCallNumber {
   }
 
   protected void parseCallNumber() {
-    String everythingElse;
     var stemMatcher = stemPattern.matcher(rawCallNum);
     if (stemMatcher.matches()) {
       authorSymbol = stemMatcher.group(1);
       subordinateOffice = stemMatcher.group(2);
       series = stemMatcher.group(3);
       subSeries = stemMatcher.group(4);
-      everythingElse = stemMatcher.group(5);
+      suffix = stemMatcher.group(5);
     } else {
-      everythingElse = rawCallNum;
+      suffix = rawCallNum;
     }
-
-    if (everythingElse != null) {
-      Matcher suffixMatcher = suffixPattern.matcher(everythingElse);
-      if (suffixMatcher.find()) {
-        suffix = suffixMatcher.group(1);
-      } else {
-        suffix = everythingElse;
-      }
-    }
-
   }
 
   @Override
