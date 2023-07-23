@@ -1107,6 +1107,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumber"),
       is(false));
+    assertThat(
+      firstUpdatedItemFromGet.containsKey("effectiveShelvingOrder"),
+      is(false));
   }
 
   @Test

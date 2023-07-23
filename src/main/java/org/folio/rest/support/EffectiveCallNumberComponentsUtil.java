@@ -46,6 +46,8 @@ public final class EffectiveCallNumberComponentsUtil {
           .map(shelfKeyValue -> shelfKeyValue + nonNullableSuffixValue)
           .findFirst()
           .orElse(nonNullableSuffixValue));
+    } else {
+      item.setEffectiveShelvingOrder(null);
     }
 
     return item;
