@@ -5,7 +5,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
 import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -21,6 +20,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
+import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -263,7 +263,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumber", callNumber);
     itemToCreate.put("itemLevelCallNumberSuffix", suffix);
     itemToCreate.put("itemLevelCallNumberPrefix", prefix);
-    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
     itemToCreate.put("volume", volume);
     itemToCreate.put("enumeration", enumeration);
     itemToCreate.put("chronology", chronology);
@@ -323,7 +323,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
     itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
     itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
-    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
 
     itemToCreate.put("statisticalCodeIds", List.of(statisticalCodeId));
 
