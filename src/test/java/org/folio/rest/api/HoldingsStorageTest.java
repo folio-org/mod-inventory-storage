@@ -1088,6 +1088,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
       is("testCallNumber"));
+    assertThat(
+      firstItemFromGet.getString("effectiveShelvingOrder"), is("testCallNumber"));
 
     URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
 
