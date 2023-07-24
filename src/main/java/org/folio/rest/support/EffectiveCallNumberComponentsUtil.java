@@ -24,7 +24,7 @@ public final class EffectiveCallNumberComponentsUtil {
     if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
       Optional<String> shelfKey
         = CallNumberUtils.getShelfKeyFromCallNumber(
-          item.getItemLevelCallNumberTypeId(),
+          item.getEffectiveCallNumberComponents().getTypeId(),
         Stream.of(
             item.getEffectiveCallNumberComponents().getCallNumber(),
             item.getVolume(),

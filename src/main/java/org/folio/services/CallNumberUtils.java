@@ -31,7 +31,8 @@ public final class CallNumberUtils {
   public static Optional<String> getShelfKeyFromCallNumber(String callNumberTypeId, String callNumber) {
     var function = logCallNumberMap.get(callNumberTypeId);
     if (function != null) {
-      return function.apply(callNumber);
+      return function.apply(callNumber)
+        .map(String::trim);
     }
 
     return Optional.ofNullable(callNumber)

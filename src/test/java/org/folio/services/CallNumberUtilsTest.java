@@ -85,7 +85,7 @@ public class CallNumberUtilsTest {
     EffectiveCallNumberComponentsUtil.setCallNumberComponents(item, holdingsRecord);
     EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
 
-    assertThat(item.getEffectiveShelvingOrder().trim(), is(desiredShelvingOrder));
+    assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
   }
 
   @Test
