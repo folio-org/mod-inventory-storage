@@ -2129,7 +2129,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instance.getString("hrid"), is(expectedHrid));
 
-    instanceToCreate.put("source", "CONSORTIA-MARC");
+    instance.put("source", "CONSORTIA-MARC");
     instance.put("hrid", "testHRID");
 
     final CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
