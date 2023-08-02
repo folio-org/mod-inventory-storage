@@ -2129,8 +2129,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instance.getString("hrid"), is(expectedHrid));
 
+    final String newHRID = "testHRID";
     instance.put("source", "CONSORTIA-MARC");
-    instance.put("hrid", "testHRID");
+    instance.put("hrid", newHRID);
 
     final CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
@@ -2138,11 +2139,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.text(replaceCompleted));
 
     final Response putResponse = replaceCompleted.get(10, SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    log.info("statusCode: {}", putResponse.getStatusCode());
-    log.info("body: {}", putResponse.getBody());
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    final JsonObject updatedInstance = getById(id).getJson();
+    assertThat(updatedInstance.getString("hrid"), is(newHRID));
 
     log.info("Finished allowChangeHridWhenSourceIsConsortia");
   }
