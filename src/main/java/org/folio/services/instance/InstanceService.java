@@ -37,6 +37,7 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
+
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -124,7 +125,12 @@ public class InstanceService {
     return refuseLongNotes(newInstance)
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldInstance -> refuseWhenHridChanged(oldInstance, newInstance))
+      .compose(oldInstance -> {
+        if (!newInstance.getSource().startsWith("CONSORTIA")) {
+          return refuseWhenHridChanged(oldInstance, newInstance);
+        }
+        return Future.succeededFuture(oldInstance);
+      })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
 
