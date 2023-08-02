@@ -1125,6 +1125,16 @@
       "run": "after",
       "snippetPath": "hridSettingsView.sql",
       "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance-hr-item/write.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance-hr-item/hridTrigger.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }

@@ -14,7 +14,7 @@
     },
     "hrid": {
       "type": "string",
-      "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+      "description": "the human readable ID, also called eye readable ID. Unique. On creation it can be provided, otherwise the system assigns the next sequential ID using the settings of the /hrid-settings-storage/hrid-settings API. An update with a different hrid is rejected. An update without hrid is populated with the holdings record's current hrid."
     },
     "holdingsTypeId": {
       "type": "string",
