@@ -126,7 +126,7 @@ public class InstanceService {
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> {
-        if (!newInstance.getSource().startsWith("CONSORTIA")) {
+        if (!newInstance.getSource().startsWith("CONSORTIA-")) {
           return refuseWhenHridChanged(oldInstance, newInstance);
         }
         return Future.succeededFuture(oldInstance);

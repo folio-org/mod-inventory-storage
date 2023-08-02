@@ -2117,26 +2117,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     log.info("Starting allowChangeHridWhenSourceIsConsortia");
 
     final UUID id = UUID.randomUUID();
-    final JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.remove("hrid");
-
-    setInstanceSequence(1);
-
+    final JsonObject instanceToCreate = smallAngryPlanet(id).put("hrid", "oldHRID");
     createInstance(instanceToCreate);
 
-    final JsonObject instance = getById(id).getJson();
-    final String expectedHrid = "in00000000001";
-
-    assertThat(instance.getString("hrid"), is(expectedHrid));
-
-    final String new_hrid = "testHRID";
-    instance.put("source", "CONSORTIA-MARC");
-    instance.put("hrid", new_hrid);
+    final String newHrid = "newHRID";
+    final JsonObject instance = getById(id).getJson()
+      .put("source", "CONSORTIA-MARC").put("hrid", newHrid);
 
     final IndividualResource updateInstance =
       updateInstance(JsonObject.mapFrom(instance));
 
-    assertThat(updateInstance.getJson().mapTo(Instance.class).getHrid(), is(new_hrid));
+    assertThat(updateInstance.getJson().mapTo(Instance.class).getHrid(), is(newHrid));
 
     log.info("Finished allowChangeHridWhenSourceIsConsortia");
   }
