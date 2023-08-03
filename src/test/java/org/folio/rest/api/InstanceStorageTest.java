@@ -2113,6 +2113,26 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void allowChangeHridWhenSourceIsConsortia() throws Exception {
+    log.info("Starting allowChangeHridWhenSourceIsConsortia");
+
+    final UUID id = UUID.randomUUID();
+    final JsonObject instanceToCreate = smallAngryPlanet(id).put("hrid", "oldHRID");
+    createInstance(instanceToCreate);
+
+    final String newHrid = "newHRID";
+    final JsonObject instance = getById(id).getJson()
+      .put("source", "CONSORTIUM-MARC").put("hrid", newHrid);
+
+    final IndividualResource updateInstance =
+      updateInstance(JsonObject.mapFrom(instance));
+
+    assertThat(updateInstance.getJson().mapTo(Instance.class).getHrid(), is(newHrid));
+
+    log.info("Finished allowChangeHridWhenSourceIsConsortia");
+  }
+
+  @Test
   @SneakyThrows
   public void cannotCreateAnInstanceWhenAlreadyAllocatedHridIsAllocated() {
     final var instanceRequest = smallAngryPlanet(UUID.randomUUID());
