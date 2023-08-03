@@ -2122,7 +2122,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     final String newHrid = "newHRID";
     final JsonObject instance = getById(id).getJson()
-      .put("source", "CONSORTIA-MARC").put("hrid", newHrid);
+      .put("source", "CONSORTIUM-MARC").put("hrid", newHrid);
 
     final IndividualResource updateInstance =
       updateInstance(JsonObject.mapFrom(instance));
