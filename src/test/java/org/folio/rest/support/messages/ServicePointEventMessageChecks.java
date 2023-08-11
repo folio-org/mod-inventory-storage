@@ -31,4 +31,16 @@ public class ServicePointEventMessageChecks {
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForServicePoint(servicePointId),
       eventMessageMatchers.hasNoUpdateEventMessage());
   }
+
+  public void deletedMessagePublished(JsonObject servicePoint) {
+    final var servicePointId = servicePoint.getString("id");
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForServicePoint(servicePointId),
+      eventMessageMatchers.hasDeleteEventMessageFor(servicePoint));
+  }
+
+  public void deletedMessageNotPublished(String servicePointId) {
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForServicePoint(servicePointId),
+      eventMessageMatchers.hasNoDeleteEventMessage());
+  }
 }
