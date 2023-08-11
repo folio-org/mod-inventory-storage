@@ -499,13 +499,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject firstCirculationNote = savedCirculationNotes.getJsonObject(0);
     assertNotNull(firstCirculationNote.getString("id"));
-    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out note")) {
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
       assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
     }
 
     JsonObject secondCirculationNote = savedCirculationNotes.getJsonObject(1);
     assertNotNull(secondCirculationNote.getString("id"));
-    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out note")) {
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
       assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
     }
   }
@@ -735,8 +735,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     setItemSequence(1);
 
+    // create item
     createItem(itemToUpdate);
 
+    // populate circulationNotes and other necessary fields
     JsonObject checkInNoteWithoutId = new JsonObject()
       .put("noteType", "Check in")
       .put("note", "Check in note")
@@ -750,11 +752,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("staffOnly", false);
 
     itemToUpdate.put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+    itemToUpdate.put("hrid", "it00000000001");
+    itemToUpdate.put("_version", "1");
 
-    CompletableFuture<Response> completed = new CompletableFuture<>();
-
-    getClient().put(itemsStorageUrl("/" + itemId), itemToUpdate, TENANT_ID,
-      ResponseHandler.text(completed));
+    // update item
+    update(itemToUpdate);
 
     Response getResponse = getById(itemId);
 
@@ -764,19 +766,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(itemFromGet.getString("id"), is(itemId.toString()));
 
-    JsonArray savedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
+    JsonArray updatedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
 
-    assertThat(savedCirculationNotes.size(), is(2));
+    assertThat(updatedCirculationNotes.size(), is(2));
 
-    JsonObject firstCirculationNote = savedCirculationNotes.getJsonObject(0);
+    JsonObject firstCirculationNote = updatedCirculationNotes.getJsonObject(0);
     assertNotNull(firstCirculationNote.getString("id"));
-    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out note")) {
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
       assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
     }
 
-    JsonObject secondCirculationNote = savedCirculationNotes.getJsonObject(1);
+    JsonObject secondCirculationNote = updatedCirculationNotes.getJsonObject(1);
     assertNotNull(secondCirculationNote.getString("id"));
-    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out note")) {
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
       assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
     }
   }
