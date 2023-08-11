@@ -37,6 +37,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +46,7 @@ import javax.ws.rs.core.Response;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
+import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
@@ -118,6 +121,7 @@ public class ItemService {
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
+      .compose(this::populateIdForCirculationNotesIfNotExists)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
 
@@ -331,6 +335,17 @@ public class ItemService {
       .withUpdatedDate(new Date());
 
     item.setMetadata(updatedMetadata);
+  }
+
+  private Future<Item> populateIdForCirculationNotesIfNotExists(Item item) {
+    if (Objects.nonNull(item.getCirculationNotes()) && !item.getCirculationNotes().isEmpty()) {
+      for (CirculationNote circulationNote : item.getCirculationNotes()) {
+        if (Objects.isNull(circulationNote.getId())) {
+          circulationNote.setId(UUID.randomUUID().toString());
+        }
+      }
+    }
+    return Future.succeededFuture(item);
   }
 
   private static class PutData {
