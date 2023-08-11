@@ -2,6 +2,8 @@ package org.folio.services.servicepoint;
 
 import static io.vertx.core.Future.succeededFuture;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.ServicePointRepository;
@@ -9,8 +11,6 @@ import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.services.domainevent.ServicePointDomainEventPublisher;
-import io.vertx.core.Context;
-import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
