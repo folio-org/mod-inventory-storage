@@ -121,7 +121,7 @@ public class ItemService {
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
-      .compose(this::populateIdForCirculationNotesIfNotExists)
+      .compose(this::populateCirculationNoteId)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
 
@@ -142,6 +142,7 @@ public class ItemService {
     return hridManager.populateHridForItems(items)
       .compose(NotesValidators::refuseItemLongNotes)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+      .compose(this::populateCirculationNoteId)
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
@@ -156,6 +157,7 @@ public class ItemService {
     newItem.setId(itemId);
     PutData putData = new PutData();
     return refuseLongNotes(newItem)
+      .compose(this::populateCirculationNoteId)
       .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
@@ -337,8 +339,13 @@ public class ItemService {
     item.setMetadata(updatedMetadata);
   }
 
-  private Future<Item> populateIdForCirculationNotesIfNotExists(Item item) {
-    if (Objects.nonNull(item.getCirculationNotes()) && !item.getCirculationNotes().isEmpty()) {
+  private Future<List<Item>> populateCirculationNoteId(List<Item> items) {
+    items.forEach(this::populateCirculationNoteId);
+    return Future.succeededFuture(items);
+  }
+
+  private Future<Item> populateCirculationNoteId(Item item) {
+    if (Objects.nonNull(item.getCirculationNotes())) {
       for (CirculationNote circulationNote : item.getCirculationNotes()) {
         if (Objects.isNull(circulationNote.getId())) {
           circulationNote.setId(UUID.randomUUID().toString());
