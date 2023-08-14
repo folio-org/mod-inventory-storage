@@ -64,7 +64,7 @@ public class ServicePointService {
     return servicePointRepository.deleteById(servicePointId)
       .map(rowSet -> {
         if (rowSet.rowCount() == 0) {
-          log.error("deleteServicePoint:: service point {} was not found", servicePointId);
+          log.error("deleteServicePoint:: service point {} was not deleted", servicePointId);
           return false;
         }
         log.info("deleteServicePoint:: service point {} was deleted successfully", servicePointId);
