@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.Boolean.TRUE;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
@@ -10,6 +11,8 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -183,7 +186,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteServicePointsByServicepointIdResponse
                 .respond500WithTextPlain(getErrorResponse(message))));
-          } else if (Boolean.TRUE.equals(inUseRes.result())) {
+          } else if (TRUE.equals(inUseRes.result())) {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteServicePointsByServicepointIdResponse
                 .respond400WithTextPlain("Cannot delete service point, as it is in use")));
@@ -191,7 +194,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
             new ServicePointService(vertxContext, okapiHeaders)
               .deleteServicePoint(servicepointId)
               .onSuccess(deleted -> {
-                if (deleted) {
+                if (TRUE.equals(deleted)) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     DeleteServicePointsByServicepointIdResponse
                       .respond204()));
