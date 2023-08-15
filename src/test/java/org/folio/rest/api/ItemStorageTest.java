@@ -42,6 +42,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -54,6 +55,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -360,6 +362,73 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags, hasItem(TAG_VALUE));
   }
 
+  @SneakyThrows
+  @Test
+  public void shouldCreateAnItemWithCirculationNoteIdsPopulated() {
+    UUID holdingsRecordId = createInstanceAndHolding(annexLibraryLocationId);
+
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject checkInNoteWithoutId = new JsonObject()
+      .put("noteType", "Check in")
+      .put("note", "Check in note")
+      .put("staffOnly", false);
+
+    UUID circulationNoteId = UUID.randomUUID();
+    JsonObject checkOutNoteWithId = new JsonObject()
+      .put("id", circulationNoteId)
+      .put("noteType", "Check out")
+      .put("note", "Check out note")
+      .put("staffOnly", false);
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", itemId.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+
+    assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
+      postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+
+    assertThat(itemFromPost.getString("id"), is(itemId.toString()));
+
+    Response getResponse = getById(itemId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
+
+    JsonArray savedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
+
+    assertThat(savedCirculationNotes.size(), is(2));
+
+    JsonObject firstCirculationNote = savedCirculationNotes.getJsonObject(0);
+    assertNotNull(firstCirculationNote.getString("id"));
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+
+    JsonObject secondCirculationNote = savedCirculationNotes.getJsonObject(1);
+    assertNotNull(secondCirculationNote.getString("id"));
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+  }
+
   @Test
   public void canReplaceItemWithNewProperties() throws Exception {
     final UUID holdingsRecordId = createInstanceAndHolding(mainLibraryLocationId);
@@ -568,6 +637,69 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getJson().getString("hrid"), is("it00000000001"));
 
     log.info("Finished canUpdateAnItemHRIDDoesNotChange");
+  }
+
+  @SneakyThrows
+  @Test
+  public void shouldUpdateItemWithCirculationNoteIdsPopulated() {
+    UUID holdingsRecordId = createInstanceAndHolding(annexLibraryLocationId);
+    UUID itemId = UUID.randomUUID();
+
+    JsonObject itemToUpdate = new JsonObject()
+      .put("id", itemId.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("materialTypeId", bookMaterialTypeID);
+
+    setItemSequence(1);
+
+    // create item
+    createItem(itemToUpdate);
+
+    // populate circulationNotes and other necessary fields
+    JsonObject checkInNoteWithoutId = new JsonObject()
+      .put("noteType", "Check in")
+      .put("note", "Check in note")
+      .put("staffOnly", false);
+
+    UUID circulationNoteId = UUID.randomUUID();
+    JsonObject checkOutNoteWithId = new JsonObject()
+      .put("id", circulationNoteId)
+      .put("noteType", "Check out")
+      .put("note", "Check out note")
+      .put("staffOnly", false);
+
+    itemToUpdate.put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+    itemToUpdate.put("hrid", "it00000000001");
+    itemToUpdate.put("_version", "1");
+
+    // update item
+    update(itemToUpdate);
+
+    Response getResponse = getById(itemId);
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
+
+    JsonArray updatedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
+
+    assertThat(updatedCirculationNotes.size(), is(2));
+
+    JsonObject firstCirculationNote = updatedCirculationNotes.getJsonObject(0);
+    assertNotNull(firstCirculationNote.getString("id"));
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+
+    JsonObject secondCirculationNote = updatedCirculationNotes.getJsonObject(1);
+    assertNotNull(secondCirculationNote.getString("id"));
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
   }
 
   @Test

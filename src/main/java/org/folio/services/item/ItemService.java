@@ -35,6 +35,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,6 +48,7 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -93,6 +96,7 @@ public class ItemService {
 
     return hridManager.populateHrid(entity)
       .compose(effectiveValuesService::populateEffectiveValues)
+            .compose(this::populateCirculationNoteId)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
 
@@ -112,6 +116,7 @@ public class ItemService {
 
     return hridManager.populateHridForItems(items)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+            .compose(this::populateCirculationNoteId)
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
           okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
@@ -125,7 +130,8 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return getItemAndHolding(itemId, newItem.getHoldingsRecordId())
+    return populateCirculationNoteId(newItem)
+      .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
       .compose(x -> {
@@ -235,6 +241,22 @@ public class ItemService {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
 
+  private Future<List<Item>> populateCirculationNoteId(List<Item> items) {
+    items.forEach(this::populateCirculationNoteId);
+    return Future.succeededFuture(items);
+  }
+
+  private Future<Item> populateCirculationNoteId(Item item) {
+    if (Objects.nonNull(item.getCirculationNotes())) {
+      for (CirculationNote circulationNote : item.getCirculationNotes()) {
+        if (Objects.isNull(circulationNote.getId())) {
+          circulationNote.setId(UUID.randomUUID().toString());
+        }
+      }
+    }
+    return Future.succeededFuture(item);
+  }
+
   private static class PutData {
     private Item oldItem;
     private HoldingsRecord oldHoldings;
@@ -318,4 +340,5 @@ public class ItemService {
     }
     return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
   }
+
 }
