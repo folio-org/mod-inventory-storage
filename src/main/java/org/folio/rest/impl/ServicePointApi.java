@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.Boolean.TRUE;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
@@ -177,37 +178,36 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                                   Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = getTenant(okapiHeaders);
-        PostgresClient pgClient = getPgClient(vertxContext, tenantId);
         checkServicePointInUse().onComplete(inUseRes -> {
           if (inUseRes.failed()) {
             String message = logAndSaveError(inUseRes.cause());
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteServicePointsByServicepointIdResponse
                 .respond500WithTextPlain(getErrorResponse(message))));
-          } else if (Boolean.TRUE.equals(inUseRes.result())) {
+          } else if (TRUE.equals(inUseRes.result())) {
             asyncResultHandler.handle(Future.succeededFuture(
               DeleteServicePointsByServicepointIdResponse
                 .respond400WithTextPlain("Cannot delete service point, as it is in use")));
           } else {
-            pgClient.delete(SERVICE_POINT_TABLE, servicepointId, deleteReply -> {
-              if (deleteReply.failed()) {
-                String message = logAndSaveError(deleteReply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
-                  DeleteServicePointsByServicepointIdResponse
-                    .respond500WithTextPlain(getErrorResponse(message))));
-              } else {
-                if (deleteReply.result().rowCount() == 0) {
-                  asyncResultHandler.handle(Future.succeededFuture(
-                    DeleteServicePointsByServicepointIdResponse
-                      .respond404WithTextPlain("Not found")));
-                } else {
+            new ServicePointService(vertxContext, okapiHeaders)
+              .deleteServicePoint(servicepointId)
+              .onSuccess(deleted -> {
+                if (TRUE.equals(deleted)) {
                   asyncResultHandler.handle(Future.succeededFuture(
                     DeleteServicePointsByServicepointIdResponse
                       .respond204()));
+                } else {
+                  asyncResultHandler.handle(Future.succeededFuture(
+                    DeleteServicePointsByServicepointIdResponse
+                      .respond404WithTextPlain("Not found")));
                 }
-              }
-            });
+              })
+              .onFailure(throwable -> {
+                String message = logAndSaveError(throwable);
+                asyncResultHandler.handle(Future.succeededFuture(
+                  DeleteServicePointsByServicepointIdResponse
+                    .respond500WithTextPlain(getErrorResponse(message))));
+              });
           }
         });
       } catch (Exception e) {
