@@ -238,18 +238,30 @@ public class ServicePointTest extends TestBase {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    Response postServicePointResponse = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
     CompletableFuture<Response> deleted = new CompletableFuture<>();
-    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null,
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleted));
+    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
     Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    servicePointEventMessageChecks.deletedMessagePublished(postServicePointResponse.getJson());
     CompletableFuture<Response> gotten = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.GET, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(gotten));
     Response getResponse = gotten.get(10, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canNotDeleteNonExistentServicePoint() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> deleted = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
+    Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    servicePointEventMessageChecks.deletedMessageNotPublished(id.toString());
   }
 
   @Test

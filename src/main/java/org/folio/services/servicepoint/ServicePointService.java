@@ -1,5 +1,7 @@
 package org.folio.services.servicepoint;
 
+import static io.vertx.core.Future.succeededFuture;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
@@ -41,5 +43,33 @@ public class ServicePointService {
       .onSuccess(oldServicePoint -> servicePointDomainEventPublisher
         .publishUpdated(oldServicePoint, entity))
       .map(x -> ItemStorage.PutItemStorageItemsByItemIdResponse.respond204());
+  }
+
+  public Future<Boolean> deleteServicePoint(String servicePointId) {
+    log.debug("deleteServicePoint:: parameters servicePointId: {}", servicePointId);
+
+    return servicePointRepository.getById(servicePointId)
+      .compose(this::deleteServicePoint);
+  }
+
+  private Future<Boolean> deleteServicePoint(Servicepoint servicePoint) {
+    if (servicePoint == null) {
+      log.error("deleteServicePoint:: service point was not found");
+      return succeededFuture(false);
+    }
+
+    String servicePointId = servicePoint.getId();
+    log.debug("deleteServicePoint:: deleting service point {}", servicePointId);
+
+    return servicePointRepository.deleteById(servicePointId)
+      .map(rowSet -> {
+        if (rowSet.rowCount() == 0) {
+          log.error("deleteServicePoint:: service point {} was not deleted", servicePointId);
+          return false;
+        }
+        log.info("deleteServicePoint:: service point {} was deleted successfully", servicePointId);
+        servicePointDomainEventPublisher.publishDeleted(servicePoint);
+        return true;
+      });
   }
 }
