@@ -313,6 +313,7 @@
     },
     "permanentLocation": {
       "description": "The permanent shelving location in which an item resides",
+      "$ref": "location.json",
       "type": "object",
       "readonly": true
     },
