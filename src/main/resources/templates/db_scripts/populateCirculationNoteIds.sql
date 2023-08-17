@@ -22,6 +22,6 @@ WITH item_circnotes as (
   GROUP BY itemId
 )
 UPDATE ${myuniversity}_${mymodule}.item
-SET jsonb = jsonb_set(jsonb, '{circulationNotes}', json_build_array(item_circnotes.circNotes)::jsonb)
+SET jsonb = jsonb_set(jsonb, '{circulationNotes}', to_jsonb(item_circnotes.circNotes))
 FROM item_circnotes
 WHERE item.id = item_circnotes.itemId;
