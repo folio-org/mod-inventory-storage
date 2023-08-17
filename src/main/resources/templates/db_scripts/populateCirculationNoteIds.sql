@@ -1,5 +1,4 @@
-DROP EXTENSION "uuid-ossp";
-CREATE EXTENSION "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 --Update circulationNotes of item only if there is at least one circulationNote with id equals null
 WITH item_circnotes AS (
