@@ -202,7 +202,7 @@
         "properties": {
           "statement": {
             "type": "string",
-            "description": "Specifices the exact content to which the library has access, typically for continuing publications."
+            "description": "Specifies the exact content to which the library has access, typically for continuing publications."
           },
           "note": {
             "type": "string",
