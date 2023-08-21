@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 --Update circulationNotes of item only if there is at least one circulationNote with id equals null
 WITH item_circnotes AS (
@@ -6,7 +6,7 @@ WITH item_circnotes AS (
   FROM (
     SELECT
       item.id AS itemId,
-      CASE WHEN circulationNote ->> 'id' IS NULL THEN jsonb_set(circulationNote, '{id}', to_jsonb(uuid_generate_v4())) ELSE circulationNote END AS circNote,
+      CASE WHEN circulationNote ->> 'id' IS NULL THEN jsonb_set(circulationNote, '{id}', to_jsonb(public.uuid_generate_v4())) ELSE circulationNote END AS circNote,
       CASE WHEN circulationNote ->> 'id' IS NULL THEN true ELSE false END AS changed
     FROM ${myuniversity}_${mymodule}.item, jsonb_array_elements((jsonb ->> 'circulationNotes')::jsonb) WITH ORDINALITY arr(circulationNote, index)
   ) AS tableA
