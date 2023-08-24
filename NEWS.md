@@ -28,8 +28,6 @@
 * GET /inventory-view/instances warns "No configuration for table instance_holdings_item_view" ([MODINVSTOR-929](https://issues.folio.org/browse/MODINVSTOR-929))
 * Speed up setEffectiveHoldingsLocation.sql migration ([MODINVSTOR-949](https://issues.folio.org/browse/MODINVSTOR-949))
 * Remove `DB_*_READER` environment variables from ModuleDescriptor ([MODINVSTOR-974](https://issues.folio.org/browse/MODINVSTOR-974))
-* provides `authority-storage 1.1`
-* provides `authority-source-files 1.0`
 * provides `inventory-view-instance-set 1.0`
 * provides `instance-storage 9.0`
 * provides `holdings-storage 6.0`

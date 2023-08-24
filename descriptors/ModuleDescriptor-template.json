@@ -17,32 +17,6 @@
       }]
     },
     {
-      "id": "authority-reindex",
-      "version": "0.1",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/authority-storage/reindex",
-          "permissionsRequired": ["authority-storage.authority.reindex.post"]
-        },
-        {
-          "methods": ["GET"],
-          "pathPattern": "/authority-storage/reindex",
-          "permissionsRequired": ["authority-storage.authority.reindex.collection.get"]
-        },
-        {
-          "methods": ["GET"],
-          "pathPattern": "/authority-storage/reindex/{id}",
-          "permissionsRequired": ["authority-storage.authority.reindex.item.get"]
-        },
-        {
-          "methods": ["DELETE"],
-          "pathPattern": "/authority-storage/reindex/{id}",
-          "permissionsRequired": ["authority-storage.authority.reindex.item.delete"]
-        }
-      ]
-    },
-    {
       "id": "item-storage",
       "version": "10.0",
       "handlers": [
@@ -1328,7 +1302,7 @@
           "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
         }
       ]
-    },
+    }
   ],
   "permissionSets": [
     {
@@ -1385,26 +1359,6 @@
       "permissionName": "inventory-storage.authorities.item.delete",
       "displayName": "inventory storage - delete individual authority record",
       "description": "delete individual authority record from the storage"
-    },
-    {
-      "permissionName": "authority-storage.authority.reindex.item.delete",
-      "displayName": "inventory storage - cancel reindex job",
-      "description": "cancel a running reindexing job"
-    },
-    {
-      "permissionName": "authority-storage.authority.reindex.item.get",
-      "displayName": "inventory storage - get reindex job by id",
-      "description": "get reindex job by id"
-    },
-    {
-      "permissionName": "authority-storage.authority.reindex.post",
-      "displayName": "inventory storage - submit reindex authority job",
-      "description": "submit reindex authority job"
-    },
-    {
-      "permissionName": "authority-storage.authority.reindex.collection.get",
-      "displayName": "inventory storage - get reindex authority jobs",
-      "description": "get reindex authority jobs"
     },
     {
       "permissionName": "inventory-storage.items.collection.get",
@@ -2503,10 +2457,6 @@
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
       "subPermissions": [
-        "authority-storage.authority.reindex.post",
-        "authority-storage.authority.reindex.collection.get",
-        "authority-storage.authority.reindex.item.get",
-        "authority-storage.authority.reindex.item.delete",
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
