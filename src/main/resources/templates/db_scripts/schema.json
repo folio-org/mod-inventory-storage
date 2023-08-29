@@ -1,13 +1,6 @@
 {
   "tables": [
     {
-      "tableName": "authority",
-      "fromModuleVersion": "22.1.0",
-      "withMetadata": true,
-      "withAuditing": false,
-      "withOptimisticLocking": "failOnConflict"
-    },
-    {
       "tableName": "loan_type",
       "withMetadata": true,
       "withAuditing": false,

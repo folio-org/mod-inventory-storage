@@ -32,7 +32,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
-import org.folio.rest.support.fixtures.AuthorityReindexFixture;
 import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
@@ -55,7 +54,6 @@ public abstract class TestBase {
   protected static final Logger logger = LogManager.getLogger();
   protected static ResourceClient instancesClient;
   protected static ResourceClient itemsClient;
-  protected static ResourceClient authoritiesClient;
   protected static ResourceClient callNumberTypesClient;
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
   static ResourceClient locationsClient;
@@ -72,7 +70,6 @@ public abstract class TestBase {
   static ResourceClient statisticalCodeClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
-  static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
 
   @BeforeClass
@@ -84,7 +81,6 @@ public abstract class TestBase {
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
     itemsClient = ResourceClient.forItems(getClient());
-    authoritiesClient = ResourceClient.forAuthorities(getClient());
     locationsClient = ResourceClient.forLocations(getClient());
     callNumberTypesClient = ResourceClient.forCallNumberTypes(getClient());
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(getClient());
@@ -101,7 +97,6 @@ public abstract class TestBase {
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
     instanceReindex = new InstanceReindexFixture(getClient());
-    authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
 
     KAFKA_CONSUMER.discardAllMessages();

@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -65,7 +64,6 @@ public class TenantRefApi extends TenantAPI {
     "ill-policies",
     "holdings-types",
     "call-number-types",
-    "authority-note-types",
     "instance-note-types",
     "holdings-note-types",
     "item-note-types",
@@ -74,8 +72,7 @@ public class TenantRefApi extends TenantAPI {
     "bound-with/instances",
     "bound-with/holdingsrecords",
     "bound-with/items",
-    "bound-with/bound-with-parts",
-    "authority-source-files"
+    "bound-with/bound-with-parts"
   };
 
   /**
@@ -183,7 +180,7 @@ public class TenantRefApi extends TenantAPI {
       .peek(migration -> log.info(
         "Following migration is to be executed [migration={}]", migration))
       .map(BaseMigrationService::runMigration)
-      .collect(Collectors.toList());
+      .toList();
 
     return GenericCompositeFuture.all(startedMigrations)
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))

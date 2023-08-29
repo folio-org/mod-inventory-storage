@@ -11,6 +11,7 @@
 * provides `instance-storage-batch-sync-unsafe 2.0`
 * provides `bound-with-parts-storage 1.1` [MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022)
 * provides `hrid-settings-storage 1.3` [MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921)
+* disables `authority-storage`, `authority-source-files`, `authority-note-types` and `authority-reindex` APIs. They are not supported by this module anymore. [MODINVSTOR-1099](https://issues.folio.org/browse/MODINVSTOR-1099)
 
 ## 25.0.0 2022-10-25
 
