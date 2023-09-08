@@ -2,7 +2,6 @@ package org.folio.rest.api;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
-import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
@@ -26,11 +25,9 @@ import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
-import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.support.messages.AuthorityEventMessageChecks;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
@@ -42,19 +39,14 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       INSTANCE.fullTopicName(TENANT_ID));
-  private final CommonDomainEventPublisher<Authority> authorityEventPublisher =
-    new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      AUTHORITY.fullTopicName(TENANT_ID));
 
-  private final AuthorityEventMessageChecks authorityMessageChecks
-    = new AuthorityEventMessageChecks(KAFKA_CONSUMER);
   private final InstanceEventMessageChecks instanceMessageChecks
     = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
-  private static ReindexJob reindexJob(ReindexJob.ResourceName reindexResourceName) {
+  private static ReindexJob instanceReindexJob() {
     return new ReindexJob()
       .withJobStatus(IN_PROGRESS)
-      .withResourceName(reindexResourceName)
+      .withResourceName(ReindexJob.ResourceName.INSTANCE)
       .withId(UUID.randomUUID().toString())
       .withSubmittedDate(new Date());
   }
@@ -71,7 +63,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canReindexInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
+    var reindexJob = instanceReindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -99,66 +91,10 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReindexAuthorities() {
-    var numberOfRecords = 500;
-    var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
-      .toCompletableFuture());
-
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
-
-    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == IDS_PUBLISHED);
-
-    var job = authorityReindex.getReindexJob(reindexJob.getId());
-
-    assertThat(job.getPublished(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-
-    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
-      greaterThanOrEqualTo(numberOfRecords));
-  }
-
-  @Test
-  public void canGetAllAuthoritiesReindexJobs() {
-    var numberOfRecords = 2;
-    var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
-      .toCompletableFuture());
-
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
-
-    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == IDS_PUBLISHED);
-
-    var jobs = authorityReindex.getReindexJobs("?query=published>=0");
-
-    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(1000));
-    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(ID_PUBLISHING_CANCELLED));
-    assertThat(jobs.getTotalRecords(), notNullValue());
-
-    authorityMessageChecks.countOfAllPublishedAuthoritiesIs(
-      greaterThanOrEqualTo(numberOfRecords));
-  }
-
-  @Test
   public void canGetAllInstancesReindexJobs() {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
+    var reindexJob = instanceReindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -183,50 +119,16 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canStartAuthoritiesReindex() {
-    ReindexJob res = authorityReindex.postReindexJob(
-      reindexJob(ReindexJob.ResourceName.INSTANCE));
-    assertThat(res, notNullValue());
-    assertThat(res.getId(), notNullValue());
-  }
-
-  @Test
   public void canStartInstanceReindex() {
-    ReindexJob res = instanceReindex.postReindexJob(
-      reindexJob(ReindexJob.ResourceName.INSTANCE));
+    ReindexJob res = instanceReindex.postReindexJob(instanceReindexJob());
     assertThat(res, notNullValue());
     assertThat(res.getId(), notNullValue());
-  }
-
-  @Test
-  public void canCancelAuthoritiesReindex() {
-    var rowStream = new TestRowStream(10_000_000);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.AUTHORITY);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
-      .toCompletableFuture());
-
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
-
-    authorityReindex.cancelReindexJob(reindexJob.getId());
-
-    await().until(() -> authorityReindex.getReindexJob(reindexJob.getId())
-      .getJobStatus() == ID_PUBLISHING_CANCELLED);
-
-    var job = authorityReindex.getReindexJob(reindexJob.getId());
-
-    assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
-    assertThat(job.getPublished(), greaterThanOrEqualTo(500));
   }
 
   @Test
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.INSTANCE);
+    var reindexJob = instanceReindexJob();
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -248,29 +150,9 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 
-  @Test
-  public void canNotReindexUnknown() {
-    var numberOfRecords = 2;
-    var rowStream = new TestRowStream(numberOfRecords);
-    var reindexJob = reindexJob(ReindexJob.ResourceName.UNKNOWN);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
-
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
-
-    get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
-      .toCompletableFuture());
-
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
-
-    var job = authorityReindex.getReindexJobs("");
-
-    assertThat(job.getReindexJobs().size(), is(0));
-  }
-
   private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
     return new ReindexJobRunner(postgresClientFuturized,
-      repository, getContext(), instanceEventPublisher, authorityEventPublisher, TENANT_ID);
+      repository, getContext(), instanceEventPublisher, TENANT_ID);
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {
