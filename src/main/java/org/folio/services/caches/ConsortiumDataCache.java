@@ -1,5 +1,9 @@
 package org.folio.services.caches;
 
+import static io.vertx.core.http.HttpMethod.GET;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.folio.okapi.common.XOkapiHeaders.URL;
+
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
@@ -10,14 +14,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static org.folio.okapi.common.XOkapiHeaders.URL;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ConsortiumDataCache {
 
@@ -50,18 +51,22 @@ public class ConsortiumDataCache {
   private CompletableFuture<Optional<ConsortiumData>> loadConsortiumData(Map<String, String> headers) {
     String okapiUrl = headers.get(URL);
     WebClient client = WebClient.wrap(httpClient);
-    HttpRequest<Buffer> request = client.get(okapiUrl + USER_TENANTS_PATH);
+    HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + USER_TENANTS_PATH);
     headers.forEach(request::putHeader);
 
     return request.send().compose(response -> {
-      if (response.statusCode() != 200) {
-        LOG.warn("loadCentralTenantId:: Error loading consortia id, response status: {}, body: {}", response.statusCode(), response.bodyAsString());
-        return Future.failedFuture("");
+      if (response.statusCode() != HTTP_OK) {
+        String msg = String.format("Error loading consortium data, response status: %s, body: '%s'",
+          response.statusCode(), response.bodyAsString());
+        LOG.warn("loadConsortiumData:: {}", msg);
+        return Future.failedFuture(msg);
       }
       JsonArray userTenants = response.bodyAsJsonObject().getJsonArray(USER_TENANTS_FIELD);
       if (userTenants.isEmpty()) {
         return Future.succeededFuture(Optional.<ConsortiumData>empty());
       }
+
+      LOG.info("loadConsortiumData:: Consortium data was loaded");
       JsonObject userTenant = userTenants.getJsonObject(0);
       return Future.succeededFuture(Optional.of(
         new ConsortiumData(userTenant.getString(CENTRAL_TENANT_ID_FIELD), userTenant.getString(CONSORTIUM_ID_FIELD))));
