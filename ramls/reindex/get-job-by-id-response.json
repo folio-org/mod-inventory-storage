@@ -30,7 +30,6 @@
       "type": "string",
       "enum": [
         "Instance",
-        "Authority",
         "Unknown"
       ]
     },
