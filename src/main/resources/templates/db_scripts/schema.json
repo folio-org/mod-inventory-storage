@@ -1130,6 +1130,31 @@
       "run": "after",
       "snippetPath": "populateCirculationNoteIds.sql",
       "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/addCompleteUpdatedDate.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/createIndexOnCompleteUpdatedDate.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/populateWithUpdatedDate.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/modifySetInstanceMdJsonTrigger.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/createTriggersAndFunctionsForCompleteUpdatedDate.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }
