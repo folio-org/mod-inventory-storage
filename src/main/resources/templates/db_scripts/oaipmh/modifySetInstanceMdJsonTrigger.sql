@@ -33,8 +33,8 @@ BEGIN
     NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,updatedDate}', to_jsonb(to_char(updatedDate, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')));
     -- since this trigger is being executed after triggers on update/insert/delete items/holdings,
     -- need to check current value to avoid overwriting with the old updatedDate value
-    IF ((NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone > NEW.completeUpdatedDate) THEN
-    	NEW.completeUpdatedDate = (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone;
+    IF ((NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone > NEW.complete_updated_date) THEN
+    	NEW.complete_updated_date = (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone;
     END IF;
   end if;
   RETURN NEW;

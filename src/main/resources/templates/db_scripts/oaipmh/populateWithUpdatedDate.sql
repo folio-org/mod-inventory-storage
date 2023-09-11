@@ -1,2 +1,2 @@
 UPDATE ${myuniversity}_${mymodule}.instance
-SET completeUpdatedDate = (jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone;
+SET complete_updated_date = (jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone;

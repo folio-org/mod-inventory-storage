@@ -19,7 +19,7 @@
      VOLATILE NOT LEAKPROOF
  AS $BODY$
  BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate =
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date =
           (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone
       WHERE inst.id = (NEW.jsonb ->> 'instanceId')::uuid;
    RETURN NEW;
@@ -40,7 +40,7 @@
      VOLATILE NOT LEAKPROOF
  AS $BODY$
  BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate = NOW()
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
       WHERE inst.id = OLD.instanceid;
    RETURN OLD;
  END;
@@ -59,7 +59,7 @@
      VOLATILE NOT LEAKPROOF
  AS $BODY$
  BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate =
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date =
           (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone
       WHERE inst.id IN (
           SELECT instanceid FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
@@ -81,7 +81,7 @@
     VOLATILE NOT LEAKPROOF
  AS $BODY$
  BEGIN
-     UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate = NOW()
+     UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
      WHERE inst.id IN (
          SELECT instanceid
          FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
