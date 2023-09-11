@@ -26,14 +26,6 @@ public class InterfaceUrls {
     return vertxUrl("/item-storage/items" + subPath);
   }
 
-  public static URL authoritiesStorageUrl(String subPath) {
-    return vertxUrl("/authority-storage/authorities" + subPath);
-  }
-
-  public static URL authorityReindexUrl(String subPath) {
-    return vertxUrl("/authority-storage/reindex" + subPath);
-  }
-
   public static URL itemsStorageSyncUrl(String subPath) {
     return vertxUrl("/item-storage/batch/synchronous" + subPath);
   }
@@ -148,14 +140,6 @@ public class InterfaceUrls {
 
   public static URL natureOfContentTermsUrl(String subPath) {
     return vertxUrl("/nature-of-content-terms" + subPath);
-  }
-
-  public static URL authoritySourceFilesUrl(String subPath) {
-    return vertxUrl("/authority-source-files" + subPath);
-  }
-
-  public static URL authorityNoteTypesUrl(String subPath) {
-    return vertxUrl("/authority-note-types" + subPath);
   }
 
   public static URL instanceNoteTypesUrl(String subPath) {
