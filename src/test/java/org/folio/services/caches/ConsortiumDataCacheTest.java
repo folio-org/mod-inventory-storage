@@ -108,4 +108,18 @@ public class ConsortiumDataCacheTest {
       async.complete();
     });
   }
+
+  @Test
+  public void shouldReturnFailedFutureWhenSpecifiedTenantIdIsNull(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.serverError()));
+
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(null, okapiHeaders)
+      .onComplete(context.asyncAssertFailure());
+
+    future.onComplete(ar -> {
+      context.assertTrue(ar.failed());
+      async.complete();
+    });
+  }
 }
