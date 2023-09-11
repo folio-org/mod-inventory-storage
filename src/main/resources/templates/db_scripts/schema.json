@@ -1138,12 +1138,12 @@
     },
     {
       "run": "after",
-      "snippetPath": "oaipmh/createIndexOnCompleteUpdatedDate.sql",
+      "snippetPath": "oaipmh/populateWithUpdatedDate.sql",
       "fromModuleVersion": "26.1.0"
     },
     {
       "run": "after",
-      "snippetPath": "oaipmh/populateWithUpdatedDate.sql",
+      "snippetPath": "oaipmh/createIndexOnCompleteUpdatedDate.sql",
       "fromModuleVersion": "26.1.0"
     },
     {
