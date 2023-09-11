@@ -39,15 +39,8 @@
      COST 100
      VOLATILE NOT LEAKPROOF
  AS $BODY$
- DECLARE
-    createdDate text;
  BEGIN
-      SELECT (jsonb ->> 'createdDate')::text INTO createdDate
-      FROM ${myuniversity}_${mymodule}.audit_holdings_record
-      WHERE (jsonb -> 'record' ->> 'id')::uuid = OLD.id;
-
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate =
-          createdDate::timestamp with time zone
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate = NOW()
       WHERE inst.id = OLD.instanceid;
    RETURN OLD;
  END;
@@ -87,15 +80,8 @@
     COST 100
     VOLATILE NOT LEAKPROOF
  AS $BODY$
- DECLARE
-   createdDate text;
  BEGIN
-     SELECT (jsonb ->> 'createdDate')::text INTO createdDate
-     FROM ${myuniversity}_${mymodule}.audit_item
-     WHERE (jsonb -> 'record' ->> 'id')::uuid = OLD.id;
-
-     UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate =
-         createdDate::timestamp with time zone
+     UPDATE ${myuniversity}_${mymodule}.instance inst SET completeUpdatedDate = NOW()
      WHERE inst.id IN (
          SELECT instanceid
          FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
