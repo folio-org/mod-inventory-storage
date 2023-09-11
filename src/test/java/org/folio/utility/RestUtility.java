@@ -1,5 +1,6 @@
 package org.folio.utility;
 
+import static java.lang.String.format;
 import static org.folio.utility.ModuleUtility.getClient;
 
 import io.vertx.core.Future;
@@ -60,6 +61,27 @@ public final class RestUtility {
       .putHeader("x-okapi-tenant", TENANT_ID)
       .putHeader("Accept", "application/json,text/plain")
       .putHeader("Content-type", contentType)
+      .putHeaders(headers)
+      .sendBuffer(body)
+      .onSuccess(handler)
+      .onFailure(error -> logger.error(error.getMessage(), error));
+  }
+
+  public static void send(URL url, HttpMethod method, String content,
+    Handler<HttpResponse<Buffer>> handler) {
+
+    Buffer body = Buffer.buffer(content == null ? "" : content);
+    MultiMap headers = MultiMap.caseInsensitiveMultiMap();
+    String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
+
+    getClient().getWebClient()
+      .requestAbs(method, url.toString())
+      .putHeader("Authorization", TENANT_ID)
+      .putHeader("X-Okapi-Tenant", TENANT_ID)
+      .putHeader("X-Okapi-Url-to", baseUrl)
+      .putHeader("X-Okapi-Url", baseUrl)
+      .putHeader("Accept", "application/json,text/plain")
+      .putHeader("Content-type", "application/json")
       .putHeaders(headers)
       .sendBuffer(body)
       .onSuccess(handler)

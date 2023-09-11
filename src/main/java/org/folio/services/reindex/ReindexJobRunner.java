@@ -1,11 +1,8 @@
 package org.folio.services.reindex;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.InventoryKafkaTopic.AUTHORITY;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.impl.AuthorityRecordsApi.AUTHORITY_TABLE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
@@ -23,7 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
-import org.folio.rest.jaxrs.model.Authority;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PgUtil;
@@ -40,7 +36,6 @@ public class ReindexJobRunner {
   private final PostgresClientFuturized postgresClient;
   private final ReindexJobRepository reindexJobRepository;
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher;
-  private final CommonDomainEventPublisher<Authority> authorityEventPublisher;
   private final String tenantId;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -49,20 +44,16 @@ public class ReindexJobRunner {
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
         INSTANCE.fullTopicName(tenantId(okapiHeaders))),
-      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        AUTHORITY.fullTopicName(tenantId(okapiHeaders))),
       tenantId(okapiHeaders));
   }
 
   public ReindexJobRunner(PostgresClientFuturized postgresClient, ReindexJobRepository repository,
                           Context vertxContext, CommonDomainEventPublisher<Instance> domainEventPublisher,
-                          CommonDomainEventPublisher<Authority> authorityEventPublisher,
                           String tenantId) {
 
     this.postgresClient = postgresClient;
     this.reindexJobRepository = repository;
     this.instanceEventPublisher = domainEventPublisher;
-    this.authorityEventPublisher = authorityEventPublisher;
     this.tenantId = tenantId;
 
     initWorker(vertxContext);
@@ -79,23 +70,17 @@ public class ReindexJobRunner {
     }
   }
 
-  public void startReindex(ReindexJob reindexJob, ReindexResourceName reindexResourceName) {
+  public void startReindex(ReindexJob reindexJob) {
     workerExecutor.executeBlocking(
         promise -> {
-          switch (reindexResourceName) {
-            case AUTHORITY:
-              streamAuthorities(new ReindexContext(reindexJob))
-                .map(notUsed -> null)
-                .onComplete(promise);
-              break;
-            case INSTANCE:
-              streamInstanceIds(new ReindexContext(reindexJob))
-                .map(notUsed -> null)
-                .onComplete(promise);
-              break;
-            default:
-              throw new UnsupportedOperationException(
-                "Unknown resource name. Reindex job was not started for: " + reindexResourceName.name());
+          if (reindexJob.getResourceName() == ReindexJob.ResourceName.INSTANCE) {
+            streamInstanceIds(new ReindexContext(reindexJob))
+              .map(notUsed -> null)
+              .onComplete(promise);
+          } else {
+            throw new UnsupportedOperationException(
+              "Unknown resource name. Reindex job was not started for: "
+                + reindexJob.getResourceName().name());
           }
         })
       .map(notUsed -> null);
@@ -123,38 +108,10 @@ public class ReindexJobRunner {
       });
   }
 
-  private Future<Long> streamAuthorities(ReindexContext context) {
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(ctx -> postgresClient.selectStream(ctx.connection,
-        "SELECT * FROM " + postgresClient.getFullTableName(AUTHORITY_TABLE)))
-      .map(context::withStream)
-      .compose(this::processAuthorityStream)
-      .onComplete(recordsPublished -> {
-        context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
-          .onFailure(error -> log.warn("Unable to commit transaction", error));
-
-        if (recordsPublished.failed()) {
-          log.warn("Unable to reindex authorities", recordsPublished.cause());
-          logFailedJob(context);
-        } else {
-          log.info("Reindex completed");
-          logReindexCompleted(recordsPublished.result(), context);
-        }
-      });
-  }
-
   private void logReindexCompleted(Long recordsPublished, ReindexContext context) {
     reindexJobRepository.fetchAndUpdate(context.getJobId(),
       job -> job.withPublished(recordsPublished.intValue())
         .withJobStatus(IDS_PUBLISHED));
-  }
-
-  private Future<Long> processAuthorityStream(ReindexContext context) {
-    return authorityEventPublisher.publishStream(context.stream,
-      row -> rowToAuthorityProducerRecord(row, context),
-      recordsPublished -> logJobDetails(recordsPublished, context));
   }
 
   private Future<Long> processStream(ReindexContext context) {
@@ -196,14 +153,6 @@ public class ReindexJobRunner {
     return new KafkaProducerRecordBuilder<String, Object>()
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
-      .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
-  }
-
-  private KafkaProducerRecordBuilder<String, Object> rowToAuthorityProducerRecord(Row row,
-                                                                                  ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder<String, Object>()
-      .key(row.getUUID("id").toString())
-      .value(reindexEvent(tenantId, readValue(row.getValue("jsonb").toString(), Authority.class)))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());
   }
 

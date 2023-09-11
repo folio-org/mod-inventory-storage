@@ -31,11 +31,14 @@ import org.folio.rest.jaxrs.model.StaffSlip;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.messages.ServicePointEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ServicePointTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
+  private final ServicePointEventMessageChecks servicePointEventMessageChecks =
+    new ServicePointEventMessageChecks(KAFKA_CONSUMER);
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration,
                                                                   HoldShelfExpiryPeriod.IntervalId intervalId) {
@@ -189,8 +192,8 @@ public class ServicePointTest extends TestBase {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
-      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod()).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -199,7 +202,7 @@ public class ServicePointTest extends TestBase {
       .put("pickupLocation", false);
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
@@ -207,6 +210,25 @@ public class ServicePointTest extends TestBase {
     assertThat(getResponse.getJson().getString("code"), is("cd2"));
     assertThat(getResponse.getJson().getString("name"), is("Circ Desk 2")); //should fail
     assertThat(getResponse.getJson().getBoolean("pickupLocation"), is(false));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
+  }
+
+  @Test
+  public void cannotUpdateNonExistentServicePoint() throws InterruptedException,
+    ExecutionException, TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    JsonObject request = new JsonObject()
+      .put("id", id)
+      .put("name", "Circ Desk 2")
+      .put("code", "cd2")
+      .put("discoveryDisplayName", "Circulation Desk -- Basement")
+      .put("pickupLocation", false);
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
   @Test
@@ -216,18 +238,30 @@ public class ServicePointTest extends TestBase {
     TimeoutException,
     MalformedURLException {
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    Response postServicePointResponse = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
     CompletableFuture<Response> deleted = new CompletableFuture<>();
-    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null,
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(deleted));
+    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
     Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    servicePointEventMessageChecks.deletedMessagePublished(postServicePointResponse.getJson());
     CompletableFuture<Response> gotten = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.GET, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(gotten));
     Response getResponse = gotten.get(10, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void canNotDeleteNonExistentServicePoint() throws InterruptedException, ExecutionException,
+    TimeoutException {
+
+    UUID id = UUID.randomUUID();
+    CompletableFuture<Response> deleted = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
+    Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    servicePointEventMessageChecks.deletedMessageNotPublished(id.toString());
   }
 
   @Test
@@ -344,14 +378,12 @@ public class ServicePointTest extends TestBase {
 
   @Test
   public void canUpdateServicePointWithHoldShelfExpiryPeriodWhenThereWasNoHoldShelfExpiryAndNotBeingPickupLocation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
-      false, null);
+      false, null).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -363,7 +395,7 @@ public class ServicePointTest extends TestBase {
       );
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -377,18 +409,17 @@ public class ServicePointTest extends TestBase {
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is(5));
     assertThat(holdShelfExpiryPeriod.getString("intervalId"), is(HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
   }
 
   @Test
   public void canUpdateServicePointWithHoldShelfExpiryPeriodAndHoldShelfCloseLibraryDateManagementAnd()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
-      false, null);
+      false, null).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -402,7 +433,7 @@ public class ServicePointTest extends TestBase {
       );
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -418,18 +449,17 @@ public class ServicePointTest extends TestBase {
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is(5));
     assertThat(holdShelfExpiryPeriod.getString("intervalId"), is(HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
   }
 
   @Test
   public void canUpdateServicePointWithoutHoldShelfExpiryPeriodAndWithoutBeingPickupLocationWhenNeitherWasTheCase()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
-      false, null);
+      false, null).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -439,7 +469,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -449,17 +479,17 @@ public class ServicePointTest extends TestBase {
     assertThat(responseJson.getString("code"), is("cd2"));
     assertThat(responseJson.getString("name"), is("Circ Desk 2"));
     assertThat(responseJson.getBoolean("pickupLocation"), is(false));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
   }
 
   @Test
   public void cannotUpdateServicePointWithoutHoldShelfExpiryPeriodWhenItOriginallyExisted()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
-      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod())
+      .getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -469,7 +499,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
@@ -478,17 +508,16 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
   }
 
   @Test
   public void cannotUpdateServicePointWithoutHoldShelfExpiryPeriodWhenItNeverExisted()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 102", "cd102",
-      "Circulation Desk -- Hallway", null, 20, false, null);
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 102", "cd102",
+      "Circulation Desk -- Hallway", null, 20, false, null).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 102")
@@ -498,7 +527,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
@@ -507,20 +536,17 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
   }
 
   @Test
   public void cannotUpdateServicePointWithoutBeingPickupLocationAndHoldShelfExpiryPeriodAlreadyExisted()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-
     HoldShelfExpiryPeriod defaultHoldShelfExpiryPeriod = createHoldShelfExpiryPeriod();
-
-    createServicePoint(id, "Circ Desk 1", "cd1",
-      "Circulation Desk -- Hallway", null, 20, true, defaultHoldShelfExpiryPeriod);
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, defaultHoldShelfExpiryPeriod).getJson();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())
@@ -532,7 +558,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
@@ -541,20 +567,17 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
   }
 
   @Test
   public void cannotUpdateServicePointWithoutBeingPickupLocationWhileAddingHoldShelfExpiryPeriod()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
-
     HoldShelfExpiryPeriod defaultHoldShelfExpiryPeriod = createHoldShelfExpiryPeriod();
-
-    createServicePoint(id, "Circ Desk 1", "cd1",
-      "Circulation Desk -- Hallway", null, 20, false, null);
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, false, null).getJson();
 
     JsonObject request = new JsonObject()
       .put("id", id.toString())
@@ -566,7 +589,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
@@ -575,19 +598,17 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
   }
 
   @Test
   public void canUpdateServicePointWithHoldShelfExpiryPeriodAndBeingPickupLocationWhenBothWasPresent()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
-      true, createHoldShelfExpiryPeriod());
+      true, createHoldShelfExpiryPeriod()).getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -599,7 +620,7 @@ public class ServicePointTest extends TestBase {
       );
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -613,19 +634,18 @@ public class ServicePointTest extends TestBase {
     JsonObject holdShelfExpiryPeriod = responseJson.getJsonObject("holdShelfExpiryPeriod");
     assertThat(holdShelfExpiryPeriod.getInteger("duration"), is(5));
     assertThat(holdShelfExpiryPeriod.getString("intervalId"), is(HoldShelfExpiryPeriod.IntervalId.WEEKS.toString()));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, responseJson);
   }
 
   @Test
   public void canUpdateServicePointWithoutHoldShelfExpiryPeriodAndBeingPickupLocationWhenBothWasPresent()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    throws InterruptedException, ExecutionException, TimeoutException, MalformedURLException {
 
     UUID id = UUID.randomUUID();
-    createServicePoint(id, "Circ Desk 1", "cd1",
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
       "Circulation Desk -- Hallway", null, 20,
-      true, createHoldShelfExpiryPeriod());
+      true, createHoldShelfExpiryPeriod()).getJson();
+
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -635,7 +655,7 @@ public class ServicePointTest extends TestBase {
 
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
 
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -645,6 +665,7 @@ public class ServicePointTest extends TestBase {
     assertThat(responseJson.getString("code"), is("cd2"));
     assertThat(responseJson.getString("name"), is("Circ Desk 2"));
     assertThat(responseJson.getBoolean("pickupLocation"), is(false));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, responseJson);
   }
 
   @Test
@@ -691,17 +712,16 @@ public class ServicePointTest extends TestBase {
   }
 
   @Test
-  public void canUpdateServicePointWithStaffSlips()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+  public void canUpdateServicePointWithStaffSlips() throws InterruptedException,
+    ExecutionException, TimeoutException, MalformedURLException {
+
     UUID id = UUID.randomUUID();
     String staffSlipId = UUID.randomUUID().toString();
     List<StaffSlip> staffSlips = new ArrayList<>(2);
     staffSlips.add(new StaffSlip().withId(staffSlipId).withPrintByDefault(Boolean.TRUE));
-    createServicePoint(id, "Circ Desk 1", "cd1",
-      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips);
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod(), staffSlips)
+      .getJson();
     JsonObject request = new JsonObject()
       .put("id", id.toString())
       .put("name", "Circ Desk 2")
@@ -714,7 +734,7 @@ public class ServicePointTest extends TestBase {
           .put("printByDefault", Boolean.FALSE)));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
+      ResponseHandler.any(updated));
     Response updateResponse = updated.get(10, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
@@ -725,6 +745,7 @@ public class ServicePointTest extends TestBase {
     assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getString("id"), is(staffSlipId));
     assertThat(getResponse.getJson().getJsonArray("staffSlips").getJsonObject(0).getBoolean("printByDefault"),
       is(Boolean.FALSE));
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
   }
 
   @Test

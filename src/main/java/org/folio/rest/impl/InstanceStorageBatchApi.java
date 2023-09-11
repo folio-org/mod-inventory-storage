@@ -14,7 +14,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -145,7 +144,7 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
     final Future<String> hridFuture;
 
     if (isBlank(instance.getHrid())) {
-      final HridManager hridManager = new HridManager(Vertx.currentContext(), postgresClient);
+      final HridManager hridManager = new HridManager(postgresClient);
       hridFuture = hridManager.getNextInstanceHrid();
     } else {
       hridFuture = succeededFuture(instance.getHrid());

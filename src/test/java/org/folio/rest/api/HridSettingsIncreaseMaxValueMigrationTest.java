@@ -21,10 +21,11 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   private static final String ITEMS_SEQ = "hrid_items_seq";
 
   private static String loadCreateSequenceSqlFile() {
-    return loadScript("hridSettings.sql",
-      MigrationTestBase::replaceSchema,
-      resource -> resource.replace("${table.tableName}", "hrid_settings")
-    );
+    return "SET ROLE " + getSchemaName() + ";"
+        + loadScript("hridSettings.sql",
+            MigrationTestBase::replaceSchema,
+            resource -> resource.replace("${table.tableName}", "hrid_settings"))
+        + loadScript("hridSettingsView.sql");
   }
 
   @SneakyThrows
@@ -55,9 +56,11 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   }
 
   private void reCreateSequences() throws Exception {
-    executeSql(dropSequenceSql(INSTANCES_SEQ));
-    executeSql(dropSequenceSql(HOLDINGS_SEQ));
-    executeSql(dropSequenceSql(ITEMS_SEQ));
+    executeSql(String.format("DROP VIEW %s.hrid_settings_view", getSchemaName()));
+    executeSql(String.format("DROP SEQUENCE %s.%s, %s.%s, %s.%s",
+        getSchemaName(), INSTANCES_SEQ,
+        getSchemaName(), HOLDINGS_SEQ,
+        getSchemaName(), ITEMS_SEQ));
 
     executeMultipleSqlStatements(CREATE_SEQUENCE_SQL);
   }
@@ -109,9 +112,5 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
     executeSql(String.format(
       "SELECT setVal('%s.%s', %d, FALSE)", getSchemaName(), sequenceName, value
     ));
-  }
-
-  private String dropSequenceSql(String sequenceName) {
-    return String.format("DROP SEQUENCE %s.%s", getSchemaName(), sequenceName);
   }
 }

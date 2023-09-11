@@ -25,6 +25,14 @@
         "Id publishing cancelled"
       ]
     },
+    "resourceName": {
+      "description": "Reindex resource name",
+      "type": "string",
+      "enum": [
+        "Instance",
+        "Unknown"
+      ]
+    },
     "submittedDate": {
       "description": "Timestamp when the job has been submitted",
       "type": "string",

@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +21,8 @@ import org.junit.Test;
 public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestBase {
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String MIGRATION_SCRIPT
-    = loadScript("populateDiscoverySuppressIfNotSet.sql");
+    = "SET ROLE " + PostgresClient.getInstance(null).getConnectionConfig().getString("username") + ";\n"
+        + loadScript("populateDiscoverySuppressIfNotSet.sql");
 
   @SneakyThrows
   @Before

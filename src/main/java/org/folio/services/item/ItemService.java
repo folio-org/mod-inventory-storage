@@ -37,6 +37,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +46,7 @@ import javax.ws.rs.core.Response;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
+import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
@@ -81,7 +84,7 @@ public class ItemService {
 
     postgresClient = postgresClient(vertxContext, okapiHeaders);
     postgresClientFuturized = new PostgresClientFuturized(postgresClient);
-    hridManager = new HridManager(vertxContext, postgresClient);
+    hridManager = new HridManager(postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
@@ -118,6 +121,7 @@ public class ItemService {
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
+      .compose(this::populateCirculationNoteId)
       .compose(item -> {
         final Promise<Response> postResponse = promise();
 
@@ -138,6 +142,7 @@ public class ItemService {
     return hridManager.populateHridForItems(items)
       .compose(NotesValidators::refuseItemLongNotes)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
+      .compose(this::populateCirculationNoteId)
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
@@ -152,6 +157,7 @@ public class ItemService {
     newItem.setId(itemId);
     PutData putData = new PutData();
     return refuseLongNotes(newItem)
+      .compose(this::populateCirculationNoteId)
       .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
@@ -331,6 +337,22 @@ public class ItemService {
       .withUpdatedDate(new Date());
 
     item.setMetadata(updatedMetadata);
+  }
+
+  private Future<List<Item>> populateCirculationNoteId(List<Item> items) {
+    items.forEach(this::populateCirculationNoteId);
+    return Future.succeededFuture(items);
+  }
+
+  private Future<Item> populateCirculationNoteId(Item item) {
+    if (Objects.nonNull(item.getCirculationNotes())) {
+      for (CirculationNote circulationNote : item.getCirculationNotes()) {
+        if (Objects.isNull(circulationNote.getId())) {
+          circulationNote.setId(UUID.randomUUID().toString());
+        }
+      }
+    }
+    return Future.succeededFuture(item);
   }
 
   private static class PutData {
