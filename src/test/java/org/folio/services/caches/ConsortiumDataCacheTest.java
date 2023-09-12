@@ -94,7 +94,6 @@ public class ConsortiumDataCacheTest {
     });
   }
 
-
   @Test
   public void shouldReturnFailedFutureWhenGetServerErrorOnConsortiumDataLoading(TestContext context) {
     Async async = context.async();
