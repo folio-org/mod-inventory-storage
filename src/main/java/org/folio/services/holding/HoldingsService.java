@@ -1,6 +1,7 @@
 package org.folio.services.holding;
 
 import static io.vertx.core.Promise.promise;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse;
@@ -14,28 +15,39 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
+import org.folio.persist.InstanceInternalRepository;
+import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.rest.support.WebContext;
+import org.folio.services.consortium.ConsortiumService;
+import org.folio.services.consortium.ConsortiumServiceImpl;
+import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
+  private static final Logger log = getLogger(HoldingsService.class);
   private static final String INSTANCE_ID = "instanceId";
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -44,6 +56,9 @@ public class HoldingsService {
   private final HoldingsRepository holdingsRepository;
   private final ItemDomainEventPublisher itemEventService;
   private final HoldingDomainEventPublisher domainEventPublisher;
+  private final InstanceInternalRepository instanceRepository;
+  private final ConsortiumService consortiumService;
+  //private final HttpClient httpClient;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     this.vertxContext = context;
@@ -54,6 +69,8 @@ public class HoldingsService {
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
+    instanceRepository = new InstanceInternalRepository(context, okapiHeaders);
+    consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient());
   }
 
   /**
@@ -126,22 +143,52 @@ public class HoldingsService {
       .map(Response.noContent().build());
   }
 
-  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
+  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert,
+                                         boolean optimisticLocking, RoutingContext routingContext) {
     if (upsert) {
       return upsertHoldings(holdings, optimisticLocking);
     }
 
+    org.folio.rest.support.Context ctx = new WebContext(routingContext);
+    List<Future> instanceFutures = new ArrayList<>(holdings.size());
+
     for (HoldingsRecord holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
+      instanceFutures.add(createShadowInstanceIfNeeded(holdingsRecord.getInstanceId(), ctx));
     }
 
-    return hridManager.populateHridForHoldings(holdings)
-      .compose(NotesValidators::refuseHoldingLongNotes)
+    return CompositeFuture.all(instanceFutures)
+      .compose(result -> hridManager.populateHridForHoldings(holdings))
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
         .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+  }
+
+  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId,
+                                                               org.folio.rest.support.Context context) {
+    return instanceRepository.getById(instanceId)
+      .compose(instance -> {
+        if (instance != null) {
+          return Future.succeededFuture();
+        }
+        log.info("createShadowInstanceIfNeeded:: instance with id: {} not found. Checking consortium",
+          instanceId);
+        return consortiumService.getConsortiumConfiguration(context)
+          .compose(consortiumConfigurationOptional -> {
+              if (consortiumConfigurationOptional.isPresent()) {
+                log.info("createShadowInstanceIfNeeded:: Creating shadow instance with instanceId: {}", instanceId);
+                return consortiumService.createShadowInstance(context, instanceId,
+                  consortiumConfigurationOptional.get());
+              }
+              String notFoundMessage = String.format("instance with id %s does not exist and it's"
+                + " not a consortia shared instance", instanceId);
+              log.warn("createShadowInstanceIfNeeded:: {}", notFoundMessage);
+              return Future.failedFuture(new NotFoundException(notFoundMessage));
+            }
+          );
+      });
   }
 
 

@@ -39,7 +39,7 @@
     <marc4j.version>2.9.4</marc4j.version>
     <aspectj.version>1.9.19</aspectj.version>
     <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal*</sonar.exclusions>
-    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
+    <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/authority-storage/authorities,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances,/holdings-storage/batch/synchronous,/holdings-storage/batch/synchronous-unsafe</generate_routing_context>
     <argLine />
   </properties>
 
@@ -199,6 +199,16 @@
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
       <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>4.5.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-cache</artifactId>
+      <version>4.5.13</version>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
