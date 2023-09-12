@@ -1,5 +1,19 @@
-ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-  ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
+DO $$
+BEGIN
+  IF(SELECT NOT (COUNT(con.*) > 0)
+  	  FROM pg_catalog.pg_constraint con
+  	  INNER JOIN pg_catalog.pg_class rel
+    	  ON rel.oid = con.conrelid
+  	  INNER JOIN pg_catalog.pg_namespace nsp
+    	  ON nsp.oid = connamespace
+  	  WHERE nsp.nspname = '${myuniversity}_${mymodule}'
+    	  AND
+    	    con.conname = '${table.tableName}_id_fkey') THEN
+	  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
+      ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
+  END IF;
+END;
+$$ language 'plpgsql';
 
 -- Trigger: If instance changes then enforce a correct value in instance.jsonb->sourceRecordFormat
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecordFormat()
