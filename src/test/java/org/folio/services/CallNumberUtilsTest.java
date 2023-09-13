@@ -8,17 +8,55 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import io.vertx.sqlclient.Tuple;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Random;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
+import org.folio.util.ResourceUtil;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+@ExtendWith(VertxExtension.class)
 public class CallNumberUtilsTest {
+  private static Vertx vertx;
+
+  @BeforeAll
+  static void beforeAll(Vertx vertx, VertxTestContext vtc) {
+    CallNumberUtilsTest.vertx = vertx;
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+    var sql = "SET search_path TO 'public';\n"
+        + ResourceUtil.asString("/templates/db_scripts/instance-hr-item/write.sql");
+    runSql(sql).onComplete(vtc.succeedingThenComplete());
+  }
+
+  static Future<Void> runSql(String sql) {
+    return PostgresClient.getInstance(vertx).runSQLFile(sql, true)
+        .compose(errors -> {
+          if (errors.isEmpty()) {
+            return Future.succeededFuture();
+          }
+          return Future.failedFuture(errors.get(0));
+        });
+  }
+
+  @AfterAll
+  static void afterAll() {
+    PostgresClient.stopPostgresTester();
+  }
 
   @ParameterizedTest
   @CsvSource({
@@ -68,7 +106,8 @@ public class CallNumberUtilsTest {
     String chronology,
     String copy,
     String suffix,
-    String typeId
+    String typeId,
+    VertxTestContext vtc
   ) {
 
     Item item = new Item();
@@ -83,9 +122,15 @@ public class CallNumberUtilsTest {
 
     HoldingsRecord holdingsRecord = new HoldingsRecord();
     EffectiveCallNumberComponentsUtil.setCallNumberComponents(item, holdingsRecord);
-    EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
 
-    assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
+    PostgresClient.getInstance(vertx)
+      .selectSingle("SELECT public.set_effective_shelving_order($1)", Tuple.of(JsonObject.mapFrom(item)))
+      .onComplete(vtc.succeeding(r -> {
+        EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder(item);
+        assertThat(item.getEffectiveShelvingOrder(), is(desiredShelvingOrder));
+        assertThat(r.getJsonObject(0).getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
+        vtc.completeNow();
+      }));
   }
 
   @Test
@@ -138,9 +183,17 @@ public class CallNumberUtilsTest {
   })
   void checkSuDocShelvingKey(
     String callNumber,
-    String expectedShelvingKey
+    String expectedShelvingKey,
+    VertxTestContext vtc
   ) {
     var shelvingKey = new SuDocCallNumber(callNumber).getShelfKey();
     assertEquals(expectedShelvingKey, shelvingKey);
+
+    PostgresClient.getInstance(vertx)
+      .selectSingle("SELECT public.su_doc_call_number($1)", Tuple.of(callNumber))
+      .onComplete(vtc.succeeding(r -> {
+        assertThat(r.getString(0), is(expectedShelvingKey));
+        vtc.completeNow();
+      }));
   }
 }
