@@ -1,17 +1,11 @@
 DO $$
 BEGIN
-  IF(SELECT NOT (COUNT(con.*) > 0)
-  	  FROM pg_catalog.pg_constraint con
-  	  INNER JOIN pg_catalog.pg_class rel
-    	  ON rel.oid = con.conrelid
-  	  INNER JOIN pg_catalog.pg_namespace nsp
-    	  ON nsp.oid = connamespace
-  	  WHERE nsp.nspname = '${myuniversity}_${mymodule}'
-    	  AND
-    	    con.conname = '${table.tableName}_id_fkey') THEN
-	  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-      ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
-  END IF;
+  -- succeeds and does nothing if foreign key already exists
+  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
+    ALTER CONSTRAINT ${table.tableName}_id_fkey;
+EXCEPTION WHEN undefined_object THEN
+  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
+    ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance ON DELETE CASCADE;
 END;
 $$ language 'plpgsql';
 
