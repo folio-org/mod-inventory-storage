@@ -12,8 +12,6 @@ public class ReindexJobRepository extends AbstractRepository<ReindexJob> {
   public static final String TABLE_NAME = "reindex_job";
   public static final String INSTANCE_REINDEX_JOBS_QUERY =
     "resourceName==Instance";
-  public static final String AUTHORITY_REINDEX_JOBS_QUERY =
-    "resourceName==Authority";
 
   public ReindexJobRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), TABLE_NAME, ReindexJob.class);
