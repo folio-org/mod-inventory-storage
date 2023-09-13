@@ -10,6 +10,7 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
+import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -27,6 +28,7 @@ public class InitApiImpl implements InitAPI {
         handler.handle(Future.failedFuture(th));
         log.error("Consumer Verticles were not started", th);
       });
+    initConsortiumDataCache(vertx, context);
   }
 
   private Future<Void> initAsyncMigrationVerticle(Vertx vertx) {
@@ -47,5 +49,10 @@ public class InitApiImpl implements InitAPI {
       }
     });
     return promise.future();
+  }
+
+  private void initConsortiumDataCache(Vertx vertx, Context context) {
+    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
+    context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
   }
 }

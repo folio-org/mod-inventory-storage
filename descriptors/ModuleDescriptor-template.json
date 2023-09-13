@@ -1310,12 +1310,6 @@
       "version": "1.0"
     }
   ],
-  "optional": [
-    {
-      "id": "consortia",
-      "version": "1.0"
-    }
-  ],
   "permissionSets": [
     {
       "permissionName": "inventory-storage.instance-relationships.collection.get",

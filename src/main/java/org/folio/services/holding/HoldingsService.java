@@ -20,7 +20,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +35,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
+import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
-import org.folio.rest.support.WebContext;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
@@ -58,7 +57,6 @@ public class HoldingsService {
   private final HoldingDomainEventPublisher domainEventPublisher;
   private final InstanceInternalRepository instanceRepository;
   private final ConsortiumService consortiumService;
-  //private final HttpClient httpClient;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     this.vertxContext = context;
@@ -70,7 +68,8 @@ public class HoldingsService {
     itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
     instanceRepository = new InstanceInternalRepository(context, okapiHeaders);
-    consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient());
+    consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+      context.get(ConsortiumDataCache.class.getName()));
   }
 
   /**
@@ -87,7 +86,7 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          return updateHolding(holdingsRecord);
+          return updateHolding(existingHoldingsRecord, holdingsRecord);
         } else {
           return createHolding(holdingsRecord);
         }
@@ -143,21 +142,18 @@ public class HoldingsService {
       .map(Response.noContent().build());
   }
 
-  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert,
-                                         boolean optimisticLocking, RoutingContext routingContext) {
+  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
     if (upsert) {
       return upsertHoldings(holdings, optimisticLocking);
     }
 
-    org.folio.rest.support.Context ctx = new WebContext(routingContext);
-    List<Future> instanceFutures = new ArrayList<>(holdings.size());
-
+    Map<String, Future<SharingInstance>> instanceFutures = new HashMap<>();
     for (HoldingsRecord holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-      instanceFutures.add(createShadowInstanceIfNeeded(holdingsRecord.getInstanceId(), ctx));
+      instanceFutures.computeIfAbsent(holdingsRecord.getInstanceId(), this::createShadowInstanceIfNeeded);
     }
 
-    return CompositeFuture.all(instanceFutures)
+    return CompositeFuture.all(new ArrayList<>(instanceFutures.values()))
       .compose(result -> hridManager.populateHridForHoldings(holdings))
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
@@ -166,8 +162,7 @@ public class HoldingsService {
         .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
-  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId,
-                                                               org.folio.rest.support.Context context) {
+  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId) {
     return instanceRepository.getById(instanceId)
       .compose(instance -> {
         if (instance != null) {
@@ -175,12 +170,12 @@ public class HoldingsService {
         }
         log.info("createShadowInstanceIfNeeded:: instance with id: {} not found. Checking consortium",
           instanceId);
-        return consortiumService.getConsortiumConfiguration(context)
+        return consortiumService.getConsortiumData(okapiHeaders)
           .compose(consortiumConfigurationOptional -> {
               if (consortiumConfigurationOptional.isPresent()) {
                 log.info("createShadowInstanceIfNeeded:: Creating shadow instance with instanceId: {}", instanceId);
-                return consortiumService.createShadowInstance(context, instanceId,
-                  consortiumConfigurationOptional.get());
+                return consortiumService.createShadowInstance(instanceId, consortiumConfigurationOptional.get(),
+                  okapiHeaders);
               }
               String notFoundMessage = String.format("instance with id %s does not exist and it's"
                 + " not a consortia shared instance", instanceId);
