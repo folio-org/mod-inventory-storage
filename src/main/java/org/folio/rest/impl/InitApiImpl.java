@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.DomainEventConsumerVerticle;
+import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -19,6 +20,8 @@ public class InitApiImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
+    initConsortiumDataCache(vertx, context);
+
     initAsyncMigrationVerticle(vertx)
       .compose(v -> initDomainEventConsumerVerticle(vertx))
       .onComplete(v -> handler.handle(Future.succeededFuture()))
@@ -52,9 +55,14 @@ public class InitApiImpl implements InitAPI {
 
     return vertx.deployVerticle(DomainEventConsumerVerticle.class, options)
       .onSuccess(ar -> log.info(
-        "initDomainEventConsumerVerticle:: AsyncMigrationConsumerVerticle verticle was successfully started"))
+        "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was successfully started"))
       .onFailure(e -> log.error(
-        "initDomainEventConsumerVerticle:: AsyncMigrationConsumerVerticle verticle was not successfully started", e))
+        "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was not successfully started", e))
       .mapEmpty();
+  }
+
+  private void initConsortiumDataCache(Vertx vertx, Context context) {
+    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
+    context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
   }
 }

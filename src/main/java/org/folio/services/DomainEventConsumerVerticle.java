@@ -3,6 +3,7 @@ package org.folio.services;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
@@ -27,7 +28,7 @@ public class DomainEventConsumerVerticle extends AbstractVerticle {
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     HttpClient httpClient = vertx.createHttpClient();
-    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, httpClient);
+    ConsortiumDataCache consortiumDataCache = getConsortiumDataCache(context);
     DomainEventKafkaRecordHandler domainEventKafkaRecordHandler =
       new DomainEventKafkaRecordHandler(consortiumDataCache, httpClient, vertx);
 
@@ -64,4 +65,9 @@ public class DomainEventConsumerVerticle extends AbstractVerticle {
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build();
   }
+
+  private ConsortiumDataCache getConsortiumDataCache(Context context) {
+    return context.get(ConsortiumDataCache.class.getName());
+  }
+
 }
