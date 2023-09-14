@@ -35,8 +35,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
-import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
@@ -86,7 +86,7 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          return updateHolding(existingHoldingsRecord, holdingsRecord);
+          return updateHolding(holdingsRecord);
         } else {
           return createHolding(holdingsRecord);
         }
@@ -163,31 +163,6 @@ public class HoldingsService {
         .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
-  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId) {
-    return instanceRepository.getById(instanceId)
-      .compose(instance -> {
-        if (instance != null) {
-          return Future.succeededFuture();
-        }
-        log.info("createShadowInstanceIfNeeded:: instance with id: {} not found. Checking consortium",
-          instanceId);
-        return consortiumService.getConsortiumData(okapiHeaders)
-          .compose(consortiumConfigurationOptional -> {
-              if (consortiumConfigurationOptional.isPresent()) {
-                log.info("createShadowInstanceIfNeeded:: Creating shadow instance with instanceId: {}", instanceId);
-                return consortiumService.createShadowInstance(instanceId, consortiumConfigurationOptional.get(),
-                  okapiHeaders);
-              }
-              String notFoundMessage = String.format("instance with id %s does not exist and it's"
-                + " not a consortia shared instance", instanceId);
-              log.warn("createShadowInstanceIfNeeded:: {}", notFoundMessage);
-              return Future.failedFuture(new NotFoundException(notFoundMessage));
-            }
-          );
-      });
-  }
-
-
   public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, boolean optimisticLocking) {
     try {
       for (HoldingsRecord holdingsRecord : holdings) {
@@ -257,6 +232,30 @@ public class HoldingsService {
     } else {
       return permanentLocationId;
     }
+  }
+
+  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId) {
+    return instanceRepository.getById(instanceId)
+      .compose(instance -> {
+        if (instance != null) {
+          return Future.succeededFuture();
+        }
+        log.info("createShadowInstanceIfNeeded:: instance with id: {} not found. Checking consortium",
+          instanceId);
+        return consortiumService.getConsortiumData(okapiHeaders)
+          .compose(consortiumDataOptional -> {
+              if (consortiumDataOptional.isPresent()) {
+                log.info("createShadowInstanceIfNeeded:: Creating shadow instance with instanceId: {}", instanceId);
+                return consortiumService.createShadowInstance(instanceId, consortiumDataOptional.get(),
+                  okapiHeaders);
+              }
+              String notFoundMessage = String.format("instance with id %s does not exist and it's"
+                + " not a consortia shared instance", instanceId);
+              log.warn("createShadowInstanceIfNeeded:: {}", notFoundMessage);
+              return Future.failedFuture(new NotFoundException(notFoundMessage));
+            }
+          );
+      });
   }
 
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
