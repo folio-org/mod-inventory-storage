@@ -155,6 +155,7 @@ public class HoldingsService {
 
     return CompositeFuture.all(new ArrayList<>(instanceFutures.values()))
       .compose(result -> hridManager.populateHridForHoldings(holdings))
+      .compose(NotesValidators::refuseHoldingLongNotes)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
       .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
