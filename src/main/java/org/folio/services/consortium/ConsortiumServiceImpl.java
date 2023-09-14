@@ -62,7 +62,6 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> shareInstance(String consortiumId, SharingInstance sharingInstance,
                                                Map<String, String> headers) {
-
     CompletableFuture<SharingInstance> completableFuture =
       buildHttpRequest(String.format(SHARE_INSTANCE_ENDPOINT, consortiumId), POST, headers)
         .sendJson(sharingInstance)
