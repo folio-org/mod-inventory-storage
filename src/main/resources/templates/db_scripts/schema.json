@@ -1135,6 +1135,11 @@
       "run": "after",
       "snippetPath": "instance-hr-item/hridTrigger.sql",
       "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "dropDuplicatesOfinstance_source_marc_id_fkey.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }
