@@ -1068,11 +1068,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "instanceDeleteCascade.sql",
-      "fromModuleVersion": "25.0.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "addAuthoritySourceFiles.sql",
       "fromModuleVersion": "25.0.1"
     },
