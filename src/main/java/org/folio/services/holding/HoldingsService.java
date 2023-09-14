@@ -143,18 +143,19 @@ public class HoldingsService {
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
-    if (upsert) {
-      return upsertHoldings(holdings, optimisticLocking);
-    }
-
-    Map<String, Future<SharingInstance>> instanceFutures = new HashMap<>();
+    Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
     for (HoldingsRecord holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-      instanceFutures.computeIfAbsent(holdingsRecord.getInstanceId(), this::createShadowInstanceIfNeeded);
+      instanceFuturesMap.computeIfAbsent(holdingsRecord.getInstanceId(), this::createShadowInstanceIfNeeded);
     }
 
-    return CompositeFuture.all(new ArrayList<>(instanceFutures.values()))
-      .compose(result -> hridManager.populateHridForHoldings(holdings))
+    CompositeFuture instancesFuture = CompositeFuture.all(new ArrayList<>(instanceFuturesMap.values()));
+
+    if (upsert) {
+      return upsertHoldings(holdings, instancesFuture, optimisticLocking);
+    }
+
+    return instancesFuture.compose(result -> hridManager.populateHridForHoldings(holdings))
       .compose(NotesValidators::refuseHoldingLongNotes)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
@@ -163,12 +164,9 @@ public class HoldingsService {
         .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
   }
 
-  public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, boolean optimisticLocking) {
+  public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, CompositeFuture instancesFuture,
+                                         boolean optimisticLocking) {
     try {
-      for (HoldingsRecord holdingsRecord : holdings) {
-        holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-      }
-
       if (optimisticLocking) {
         OptimisticLockingUtil.unsetVersionIfMinusOne(holdings);
       } else {
@@ -180,7 +178,7 @@ public class HoldingsService {
         OptimisticLockingUtil.setVersionToMinusOne(holdings);
       }
 
-      return NotesValidators.refuseHoldingLongNotes(holdings)
+      return instancesFuture.compose(x -> NotesValidators.refuseHoldingLongNotes(holdings))
           .compose(x -> holdingsRepository.upsert(holdings))
           .onSuccess(this::publishEvents)
           .map(Response.status(201).build())
