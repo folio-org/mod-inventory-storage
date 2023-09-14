@@ -10,6 +10,7 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
+import org.folio.services.DomainEventConsumerVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -19,14 +20,9 @@ public class InitApiImpl implements InitAPI {
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initAsyncMigrationVerticle(vertx)
-      .onComplete(car -> {
-        handler.handle(Future.succeededFuture());
-        log.info("Consumer Verticles were successfully started");
-      })
-      .onFailure(th -> {
-        handler.handle(Future.failedFuture(th));
-        log.error("Consumer Verticles were not started", th);
-      });
+      .compose(v -> initDomainEventConsumerVerticle(vertx))
+      .onComplete(v -> handler.handle(Future.succeededFuture()))
+      .onFailure(th -> handler.handle(Future.failedFuture(th)));
   }
 
   private Future<Void> initAsyncMigrationVerticle(Vertx vertx) {
@@ -39,13 +35,26 @@ public class InitApiImpl implements InitAPI {
     vertx.deployVerticle(AsyncMigrationConsumerVerticle.class, options, result -> {
       if (result.succeeded()) {
         long elapsedTime = System.currentTimeMillis() - startTime;
-        log.info(String.format(
-          "%s deployed in %s milliseconds", AsyncMigrationConsumerVerticle.class.getName(), elapsedTime));
+        log.info("AsyncMigrationConsumerVerticle was deployed in {} milliseconds", elapsedTime);
         promise.complete();
       } else {
+        log.error("AsyncMigrationConsumerVerticle was not started", result.cause());
         promise.fail(result.cause());
       }
     });
     return promise.future();
+  }
+
+  private Future<Void> initDomainEventConsumerVerticle(Vertx vertx) {
+    DeploymentOptions options = new DeploymentOptions()
+      .setWorker(true)
+      .setInstances(1);
+
+    return vertx.deployVerticle(DomainEventConsumerVerticle.class, options)
+      .onSuccess(ar -> log.info(
+        "initDomainEventConsumerVerticle:: AsyncMigrationConsumerVerticle verticle was successfully started"))
+      .onFailure(e -> log.error(
+        "initDomainEventConsumerVerticle:: AsyncMigrationConsumerVerticle verticle was not successfully started", e))
+      .mapEmpty();
   }
 }
