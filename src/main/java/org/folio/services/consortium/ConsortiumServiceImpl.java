@@ -15,7 +15,6 @@ import io.vertx.ext.web.client.WebClient;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,28 +61,23 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> shareInstance(String consortiumId, SharingInstance sharingInstance,
                                                Map<String, String> headers) {
-    CompletableFuture<SharingInstance> completableFuture =
-      buildHttpRequest(String.format(SHARE_INSTANCE_ENDPOINT, consortiumId), POST, headers)
-        .sendJson(sharingInstance)
-        .compose(httpResponse -> {
-          if (httpResponse.statusCode() == HTTP_CREATED
-            && !SharingStatus.ERROR.toString().equals(httpResponse.bodyAsJsonObject().getString("status"))) {
-            SharingInstance response = Json.decodeValue(httpResponse.body(), SharingInstance.class);
-            LOGGER.debug("shareInstance:: Successfully sharedInstance with id: {}, sharedInstance: {}",
-              response.getInstanceIdentifier(), httpResponse.bodyAsString());
-            return Future.succeededFuture(response);
-          } else {
-            String message = String.format(SHARING_INSTANCE_ERROR, sharingInstance.getSourceTenantId(),
-              sharingInstance.getTargetTenantId(), sharingInstance.getInstanceIdentifier(),
-              httpResponse.statusCode(), httpResponse.bodyAsString());
-            LOGGER.warn(String.format("shareInstance:: %s", message));
-            return Future.failedFuture(new ConsortiumException(message));
-          }
-        })
-        .toCompletionStage()
-        .toCompletableFuture();
-
-    return Future.fromCompletionStage(completableFuture);
+    return buildHttpRequest(String.format(SHARE_INSTANCE_ENDPOINT, consortiumId), POST, headers)
+      .sendJson(sharingInstance)
+      .compose(httpResponse -> {
+        if (httpResponse.statusCode() == HTTP_CREATED
+          && !SharingStatus.ERROR.toString().equals(httpResponse.bodyAsJsonObject().getString("status"))) {
+          SharingInstance response = Json.decodeValue(httpResponse.body(), SharingInstance.class);
+          LOGGER.debug("shareInstance:: Successfully sharedInstance with id: {}, sharedInstance: {}",
+            response.getInstanceIdentifier(), httpResponse.bodyAsString());
+          return Future.succeededFuture(response);
+        } else {
+          String message = String.format(SHARING_INSTANCE_ERROR, sharingInstance.getSourceTenantId(),
+            sharingInstance.getTargetTenantId(), sharingInstance.getInstanceIdentifier(),
+            httpResponse.statusCode(), httpResponse.bodyAsString());
+          LOGGER.warn(String.format("shareInstance:: %s", message));
+          return Future.failedFuture(new ConsortiumException(message));
+        }
+      });
   }
 
   private HttpRequest<Buffer> buildHttpRequest(String path, HttpMethod httpMethod, Map<String, String> headers) {
