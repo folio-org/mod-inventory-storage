@@ -13,6 +13,7 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.utility.ModuleUtility.getClient;
@@ -41,6 +42,7 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -382,10 +384,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
-    JsonObject newItem = item.copy()
-      .put("_version", 2);
-
-    itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
+    // item doesn't change when holding moves
   }
 
   @Test
@@ -1541,7 +1540,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     firstHolding.put("callNumberSuffix", "updatedFirstCallNumberSuffix");
 
     Response putResponse = update(firstHoldingsUrl, firstHolding);
-
     Response updatedFirstHoldingResponse = get(firstHoldingsUrl);
 
     JsonObject updatedFirstHolding = updatedFirstHoldingResponse.getJson();
@@ -2251,7 +2249,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
-      is("The hrid field cannot be changed: new=ABC123, old=ho00000000001"));
+      is("ERROR: Cannot change hrid of holdings record id=" + holdingsId
+          + ", old hrid=ho00000000001, new hrid=ABC123 (239HR)"));
 
     log.info("Finished cannotChangeHRIDAfterCreation");
   }
@@ -2280,16 +2279,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdings.remove("hrid");
 
-    final CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
+    getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID)
+      .get(10, TimeUnit.SECONDS);
 
-    getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
-      text(updateCompleted));
-
-    final Response response = updateCompleted.get(10, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(),
-      is("The hrid field cannot be changed: new=null, old=ho00000000001"));
+    final Response get = getById(holdingsId.toString());
+    assertThat(get.getJson().getString("hrid"), is("ho00000000001"));
 
     log.info("Finished cannotRemoveHRIDAfterCreation");
   }
@@ -2614,6 +2608,51 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canPostSynchronousBatchWithItemCallNumber() {
+    final JsonArray holdings = threeHoldings();
+    final JsonArray items = sixItems(holdings);
+    for (int i = 0; i < 3; i++) {
+      if (i == 0 || i == 2) {
+        holdings.getJsonObject(i)
+          .put("callNumberPrefix", "hcnp")
+          .put("callNumber", "hcn")
+          .put("callNumberSuffix", "hcns");
+      }
+    }
+    for (int i = 0; i < 6; i++) {
+      if (i == 1 || i == 2 || i == 3 || i == 5) {
+        items.getJsonObject(i)
+          .put("itemLevelCallNumberPrefix", "icnp")
+          .put("itemLevelCallNumber", "icn")
+          .put("itemLevelCallNumberSuffix", "icns");
+      }
+    }
+    final Response response1 = postSynchronousBatch("?upsert=true", holdings);
+    assertThat(response1, statusCodeIs(HTTP_CREATED));
+    final Response itemResponse = postItemSynchronousBatch("?upsert=true", items);
+    assertThat(itemResponse, statusCodeIs(HTTP_CREATED));
+
+    assertItemEffectiveCallNumbers(items, "prefix",     "hcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
+    assertItemEffectiveCallNumbers(items, "callNumber", "hcn",  "icn",  "icn",  "icn",  "hcn",  "icn");
+    assertItemEffectiveCallNumbers(items, "suffix",     "hcns", "icns", "icns", "icns", "hcns", "icns");
+
+    for (int i = 0; i < 3; i++) {
+      if (i == 0 || i == 1) {
+        holdings.getJsonObject(i)
+          .put("callNumberPrefix", "xcnp")
+          .put("callNumber", "xcn")
+          .put("callNumberSuffix", "xcns");
+      }
+    }
+    final Response response2 = postSynchronousBatch("?upsert=true", holdings);
+    assertThat(response2, statusCodeIs(HTTP_CREATED));
+
+    assertItemEffectiveCallNumbers(items, "prefix",     "xcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
+    assertItemEffectiveCallNumbers(items, "callNumber", "xcn",  "icn",  "icn",  "icn",  "hcn",  "icn");
+    assertItemEffectiveCallNumbers(items, "suffix",     "xcns", "icns", "icns", "icns", "hcns", "icns");
+  }
+
+  @Test
   public void canSearchByDiscoverySuppressProperty() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
@@ -2865,6 +2904,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     return holdingsArray;
   }
 
+  /**
+   * Return six item JsonObject, two for each of the three holdings. The items are not created.
+   */
+  private JsonArray sixItems(JsonArray holdings) {
+    JsonArray items = new JsonArray();
+    for (int i = 0; i < 6; i++) {
+      items.add(new JsonObject()
+        .put("id", UUID.randomUUID().toString())
+        .put("holdingsRecordId", holdings.getJsonObject(i / 2).getString("id"))
+        .put("_version", 1)
+        .put("materialTypeId", bookMaterialTypeID)
+        .put("permanentLoanTypeId", canCirculateLoanTypeID)
+        .put("status", new JsonObject().put("name", "Available")));
+    }
+    return items;
+  }
+
   private Response postSynchronousBatchUnsafe(JsonArray holdingsArray) {
     return postSynchronousBatch(holdingsStorageSyncUnsafeUrl(""), holdingsArray);
   }
@@ -2883,6 +2939,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(url, holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(10, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Response postItemSynchronousBatch(String subPath, JsonArray itemArray) {
+    try {
+      JsonObject itemCollection = new JsonObject().put("items", itemArray);
+      return getClient().post(itemsStorageSyncUrl(subPath), itemCollection, TENANT_ID).get(10, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
@@ -2940,6 +3005,35 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * For each passed item use the id and fetch the item record from database.
+   */
+  private List<JsonObject> fetchItems(JsonArray items) {
+    try {
+      var result = new ArrayList<JsonObject>();
+      for (int i = 0; i < items.size(); i++) {
+        var id = items.getJsonObject(i).getString("id");
+        result.add(getClient().get(itemsStorageUrl("/" + id), TENANT_ID).get(5, SECONDS).getJson());
+      }
+      return result;
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Assert that the effective call number property in the database equals the expected n1 ... n6.
+   * Fetch the item using the id from items.
+   */
+  private void assertItemEffectiveCallNumbers(JsonArray items, String property,
+      String n1, String n2, String n3, String n4, String n5, String n6) {
+
+    var actual = fetchItems(items).stream()
+        .map(item -> item.getJsonObject("effectiveCallNumberComponents").getString(property))
+        .collect(Collectors.toList());
+    assertThat(actual, is(List.of(n1, n2, n3, n4, n5, n6)));
   }
 
   private void assertExists(JsonObject expectedHolding) {

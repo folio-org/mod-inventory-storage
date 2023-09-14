@@ -13,6 +13,7 @@ import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.persist.PgExceptionFacade;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.tools.client.exceptions.ResponseException;
@@ -67,6 +68,10 @@ public final class EndpointFailureHandler {
       return textPlainResponse(409, error);
     } else if (error instanceof ResponseException) {
       return ((ResponseException) error).getResponse();
+    }
+    var sqlState = new PgExceptionFacade(error).getSqlState();
+    if ("239HR".equals(sqlState)) {  // Cannot change hrid of holdings record
+      return textPlainResponse(400, error);
     }
     String message = PgExceptionUtil.badRequestMessage(error);
     if (message != null) {
