@@ -1,12 +1,11 @@
 package org.folio.services;
 
+import static org.folio.InventoryKafkaTopic.INSTANCE;
+
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumer;
-import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import io.vertx.core.http.HttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
@@ -14,16 +13,9 @@ import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaConsumerWrapper;
-import org.folio.kafka.SimpleConfigurationReader;
 import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.folio.InventoryKafkaTopic.INSTANCE;
+import org.folio.services.caches.ConsortiumDataCache;
 
 public class DomainEventConsumerVerticle extends AbstractVerticle {
 
@@ -34,17 +26,18 @@ public class DomainEventConsumerVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    var topicName = INSTANCE.fullTopicName(TENANT_PATTERN);
-    String groupId = DomainEventConsumerVerticle.class.getSimpleName() + "_group";
+    HttpClient httpClient = vertx.createHttpClient();
+    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, httpClient);
+    DomainEventKafkaRecordHandler domainEventKafkaRecordHandler =
+      new DomainEventKafkaRecordHandler(consortiumDataCache, httpClient, vertx);
 
-    createKafkaConsumerWrapper(INSTANCE, null)
+    createKafkaConsumerWrapper(INSTANCE, domainEventKafkaRecordHandler)
       .onFailure(startPromise::fail)
       .onSuccess(v -> startPromise.complete());
   }
 
   private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(InventoryKafkaTopic topic,
                                                                                   AsyncRecordHandler<String, String> recordHandler) {
-
     KafkaConfig kafkaConfig = getKafkaConfig();
     SubscriptionDefinition subscriptionDefinition = SubscriptionDefinition.builder()
       .eventType(topic.topicName())
