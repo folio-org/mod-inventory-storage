@@ -155,7 +155,8 @@ public class HoldingsService {
       return upsertHoldings(holdings, instancesFuture, optimisticLocking);
     }
 
-    return instancesFuture.compose(result -> hridManager.populateHridForHoldings(holdings))
+    return instancesFuture
+      .compose(result -> hridManager.populateHridForHoldings(holdings))
       .compose(NotesValidators::refuseHoldingLongNotes)
       .compose(result -> buildBatchOperationContext(upsert, holdings,
         holdingsRepository, HoldingsRecord::getId))
@@ -178,7 +179,8 @@ public class HoldingsService {
         OptimisticLockingUtil.setVersionToMinusOne(holdings);
       }
 
-      return instancesFuture.compose(x -> NotesValidators.refuseHoldingLongNotes(holdings))
+      return instancesFuture
+          .compose(x -> NotesValidators.refuseHoldingLongNotes(holdings))
           .compose(x -> holdingsRepository.upsert(holdings))
           .onSuccess(this::publishEvents)
           .map(Response.status(201).build())
