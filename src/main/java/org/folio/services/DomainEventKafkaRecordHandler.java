@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
@@ -27,7 +28,6 @@ import org.folio.kafka.KafkaHeaderUtils;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
@@ -36,8 +36,9 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private static final Logger LOG = LogManager.getLogger(DomainEventKafkaRecordHandler.class);
   private static final String SHARING_JOBS_PATH =
-    "/consortia/%s/sharing/instances?query=sourceTenantId=%s&instanceIdentifer=%s"; //NOSONAR
+    "/consortia/%s/sharing/instances?sourceTenantId=%s&instanceIdentifer=%s"; //NOSONAR
   private static final String TENANT_IDS_LIMIT = "100";
+  private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
 
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
@@ -54,26 +55,26 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaRecord) {
     try {
       DomainEvent<Instance> event = Json.decodeValue(kafkaRecord.value(), DomainEvent.class);
-      Map<String, String> headers = KafkaHeaderUtils.kafkaHeadersToMap(kafkaRecord.headers());
-      String tenantId = TenantTool.tenantId(headers);
+      Map<String, String> headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(kafkaRecord.headers()));
+      String instanceId = kafkaRecord.key();
+      String tenantId = headers.get(TENANT.toLowerCase());
 
       if (event.getType() != UPDATE) {
         return Future.succeededFuture(kafkaRecord.key());
       }
 
-      Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
       Future<Optional<ConsortiumData>> consortiumDataFuture = consortiaDataCache.getConsortiumData(tenantId, headers);
-
       return consortiumDataFuture
         .map(consortiumDataOptional -> consortiumDataOptional
           .map(consortiumData -> isCentralTenantId(event.getTenant(), consortiumData))
           .orElse(false))
         .compose(isCentralTenant -> Boolean.TRUE.equals(isCentralTenant)
-          ? synchronizeShadowInstances(instance, consortiumDataFuture.result().get(), headers).map(kafkaRecord.key())
+          ? synchronizeShadowInstances(event, instanceId, consortiumDataFuture.result().get(), headers)
+            .map(kafkaRecord.key())
           : Future.succeededFuture(kafkaRecord.key()))
         .onFailure(e -> LOG.warn(
-          "Error during handling event for shadow instances synchronization, tenantId: '{}', instanceId: '{}'",
-          event.getTenant(), instance.getId(), e));
+          "handle:: Error during handling event for shadow instances synchronization, tenantId: '{}', instanceId: '{}'",
+          event.getTenant(), instanceId, e));
     } catch (Exception e) {
       LOG.warn("handle:: Error while handling event for shadow instances synchronization", e);
       return Future.failedFuture(e);
@@ -84,11 +85,11 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
     return tenantId.equals(consortiumData.getCentralTenantId());
   }
 
-  private Future<Void> synchronizeShadowInstances(Instance instance, ConsortiumData consortiumData,
-                                                  Map<String, String> headers) {
+  private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
+                                                  ConsortiumData consortiumData, Map<String, String> headers) {
     return getInstanceAffiliationTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
-      instance.getId(), headers)
-      .compose(tenantIds -> updateShadowInstances(instance, tenantIds, headers));
+      instanceId, headers)
+      .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
   }
 
   private Future<List<String>> getInstanceAffiliationTenantIds(String consortiumId, String sourceTenantId,
@@ -111,28 +112,38 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
       List<String> affiliationsTenantIds = response.bodyAsJsonObject().getJsonArray("sharingInstances")
         .stream()
-        .map((JsonObject.class::cast))
+        .map(JsonObject.class::cast)
         .map(sharing -> sharing.getString("targetTenantId"))
         .collect(Collectors.toList());
       return Future.succeededFuture(affiliationsTenantIds);
     });
   }
 
-  private Future<Void> updateShadowInstances(Instance instance, List<String> tenantIds, Map<String, String> headers) {
+  private Future<Void> updateShadowInstances(DomainEvent<Instance> event, List<String> tenantIds,
+                                             Map<String, String> headers) {
     HashMap<String, String> okapiHeaders = new HashMap<>(headers);
     ArrayList<Future<Void>> updateFutures = new ArrayList<>();
+    Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
+    Integer previousInstanceVersion = JsonObject.mapFrom(event.getOldEntity()).mapTo(Instance.class).getVersion();
+    prepareInstanceForUpdate(instance, previousInstanceVersion);
+
     for (String tenantId : tenantIds) {
       updateFutures.add(updateShadowInstance(instance, tenantId, okapiHeaders));
     }
     return GenericCompositeFuture.join(updateFutures).mapEmpty();
   }
 
+  private void prepareInstanceForUpdate(Instance instance, Integer previousInstanceVersion) {
+    instance.setVersion(previousInstanceVersion);
+    instance.setSource(String.format(CONSORTIUM_SOURCE_TEMPLATE, instance.getSource()));
+  }
+
   private Future<Void> updateShadowInstance(Instance instance, String tenantId, HashMap<String, String> okapiHeaders) {
     okapiHeaders.put(TENANT, tenantId);
     return new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders).update(instance.getId(), instance)
-      .onFailure(e -> LOG.warn("Error during shadow instance update, tenantId: '{}' instanceId: '{}'",
+      .onFailure(e -> LOG.warn("Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId()))
-      .onSuccess(v -> LOG.info("Shadow instance has been updated, tenantId: '{}' instanceId: '{}'",
+      .onSuccess(v -> LOG.info("Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId()))
       .mapEmpty();
   }
