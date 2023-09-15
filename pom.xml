@@ -70,7 +70,6 @@
   </dependencyManagement>
 
   <dependencies>
-    <!-- https://mvnrepository.com/artifact/org.marc4j/marc4j -->
     <dependency>
       <groupId>org.marc4j</groupId>
       <artifactId>marc4j</artifactId>
@@ -114,6 +113,11 @@
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
       <version>2.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>3.1.3</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
@@ -182,6 +186,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.12.0</version>
@@ -206,6 +215,12 @@
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
       <version>5.1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <version>2.27.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>  <!-- for testcontainers -->
