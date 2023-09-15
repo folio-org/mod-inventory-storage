@@ -430,7 +430,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       .withBarcode("bound-with")
       .withItemLevelCallNumber("item effective call number 1")
       .withMaterialType(journalMaterialTypeId).create());
-    boundWithClient.create(new BoundWithPartBuilder(holdingsRecordIdPredefined, UUID.fromString(itemJson.getString("id"))));
+    boundWithClient.create(new BoundWithPartBuilder(holdingsRecordIdPredefined,
+      UUID.fromString(itemJson.getString("id"))));
 
     requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[]{instanceId}, false, response -> {
       assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
