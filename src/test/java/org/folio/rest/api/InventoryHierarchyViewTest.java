@@ -29,6 +29,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
@@ -63,6 +64,7 @@ import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
@@ -414,6 +416,30 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // then
     List<JsonObject> data = getInventoryHierarchyInstances(params);
     assertThat(data.size(), is(1));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldRetrieveBoundWithItems() {
+    var instanceId = UUID.fromString(predefinedInstance.getString("id"));
+
+    var holdingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemJson = super.createItem(new ItemRequestBuilder().forHolding(holdingsId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withTemporaryLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withBarcode("bound-with")
+      .withItemLevelCallNumber("item effective call number 1")
+      .withMaterialType(journalMaterialTypeId).create());
+    boundWithClient.create(new BoundWithPartBuilder(holdingsRecordIdPredefined, UUID.fromString(itemJson.getString("id"))));
+
+    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[]{instanceId}, false, response -> {
+      assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      var items = response.getJson().getJsonArray("items");
+      assertThat(items.size(), is(3));
+      assertTrue(items.stream()
+        .map(Object::toString)
+        .anyMatch(s -> s.contains("bound-with")));
+    });
   }
 
   /**

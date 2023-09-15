@@ -301,6 +301,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return itemsClient.create(item.create());
   }
 
+  protected IndividualResource createBoundWithPart(JsonObject boundWithPartJson) {
+    return boundWithClient.create(boundWithPartJson);
+  }
+
   IndividualResource getCatalogedInstanceType() {
     return getInstanceStatusByCode("cat");
   }
