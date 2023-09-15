@@ -1138,11 +1138,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "oaipmh/modifySetInstanceMdJsonTrigger.sql",
-      "fromModuleVersion": "26.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "oaipmh/createTriggersAndFunctionsForCompleteUpdatedDate.sql",
       "fromModuleVersion": "26.1.0"
     }

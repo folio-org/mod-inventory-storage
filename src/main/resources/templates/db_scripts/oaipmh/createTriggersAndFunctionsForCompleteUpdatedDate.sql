@@ -1,80 +1,23 @@
- DROP TRIGGER IF EXISTS completeUpdatedDate_holdings_record_inserted_updated
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_holdings_record
  ON ${myuniversity}_${mymodule}.holdings_record;
- DROP TRIGGER IF EXISTS completeUpdatedDate_holdings_record_deleted
- ON ${myuniversity}_${mymodule}.holdings_record;
- DROP TRIGGER IF EXISTS completeUpdatedDate_item_inserted_updated
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_item
  ON ${myuniversity}_${mymodule}.item;
- DROP TRIGGER IF EXISTS completeUpdatedDate_item_deleted
- ON ${myuniversity}_${mymodule}.item;
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_instance
+ ON ${myuniversity}_${mymodule}.instance;
 
- DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_holding;
- DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_holding;
- DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_item;
- DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_item;
-
- CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_holding()
-     RETURNS trigger
-     LANGUAGE 'plpgsql'
-     COST 100
-     VOLATILE NOT LEAKPROOF
+ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_instance()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
  AS $BODY$
  BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date =
-          (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone
-      WHERE inst.id = (NEW.jsonb ->> 'instanceId')::uuid;
-   RETURN NEW;
+     NEW.complete_updated_date = NOW();
+  RETURN NEW;
  END;
  $BODY$;
 
- CREATE TRIGGER completeUpdatedDate_holdings_record_inserted_updated
-     BEFORE UPDATE OR INSERT
-     ON ${myuniversity}_${mymodule}.holdings_record
-     FOR EACH ROW
-     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_holding();
-
-
- CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_holding()
-     RETURNS trigger
-     LANGUAGE 'plpgsql'
-     COST 100
-     VOLATILE NOT LEAKPROOF
- AS $BODY$
- BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
-      WHERE inst.id = OLD.instanceid;
-   RETURN OLD;
- END;
- $BODY$;
-
- CREATE TRIGGER completeUpdatedDate_holdings_record_deleted
-     AFTER DELETE
-     ON ${myuniversity}_${mymodule}.holdings_record
-     FOR EACH ROW
-     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_holding();
-
- CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_item()
-     RETURNS trigger
-     LANGUAGE 'plpgsql'
-     COST 100
-     VOLATILE NOT LEAKPROOF
- AS $BODY$
- BEGIN
-      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date =
-          (NEW.jsonb -> 'metadata' ->> 'updatedDate')::timestamp with time zone
-      WHERE inst.id IN (
-          SELECT instanceid FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
-          WHERE hold_rec.id = (NEW.jsonb ->> 'holdingsRecordId')::uuid);
-   RETURN NEW;
- END;
- $BODY$;
-
- CREATE TRIGGER completeUpdatedDate_item_inserted_updated
-     BEFORE UPDATE OR INSERT
-     ON ${myuniversity}_${mymodule}.item
-     FOR EACH ROW
-     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_insert_update_item();
-
- CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_item()
+ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_item_insert_update()
     RETURNS trigger
     LANGUAGE 'plpgsql'
     COST 100
@@ -83,15 +26,81 @@
  BEGIN
      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
      WHERE inst.id IN (
-         SELECT instanceid
-         FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
-         WHERE hold_rec.id = (OLD.jsonb ->> 'holdingsRecordId')::uuid);
+          SELECT instanceid
+          FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
+          WHERE hold_rec.id = NEW.holdingsrecordid);
+  RETURN NEW;
+ END;
+ $BODY$;
+
+ CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_item_delete()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+ AS $BODY$
+ BEGIN
+     UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
+     WHERE inst.id IN (
+          SELECT instanceid
+          FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
+          WHERE hold_rec.id = OLD.holdingsrecordid);
   RETURN OLD;
  END;
  $BODY$;
 
- CREATE TRIGGER completeUpdatedDate_item_deleted
-    AFTER DELETE
-    ON ${myuniversity}_${mymodule}.item
-    FOR EACH ROW
-    EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_delete_item();
+  CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_holdings_insert_update()
+     RETURNS trigger
+     LANGUAGE 'plpgsql'
+     COST 100
+     VOLATILE NOT LEAKPROOF
+  AS $BODY$
+  BEGIN
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
+      WHERE inst.id = NEW.instanceid;
+   RETURN NEW;
+  END;
+  $BODY$;
+
+  CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_holdings_delete()
+     RETURNS trigger
+     LANGUAGE 'plpgsql'
+     COST 100
+     VOLATILE NOT LEAKPROOF
+  AS $BODY$
+  BEGIN
+      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
+      WHERE inst.id = OLD.instanceid;
+   RETURN OLD;
+  END;
+  $BODY$;
+
+ CREATE TRIGGER updateCompleteUpdatedDate_holdings_record_insert_update
+     BEFORE UPDATE OR INSERT
+     ON ${myuniversity}_${mymodule}.holdings_record
+     FOR EACH ROW
+     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_holdings_insert_update();
+
+ CREATE TRIGGER updateCompleteUpdatedDate_holdings_record_delete
+     AFTER DELETE
+     ON ${myuniversity}_${mymodule}.holdings_record
+     FOR EACH ROW
+     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_holdings_delete();
+
+ CREATE TRIGGER updateCompleteUpdatedDate_item_insert_update
+     BEFORE UPDATE OR INSERT
+     ON ${myuniversity}_${mymodule}.item
+     FOR EACH ROW
+     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_item_insert_update();
+
+ CREATE TRIGGER updateCompleteUpdatedDate_item_delete
+     AFTER DELETE
+     ON ${myuniversity}_${mymodule}.item
+     FOR EACH ROW
+     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_item_delete();
+
+ CREATE TRIGGER updateCompleteUpdatedDate_instance
+     BEFORE UPDATE OR INSERT
+     ON ${myuniversity}_${mymodule}.instance
+     FOR EACH ROW
+     EXECUTE FUNCTION ${myuniversity}_${mymodule}.completeUpdatedDate_for_instance();
