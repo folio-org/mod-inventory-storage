@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
-public class OaiPmhCompleteUpdatedDateTest extends TestBaseWithInventoryUtil {
+public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   private final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
       TenantTool.calculateTenantId(TENANT_ID));

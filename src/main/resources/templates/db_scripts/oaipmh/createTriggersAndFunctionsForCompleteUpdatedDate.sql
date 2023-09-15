@@ -1,6 +1,10 @@
- DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_holdings_record
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_holdings_record_insert_update
  ON ${myuniversity}_${mymodule}.holdings_record;
- DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_item
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_holdings_record_delete
+ ON ${myuniversity}_${mymodule}.holdings_record;
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_item_insert_update
+ ON ${myuniversity}_${mymodule}.item;
+ DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_item_delete
  ON ${myuniversity}_${mymodule}.item;
  DROP TRIGGER IF EXISTS updateCompleteUpdatedDate_instance
  ON ${myuniversity}_${mymodule}.instance;
