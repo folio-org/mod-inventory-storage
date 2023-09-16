@@ -41,7 +41,7 @@ WITH
                  JOIN instance i
                       ON i.id = instId
                  LEFT JOIN mode_of_issuance moi
-                           ON moi.id = (i.jsonb ->> 'modeOfIssuanceId')::uuid
+                           ON moi.id = nullif(i.jsonb ->> 'modeOfIssuanceId','')::uuid
     ),
     -- Prepared items and holdings
     viewItemsAndHoldings(instId, records) AS (
@@ -72,7 +72,13 @@ WITH
                                                                                                                'code', holdTempLoc.locJsonb ->> 'code',
                                                                                                                'campusName', holdTempLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', holdTempLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', holdTempLoc.locInstJsonb ->> 'name'))
+                                                                                                               'institutionName', holdTempLoc.locInstJsonb ->> 'name'),
+                                                                                            'effectiveLocation',
+                                                                                            jsonb_build_object('name', COALESCE(holdEffLoc.locJsonb ->> 'discoveryDisplayName', holdEffLoc.locJsonb ->> 'name'),
+                                                                                                               'code', holdEffLoc.locJsonb ->> 'code',
+                                                                                                               'campusName', holdEffLoc.locCampJsonb ->> 'name',
+                                                                                                               'libraryName', holdEffLoc.locLibJsonb ->> 'name',
+                                                                                                               'institutionName', holdEffLoc.locInstJsonb ->> 'name'))
                                                                       ELSE NULL END::jsonb,
                                                                  'callNumber', json_build_object('prefix', hr.jsonb ->> 'callNumberPrefix',
                                                                                                  'suffix', hr.jsonb ->> 'callNumberSuffix',
@@ -173,7 +179,7 @@ WITH
                                                                  CASE WHEN item.id IS NOT NULL THEN
                                                                           COALESCE(getStatisticalCodes(item.jsonb -> 'statisticalCodeIds'), '[]'::jsonb)
                                                                       ELSE NULL END ::jsonb))
-                                              FILTER (WHERE item.id IS NOT NULL), '[]'::jsonb)
+                                              FILTER (WHERE item.id IS NOT NULL AND NOT ($2 AND COALESCE((item.jsonb ->> 'discoverySuppress')::bool, false))), '[]'::jsonb)
                       ) itemsAndHoldings
 
               FROM ${myuniversity}_${mymodule}.holdings_record hr
@@ -217,6 +223,9 @@ WITH
                   -- Holdings Temporary location relation
                        LEFT JOIN viewLocations holdTempLoc
                                  ON (hr.jsonb ->> 'temporaryLocationId')::uuid = holdTempLoc.locId
+                  -- Holdings Effective location relation
+                       LEFT JOIN viewLocations holdEffLoc
+                                 ON (hr.jsonb ->> 'effectiveLocationId')::uuid = holdEffLoc.locId
                   -- Holdings Call number type relation
                        LEFT JOIN ${myuniversity}_${mymodule}.call_number_type hrcnt
                                  ON (hr.jsonb ->> 'callNumberTypeId')::uuid = hrcnt.id
@@ -225,7 +234,6 @@ WITH
                                  ON hr.illpolicyid = ilp.id
               WHERE true
                 AND NOT ($2 AND COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false))
-                AND NOT ($2 AND COALESCE((item.jsonb ->> 'discoverySuppress')::bool, false))
               GROUP BY 1
              ) itemAndHoldingsAttrs
     )

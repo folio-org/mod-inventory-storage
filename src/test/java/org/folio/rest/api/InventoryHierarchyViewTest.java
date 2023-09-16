@@ -98,6 +98,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Before
   public void beforeEach() {
+    deleteAll(TENANT_ID, "bound_with_part");
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
