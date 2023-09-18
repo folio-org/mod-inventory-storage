@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,9 +37,12 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private static final Logger LOG = LogManager.getLogger(DomainEventKafkaRecordHandler.class);
   private static final String SHARING_JOBS_PATH =
-    "/consortia/%s/sharing/instances?sourceTenantId=%s&instanceIdentifer=%s"; //NOSONAR
+    "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifer=%s"; //NOSONAR
   private static final String TENANT_IDS_LIMIT = "100";
   private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
+  private static final String SHARING_INSTANCES_FIELD = "sharingInstances";
+  private static final String TARGET_TENANT_ID_FIELD = "targetTenantId";
+  private static final String SOURCE_TENANT_ID_FIELD = "sourceTenantId";
 
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
@@ -92,10 +96,10 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
   }
 
-  private Future<List<String>> getInstanceAffiliationTenantIds(String consortiumId, String sourceTenantId,
+  private Future<List<String>> getInstanceAffiliationTenantIds(String consortiumId, String centralTenantId,
                                                                String instanceId, Map<String, String> headers) {
     String okapiUrl = headers.get(URL);
-    String preparedPath = String.format(SHARING_JOBS_PATH, consortiumId, sourceTenantId, instanceId);
+    String preparedPath = String.format(SHARING_JOBS_PATH, consortiumId, instanceId);
     WebClient client = WebClient.wrap(httpClient);
     HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + preparedPath);
     headers.forEach(request::putHeader);
@@ -110,10 +114,12 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
         return Future.failedFuture(msg);
       }
 
-      List<String> affiliationsTenantIds = response.bodyAsJsonObject().getJsonArray("sharingInstances")
+      List<String> affiliationsTenantIds = response.bodyAsJsonObject().getJsonArray(SHARING_INSTANCES_FIELD)
         .stream()
         .map(JsonObject.class::cast)
-        .map(sharing -> sharing.getString("targetTenantId"))
+        .flatMap(sharing ->
+          Stream.of(sharing.getString(TARGET_TENANT_ID_FIELD), sharing.getString(SOURCE_TENANT_ID_FIELD)))
+        .filter(tenantId -> !tenantId.equals(centralTenantId))
         .collect(Collectors.toList());
       return Future.succeededFuture(affiliationsTenantIds);
     });
