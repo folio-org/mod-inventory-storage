@@ -13,7 +13,7 @@ Provides PostgreSQL based storage to complement the [inventory module](http://gi
 
 # Prerequisites
 
-- Java 11 JDK
+- Java 17 JDK
 - Maven 3.3.9
 - Docker ([minimum requirements](https://www.testcontainers.org/supported_docker_environment/))
 - Postgres 12 (running and listening on localhost:5432, logged in user must have admin rights)

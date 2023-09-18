@@ -1,5 +1,13 @@
-ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
-  ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance;
+DO $$
+BEGIN
+  -- succeeds and does nothing if foreign key already exists
+  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
+    ALTER CONSTRAINT ${table.tableName}_id_fkey;
+EXCEPTION WHEN undefined_object THEN
+  ALTER TABLE ${myuniversity}_${mymodule}.${table.tableName}
+    ADD FOREIGN KEY (id) REFERENCES ${myuniversity}_${mymodule}.instance ON DELETE CASCADE;
+END;
+$$ language 'plpgsql';
 
 -- Trigger: If instance changes then enforce a correct value in instance.jsonb->sourceRecordFormat
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.set_instance_sourceRecordFormat()

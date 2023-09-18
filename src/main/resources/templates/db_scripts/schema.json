@@ -1068,11 +1068,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "instanceDeleteCascade.sql",
-      "fromModuleVersion": "25.0.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "addAuthoritySourceFiles.sql",
       "fromModuleVersion": "25.0.1"
     },
@@ -1139,6 +1134,11 @@
     {
       "run": "after",
       "snippetPath": "instance-hr-item/hridTrigger.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "dropDuplicatesOfinstance_source_marc_id_fkey.sql",
       "fromModuleVersion": "26.1.0"
     },
     {
