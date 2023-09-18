@@ -23,7 +23,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -39,13 +38,6 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
-  }
-
-  @AfterClass
-  public static void afterAll() {
-    itemsClient.deleteAll();
-    holdingsClient.deleteAll();
-    instancesClient.deleteAll();
   }
 
   @Test
