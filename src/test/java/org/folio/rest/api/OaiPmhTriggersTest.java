@@ -22,7 +22,7 @@ import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -33,8 +33,8 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
       TenantTool.calculateTenantId(TENANT_ID));
 
   @SneakyThrows
-  @After
-  public void afterEach() {
+  @Before
+  public void beforeEach() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
