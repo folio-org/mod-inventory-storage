@@ -29,13 +29,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceInternalRepository;
-import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
@@ -143,30 +143,33 @@ public class HoldingsService {
   }
 
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
-    Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
     for (HoldingsRecord holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-      instanceFuturesMap.computeIfAbsent(holdingsRecord.getInstanceId(), this::createShadowInstanceIfNeeded);
     }
 
-    CompositeFuture instancesFuture = CompositeFuture.all(new ArrayList<>(instanceFuturesMap.values()));
-
-    if (upsert) {
-      return upsertHoldings(holdings, instancesFuture, optimisticLocking);
-    }
-
-    return instancesFuture
-      .compose(result -> hridManager.populateHridForHoldings(holdings))
-      .compose(NotesValidators::refuseHoldingLongNotes)
-      .compose(result -> buildBatchOperationContext(upsert, holdings,
-        holdingsRepository, HoldingsRecord::getId))
-      .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES, upsert, optimisticLocking,
-        okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .compose(consortiumDataOptional -> {
+        if (consortiumDataOptional.isPresent()) {
+          return createShadowInstancesIfNeeded(holdings, consortiumDataOptional.get());
+        }
+        return Future.succeededFuture();
+      })
+      .compose(ar -> {
+        if (upsert) {
+          return upsertHoldings(holdings, optimisticLocking);
+        } else {
+          return hridManager.populateHridForHoldings(holdings)
+            .compose(NotesValidators::refuseHoldingLongNotes)
+            .compose(result -> buildBatchOperationContext(upsert, holdings,
+              holdingsRepository, HoldingsRecord::getId))
+            .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
+              upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
+              .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+        }
+      });
   }
 
-  public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, CompositeFuture instancesFuture,
-                                         boolean optimisticLocking) {
+  public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, boolean optimisticLocking) {
     try {
       if (optimisticLocking) {
         OptimisticLockingUtil.unsetVersionIfMinusOne(holdings);
@@ -179,8 +182,7 @@ public class HoldingsService {
         OptimisticLockingUtil.setVersionToMinusOne(holdings);
       }
 
-      return instancesFuture
-          .compose(x -> NotesValidators.refuseHoldingLongNotes(holdings))
+      return NotesValidators.refuseHoldingLongNotes(holdings)
           .compose(x -> holdingsRepository.upsert(holdings))
           .onSuccess(this::publishEvents)
           .map(Response.status(201).build())
@@ -234,27 +236,26 @@ public class HoldingsService {
     }
   }
 
-  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId) {
+  private CompositeFuture createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
+                                                        ConsortiumData consortiumData) {
+    Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
+
+    for (HoldingsRecord holdingRecord : holdingsRecords) {
+      String instanceId = holdingRecord.getInstanceId();
+      instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
+    }
+    return CompositeFuture.all(new ArrayList<>(instanceFuturesMap.values()));
+  }
+
+  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
     return instanceRepository.getById(instanceId)
       .compose(instance -> {
         if (instance != null) {
           return Future.succeededFuture();
         }
-        log.info("createShadowInstanceIfNeeded:: instance with id: {} not found. Checking consortium",
-          instanceId);
-        return consortiumService.getConsortiumData(okapiHeaders)
-          .compose(consortiumDataOptional -> {
-              if (consortiumDataOptional.isPresent()) {
-                log.info("createShadowInstanceIfNeeded:: Creating shadow instance with instanceId: {}", instanceId);
-                return consortiumService.createShadowInstance(instanceId, consortiumDataOptional.get(),
-                  okapiHeaders);
-              }
-              String notFoundMessage = String.format("instance with id %s does not exist and it's"
-                + " not a consortia shared instance", instanceId);
-              log.warn("createShadowInstanceIfNeeded:: {}", notFoundMessage);
-              return Future.failedFuture(new NotFoundException(notFoundMessage));
-            }
-          );
+        log.info("createShadowInstanceIfNeeded:: instance with id: {} is not found in local tenant."
+          + " Trying to create a shadow instance", instanceId);
+        return consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders);
       });
   }
 
