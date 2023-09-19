@@ -88,30 +88,42 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static void setupMaterialTypes() {
+    setupMaterialTypes(TENANT_ID);
+  }
+
+  protected static void setupMaterialTypes(String tenantId) {
     MaterialTypesClient materialTypesClient = new MaterialTypesClient(getClient(), materialTypesStorageUrl(""));
-    journalMaterialTypeID = materialTypesClient.create("journal");
+    journalMaterialTypeID = materialTypesClient.create("journal", tenantId);
     journalMaterialTypeId = UUID.fromString(journalMaterialTypeID);
-    bookMaterialTypeID = materialTypesClient.create("book");
+    bookMaterialTypeID = materialTypesClient.create("book", tenantId);
     bookMaterialTypeId = UUID.fromString(bookMaterialTypeID);
   }
 
   protected static void setupLoanTypes() {
+    setupLoanTypes(TENANT_ID);
+  }
+
+  protected static void setupLoanTypes(String tenantId) {
     LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
-    canCirculateLoanTypeID = loanTypesClient.create("Can Circulate");
+    canCirculateLoanTypeID = loanTypesClient.create("Can Circulate", tenantId);
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
-    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating");
+    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating", tenantId);
     nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
   }
 
   protected static void setupLocations() {
+    setupLocations(TENANT_ID);
+  }
+
+  protected static void setupLocations(String tenantId) {
     LocationUtility.clearServicePointIds();
-    LocationUtility.createLocationUnits(true);
-    LocationUtility.createLocation(MAIN_LIBRARY_LOCATION_ID, MAIN_LIBRARY_LOCATION, "TestBaseWI/M");
-    LocationUtility.createLocation(ANNEX_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A");
-    LocationUtility.createLocation(ONLINE_LOCATION_ID, ONLINE_LOCATION, "TestBaseWI/O");
-    LocationUtility.createLocation(SECOND_FLOOR_LOCATION_ID, SECOND_FLOOR_LOCATION, "TestBaseWI/SF");
-    LocationUtility.createLocation(THIRD_FLOOR_LOCATION_ID, THIRD_FLOOR_LOCATION, "TestBaseWI/TF");
-    LocationUtility.createLocation(FOURTH_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION, "TestBaseWI/FF");
+    LocationUtility.createLocationUnits(true, tenantId);
+    LocationUtility.createLocation(MAIN_LIBRARY_LOCATION_ID, MAIN_LIBRARY_LOCATION, "TestBaseWI/M", tenantId);
+    LocationUtility.createLocation(ANNEX_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION, "TestBaseWI/A", tenantId);
+    LocationUtility.createLocation(ONLINE_LOCATION_ID, ONLINE_LOCATION, "TestBaseWI/O", tenantId);
+    LocationUtility.createLocation(SECOND_FLOOR_LOCATION_ID, SECOND_FLOOR_LOCATION, "TestBaseWI/SF", tenantId);
+    LocationUtility.createLocation(THIRD_FLOOR_LOCATION_ID, THIRD_FLOOR_LOCATION, "TestBaseWI/TF", tenantId);
+    LocationUtility.createLocation(FOURTH_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION, "TestBaseWI/FF", tenantId);
   }
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) {

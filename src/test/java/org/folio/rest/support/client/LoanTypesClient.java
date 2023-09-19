@@ -21,12 +21,17 @@ public class LoanTypesClient {
 
   public String create(String name) {
 
+    return create(name, TENANT_ID);
+  }
+
+  public String create(String name, String tenantId) {
+
     CompletableFuture<Response> completed = new CompletableFuture<>();
 
     JsonObject loanTypeRequest = new JsonObject()
       .put("name", name);
 
-    client.post(loanTypesUrl, loanTypeRequest, TENANT_ID,
+    client.post(loanTypesUrl, loanTypeRequest, tenantId,
       ResponseHandler.json(completed));
 
     Response response = TestBase.get(completed);

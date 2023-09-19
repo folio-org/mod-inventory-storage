@@ -37,6 +37,14 @@ public class HoldingsEventMessageChecks {
       eventMessageMatchers.hasCreateEventMessageFor(holdings));
   }
 
+  public void createdMessagePublished(JsonObject holdings, String tenantIdExpected, String okapiUrlExpected) {
+    final var holdingsId = getId(holdings);
+    final var instanceId = getInstanceId(holdings);
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
+      eventMessageMatchers.hasCreateEventMessageFor(holdings, tenantIdExpected, okapiUrlExpected));
+  }
+
   public void updatedMessagePublished(JsonObject oldHoldings,
                                       JsonObject newHoldings) {
 
@@ -45,6 +53,17 @@ public class HoldingsEventMessageChecks {
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings));
+  }
+
+  public void updatedMessagePublished(JsonObject oldHoldings,
+                                      JsonObject newHoldings,
+                                      String okapiUrlExpected) {
+
+    final var holdingsId = getId(newHoldings);
+    final var instanceId = getInstanceId(newHoldings);
+
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
+      eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings, okapiUrlExpected));
   }
 
   public void noHoldingsUpdatedMessagePublished(String instanceId,

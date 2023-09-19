@@ -1,5 +1,7 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.http.Response.Builder.like;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
@@ -18,6 +20,8 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.ModuleUtility.prepareTenant;
+import static org.folio.utility.ModuleUtility.removeTenant;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -31,12 +35,21 @@ import static org.hamcrest.Matchers.both;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.common.FileSource;
+import com.github.tomakehurst.wiremock.common.Json;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
+import com.github.tomakehurst.wiremock.http.Request;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -76,22 +89,57 @@ import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.messages.HoldingsEventMessageChecks;
 import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.services.consortium.entities.SharingInstance;
+import org.folio.services.consortium.entities.SharingStatus;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
+  @ClassRule
+  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
+    .notifier(new ConsoleNotifier(false))
+    .dynamicPort()
+    .extensions(ConsortiumInstanceSharingTransformer.class));
   public static final String NEW_TEST_TAG = "new test tag";
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
+  private static final String X_OKAPI_URL = "X-Okapi-Url";
+  private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
+  private static final String CONSORTIUM_TENANT_ID = "consortium_member_tenant";
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
+
+  @SneakyThrows
+  @BeforeClass
+  public static void beforeClass() {
+    prepareTenant(CONSORTIUM_TENANT_ID, true);
+
+    StorageTestSuite.deleteAll(CONSORTIUM_TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(CONSORTIUM_TENANT_ID, "instance_relationship");
+    StorageTestSuite.deleteAll(CONSORTIUM_TENANT_ID, "bound_with_part");
+    clearData(CONSORTIUM_TENANT_ID);
+
+    setupMaterialTypes(CONSORTIUM_TENANT_ID);
+    setupLoanTypes(CONSORTIUM_TENANT_ID);
+    setupLocations(CONSORTIUM_TENANT_ID);
+  }
+
+  @SneakyThrows
+  @AfterClass
+  public static void afterClass() {
+    removeTenant(CONSORTIUM_TENANT_ID);
+  }
 
   @SneakyThrows
   @Before
@@ -110,6 +158,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
 
     removeAllEvents();
+
+    WireMock.reset();
+    mockUserTenantsForNonConsortiumMember();
+    mockUserTenantsForConsortiumMember();
   }
 
   @SneakyThrows
@@ -2533,6 +2585,32 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithoutUpsert() {
+    canPostSynchronousBatchUnsafeAndCreateShadowInstance("");
+  }
+
+  @Test
+  public void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithUpsertTrue() {
+    canPostSynchronousBatchUnsafeAndCreateShadowInstance("?upsert=true");
+  }
+
+  private void canPostSynchronousBatchUnsafeAndCreateShadowInstance(String subpath) {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+    mockSharingInstance();
+
+    JsonArray holdingsArray = threeHoldingsWithoutInstance();
+    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_TENANT_ID), statusCodeIs(HTTP_CREATED));
+    for (Object hrObj : holdingsArray) {
+      final JsonObject holding = (JsonObject) hrObj;
+      assertExists(holding, CONSORTIUM_TENANT_ID);
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"), CONSORTIUM_TENANT_ID).getJson(),
+        CONSORTIUM_TENANT_ID, mockServer.baseUrl());
+    }
+  }
+
+
+  @Test
   public void canPostSynchronousBatch() {
     JsonArray holdingsArray = threeHoldings();
     assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
@@ -2541,7 +2619,58 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
       assertExists(holding);
 
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id")).getJson());
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id")).getJson(),
+        TENANT_ID, mockServer.baseUrl());
+    }
+  }
+
+  @Test
+  public void canPostSynchronousBatchAndCreateShadowInstanceWithoutUpsert() {
+    canPostSynchronousBatchAndCreateShadowInstance("");
+  }
+
+  @Test
+  public void canPostSynchronousBatchAndCreateShadowInstanceWithUpsertTrue() {
+    canPostSynchronousBatchAndCreateShadowInstance("?upsert=true");
+  }
+
+  private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {
+    mockSharingInstance();
+
+    JsonArray holdingsArray = threeHoldingsWithoutInstance();
+    assertThat(postSynchronousBatch(subpath, holdingsArray, CONSORTIUM_TENANT_ID), statusCodeIs(HTTP_CREATED));
+    for (Object hrObj : holdingsArray) {
+      final JsonObject holding = (JsonObject) hrObj;
+
+      assertExists(holding, CONSORTIUM_TENANT_ID);
+
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"), CONSORTIUM_TENANT_ID).getJson(),
+        CONSORTIUM_TENANT_ID, mockServer.baseUrl());
+    }
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchWithNonExistingInstanceAndNonConsortiumTenant() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+
+    JsonArray holdingsArray = threeHoldingsWithoutInstance();
+    var response = postSynchronousBatch(holdingsArray);
+
+    assertThat(response, statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+
+    JsonObject firstError = errors.getJsonObject(0);
+    assertThat(firstError.getString("message"), matchesPattern("Cannot set holdings_record.instanceid = [\\S]+ "
+      + "because it does not exist in instance.id."));
+    assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
+      is("holdings_record.instanceid"));
+
+    for (int i = 0; i < holdingsArray.size(); i++) {
+      assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
     }
   }
 
@@ -2600,11 +2729,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
-      .forEach(holdingsMessageChecks::createdMessagePublished);
+      .forEach(holding -> holdingsMessageChecks.createdMessagePublished(holding, TENANT_ID, mockServer.baseUrl()));
 
     var holdingsAfterUpdate = getById(existingHrId).getJson();
 
-    holdingsMessageChecks.updatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate);
+    holdingsMessageChecks.updatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate,
+      mockServer.baseUrl());
   }
 
   @Test
@@ -2904,6 +3034,19 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     return holdingsArray;
   }
 
+  private JsonArray threeHoldingsWithoutInstance() {
+    JsonArray holdingsArray = new JsonArray();
+    for (int i = 0; i < 3; i++) {
+      UUID instanceId = UUID.randomUUID();
+      holdingsArray.add(new JsonObject()
+        .put("id", UUID.randomUUID().toString())
+        .put("instanceId", instanceId.toString())
+        .put("_version", 1)
+        .put("permanentLocationId", MAIN_LIBRARY_LOCATION_ID.toString()));
+    }
+    return holdingsArray;
+  }
+
   /**
    * Return six item JsonObject, two for each of the three holdings. The items are not created.
    */
@@ -2925,6 +3068,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     return postSynchronousBatch(holdingsStorageSyncUnsafeUrl(""), holdingsArray);
   }
 
+  private Response postSynchronousBatchUnsafe(String subPath, JsonArray holdingsArray, String tenantId) {
+    return postSynchronousBatch(holdingsStorageSyncUnsafeUrl(subPath), holdingsArray, tenantId);
+  }
+
   private Response postSynchronousBatch(JsonArray holdingsArray) {
     return postSynchronousBatch(holdingsStorageSyncUrl(""), holdingsArray);
   }
@@ -2934,9 +3081,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response postSynchronousBatch(URL url, JsonArray holdingsArray) {
+    return postSynchronousBatch(url, holdingsArray, TENANT_ID);
+  }
+
+  private Response postSynchronousBatch(String subPath, JsonArray holdingsArray, String tenantId) {
+    return postSynchronousBatch(holdingsStorageSyncUrl(subPath), holdingsArray, tenantId);
+  }
+
+  private Response postSynchronousBatch(URL url, JsonArray holdingsArray, String tenantId) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(url, holdingsCollection, TENANT_ID, ResponseHandler.any(createCompleted));
+    getClient().post(url, holdingsCollection, Map.of(X_OKAPI_URL, mockServer.baseUrl()), tenantId,
+      ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(10, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -2953,7 +3109,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private JsonObject smallAngryPlanet(UUID id) {
+  private static JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
     JsonArray contributors = new JsonArray();
@@ -2998,8 +3154,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private Response getById(String id) {
+    return getById(id, TENANT_ID);
+  }
+
+  private Response getById(String id, String tenantId) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    getClient().get(holdingsStorageUrl("/" + id), TENANT_ID, json(getCompleted));
+    getClient().get(holdingsStorageUrl("/" + id), tenantId, json(getCompleted));
     try {
       return getCompleted.get(10, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -3037,7 +3197,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void assertExists(JsonObject expectedHolding) {
-    Response response = getById(expectedHolding.getString("id"));
+    assertExists(expectedHolding, TENANT_ID);
+  }
+
+  private void assertExists(JsonObject expectedHolding, String tenantId) {
+    Response response = getById(expectedHolding.getString("id"), tenantId);
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
   }
@@ -3113,5 +3277,58 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(obj -> (String) obj)
       .collect(Collectors.toList());
+  }
+
+  private void mockUserTenantsForConsortiumMember() {
+    JsonObject userTenantsCollection = new JsonObject()
+      .put("userTenants", new JsonArray()
+        .add(new JsonObject()
+          .put("centralTenantId", "CENTRAL_TENANT_ID")
+          .put("consortiumId", "mobius")));
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(CONSORTIUM_TENANT_ID))
+      .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
+  }
+
+  private void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+  }
+
+  private void mockSharingInstance() {
+    WireMock.stubFor(WireMock.post("/consortia/mobius/sharing/instances")
+      .willReturn(WireMock.created().withTransformers(ConsortiumInstanceSharingTransformer.NAME)));
+  }
+
+  public static class ConsortiumInstanceSharingTransformer extends ResponseTransformer {
+    public static final String NAME = "consortium-instance-sharing-transformer";
+
+    @SneakyThrows
+    @Override
+    public com.github.tomakehurst.wiremock.http.Response transform(Request request,
+       com.github.tomakehurst.wiremock.http.Response response, FileSource fileSource,
+       com.github.tomakehurst.wiremock.extension.Parameters parameters) {
+
+      SharingInstance sharingInstance = Json.getObjectMapper().readValue(request.getBody(),
+        SharingInstance.class);
+      sharingInstance.setStatus(SharingStatus.COMPLETE);
+
+      instancesClient.create(smallAngryPlanet(sharingInstance.getInstanceIdentifier()),
+        sharingInstance.getTargetTenantId());
+
+      return like(response).body(Json.getObjectMapper().writeValueAsString(sharingInstance)).build();
+    }
+
+    @Override
+    public String getName() {
+      return NAME;
+    }
+
+    public boolean applyGlobally() {
+      return false;
+    }
   }
 }

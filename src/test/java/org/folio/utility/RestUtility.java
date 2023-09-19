@@ -49,6 +49,12 @@ public final class RestUtility {
   public static void send(String url, HttpMethod method, String userId, String content,
                           String contentType, Handler<HttpResponse<Buffer>> handler) {
 
+    send(url, method, userId, content, contentType, TENANT_ID, handler);
+  }
+
+  public static void send(String url, HttpMethod method, String userId, String content,
+                          String contentType, String tenantId, Handler<HttpResponse<Buffer>> handler) {
+
     Buffer body = Buffer.buffer(content == null ? "" : content);
     MultiMap headers = MultiMap.caseInsensitiveMultiMap();
     if (userId != null) {
@@ -57,8 +63,8 @@ public final class RestUtility {
 
     getClient().getWebClient()
       .requestAbs(method, url)
-      .putHeader("Authorization", TENANT_ID)
-      .putHeader("x-okapi-tenant", TENANT_ID)
+      .putHeader("Authorization", tenantId)
+      .putHeader("x-okapi-tenant", tenantId)
       .putHeader("Accept", "application/json,text/plain")
       .putHeader("Content-type", contentType)
       .putHeaders(headers)

@@ -43,10 +43,18 @@ public class EventMessageMatchers {
 
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
+    return hasCreateEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation,
+                                                                          String expectedTenantId,
+                                                                          String okapiUrlExpected) {
     return hasItem(allOf(
       isCreateEvent(),
-      isForTenant(),
-      hasHeaders(),
+      isForTenant(expectedTenantId),
+      hasHeaders(expectedTenantId, okapiUrlExpected),
+      hasNewRepresentation(representation),
       hasNewRepresentation(representation),
       hasNoOldRepresentation()));
   }
@@ -55,10 +63,18 @@ public class EventMessageMatchers {
   public Matcher<Iterable<? super EventMessage>> hasUpdateEventMessageFor(JsonObject oldRepresentation,
                                                                           JsonObject newRepresentation) {
 
+    return hasUpdateEventMessageFor(oldRepresentation, newRepresentation, expectedUrl.toString());
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasUpdateEventMessageFor(JsonObject oldRepresentation,
+                                                                          JsonObject newRepresentation,
+                                                                          String okapiUrlExpected) {
+
     return hasItem(allOf(
       isUpdateEvent(),
       isForTenant(),
-      hasHeaders(),
+      hasHeaders(expectedTenantId, okapiUrlExpected),
       hasNewRepresentation(newRepresentation),
       hasOldRepresentation(oldRepresentation)));
   }
@@ -100,7 +116,12 @@ public class EventMessageMatchers {
 
   @NotNull
   public Matcher<EventMessage> isForTenant() {
-    return hasProperty("tenant", is(expectedTenantId));
+    return isForTenant(expectedTenantId);
+  }
+
+  @NotNull
+  public Matcher<EventMessage> isForTenant(String tenantIdExpected) {
+    return hasProperty("tenant", is(tenantIdExpected));
   }
 
   @NotNull
@@ -108,6 +129,13 @@ public class EventMessageMatchers {
     return hasProperty("headers", allOf(
       hasTenantHeader(),
       hasUrlHeader()));
+  }
+
+  @NotNull
+  public Matcher<EventMessage> hasHeaders(String tenantIdExpected, String okapiUrlExpected) {
+    return hasProperty("headers", allOf(
+      hasTenantHeader(tenantIdExpected),
+      hasUrlHeader(okapiUrlExpected)));
   }
 
   @NotNull
@@ -133,13 +161,23 @@ public class EventMessageMatchers {
 
   @NotNull
   private Matcher<Map<? extends String, ? extends String>> hasUrlHeader() {
-    return hasEntry(XOkapiHeaders.URL.toLowerCase(), expectedUrl.toString());
+    return hasUrlHeader(expectedUrl.toString());
+  }
+
+  @NotNull
+  private Matcher<Map<? extends String, ? extends String>> hasUrlHeader(String okapiUrlExpected) {
+    return hasEntry(XOkapiHeaders.URL.toLowerCase(), okapiUrlExpected.toLowerCase());
   }
 
   @NotNull
   private Matcher<Map<? extends String, ? extends String>> hasTenantHeader() {
+    return hasTenantHeader(expectedTenantId);
+  }
+
+  @NotNull
+  private Matcher<Map<? extends String, ? extends String>> hasTenantHeader(String tenantIdExpected) {
     // Needs to be lower case because keys are mapped to lower case
-    return hasEntry(XOkapiHeaders.TENANT.toLowerCase(), expectedTenantId);
+    return hasEntry(XOkapiHeaders.TENANT.toLowerCase(), tenantIdExpected);
   }
 
   @NotNull
