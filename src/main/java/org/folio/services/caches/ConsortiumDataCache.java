@@ -43,6 +43,14 @@ public class ConsortiumDataCache {
       .buildAsync();
   }
 
+  /**
+   * Returns consortium data by specified {@code tenantId}.
+   *
+   * @param tenantId - tenant id
+   * @param headers  - okapi headers
+   * @return future of Optional with consortium data for the specified {@code tenantId},
+   *   if the specified {@code tenantId} is not included to any consortium, then returns future with empty Optional
+   */
   public Future<Optional<ConsortiumData>> getConsortiumData(String tenantId, Map<String, String> headers) {
     try {
       return Future.fromCompletionStage(cache.get(tenantId, (key, executor) -> loadConsortiumData(key, headers)));

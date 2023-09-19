@@ -1,5 +1,7 @@
 package org.folio.services.caches;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -11,31 +13,28 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-
 @RunWith(VertxUnitRunner.class)
 public class ConsortiumDataCacheTest {
+
+  @ClassRule
+  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
+    .notifier(new ConsoleNotifier(false))
+    .dynamicPort());
 
   private static final String TENANT_ID = "diku";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private static final String USER_TENANTS_FIELD = "userTenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
   private static final String CONSORTIUM_ID_FIELD = "consortiumId";
-
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort());
 
   private final Vertx vertx = Vertx.vertx();
   private ConsortiumDataCache consortiumDataCache;
@@ -95,13 +94,26 @@ public class ConsortiumDataCacheTest {
     });
   }
 
-
   @Test
   public void shouldReturnFailedFutureWhenGetServerErrorOnConsortiumDataLoading(TestContext context) {
     Async async = context.async();
     WireMock.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.serverError()));
 
     Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders)
+      .onComplete(context.asyncAssertFailure());
+
+    future.onComplete(ar -> {
+      context.assertTrue(ar.failed());
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldReturnFailedFutureWhenSpecifiedTenantIdIsNull(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.serverError()));
+
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(null, okapiHeaders)
       .onComplete(context.asyncAssertFailure());
 
     future.onComplete(ar -> {
