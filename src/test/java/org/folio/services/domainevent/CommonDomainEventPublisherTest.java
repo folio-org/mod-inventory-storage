@@ -147,6 +147,6 @@ public class CommonDomainEventPublisherTest {
   }
 
   private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
-    return new KafkaProducerRecordBuilder<String, Object>().value(value);
+    return new KafkaProducerRecordBuilder<String, Object>("").value(value);
   }
 }

@@ -150,7 +150,7 @@ public class ReindexJobRunner {
 
   private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(Row row,
                                                                                  ReindexContext reindexContext) {
-    return new KafkaProducerRecordBuilder<String, Object>()
+    return new KafkaProducerRecordBuilder<String, Object>(tenantId)
       .key(row.getUUID("id").toString())
       .value(reindexEvent(tenantId))
       .header(REINDEX_JOB_ID_HEADER, reindexContext.getJobId());

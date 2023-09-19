@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
@@ -159,7 +160,7 @@ public class IterationJobRunner {
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, IterationContext context) {
-    return new KafkaProducerRecordBuilder<String, Object>()
+    return new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());
