@@ -29,6 +29,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.okapi.common.XOkapiHeaders;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -179,6 +180,7 @@ public class CommonDomainEventPublisher<T> {
 
     KafkaProducer<String, String> producer = getOrCreateProducer();
 
+    producerRecord.addHeader(XOkapiHeaders.TOKEN.toLowerCase(), okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()));
     return producer.send(producerRecord)
       .<Void>mapEmpty()
       .eventually(x -> producer.flush())
