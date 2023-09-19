@@ -91,6 +91,8 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
+    LOG.info("synchronizeShadowInstances:: initializing shadow instances synchronization, instanceId: '{}'",
+      instanceId);
     return getInstanceAffiliationTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
       instanceId, headers)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
@@ -130,8 +132,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
     HashMap<String, String> okapiHeaders = new HashMap<>(headers);
     ArrayList<Future<Void>> updateFutures = new ArrayList<>();
     Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
-    Integer previousInstanceVersion = JsonObject.mapFrom(event.getOldEntity()).mapTo(Instance.class).getVersion();
-    prepareInstanceForUpdate(instance, previousInstanceVersion);
+    prepareInstanceForUpdate(instance);
 
     for (String tenantId : tenantIds) {
       updateFutures.add(updateShadowInstance(instance, tenantId, okapiHeaders));
@@ -139,14 +140,16 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
     return GenericCompositeFuture.join(updateFutures).mapEmpty();
   }
 
-  private void prepareInstanceForUpdate(Instance instance, Integer previousInstanceVersion) {
-    instance.setVersion(previousInstanceVersion);
+  private void prepareInstanceForUpdate(Instance instance) {
     instance.setSource(String.format(CONSORTIUM_SOURCE_TEMPLATE, instance.getSource()));
   }
 
   private Future<Void> updateShadowInstance(Instance instance, String tenantId, HashMap<String, String> okapiHeaders) {
     okapiHeaders.put(TENANT, tenantId);
-    return new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders).update(instance.getId(), instance)
+    InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
+    return instanceRepository.getById(instance.getId())
+      .map(Instance::getVersion)
+      .compose(currentVersion ->  instanceRepository.update(instance.getId(), instance.withVersion(currentVersion)))
       .onFailure(e -> LOG.warn("Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId()))
       .onSuccess(v -> LOG.info("Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
