@@ -2651,11 +2651,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotPostSynchronousBatchWithNonExistingInstanceAndNonConsortiumTenant() {
-    JsonObject emptyUserTenantsCollection = new JsonObject()
-      .put("userTenants", JsonArray.of());
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
-
     JsonArray holdingsArray = threeHoldingsWithoutInstance();
     var response = postSynchronousBatch(holdingsArray);
 
