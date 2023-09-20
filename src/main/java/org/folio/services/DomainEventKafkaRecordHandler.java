@@ -37,7 +37,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private static final Logger LOG = LogManager.getLogger(DomainEventKafkaRecordHandler.class);
   private static final String SHARING_JOBS_PATH =
-    "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifer=%s"; //NOSONAR
+    "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s"; //NOSONAR
   private static final String TENANT_IDS_LIMIT = "100";
   private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
   private static final String SHARING_INSTANCES_FIELD = "sharingInstances";
@@ -59,6 +59,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaRecord) {
     try {
       DomainEvent<Instance> event = Json.decodeValue(kafkaRecord.value(), DomainEvent.class);
+      LOG.info("handle:: Processing event for shadow instances synchronization, tenantId: '{}'", event.getTenant());
       Map<String, String> headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(kafkaRecord.headers()));
       String instanceId = kafkaRecord.key();
       String tenantId = headers.get(TENANT.toLowerCase());
@@ -77,7 +78,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
             .map(kafkaRecord.key())
           : Future.succeededFuture(kafkaRecord.key()))
         .onFailure(e -> LOG.warn(
-          "handle:: Error during handling event for shadow instances synchronization, tenantId: '{}', instanceId: '{}'",
+          "handle:: Error during handling event for shadow instances synchronization, centralTenantId: '{}', instanceId: '{}'",
           event.getTenant(), instanceId, e));
     } catch (Exception e) {
       LOG.warn("handle:: Error while handling event for shadow instances synchronization", e);
@@ -92,7 +93,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
     LOG.info(
-      "synchronizeShadowInstances:: initializing shadow instances synchronization, instanceId: '{}', centralTenantId: '{}'",
+      "synchronizeShadowInstances:: Initializing shadow instances synchronization, instanceId: '{}', centralTenantId: '{}'",
       instanceId, event.getTenant());
     return getInstanceAffiliationTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
       instanceId, headers)
@@ -130,6 +131,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private Future<Void> updateShadowInstances(DomainEvent<Instance> event, List<String> tenantIds,
                                              Map<String, String> headers) {
+    LOG.info("updateShadowInstances:: trying to update shadow instances in the following tenants: {} ", tenantIds);
     HashMap<String, String> okapiHeaders = new HashMap<>(headers);
     ArrayList<Future<Void>> updateFutures = new ArrayList<>();
     Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
@@ -146,15 +148,17 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   }
 
   private Future<Void> updateShadowInstance(Instance instance, String tenantId, HashMap<String, String> okapiHeaders) {
-    LOG.info("updateShadowInstance:: trying to update shadow instance, tenantId: '{}', instanceId: '{}'", tenantId, instance.getId());
+    LOG.info("updateShadowInstance:: Trying to update shadow instance, tenantId: '{}', instanceId: '{}'", tenantId, instance.getId());
     okapiHeaders.put(TENANT, tenantId);
     InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
     return instanceRepository.getById(instance.getId())
       .map(Instance::getVersion)
       .compose(currentVersion ->  instanceRepository.update(instance.getId(), instance.withVersion(currentVersion)))
-      .onFailure(e -> LOG.warn("Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
+      .onFailure(e -> LOG.warn(
+        "updateShadowInstance:: Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId(), e))
-      .onSuccess(v -> LOG.info("Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
+      .onSuccess(v -> LOG.info(
+        "updateShadowInstance:: Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId()))
       .mapEmpty();
   }
