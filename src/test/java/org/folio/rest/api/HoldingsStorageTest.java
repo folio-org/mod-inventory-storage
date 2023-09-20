@@ -2627,7 +2627,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatchForConsortiumMember() {
-    JsonArray holdingsArray = threeHoldings();
+    JsonArray holdingsArray = threeHoldings(CONSORTIUM_MEMBER_TENANT);
     assertThat(postSynchronousBatch("", holdingsArray, CONSORTIUM_MEMBER_TENANT), statusCodeIs(HTTP_CREATED));
     for (Object hrObj : holdingsArray) {
       final JsonObject holding = (JsonObject) hrObj;
@@ -3031,10 +3031,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
    * The holdings are not created.
    */
   private JsonArray threeHoldings() {
+    return threeHoldings(TENANT_ID);
+  }
+
+  private JsonArray threeHoldings(String tenantId) {
     JsonArray holdingsArray = new JsonArray();
     for (int i = 0; i < 3; i++) {
       UUID instanceId = UUID.randomUUID();
-      instancesClient.create(smallAngryPlanet(instanceId));
+      instancesClient.create(smallAngryPlanet(instanceId), tenantId);
       holdingsArray.add(new JsonObject()
         .put("id", UUID.randomUUID().toString())
         .put("instanceId", instanceId.toString())
