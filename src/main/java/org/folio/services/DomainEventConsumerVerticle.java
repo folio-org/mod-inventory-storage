@@ -3,12 +3,9 @@ package org.folio.services;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
@@ -20,15 +17,18 @@ import org.folio.services.caches.ConsortiumDataCache;
 
 public class DomainEventConsumerVerticle extends AbstractVerticle {
 
-  private static final Logger LOG = LogManager.getLogger(DomainEventConsumerVerticle.class);
   private static final String TENANT_PATTERN = "\\w{1,}";
   private static final int LOAD_LIMIT = 5;
-  public static final String MODULE_NAME = "inventory";
+
+  private final ConsortiumDataCache consortiumDataCache;
+
+  public DomainEventConsumerVerticle(ConsortiumDataCache consortiumDataCache) {
+    this.consortiumDataCache = consortiumDataCache;
+  }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     HttpClient httpClient = vertx.createHttpClient();
-    ConsortiumDataCache consortiumDataCache = getConsortiumDataCache(context);
     DomainEventKafkaRecordHandler domainEventKafkaRecordHandler =
       new DomainEventKafkaRecordHandler(consortiumDataCache, httpClient, vertx);
 
@@ -64,10 +64,6 @@ public class DomainEventConsumerVerticle extends AbstractVerticle {
       .kafkaHost(KafkaEnvironmentProperties.host())
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build();
-  }
-
-  private ConsortiumDataCache getConsortiumDataCache(Context context) {
-    return context.get(ConsortiumDataCache.class.getName());
   }
 
 }

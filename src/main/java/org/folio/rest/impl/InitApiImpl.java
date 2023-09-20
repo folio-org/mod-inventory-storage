@@ -21,9 +21,8 @@ public class InitApiImpl implements InitAPI {
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initConsortiumDataCache(vertx, context);
-
     initAsyncMigrationVerticle(vertx)
-      .compose(v -> initDomainEventConsumerVerticle(vertx))
+      .compose(v -> initDomainEventConsumerVerticle(vertx, getConsortiumDataCache(context)))
       .onComplete(v -> handler.handle(Future.succeededFuture()))
       .onFailure(th -> handler.handle(Future.failedFuture(th)));
   }
@@ -48,13 +47,13 @@ public class InitApiImpl implements InitAPI {
     return promise.future();
   }
 
-  private Future<Void> initDomainEventConsumerVerticle(Vertx vertx) {
+  private Future<Void> initDomainEventConsumerVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
     DeploymentOptions options = new DeploymentOptions()
       .setWorker(true)
       .setInstances(1);
 
-    return vertx.deployVerticle(DomainEventConsumerVerticle.class, options)
-      .onSuccess(ar -> log.info(
+    return vertx.deployVerticle(() -> new DomainEventConsumerVerticle(consortiumDataCache), options)
+      .onSuccess(v -> log.info(
         "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was successfully started"))
       .onFailure(e -> log.error(
         "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was not successfully started", e))
@@ -65,4 +64,9 @@ public class InitApiImpl implements InitAPI {
     ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
     context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
   }
+
+  private ConsortiumDataCache getConsortiumDataCache(Context context) {
+    return context.get(ConsortiumDataCache.class.getName());
+  }
+
 }
