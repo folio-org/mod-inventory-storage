@@ -55,7 +55,6 @@ public class EventMessageMatchers {
       isForTenant(expectedTenantId),
       hasHeaders(expectedTenantId, okapiUrlExpected),
       hasNewRepresentation(representation),
-      hasNewRepresentation(representation),
       hasNoOldRepresentation()));
   }
 
