@@ -91,8 +91,9 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
-    LOG.info("synchronizeShadowInstances:: initializing shadow instances synchronization, instanceId: '{}'",
-      instanceId);
+    LOG.info(
+      "synchronizeShadowInstances:: initializing shadow instances synchronization, instanceId: '{}', centralTenantId: '{}'",
+      instanceId, event.getTenant());
     return getInstanceAffiliationTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
       instanceId, headers)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
@@ -145,13 +146,14 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   }
 
   private Future<Void> updateShadowInstance(Instance instance, String tenantId, HashMap<String, String> okapiHeaders) {
+    LOG.info("updateShadowInstance:: trying to update shadow instance, tenantId: '{}', instanceId: '{}'", tenantId, instance.getId());
     okapiHeaders.put(TENANT, tenantId);
     InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
     return instanceRepository.getById(instance.getId())
       .map(Instance::getVersion)
       .compose(currentVersion ->  instanceRepository.update(instance.getId(), instance.withVersion(currentVersion)))
       .onFailure(e -> LOG.warn("Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
-        tenantId, instance.getId()))
+        tenantId, instance.getId(), e))
       .onSuccess(v -> LOG.info("Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId()))
       .mapEmpty();
