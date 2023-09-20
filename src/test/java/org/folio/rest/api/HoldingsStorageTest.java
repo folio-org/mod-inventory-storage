@@ -2600,12 +2600,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     mockSharingInstance();
 
     JsonArray holdingsArray = threeHoldingsWithoutInstance();
-    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT), statusCodeIs(HTTP_CREATED));
+    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT),
+      statusCodeIs(HTTP_CREATED));
     for (Object hrObj : holdingsArray) {
       final JsonObject holding = (JsonObject) hrObj;
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"), CONSORTIUM_MEMBER_TENANT).getJson(),
-        CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
+          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
@@ -2633,8 +2634,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
 
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"), CONSORTIUM_MEMBER_TENANT).getJson(),
-        CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
+          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
@@ -2658,8 +2659,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
 
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"), CONSORTIUM_MEMBER_TENANT).getJson(),
-        CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
+          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
