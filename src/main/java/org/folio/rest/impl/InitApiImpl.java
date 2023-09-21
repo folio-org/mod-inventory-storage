@@ -10,8 +10,8 @@ import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
-import org.folio.services.DomainEventConsumerVerticle;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.consortia.ShadowInstanceSynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -22,7 +22,7 @@ public class InitApiImpl implements InitAPI {
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initConsortiumDataCache(vertx, context);
     initAsyncMigrationVerticle(vertx)
-      .compose(v -> initDomainEventConsumerVerticle(vertx, getConsortiumDataCache(context)))
+      .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .onComplete(v -> handler.handle(Future.succeededFuture()))
       .onFailure(th -> handler.handle(Future.failedFuture(th)));
   }
@@ -47,16 +47,16 @@ public class InitApiImpl implements InitAPI {
     return promise.future();
   }
 
-  private Future<Void> initDomainEventConsumerVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
+  private Future<Void> initShadowInstanceSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
     DeploymentOptions options = new DeploymentOptions()
       .setWorker(true)
       .setInstances(1);
 
-    return vertx.deployVerticle(() -> new DomainEventConsumerVerticle(consortiumDataCache), options)
-      .onSuccess(v -> log.info(
-        "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was successfully started"))
-      .onFailure(e -> log.error(
-        "initDomainEventConsumerVerticle:: DomainEventConsumerVerticle verticle was not successfully started", e))
+    return vertx.deployVerticle(() -> new ShadowInstanceSynchronizationVerticle(consortiumDataCache), options)
+      .onSuccess(v -> log.info("initShadowInstanceSynchronizationVerticle:: "
+        + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
+      .onFailure(e -> log.error("initShadowInstanceSynchronizationVerticle:: "
+        + "ShadowInstanceSynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 

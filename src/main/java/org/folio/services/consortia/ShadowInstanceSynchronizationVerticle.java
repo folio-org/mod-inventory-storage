@@ -1,4 +1,4 @@
-package org.folio.services;
+package org.folio.services.consortia;
 
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 
@@ -6,7 +6,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
-import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
 import org.folio.kafka.KafkaConfig;
@@ -15,46 +14,50 @@ import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.services.caches.ConsortiumDataCache;
 
-public class DomainEventConsumerVerticle extends AbstractVerticle {
+public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
 
+  private static final String LOAD_LIMIT_PARAM = "consumer.instance-synchronization.load-limit";
+  private static final String DEFAULT_LOAD_LIMIT = "5";
   private static final String TENANT_PATTERN = "\\w{1,}";
-  private static final int LOAD_LIMIT = 5;
 
   private final ConsortiumDataCache consortiumDataCache;
 
-  public DomainEventConsumerVerticle(ConsortiumDataCache consortiumDataCache) {
+  public ShadowInstanceSynchronizationVerticle(ConsortiumDataCache consortiumDataCache) {
     this.consortiumDataCache = consortiumDataCache;
   }
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     HttpClient httpClient = vertx.createHttpClient();
-    DomainEventKafkaRecordHandler domainEventKafkaRecordHandler =
-      new DomainEventKafkaRecordHandler(consortiumDataCache, httpClient, vertx);
+    ShadowInstanceSynchronizationHandler handler =
+      new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);
 
-    createKafkaConsumerWrapper(INSTANCE, domainEventKafkaRecordHandler)
+    createKafkaConsumerWrapper(handler)
       .onFailure(startPromise::fail)
       .onSuccess(v -> startPromise.complete());
   }
 
-  private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(InventoryKafkaTopic topic,
-                                                                                  AsyncRecordHandler<String, String> recordHandler) {
+  private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(
+    AsyncRecordHandler<String, String> recordHandler) {
+
+    int loadLimit = Integer.parseInt(System.getProperty(LOAD_LIMIT_PARAM, DEFAULT_LOAD_LIMIT));
     KafkaConfig kafkaConfig = getKafkaConfig();
     SubscriptionDefinition subscriptionDefinition = SubscriptionDefinition.builder()
-      .eventType(topic.topicName())
-      .subscriptionPattern(topic.fullTopicName(TENANT_PATTERN))
+      .eventType(INSTANCE.topicName())
+      .subscriptionPattern(INSTANCE.fullTopicName(TENANT_PATTERN))
       .build();
 
     KafkaConsumerWrapper<String, String> consumerWrapper = KafkaConsumerWrapper.<String, String>builder()
       .context(context)
       .vertx(vertx)
       .kafkaConfig(kafkaConfig)
-      .loadLimit(LOAD_LIMIT)
+      .loadLimit(loadLimit)
       .globalLoadSensor(new GlobalLoadSensor())
       .subscriptionDefinition(subscriptionDefinition)
       .build();
 
-    return consumerWrapper.start(recordHandler, topic.moduleName() + DomainEventConsumerVerticle.class.getName())
+    return consumerWrapper
+      .start(recordHandler, INSTANCE.moduleName() + ShadowInstanceSynchronizationVerticle.class.getName())
       .map(consumerWrapper);
   }
 

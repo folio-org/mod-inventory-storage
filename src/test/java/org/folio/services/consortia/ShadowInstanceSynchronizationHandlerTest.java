@@ -1,4 +1,4 @@
-package org.folio.services;
+package org.folio.services.consortia;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -46,7 +46,6 @@ import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.InventoryKafkaTopic;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceType;
@@ -67,7 +66,12 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @RunWith(VertxUnitRunner.class)
-public class DomainEventKafkaRecordHandlerTest extends TestBase {
+public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
+
+  @ClassRule
+  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
+    .notifier(new ConsoleNotifier(false))
+    .dynamicPort());
 
   private static final String SHARING_JOBS_PATH = "/consortia/.{36}/sharing/instances";
   private static final String CENTRAL_TENANT_ID = "mobius";
@@ -78,11 +82,6 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
   private static final String INSTANCE_IDENTIFIER_FIELD = "instanceIdentifier";
   private static final String INSTANCE_TYPE_ID = "bbe13900-61c6-4643-8d73-2e60d38c8e55";
 
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort());
-
   private static InstanceType instanceType = new InstanceType()
     .withId(INSTANCE_TYPE_ID)
     .withCode("DIT")
@@ -92,7 +91,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
   @Mock
   private ConsortiumDataCache consortiaDataCache;
   private Vertx vertx = Vertx.vertx();
-  private DomainEventKafkaRecordHandler domainEventKafkaRecordHandler;
+  private ShadowInstanceSynchronizationHandler synchronizationHandler;
 
   @BeforeClass
   public static void setUpClass() throws ExecutionException, InterruptedException, TimeoutException {
@@ -105,8 +104,8 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     clearData();
-    domainEventKafkaRecordHandler =
-      new DomainEventKafkaRecordHandler(consortiaDataCache, vertx.createHttpClient(), vertx);
+    synchronizationHandler =
+      new ShadowInstanceSynchronizationHandler(consortiaDataCache, vertx.createHttpClient(), vertx);
 
     JsonObject sharingCollection = new JsonObject()
       .put(SHARING_INSTANCES_FIELD, JsonArray.of(new JsonObject()
@@ -142,7 +141,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     DomainEvent<Instance> event = DomainEvent.updateEvent(sharedInstance, sharedInstance, CENTRAL_TENANT_ID);
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(sharedInstance.getId(), event);
 
-    Future<Instance> future = domainEventKafkaRecordHandler.handle(kafkaRecord)
+    Future<Instance> future = synchronizationHandler.handle(kafkaRecord)
       .onComplete(ar -> context.assertTrue(ar.succeeded()))
       .compose(v -> getInstanceById(sharedInstance.getId(), TENANT_ID));
 
@@ -167,7 +166,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     context.assertNotEquals(DomainEventType.UPDATE, event.getType());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = domainEventKafkaRecordHandler.handle(kafkaRecord);
+    Future<String> future = synchronizationHandler.handle(kafkaRecord);
 
     future.onComplete(ar -> context.verify(v -> {
       context.assertTrue(ar.succeeded());
@@ -184,7 +183,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     context.assertNotEquals(CENTRAL_TENANT_ID, event.getTenant());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = domainEventKafkaRecordHandler.handle(kafkaRecord);
+    Future<String> future = synchronizationHandler.handle(kafkaRecord);
 
     future.onComplete(ar -> context.verify(v -> {
       context.assertTrue(ar.succeeded());
@@ -203,7 +202,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     DomainEvent<Instance> event = DomainEvent.updateEvent(instance, instance, CENTRAL_TENANT_ID);
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = domainEventKafkaRecordHandler.handle(kafkaRecord);
+    Future<String> future = synchronizationHandler.handle(kafkaRecord);
 
     future.onComplete(ar -> context.verify(v -> {
       context.assertTrue(ar.failed());
@@ -235,7 +234,7 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(HTTP_CREATED));
 
-      return response.getJson().mapTo(Instance.class);
+    return response.getJson().mapTo(Instance.class);
   }
 
   private Future<Instance> getInstanceById(String instanceId, String tenantId) {
@@ -248,7 +247,8 @@ public class DomainEventKafkaRecordHandlerTest extends TestBase {
     });
   }
 
-  private static KafkaConsumerRecordImpl<String, String> buildKafkaRecord(String recordKey, DomainEvent<Instance> event) {
+  private static KafkaConsumerRecordImpl<String, String> buildKafkaRecord(String recordKey,
+                                                                          DomainEvent<Instance> event) {
     String topic = InventoryKafkaTopic.INSTANCE.fullTopicName(CENTRAL_TENANT_ID);
     ConsumerRecord<String, String> consumerRecord = new ConsumerRecord<>(topic, 0, 0, recordKey, Json.encode(event));
     consumerRecord.headers().add(new RecordHeader(TENANT.toLowerCase(), CENTRAL_TENANT_ID.getBytes()));

@@ -559,39 +559,39 @@
         </configuration>
       </plugin>
 
-<!--      <plugin>-->
-<!--        <groupId>org.apache.maven.plugins</groupId>-->
-<!--        <artifactId>maven-checkstyle-plugin</artifactId>-->
-<!--        <version>3.2.0</version>-->
-<!--        <dependencies>-->
-<!--          <dependency>-->
-<!--            <groupId>com.puppycrawl.tools</groupId>-->
-<!--            <artifactId>checkstyle</artifactId>-->
-<!--            <version>10.4</version>-->
-<!--          </dependency>-->
-<!--        </dependencies>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>verify-style</id>-->
-<!--            <phase>process-classes</phase>-->
-<!--            <goals>-->
-<!--              <goal>check</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--        <configuration>-->
-<!--          <sourceDirectories>-->
-<!--            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>-->
-<!--            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>-->
-<!--          </sourceDirectories>-->
-<!--          <failsOnError>true</failsOnError>-->
-<!--          <violationSeverity>warning</violationSeverity>-->
-<!--          <failOnViolation>true</failOnViolation>-->
-<!--          <logViolationsToConsole>true</logViolationsToConsole>-->
-<!--          <configLocation>checkstyle/checkstyle.xml</configLocation>-->
-<!--          <cacheFile>${basedir}/target/cachefile</cacheFile>-->
-<!--        </configuration>-->
-<!--      </plugin>-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.2.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>10.4</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>verify-style</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <sourceDirectories>
+            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+            <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+          </sourceDirectories>
+          <failsOnError>true</failsOnError>
+          <violationSeverity>warning</violationSeverity>
+          <failOnViolation>true</failOnViolation>
+          <logViolationsToConsole>true</logViolationsToConsole>
+          <configLocation>checkstyle/checkstyle.xml</configLocation>
+          <cacheFile>${basedir}/target/cachefile</cacheFile>
+        </configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

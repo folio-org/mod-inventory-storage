@@ -1,6 +1,8 @@
-package org.folio.services;
+package org.folio.services.consortia;
 
 import static io.vertx.core.http.HttpMethod.GET;
+import static java.lang.String.format;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.services.domainevent.DomainEventType.UPDATE;
@@ -33,23 +35,27 @@ import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
 
-public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String, String> {
+public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<String, String> {
 
-  private static final Logger LOG = LogManager.getLogger(DomainEventKafkaRecordHandler.class);
-  private static final String SHARING_JOBS_PATH =
+  private static final Logger LOG = LogManager.getLogger(ShadowInstanceSynchronizationHandler.class);
+  private static final String EVENT_HANDLING_ERROR_MSG =
+    "handle:: Failed to handle event for shadow instances synchronization, centralTenantId: '{}', instanceId: '{}'";
+  private static final String SHARING_INSTANCES_PATH =
     "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s"; //NOSONAR
-  private static final String TENANT_IDS_LIMIT = "100";
+  private static final String LIMIT_QUERY_PARAM = "limit";
+  private static final String TENANT_IDS_LIMIT = "1000";
   private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
   private static final String SHARING_INSTANCES_FIELD = "sharingInstances";
   private static final String TARGET_TENANT_ID_FIELD = "targetTenantId";
   private static final String SOURCE_TENANT_ID_FIELD = "sourceTenantId";
 
+
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
   private final HttpClient httpClient;
 
-  public DomainEventKafkaRecordHandler(ConsortiumDataCache consortiaDataCache,
-                                       HttpClient httpClient, Vertx vertx) {
+  public ShadowInstanceSynchronizationHandler(ConsortiumDataCache consortiaDataCache,
+                                              HttpClient httpClient, Vertx vertx) {
     this.consortiaDataCache = consortiaDataCache;
     this.vertx = vertx;
     this.httpClient = httpClient;
@@ -77,9 +83,7 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
           ? synchronizeShadowInstances(event, instanceId, consortiumDataFuture.result().get(), headers)
             .map(kafkaRecord.key())
           : Future.succeededFuture(kafkaRecord.key()))
-        .onFailure(e -> LOG.warn(
-          "handle:: Error during handling event for shadow instances synchronization, centralTenantId: '{}', instanceId: '{}'",
-          event.getTenant(), instanceId, e));
+        .onFailure(e -> LOG.warn(EVENT_HANDLING_ERROR_MSG, event.getTenant(), instanceId, e));
     } catch (Exception e) {
       LOG.warn("handle:: Error while handling event for shadow instances synchronization", e);
       return Future.failedFuture(e);
@@ -92,29 +96,25 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
-    LOG.debug(
-      "synchronizeShadowInstances:: Initializing shadow instances synchronization, instanceId: '{}', centralTenantId: '{}'",
-      instanceId, event.getTenant());
-    return getInstanceAffiliationTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
+    return getShadowInstancesTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
       instanceId, headers)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
   }
 
-  private Future<List<String>> getInstanceAffiliationTenantIds(String consortiumId, String centralTenantId,
-                                                               String instanceId, Map<String, String> headers) {
+  private Future<List<String>> getShadowInstancesTenantIds(String consortiumId, String centralTenantId,
+                                                           String instanceId, Map<String, String> headers) {
     String okapiUrl = headers.get(URL);
-    String preparedPath = String.format(SHARING_JOBS_PATH, consortiumId, instanceId);
+    String preparedPath = format(SHARING_INSTANCES_PATH, consortiumId, instanceId);
     WebClient client = WebClient.wrap(httpClient);
     HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + preparedPath);
     headers.forEach(request::putHeader);
-    request.addQueryParam("limit", TENANT_IDS_LIMIT);
+    request.addQueryParam(LIMIT_QUERY_PARAM, TENANT_IDS_LIMIT);
 
     return request.send().compose(response -> {
-      if (response.statusCode() != 200) {
-        String msg =
-          String.format("Error retrieving affiliations tenant ids, response status: '%s', response body: '%s'",
-            response.statusCode(), response.bodyAsString());
-        LOG.warn("getInstanceAffiliationTenantIds:: {}", msg);
+      if (response.statusCode() != HTTP_OK) {
+        String msg = format("Error retrieving shadow instances tenant ids, response status: '%s', response body: '%s'",
+          response.statusCode(), response.bodyAsString());
+        LOG.warn("getShadowInstancesTenantIds:: {}", msg);
         return Future.failedFuture(msg);
       }
 
@@ -143,11 +143,12 @@ public class DomainEventKafkaRecordHandler implements AsyncRecordHandler<String,
   }
 
   private void prepareInstanceForUpdate(Instance instance) {
-    instance.setSource(String.format(CONSORTIUM_SOURCE_TEMPLATE, instance.getSource()));
+    instance.setSource(format(CONSORTIUM_SOURCE_TEMPLATE, instance.getSource()));
   }
 
   private Future<Void> updateShadowInstance(Instance instance, String tenantId, Map<String, String> okapiHeaders) {
-    LOG.info("updateShadowInstance:: Trying to update shadow instance, tenantId: '{}', instanceId: '{}'", tenantId, instance.getId());
+    LOG.debug("updateShadowInstance:: Trying to update shadow instance, tenantId: '{}', instanceId: '{}'",
+      tenantId, instance.getId());
     HashMap<String, String> headers = new HashMap<>(okapiHeaders);
     headers.put(TENANT, tenantId);
     InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), headers);
