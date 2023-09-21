@@ -180,7 +180,10 @@ public class CommonDomainEventPublisher<T> {
 
     KafkaProducer<String, String> producer = getOrCreateProducer();
 
-    producerRecord.addHeader(XOkapiHeaders.TOKEN.toLowerCase(), okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()));
+    if (okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()) != null) {
+      producerRecord.addHeader(XOkapiHeaders.TOKEN.toLowerCase(), okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()));
+    }
+
     return producer.send(producerRecord)
       .<Void>mapEmpty()
       .eventually(x -> producer.flush())
