@@ -149,7 +149,8 @@
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.put"],
           "modulePermissions": [
-            "user-tenants.collection.get"
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.collection.get"
           ]
         }, {
           "methods": ["DELETE"],
