@@ -2,6 +2,12 @@
   "id": "${artifactId}-${version}",
   "name": "Inventory Storage Module",
   "replaces": [ "inventory-storage" ],
+  "requires": [
+    {
+      "id": "user-tenants",
+      "version": "1.0"
+    }
+  ],
   "provides": [
     {
       "id": "item-storage-dereferenced",
@@ -143,8 +149,7 @@
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.put"],
           "modulePermissions": [
-            "user-tenants.collection.get",
-            "consortia.sharing-instances.collection.get"
+            "user-tenants.collection.get"
           ]
         }, {
           "methods": ["DELETE"],
@@ -1310,7 +1315,7 @@
   ],
   "optional": [
     {
-      "id": "user-tenants",
+      "id": "consortia",
       "version": "1.0"
     }
   ],
