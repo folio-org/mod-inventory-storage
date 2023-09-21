@@ -20,13 +20,17 @@ public class MaterialTypesClient {
   }
 
   public String create(String name) {
+    return create(name, TENANT_ID);
+  }
+
+  public String create(String name, String tenantId) {
 
     CompletableFuture<Response> completed = new CompletableFuture<>();
 
     JsonObject materialTypeRequest = new JsonObject()
       .put("name", name);
 
-    client.post(materialTypesUrl, materialTypeRequest, TENANT_ID,
+    client.post(materialTypesUrl, materialTypeRequest, tenantId,
       ResponseHandler.json(completed));
 
     Response response = TestBase.get(completed);
