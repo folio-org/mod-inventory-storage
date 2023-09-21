@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
@@ -124,7 +123,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
         .flatMap(sharing ->
           Stream.of(sharing.getString(TARGET_TENANT_ID_FIELD), sharing.getString(SOURCE_TENANT_ID_FIELD)))
         .filter(tenantId -> !tenantId.equals(centralTenantId))
-        .collect(Collectors.toList());
+        .toList();
       return Future.succeededFuture(affiliationsTenantIds);
     });
   }
