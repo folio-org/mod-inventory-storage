@@ -33,7 +33,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
@@ -122,7 +121,6 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
   @Test
   public void shouldUpdateShadowInstance(TestContext context)
     throws ExecutionException, InterruptedException, TimeoutException {
-    Async async = context.async();
     Instance shadowInstance = new Instance()
       .withId(UUID.randomUUID().toString())
       .withInstanceTypeId(INSTANCE_TYPE_ID)
@@ -141,21 +139,14 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     DomainEvent<Instance> event = DomainEvent.updateEvent(sharedInstance, sharedInstance, CENTRAL_TENANT_ID);
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(sharedInstance.getId(), event);
 
-    Future<Instance> future = synchronizationHandler.handle(kafkaRecord)
-      .onComplete(ar -> context.assertTrue(ar.succeeded()))
-      .compose(v -> getInstanceById(sharedInstance.getId(), TENANT_ID));
-
-    future.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      Instance updatedShadowInstance = ar.result();
-      context.assertEquals(sharedInstance.getTitle(), updatedShadowInstance.getTitle());
-      async.complete();
-    });
+    synchronizationHandler.handle(kafkaRecord)
+      .compose(v -> getInstanceById(sharedInstance.getId(), TENANT_ID))
+      .onComplete(context.asyncAssertSuccess(
+        updatedShadowInstance -> context.assertEquals(sharedInstance.getTitle(), updatedShadowInstance.getTitle())));
   }
 
   @Test
   public void shouldNotUpdateShadowInstanceIfEventTypeIsNotUpdate(TestContext context) {
-    Async async = context.async();
     Instance instance = new Instance()
       .withId(UUID.randomUUID().toString())
       .withInstanceTypeId(INSTANCE_TYPE_ID)
@@ -166,35 +157,23 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     context.assertNotEquals(DomainEventType.UPDATE, event.getType());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = synchronizationHandler.handle(kafkaRecord);
-
-    future.onComplete(ar -> context.verify(v -> {
-      context.assertTrue(ar.succeeded());
-      verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)));
-      async.complete();
-    }));
+    synchronizationHandler.handle(kafkaRecord)
+      .onComplete(context.asyncAssertSuccess(v -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)))));
   }
 
   @Test
   public void shouldNotInitiateShadowInstanceUpdateIfEventContainsNonCentralTenant(TestContext context) {
-    Async async = context.async();
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
     DomainEvent<Instance> event = DomainEvent.updateEvent(instance, instance, TENANT_ID);
     context.assertNotEquals(CENTRAL_TENANT_ID, event.getTenant());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = synchronizationHandler.handle(kafkaRecord);
-
-    future.onComplete(ar -> context.verify(v -> {
-      context.assertTrue(ar.succeeded());
-      verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)));
-      async.complete();
-    }));
+    synchronizationHandler.handle(kafkaRecord)
+      .onComplete(context.asyncAssertSuccess(v -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)))));
   }
 
   @Test
   public void shouldReturnFailedFutureIfFailedToGetInstanceSharingActions(TestContext context) {
-    Async async = context.async();
     WireMock.stubFor(WireMock.get(new UrlPathPattern(new RegexPattern(SHARING_JOBS_PATH), true))
       .willReturn(WireMock.serverError()));
 
@@ -202,13 +181,8 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     DomainEvent<Instance> event = DomainEvent.updateEvent(instance, instance, CENTRAL_TENANT_ID);
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    Future<String> future = synchronizationHandler.handle(kafkaRecord);
-
-    future.onComplete(ar -> context.verify(v -> {
-      context.assertTrue(ar.failed());
-      verify(1, getRequestedFor(urlMatching(SHARING_JOBS_PATH + ".+")));
-      async.complete();
-    }));
+    synchronizationHandler.handle(kafkaRecord)
+      .onComplete(context.asyncAssertFailure(v -> verify(1, getRequestedFor(urlMatching(SHARING_JOBS_PATH + ".+")))));
   }
 
   private static IndividualResource createInstanceType(InstanceType instanceType, String tenantId)
