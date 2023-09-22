@@ -4,6 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -34,6 +35,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
+  private static final String TENANT_ID = "foo-tenant";
+
   @Mock
   private KafkaProducer<String, String> producer;
   @Mock
@@ -45,7 +48,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName("foo-tenant"),
+      new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)), INSTANCE.fullTopicName(TENANT_ID),
       producerManager, failureHandler);
   }
 
