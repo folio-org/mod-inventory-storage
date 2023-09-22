@@ -1,4 +1,4 @@
-package org.folio.services.consortia;
+package org.folio.services.consortium;
 
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 

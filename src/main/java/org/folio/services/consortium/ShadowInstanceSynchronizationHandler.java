@@ -1,4 +1,4 @@
-package org.folio.services.consortia;
+package org.folio.services.consortium;
 
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.lang.String.format;

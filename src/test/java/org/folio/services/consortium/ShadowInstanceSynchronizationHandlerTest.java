@@ -1,4 +1,4 @@
-package org.folio.services.consortia;
+package org.folio.services.consortium;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
