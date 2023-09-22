@@ -68,6 +68,7 @@ public abstract class TestBase {
   static ResourceClient illPoliciesClient;
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
+  static ResourceClient boundWithClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -91,6 +92,7 @@ public abstract class TestBase {
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(getClient());
     inventoryViewClient = ResourceClient.forInventoryView(getClient());
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
+    boundWithClient = ResourceClient.forBoundWithParts(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
