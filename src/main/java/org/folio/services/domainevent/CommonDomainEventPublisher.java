@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.CompositeFuture.all;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.createEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
@@ -29,7 +30,6 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.okapi.common.XOkapiHeaders;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -174,15 +174,12 @@ public class CommonDomainEventPublisher<T> {
   private Future<Void> publish(String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new KafkaProducerRecordBuilder<String, Object>()
+    String tenantId = okapiHeaders.get(TENANT.toLowerCase());
+    var producerRecord = new KafkaProducerRecordBuilder<String, Object>(tenantId)
       .key(key).value(value).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
       .build();
 
     KafkaProducer<String, String> producer = getOrCreateProducer();
-
-    if (okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()) != null) {
-      producerRecord.addHeader(XOkapiHeaders.TOKEN.toLowerCase(), okapiHeaders.get(XOkapiHeaders.TOKEN.toLowerCase()));
-    }
 
     return producer.send(producerRecord)
       .<Void>mapEmpty()

@@ -24,6 +24,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.support.sql.TestRowStream;
+import org.folio.utility.RestUtility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -147,6 +148,6 @@ public class CommonDomainEventPublisherTest {
   }
 
   private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
-    return new KafkaProducerRecordBuilder<String, Object>().value(value);
+    return new KafkaProducerRecordBuilder<String, Object>(RestUtility.TENANT_ID).value(value);
   }
 }

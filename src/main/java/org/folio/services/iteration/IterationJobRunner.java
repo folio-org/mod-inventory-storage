@@ -3,6 +3,7 @@ package org.folio.services.iteration;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.join;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
@@ -159,7 +160,7 @@ public class IterationJobRunner {
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, IterationContext context) {
-    return new KafkaProducerRecordBuilder<String, Object>()
+    return new KafkaProducerRecordBuilder<String, Object>(okapiHeaders.get(TENANT.toLowerCase()))
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());
