@@ -23,8 +23,8 @@ public class InitApiImpl implements InitAPI {
     initConsortiumDataCache(vertx, context);
     initAsyncMigrationVerticle(vertx)
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
-      .onComplete(v -> handler.handle(Future.succeededFuture()))
-      .onFailure(th -> handler.handle(Future.failedFuture(th)));
+      .map(true)
+      .onComplete(handler);
   }
 
   private Future<Void> initAsyncMigrationVerticle(Vertx vertx) {

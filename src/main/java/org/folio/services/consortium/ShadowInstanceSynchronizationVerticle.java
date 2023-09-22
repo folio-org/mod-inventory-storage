@@ -33,8 +33,8 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
       new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);
 
     createKafkaConsumerWrapper(handler)
-      .onFailure(startPromise::fail)
-      .onSuccess(v -> startPromise.complete());
+      .<Void>mapEmpty()
+      .onComplete(startPromise);
   }
 
   private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(
