@@ -1,4 +1,7 @@
-## 26.0.0 IN-PROGRESS
+## 26.0.1 2023-09-23
+* Populate circulation notes ids ([MODINVSTOR-1093](https://issues.folio.org/browse/MODINVSTOR-1093))
+
+## 26.0.0 2023-02-14
 * New PUT API where a single item ID and a list of holdings IDs can be created (MODINVSTOR-1022)
 * Extend subjects, alternativeTitles, series with authorityId ([MODINVSTOR-1010](https://issues.folio.org/browse/MODINVSTOR-1010))
 * provides `inventory-view 2.0`
