@@ -1,9 +1,7 @@
 package org.folio.services.iteration;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.lang.String.join;
-import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
-import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
@@ -26,6 +24,7 @@ import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
@@ -79,8 +78,8 @@ public class IterationJobRunner {
   }
 
   public void startIteration(IterationJob job) {
-    String fullTopicName = join(".", environment(), tenantId(okapiHeaders), job.getJobParams().getTopicName());
-    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders, fullTopicName);
+    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+      INSTANCE.fullTopicName(tenantId(okapiHeaders)));
 
     workerExecutor.executeBlocking(
         promise -> streamInstanceIds(new IterationContext(job))
@@ -160,7 +159,7 @@ public class IterationJobRunner {
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, IterationContext context) {
-    return new KafkaProducerRecordBuilder<String, Object>(okapiHeaders.get(TENANT.toLowerCase()))
+    return new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());

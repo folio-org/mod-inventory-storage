@@ -13,6 +13,7 @@ import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 
 public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJobRunner {
@@ -78,7 +79,7 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {
-    String tenantId = tenantId(context.getMigrationContext().getOkapiHeaders());
+    String tenantId = TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders());
     return new KafkaProducerRecordBuilder<String, Object>(tenantId)
       .key(row.getUUID("id").toString())
       .value(asyncMigrationEvent(context.getJob(), tenantId))

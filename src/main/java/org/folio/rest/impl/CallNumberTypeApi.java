@@ -77,12 +77,20 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
 
   @Validate
   @Override
-  public void putCallNumberTypesById(String id, String lang, CallNumberType entity, Map<String, String> okapiHeaders,
-                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putCallNumberTypesById(String id,
+                                     String lang,
+                                     CallNumberType entity,
+                                     Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
     try {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       checkIfSystemCallNumberType(id, vertxContext, tenantId, "System call number type couldn't be updated")
-        .compose(callNumberType -> PgUtil.put(REFERENCE_TABLE, entity, id, okapiHeaders, vertxContext,
+        .compose(callNumberType -> PgUtil.put(REFERENCE_TABLE,
+          entity,
+          id,
+          okapiHeaders,
+          vertxContext,
           PutCallNumberTypesByIdResponse.class))
         .onFailure(handleFailure(asyncResultHandler))
         .onSuccess(event -> asyncResultHandler.handle(Future.succeededFuture(event)));

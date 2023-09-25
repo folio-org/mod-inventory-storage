@@ -4,7 +4,6 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,7 +24,6 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.support.sql.TestRowStream;
-import org.folio.utility.RestUtility;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -48,7 +46,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)), INSTANCE.fullTopicName(TENANT_ID),
+      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(TENANT_ID),
       producerManager, failureHandler);
   }
 
@@ -151,6 +149,6 @@ public class CommonDomainEventPublisherTest {
   }
 
   private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
-    return new KafkaProducerRecordBuilder<String, Object>(RestUtility.TENANT_ID).value(value);
+    return new KafkaProducerRecordBuilder<String, Object>(TENANT_ID).value(value);
   }
 }
