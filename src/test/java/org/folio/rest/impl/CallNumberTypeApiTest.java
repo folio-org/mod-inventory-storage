@@ -2,15 +2,29 @@ package org.folio.rest.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
 import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.jaxrs.model.CallNumberType;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.utils.TenantTool;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.exceptions.base.MockitoException;
 
 @RunWith(JUnitParamsRunner.class)
 public class CallNumberTypeApiTest extends TestBase {
@@ -24,13 +38,14 @@ public class CallNumberTypeApiTest extends TestBase {
 
   @BeforeClass
   public static void setUp() {
-    var requestBody = new JsonObject().put(NAME_FIELD, NAME_VALUE).put(SOURCE_FIELD, SOURCE_VALUE);
-    var response = callNumberTypesClient.create(requestBody);
-    callNumberTypeId = response.getId();
   }
 
   @Test
   public void shouldRespondWith400_whenAttemptToDeleteSystemType() {
+    var requestBody = new JsonObject().put(NAME_FIELD, NAME_VALUE).put(SOURCE_FIELD, SOURCE_VALUE);
+    var createResponse = callNumberTypesClient.create(requestBody);
+    callNumberTypeId = createResponse.getId();
+
     var response = callNumberTypesClient.attemptToDelete(callNumberTypeId);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
@@ -50,5 +65,20 @@ public class CallNumberTypeApiTest extends TestBase {
     assertThat(callNumberTypeResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(callNumberTypeResponse.getJson().getString(NAME_FIELD), is(NAME_VALUE));
     assertThat(callNumberTypeResponse.getJson().getString(SOURCE_FIELD), is(SOURCE_VALUE));
+  }
+
+  @Test
+  public void shouldRespondWith204_whenAttemptToDeleteNotSystemType() {
+    var requestBody = new JsonObject().put(NAME_FIELD, "NOT SYSTEM TYPE").put(SOURCE_FIELD, "NOT SYSTEM");
+    var createResponse = callNumberTypesClient.create(requestBody);
+    var callNumberTypeId = createResponse.getId();
+
+    var callNumberTypeResponse = callNumberTypesClient.getById(callNumberTypeId);
+    assertThat(callNumberTypeResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(callNumberTypeResponse.getJson().getString(NAME_FIELD), is("NOT SYSTEM TYPE"));
+    assertThat(callNumberTypeResponse.getJson().getString(SOURCE_FIELD), is("NOT SYSTEM"));
+
+    var response = callNumberTypesClient.attemptToDelete(callNumberTypeId);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 }
