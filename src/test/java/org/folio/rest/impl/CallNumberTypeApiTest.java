@@ -127,6 +127,7 @@ public class CallNumberTypeApiTest extends TestBase {
     //Given
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
     var entity = new CallNumberType();
+    String id = "id";
     Map<String, String> okapiHeaders = Collections.emptyMap();
 
     Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
@@ -149,7 +150,7 @@ public class CallNumberTypeApiTest extends TestBase {
       )).thenThrow(new RuntimeException("Test"));
 
       //When
-      callNumberTypesApi.putCallNumberTypesById("id",
+      callNumberTypesApi.putCallNumberTypesById(id,
         "us",
         entity,
         okapiHeaders,
@@ -159,7 +160,7 @@ public class CallNumberTypeApiTest extends TestBase {
       //Then
       mockedPgUtil.verify(() -> PgUtil.put("call_number_type",
         entity,
-        "id",
+        id,
         okapiHeaders,
         vertex,
         CallNumberTypes.PutCallNumberTypesByIdResponse.class));
