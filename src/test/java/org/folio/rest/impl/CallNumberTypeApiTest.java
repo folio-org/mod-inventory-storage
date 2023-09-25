@@ -3,15 +3,27 @@ package org.folio.rest.impl;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.jaxrs.model.CallNumberType;
+import org.folio.rest.jaxrs.resource.CallNumberTypes;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -76,7 +88,7 @@ public class CallNumberTypeApiTest extends TestBase {
   }
 
   @Test
-  public void shouldRespondWith500_whenAttemptToSaveNull() {
+  public void shouldHandleException_whenPut() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
     Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
     try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
@@ -94,7 +106,7 @@ public class CallNumberTypeApiTest extends TestBase {
   }
 
   @Test
-  public void shouldRespondWith500_whenAttemptToDeleteNull() {
+  public void shouldHandleException_whenDelete() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
     Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
     try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
@@ -106,6 +118,51 @@ public class CallNumberTypeApiTest extends TestBase {
         errorHandler,
         null);
 
+      Mockito.verify(errorHandler).handle(any());
+    }
+  }
+
+  @Test
+  public void shouldCallPgUtilPutWithProperArgumentsAndHandleError() {
+    //Given
+    var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
+    var entity = new CallNumberType();
+    Map<String, String> okapiHeaders = Collections.emptyMap();
+
+    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
+    Context vertex = Mockito.mock(Context.class);
+    var mockedPgClinet = Mockito.mock(PostgresClient.class);
+    when(mockedPgClinet.getById(any(), any(), eq(CallNumberType.class))).thenReturn(Future.succeededFuture(entity));
+
+    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
+         MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class);
+         MockedStatic<PostgresClient> mockedPgClientStat = Mockito.mockStatic(PostgresClient.class)) {
+      mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
+      mockedPgClientStat.when(() -> PostgresClient.getInstance(any(), any())).thenReturn(mockedPgClinet);
+      mockedPgUtil.when(() -> PgUtil.put(
+        anyString(),
+        any(),
+        any(),
+        any(),
+        any(),
+        eq(CallNumberTypes.PutCallNumberTypesByIdResponse.class)
+      )).thenThrow(new RuntimeException("Test"));
+
+      //When
+      callNumberTypesApi.putCallNumberTypesById("id",
+        "us",
+        entity,
+        okapiHeaders,
+        errorHandler,
+        vertex);
+
+      //Then
+      mockedPgUtil.verify(() -> PgUtil.put("call_number_type",
+        entity,
+        "id",
+        okapiHeaders,
+        vertex,
+        CallNumberTypes.PutCallNumberTypesByIdResponse.class));
       Mockito.verify(errorHandler).handle(any());
     }
   }
