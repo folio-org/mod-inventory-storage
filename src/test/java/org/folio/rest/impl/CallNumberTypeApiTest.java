@@ -2,16 +2,21 @@ package org.folio.rest.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
+import javax.ws.rs.core.Response;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.tools.utils.TenantTool;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 @RunWith(JUnitParamsRunner.class)
@@ -73,25 +78,35 @@ public class CallNumberTypeApiTest extends TestBase {
   @Test
   public void shouldRespondWith500_whenAttemptToSaveNull() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
+    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
+    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
+      mockedTenantTool.when(() -> TenantTool.tenantId(any())).thenThrow(new RuntimeException("Test"));
 
-    Assertions.assertThrows(NullPointerException.class,
-      () -> callNumberTypesApi.putCallNumberTypesById(null,
+      callNumberTypesApi.putCallNumberTypesById(null,
         null,
         null,
         null,
-        null,
-        null));
+        errorHandler,
+        null);
+
+      Mockito.verify(errorHandler).handle(any());
+    }
   }
 
   @Test
   public void shouldRespondWith500_whenAttemptToDeleteNull() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
+    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
+    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
+      mockedTenantTool.when(() -> TenantTool.tenantId(any())).thenThrow(new RuntimeException("Test"));
 
-    Assertions.assertThrows(NullPointerException.class,
-      () -> callNumberTypesApi.deleteCallNumberTypesById(null,
+      callNumberTypesApi.deleteCallNumberTypesById(null,
         null,
         null,
-        null,
-        null));
+        errorHandler,
+        null);
+
+      Mockito.verify(errorHandler).handle(any());
+    }
   }
 }
