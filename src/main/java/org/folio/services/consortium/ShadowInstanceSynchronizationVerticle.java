@@ -32,12 +32,10 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
     ShadowInstanceSynchronizationHandler handler =
       new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);
 
-    createKafkaConsumerWrapper(handler)
-      .<Void>mapEmpty()
-      .onComplete(startPromise);
+    createKafkaConsumerWrapper(handler).onComplete(startPromise);
   }
 
-  private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(
+  private Future<Void> createKafkaConsumerWrapper(
     AsyncRecordHandler<String, String> recordHandler) {
 
     int loadLimit = Integer.parseInt(System.getProperty(LOAD_LIMIT_PARAM, DEFAULT_LOAD_LIMIT));
@@ -58,7 +56,7 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
 
     return consumerWrapper
       .start(recordHandler, INSTANCE.moduleName() + ShadowInstanceSynchronizationVerticle.class.getName())
-      .map(consumerWrapper);
+      .mapEmpty();
   }
 
   private KafkaConfig getKafkaConfig() {

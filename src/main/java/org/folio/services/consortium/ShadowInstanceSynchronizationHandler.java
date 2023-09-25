@@ -7,6 +7,8 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
+import com.google.common.collect.Lists;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -41,6 +43,9 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     "handle:: Failed to handle event for shadow instances synchronization, centralTenantId: '{}', instanceId: '{}'";
   private static final String SHARING_INSTANCES_PATH =
     "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s"; //NOSONAR
+  private static final String INSTANCES_PARALLEL_UPDATES_COUNT_PARAM =
+    "instance-synchronization.parallel.updates.count";
+  private static final String DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT = "10";
   private static final String LIMIT_QUERY_PARAM = "limit";
   private static final String TENANT_IDS_LIMIT = "1000";
   private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
@@ -52,9 +57,12 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
   private final HttpClient httpClient;
+  private final int instancesParallelUpdateLimit;
 
   public ShadowInstanceSynchronizationHandler(ConsortiumDataCache consortiaDataCache,
                                               HttpClient httpClient, Vertx vertx) {
+    this.instancesParallelUpdateLimit = Integer.parseInt(
+      System.getProperty(INSTANCES_PARALLEL_UPDATES_COUNT_PARAM, DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT));
     this.consortiaDataCache = consortiaDataCache;
     this.vertx = vertx;
     this.httpClient = httpClient;
@@ -131,14 +139,24 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private Future<Void> updateShadowInstances(DomainEvent<Instance> event, List<String> tenantIds,
                                              Map<String, String> headers) {
     LOG.info("updateShadowInstances:: Trying to update shadow instances in the following tenants: {} ", tenantIds);
-    ArrayList<Future<Void>> updateFutures = new ArrayList<>();
     Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
     prepareInstanceForUpdate(instance);
+    List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdateLimit);
 
-    for (String tenantId : tenantIds) {
+    Future<CompositeFuture> future = Future.succeededFuture();
+    for (List<String> tenantsChunk : tenantsChunks) {
+      future = future.compose(v -> updateShadowInstances(tenantsChunk, instance, headers));
+    }
+    return future.mapEmpty();
+  }
+
+  private CompositeFuture updateShadowInstances(List<String> tenantsChunk, Instance instance,
+                                                Map<String, String> headers) {
+    ArrayList<Future<Void>> updateFutures = new ArrayList<>();
+    for (String tenantId : tenantsChunk) {
       updateFutures.add(updateShadowInstance(instance, tenantId, headers));
     }
-    return GenericCompositeFuture.join(updateFutures).mapEmpty();
+    return GenericCompositeFuture.join(updateFutures);
   }
 
   private void prepareInstanceForUpdate(Instance instance) {
