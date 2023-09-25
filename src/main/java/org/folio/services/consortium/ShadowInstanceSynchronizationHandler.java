@@ -57,11 +57,11 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
   private final HttpClient httpClient;
-  private final int instancesParallelUpdateLimit;
+  private final int instancesParallelUpdatesLimit;
 
   public ShadowInstanceSynchronizationHandler(ConsortiumDataCache consortiaDataCache,
                                               HttpClient httpClient, Vertx vertx) {
-    this.instancesParallelUpdateLimit = Integer.parseInt(
+    this.instancesParallelUpdatesLimit = Integer.parseInt(
       System.getProperty(INSTANCES_PARALLEL_UPDATES_COUNT_PARAM, DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT));
     this.consortiaDataCache = consortiaDataCache;
     this.vertx = vertx;
@@ -141,7 +141,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     LOG.info("updateShadowInstances:: Trying to update shadow instances in the following tenants: {} ", tenantIds);
     Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
     prepareInstanceForUpdate(instance);
-    List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdateLimit);
+    List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdatesLimit);
 
     Future<CompositeFuture> future = Future.succeededFuture();
     for (List<String> tenantsChunk : tenantsChunks) {
@@ -150,10 +150,10 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     return future.mapEmpty();
   }
 
-  private CompositeFuture updateShadowInstances(List<String> tenantsChunk, Instance instance,
+  private CompositeFuture updateShadowInstances(List<String> tenantIds, Instance instance,
                                                 Map<String, String> headers) {
     ArrayList<Future<Void>> updateFutures = new ArrayList<>();
-    for (String tenantId : tenantsChunk) {
+    for (String tenantId : tenantIds) {
       updateFutures.add(updateShadowInstance(instance, tenantId, headers));
     }
     return GenericCompositeFuture.join(updateFutures);

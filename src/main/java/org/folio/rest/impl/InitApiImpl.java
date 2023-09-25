@@ -37,10 +37,11 @@ public class InitApiImpl implements InitAPI {
     vertx.deployVerticle(AsyncMigrationConsumerVerticle.class, options, result -> {
       if (result.succeeded()) {
         long elapsedTime = System.currentTimeMillis() - startTime;
-        log.info("AsyncMigrationConsumerVerticle was deployed in {} milliseconds", elapsedTime);
+        log.info("initAsyncMigrationVerticle:: AsyncMigrationConsumerVerticle was deployed in {} milliseconds",
+          elapsedTime);
         promise.complete();
       } else {
-        log.error("AsyncMigrationConsumerVerticle was not started", result.cause());
+        log.error("initAsyncMigrationVerticle:: AsyncMigrationConsumerVerticle was not started", result.cause());
         promise.fail(result.cause());
       }
     });
