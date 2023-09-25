@@ -131,14 +131,14 @@ public class CallNumberTypeApiTest extends TestBase {
 
     Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
     Context vertex = Mockito.mock(Context.class);
-    var mockedPgClinet = Mockito.mock(PostgresClient.class);
-    when(mockedPgClinet.getById(any(), any(), eq(CallNumberType.class))).thenReturn(Future.succeededFuture(entity));
+    var mockedPgClient = Mockito.mock(PostgresClient.class);
+    when(mockedPgClient.getById(any(), any(), eq(CallNumberType.class))).thenReturn(Future.succeededFuture(entity));
 
     try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
          MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class);
          MockedStatic<PostgresClient> mockedPgClientStat = Mockito.mockStatic(PostgresClient.class)) {
       mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
-      mockedPgClientStat.when(() -> PostgresClient.getInstance(any(), any())).thenReturn(mockedPgClinet);
+      mockedPgClientStat.when(() -> PostgresClient.getInstance(any(), any())).thenReturn(mockedPgClient);
       mockedPgUtil.when(() -> PgUtil.put(
         anyString(),
         any(),
