@@ -10,7 +10,9 @@ import junitparams.JUnitParamsRunner;
 import org.folio.rest.api.TestBase;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 @RunWith(JUnitParamsRunner.class)
 public class CallNumberTypeApiTest extends TestBase {
@@ -66,5 +68,30 @@ public class CallNumberTypeApiTest extends TestBase {
 
     var response = callNumberTypesClient.attemptToDelete(callNumberTypeId);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void shouldRespondWith500_whenAttemptToSaveNull() {
+    var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
+
+    Assertions.assertThrows(NullPointerException.class,
+      () -> callNumberTypesApi.putCallNumberTypesById(null,
+        null,
+        null,
+        null,
+        null,
+        null));
+  }
+
+  @Test
+  public void shouldRespondWith500_whenAttemptToDeleteNull() {
+    var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
+
+    Assertions.assertThrows(NullPointerException.class,
+      () -> callNumberTypesApi.deleteCallNumberTypesById(null,
+        null,
+        null,
+        null,
+        null));
   }
 }
