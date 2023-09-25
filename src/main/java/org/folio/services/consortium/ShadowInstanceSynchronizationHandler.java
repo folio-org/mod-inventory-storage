@@ -145,7 +145,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
 
     Future<CompositeFuture> future = Future.succeededFuture();
     for (List<String> tenantsChunk : tenantsChunks) {
-      future = future.compose(v -> updateShadowInstances(tenantsChunk, instance, headers));
+      future = future.eventually(v -> updateShadowInstances(tenantsChunk, instance, headers));
     }
     return future.mapEmpty();
   }
