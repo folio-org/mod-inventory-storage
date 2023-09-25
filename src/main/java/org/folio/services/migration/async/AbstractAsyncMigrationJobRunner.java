@@ -79,10 +79,10 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {
-    return new KafkaProducerRecordBuilder<String, Object>()
+    String tenantId = TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders());
+    return new KafkaProducerRecordBuilder<String, Object>(tenantId)
       .key(row.getUUID("id").toString())
-      .value(
-        asyncMigrationEvent(context.getJob(), TenantTool.tenantId(context.getMigrationContext().getOkapiHeaders())))
+      .value(asyncMigrationEvent(context.getJob(), tenantId))
       .header(ASYNC_MIGRATION_JOB_ID_HEADER, context.getJobId())
       .header(ASYNC_MIGRATION_JOB_NAME, context.getMigrationContext().getMigrationName());
   }
