@@ -2,29 +2,15 @@ package org.folio.rest.impl;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.util.HashMap;
 import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import org.folio.rest.api.TestBase;
-import org.folio.rest.jaxrs.model.CallNumberType;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.exceptions.base.MockitoException;
 
 @RunWith(JUnitParamsRunner.class)
 public class CallNumberTypeApiTest extends TestBase {
