@@ -33,6 +33,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
+  private static final String TENANT_ID = "foo-tenant";
+
   @Mock
   private KafkaProducer<String, String> producer;
   @Mock
@@ -44,7 +46,7 @@ public class CommonDomainEventPublisherTest {
   @Before
   public void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName("foo-tenant"),
+      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(TENANT_ID),
       producerManager, failureHandler);
   }
 
@@ -147,6 +149,6 @@ public class CommonDomainEventPublisherTest {
   }
 
   private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
-    return new KafkaProducerRecordBuilder<String, Object>("").value(value);
+    return new KafkaProducerRecordBuilder<String, Object>(TENANT_ID).value(value);
   }
 }
