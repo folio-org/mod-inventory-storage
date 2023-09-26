@@ -32,7 +32,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
-import org.folio.rest.support.fixtures.AuthorityReindexFixture;
 import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
@@ -55,7 +54,6 @@ public abstract class TestBase {
   protected static final Logger logger = LogManager.getLogger();
   protected static ResourceClient instancesClient;
   protected static ResourceClient itemsClient;
-  protected static ResourceClient authoritiesClient;
   protected static ResourceClient callNumberTypesClient;
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
   static ResourceClient locationsClient;
@@ -70,9 +68,9 @@ public abstract class TestBase {
   static ResourceClient illPoliciesClient;
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
+  static ResourceClient boundWithClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
-  static AuthorityReindexFixture authorityReindex;
   static AsyncMigrationFixture asyncMigration;
 
   @BeforeClass
@@ -84,7 +82,6 @@ public abstract class TestBase {
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
     itemsClient = ResourceClient.forItems(getClient());
-    authoritiesClient = ResourceClient.forAuthorities(getClient());
     locationsClient = ResourceClient.forLocations(getClient());
     callNumberTypesClient = ResourceClient.forCallNumberTypes(getClient());
     modesOfIssuanceClient = ResourceClient.forModesOfIssuance(getClient());
@@ -95,13 +92,13 @@ public abstract class TestBase {
     itemsStorageSyncClient = ResourceClient.forItemsStorageSync(getClient());
     inventoryViewClient = ResourceClient.forInventoryView(getClient());
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
+    boundWithClient = ResourceClient.forBoundWithParts(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
     instanceReindex = new InstanceReindexFixture(getClient());
-    authorityReindex = new AuthorityReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());
 
     KAFKA_CONSUMER.discardAllMessages();
@@ -134,17 +131,21 @@ public abstract class TestBase {
    * accordingly.
    */
   protected static void clearData() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
-    StorageTestSuite.deleteAll(locationsStorageUrl(""));
-    StorageTestSuite.deleteAll(locLibraryStorageUrl(""));
-    StorageTestSuite.deleteAll(locCampusStorageUrl(""));
-    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""));
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(materialTypesStorageUrl(""));
-    StorageTestSuite.deleteAll(servicePointsUsersUrl(""));
-    StorageTestSuite.deleteAll(servicePointsUrl(""));
+    clearData(TENANT_ID);
+  }
+
+  protected static void clearData(String tenantId) {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(instancesStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(locationsStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(locLibraryStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(locCampusStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(locInstitutionStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(loanTypesStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(materialTypesStorageUrl(""), tenantId);
+    StorageTestSuite.deleteAll(servicePointsUsersUrl(""), tenantId);
+    StorageTestSuite.deleteAll(servicePointsUrl(""), tenantId);
   }
 
   /**
@@ -192,9 +193,13 @@ public abstract class TestBase {
    * @param url endpoint where to execute a GET request
    */
   void assertGetNotFound(URL url) {
+    assertGetNotFound(url, TENANT_ID);
+  }
+
+  void assertGetNotFound(URL url, String tenantId) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    getClient().get(url, TENANT_ID, ResponseHandler.text(getCompleted));
+    getClient().get(url, tenantId, ResponseHandler.text(getCompleted));
     Response response = get(getCompleted);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }

@@ -84,9 +84,7 @@ import org.junit.runners.Suite;
   NotificationSendingErrorRepositoryTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   IterationJobRunnerTest.class,
-  AuthorityStorageTest.class,
   SampleDataTest.class,
-  AuthoritySourceFileApiTest.class,
   AuditDeleteTest.class,
   HridSettingsIncreaseMaxValueMigrationTest.class,
   IllMigrationScriptTest.class,
@@ -156,12 +154,16 @@ public final class StorageTestSuite {
   }
 
   static void deleteAll(URL rootUrl) {
+    deleteAll(rootUrl, TENANT_ID);
+  }
+
+  static void deleteAll(URL rootUrl, String tenantId) {
     HttpClient client = new HttpClient(getVertx());
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
-      client.delete(rootUrl + "?query=cql.allRecords=1", TENANT_ID,
+      client.delete(rootUrl + "?query=cql.allRecords=1", tenantId,
         ResponseHandler.any(deleteAllFinished));
 
       Response response = TestBase.get(deleteAllFinished);

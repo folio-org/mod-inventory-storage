@@ -6,6 +6,7 @@ import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.RestUtility.send;
 
 import io.vertx.core.http.HttpMethod;
@@ -40,25 +41,34 @@ public final class LocationUtility {
 
   @SneakyThrows
   public static void createLocationUnits(boolean force) {
+    createLocationUnits(force, TENANT_ID);
+  }
+
+  @SneakyThrows
+  public static void createLocationUnits(boolean force, String tenantId) {
     if (force || institutionID == null) {
       institutionID = UUID.randomUUID();
-      createInstitution(institutionID, "Primary Institution", "PI");
+      createInstitution(institutionID, "Primary Institution", "PI", tenantId);
 
       campusID = UUID.randomUUID();
-      createCampus(campusID, "Central Campus", "CC", institutionID);
+      createCampus(campusID, "Central Campus", "CC", institutionID, tenantId);
 
       libraryID = UUID.randomUUID();
-      createLibrary(libraryID, "Main Library", "ML", campusID);
+      createLibrary(libraryID, "Main Library", "ML", campusID, tenantId);
 
       UUID spId = UUID.randomUUID();
       SERVICE_POINT_IDS.add(spId);
       String spName = "Service Point " + spId;
 
-      createServicePoint(spId, spName, "SP" + spId, spName, "SP Description", 0, false, null);
+      createServicePoint(spId, spName, "SP" + spId, spName, "SP Description", 0, false, null, tenantId);
     }
   }
 
   public static Response createInstitution(UUID id, String name, String code) {
+    return createInstitution(id, name, code, TENANT_ID);
+  }
+
+  public static Response createInstitution(UUID id, String name, String code, String tenantId) {
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
@@ -68,13 +78,17 @@ public final class LocationUtility {
       request.put("id", id.toString());
     }
 
-    send(locInstitutionStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
+    send(locInstitutionStorageUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
   }
 
   public static Response createCampus(UUID id, String name, String code, UUID instId) {
+    return createCampus(id, name, code, instId, TENANT_ID);
+  }
+
+  public static Response createCampus(UUID id, String name, String code, UUID instId, String tenantId) {
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
     JsonObject request = new JsonObject()
       .put("name", name)
@@ -86,14 +100,21 @@ public final class LocationUtility {
       request.put("id", id.toString());
     }
 
-    send(locCampusStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
+    send(locCampusStorageUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
   }
 
   public static Response createLocation(UUID id, String name,
                                         UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints) {
+
+    return createLocation(id, name, inst, camp, lib, code, servicePoints, TENANT_ID);
+  }
+
+  public static Response createLocation(UUID id, String name,
+                                        UUID inst, UUID camp, UUID lib, String code, List<UUID> servicePoints,
+                                        String tenantId) {
 
     final CompletableFuture<Response> createLocation = new CompletableFuture<>();
     JsonObject request = new JsonObject()
@@ -110,8 +131,8 @@ public final class LocationUtility {
     UUID spId = UUID.randomUUID();
     SERVICE_POINT_IDS.add(spId);
     putIfNotNull(request, "servicePointIds", new JsonArray(servicePoints));
-    send(locationsStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocation));
+    send(locationsStorageUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId, ResponseHandler.json(createLocation));
     return get(createLocation);
   }
 
@@ -120,14 +141,26 @@ public final class LocationUtility {
    * Used mostly while migrating to new Locations
    */
   public static UUID createLocation(UUID id, String name, String code) {
+    return createLocation(id, name, code, TENANT_ID);
+  }
+
+  /**
+   * Helper to create a Location record the way old shelfLocations were created.
+   * Used mostly while migrating to new Locations
+   */
+  public static UUID createLocation(UUID id, String name, String code, String tenantId) {
     if (id == null) {
       id = UUID.randomUUID();
     }
-    createLocation(id, name, institutionID, campusID, libraryID, code, SERVICE_POINT_IDS);
+    createLocation(id, name, institutionID, campusID, libraryID, code, SERVICE_POINT_IDS, tenantId);
     return id;
   }
 
   public static Response createLibrary(UUID id, String name, String code, UUID campId) {
+    return createLibrary(id, name, code, campId, TENANT_ID);
+  }
+
+  public static Response createLibrary(UUID id, String name, String code, UUID campId, String tenantId) {
     CompletableFuture<Response> createLocationUnit = new CompletableFuture<>();
 
     JsonObject request = new JsonObject()
@@ -138,8 +171,8 @@ public final class LocationUtility {
       request.put("id", id.toString());
     }
 
-    send(locLibraryStorageUrl(""), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createLocationUnit));
+    send(locLibraryStorageUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId, ResponseHandler.json(createLocationUnit));
 
     return get(createLocationUnit);
   }
@@ -150,13 +183,33 @@ public final class LocationUtility {
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description,
-      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList());
+      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), TENANT_ID);
+  }
+
+  public static Response createServicePoint(UUID id, String name, String code,
+                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
+                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                            String tenantId)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    return createServicePoint(id, name, code, discoveryDisplayName, description,
+      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), tenantId);
   }
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
                                             Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
                                             List<StaffSlip> slips)
+    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+
+    return createServicePoint(id, name, code, discoveryDisplayName, description, shelvingLagTime, pickupLocation,
+      shelfExpiryPeriod, slips, TENANT_ID);
+  }
+
+  public static Response createServicePoint(UUID id, String name, String code,
+                                            String discoveryDisplayName, String description, Integer shelvingLagTime,
+                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                            List<StaffSlip> slips, String tenantId)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
@@ -192,8 +245,8 @@ public final class LocationUtility {
       request.put("staffSlips", staffSlips);
     }
 
-    send(servicePointsUrl(""), HttpMethod.POST, request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF,
+    send(servicePointsUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId,
       ResponseHandler.json(createServicePoint));
     return createServicePoint.get(10, TimeUnit.SECONDS);
   }

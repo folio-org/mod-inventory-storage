@@ -44,13 +44,13 @@ public class InstallUpgradeIT {
   private static final boolean IS_LOG_ENABLED = false;
   private static final Network NETWORK = Network.newNetwork();
 
-  @ClassRule
+  @ClassRule(order = 0)
   public static final KafkaContainer KAFKA =
     new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.0.3"))
       .withNetwork(NETWORK)
       .withNetworkAliases("mykafka");
 
-  @ClassRule
+  @ClassRule(order = 1)
   public static final PostgreSQLContainer<?> POSTGRES =
     new PostgreSQLContainer<>("postgres:12-alpine")
       .withClasspathResourceMapping("lotus-23.0.0.sql", "/lotus-23.0.0.sql", BindMode.READ_ONLY)
@@ -61,7 +61,7 @@ public class InstallUpgradeIT {
       .withPassword("password")
       .withDatabaseName("postgres");
 
-  @ClassRule
+  @ClassRule(order = 2)
   public static final GenericContainer<?> MOD_MIS =
     new GenericContainer<>(
       new ImageFromDockerfile("mod-inventory-storage").withFileFromPath(".", Path.of(".")))

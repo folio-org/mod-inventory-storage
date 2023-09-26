@@ -6,7 +6,6 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   INSTANCE("instance"),
   ITEM("item"),
   HOLDINGS_RECORD("holdings-record"),
-  AUTHORITY("authority"),
   INSTANCE_CONTRIBUTION("instance-contribution"),
   BOUND_WITH("bound-with"),
   ASYNC_MIGRATION("async-migration"),

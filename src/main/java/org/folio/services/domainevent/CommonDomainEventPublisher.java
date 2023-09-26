@@ -29,6 +29,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
+import org.folio.rest.tools.utils.TenantTool;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -116,6 +117,11 @@ public class CommonDomainEventPublisher<T> {
     return publish(instanceId, domainEvent);
   }
 
+  Future<Void> publishRecordUpdated(String instanceId, String oldRecord, String newRecord) {
+    var domainEvent = DomainEventRaw.updateEvent(oldRecord, newRecord, tenantId(okapiHeaders));
+    return publish(instanceId, domainEvent);
+  }
+
   Future<Void> publishRecordsUpdated(Collection<Triple<String, T, T>> updatedRecords) {
     if (updatedRecords.isEmpty()) {
       return succeededFuture();
@@ -131,6 +137,11 @@ public class CommonDomainEventPublisher<T> {
     final DomainEvent<T> domainEvent = createEvent(newRecord, tenantId(okapiHeaders));
 
     return publish(instanceId, domainEvent);
+  }
+
+  Future<Void> publishRecordCreated(String id, String newRecord) {
+    var domainEvent = DomainEventRaw.createEvent(newRecord, tenantId(okapiHeaders));
+    return publish(id, domainEvent);
   }
 
   Future<Void> publishRecordsCreated(List<Pair<String, T>> records) {
@@ -163,8 +174,11 @@ public class CommonDomainEventPublisher<T> {
   private Future<Void> publish(String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new KafkaProducerRecordBuilder<String, Object>()
-      .key(key).value(value).topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders)
+    var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
+      .key(key)
+      .value(value)
+      .topic(kafkaTopic)
+      .propagateOkapiHeaders(okapiHeaders)
       .build();
 
     KafkaProducer<String, String> producer = getOrCreateProducer();

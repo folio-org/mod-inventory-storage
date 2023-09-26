@@ -106,10 +106,9 @@ public class InstancesInternal {
     if (other == this) {
       return true;
     }
-    if (!(other instanceof InstancesInternal)) {
+    if (!(other instanceof InstancesInternal rhs)) {
       return false;
     }
-    InstancesInternal rhs = (InstancesInternal) other;
     return new EqualsBuilder().append(totalRecords, rhs.totalRecords)
       .append(additionalProperties, rhs.additionalProperties)
       .append(instances, rhs.instances)

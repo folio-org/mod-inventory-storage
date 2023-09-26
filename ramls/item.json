@@ -407,7 +407,7 @@
     },
     "holdingsRecord2": {
       "type": "object",
-      "description": "Item associated holdings record object.",
+      "description": "Fake property for mod-graphql to determine record relationships.",
       "folio:$ref": "holdingsrecord.json",
       "readonly": true,
       "folio:isVirtual": true,
