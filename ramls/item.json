@@ -313,9 +313,14 @@
     },
     "permanentLocation": {
       "description": "The permanent shelving location in which an item resides",
-      "$ref": "location.json",
       "type": "object",
-      "readonly": true
+      "folio:$ref": "location.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "locations",
+      "folio:linkFromField": "permanentLocationId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "locations.0"
     },
     "temporaryLocationId": {
       "type": "string",
