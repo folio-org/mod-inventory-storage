@@ -14,6 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -110,9 +111,10 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     var jobs = instanceReindex.getReindexJobs();
 
-    assertThat(jobs.getReindexJobs().get(0).getPublished(), is(0));
-    assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED));
-    assertThat(jobs.getTotalRecords(), notNullValue());
+    assertAll("jobs",
+      () -> assertThat(jobs.getReindexJobs().get(0).getPublished(), is(numberOfRecords)),
+      () -> assertThat(jobs.getReindexJobs().get(0).getJobStatus(), is(IDS_PUBLISHED)),
+      () -> assertThat(jobs.getTotalRecords(), notNullValue()));
 
     instanceMessageChecks.countOfAllPublishedInstancesIs(
       greaterThanOrEqualTo(numberOfRecords));
