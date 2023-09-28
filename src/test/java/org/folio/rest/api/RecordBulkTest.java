@@ -221,10 +221,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetHoldingsBulkOfId()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     int totalHoldingsIds = 2;
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
@@ -240,10 +237,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetHoldingsBulkOfIdWithLimitAndOffset()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     int totalHoldingsIds = 20;
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);

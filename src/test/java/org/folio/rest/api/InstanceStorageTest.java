@@ -52,7 +52,6 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -77,6 +76,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
@@ -256,8 +256,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateAnInstanceWithoutProvidingId()
-    throws MalformedURLException,
-    InterruptedException,
+    throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
@@ -295,8 +294,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateAnInstanceWithIdThatIsNotUuid()
-    throws MalformedURLException,
-    InterruptedException,
+    throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
@@ -331,10 +329,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotPutAnInstanceAtNonexistingLocation()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -430,10 +425,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotProvideAdditionalPropertiesInInstance()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+    throws InterruptedException, TimeoutException, ExecutionException {
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
 
@@ -452,10 +444,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotProvideAdditionalPropertiesInInstanceIdentifiers()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+    throws InterruptedException, TimeoutException, ExecutionException {
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
 
@@ -590,11 +579,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceById()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void canGetInstanceById() throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
 
@@ -622,11 +607,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetAllInstances()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void canGetAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID firstInstanceId = UUID.randomUUID();
 
@@ -682,10 +663,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canSearchByClassificationNumberWithoutArrayModifier()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     createInstancesWithClassificationNumbers();
 
@@ -698,10 +676,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canSearchUsingMetadataDateUpdatedIndex()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID firstInstanceId = UUID.randomUUID();
 
@@ -738,11 +713,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPageAllInstances()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void canPageAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
 
     createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(nod(UUID.randomUUID()));
@@ -780,10 +751,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canProvideLargePageOffsetAndLimit()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(nod(UUID.randomUUID()));
@@ -1133,10 +1101,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     matchInstanceTitles(searchForInstances("subjects=\"abc xyz\""));
   }
 
+  //todo
   @Test
   public void canSearchByBarcode()
     throws InterruptedException,
-    MalformedURLException,
     TimeoutException,
     ExecutionException {
 
@@ -1181,12 +1149,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   // This is intended to demonstrate usage of the two different views
+  // todo
   @Test
   public void canSearchByBarcodeAndPermanentLocation()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+    throws InterruptedException, TimeoutException, ExecutionException {
 
     UUID smallAngryPlanetInstanceId = UUID.randomUUID();
     UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
@@ -1251,12 +1217,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   // This is intended to demonstrate that instances without holdings or items
   // are not excluded from searching
+  //todo
   @Test
   public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
+    throws InterruptedException, TimeoutException, ExecutionException {
 
     UUID smallAngryPlanetInstanceId = UUID.randomUUID();
     UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
@@ -1683,10 +1647,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldReturnErrorResponseIfAllInstancesFailed()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
 
@@ -2327,10 +2288,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateCollectionOfInstancesWithGeneratedHrids()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting canCreateACollectionOfInstancesWithGeneratedHRIDs");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2908,15 +2866,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
-    throws MalformedURLException,
-    InterruptedException,
+    throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     getClient().post(holdingsStorageUrl(""), holdingsToCreate,
-      TENANT_ID, json(createCompleted));
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()), TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
 
