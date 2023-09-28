@@ -53,7 +53,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +122,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @BeforeClass
   public static void beforeClass() {
-    prepareTenant(CONSORTIUM_MEMBER_TENANT, true);
+    prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
 
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "instance_relationship");
@@ -191,7 +190,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
 
-    JsonObject holding = holdingsClient.create(holdingToCreate).getJson();
+    JsonObject holding = postHoldingsRecord(holdingToCreate).getJson();
 
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
@@ -217,21 +216,21 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
 
-    holdingsMessageChecks.createdMessagePublished(holding);
+    holdingsMessageChecks.createdMessagePublished(holding, TENANT_ID, mockServer.baseUrl());
   }
 
   @Test
   public void canCreateHoldingWithoutProvidingAnId() {
-
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
+    HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .withId(null)
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))));
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    IndividualResource holdingResponse = postHoldingsRecord(holdingBuilder.create());
 
     JsonObject holding = holdingResponse.getJson();
 
@@ -408,9 +407,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(newInstanceId));
     setHoldingsSequence(1);
 
-    IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
       .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+    IndividualResource holdingResource = postHoldingsRecord(holdingToCreate);
 
     UUID holdingId = holdingResource.getId();
 
@@ -510,9 +511,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    holdingsClient.create(new HoldingRequestBuilder()
+    postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create());
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -674,26 +676,31 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId1));
     instancesClient.create(nod(instanceId2));
 
-    final var h1 = holdingsClient.create(new HoldingRequestBuilder()
+    final var h1 = postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId1)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("1234")).getJson();
-    final var h2 = holdingsClient.create(new HoldingRequestBuilder()
+      .withHrid("1234")
+      .create()).getJson();
+    final var h2 = postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId1)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("21234")).getJson();
-    final var h3 = holdingsClient.create(new HoldingRequestBuilder()
+      .withHrid("21234")
+      .create()).getJson();
+    final var h3 = postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId2)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("12")).getJson();
-    final var h4 = holdingsClient.create(new HoldingRequestBuilder()
+      .withHrid("12")
+      .create()).getJson();
+    final var h4 = postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId2)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("3123")).getJson();
-    final var h5 = holdingsClient.create(new HoldingRequestBuilder()
+      .withHrid("3123")
+      .create()).getJson();
+    final var h5 = postHoldingsRecord(new HoldingRequestBuilder()
       .forInstance(instanceId2)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("123")).getJson();
+      .withHrid("123")
+      .create()).getJson();
 
     var response = getClient().delete(holdingsStorageUrl("?query=hrid==12*"), TENANT_ID).get(10, SECONDS);
 
@@ -857,11 +864,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
-    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+    JsonObject holding = postHoldingsRecord(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .create()).getJson();
 
     assertThat(holding.getString("effectiveLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
 
@@ -1008,8 +1016,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumber()
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -2376,6 +2383,32 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canCreateHoldingAndCreateShadowInstance() {
+    log.info("Starting canCreateHoldingAndCreateShadowInstance");
+    mockSharingInstance();
+
+    UUID instanceId = UUID.randomUUID();
+    HoldingRequestBuilder builder = new HoldingRequestBuilder()
+      .withId(null)
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+
+    JsonObject holding = holdingsClient.create(builder.create(), CONSORTIUM_MEMBER_TENANT,
+      Map.of(X_OKAPI_URL, mockServer.baseUrl())).getJson();
+
+    assertThat(holding.getString("id"), is(notNullValue()));
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
+    assertExists(holding, CONSORTIUM_MEMBER_TENANT);
+
+    holdingsMessageChecks.createdMessagePublished(
+      getById(holding.getString("id"), CONSORTIUM_MEMBER_TENANT).getJson(),
+      CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+
+    log.info("Finished canCreateHoldingAndCreateShadowInstance");
+  }
+
+  @Test
   public void canPostSynchronousBatchWithGeneratedHrid() {
     log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
 
@@ -3076,6 +3109,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         .put("status", new JsonObject().put("name", "Available")));
     }
     return items;
+  }
+
+  private IndividualResource postHoldingsRecord(JsonObject holdingsRecord) {
+    return holdingsClient.create(holdingsRecord, TENANT_ID, Map.of(X_OKAPI_URL, mockServer.baseUrl()));
   }
 
   private Response postSynchronousBatchUnsafe(JsonArray holdingsArray) {
