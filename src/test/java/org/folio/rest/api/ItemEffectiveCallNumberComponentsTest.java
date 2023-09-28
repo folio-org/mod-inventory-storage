@@ -6,6 +6,7 @@ import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasSuffix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,18 +15,21 @@ import static org.junit.Assert.assertNotNull;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.ItemEventMessageChecks;
+import org.folio.utility.RestUtility;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -275,13 +279,14 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     IndividualResource instance = instancesClient.create(instance(UUID.randomUUID()));
 
-    IndividualResource holdings = holdingsClient.create(new HoldingRequestBuilder()
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instance.getId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create()
-      .put(propertyName, propertyValue)
-    );
+      .put(propertyName, propertyValue);
+    IndividualResource holdings =
+      holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
     assertThat(holdings.getJson().getString(propertyName), is(propertyValue));
 
     return holdings;

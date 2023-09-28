@@ -166,7 +166,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .withPermanentLocation(holdingsPermanentLocationId);
 
     return holdingsClient
-      .create(holdingsBuilderProcessor.apply(holdingsBuilder))
+      .create(holdingsBuilderProcessor.apply(holdingsBuilder).create(), TENANT_ID,
+        Map.of(XOkapiHeaders.URL, mockServer.baseUrl()))
       .getId();
   }
 

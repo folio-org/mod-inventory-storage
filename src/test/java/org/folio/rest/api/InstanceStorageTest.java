@@ -1101,7 +1101,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     matchInstanceTitles(searchForInstances("subjects=\"abc xyz\""));
   }
 
-  //todo
   @Test
   public void canSearchByBarcode()
     throws InterruptedException,
