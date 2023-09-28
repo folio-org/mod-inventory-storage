@@ -1155,6 +1155,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportBoundWithItems.sql",
       "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/updateCompleteUpdatedDateForItemInsertUpdateToHandleBoundWith.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }
