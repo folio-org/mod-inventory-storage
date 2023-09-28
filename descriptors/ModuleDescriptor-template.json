@@ -90,7 +90,11 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/holdings",
-          "permissionsRequired": ["inventory-storage.holdings.item.post"]
+          "permissionsRequired": ["inventory-storage.holdings.item.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.item.post"
+          ]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/holdings-storage/holdings/{id}",
