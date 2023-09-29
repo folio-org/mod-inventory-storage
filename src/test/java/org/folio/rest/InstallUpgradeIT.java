@@ -6,6 +6,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -13,12 +17,14 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
@@ -43,6 +49,8 @@ public class InstallUpgradeIT {
   private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
   private static final boolean IS_LOG_ENABLED = false;
   private static final Network NETWORK = Network.newNetwork();
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final String USER_TENANTS_FIELD = "userTenants";
 
   @ClassRule(order = 0)
   public static final KafkaContainer KAFKA =
@@ -62,11 +70,18 @@ public class InstallUpgradeIT {
       .withDatabaseName("postgres");
 
   @ClassRule(order = 2)
+  public static final WireMockRule MOCK_SERVER =
+    new WireMockRule(WireMockConfiguration.wireMockConfig()
+      .notifier(new ConsoleNotifier(false))
+      .dynamicPort());
+
+  @ClassRule(order = 3)
   public static final GenericContainer<?> MOD_MIS =
     new GenericContainer<>(
       new ImageFromDockerfile("mod-inventory-storage").withFileFromPath(".", Path.of(".")))
       .withNetwork(NETWORK)
       .withExposedPorts(8081)
+      .withAccessToHost(true)
       .withEnv("DB_HOST", "mypostgres")
       .withEnv("DB_PORT", "5432")
       .withEnv("DB_USERNAME", "username")
@@ -77,6 +92,7 @@ public class InstallUpgradeIT {
 
   @BeforeClass
   public static void beforeClass() {
+    Testcontainers.exposeHostPorts(MOCK_SERVER.port());
     RestAssured.reset();
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     RestAssured.baseURI = "http://" + MOD_MIS.getHost() + ":" + MOD_MIS.getFirstMappedPort();
@@ -84,6 +100,9 @@ public class InstallUpgradeIT {
       KAFKA.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams());
       MOD_MIS.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams());
     }
+
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .willReturn(WireMock.ok().withBody(new JsonObject().put(USER_TENANTS_FIELD, JsonArray.of()).encode())));
   }
 
   static void postgresExec(String... command) {
@@ -170,9 +189,10 @@ public class InstallUpgradeIT {
 
   private void setTenant(String tenant) {
     RestAssured.requestSpecification = new RequestSpecBuilder()
-      .addHeader("X-Okapi-Url", "http://localhost:8081")
-      .addHeader("X-Okapi-Tenant", tenant)
-      .addHeader("X-Okapi-User-Id", "67e1ce93-e358-46ea-aed8-96e2fa73520f")
+      .addHeader(XOkapiHeaders.URL_TO, "http://localhost:8081")
+      .addHeader(XOkapiHeaders.URL, String.format("http://host.testcontainers.internal:%d", MOCK_SERVER.port()))
+      .addHeader(XOkapiHeaders.TENANT, tenant)
+      .addHeader(XOkapiHeaders.USER_ID, "67e1ce93-e358-46ea-aed8-96e2fa73520f")
       .setContentType(ContentType.JSON)
       .build();
   }
