@@ -3343,8 +3343,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     @SneakyThrows
     @Override
     public com.github.tomakehurst.wiremock.http.Response transform(Request request,
-        com.github.tomakehurst.wiremock.http.Response response, FileSource fileSource,
-        com.github.tomakehurst.wiremock.extension.Parameters parameters) {
+       com.github.tomakehurst.wiremock.http.Response response, FileSource fileSource,
+       com.github.tomakehurst.wiremock.extension.Parameters parameters) {
 
       SharingInstance sharingInstance = Json.getObjectMapper().readValue(request.getBody(),
         SharingInstance.class);
