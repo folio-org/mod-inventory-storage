@@ -46,11 +46,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 public class InstallUpgradeIT {
 
-  private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
-  private static final boolean IS_LOG_ENABLED = false;
-  private static final Network NETWORK = Network.newNetwork();
-  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
-  private static final String USER_TENANTS_FIELD = "userTenants";
+  public static final Network NETWORK = Network.newNetwork();
 
   @ClassRule(order = 0)
   public static final KafkaContainer KAFKA =
@@ -89,6 +85,11 @@ public class InstallUpgradeIT {
       .withEnv("DB_DATABASE", "postgres")
       .withEnv("KAFKA_HOST", "mykafka")
       .withEnv("KAFKA_PORT", "9092");
+
+  private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
+  private static final boolean IS_LOG_ENABLED = false;
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final String USER_TENANTS_FIELD = "userTenants";
 
   @BeforeClass
   public static void beforeClass() {
