@@ -7,6 +7,7 @@ import static org.folio.services.domainevent.DomainEventType.MIGRATION;
 import static org.folio.services.domainevent.DomainEventType.REINDEX;
 import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,7 +21,9 @@ public class DomainEvent<T> {
   private DomainEventType type;
   private String tenant;
 
-  public DomainEvent(T oldEntity, T newEntity, DomainEventType type, String tenant) {
+  @JsonCreator
+  public DomainEvent(@JsonProperty("old") T oldEntity, @JsonProperty("new") T newEntity,
+                     @JsonProperty("type") DomainEventType type, @JsonProperty("tenant") String tenant) {
     this.oldEntity = oldEntity;
     this.newEntity = newEntity;
     this.type = type;

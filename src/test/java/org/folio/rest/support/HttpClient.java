@@ -17,6 +17,7 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,8 @@ public class HttpClient {
   private static final String TENANT_HEADER = "X-Okapi-Tenant";
   private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_URL_TO = "X-Okapi-Url-to";
+  private static final String TOKEN_HEADER = "X-Okapi-Token";
+  private static final String TEST_TOKEN = "test-token";
 
   private final WebClient client;
 
@@ -53,10 +56,22 @@ public class HttpClient {
     Object body,
     String tenantId) {
 
+    return request(method, url, body, Map.of(), tenantId);
+  }
+
+  public Future<HttpResponse<Buffer>> request(
+    HttpMethod method,
+    URL url,
+    Object body,
+    Map<String, String> headers,
+    String tenantId) {
+
     try {
       HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
       request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
       addDefaultHeaders(request, url, tenantId);
+      headers.entrySet().stream().forEach(header -> request.putHeader(header.getKey(),
+        header.getValue()));
 
       if (body == null) {
         return request.send();
@@ -93,15 +108,30 @@ public class HttpClient {
   public void post(
     URL url,
     Object body,
+    Map<String, String> headers,
     String tenantId,
     Handler<HttpResponse<Buffer>> responseHandler) {
 
-    request(HttpMethod.POST, url, body, tenantId)
+    request(HttpMethod.POST, url, body, headers, tenantId)
       .recover(error -> {
         LOG.error(error.getMessage(), error);
         return null;
       })
       .onSuccess(responseHandler);
+  }
+
+  /**
+   * Warning: The responseHandler gets null on error, use
+   * doPost(URL, Object, String) or {@link #post(URL, Object, String)}
+   * for better error reporting.
+   */
+  public void post(
+    URL url,
+    Object body,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
+
+    post(url, body, Map.of(), tenantId, responseHandler);
   }
 
   public CompletableFuture<Response> post(URL url, Object body, String tenantId) {
@@ -210,6 +240,7 @@ public class HttpClient {
   private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
     if (isNotBlank(tenantId)) {
       request.putHeader(TENANT_HEADER, tenantId);
+      request.putHeader(TOKEN_HEADER, TEST_TOKEN);
     }
     if (url != null) {
       // FIXME: Several institutions have a Okapi URL with path, for example https://folio-demo.gbv.de/okapi

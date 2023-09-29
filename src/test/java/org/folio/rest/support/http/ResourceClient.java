@@ -173,7 +173,12 @@ public final class ResourceClient {
 
   public IndividualResource create(JsonObject request) {
 
-    Response response = attemptToCreate(request);
+    return create(request, TENANT_ID);
+  }
+
+  public IndividualResource create(JsonObject request, String tenantId) {
+
+    Response response = attemptToCreate("", request, tenantId);
 
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
@@ -196,11 +201,15 @@ public final class ResourceClient {
   }
 
   public Response attemptToCreate(String subPath, JsonObject request) {
+    return attemptToCreate(subPath, request, TENANT_ID);
+  }
+
+  public Response attemptToCreate(String subPath, JsonObject request, String tenantId) {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     try {
-      client.post(urlMaker.combine(subPath), request, TENANT_ID,
+      client.post(urlMaker.combine(subPath), request, tenantId,
         ResponseHandler.any(createCompleted));
     } catch (MalformedURLException e) {
       throw new RuntimeException(subPath + ": " + e.getMessage(), e);

@@ -154,12 +154,16 @@ public final class StorageTestSuite {
   }
 
   static void deleteAll(URL rootUrl) {
+    deleteAll(rootUrl, TENANT_ID);
+  }
+
+  static void deleteAll(URL rootUrl, String tenantId) {
     HttpClient client = new HttpClient(getVertx());
 
     CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
 
     try {
-      client.delete(rootUrl + "?query=cql.allRecords=1", TENANT_ID,
+      client.delete(rootUrl + "?query=cql.allRecords=1", tenantId,
         ResponseHandler.any(deleteAllFinished));
 
       Response response = TestBase.get(deleteAllFinished);

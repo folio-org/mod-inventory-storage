@@ -21,6 +21,9 @@ public final class FakeKafkaConsumer {
   static final String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
   static final String SERVICE_POINT_TOPIC_NAME = "folio.test_tenant.inventory.service-point";
 
+  static final String HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT =
+    "folio.consortium_member_tenant.inventory.holdings-record";
+
   private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedItemMessages = new GroupedCollectedMessages();
@@ -93,7 +96,8 @@ public final class FakeKafkaConsumer {
   private VertxMessageCollectingTopicConsumer createConsumer() {
     return new VertxMessageCollectingTopicConsumer(
       Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
-        BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME),
+        BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME,
+        HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT),
       new AggregateMessageCollector(
         filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
           KafkaConsumerRecord::key, collectedInstanceMessages),
@@ -104,7 +108,9 @@ public final class FakeKafkaConsumer {
         filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
           KafkaConsumerRecord::key, collectedBoundWithMessages),
         filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedServicePointMessages)));
+          KafkaConsumerRecord::key, collectedServicePointMessages),
+        filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
+          FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages)));
   }
 
   @NotNull
