@@ -1148,7 +1148,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   // This is intended to demonstrate usage of the two different views
-  // todo
   @Test
   public void canSearchByBarcodeAndPermanentLocation()
     throws InterruptedException, TimeoutException, ExecutionException {
@@ -1216,7 +1215,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   // This is intended to demonstrate that instances without holdings or items
   // are not excluded from searching
-  //todo
   @Test
   public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances()
     throws InterruptedException, TimeoutException, ExecutionException {

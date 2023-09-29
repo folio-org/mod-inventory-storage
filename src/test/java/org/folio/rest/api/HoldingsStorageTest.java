@@ -43,13 +43,10 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.common.Json;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
 import com.github.tomakehurst.wiremock.http.Request;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -94,18 +91,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort()
-    .extensions(ConsortiumInstanceSharingTransformer.class));
   public static final String NEW_TEST_TAG = "new test tag";
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
@@ -122,7 +113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @BeforeClass
   public static void beforeClass() {
-    prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
+    prepareTenant(CONSORTIUM_MEMBER_TENANT, true);
 
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "instance_relationship");
@@ -2309,7 +2300,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
       is("ERROR: Cannot change hrid of holdings record id=" + holdingsId
-          + ", old hrid=ho00000000001, new hrid=ABC123 (239HR)"));
+        + ", old hrid=ho00000000001, new hrid=ABC123 (239HR)"));
 
     log.info("Finished cannotChangeHRIDAfterCreation");
   }
@@ -2639,7 +2630,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       final JsonObject holding = (JsonObject) hrObj;
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
       holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
-          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
@@ -2668,7 +2659,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
 
       holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
-          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
@@ -2693,7 +2684,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       assertExists(holding, CONSORTIUM_MEMBER_TENANT);
 
       holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
-          CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
     }
   }
 
@@ -2805,9 +2796,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response itemResponse = postItemSynchronousBatch("?upsert=true", items);
     assertThat(itemResponse, statusCodeIs(HTTP_CREATED));
 
-    assertItemEffectiveCallNumbers(items, "prefix",     "hcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
-    assertItemEffectiveCallNumbers(items, "callNumber", "hcn",  "icn",  "icn",  "icn",  "hcn",  "icn");
-    assertItemEffectiveCallNumbers(items, "suffix",     "hcns", "icns", "icns", "icns", "hcns", "icns");
+    assertItemEffectiveCallNumbers(items, "prefix", "hcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
+    assertItemEffectiveCallNumbers(items, "callNumber", "hcn", "icn", "icn", "icn", "hcn", "icn");
+    assertItemEffectiveCallNumbers(items, "suffix", "hcns", "icns", "icns", "icns", "hcns", "icns");
 
     for (int i = 0; i < 3; i++) {
       if (i == 0 || i == 1) {
@@ -2820,9 +2811,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response response2 = postSynchronousBatch("?upsert=true", holdings);
     assertThat(response2, statusCodeIs(HTTP_CREATED));
 
-    assertItemEffectiveCallNumbers(items, "prefix",     "xcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
-    assertItemEffectiveCallNumbers(items, "callNumber", "xcn",  "icn",  "icn",  "icn",  "hcn",  "icn");
-    assertItemEffectiveCallNumbers(items, "suffix",     "xcns", "icns", "icns", "icns", "hcns", "icns");
+    assertItemEffectiveCallNumbers(items, "prefix", "xcnp", "icnp", "icnp", "icnp", "hcnp", "icnp");
+    assertItemEffectiveCallNumbers(items, "callNumber", "xcn", "icn", "icn", "icn", "hcn", "icn");
+    assertItemEffectiveCallNumbers(items, "suffix", "xcns", "icns", "icns", "icns", "hcns", "icns");
   }
 
   @Test
@@ -3239,11 +3230,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
    * Fetch the item using the id from items.
    */
   private void assertItemEffectiveCallNumbers(JsonArray items, String property,
-      String n1, String n2, String n3, String n4, String n5, String n6) {
+                                              String n1, String n2, String n3, String n4, String n5, String n6) {
 
     var actual = fetchItems(items).stream()
-        .map(item -> item.getJsonObject("effectiveCallNumberComponents").getString(property))
-        .collect(Collectors.toList());
+      .map(item -> item.getJsonObject("effectiveCallNumberComponents").getString(property))
+      .collect(Collectors.toList());
     assertThat(actual, is(List.of(n1, n2, n3, n4, n5, n6)));
   }
 
@@ -3360,8 +3351,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     @SneakyThrows
     @Override
     public com.github.tomakehurst.wiremock.http.Response transform(Request request,
-       com.github.tomakehurst.wiremock.http.Response response, FileSource fileSource,
-       com.github.tomakehurst.wiremock.extension.Parameters parameters) {
+        com.github.tomakehurst.wiremock.http.Response response, FileSource fileSource,
+        com.github.tomakehurst.wiremock.extension.Parameters parameters) {
 
       SharingInstance sharingInstance = Json.getObjectMapper().readValue(request.getBody(),
         SharingInstance.class);

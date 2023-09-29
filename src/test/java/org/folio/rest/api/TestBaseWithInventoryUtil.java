@@ -43,7 +43,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   @ClassRule
   public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
     .notifier(new ConsoleNotifier(false))
-    .dynamicPort());
+    .dynamicPort()
+    .extensions(HoldingsStorageTest.ConsortiumInstanceSharingTransformer.class));
 
   public static final String MAIN_LIBRARY_LOCATION = "Main Library";
   public static final String SECOND_FLOOR_LOCATION = "Second Floor";
