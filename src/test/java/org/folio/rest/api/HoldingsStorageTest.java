@@ -113,7 +113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @BeforeClass
   public static void beforeClass() {
-    prepareTenant(CONSORTIUM_MEMBER_TENANT, true);
+    prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
 
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "instance_relationship");
@@ -3330,14 +3330,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
-  }
-
-  private void mockUserTenantsForNonConsortiumMember() {
-    JsonObject emptyUserTenantsCollection = new JsonObject()
-      .put("userTenants", JsonArray.of());
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(TENANT_ID))
-      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
   private void mockSharingInstance() {

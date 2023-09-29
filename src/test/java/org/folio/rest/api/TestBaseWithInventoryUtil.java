@@ -104,6 +104,14 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }
 
+  public static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+  }
+
   protected static void setupMaterialTypes() {
     setupMaterialTypes(TENANT_ID);
   }
@@ -355,13 +363,5 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .getJsonArray("instanceStatuses").getJsonObject(0);
 
     return new IndividualResource(instanceStatus);
-  }
-
-  private static void mockUserTenantsForNonConsortiumMember() {
-    JsonObject emptyUserTenantsCollection = new JsonObject()
-      .put("userTenants", JsonArray.of());
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
-      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 }

@@ -210,17 +210,7 @@ public final class ResourceClient {
   }
 
   public Response attemptToCreate(String subPath, JsonObject request, String tenantId) {
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    try {
-      client.post(urlMaker.combine(subPath), request, tenantId,
-        ResponseHandler.any(createCompleted));
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(subPath + ": " + e.getMessage(), e);
-    }
-
-    return TestBase.get(createCompleted);
+    return attemptToCreate(subPath, request, tenantId, Map.of());
   }
 
   public Response attemptToCreate(String subPath, JsonObject request, String tenantId, Map<String, String> headers) {
