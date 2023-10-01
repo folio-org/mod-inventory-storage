@@ -79,7 +79,9 @@ public class IterationJobRunner {
   }
 
   public void startIteration(IterationJob job) {
-    String fullTopicName = KafkaTopicNameHelper.formatTopicName(environment(), tenantId(okapiHeaders), job.getJobParams().getTopicName());
+    String fullTopicName = KafkaTopicNameHelper.formatTopicName(environment(),
+      tenantId(okapiHeaders),
+      job.getJobParams().getTopicName());
     eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
       fullTopicName);
 
