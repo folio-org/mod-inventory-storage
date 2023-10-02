@@ -90,7 +90,11 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/holdings",
-          "permissionsRequired": ["inventory-storage.holdings.item.post"]
+          "permissionsRequired": ["inventory-storage.holdings.item.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.item.post"
+          ]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/holdings-storage/holdings/{id}",
@@ -113,7 +117,11 @@
         {
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/batch/synchronous",
-          "permissionsRequired": ["inventory-storage.holdings.batch.post"]
+          "permissionsRequired": ["inventory-storage.holdings.batch.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.item.post"
+          ]
         }
       ]
     },
@@ -124,7 +132,11 @@
         {
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/batch/synchronous-unsafe",
-          "permissionsRequired": ["inventory-storage.holdings.batch-unsafe.post"]
+          "permissionsRequired": ["inventory-storage.holdings.batch-unsafe.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.item.post"
+          ]
         }
       ]
     },

@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
@@ -9,14 +10,20 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 import lombok.SneakyThrows;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
@@ -28,9 +35,17 @@ import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 
 public abstract class TestBaseWithInventoryUtil extends TestBase {
+
+  @ClassRule
+  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
+    .notifier(new ConsoleNotifier(false))
+    .dynamicPort()
+    .extensions(HoldingsStorageTest.ConsortiumInstanceSharingTransformer.class));
+
   public static final String MAIN_LIBRARY_LOCATION = "Main Library";
   public static final String SECOND_FLOOR_LOCATION = "Second Floor";
   public static final String ANNEX_LIBRARY_LOCATION = "Annex Library";
@@ -65,6 +80,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String canCirculateLoanTypeID;
   protected static UUID nonCirculatingLoanTypeId;
   protected static String nonCirculatingLoanTypeID;
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
   @SneakyThrows
   @BeforeClass
@@ -83,8 +99,17 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupLocations();
 
     KAFKA_CONSUMER.discardAllMessages();
+    mockUserTenantsForNonConsortiumMember();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+  }
+
+  public static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
   protected static void setupMaterialTypes() {
@@ -150,7 +175,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .withPermanentLocation(holdingsPermanentLocationId);
 
     return holdingsClient
-      .create(holdingsBuilderProcessor.apply(holdingsBuilder))
+      .create(holdingsBuilderProcessor.apply(holdingsBuilder).create(), TENANT_ID,
+        Map.of(XOkapiHeaders.URL, mockServer.baseUrl()))
       .getId();
   }
 
@@ -163,7 +189,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withTemporaryLocation(holdingsTemporaryLocationId)
-    ).getId();
+        .create(),
+      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumber(UUID holdingsPermanentLocationId) {
