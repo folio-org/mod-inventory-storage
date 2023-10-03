@@ -4,12 +4,15 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
+import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
@@ -64,9 +67,11 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     final var instance = instancesClient.create(
       smallAngryPlanet(UUID.randomUUID()));
     // create a holding so that instance is not allowed to be removed
-    holdingsClient.create(new HoldingRequestBuilder()
+    HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .forInstance(instance.getId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+    holdingsClient.create(holdingBuilder.create(), TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
@@ -82,9 +87,11 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(UUID.randomUUID()));
 
     // create a holding so that instance is not allowed to be removed
-    holdingsClient.create(new HoldingRequestBuilder()
+    HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .forInstance(instance.getId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+    holdingsClient.create(holdingBuilder.create(), TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     final Response removeResponse = instancesClient.attemptDeleteAll();
 

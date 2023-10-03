@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -177,8 +178,12 @@ public final class ResourceClient {
   }
 
   public IndividualResource create(JsonObject request, String tenantId) {
+    return create(request, tenantId, Map.of());
+  }
 
-    Response response = attemptToCreate("", request, tenantId);
+  public IndividualResource create(JsonObject request, String tenantId, Map<String, String> headers) {
+
+    Response response = attemptToCreate("", request, tenantId, headers);
 
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
@@ -205,11 +210,15 @@ public final class ResourceClient {
   }
 
   public Response attemptToCreate(String subPath, JsonObject request, String tenantId) {
+    return attemptToCreate(subPath, request, tenantId, Map.of());
+  }
+
+  public Response attemptToCreate(String subPath, JsonObject request, String tenantId, Map<String, String> headers) {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
     try {
-      client.post(urlMaker.combine(subPath), request, tenantId,
+      client.post(urlMaker.combine(subPath), request, headers, tenantId,
         ResponseHandler.any(createCompleted));
     } catch (MalformedURLException e) {
       throw new RuntimeException(subPath + ": " + e.getMessage(), e);

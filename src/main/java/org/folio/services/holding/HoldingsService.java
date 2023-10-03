@@ -95,7 +95,12 @@ public class HoldingsService {
 
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
-    return hridManager.populateHrid(entity)
+
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .compose(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> createShadowInstanceIfNeeded(entity.getInstanceId(), consortiumData).mapEmpty())
+        .orElse(Future.succeededFuture()))
+      .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
         final Promise<Response> postResponse = promise();

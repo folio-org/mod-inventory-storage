@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
+import static org.folio.rest.support.http.InterfaceUrls.boundWithPartsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -12,14 +13,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.After;
@@ -99,6 +104,31 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
+  public void updateBoundWithItemTest() {
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var holding2Id = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemJson = createItem(journalMaterialTypeId, holdingId);
+    final var boundWith = boundWithClient.create(new BoundWithPartBuilder(holding2Id,
+      UUID.fromString(itemJson.getString("id"))));
+    CompletableFuture<Map<String, LocalDateTime>> futureDates = new CompletableFuture<>();
+    getCompleteUpdatedDates(futureDates);
+    final var datesBeforeUpdatingItem = futureDates.get(80, TimeUnit.SECONDS);
+    CompletableFuture<Void> future = new CompletableFuture<>();
+    updateTable("item", future);
+    future.get(80, TimeUnit.SECONDS);
+    futureDates = new CompletableFuture<>();
+    getCompleteUpdatedDates(futureDates);
+    var datesAfterUpdatingItem = futureDates.get(80, TimeUnit.SECONDS);
+
+    assertEquals(datesBeforeUpdatingItem.keySet(), datesAfterUpdatingItem.keySet());
+    assertTrue(datesBeforeUpdatingItem.entrySet().stream()
+      .allMatch(entry -> entry.getValue().isBefore(datesAfterUpdatingItem.get(entry.getKey()))));
+
+    deleteAll(boundWithPartsUrl("/" + boundWith.getId()));
+  }
+
+  @SneakyThrows
+  @Test
   public void updateHoldingsRecordTest() {
     createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();
@@ -162,6 +192,26 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     });
   }
 
+  private void getCompleteUpdatedDates(CompletableFuture<Map<String, LocalDateTime>> future) {
+    postgresClient.select("SELECT * FROM " + TENANT_ID + "_mod_inventory_storage.instance", handler -> {
+      Map<String, LocalDateTime> res = new HashMap<>();
+      if (handler.succeeded()) {
+        handler.result().iterator().forEachRemaining(row -> {
+          var rowJson = row.toJson();
+          if (rowJson.containsKey("complete_updated_date")) {
+            var completeUpdatedDate = rowJson.getString("complete_updated_date");
+            if (nonNull(completeUpdatedDate)) {
+              res.put(rowJson.getString("id"),
+                LocalDateTime.parse(completeUpdatedDate, DateTimeFormatter.ISO_ZONED_DATE_TIME));
+            }
+          }
+        });
+        future.complete(res);
+      }
+      future.completeExceptionally(new Exception("Cannot get from Instance"));
+    });
+  }
+
   private void verifyCompleteUpdatedDate(LocalDateTime dateBefore) {
     postgresClient.select("SELECT * FROM " + TENANT_ID + "_mod_inventory_storage.instance", handler -> {
       if (handler.succeeded()) {
@@ -183,8 +233,8 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     });
   }
 
-  private void createItem(UUID journalMaterialTypeId, UUID holdingId) {
-    super.createItem(createItemRequest(journalMaterialTypeId, holdingId).create());
+  private JsonObject createItem(UUID journalMaterialTypeId, UUID holdingId) {
+    return super.createItem(createItemRequest(journalMaterialTypeId, holdingId).create());
   }
 
   private ItemRequestBuilder createItemRequest(UUID materialTypeId, UUID holdingId) {

@@ -14,6 +14,7 @@
 * disables `authority-storage`, `authority-source-files`, `authority-note-types` and `authority-reindex` APIs. They are not supported by this module anymore. [MODINVSTOR-1099](https://issues.folio.org/browse/MODINVSTOR-1099)
 * Added new column complete_updated_date into INSTANCE table that will be used in mod-oai-pmh module: [MODINVSTOR-1105](https://issues.folio.org/browse/MODINVSTOR-1105)
 * Shadow Instance Synchronization [MODINVSTOR-1076](https://issues.folio.org/browse/MODINVSTOR-1076)
+* Ad hoc Shadow Instance creation when adding a Holdings to a Shared Instance [MODINVSTOR-1103](https://issues.folio.org/browse/MODINVSTOR-1103)
 
 ## 25.0.0 2022-10-25
 

@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -7,13 +8,16 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.util.ResourceUtil;
 import org.junit.After;
@@ -48,7 +52,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   @Test
   public void canMigrateToEffectiveLocationForItemsWithPermanentLocationOnly() throws
     InterruptedException, ExecutionException, TimeoutException {
-    holdingsClient.create(new HoldingRequestBuilder()
+    createHoldingsRecord(new HoldingRequestBuilder()
       .withId(HOLDINGS_ID)
       .forInstance(INSTANCE_ID)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -72,7 +76,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   @Test
   public void canMigrateToEffectiveLocationForItemsWithTemporaryLocation() throws
     InterruptedException, ExecutionException, TimeoutException {
-    holdingsClient.create(new HoldingRequestBuilder()
+    createHoldingsRecord(new HoldingRequestBuilder()
       .withId(HOLDINGS_ID)
       .forInstance(INSTANCE_ID)
       .withTemporaryLocation(ANNEX_LIBRARY_LOCATION_ID)
@@ -92,6 +96,11 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     JsonObject migrationEntry = migrationResult.iterator().next().toJson();
     assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
       migrationEntry.getJsonObject("jsonb").getString("effectiveLocationId"));
+  }
+
+  private IndividualResource createHoldingsRecord(HoldingRequestBuilder holdingRequestBuilder) {
+    return holdingsClient.create(holdingRequestBuilder.create(), TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
 
   private RowSet<Row> runSql(String sql) throws
