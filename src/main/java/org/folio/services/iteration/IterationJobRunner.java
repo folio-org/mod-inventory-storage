@@ -1,7 +1,7 @@
 package org.folio.services.iteration;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
@@ -16,6 +16,7 @@ import io.vertx.sqlclient.RowStream;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.kafka.KafkaTopicNameHelper;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.IterationJobRepository;
@@ -78,8 +79,11 @@ public class IterationJobRunner {
   }
 
   public void startIteration(IterationJob job) {
+    String fullTopicName = KafkaTopicNameHelper.formatTopicName(environment(),
+      tenantId(okapiHeaders),
+      job.getJobParams().getTopicName());
     eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-      INSTANCE.fullTopicName(tenantId(okapiHeaders)));
+      fullTopicName);
 
     workerExecutor.executeBlocking(
         promise -> streamInstanceIds(new IterationContext(job))
