@@ -5,6 +5,7 @@ import static io.restassured.RestAssured.when;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
@@ -212,8 +213,9 @@ public class InstallUpgradeIT {
     when()
       .get(location + "?wait=60000")
       .then()
-      .statusCode(200)
-      .body("complete", is(true));
+      .statusCode(200)  // getting job record succeeds
+      .body("complete", is(true))  // job is complete
+      .body("error", is(nullValue()));  // job has succeeded without error
   }
 
   private void smokeTest() {
