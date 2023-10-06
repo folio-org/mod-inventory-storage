@@ -8,7 +8,7 @@ INSERT INTO ${myuniversity}_${mymodule}.holdings_record(id, jsonb)
       'id', '10cd3a5a-d36f-4c7a-bc4f-e1ae3cf820c9'
     )
   FROM
-    diku_mod_inventory_storage.holdings_records_source
+    ${myuniversity}_${mymodule}.holdings_records_source
   WHERE
     jsonb->> 'name'='FOLIO'
 ON CONFLICT DO NOTHING;
