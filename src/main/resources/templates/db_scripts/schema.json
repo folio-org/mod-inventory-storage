@@ -1160,6 +1160,16 @@
       "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateForItemInsertUpdateToHandleBoundWith.sql",
       "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addDcbInstance.sql",
+      "fromModuleVersion": "26.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addDcbHolding.sql",
+      "fromModuleVersion": "26.1.0"
     }
   ]
 }
