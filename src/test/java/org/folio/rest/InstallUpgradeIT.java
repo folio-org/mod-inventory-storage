@@ -221,7 +221,7 @@ public class InstallUpgradeIT {
       .get("/instance-storage/instances?limit=1000")
       .then()
       .statusCode(200)
-      .body("instances.size()", is(36));
+      .body("instances.size()", is(37));
 
     given()
       .body("{'instances':{'startNumber':9}, 'holdings':{'startNumber':7}, 'items':{'startNumber':5}}"
