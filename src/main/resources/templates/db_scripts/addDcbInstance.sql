@@ -9,5 +9,5 @@ INSERT INTO ${myuniversity}_${mymodule}.instance (id, jsonb)
   FROM
     ${myuniversity}_${mymodule}.instance_type
   WHERE
-    jsonb->> 'name' = 'other'
+    jsonb ->> 'name' = 'other'
 ON CONFLICT DO NOTHING;
