@@ -48,6 +48,7 @@ import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
+  private static final String CONSORTIUM_ENABLED_PARAM = "consortium.enabled";
   private static final String INSTANCE_ID = "instanceId";
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -58,7 +59,6 @@ public class HoldingsService {
   private final HoldingDomainEventPublisher domainEventPublisher;
   private final InstanceInternalRepository instanceRepository;
   private final ConsortiumService consortiumService;
-  private final String CONSORTIUM_ENABLED_PARAM = "consortium.enabled";
   private final boolean consortiumEnabled;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
