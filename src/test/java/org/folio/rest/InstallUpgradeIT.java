@@ -145,6 +145,8 @@ public class InstallUpgradeIT {
     // migrate from 0.0.0, migration should be idempotent
     body.put("module_from", "0.0.0");
     postTenant(body);
+
+    smokeTest();
   }
 
   @Test
@@ -162,6 +164,8 @@ public class InstallUpgradeIT {
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
         .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
+
+    smokeTest();
   }
 
   /**
