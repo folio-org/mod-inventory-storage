@@ -117,11 +117,6 @@ public class CommonDomainEventPublisher<T> {
     return publish(instanceId, domainEvent);
   }
 
-  Future<Void> publishRecordUpdated(String instanceId, String oldRecord, String newRecord) {
-    var domainEvent = DomainEventRaw.updateEvent(oldRecord, newRecord, tenantId(okapiHeaders));
-    return publish(instanceId, domainEvent);
-  }
-
   Future<Void> publishRecordsUpdated(Collection<Triple<String, T, T>> updatedRecords) {
     if (updatedRecords.isEmpty()) {
       return succeededFuture();
@@ -137,11 +132,6 @@ public class CommonDomainEventPublisher<T> {
     final DomainEvent<T> domainEvent = createEvent(newRecord, tenantId(okapiHeaders));
 
     return publish(instanceId, domainEvent);
-  }
-
-  Future<Void> publishRecordCreated(String id, String newRecord) {
-    var domainEvent = DomainEventRaw.createEvent(newRecord, tenantId(okapiHeaders));
-    return publish(id, domainEvent);
   }
 
   Future<Void> publishRecordsCreated(List<Pair<String, T>> records) {

@@ -224,10 +224,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     final String effectivePropertyName = callNumberProperties.effectivePropertyName;
 
     final String initEffectiveValue = StringUtils.firstNonBlank(itemInitValue, holdingsInitValue);
-    /** expected value after holdings update */
-    final String targetEffectiveValue1 = StringUtils.firstNonBlank(itemInitValue, holdingsTargetValue);
-    /** expected value after holdings and item update */
-    final String targetEffectiveValue2 = StringUtils.firstNonBlank(itemTargetValue, holdingsTargetValue);
+    final String targetEffectiveValue = StringUtils.firstNonBlank(itemTargetValue, holdingsTargetValue);
 
     IndividualResource holdings = createHoldingsWithPropertySetAndInstance(
       holdingsPropertyName, holdingsInitValue
@@ -252,9 +249,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     var itemAfterHoldingsUpdate = getById(createdItem.getJson());
 
-    if (! Objects.equals(initEffectiveValue, targetEffectiveValue1)) {
-      itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
-    }
+    itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
 
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
@@ -270,7 +265,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     assertNotNull(updatedEffectiveCallNumberComponents);
     assertThat(updatedEffectiveCallNumberComponents.getString(effectivePropertyName),
-      is(targetEffectiveValue2));
+      is(targetEffectiveValue));
   }
 
   private IndividualResource createHoldingsWithPropertySetAndInstance(
