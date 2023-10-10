@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +48,7 @@ import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
+  private static final String CONSORTIUM_ENABLED_PARAM = "consortium.enabled";
   private static final String INSTANCE_ID = "instanceId";
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -57,6 +59,7 @@ public class HoldingsService {
   private final HoldingDomainEventPublisher domainEventPublisher;
   private final InstanceInternalRepository instanceRepository;
   private final ConsortiumService consortiumService;
+  private final boolean consortiumEnabled;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     this.vertxContext = context;
@@ -70,6 +73,7 @@ public class HoldingsService {
     instanceRepository = new InstanceInternalRepository(context, okapiHeaders);
     consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
       context.get(ConsortiumDataCache.class.getName()));
+    consortiumEnabled = Boolean.parseBoolean(getPropertyValue(CONSORTIUM_ENABLED_PARAM, "false"));
   }
 
   /**
@@ -96,10 +100,7 @@ public class HoldingsService {
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
 
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .compose(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> createShadowInstanceIfNeeded(entity.getInstanceId(), consortiumData).mapEmpty())
-        .orElse(Future.succeededFuture()))
+    return executeConsortiumLogicIfConsortiumEnabled(entity)
       .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
@@ -241,6 +242,16 @@ public class HoldingsService {
     }
   }
 
+  private Future<Object> executeConsortiumLogicIfConsortiumEnabled(HoldingsRecord entity) {
+    if (consortiumEnabled) {
+      return consortiumService.getConsortiumData(okapiHeaders)
+        .compose(consortiumDataOptional -> consortiumDataOptional
+          .map(consortiumData -> createShadowInstanceIfNeeded(entity.getInstanceId(), consortiumData).mapEmpty())
+          .orElse(Future.succeededFuture()));
+    }
+    return Future.succeededFuture();
+  }
+
   private CompositeFuture createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
                                                         ConsortiumData consortiumData) {
     Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
@@ -266,5 +277,11 @@ public class HoldingsService {
 
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
     return holdingsRecord != null;
+  }
+
+  private String getPropertyValue(String propertyName, String defaultValue) {
+    return Optional.ofNullable(System.getProperty(propertyName))
+      .or(() -> Optional.ofNullable(System.getenv(propertyName)))
+      .orElse(defaultValue);
   }
 }
