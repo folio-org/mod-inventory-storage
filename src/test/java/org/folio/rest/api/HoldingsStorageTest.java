@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -106,6 +107,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
   private static final String CONSORTIUM_MEMBER_TENANT = "consortium_member_tenant";
+  private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "no_permissions_tenant";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
@@ -126,18 +128,20 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setupMaterialTypes(CONSORTIUM_MEMBER_TENANT);
     setupLoanTypes(CONSORTIUM_MEMBER_TENANT);
     setupLocations(CONSORTIUM_MEMBER_TENANT);
+
+    prepareTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS, false);
   }
 
   @SneakyThrows
   @AfterClass
   public static void afterClass() {
     removeTenant(CONSORTIUM_MEMBER_TENANT);
+    removeTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS);
   }
 
   @SneakyThrows
   @Before
   public void beforeEach() {
-    System.setProperty("consortium.enabled", "true");
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
@@ -156,6 +160,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     WireMock.reset();
     mockUserTenantsForNonConsortiumMember();
     mockUserTenantsForConsortiumMember();
+    mockUserTenantsForTenantWithoutPermissions();
   }
 
   @SneakyThrows
@@ -2404,9 +2409,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldNotExecuteConsortiumLogicIfConsortiumSystemPropertyDisabled() {
-    System.setProperty("consortium.enabled", "false");
-    log.info("Starting canCreateHoldingAndCreateShadowInstance");
+  public void shouldNotExecuteConsortiumLogicIfUserNotHavePermissionsToRetrieveConsortiumData() {
     mockSharingInstance();
 
     UUID instanceId = UUID.randomUUID();
@@ -2415,28 +2418,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
-    Response response = holdingsClient.attemptToCreate("", builder.create(), CONSORTIUM_MEMBER_TENANT,
+    Response response = holdingsClient.attemptToCreate("", builder.create(), TENANT_WITHOUT_USER_TENANTS_PERMISSIONS,
       Map.of(X_OKAPI_URL, mockServer.baseUrl()));
 
-    verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
-    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
-  }
-
-  @Test
-  public void shouldNotExecuteConsortiumLogicIfConsortiumSystemPropertyIsNull() {
-    System.clearProperty("consortium.enabled");
-    log.info("Starting canCreateHoldingAndCreateShadowInstance");
-    mockSharingInstance();
-
-    UUID instanceId = UUID.randomUUID();
-    HoldingRequestBuilder builder = new HoldingRequestBuilder()
-      .withId(null)
-      .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-
-    Response response = holdingsClient.attemptToCreate("", builder.create(), CONSORTIUM_MEMBER_TENANT,
-      Map.of(X_OKAPI_URL, mockServer.baseUrl()));
-
+    verify(1, getRequestedFor(urlEqualTo(USER_TENANTS_PATH)));
     verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
@@ -3372,6 +3357,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
+  }
+
+  private void mockUserTenantsForTenantWithoutPermissions() {
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS))
+      .willReturn(WireMock.forbidden()));
   }
 
   private void mockSharingInstance() {
