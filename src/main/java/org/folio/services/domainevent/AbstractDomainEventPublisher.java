@@ -11,7 +11,6 @@ import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
 
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
 import java.util.Collection;
 import java.util.List;
 import javax.ws.rs.core.Response;
@@ -91,13 +90,6 @@ abstract class AbstractDomainEventPublisher<D, E> {
 
   public Future<Void> publishAllRemoved() {
     return domainEventService.publishAllRecordsRemoved();
-  }
-
-  public Future<Void> publishUpserted(String instanceId, JsonObject oldRecord, JsonObject newRecord) {
-    if (oldRecord == null) {
-      return domainEventService.publishRecordCreated(instanceId, newRecord.encode());
-    }
-    return domainEventService.publishRecordUpdated(instanceId, oldRecord.encode(), newRecord.encode());
   }
 
   public Handler<Response> publishUpdated(D oldRecord) {

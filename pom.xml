@@ -70,6 +70,7 @@
   </dependencyManagement>
 
   <dependencies>
+    <!-- https://mvnrepository.com/artifact/org.marc4j/marc4j -->
     <dependency>
       <groupId>org.marc4j</groupId>
       <artifactId>marc4j</artifactId>
@@ -183,11 +184,6 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
