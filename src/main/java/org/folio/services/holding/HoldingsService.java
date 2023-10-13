@@ -258,4 +258,5 @@ public class HoldingsService {
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
     return holdingsRecord != null;
   }
+
 }
