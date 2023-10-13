@@ -1,4 +1,46 @@
-## 26.0.0 IN-PROGRESS
+## v 27.0.0 2023-10-13
+### Breaking changes
+* Migrate to Java 17 [MODINVSTOR-1079](https://issues.folio.org/browse/MODINVSTOR-1079)
+* Disables `authority-storage`, `authority-source-files`, `authority-note-types` and `authority-reindex` [MODINVSTOR-1099](https://issues.folio.org/browse/MODINVSTOR-1099)
+
+### New APIs versions
+* Provides `hrid-settings-storage 1.3` [MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921)
+* Provides `loan-types 2.3`
+* Provides `electronic-access-relationships 1.1`
+* Provides `inventory-hierarchy 0.3`
+* Required `user-tenants 1.0`
+* Optional `consortia 1.0`
+
+### Features
+* Added new column complete_updated_date into INSTANCE table that will be used in mod-oai-pmh module: [MODINVSTOR-1105](https://issues.folio.org/browse/MODINVSTOR-1105)
+* Shadow Instance Synchronization [MODINVSTOR-1076](https://issues.folio.org/browse/MODINVSTOR-1076)
+* Convert Local Instance to Shared Instance [MODINVSTOR-1073](https://issues.folio.org/browse/MODINVSTOR-1073)
+* Ad hoc Shadow Instance creation when adding a Holdings to a Shared Instance [MODINVSTOR-1103](https://issues.folio.org/browse/MODINVSTOR-1103)
+* Use instanceRepository.getById(id) for GET instance by id [MODINVSTOR-1038](https://issues.folio.org/browse/MODINVSTOR-1038)
+* Handle deleted holdings/items in harvest [MODINVSTOR-1048](https://issues.folio.org/browse/MODINVSTOR-1048)
+* Add concept of system call number type [MODINVSTOR-1046](https://issues.folio.org/browse/MODINVSTOR-1046)
+* Create endpoints to retrieve all reindex jobs [MODINVSTOR-990](https://issues.folio.org/browse/MODINVSTOR-990)
+* Create API endpoint to get the current maximum assigned HRID [MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921)
+* Publish domain event when service point is updated [MODINVSTOR-1043](https://issues.folio.org/browse/MODINVSTOR-1043)
+* Publish domain event when service point is deleted [MODINVSTOR-1077](https://issues.folio.org/browse/MODINVSTOR-1077)
+* Support NLM call-numbers for shelf order generation [MODINVSTOR-1066](https://issues.folio.org/browse/MODINVSTOR-1066)
+* Support SuDoc call-numbers for shelf order generation [MODINVSTOR-1069](https://issues.folio.org/browse/MODINVSTOR-1069)
+* Handle bound-with items [MODINVSTOR-1070](https://issues.folio.org/browse/MODINVSTOR-1070)
+
+### Bug fixes
+* Remove Related Instance Type Instantiation During Tenant Instantiation ([MODINVSTOR-1039](https://issues.folio.org/browse/MODINVSTOR-1039))
+* Fix of metadata update on call number changes via the holdings record ([MODINVSTOR-1053](https://issues.folio.org/browse/MODINVSTOR-1053))
+* Items with multiple circulation notes that do not have an id cannot be updated ([MODINVSTOR-1096](https://issues.folio.org/browse/MODINVSTOR-1096))
+
+### Tech Dept
+* Supporting source in /inventory-hierarchy/updated-instance-ids ([MODINVSTOR-1045](https://issues.folio.org/browse/MODINVSTOR-1045))
+* Unify API response in case of ValidationException ([MODINVSTOR-1055](https://issues.folio.org/browse/MODINVSTOR-1055))
+* Add missing item field descriptions ([MODINVSTOR-400](https://issues.folio.org/browse/MODINVSTOR-400))
+* Fix creating duplicate fkeys on instance_source_marc ([MODINVSTOR-1086](https://issues.folio.org/browse/MODINVSTOR-1086))
+
+---
+
+## 26.0.0 2023-02-14
 * New PUT API where a single item ID and a list of holdings IDs can be created ([MODINVSTOR-1022](https://issues.folio.org/browse/MODINVSTOR-1022))
 * Extend subjects, alternativeTitles, series with authorityId ([MODINVSTOR-1010](https://issues.folio.org/browse/MODINVSTOR-1010))
 * API to get the current maximum assigned HRID ([MODINVSTOR-921](https://issues.folio.org/browse/MODINVSTOR-921))
