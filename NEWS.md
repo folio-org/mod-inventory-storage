@@ -1,3 +1,22 @@
+## v27.1.0 In progress
+### Breaking changes
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### New APIs versions
+* Provides `API_NAME vX.Y`
+* Requires `API_NAME vX.Y`
+
+### Features
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### Bug fixes
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+### Tech Dept
+* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+
+---
+
 ## v 27.0.0 2023-10-13
 ### Breaking changes
 * Migrate to Java 17 [MODINVSTOR-1079](https://issues.folio.org/browse/MODINVSTOR-1079)
