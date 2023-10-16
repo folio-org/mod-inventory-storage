@@ -1,6 +1,9 @@
 package org.folio.rest.api;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.http.Response.Builder.like;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
@@ -134,6 +137,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Before
   public void beforeEach() {
+    System.setProperty("consortium.enabled", "true");
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
@@ -2397,6 +2401,44 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
 
     log.info("Finished canCreateHoldingAndCreateShadowInstance");
+  }
+
+  @Test
+  public void shouldNotExecuteConsortiumLogicIfConsortiumSystemPropertyDisabled() {
+    System.setProperty("consortium.enabled", "false");
+    log.info("Starting canCreateHoldingAndCreateShadowInstance");
+    mockSharingInstance();
+
+    UUID instanceId = UUID.randomUUID();
+    HoldingRequestBuilder builder = new HoldingRequestBuilder()
+      .withId(null)
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+
+    Response response = holdingsClient.attemptToCreate("", builder.create(), CONSORTIUM_MEMBER_TENANT,
+      Map.of(X_OKAPI_URL, mockServer.baseUrl()));
+
+    verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  public void shouldNotExecuteConsortiumLogicIfConsortiumSystemPropertyIsNull() {
+    System.clearProperty("consortium.enabled");
+    log.info("Starting canCreateHoldingAndCreateShadowInstance");
+    mockSharingInstance();
+
+    UUID instanceId = UUID.randomUUID();
+    HoldingRequestBuilder builder = new HoldingRequestBuilder()
+      .withId(null)
+      .forInstance(instanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+
+    Response response = holdingsClient.attemptToCreate("", builder.create(), CONSORTIUM_MEMBER_TENANT,
+      Map.of(X_OKAPI_URL, mockServer.baseUrl()));
+
+    verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
