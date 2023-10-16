@@ -209,10 +209,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
 
-    if (! associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY)
-        .equals(createdItem.getString(EFFECTIVE_LOCATION_ID_KEY))) {
-      itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
-    }
+    itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
 
     holdingsMessageChecks.updatedMessagePublished(createdHolding,
       holdingsClient.getById(holdingsRecordId).getJson());

@@ -12,13 +12,19 @@
  BEGIN
      UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
      WHERE inst.id IN (
-          SELECT instanceid
-          FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
-          WHERE hold_rec.id = NEW.holdingsrecordid OR hold_rec.id IN (
-              SELECT holdingsrecordid
-              FROM ${myuniversity}_${mymodule}.bound_with_part bwp
-              WHERE bwp.itemid = NEW.id));
-  RETURN NEW;
+         SELECT instanceid
+         FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
+         WHERE hold_rec.id = NEW.holdingsrecordid);
+
+     UPDATE ${myuniversity}_${mymodule}.instance inst SET complete_updated_date = NOW()
+     WHERE inst.id IN (
+         SELECT instanceid
+         FROM ${myuniversity}_${mymodule}.holdings_record hold_rec
+         WHERE hold_rec.id IN (
+             SELECT holdingsrecordid
+             FROM ${myuniversity}_${mymodule}.bound_with_part bwp
+             WHERE bwp.itemid = NEW.id));
+     RETURN NEW;
  END;
  $BODY$;
 
