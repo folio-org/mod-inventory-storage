@@ -23,8 +23,7 @@ public class GroupedCollectedMessages {
   }
 
   List<EventMessage> messagesByGroupKey(String key) {
-    // copyOf avoids sporadic ConcurrentModificationException
-    return List.copyOf(collectedMessages.getOrDefault(key, emptyList()));
+    return collectedMessages.getOrDefault(key, emptyList());
   }
 
   int groupCount() {

@@ -63,6 +63,7 @@ public class ItemEventMessageChecks {
 
     final var itemId = getId(newItem);
     final var newInstanceId = getInstanceIdForItem(newItem);
+
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(newInstanceId, itemId),
       EVENT_MESSAGE_MATCHERS.hasUpdateEventMessageFor(
         addInstanceIdToItem(oldItem, oldInstanceId),
