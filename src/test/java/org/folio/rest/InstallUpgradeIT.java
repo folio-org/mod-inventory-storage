@@ -146,6 +146,12 @@ public class InstallUpgradeIT {
     body.put("module_from", "0.0.0");
     postTenant(body);
 
+    when()
+      .get("/instance-storage/instances?limit=1000")
+      .then()
+      .statusCode(200)
+      .body("instances.size()", is(36));
+
     smokeTest();
   }
 
@@ -164,6 +170,12 @@ public class InstallUpgradeIT {
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
         .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
+
+    when()
+      .get("/instance-storage/instances?limit=1000")
+      .then()
+      .statusCode(200)
+      .body("instances.size()", is(37));
 
     smokeTest();
   }
@@ -217,12 +229,6 @@ public class InstallUpgradeIT {
   }
 
   private void smokeTest() {
-    when()
-      .get("/instance-storage/instances?limit=1000")
-      .then()
-      .statusCode(200)
-      .body("instances.size()", is(36));
-
     given()
       .body("{'instances':{'startNumber':9}, 'holdings':{'startNumber':7}, 'items':{'startNumber':5}}"
           .replace('\'', '"'))
@@ -237,5 +243,4 @@ public class InstallUpgradeIT {
       .statusCode(200)
       .body("holdings.currentNumber", is(6));
   }
-
 }
