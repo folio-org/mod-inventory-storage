@@ -164,6 +164,8 @@ public class InstallUpgradeIT {
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
         .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
+
+    smokeTest();
   }
 
   /**
