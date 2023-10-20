@@ -14,12 +14,14 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,11 +32,11 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceInternalRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
-import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.rest.support.HridManager;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
@@ -42,16 +44,17 @@ import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.item.ItemService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
-  private static final String INSTANCE_ID = "instanceId";
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
   private final HridManager hridManager;
+  private final ItemService itemService;
   private final HoldingsRepository holdingsRepository;
   private final ItemDomainEventPublisher itemEventService;
   private final HoldingDomainEventPublisher domainEventPublisher;
@@ -62,6 +65,7 @@ public class HoldingsService {
     this.vertxContext = context;
     this.okapiHeaders = okapiHeaders;
 
+    itemService = new ItemService(context, okapiHeaders);
     postgresClient = postgresClient(context, okapiHeaders);
     hridManager = new HridManager(postgresClient);
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
@@ -86,7 +90,7 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          return updateHolding(holdingsRecord);
+          return updateHolding(existingHoldingsRecord, holdingsRecord);
         } else {
           return createHolding(holdingsRecord);
         }
@@ -159,75 +163,37 @@ public class HoldingsService {
         }
         return Future.succeededFuture();
       })
-      .compose(ar -> {
-        if (upsert) {
-          return upsertHoldings(holdings, optimisticLocking);
-        } else {
-          return hridManager.populateHridForHoldings(holdings)
-            .compose(NotesValidators::refuseHoldingLongNotes)
-            .compose(result -> buildBatchOperationContext(upsert, holdings,
-              holdingsRepository, HoldingsRecord::getId))
-            .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
-              upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-              .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
-        }
-      });
+      .compose(ar -> hridManager.populateHridForHoldings(holdings)
+        .compose(NotesValidators::refuseHoldingLongNotes)
+        .compose(result -> buildBatchOperationContext(upsert, holdings,
+          holdingsRepository, HoldingsRecord::getId))
+        .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
+          upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))));
   }
 
-  public Future<Response> upsertHoldings(List<HoldingsRecord> holdings, boolean optimisticLocking) {
-    try {
-      if (optimisticLocking) {
-        OptimisticLockingUtil.unsetVersionIfMinusOne(holdings);
-      } else {
-        if (! OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
-          return Future.succeededFuture(Response.status(413).entity(
-              "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow "
-                  + "to disable optimistic locking").build());
-        }
-        OptimisticLockingUtil.setVersionToMinusOne(holdings);
-      }
-
-      return NotesValidators.refuseHoldingLongNotes(holdings)
-          .compose(x -> holdingsRepository.upsert(holdings))
-          .onSuccess(this::publishEvents)
-          .map(Response.status(201).build())
-          .otherwise(EndpointFailureHandler::failureResponse);
-    } catch (ReflectiveOperationException e) {
-      throw new SecurityException(e);
-    }
-  }
-
-  private Future<Response> updateHolding(HoldingsRecord newHoldings) {
+  private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
     if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
       newHoldings.setVersion(null);  // enforce optimistic locking
     }
 
-    return NotesValidators.refuseLongNotes(newHoldings)
-        .compose(x -> holdingsRepository.upsert(List.of(newHoldings)))
-        .onSuccess(this::publishEvents)
-        .map(x -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
-  }
+    return refuseWhenHridChanged(oldHoldings, newHoldings)
+      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+      .compose(notUsed -> {
+        final Promise<List<Item>> overallResult = promise();
 
-  private void publishEvents(JsonObject holdingsItems) {
-    Map<String, String> instanceIdByHoldingsRecordId = new HashMap<>();
-    holdingsItems.getJsonArray("holdingsRecords").forEach(o -> {
-      var oldHolding = ((JsonObject) o).getJsonObject("old");
-      var newHolding = ((JsonObject) o).getJsonObject("new");
-      var instanceId = newHolding.getString(INSTANCE_ID);
-      var holdingId = newHolding.getString("id");
-      instanceIdByHoldingsRecordId.put(holdingId, instanceId);
-      domainEventPublisher.publishUpserted(instanceId, oldHolding, newHolding);
-    });
-    holdingsItems.getJsonArray("items").forEach(o -> {
-      var oldItem = ((JsonObject) o).getJsonObject("old");
-      var newItem = ((JsonObject) o).getJsonObject("new");
-      var instanceId = instanceIdByHoldingsRecordId.get(newItem.getString("holdingsRecordId"));
-      oldItem.put(INSTANCE_ID, instanceId);
-      newItem.put(INSTANCE_ID, instanceId);
-      itemEventService.publishUpserted(instanceId, oldItem, newItem);
-    });
+        postgresClient.startTx(
+          connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+            .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
+            .onComplete(handleTransaction(connection, overallResult)));
+
+        return overallResult.future()
+          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+          .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+      });
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
@@ -239,6 +205,31 @@ public class HoldingsService {
     } else {
       return permanentLocationId;
     }
+  }
+
+  private <T> Handler<AsyncResult<T>> handleTransaction(
+    AsyncResult<SQLConnection> connection, Promise<T> overallResult) {
+
+    return transactionResult -> {
+      if (transactionResult.succeeded()) {
+        postgresClient.endTx(connection, commitResult -> {
+          if (commitResult.succeeded()) {
+            overallResult.complete(transactionResult.result());
+          } else {
+            log.error("Unable to commit transaction", commitResult.cause());
+            overallResult.fail(commitResult.cause());
+          }
+        });
+      } else {
+        log.error("Reverting transaction");
+        postgresClient.rollbackTx(connection, revertResult -> {
+          if (revertResult.failed()) {
+            log.error("Unable to revert transaction", revertResult.cause());
+          }
+          overallResult.fail(transactionResult.cause());
+        });
+      }
+    };
   }
 
   private CompositeFuture createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
@@ -267,4 +258,5 @@ public class HoldingsService {
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
     return holdingsRecord != null;
   }
+
 }

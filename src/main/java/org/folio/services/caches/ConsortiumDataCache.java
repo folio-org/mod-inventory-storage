@@ -1,6 +1,7 @@
 package org.folio.services.caches;
 
 import static io.vertx.core.http.HttpMethod.GET;
+import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 
@@ -71,6 +72,10 @@ public class ConsortiumDataCache {
         String msg = String.format("Error loading consortium data, tenantId: '%s' response status: '%s', body: '%s'",
           tenantId, response.statusCode(), response.bodyAsString());
         LOG.warn("loadConsortiumData:: {}", msg);
+        if (response.statusCode() == HTTP_FORBIDDEN) {
+          return Future.succeededFuture(Optional.<ConsortiumData>empty());
+        }
+
         return Future.failedFuture(msg);
       }
       JsonArray userTenants = response.bodyAsJsonObject().getJsonArray(USER_TENANTS_FIELD);
