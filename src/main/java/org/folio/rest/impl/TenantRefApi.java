@@ -63,7 +63,6 @@ public class TenantRefApi extends TenantAPI {
     "electronic-access-relationships",
     "ill-policies",
     "holdings-types",
-    "call-number-types",
     "instance-note-types",
     "holdings-note-types",
     "item-note-types",
@@ -131,6 +130,10 @@ public class TenantRefApi extends TenantAPI {
       for (String p : refPaths) {
         tl.add(p);
       }
+
+      tl.withPostIgnore();  // System call number type couldn't be updated
+      tl.add("call-number-types");
+
       tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
       tl.withIdContent();
       tl.add("location-units/institutions");
@@ -140,11 +143,12 @@ public class TenantRefApi extends TenantAPI {
       tl.add("instances", INSTANCES);
       tl.add("holdingsrecords", HOLDINGS);
       tl.add("items", ITEMS);
-      tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
       tl.add("bound-with/instances", INSTANCES);
       tl.add("bound-with/holdingsrecords", HOLDINGS);
       tl.add("bound-with/items", ITEMS);
       tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
+      tl.withPostIgnore();
+      tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
       tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
         .withPostOnly()
         .withAcceptStatus(422)
