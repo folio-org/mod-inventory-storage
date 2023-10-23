@@ -1114,7 +1114,7 @@
     {
       "run": "after",
       "snippetPath": "addDcbInstance.sql",
-      "fromModuleVersion": "27.0.0"
+      "fromModuleVersion": "27.1.0"
     },
     {
       "run": "after",
@@ -1124,7 +1124,7 @@
     {
       "run": "after",
       "snippetPath": "addDcbHolding.sql",
-      "fromModuleVersion": "27.0.0"
+      "fromModuleVersion": "27.1.0"
     },
     {
       "run": "after",

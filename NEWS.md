@@ -2,12 +2,14 @@
 ### Breaking changes
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
 
+
 ### New APIs versions
 * Provides `API_NAME vX.Y`
 * Requires `API_NAME vX.Y`
 
 ### Features
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Added insert script for single instance and holdings , that will be used in mod-dcb : [MODINVSTOR-1102](https://issues.folio.org/browse/MODINVSTOR-1102)
 
 ### Bug fixes
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
@@ -32,7 +34,6 @@
 
 ### Features
 * Added new column complete_updated_date into INSTANCE table that will be used in mod-oai-pmh module: [MODINVSTOR-1105](https://issues.folio.org/browse/MODINVSTOR-1105)
-* Added insert script for single instance and holdings , that will be used in mod-dcb : [MODINVSTOR-1102](https://issues.folio.org/browse/MODINVSTOR-1102)
 * Shadow Instance Synchronization [MODINVSTOR-1076](https://issues.folio.org/browse/MODINVSTOR-1076)
 * Convert Local Instance to Shared Instance [MODINVSTOR-1073](https://issues.folio.org/browse/MODINVSTOR-1073)
 * Ad hoc Shadow Instance creation when adding a Holdings to a Shared Instance [MODINVSTOR-1103](https://issues.folio.org/browse/MODINVSTOR-1103)
