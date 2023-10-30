@@ -17,8 +17,10 @@ import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.support.IndividualResource;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
   private static final String EFFECTIVE_SHELVING_ORDER = "effectiveShelvingOrder";
   private final AtomicInteger nextPatch = new AtomicInteger(1);

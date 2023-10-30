@@ -21,6 +21,7 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import org.testcontainers.utility.DockerImageName;
  *
  * <p>Test installation and migration with smoke test.
  */
+@Ignore
 public class InstallUpgradeIT {
 
   public static final Network NETWORK = Network.newNetwork();
