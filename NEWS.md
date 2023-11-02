@@ -1,3 +1,12 @@
+## v 27.0.2 2023-11-02
+### Bug Fixes
+* create env variable to control number of partitions for topics [MODINVSTOR-1131](https://issues.folio.org/browse/MODINVSTOR-1131)
+* fix reference and sample data ([MODINVSTOR-1116](https://issues.folio.org/browse/MODINVSTOR-1116), [MODINVSTOR-1115](https://issues.folio.org/browse/MODINVSTOR-1115))
+
+## v 27.0.1 2023-10-27
+### Bug Fixes
+* add script for call-number migration [MODINVSTOR-1126](https://issues.folio.org/browse/MODINVSTOR-1126)
+
 ## v 27.0.0 2023-10-13
 ### Breaking changes
 * Migrate to Java 17 [MODINVSTOR-1079](https://issues.folio.org/browse/MODINVSTOR-1079)
