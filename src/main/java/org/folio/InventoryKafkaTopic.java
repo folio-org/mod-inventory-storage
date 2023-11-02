@@ -1,5 +1,6 @@
 package org.folio;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.kafka.services.KafkaTopic;
 
 public enum InventoryKafkaTopic implements KafkaTopic {
@@ -25,5 +26,13 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   @Override
   public String topicName() {
     return topic;
+  }
+
+  @Override
+  public int numPartitions() {
+    return Integer.parseInt(StringUtils.firstNonBlank(
+      System.getenv("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS"),
+      System.getProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS"),
+      System.getProperty("kafka-domain-topic-num-partitions"), "50"));
   }
 }
