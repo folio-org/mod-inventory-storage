@@ -5,6 +5,51 @@ Copyright (C) 2016-2023 The Open Library Foundation
 This software is distributed under the terms of the Apache License,
 Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 
+<!-- TOC -->
+* [mod-inventory-storage](#mod-inventory-storage)
+* [Goal](#goal)
+* [Prerequisites](#prerequisites)
+* [Preparation](#preparation)
+  * [Git Submodules](#git-submodules)
+  * [Postgres](#postgres)
+  * [Kafka](#kafka)
+* [Building](#building)
+* [Environment Variables](#environment-variables)
+* [Local Deployment using Docker](#local-deployment-using-docker)
+  * [Preparation](#preparation-1)
+  * [Start the infrastructure](#start-the-infrastructure)
+  * [Start the Module](#start-the-module)
+  * [Stop the Module](#stop-the-module)
+  * [Stop the infrastructure](#stop-the-infrastructure)
+* [Local Deployment using Homebrew on macOS](#local-deployment-using-homebrew-on-macos)
+* [Running](#running)
+  * [Preparation](#preparation-2)
+  * [Running Okapi](#running-okapi)
+  * [Registration](#registration)
+  * [Tenant Initialization](#tenant-initialization)
+  * [Sample Data](#sample-data)
+* [Making Requests](#making-requests)
+  * [Okapi Root Address](#okapi-root-address)
+* [Operating System Support](#operating-system-support)
+* [Additional Information](#additional-information)
+    * [Issue tracker](#issue-tracker)
+    * [ModuleDescriptor](#moduledescriptor)
+    * [API documentation](#api-documentation)
+    * [Code analysis](#code-analysis)
+    * [Download and configuration](#download-and-configuration)
+* [Appendix 1 - Docker Information](#appendix-1---docker-information)
+  * [When Using the Modules as Docker Containers](#when-using-the-modules-as-docker-containers)
+    * [Finding a Routable Address](#finding-a-routable-address)
+* [Batch interface](#batch-interface)
+* [HRID Management](#hrid-management)
+* [Inventory view endpoint](#inventory-view-endpoint)
+* [Domain event pattern](#domain-event-pattern)
+  * [Domain events for items](#domain-events-for-items)
+  * [Domain events for delete all APIs](#domain-events-for-delete-all-apis)
+  * [Reindex of instances](#reindex-of-instances)
+  * [Iteration of instances](#iteration-of-instances)
+<!-- TOC -->
+
 # Goal
 
 FOLIO compatible inventory storage module.
@@ -46,18 +91,18 @@ Mod-inventory-storage implements domain event pattern and requires kafka to be l
 `KAFKA_HOST` environment variables.
 
 For production deployments it is also required to set `REPLICATION_FACTOR`
-env variable, this property has following description:
+env variable, this property has the following description:
 > The replication factor controls how many servers will replicate each message that is written.
 > If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
 
 The default configuration for this property is `1` for production environments
 it is usually `3`.
 
-There is another important property - `number of partitions` for a topic - it has following
+There is another important property - `number of partitions` for a topic - it has the following
 description:
 > The partition count controls how many logs the topic will be sharded into.
 
-This property has fixed value - `50`.
+This property can be changed by setting `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS` env variable. Default value - `50`.
 
 # Building
 
@@ -71,6 +116,7 @@ These environment variables configure Kafka, for details see [Kafka](#kafka):
 * `KAFKA_PORT`
 * `KAFKA_HOST`
 * `REPLICATION_FACTOR`
+* `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS`
 
 mod-inventory-storage also supports all Raml Module Builder (RMB) environment variables,
 for details see [RMB](https://github.com/folio-org/raml-module-builder#environment-variables):
@@ -288,7 +334,7 @@ Changing the start number to a number lower than the current number is not suppo
 likely lead to generation of duplicate HRIDs. If an inventory type is added that contains a
 duplicate HRID, the module will reject the submission.
 
-# /inventory-view/instances
+# Inventory view endpoint
 
 Running a query against the `/inventory-view/instances` API writes this log message:
 
