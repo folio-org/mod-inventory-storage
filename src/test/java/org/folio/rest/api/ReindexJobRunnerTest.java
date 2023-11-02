@@ -64,6 +64,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
+    instanceReindex.postReindexJob(reindexJob);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
@@ -95,6 +96,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
+    instanceReindex.postReindexJob(reindexJob);
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
