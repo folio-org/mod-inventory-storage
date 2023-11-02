@@ -114,6 +114,7 @@ public final class StorageTestSuite {
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
+    System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
