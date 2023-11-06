@@ -1160,6 +1160,11 @@
       "run": "before",
       "snippetPath": "instance-hr-item/item-effective-values.sql",
       "fromModuleVersion": "27.0.5"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportAdditionalFields.sql",
+      "fromModuleVersion": "27.0.5"
     }
   ]
 }

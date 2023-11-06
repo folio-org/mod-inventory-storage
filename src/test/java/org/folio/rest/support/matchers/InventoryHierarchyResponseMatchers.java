@@ -171,6 +171,10 @@ public final class InventoryHierarchyResponseMatchers {
     return hasItemsElement(JsonPointer.from("/location/location/code"), ArrayUtils.toArray(code));
   }
 
+  public static Matcher<JsonObject> hasLibraryCodeForItems(String... code) {
+    return hasItemsElement(JsonPointer.from("/location/location/libraryCode"), ArrayUtils.toArray(code));
+  }
+
   public static Matcher<JsonObject> hasAggregatedNumberOfHoldings(int size) {
     return hasHoldingsCount(size);
   }
