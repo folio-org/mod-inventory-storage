@@ -61,6 +61,10 @@
                 "type": "object",
                 "description": "Permanent shelving location in which an item resides",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -70,6 +74,10 @@
                     "type": "string"
                   },
                   "libraryName": {
+                    "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
@@ -94,6 +102,10 @@
                 "type": "object",
                 "description": "Temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -104,6 +116,10 @@
                   },
                   "libraryName": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
+                    "description": "The code of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
                   "institutionName": {
@@ -120,6 +136,10 @@
                 "type": "object",
                 "description": "Effective location, shelving location, or holding which is a physical place where items are stored, or an Online location",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -130,6 +150,10 @@
                   },
                   "libraryName": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
+                    "description": "The code of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
                   "institutionName": {
@@ -439,6 +463,10 @@
                 "type": "object",
                 "description": "Current home location for the item",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -449,6 +477,10 @@
                   },
                   "libraryName": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
+                    "description": "The code of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
                   "institutionName": {
@@ -465,6 +497,10 @@
                 "type": "object",
                 "description": "Permanent shelving location in which an item resides",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -475,6 +511,10 @@
                   },
                   "libraryName": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
+                    "description": "The code of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
                   "institutionName": {
@@ -491,6 +531,10 @@
                 "type": "object",
                 "description": "Temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location",
                 "properties": {
+                  "id": {
+                    "description": "id of this (shelf) location record as UUID.",
+                    "type": "string"
+                  },
                   "name": {
                     "description": "Name of the (shelf) location",
                     "type": "string"
@@ -501,6 +545,10 @@
                   },
                   "libraryName": {
                     "description": "The name of the library, the third-level location unit, this (shelf) location belongs to",
+                    "type": "string"
+                  },
+                  "libraryCode": {
+                    "description": "The code of the library, the third-level location unit, this (shelf) location belongs to",
                     "type": "string"
                   },
                   "institutionName": {
@@ -602,6 +650,10 @@
           },
           "materialType": {
             "description": "Define what type of thing the item is",
+            "type": "string"
+          },
+          "materialTypeId": {
+            "description": "Define what type id of thing the item is",
             "type": "string"
           },
           "permanentLoanType": {
