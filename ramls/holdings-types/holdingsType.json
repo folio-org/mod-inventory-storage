@@ -1,23 +1,23 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A holdings note type",
+  "description": "A holdings type",
   "type": "object",
   "properties": {
     "id": {
       "type": "string",
-      "description": "unique ID of the holdings note type; a UUID"
+      "description": "unique ID of the holdings type; a UUID"
     },
     "name": {
       "type": "string",
-      "description": "name of the holdings note type"
+      "description": "name of the holdings type"
     },
     "source": {
       "type": "string",
-      "description": "label indicating where the holdings note type entry originates from, i.e. 'folio' or 'local'"
+      "description": "label indicating where the holdings type entry originates from, i.e. 'folio' or 'local'"
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema",
+      "$ref": "../raml-util/schemas/metadata.schema",
       "readonly": true
     }
   },
@@ -27,4 +27,3 @@
     "source"
   ]
 }
-

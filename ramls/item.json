@@ -157,6 +157,8 @@
       "description": "Notes about action, copy, binding etc.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "javaType": "org.folio.rest.jaxrs.model.ItemNote",
         "properties": {
           "itemNoteTypeId": {
             "type": "string",

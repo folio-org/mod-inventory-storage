@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A (shelf) location, the forth-level location unit below institution, campus, and library.",
+  "javaType": "org.folio.rest.jaxrs.model.Location",
   "type": "object",
   "properties": {
     "id": {

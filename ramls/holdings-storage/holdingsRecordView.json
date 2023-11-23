@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A holdings record with virtual fields",
+  "type": "object",
+  "extends" : {
+    "$ref" : "holdingsRecord.json"
+  },
+  "properties": {
+    "permanentLocation": {
+      "description": "The permanent shelving location in which an item resides. This is a virtual field, accessible only when using mod-graphql.",
+      "type": "object",
+      "folio:$ref": "location.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "locations",
+      "folio:linkFromField": "permanentLocationId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "locations.0"
+    },
+    "illPolicy": {
+      "type": "object",
+      "description": "expanded ILL Policy object corresponding to illPolicyId. This is a virtual field, accessible only when using mod-graphql.",
+      "javaType": "org.folio.rest.jaxrs.model.IllPolicyVirtual",
+      "folio:$ref": "illpolicy.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "ill-policies",
+      "folio:linkFromField": "illPolicyId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "illPolicies.0"
+    },
+    "holdingsItems": {
+      "description": "Items related to holdings record. This is a virtual field, accessible only when using mod-graphql.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "../item.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "inventory/items",
+      "folio:linkFromField": "id",
+      "folio:linkToField": "holdingsRecordId",
+      "folio:includedElement": "items"
+    },
+    "bareHoldingsItems": {
+      "description": "Items of bareHoldings. This is a virtual field, accessible only when using mod-graphql.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "../item.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "item-storage/items",
+      "folio:linkFromField": "id",
+      "folio:linkToField": "holdingsRecordId",
+      "folio:includedElement": "items"
+    },
+    "holdingsInstance": {
+      "description": "Instance of holding record. This is a virtual field, accessible only when using mod-graphql.",
+      "type": "object",
+      "folio:$ref": "instance.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "inventory/instances",
+      "folio:linkFromField": "instanceId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "instances.0"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instanceId",
+    "permanentLocationId"
+  ]
+}
+

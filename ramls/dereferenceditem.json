@@ -23,7 +23,7 @@
     "holdingsRecord": {
       "type": "object",
       "description": "Holdings record the item is a member of.",
-      "$ref": "holdingsrecord.json"
+      "$ref": "holdings-storage/holdingsRecord.json"
     },
     "formerIds": {
       "type": "array",

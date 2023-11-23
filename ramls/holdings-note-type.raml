@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage holdings note types of the system
 
 types:
-  holdingsNoteType: !include holdingsnotetype.json
-  holdingsNoteTypes: !include holdingsnotetypes.json
+  holdingsNoteType: !include holdings-note-types/holdingsNoteType.json
+  holdingsNoteTypes: !include holdings-note-types/holdingsNoteTypes.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -26,8 +26,8 @@ resourceTypes:
 /holdings-note-types:
   type:
     collection:
-      exampleCollection: !include examples/holdingsnotetypes.json
-      exampleItem: !include examples/holdingsnotetype.json
+      exampleCollection: !include examples/holdings-note-types/holdingsNoteTypes.json
+      exampleItem: !include examples/holdings-note-types/holdingsNoteType.json
       schemaCollection: holdingsNoteTypes
       schemaItem: holdingsNoteType
   get:
@@ -43,6 +43,6 @@ resourceTypes:
     description: "Pass in the holdings note type id"
     type:
       collection-item:
-        exampleItem: !include examples/holdingsnotetype.json
+        exampleItem: !include examples/holdings-note-types/holdingsNoteType.json
         schema: holdingsNoteType
 

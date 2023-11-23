@@ -372,6 +372,8 @@
       "description": "Bibliographic notes (e.g. general notes, specialized notes)",
       "items": {
         "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.InstanceNote",
+        "additionalProperties": false,
         "properties": {
           "instanceNoteTypeId": {
             "description": "ID of the type of note",
@@ -459,7 +461,7 @@
       "description": "List of holdings records",
       "items": {
         "type": "object",
-        "$ref": "holdingsrecord.json"
+        "$ref": "holdings-storage/holdingsRecord.json"
       },
       "readonly": true,
       "folio:isVirtual": true,
