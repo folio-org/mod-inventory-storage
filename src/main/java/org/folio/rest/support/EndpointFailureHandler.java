@@ -5,10 +5,9 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.pgclient.PgException;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
-
-import io.vertx.pgclient.PgException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
