@@ -34,6 +34,8 @@ public final class EndpointFailureHandler {
     Response response;
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
+    } else if (error instanceof PgException) {
+      response = textPlainResponse(422, error.getMessage());
     } else {
       response = serverErrorHandler.apply(error.getMessage());
     }
@@ -65,7 +67,7 @@ public final class EndpointFailureHandler {
       final Errors errors = ((ValidationException) error).getErrors();
       return failedValidationResponse(errors);
     } else if (PgExceptionUtil.isVersionConflict(error)) {
-      return textPlainResponse(409, getErrorMessage(error));
+      return textPlainResponse(409, error);
     } else if (error instanceof ResponseException) {
       return ((ResponseException) error).getResponse();
     }
@@ -88,13 +90,5 @@ public final class EndpointFailureHandler {
   private static Response failedValidationResponse(Object jsonEntity) {
     return Response.status(422).header(CONTENT_TYPE, "application/json")
       .entity(jsonEntity).build();
-  }
-
-  private static String getErrorMessage(Throwable error) {
-    if (error instanceof PgException pgException) {
-      return pgException.getMessage();
-    } else {
-      return error.getMessage();
-    }
   }
 }
