@@ -7,6 +7,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
+
+import io.vertx.pgclient.PgException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
@@ -64,7 +66,7 @@ public final class EndpointFailureHandler {
       final Errors errors = ((ValidationException) error).getErrors();
       return failedValidationResponse(errors);
     } else if (PgExceptionUtil.isVersionConflict(error)) {
-      return textPlainResponse(409, error);
+      return textPlainResponse(409, getErrorMessage(error));
     } else if (error instanceof ResponseException) {
       return ((ResponseException) error).getResponse();
     }
@@ -87,5 +89,13 @@ public final class EndpointFailureHandler {
   private static Response failedValidationResponse(Object jsonEntity) {
     return Response.status(422).header(CONTENT_TYPE, "application/json")
       .entity(jsonEntity).build();
+  }
+
+  private static String getErrorMessage(Throwable error) {
+    if (error instanceof PgException pgException) {
+      return pgException.getMessage();
+    } else {
+      return error.getMessage();
+    }
   }
 }
