@@ -5,7 +5,6 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.pgclient.PgException;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
@@ -34,8 +33,6 @@ public final class EndpointFailureHandler {
     Response response;
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
-    } else if (error instanceof PgException) {
-      response = serverErrorHandler.apply(error.getMessage());
     } else {
       response = serverErrorHandler.apply(error.getMessage());
     }
