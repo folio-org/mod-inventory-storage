@@ -30,6 +30,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.handler.HttpException;
+import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
@@ -146,7 +148,14 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
+        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
+        .onFailure(throwable -> {
+          if (throwable instanceof PgException pgException) {
+            if ("22P02".equals(pgException.getCode())) {
+              throw new HttpException(422, pgException.getErrorMessage());
+            }
+          }
+        });
   }
 
   public Future<Response> updateItems(List<Item> items) {

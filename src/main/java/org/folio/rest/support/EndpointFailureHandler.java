@@ -35,7 +35,7 @@ public final class EndpointFailureHandler {
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
     } else if (error instanceof PgException) {
-      response = textPlainResponse(422, error.getMessage());
+      response = serverErrorHandler.apply(error.getMessage());
     } else {
       response = serverErrorHandler.apply(error.getMessage());
     }
