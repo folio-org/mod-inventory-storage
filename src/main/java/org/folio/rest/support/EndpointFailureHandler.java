@@ -5,6 +5,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.pgclient.PgException;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
@@ -33,11 +34,15 @@ public final class EndpointFailureHandler {
     Response response;
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
-    } else if (PgExceptionUtil.isVersionConflict(error)) {
-      log.error("Version conflict error occurred", error);
-      response = textPlainResponse(409, error.getMessage());
+    } else if (error instanceof PgException) {
+      log.error("Error occurred: {}", error.getClass().getName(), error);
+      log.warn("Error occurred: {}", error.getClass().getName(), error);
+      log.debug("Error occurred: {}", error.getClass().getName(), error);
+      response = textPlainResponse(422, error.getMessage());
     } else {
       log.error("Server error occurred", error);
+      log.warn("Error occurred: {}", error.getClass().getName(), error);
+      log.debug("Error occurred: {}", error.getClass().getName(), error);
       response = serverErrorHandler.apply(error.getMessage());
     }
     asyncResultHandler.handle(succeededFuture(response));
