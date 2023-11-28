@@ -33,7 +33,11 @@ public final class EndpointFailureHandler {
     Response response;
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
+    } else if (PgExceptionUtil.isVersionConflict(error)) {
+      log.error("Version conflict error occurred", error);
+      response = textPlainResponse(409, error.getMessage());
     } else {
+      log.error("Server error occurred", error);
       response = serverErrorHandler.apply(error.getMessage());
     }
     asyncResultHandler.handle(succeededFuture(response));

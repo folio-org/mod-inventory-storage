@@ -148,12 +148,7 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
-        .onFailure(error -> {
-          if (error instanceof PgException) {
-            throw new CompletionException(error.getMessage(), error);
-          }
-        });
+        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
   }
 
   public Future<Response> updateItems(List<Item> items) {
