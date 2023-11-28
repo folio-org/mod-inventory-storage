@@ -35,14 +35,12 @@ public final class EndpointFailureHandler {
     if (error instanceof ValidationException) {
       response = validationHandler.apply(((ValidationException) error).getErrors());
     } else if (error instanceof PgException) {
-      log.error("Error occurred: {}", error.getClass().getName(), error);
-      log.warn("Error occurred: {}", error.getClass().getName(), error);
-      log.debug("Error occurred: {}", error.getClass().getName(), error);
-      response = textPlainResponse(422, error.getMessage());
+      log.error("Error occurred in PgException: {}", error.getClass().getName());
+      log.warn("Error occurred in PgException: {}", error.getClass().getName());
+      response = textPlainResponse(500, error.getMessage());
     } else {
-      log.error("Server error occurred", error);
-      log.warn("Error occurred: {}", error.getClass().getName(), error);
-      log.debug("Error occurred: {}", error.getClass().getName(), error);
+      log.error("Error occurred: {}", error.getClass().getName());
+      log.warn("Error occurred: {}", error.getClass().getName());
       response = serverErrorHandler.apply(error.getMessage());
     }
     asyncResultHandler.handle(succeededFuture(response));

@@ -43,6 +43,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -63,6 +65,8 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class ItemService {
+  private static final Logger log = LogManager.getLogger();
+
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
@@ -146,7 +150,13 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
+        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
+        .onFailure(error -> {
+          log.error("Error type: {}", error.getClass().getName());
+          log.error("Error message: {}", error.getMessage());
+          log.warn("Error type: {}", error.getClass().getName());
+          log.warn("Error message: {}", error.getMessage());
+        });
   }
 
   public Future<Response> updateItems(List<Item> items) {
