@@ -30,6 +30,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
+import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
@@ -39,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -146,26 +148,12 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .compose(this::handlePostSyncResponse)
         .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
-        .otherwise(error -> (Response) handleCreateItemsError(error));
-  }
-
-  private Future<Response> handlePostSyncResponse(Response response) {
-    if (response.getStatus() == 201) {
-      // Successful response from postSync
-      return Future.succeededFuture(response);
-    } else {
-      // Failed response, assuming it's due to an error in saveBatch
-      String errorMessage = "Failed to save items to the database. PostSync response: " + response.getStatus();
-      return Future.failedFuture(new RuntimeException(errorMessage));
-    }
-  }
-
-  private Future<Response> handleCreateItemsError(Throwable error) {
-    // Handle any error that might occur during the createItems process
-    String errorMessage = "Error during createItems operation: " + error.getMessage();
-    return Future.failedFuture(new RuntimeException(errorMessage));
+        .onFailure(error -> {
+          if (error instanceof PgException) {
+            throw new CompletionException(error.getMessage(), error);
+          }
+        });
   }
 
   public Future<Response> updateItems(List<Item> items) {
