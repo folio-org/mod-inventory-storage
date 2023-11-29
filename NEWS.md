@@ -1,3 +1,11 @@
+## v 27.0.4 2023-11-29
+### Bug Fixes
+* Upgrade snappy-java from 1.1.8.1 to 1.1.10.5 fixing security vulnerabilities [MODINVSTOR-1139](https://issues.folio.org/browse/MODINVSTOR-1139)
+
+## v 27.0.3 2023-11-08
+### Bug Fixes
+* Fix migration failure [MODINVSTOR-1135](https://issues.folio.org/browse/MODINVSTOR-1135)
+
 ## v 27.0.2 2023-11-02
 ### Bug Fixes
 * create env variable to control number of partitions for topics [MODINVSTOR-1131](https://issues.folio.org/browse/MODINVSTOR-1131)
