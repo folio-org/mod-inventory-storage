@@ -150,13 +150,14 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
+        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation))
         .onFailure(error -> {
           log.error("createItems: Error type: {}", error.getClass().getName());
           log.error("createItems: Error message: {}", error.getMessage());
           log.warn("createItems: Error type: {}", error.getClass().getName());
           log.warn("createItems: Error message: {}", error.getMessage());
-        });
+        })
+      );
   }
 
   public Future<Response> updateItems(List<Item> items) {
