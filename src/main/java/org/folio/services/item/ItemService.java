@@ -152,10 +152,10 @@ public class ItemService {
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
         .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
         .onFailure(error -> {
-          log.error("Error type: {}", error.getClass().getName());
-          log.error("Error message: {}", error.getMessage());
-          log.warn("Error type: {}", error.getClass().getName());
-          log.warn("Error message: {}", error.getMessage());
+          log.error("createItems: Error type: {}", error.getClass().getName());
+          log.error("createItems: Error message: {}", error.getMessage());
+          log.warn("createItems: Error type: {}", error.getClass().getName());
+          log.warn("createItems: Error message: {}", error.getMessage());
         });
   }
 
