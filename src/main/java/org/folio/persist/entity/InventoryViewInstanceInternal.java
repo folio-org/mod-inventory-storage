@@ -11,9 +11,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.folio.rest.jaxrs.model.HoldingsItem;
-import org.folio.rest.jaxrs.model.HoldingsRecords2;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Item;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({"instanceId", "isBoundWith", "instance", "holdingsRecords", "items"})
@@ -41,12 +41,12 @@ public class InventoryViewInstanceInternal {
   @JsonProperty("holdingsRecords")
   @JsonPropertyDescription("Holdings records for the instance")
   @Valid
-  private List<HoldingsRecords2> holdingsRecords = new ArrayList<>();
+  private List<HoldingsRecord> holdingsRecords = new ArrayList<>();
 
   @JsonProperty("items")
   @JsonPropertyDescription("Items for the instance")
   @Valid
-  private List<HoldingsItem> items = new ArrayList<>();
+  private List<Item> items = new ArrayList<>();
 
   @JsonProperty("instanceId")
   public String getInstanceId() {
@@ -69,12 +69,12 @@ public class InventoryViewInstanceInternal {
   }
 
   @JsonProperty("holdingsRecords")
-  public List<HoldingsRecords2> getHoldingsRecords() {
+  public List<HoldingsRecord> getHoldingsRecords() {
     return holdingsRecords;
   }
 
   @JsonProperty("holdingsRecords")
-  public void setHoldingsRecords(List<HoldingsRecords2> holdingsRecords) {
+  public void setHoldingsRecords(List<HoldingsRecord> holdingsRecords) {
     this.holdingsRecords = holdingsRecords;
   }
 
@@ -89,12 +89,12 @@ public class InventoryViewInstanceInternal {
   }
 
   @JsonProperty("items")
-  public List<HoldingsItem> getItems() {
+  public List<Item> getItems() {
     return items;
   }
 
   @JsonProperty("items")
-  public void setItems(List<HoldingsItem> items) {
+  public void setItems(List<Item> items) {
     this.items = items;
   }
 

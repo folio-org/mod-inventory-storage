@@ -109,6 +109,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     final JsonObject record = holdingsClient.getAll().get(0);
     //when
     record.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    record.remove("holdingsItems");
+    record.remove("bareHoldingsItems");
     holdingsClient.replace(holdingsRecordId, record);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));

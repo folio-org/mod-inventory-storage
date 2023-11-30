@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Holdings record statement",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsStatement",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "statement": {
+      "type": "string",
+      "description": "Specifies the exact content to which the library has access, typically for continuing publications."
+    },
+    "note": {
+      "type": "string",
+      "description": "Note attached to a holdings statement"
+    },
+    "staffNote": {
+      "type": "string",
+      "description": "Private note attached to a holdings statement"
+    }
+  }
+}
+

@@ -6,7 +6,7 @@
     "id": {
       "type": "string",
       "description": "The unique ID of the holdings records source; UUID",
-      "$ref": "uuid.json"
+      "$ref": "../uuid.json"
     },
     "name": {
       "type": "string",
@@ -22,7 +22,7 @@
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema",
+      "$ref": "../raml-util/schemas/metadata.schema",
       "readonly": true
     }
   },

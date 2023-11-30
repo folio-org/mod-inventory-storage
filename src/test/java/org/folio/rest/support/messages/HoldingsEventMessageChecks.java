@@ -51,6 +51,11 @@ public class HoldingsEventMessageChecks {
     final var holdingsId = getId(newHoldings);
     final var instanceId = getInstanceId(newHoldings);
 
+    oldHoldings.remove("holdingsItems");
+    oldHoldings.remove("bareHoldingsItems");
+    newHoldings.remove("holdingsItems");
+    newHoldings.remove("bareHoldingsItems");
+
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings));
   }
@@ -61,6 +66,11 @@ public class HoldingsEventMessageChecks {
 
     final var holdingsId = getId(newHoldings);
     final var instanceId = getInstanceId(newHoldings);
+
+    oldHoldings.remove("holdingsItems");
+    oldHoldings.remove("bareHoldingsItems");
+    newHoldings.remove("holdingsItems");
+    newHoldings.remove("bareHoldingsItems");
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(instanceId, holdingsId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings, okapiUrlExpected));

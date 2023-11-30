@@ -19,12 +19,12 @@ import org.folio.rest.jaxrs.model.AlternativeTitle;
 import org.folio.rest.jaxrs.model.Classification;
 import org.folio.rest.jaxrs.model.Contributor;
 import org.folio.rest.jaxrs.model.ElectronicAccess;
-import org.folio.rest.jaxrs.model.HoldingsRecords2;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceFormat;
+import org.folio.rest.jaxrs.model.InstanceNote;
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.PublicationPeriod;
 import org.folio.rest.jaxrs.model.Series;
@@ -239,7 +239,7 @@ public class InstanceInternal {
   @JsonProperty("notes")
   @JsonPropertyDescription("Bibliographic notes (e.g. general notes, specialized notes)")
   @Valid
-  private List<Note> notes = new ArrayList<>();
+  private List<InstanceNote> notes = new ArrayList<>();
   /**
    * Administrative notes.
    */
@@ -340,7 +340,7 @@ public class InstanceInternal {
   @JsonProperty("holdingsRecords2")
   @JsonPropertyDescription("List of holdings records")
   @Valid
-  private List<HoldingsRecords2> holdingsRecords2 = new ArrayList<>();
+  private List<HoldingsRecord> holdingsRecords2 = new ArrayList<>();
   /**
    * Array of UUID for the InstanceInternal nature of content (e.g. bibliography, biography, exhibition catalogue,
    * festschrift, newspaper, proceedings, research report, thesis or website)
@@ -768,7 +768,7 @@ public class InstanceInternal {
    * Bibliographic notes (e.g. general notes, specialized notes)
    */
   @JsonProperty("notes")
-  public List<Note> getNotes() {
+  public List<InstanceNote> getNotes() {
     return notes;
   }
 
@@ -776,7 +776,7 @@ public class InstanceInternal {
    * Bibliographic notes (e.g. general notes, specialized notes)
    */
   @JsonProperty("notes")
-  public void setNotes(List<Note> notes) {
+  public void setNotes(List<InstanceNote> notes) {
     this.notes = notes;
   }
 
@@ -988,7 +988,7 @@ public class InstanceInternal {
    * List of holdings records.
    */
   @JsonProperty("holdingsRecords2")
-  public List<HoldingsRecords2> getHoldingsRecords2() {
+  public List<HoldingsRecord> getHoldingsRecords2() {
     return holdingsRecords2;
   }
 
@@ -996,7 +996,7 @@ public class InstanceInternal {
    * List of holdings records.
    */
   @JsonProperty("holdingsRecords2")
-  public void setHoldingsRecords2(List<HoldingsRecords2> holdingsRecords2) {
+  public void setHoldingsRecords2(List<HoldingsRecord> holdingsRecords2) {
     this.holdingsRecords2 = holdingsRecords2;
   }
 

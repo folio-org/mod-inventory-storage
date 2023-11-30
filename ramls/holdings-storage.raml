@@ -9,8 +9,10 @@ documentation:
     content: <b>Storage for holdings in the inventory</b>
 
 types:
-  holdingsRecord: !include holdingsrecord.json
-  holdingsRecords: !include holdingsrecords.json
+  holdingsRecord: !include holdings-storage/holdingsRecord.json
+  holdingsRecords: !include holdings-storage/holdingsRecords.json
+  holdingsRecordView: !include holdings-storage/holdingsRecordView.json
+  holdingsRecordViews: !include holdings-storage/holdingsRecordViews.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -28,10 +30,10 @@ resourceTypes:
     displayName: Holdings
     type:
       collection:
-        exampleCollection: !include  examples/holdingsrecords_get.json
-        schemaCollection: holdingsRecords
-        schemaItem: holdingsRecord
-        exampleItem: !include  examples/holdingsrecord_get.json
+        exampleCollection: !include examples/holdings-storage/holdingsRecords_get.json
+        schemaCollection: holdingsRecordViews
+        schemaItem: holdingsRecordView
+        exampleItem: !include examples/holdings-storage/holdingsRecord_get.json
     get:
       is: [pageable,
            searchable: {description: "by instance ID (using CQL)",
@@ -39,6 +41,12 @@ resourceTypes:
           ]
     post:
       is: [validate]
+      body:
+        application/json:
+          type: holdingsRecord
+          example:
+            strict: false
+            value: !include examples/holdings-storage/holdingsRecord_get.json
     delete:
       is: [searchable: { description: "CQL to select holdings to delete, use cql.allRecords=1 to delete all", example: "callNumber==\"123-0*\"" } ]
       responses:
@@ -57,8 +65,8 @@ resourceTypes:
     /{holdingsRecordId}:
       type:
         collection-item:
-          exampleItem: !include examples/holdingsrecord_get.json
-          schema: holdingsRecord
+          exampleItem: !include examples/holdings-storage/holdingsRecord_get.json
+          schema: holdingsRecordView
       get:
         responses:
           200:
@@ -67,3 +75,11 @@ resourceTypes:
                 type: holdingsRecord
             description: |
               Get Holdings Record by holdingsRecordId
+      put:
+        is: [ validate ]
+        body:
+          application/json:
+            type: holdingsRecord
+            example:
+              strict: false
+              value: !include examples/holdings-storage/holdingsRecord_get.json

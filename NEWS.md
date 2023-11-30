@@ -11,10 +11,9 @@
 
 ### Bug fixes
 * Fix reference and sample data ([MODINVSTOR-1116](https://issues.folio.org/browse/MODINVSTOR-1116), [MODINVSTOR-1115](https://issues.folio.org/browse/MODINVSTOR-1115))
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
 
 ### Tech Dept
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Prevent virtual fields populating for holdings records ([MODINVSTOR-1094](https://issues.folio.org/browse/MODINVSTOR-1094))
 
 ---
 

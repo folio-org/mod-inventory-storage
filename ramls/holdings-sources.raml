@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage holdings records sources
 
 types:
-  holdingsRecordsSource: !include holdingsrecordssource.json
-  holdingsRecordsSources: !include holdingsrecordssources.json
+  holdingsRecordsSource: !include holdings-sources/holdingsRecordsSource.json
+  holdingsRecordsSources: !include holdings-sources/holdingsRecordsSources.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -26,8 +26,8 @@ resourceTypes:
 /holdings-sources:
   type:
     collection:
-      exampleCollection: !include examples/holdingsrecordssources.json
-      exampleItem: !include examples/holdingsrecordssource.json
+      exampleCollection: !include examples/holdings-sources/holdingsRecordsSources.json
+      exampleItem: !include examples/holdings-sources/holdingsRecordsSource.json
       schemaCollection: holdingsRecordsSources
       schemaItem: holdingsRecordsSource
   get:
@@ -43,5 +43,5 @@ resourceTypes:
     description: Pass in the holdings records source id
     type:
       collection-item:
-        exampleItem: !include examples/holdingsrecordssource.json
+        exampleItem: !include examples/holdings-sources/holdingsRecordsSource.json
         schema: holdingsRecordsSource
