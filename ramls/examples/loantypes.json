@@ -3,17 +3,17 @@
     {
       "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
       "name": "Can circulate",
-      "source": "System"
+      "source": "local"
     },
     {
       "id": "2e48e713-17f3-4c13-a9f8-23845bb210a4",
       "name": "Reading room",
-      "source": "User"
+      "source": "local"
     },
     {
       "id": "e8b311a6-3b21-43f2-a269-dd9310cb2d0e",
       "name": "Course reserves",
-      "source": "Consortium"
+      "source": "consortium"
     }
   ],
   "totalRecords": 3

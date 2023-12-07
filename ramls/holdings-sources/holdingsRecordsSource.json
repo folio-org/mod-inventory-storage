@@ -16,7 +16,8 @@
       "type": "string",
       "enum": [
         "folio",
-        "local"
+        "local",
+        "consortium"
       ],
       "description": "The holdings records source"
     },
