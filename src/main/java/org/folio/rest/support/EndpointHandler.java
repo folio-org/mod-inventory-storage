@@ -30,11 +30,7 @@ public final class EndpointHandler {
     };
   }
 
-  public static Handler<Response> handleResponse(Handler<AsyncResult<Response>> asyncResultHandler) {
-    return response -> asyncResultHandler.handle(succeededFuture(handleResponse(response)));
-  }
-
-  private static Response handleResponse(Response response) {
+  public static Response handleResponse(Response response) {
     var errorMessage = response.getEntity().toString();
     if (errorMessage.contains(HRID_ERROR_MESSAGE) && (errorMessage.contains("instance"))) {
       return createResponse(errorMessage);

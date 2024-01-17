@@ -11,6 +11,7 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.support.EndpointHandler.handleResponse;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -23,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
@@ -39,7 +38,6 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
-  private static final Logger log = LogManager.getLogger(InstanceService.class);
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -92,19 +90,8 @@ public class InstanceService {
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
-        try {
-          log.warn("Instance: {}", instance);
-          log.info("In the createInstance method.");
-          post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
-            InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
-          log.info("After the post method.");
-        } catch (Exception e) {
-          log.error("Error posting instance {}. Message: {}. Cause: {}", e, e.getMessage(), e.getCause());
-          log.error("Instance: {}", instance);
-        }
-        log.info("After the try/catch block.");
-        log.info("postResponse: {}", postResponse);
-        log.info("Instance after processing: {}", instance);
+        post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
+          InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
         return postResponse.future()
           // Return the response without waiting for a domain event publish
           // to complete. Units of work performed by this service is the same
@@ -112,7 +99,10 @@ public class InstanceService {
           // api client invoking this endpoint. The response is returned
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
-          .onSuccess(domainEventPublisher.publishCreated());
+          .onSuccess(response -> {
+            handleResponse(response);
+            domainEventPublisher.publishCreated();
+          });
       });
   }
 

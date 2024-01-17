@@ -5,7 +5,6 @@ import static org.folio.persist.InstanceMarcRepository.INSTANCE_SOURCE_MARC_TABL
 import static org.folio.persist.InstanceRelationshipRepository.INSTANCE_RELATIONSHIP_TABLE;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
-import static org.folio.rest.support.EndpointHandler.handleResponse;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -247,7 +246,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
     new InstanceService(vertxContext, okapiHeaders)
       .createInstance(entity)
-      .onSuccess(handleResponse(asyncResultHandler))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 
