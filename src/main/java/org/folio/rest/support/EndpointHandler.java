@@ -5,8 +5,8 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import javax.ws.rs.core.Response;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 
 
 public final class EndpointHandler {
