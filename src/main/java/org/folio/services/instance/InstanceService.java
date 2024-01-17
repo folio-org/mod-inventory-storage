@@ -92,6 +92,7 @@ public class InstanceService {
         final Promise<Response> postResponse = promise();
         post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
           InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
+
         return postResponse.future()
           // Return the response without waiting for a domain event publish
           // to complete. Units of work performed by this service is the same
@@ -100,10 +101,11 @@ public class InstanceService {
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
           .onSuccess(response -> {
-            handleResponse(response);
             domainEventPublisher.publishCreated();
+            handleResponse(response);
           });
-      });
+      })
+      .onComplete(response -> handleResponse(response.result()));
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
