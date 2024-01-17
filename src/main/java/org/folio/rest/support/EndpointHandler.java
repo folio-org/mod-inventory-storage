@@ -58,6 +58,7 @@ public final class EndpointHandler {
     logger.info("Error message in the extractErrorMessage: " + input);
     int index = input.indexOf(substringToFind);
     if (index != -1) {
+      logger.info("Entered the if statement in the extractErrorMessage");
       return input.substring(index + substringToFind.length()).trim();
     } else {
       return input;

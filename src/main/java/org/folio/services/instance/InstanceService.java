@@ -102,10 +102,10 @@ public class InstanceService {
           // while the domain event publish is satisfied.
           .onSuccess(response -> {
             domainEventPublisher.publishCreated();
-            handleResponse(response);
+            var updatedResponse = handleResponse(response);
+            postResponse.complete(updatedResponse);
           });
-      })
-      .onComplete(response -> handleResponse(response.result()));
+      });
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
