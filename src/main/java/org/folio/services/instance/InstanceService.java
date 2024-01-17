@@ -93,12 +93,18 @@ public class InstanceService {
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
         try {
+          log.warn("Instance: {}", instance);
+          log.info("In the createInstance method.");
           post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
             InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
+          log.info("After the post method.");
         } catch (Exception e) {
           log.error("Error posting instance {}. Message: {}. Cause: {}", e, e.getMessage(), e.getCause());
           log.error("Instance: {}", instance);
         }
+        log.info("After the try/catch block.");
+        log.info("postResponse: {}", postResponse);
+        log.info("Instance after processing: {}", instance);
         return postResponse.future()
           // Return the response without waiting for a domain event publish
           // to complete. Units of work performed by this service is the same
