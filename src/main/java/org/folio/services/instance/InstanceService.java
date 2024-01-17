@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
@@ -37,7 +39,7 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
-
+  private static final Logger log = LogManager.getLogger(InstanceService.class);
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -70,7 +72,8 @@ public class InstanceService {
       });
   }
 
-  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
                                          boolean precedingTitles, boolean succeedingTitles,
                                          boolean superInstanceRelationships, boolean subInstanceRelationships,
@@ -89,10 +92,13 @@ public class InstanceService {
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
-
-        post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
-          InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
-
+        try {
+          post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
+            InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
+        } catch (Exception e) {
+          log.error("Error posting instance {}. Message: {}. Cause: {}", e, e.getMessage(), e.getCause());
+          log.error("Instance: {}", instance);
+        }
         return postResponse.future()
           // Return the response without waiting for a domain event publish
           // to complete. Units of work performed by this service is the same
