@@ -246,11 +246,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
     new InstanceService(vertxContext, okapiHeaders)
       .createInstance(entity)
-      .onSuccess(response -> {
-          log.info(response.getEntity());
-          asyncResultHandler.handle(succeededFuture(response));
-      }
-      )
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 

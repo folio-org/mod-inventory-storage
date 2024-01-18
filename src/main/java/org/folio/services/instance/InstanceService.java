@@ -30,8 +30,8 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
-import org.folio.rest.support.EndpointHandler;
 import org.folio.rest.support.HridManager;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
@@ -102,7 +102,7 @@ public class InstanceService {
           // while the domain event publish is satisfied.
           .onSuccess(domainEventPublisher.publishCreated());
       })
-      .map(EndpointHandler::handleResponse);
+      .map(ResponseHandlerUtil::handleResponse);
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
