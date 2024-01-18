@@ -11,7 +11,6 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
-import static org.folio.rest.support.EndpointHandler.handleResponse;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -22,7 +21,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.InstanceInternalRepository;
@@ -32,6 +30,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
+import org.folio.rest.support.EndpointHandler;
 import org.folio.rest.support.HridManager;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
@@ -39,7 +38,6 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
-  private static final Logger logger = Logger.getLogger(InstanceService.class.getName());
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -102,12 +100,9 @@ public class InstanceService {
           // api client invoking this endpoint. The response is returned
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
-          .onSuccess(response -> {
-            domainEventPublisher.publishCreated();
-            var updatedResponse = handleResponse(response);
-            logger.info("Updated response: " + updatedResponse.getEntity().toString());
-          });
-      });
+          .onSuccess(domainEventPublisher.publishCreated());
+      })
+      .map(EndpointHandler::handleResponse);
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
