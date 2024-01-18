@@ -6,7 +6,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import javax.ws.rs.core.Response;
 
-
 public final class EndpointHandler {
   private EndpointHandler() { }
 
