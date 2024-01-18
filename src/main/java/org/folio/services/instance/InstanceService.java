@@ -22,6 +22,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.InstanceInternalRepository;
@@ -38,6 +39,7 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
+  private static final Logger logger = Logger.getLogger(InstanceService.class.getName());
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -103,7 +105,7 @@ public class InstanceService {
           .onSuccess(response -> {
             domainEventPublisher.publishCreated();
             var updatedResponse = handleResponse(response);
-            postResponse.complete(updatedResponse);
+            logger.info("Updated response: " + updatedResponse.getEntity().toString());
           });
       });
   }

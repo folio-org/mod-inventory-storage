@@ -46,6 +46,7 @@ public final class EndpointHandler {
   private static Response createResponse(String errorMessage) {
     logger.info("Error message in the createResponse: " + errorMessage);
     var message = extractErrorMessage(errorMessage, HRID_ERROR_MESSAGE);
+    logger.info("Updated message: " + message);
     return textPlainResponse(400, HRID + message);
   }
 
