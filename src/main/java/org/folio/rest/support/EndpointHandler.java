@@ -8,9 +8,7 @@ import javax.ws.rs.core.Response;
 
 
 public final class EndpointHandler {
-
-  private EndpointHandler() {
-  }
+  private EndpointHandler() { }
 
   /**
    * On success pass the result to asyncResultHandler. On failure use

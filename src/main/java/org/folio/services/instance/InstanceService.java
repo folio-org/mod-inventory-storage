@@ -90,6 +90,7 @@ public class InstanceService {
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
+
         post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
           InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
 
