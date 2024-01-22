@@ -11,7 +11,7 @@ public final class ResponseHandlerUtil {
   private ResponseHandlerUtil() {
   }
 
-  public static Response handleResponse(Response response) {
+  public static Response handleInstanceHridError(Response response) {
     if (response.getStatus() != 400) {
       return response;
     }
