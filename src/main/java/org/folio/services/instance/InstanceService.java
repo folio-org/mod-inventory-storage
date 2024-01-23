@@ -103,7 +103,7 @@ public class InstanceService {
           // while the domain event publish is satisfied.
           .onSuccess(domainEventPublisher.publishCreated());
       })
-      .map(ResponseHandlerUtil::handleInstanceHridError);
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {

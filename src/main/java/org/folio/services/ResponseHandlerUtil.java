@@ -4,6 +4,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.folio.rest.jaxrs.model.Errors;
 
 public final class ResponseHandlerUtil {
   private static final Logger logger = Logger.getLogger(ResponseHandlerUtil.class.getName());
@@ -13,11 +14,11 @@ public final class ResponseHandlerUtil {
   private ResponseHandlerUtil() {
   }
 
-  public static Response handleInstanceHridError(Response response) {
+  public static Response handleHridError(Response response) {
     var statusCode = response.getStatus();
-    var errorMessage = response.getEntity().toString();
+    var errorMessage = getErrorMessage(response.getEntity());
 
-    logger.info("Status code is" + statusCode + " and error message is " + errorMessage);
+    logger.info("Status code is" + statusCode + " and error message is " + response.getEntity());
 
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && errorMessage.contains("instance") && statusCode == 400) {
@@ -27,6 +28,17 @@ public final class ResponseHandlerUtil {
       return createResponse(422, errorMessage);
     }
     return response;
+  }
+
+  private static String getErrorMessage(Object responseEntity) {
+    var errorMessage = "";
+    if (responseEntity.getClass().isInstance(Errors.class)) {
+      var errors = (Errors) responseEntity;
+      errorMessage = errors.getErrors().get(0).getMessage();
+    } else if (responseEntity.getClass().isInstance(String.class)) {
+      errorMessage = (String) responseEntity;
+    }
+    return errorMessage;
   }
 
   private static Response createResponse(int status, String message) {

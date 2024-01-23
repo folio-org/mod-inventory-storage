@@ -116,7 +116,7 @@ public class HoldingsService {
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
       })
-      .map(ResponseHandlerUtil::handleInstanceHridError);
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> deleteHolding(String hrId) {

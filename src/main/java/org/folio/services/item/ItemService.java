@@ -132,7 +132,7 @@ public class ItemService {
         return postResponse.future()
           .onSuccess(domainEventService.publishCreated());
       })
-      .map(ResponseHandlerUtil::handleInstanceHridError);
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {
