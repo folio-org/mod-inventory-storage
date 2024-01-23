@@ -32,7 +32,7 @@
       "description": "Records the fact that the record should not be displayed in a discovery system"
     },
     "displaySummary": {
-      "description": "Display summary about the item",
+      "description": "Display summary about the item.",
       "type": "string"
     },
     "accessionNumber": {
