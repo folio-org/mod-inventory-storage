@@ -12,6 +12,9 @@ public final class ResponseHandlerUtil {
   }
 
   public static Response handleInstanceHridError(Response response) {
+    if (response.getStatus() != 400) {
+      return response;
+    }
     var errorMessage = response.getEntity().toString();
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && (errorMessage.contains("instance") || errorMessage.contains("item")
