@@ -31,6 +31,9 @@
       "type": "boolean",
       "description": "Records the fact that the record should not be displayed in a discovery system"
     },
+    "displaySummary": {
+      "type": "string"
+    },
     "accessionNumber": {
       "type": "string",
       "description": "Also called inventar number"
