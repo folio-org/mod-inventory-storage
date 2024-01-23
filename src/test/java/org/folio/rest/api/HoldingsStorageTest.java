@@ -2198,6 +2198,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
 
     assertThat(duplicateResponse.getStatusCode(), is(422));
+    assertThat(duplicateResponse.getBody(),
+      is("HRID value already exists in table holdings_record: ho00000000001"));
 
     final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
 

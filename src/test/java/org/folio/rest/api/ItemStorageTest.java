@@ -1049,6 +1049,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
+    assertThat(postResponse.getBody(),
+      is("HRID value already exists in table item: it00000000001"));
 
     final Errors errors = postResponse.getJson().mapTo(Errors.class);
 
@@ -2197,7 +2199,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
 
     Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-                            itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
+      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
 
     for (Item item : itemsToCreate) {
       IndividualResource createdItem = createItem(item);

@@ -37,6 +37,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
@@ -114,7 +115,8 @@ public class HoldingsService {
 
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
-      });
+      })
+      .map(ResponseHandlerUtil::handleInstanceHridError);
   }
 
   public Future<Response> deleteHolding(String hrId) {

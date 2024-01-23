@@ -58,6 +58,7 @@ import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -130,7 +131,8 @@ public class ItemService {
 
         return postResponse.future()
           .onSuccess(domainEventService.publishCreated());
-      });
+      })
+      .map(ResponseHandlerUtil::handleInstanceHridError);
   }
 
   public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {

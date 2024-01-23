@@ -12,11 +12,13 @@ public final class ResponseHandlerUtil {
   }
 
   public static Response handleInstanceHridError(Response response) {
-    if (response.getStatus() != 400) {
+    if (response.getStatus() != 400 || response.getStatus() != 422) {
       return response;
     }
     var errorMessage = response.getEntity().toString();
-    if (errorMessage.contains(HRID_ERROR_MESSAGE) && (errorMessage.contains("instance"))) {
+    if (errorMessage.contains(HRID_ERROR_MESSAGE)
+      && (errorMessage.contains("instance") || errorMessage.contains("item")
+      || errorMessage.contains("holdings_record"))) {
       errorMessage = errorMessage.replace(HRID_ERROR_MESSAGE, HRID);
       return textPlainResponse(400, errorMessage);
     }
