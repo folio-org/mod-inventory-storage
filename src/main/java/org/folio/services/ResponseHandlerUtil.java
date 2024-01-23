@@ -14,19 +14,23 @@ public final class ResponseHandlerUtil {
   }
 
   public static Response handleInstanceHridError(Response response) {
-    logger.info("Response status code" + response.getStatus());
-    if (response.getStatus() != 400 || response.getStatus() != 422) {
-      return response;
-    }
+    var statusCode = response.getStatus();
     var errorMessage = response.getEntity().toString();
+
+    logger.info("Status code is" + statusCode + " and error message is " + errorMessage);
+
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
-      && (errorMessage.contains("instance") || errorMessage.contains("item")
-      || errorMessage.contains("holdings_record"))) {
-      logger.info("Inside the if statement with the error message: " + errorMessage);
-      errorMessage = errorMessage.replace(HRID_ERROR_MESSAGE, HRID);
-      return textPlainResponse(400, errorMessage);
+      && errorMessage.contains("instance") && statusCode == 400) {
+      return createResponse(400, errorMessage);
+    } else if (errorMessage.contains(HRID_ERROR_MESSAGE)
+      && (errorMessage.contains("item") || errorMessage.contains("holdings_record")) && statusCode == 422) {
+      return createResponse(422, errorMessage);
     }
     return response;
+  }
+
+  private static Response createResponse(int status, String message) {
+    return textPlainResponse(status, message.replace(HRID_ERROR_MESSAGE, HRID));
   }
 
   private static Response textPlainResponse(int status, String message) {
