@@ -15,7 +15,7 @@ public final class ResponseHandlerUtil {
 
   public static Response handleInstanceHridError(Response response) {
     logger.info("Response status code" + response.getStatus());
-    if (response.getStatus() != 400) {
+    if (response.getStatus() != 400 || response.getStatus() != 422) {
       return response;
     }
     var errorMessage = response.getEntity().toString();
