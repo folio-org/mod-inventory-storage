@@ -2,8 +2,8 @@ package org.folio.services;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
-import javax.ws.rs.core.Response;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 
 public final class ResponseHandlerUtil {
   private static final Logger logger = Logger.getLogger(ResponseHandlerUtil.class.getName());
