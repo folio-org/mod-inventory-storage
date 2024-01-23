@@ -31,12 +31,10 @@ public final class ResponseHandlerUtil {
   }
 
   private static String getErrorMessage(Object responseEntity) {
-    var errorMessage = "";
+    var errorMessage = responseEntity.toString();
     if (responseEntity.getClass().isInstance(Errors.class)) {
       var errors = (Errors) responseEntity;
       errorMessage = errors.getErrors().get(0).getMessage();
-    } else if (responseEntity.getClass().isInstance(String.class)) {
-      errorMessage = (String) responseEntity;
     }
     return errorMessage;
   }
