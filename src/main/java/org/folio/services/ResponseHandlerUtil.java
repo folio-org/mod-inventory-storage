@@ -22,11 +22,11 @@ public final class ResponseHandlerUtil {
 
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && errorMessage.contains("instance") && statusCode == 400) {
-      logger.info( "Constructing response with 400 status code and message: " + errorMessage);
+      logger.info("Constructing response with 400 status code and message: " + errorMessage);
       return createResponse(400, errorMessage);
     } else if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && (errorMessage.contains("item") || errorMessage.contains("holdings_record")) && statusCode == 422) {
-      logger.info( "Constructing response with 422 status code and message: " + errorMessage);
+      logger.info("Constructing response with 422 status code and message: " + errorMessage);
       return createResponse(422, errorMessage);
     }
     return response;
@@ -38,7 +38,11 @@ public final class ResponseHandlerUtil {
       logger.info("responseEntity is instance of Errors");
       var errors = (Errors) responseEntity;
       errorMessage = errors.getErrors().get(0).getMessage();
+    } else if (responseEntity.getClass().isInstance(String.class)) {
+      logger.info("responseEntity is instance of String");
+      errorMessage = (String) responseEntity;
     }
+    logger.info("Error message is " + errorMessage);
     return errorMessage;
   }
 
