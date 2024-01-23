@@ -12,7 +12,7 @@ public final class ResponseHandlerUtil {
   }
 
   public static Response handleInstanceHridError(Response response) {
-    if (response.getStatus() != 400 || response.getStatus() != 422) {
+    if (response.getStatus() != 400) {
       return response;
     }
     var errorMessage = response.getEntity().toString();
