@@ -18,13 +18,15 @@ public final class ResponseHandlerUtil {
     var statusCode = response.getStatus();
     var errorMessage = getErrorMessage(response.getEntity());
 
-    logger.info("Status code is" + statusCode + " and error message is " + response.getEntity());
+    logger.info("Status code is" + statusCode + " and error message is " + errorMessage);
 
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && errorMessage.contains("instance") && statusCode == 400) {
+      logger.info( "Constructing response with 400 status code and message: " + errorMessage);
       return createResponse(400, errorMessage);
     } else if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && (errorMessage.contains("item") || errorMessage.contains("holdings_record")) && statusCode == 422) {
+      logger.info( "Constructing response with 422 status code and message: " + errorMessage);
       return createResponse(422, errorMessage);
     }
     return response;
@@ -33,6 +35,7 @@ public final class ResponseHandlerUtil {
   private static String getErrorMessage(Object responseEntity) {
     var errorMessage = responseEntity.toString();
     if (responseEntity.getClass().isInstance(Errors.class)) {
+      logger.info("responseEntity is instance of Errors");
       var errors = (Errors) responseEntity;
       errorMessage = errors.getErrors().get(0).getMessage();
     }
