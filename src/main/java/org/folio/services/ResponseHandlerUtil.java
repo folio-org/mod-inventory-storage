@@ -16,8 +16,10 @@ public final class ResponseHandlerUtil {
 
   public static Response handleHridError(Response response) {
     var statusCode = response.getStatus();
+    if (statusCode == 201) {
+      return response;
+    }
     var errorMessage = getErrorMessage(response.getEntity());
-
     logger.info("Status code is" + statusCode + " and error message is " + errorMessage);
 
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
