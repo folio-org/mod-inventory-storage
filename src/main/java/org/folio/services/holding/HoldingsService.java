@@ -171,7 +171,8 @@ public class HoldingsService {
           holdingsRepository, HoldingsRecord::getId))
         .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
           upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))));
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))))
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

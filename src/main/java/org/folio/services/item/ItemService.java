@@ -148,7 +148,8 @@ public class ItemService {
       .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
-        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)));
+        .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> updateItems(List<Item> items) {
