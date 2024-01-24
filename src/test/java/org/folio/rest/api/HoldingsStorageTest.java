@@ -72,7 +72,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -2198,22 +2197,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
 
     assertThat(duplicateResponse.getStatusCode(), is(422));
-
-    final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
-
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
-    assertThat(errors.getErrors().size(), is(1));
-    assertThat(errors.getErrors().get(0), notNullValue());
-    assertThat(errors.getErrors().get(0).getMessage(),
-      containsString("value already exists in table holdings_record: ho00000000001"));
-    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
-    assertThat(errors.getErrors().get(0).getParameters().size(), is(1));
-    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
-    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
-    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
-      is("ho00000000001"));
+    assertThat(duplicateResponse.getBody(),
+      is("HRID value already exists in table holdings_record: ho00000000001"));
 
     log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
   }
@@ -2283,13 +2268,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(5, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
-
-    JsonArray errors = response.getJson().getJsonArray("errors");
-    assertThat(errors.size(), is(1));
-
-    JsonObject firstError = errors.getJsonObject(0);
-    assertThat(firstError.getString("message"), is(
-      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table holdings_record: ho00000001000"));
+    assertThat(response.getBody(),
+      is("HRID value already exists in table holdings_record: ho00000001000"));
   }
 
   @Test
