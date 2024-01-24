@@ -4,8 +4,7 @@
 * Add new field "Display summary" for the item schema ([MODINVSTOR-1154](https://issues.folio.org/browse/MODINVSTOR-1154))
 
 ### New APIs versions
-* Provides `item-storage v10.0`
-* Requires `item-storage v10.1`
+* Provides `item-storage v10.1`
 
 ### Features
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
