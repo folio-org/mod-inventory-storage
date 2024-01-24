@@ -34,13 +34,12 @@ public final class ResponseHandlerUtil {
 
   private static String getErrorMessage(Object responseEntity) {
     var errorMessage = responseEntity.toString();
-    if (responseEntity.getClass().isInstance(Errors.class)) {
+    if (responseEntity instanceof Errors errors) {
       logger.info("responseEntity is instance of Errors");
-      var errors = (Errors) responseEntity;
       errorMessage = errors.getErrors().get(0).getMessage();
-    } else if (responseEntity.getClass().isInstance(String.class)) {
+    } else if (responseEntity instanceof String message) {
       logger.info("responseEntity is instance of String");
-      errorMessage = (String) responseEntity;
+      errorMessage = message;
     }
     logger.info("Error message is " + errorMessage);
     return errorMessage;
