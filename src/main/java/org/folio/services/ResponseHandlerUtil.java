@@ -46,11 +46,20 @@ public final class ResponseHandlerUtil {
   }
 
   private static Response createResponse(int status, String message) {
-    return textPlainResponse(status, message.replace(HRID_ERROR_MESSAGE, HRID));
+    if (status == 400) {
+      return textPlainResponse(status, message.replace(HRID_ERROR_MESSAGE, HRID));
+    } else {
+      return failedValidationResponse(message);
+    }
   }
 
   private static Response textPlainResponse(int status, String message) {
     return Response.status(status).header(CONTENT_TYPE, "text/plain")
       .entity(message).build();
+  }
+
+  private static Response failedValidationResponse(Object jsonEntity) {
+    return Response.status(422).header(CONTENT_TYPE, "application/json")
+      .entity(jsonEntity).build();
   }
 }

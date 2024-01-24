@@ -120,7 +120,8 @@ public class InstanceService {
         return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      });
+      })
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
