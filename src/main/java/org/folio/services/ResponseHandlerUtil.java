@@ -49,7 +49,7 @@ public final class ResponseHandlerUtil {
     if (status == 400) {
       return textPlainResponse(status, message.replace(HRID_ERROR_MESSAGE, HRID));
     } else {
-      return failedValidationResponse(message);
+      return failedValidationResponse(message.replace(HRID_ERROR_MESSAGE, HRID));
     }
   }
 
