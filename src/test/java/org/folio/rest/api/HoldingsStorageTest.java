@@ -2489,10 +2489,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final String duplicateHrid = "ho00000000001";
     holdingsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
-    assertThat(postSynchronousBatch(holdingsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("HRID value already exists in table holdings_record: ho00000000001"),
-      errorMessageContains(duplicateHrid))));
+    Response response = postSynchronousBatch(holdingsArray);
+    assertThat(response.getStatusCode(), is(422));
+    assertThat(response.getBody(), is("HRID value already exists in table holdings_record: ho00000000001"));
 
     for (int i = 0; i < holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
