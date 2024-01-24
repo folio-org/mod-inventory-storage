@@ -22,10 +22,10 @@ public final class ResponseHandlerUtil {
     var errorMessage = getErrorMessage(response.getEntity());
     if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && errorMessage.contains("instance") && statusCode == 400) {
-      return createResponse(400, errorMessage);
+      return createResponse(response);
     } else if (errorMessage.contains(HRID_ERROR_MESSAGE)
       && (errorMessage.contains("item") || errorMessage.contains("holdings_record")) && statusCode == 422) {
-      return createResponse(422, errorMessage);
+      return createResponse(response);
     }
     return response;
   }
@@ -40,21 +40,23 @@ public final class ResponseHandlerUtil {
     return errorMessage;
   }
 
-  private static Response createResponse(int status, String message) {
-    if (status == 400) {
-      return textPlainResponse(status, message.replace(HRID_ERROR_MESSAGE, HRID));
+  private static Response createResponse(Response response) {
+    if (response.getStatus() == 400) {
+      return Response.fromResponse(response)
+        .entity(response.getEntity().toString().replace(HRID_ERROR_MESSAGE, HRID))
+        .build();
     } else {
-      return failedValidationResponse(message.replace(HRID_ERROR_MESSAGE, HRID));
+      return failedValidationResponse(response);
     }
   }
 
-  private static Response textPlainResponse(int status, String message) {
-    return Response.status(status).header(CONTENT_TYPE, "text/plain")
-      .entity(message).build();
-  }
-
-  private static Response failedValidationResponse(Object jsonEntity) {
-    return Response.status(422).header(CONTENT_TYPE, "application/json")
-      .entity(jsonEntity).build();
+  public static Response failedValidationResponse(Response response) {
+    var errors = response.readEntity(Errors.class).getErrors();
+    var errorMessage = errors.get(0).getMessage().replace(HRID_ERROR_MESSAGE, HRID);
+    errors.get(0).setMessage(errorMessage);
+    return Response.fromResponse(response)
+      .header(CONTENT_TYPE, "application/json")
+      .entity(errors)
+      .build();
   }
 }

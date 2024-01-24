@@ -74,6 +74,7 @@ import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
@@ -1048,8 +1049,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
-    assertThat(postResponse.getBody(),
+
+    final Errors errors = postResponse.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
       is("HRID value already exists in table item: it00000000001"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("it00000000001"));
 
     log.info("Finished cannotCreateAnItemWithDuplicateHRID");
   }
