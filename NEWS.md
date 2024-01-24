@@ -1,10 +1,11 @@
 ## v27.1.0 In progress
 ### Breaking changes
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Add new field "Display summary" for the item schema ([MODINVSTOR-1154](https://issues.folio.org/browse/MODINVSTOR-1154))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
-* Requires `API_NAME vX.Y`
+* Provides `item-storage v10.0`
+* Requires `item-storage v10.1`
 
 ### Features
 * Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
