@@ -20,11 +20,7 @@ public final class ResponseHandlerUtil {
     }
 
     var errorMessage = getErrorMessage(response.getEntity());
-    if (errorMessage.contains(HRID_ERROR_MESSAGE)
-      && errorMessage.contains("instance") && statusCode == 400) {
-      return createResponse(response);
-    } else if (errorMessage.contains(HRID_ERROR_MESSAGE)
-      && (errorMessage.contains("item") || errorMessage.contains("holdings_record")) && statusCode == 422) {
+    if (errorMessage.contains(HRID_ERROR_MESSAGE)) {
       return createResponse(response);
     }
     return response;
