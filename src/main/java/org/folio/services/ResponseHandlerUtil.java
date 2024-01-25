@@ -42,21 +42,21 @@ public final class ResponseHandlerUtil {
 
   private static Response createResponse(Response response) {
     if (response.getStatus() == 400) {
-      return Response.fromResponse(response)
-        .entity(response.getEntity().toString().replace(HRID_ERROR_MESSAGE, HRID))
-        .build();
+      return Response.fromResponse(response).header(CONTENT_TYPE, "text/plain")
+        .entity(response.getEntity().toString().replace(HRID_ERROR_MESSAGE, HRID)).build();
     } else {
       return failedValidationResponse(response);
     }
   }
 
   public static Response failedValidationResponse(Response response) {
-    var errors = response.readEntity(Errors.class).getErrors();
-    var errorMessage = errors.get(0).getMessage().replace(HRID_ERROR_MESSAGE, HRID);
-    errors.get(0).setMessage(errorMessage);
+    var entity = (Errors) response.getEntity();
+    var errors = entity.getErrors();
+    errors.get(0).setMessage(errors.get(0).getMessage().replace(HRID_ERROR_MESSAGE, HRID));
+    entity.setErrors(errors);
     return Response.fromResponse(response)
+      .entity(entity)
       .header(CONTENT_TYPE, "application/json")
-      .entity(errors)
       .build();
   }
 }
