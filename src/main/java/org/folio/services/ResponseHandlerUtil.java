@@ -1,7 +1,5 @@
 package org.folio.services;
 
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Errors;
 
@@ -38,7 +36,7 @@ public final class ResponseHandlerUtil {
 
   private static Response createResponse(Response response) {
     if (response.getStatus() == 400) {
-      return Response.fromResponse(response).header(CONTENT_TYPE, "text/plain")
+      return Response.fromResponse(response)
         .entity(response.getEntity().toString().replace(HRID_ERROR_MESSAGE, HRID)).build();
     } else {
       return failedValidationResponse(response);
@@ -52,7 +50,6 @@ public final class ResponseHandlerUtil {
     entity.setErrors(errors);
     return Response.fromResponse(response)
       .entity(entity)
-      .header(CONTENT_TYPE, "application/json")
       .build();
   }
 }
