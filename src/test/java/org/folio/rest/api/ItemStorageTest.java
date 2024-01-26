@@ -301,6 +301,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     final String inTransitServicePointId = UUID.randomUUID().toString();
     String adminNote = "an admin note";
+    String displaySummary = "Important item";
 
     final var statisticalCode = statisticalCodeFixture
       .createSerialManagementCode(new StatisticalCodeBuilder()
@@ -316,6 +317,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("displaySummary", displaySummary);
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
@@ -351,6 +353,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
     assertThat(itemFromPost.getString("materialTypeId"),
       is(journalMaterialTypeID));
     assertThat(itemFromPost.getString("permanentLoanTypeId"),
@@ -376,6 +379,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
     assertThat(itemFromGet.getString("materialTypeId"),
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
@@ -516,6 +520,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final UUID id = UUID.randomUUID();
     final String expectedCopyNumber = "copy1";
     final String adminNote = "an admin note";
+    final String displaySummary = "Important item";
 
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
     createItem(itemToCreate);
@@ -524,14 +529,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(createdItem.getString("copyNumber"), nullValue());
 
     JsonObject updatedItem = createdItem.copy()
-      .put("copyNumber", expectedCopyNumber);
-    updatedItem.put("administrativeNotes", new JsonArray().add(adminNote));
+      .put("copyNumber", expectedCopyNumber)
+      .put("displaySummary", displaySummary)
+      .put("administrativeNotes", new JsonArray().add(adminNote));
+
     itemsClient.replace(id, updatedItem);
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
 
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertThat(updatedItemResponse.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+    assertThat(updatedItemResponse.getString("displaySummary"), is(displaySummary));
 
     itemMessageChecks.updatedMessagePublished(createdItem, getById(id).getJson());
   }
