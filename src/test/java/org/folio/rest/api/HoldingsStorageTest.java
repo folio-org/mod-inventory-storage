@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -2197,7 +2198,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
 
-    assertThat(duplicateResponse.getStatusCode(), is(422));
+    assertThat(duplicateResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
 
     final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
 
@@ -2206,7 +2207,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors().size(), is(1));
     assertThat(errors.getErrors().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getMessage(),
-      containsString("value already exists in table holdings_record: ho00000000001"));
+      containsString("HRID value already exists in table holdings_record: ho00000000001"));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().size(), is(1));
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
@@ -2284,12 +2285,19 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(422));
 
-    JsonArray errors = response.getJson().getJsonArray("errors");
-    assertThat(errors.size(), is(1));
+    final Errors errors = response.getJson().mapTo(Errors.class);
 
-    JsonObject firstError = errors.getJsonObject(0);
-    assertThat(firstError.getString("message"), is(
-      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table holdings_record: ho00000001000"));
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+      is("HRID value already exists in table holdings_record: ho00000001000"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("ho00000001000"));
   }
 
   @Test
@@ -2509,10 +2517,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final String duplicateHrid = "ho00000000001";
     holdingsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
-    assertThat(postSynchronousBatch(holdingsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
-      errorParametersValueIs(duplicateHrid)));
+    Response response = postSynchronousBatch(holdingsArray);
+    assertThat(response.getStatusCode(), is(422));
+
+    final Errors errors = response.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+      is("HRID value already exists in table holdings_record: ho00000000001"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("ho00000000001"));
 
     for (int i = 0; i < holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
