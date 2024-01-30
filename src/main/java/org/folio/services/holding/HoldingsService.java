@@ -37,6 +37,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
@@ -114,7 +115,8 @@ public class HoldingsService {
 
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
-      });
+      })
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> deleteHolding(String hrId) {
@@ -169,7 +171,8 @@ public class HoldingsService {
           holdingsRepository, HoldingsRecord::getId))
         .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
           upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))));
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))))
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
