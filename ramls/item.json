@@ -31,6 +31,10 @@
       "type": "boolean",
       "description": "Records the fact that the record should not be displayed in a discovery system"
     },
+    "displaySummary": {
+      "description": "Display summary about the item",
+      "type": "string"
+    },
     "accessionNumber": {
       "type": "string",
       "description": "Also called inventar number"
@@ -157,6 +161,8 @@
       "description": "Notes about action, copy, binding etc.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
+        "javaType": "org.folio.rest.jaxrs.model.ItemNote",
         "properties": {
           "itemNoteTypeId": {
             "type": "string",

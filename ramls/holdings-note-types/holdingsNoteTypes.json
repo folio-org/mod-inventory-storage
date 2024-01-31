@@ -1,29 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of holdings records",
+  "description": "A collection of holdings note types",
   "type": "object",
   "properties": {
-    "holdingsRecords": {
-      "description": "List of holdings records",
-      "id": "holdingsRecord",
+    "holdingsNoteTypes": {
+      "description": "List of holdings note types",
+      "id": "holdingsNoteType",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "holdingsrecord.json"
+        "$ref": "holdingsNoteType.json"
       }
     },
     "totalRecords": {
       "description": "Estimated or exact total number of records",
       "type": "integer"
-    },
-    "resultInfo": {
-      "$ref": "raml-util/schemas/resultInfo.schema",
-      "readonly": true
     }
   },
   "required": [
-    "holdingsRecords",
+    "holdingsNoteTypes",
     "totalRecords"
   ]
 }
-

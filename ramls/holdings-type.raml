@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage holdings types of the system
 
 types:
-  holdingsType: !include holdingstype.json
-  holdingsTypes: !include holdingstypes.json
+  holdingsType: !include holdings-types/holdingsType.json
+  holdingsTypes: !include holdings-types/holdingsTypes.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -26,8 +26,8 @@ resourceTypes:
 /holdings-types:
   type:
     collection:
-      exampleCollection: !include examples/holdingstypes.json
-      exampleItem: !include examples/holdingstype.json
+      exampleCollection: !include examples/holdings-types/holdingsTypes.json
+      exampleItem: !include examples/holdings-types/holdingsType.json
       schemaCollection: holdingsTypes
       schemaItem: holdingsType
   get:
@@ -43,5 +43,5 @@ resourceTypes:
     description: "Pass in the holdings type id"
     type:
       collection-item:
-        exampleItem: !include examples/holdingstype.json
+        exampleItem: !include examples/holdings-types/holdingsType.json
         schema: holdingsType

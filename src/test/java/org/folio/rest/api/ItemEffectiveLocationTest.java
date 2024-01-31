@@ -202,6 +202,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
       is(effectiveLocation(holdingStartLoc, itemLoc)));
 
     JsonObject holdingToUpdate = createdHolding.copy();
+    holdingToUpdate.remove("holdingsItems");
+    holdingToUpdate.remove("bareHoldingsItems");
     setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
     holdingsClient.replace(holdingsRecordId, holdingToUpdate);
 
@@ -211,8 +213,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
 
-    holdingsMessageChecks.updatedMessagePublished(createdHolding,
-      holdingsClient.getById(holdingsRecordId).getJson());
+    JsonObject holdings = holdingsClient.getById(holdingsRecordId).getJson();
+    holdingsMessageChecks.updatedMessagePublished(createdHolding, holdings);
   }
 
   @Test

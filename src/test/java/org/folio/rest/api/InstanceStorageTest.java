@@ -2000,8 +2000,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already "
-        + "exists in table instance: in00000000001"));
+      is("HRID value already exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2118,7 +2117,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
 
     assertThat(response.getBody(), is(
-      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table instance: in00000001000"));
+      "HRID value already exists in table instance: in00000001000"));
   }
 
   @Test

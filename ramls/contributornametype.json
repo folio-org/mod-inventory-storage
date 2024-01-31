@@ -14,6 +14,10 @@
       "description": "used for ordering of contributor name types in displays, i.e. in select lists",
       "type": "string"
     },
+    "source": {
+      "type": "string",
+      "description": "origin of the contributor name type record, e.g. 'local', 'consortium' etc."
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",

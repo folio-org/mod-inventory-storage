@@ -10,7 +10,7 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  holdingsrecords_post: !include holdingsrecords_post.json
+  holdingsrecords_post: !include holdings-storage/holdingsRecords_post.json
 /holdings-storage/batch/synchronous-unsafe:
   displayName: Holdings Batch Upload Sync API With Optimistic Locking Disabled
   post:
@@ -18,7 +18,7 @@ types:
     body:
       application/json:
         type: holdingsrecords_post
-        example: !include examples/holdingsrecords_post.json
+        example: !include examples/holdings-storage/holdingsRecords_post.json
     responses:
       201:
         description: "All holdings have been successfully created or updated"

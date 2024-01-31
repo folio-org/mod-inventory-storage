@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Receiving history of holdings record",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsReceivingHistory",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "displayType": {
+      "type": "string",
+      "description": "Display hint. 1: Display fields separately. 2: Display fields concatenated"
+    },
+    "entries": {
+      "type": "array",
+      "description": "Entries of receiving history",
+      "items": {
+        "$ref": "holdingsReceivingHistoryEntry.json"
+      }
+    }
+  }
+}
+
