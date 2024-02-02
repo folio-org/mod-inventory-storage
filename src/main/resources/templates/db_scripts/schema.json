@@ -2,7 +2,7 @@
   "tables": [
     {
       "tableName": "authority",
-      "fromModuleVersion": "22.1.0",
+      "mode": "delete",
       "withMetadata": true,
       "withAuditing": false,
       "withOptimisticLocking": "failOnConflict"
@@ -517,6 +517,7 @@
     },
     {
       "tableName": "authority_note_type",
+      "mode": "delete",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -862,6 +863,7 @@
     },
     {
       "tableName": "authority_source_file",
+      "mode": "delete",
       "withMetadata": true,
       "withAuditing": false,
       "uniqueIndex": [
@@ -1065,16 +1067,6 @@
       "run": "after",
       "snippetPath": "createInstanceSetView.sql",
       "fromModuleVersion": "25.0.0"
-    },
-    {
-      "run": "after",
-      "snippetPath": "addAuthoritySourceFiles.sql",
-      "fromModuleVersion": "25.0.1"
-    },
-    {
-      "run": "after",
-      "snippetPath": "updateLCNAFAuthoritySourceFile.sql",
-      "fromModuleVersion": "25.0.3"
     },
     {
       "run": "after",
