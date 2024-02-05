@@ -60,7 +60,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
       TENANT_ID,
       ResponseHandler.json(createRelationshipCompleted)
     );
-    Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
+    Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     CompletableFuture<Response> createRelationshipCompleted2 = new CompletableFuture<>();
@@ -74,7 +74,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
       TENANT_ID,
       ResponseHandler.json(createRelationshipCompleted2)
     );
-    Response relationshipPostResponse2 = createRelationshipCompleted2.get(10, TimeUnit.SECONDS);
+    Response relationshipPostResponse2 = createRelationshipCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
   }
@@ -101,7 +101,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
       TENANT_ID,
       ResponseHandler.text(createRelationshipCompleted)
     );
-    Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
+    Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
@@ -127,7 +127,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
       TENANT_ID,
       ResponseHandler.text(createRelationshipCompleted)
     );
-    Response relationshipPostResponse = createRelationshipCompleted.get(10, TimeUnit.SECONDS);
+    Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
 
   }
@@ -142,7 +142,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
       TENANT_ID,
       ResponseHandler.json(createCompleted)
     );
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     return postResponse.getJson();
   }

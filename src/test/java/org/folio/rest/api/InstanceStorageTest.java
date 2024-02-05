@@ -699,7 +699,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(instancesStorageUrl(format("?query=%s", query)), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
@@ -2112,7 +2112,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageUrl(""), instanceRequest, TENANT_ID,
       text(createCompleted));
 
-    final Response response = createCompleted.get(5, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
 

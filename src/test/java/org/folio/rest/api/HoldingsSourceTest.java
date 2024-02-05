@@ -137,7 +137,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     getClient().post(holdingsSourceUrl(""), request, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response response = createCompleted.get(10, TimeUnit.SECONDS);
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
     JsonArray errors = response.getJson().getJsonArray("errors");

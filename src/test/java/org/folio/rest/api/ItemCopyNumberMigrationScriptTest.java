@@ -169,7 +169,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
         }
       });
 
-    result.get(10, TimeUnit.SECONDS);
+    result.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private void setCopyNumbersArrayWithTwoValues(UUID id, String copyNumber) throws Exception {

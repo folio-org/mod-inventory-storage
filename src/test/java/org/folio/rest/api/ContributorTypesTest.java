@@ -33,7 +33,7 @@ public class ContributorTypesTest extends TestBase {
       + urlEncode("cql.allRecords=1");
 
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(
       String.format("Failed to search for instances: '%s'", searchResponse.getBody()),

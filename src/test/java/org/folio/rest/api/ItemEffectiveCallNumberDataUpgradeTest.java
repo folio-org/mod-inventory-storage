@@ -388,7 +388,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
     });
 
     try {
-      future.get(1, TimeUnit.SECONDS);
+      future.get(TIMEOUT, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
