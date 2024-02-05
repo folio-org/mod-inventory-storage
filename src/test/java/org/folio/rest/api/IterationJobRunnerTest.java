@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.persist.InstanceInternalRepository;
+import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
@@ -48,7 +48,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   private final InstanceEventMessageChecks instanceMessageChecks
     = new InstanceEventMessageChecks(KAFKA_CONSUMER);
   private IterationJobRepository jobRepository;
-  private InstanceInternalRepository instanceRepository;
+  private InstanceRepository instanceRepository;
   private IterationJobRunner jobRunner;
 
   @BeforeClass
@@ -80,7 +80,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
   @Before
   public void beforeEach() {
     jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
-    instanceRepository = mock(InstanceInternalRepository.class);
+    instanceRepository = mock(InstanceRepository.class);
 
     var postgresClient = postgresClient(getContext(), okapiHeaders());
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
