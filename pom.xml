@@ -35,7 +35,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
     <raml-module-builder-version>35.0.4</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.3.5</vertx.version>
+    <vertx.version>4.5.3</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.19</aspectj.version>
     <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal*</sonar.exclusions>
