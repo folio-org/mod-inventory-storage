@@ -1146,7 +1146,7 @@
     {
       "run": "after",
       "snippetPath": "addIdentifierTypeCancelledLCCN.sql",
-      "fromModuleVersion": "26.1.0"
+      "fromModuleVersion": "27.1.0"
     }
   ]
 }
