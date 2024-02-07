@@ -420,7 +420,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     getClient().get(oaiPmhView("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh view:", response);
 
@@ -446,7 +446,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     getClient().post(oaiPmhViewEnrichedInstances(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh instance ids view:", response);
 

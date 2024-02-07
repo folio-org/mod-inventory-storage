@@ -159,7 +159,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(servicePointsUrl("/"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(2));
@@ -179,7 +179,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     send(servicePointsUrl("/?query=code==cd1"), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject item = getResponse.getJson();
     assertThat(item.getInteger("totalRecords"), is(1));
@@ -203,7 +203,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     assertThat(getResponse.getJson().getString("id"), is(id.toString()));
@@ -227,7 +227,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
@@ -242,13 +242,13 @@ public class ServicePointTest extends TestBase {
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
     CompletableFuture<Response> deleted = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
-    Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     servicePointEventMessageChecks.deletedMessagePublished(postServicePointResponse.getJson());
     CompletableFuture<Response> gotten = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.GET, null,
       SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.any(gotten));
-    Response getResponse = gotten.get(10, TimeUnit.SECONDS);
+    Response getResponse = gotten.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
@@ -259,7 +259,7 @@ public class ServicePointTest extends TestBase {
     UUID id = UUID.randomUUID();
     CompletableFuture<Response> deleted = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.DELETE, null, ResponseHandler.any(deleted));
-    Response deleteResponse = deleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
     servicePointEventMessageChecks.deletedMessageNotPublished(id.toString());
   }
@@ -397,7 +397,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     JsonObject responseJson = getResponse.getJson();
@@ -435,7 +435,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     JsonObject responseJson = getResponse.getJson();
@@ -471,7 +471,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     JsonObject responseJson = getResponse.getJson();
@@ -500,7 +500,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
     JsonObject responseJson = updateResponse.getJson();
@@ -528,7 +528,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
     JsonObject responseJson = updateResponse.getJson();
@@ -559,7 +559,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
     JsonObject responseJson = updateResponse.getJson();
@@ -590,7 +590,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(updateResponse.getStatusCode(), is(422));
     JsonObject responseJson = updateResponse.getJson();
@@ -622,7 +622,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     JsonObject responseJson = getResponse.getJson();
@@ -657,7 +657,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
 
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     JsonObject responseJson = getResponse.getJson();
@@ -735,7 +735,7 @@ public class ServicePointTest extends TestBase {
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
       ResponseHandler.any(updated));
-    Response updateResponse = updated.get(10, TimeUnit.SECONDS);
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     Response getResponse = getById(id);
     assertThat(getResponse.getJson().getString("id"), is(id.toString()));
@@ -772,7 +772,7 @@ public class ServicePointTest extends TestBase {
       HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS).getJson()
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS).getJson()
       .getJsonArray("servicepoints").stream()
       .map(obj -> (JsonObject) obj)
       .collect(Collectors.toList());
@@ -789,7 +789,7 @@ public class ServicePointTest extends TestBase {
     send(servicePointsUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
 }

@@ -8,3 +8,11 @@ updates:
       prefix: fix
       prefix-development: chore
       include: scope
+    groups:
+      rmb:
+        patterns:
+          - "org.folio*"
+          - "*vertx*"
+      plugins:
+        patterns:
+          - "*plugin*"

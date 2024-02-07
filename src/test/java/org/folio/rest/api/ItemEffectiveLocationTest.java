@@ -307,7 +307,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     });
 
     try {
-      return future.get(1, TimeUnit.SECONDS);
+      return future.get(TIMEOUT, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

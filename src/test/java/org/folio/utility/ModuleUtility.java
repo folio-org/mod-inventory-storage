@@ -1,5 +1,6 @@
 package org.folio.utility;
 
+import static org.folio.rest.api.TestBase.TIMEOUT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -62,7 +63,7 @@ public final class ModuleUtility {
       vertx.close()
         .toCompletionStage()
         .toCompletableFuture()
-        .get(20, TimeUnit.SECONDS);
+        .get(TIMEOUT, TimeUnit.SECONDS);
     } catch (TimeoutException e) {
       // Do not care if Vertx close times out.
       logger.debug(e.getMessage(), e);
@@ -87,7 +88,7 @@ public final class ModuleUtility {
     vertx.deployVerticle(RestVerticle.class, options)
       .toCompletionStage()
       .toCompletableFuture()
-      .get(20, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   public static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample)

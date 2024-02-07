@@ -216,7 +216,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(dereferencedItemStorage("?query=") + urlEncode(badSearchQuery),
       TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    return searchCompleted.get(10, TimeUnit.SECONDS);
+    return searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   @SneakyThrows
@@ -225,7 +225,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(dereferencedItemStorage("/") + urlEncode(badId),
       TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    return searchCompleted.get(10, TimeUnit.SECONDS);
+    return searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   @SneakyThrows
@@ -234,7 +234,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(dereferencedItemStorage("?query=") + urlEncode(searchQuery),
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    return searchCompleted.get(10, TimeUnit.SECONDS).getJson()
+    return searchCompleted.get(TIMEOUT, TimeUnit.SECONDS).getJson()
       .mapTo(DereferencedItems.class);
   }
 
