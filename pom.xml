@@ -34,8 +34,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <ramlfiles_path>${basedir}/ramls/</ramlfiles_path>
-    <raml-module-builder-version>35.0.4</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.3.5</vertx.version>
+    <raml-module-builder-version>35.1.1</raml-module-builder-version> <!-- also update vertx.version -->
+    <vertx.version>4.5.3</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.19</aspectj.version>
     <sonar.exclusions>src/main/java/org/folio/persist/entity/*Internal*</sonar.exclusions>
@@ -79,7 +79,7 @@
     <dependency>
       <groupId>org.folio.okapi</groupId>
       <artifactId>okapi-testing</artifactId>
-      <version>4.14.2</version>
+      <version>5.2.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -113,7 +113,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.2</version>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
