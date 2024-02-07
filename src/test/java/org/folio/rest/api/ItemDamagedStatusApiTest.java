@@ -48,7 +48,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .withSource("local");
 
     Response result = getClient().post(itemDamagedStatusesUrl(EMPTY), status, TENANT_ID)
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
@@ -64,7 +64,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
     JsonObject object = new JsonObject().put("foo", "boo");
 
     Response result = getClient().post(itemDamagedStatusesUrl(EMPTY), object, TENANT_ID)
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(422));
@@ -79,13 +79,13 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .withSource("local");
 
     Response result = getClient().post(itemDamagedStatusesUrl(EMPTY), status, TENANT_ID)
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_CREATED.toInt()));
 
     result = getClient().post(itemDamagedStatusesUrl(EMPTY), status, TENANT_ID)
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
@@ -105,7 +105,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
         status.setId(response.getJson().getString("id"));
         return getClient().post(itemDamagedStatusesUrl(EMPTY), status, TENANT_ID);
       })
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
@@ -125,7 +125,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
         String id = response.getJson().getString("id");
         return getClient().get(itemDamagedStatusesUrl("/" + id), TENANT_ID);
       })
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
@@ -149,7 +149,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .thenCompose(it -> getClient().post(url, status.withName("name"), TENANT_ID))
       .whenComplete(ItemDamagedStatusApiTest::assertHttpStatusIsCreated)
       .thenCompose(it -> getClient().get(url, TENANT_ID))
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     int size = result.getJson().getJsonArray("itemDamageStatuses").size();
     assertThat(size, is(2));
@@ -171,7 +171,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .whenComplete(ItemDamagedStatusApiTest::assertHttpStatusIsCreated)
       .thenApply(it -> itemDamagedStatusesUrl("?query=name=targetName"))
       .thenCompose(url -> getClient().get(url, TENANT_ID))
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     JsonObject body = result.getJson();
     int size = body.getJsonArray("itemDamageStatuses").size();
@@ -192,7 +192,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .whenComplete(ItemDamagedStatusApiTest::assertHttpStatusIsCreated)
       .thenApply(response -> response.getJson().getString("id"))
       .thenCompose(id -> getClient().delete(itemDamagedStatusesUrl("/" + id), TENANT_ID))
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
@@ -203,7 +203,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     URL url = itemDamagedStatusesUrl("/" + UUID.randomUUID());
-    Response result = getClient().delete(url, TENANT_ID).get(10, TimeUnit.SECONDS);
+    Response result = getClient().delete(url, TENANT_ID).get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));
@@ -222,7 +222,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .thenApply(response -> status.withId(response.getJson().getString("id")))
       .thenApply(it -> itemDamagedStatusesUrl("/" + status.getId()))
       .thenCompose(url -> getClient().put(url, status.withSource("folio"), TENANT_ID))
-      .get(10, TimeUnit.SECONDS);
+      .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
@@ -237,7 +237,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .withSource("local");
 
     URL url = itemDamagedStatusesUrl("/" + UUID.randomUUID());
-    Response result = getClient().put(url, status, TENANT_ID).get(10, TimeUnit.SECONDS);
+    Response result = getClient().put(url, status, TENANT_ID).get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
     assertThat(result.getStatusCode(), is(HttpStatus.HTTP_NOT_FOUND.toInt()));

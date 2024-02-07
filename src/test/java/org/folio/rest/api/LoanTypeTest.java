@@ -353,7 +353,7 @@ public class LoanTypeTest extends TestBaseWithInventoryUtil {
     Response response;
 
     try {
-      response = future.get(10, TimeUnit.SECONDS);
+      response = future.get(TIMEOUT, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new IllegalStateException(e);
     }

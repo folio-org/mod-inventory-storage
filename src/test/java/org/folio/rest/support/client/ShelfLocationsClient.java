@@ -1,5 +1,6 @@
 package org.folio.rest.support.client;
 
+import static org.folio.rest.api.TestBase.TIMEOUT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonObject;
@@ -34,7 +35,7 @@ public class ShelfLocationsClient {
     client.post(shelfLocationsUrl, shelfLocationRequest, TENANT_ID,
       ResponseHandler.json(completed));
 
-    Response response = completed.get(10, TimeUnit.SECONDS);
+    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     return response.getJson().getString("id");
   }

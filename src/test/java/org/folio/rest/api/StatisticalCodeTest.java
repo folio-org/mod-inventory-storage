@@ -98,7 +98,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
-    Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response response = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
@@ -137,7 +137,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
-    Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response response = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
@@ -186,7 +186,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     getClient().delete(statisticalCodesUrl("/" + createdCode.getId().toString()), TENANT_ID,
       ResponseHandler.text(deleteCompleted));
 
-    Response response = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response response = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
