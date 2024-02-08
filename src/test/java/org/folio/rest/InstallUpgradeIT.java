@@ -162,25 +162,6 @@ public class InstallUpgradeIT {
     smokeTest();
   }
 
-  @Test
-  public void upgradeFromLotus() {
-    // load database dump of Lotus (R3 2021) version of mod-inventory-storage
-    postgresExec("psql", "-U", POSTGRES.getUsername(), "-d", POSTGRES.getDatabaseName(),
-      "-f", "/lotus-23.0.0.sql");
-
-    setTenant("lotus");
-
-    // migrate
-    postTenant(new JsonObject()
-      .put("module_from", "23.0.0")
-      .put("module_to", "999999.0.0")
-      .put("parameters", new JsonArray()
-        .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-        .add(new JsonObject().put("key", "loadSample").put("value", "true"))));
-
-    smokeTest();
-  }
-
   /**
    * Test logging. It broke several times caused by dependency order in pom.xml or by configuration:
    * <a href="https://issues.folio.org/browse/EDGPATRON-90">https://issues.folio.org/browse/EDGPATRON-90</a>

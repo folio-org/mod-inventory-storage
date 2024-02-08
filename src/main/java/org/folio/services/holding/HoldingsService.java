@@ -30,7 +30,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
-import org.folio.persist.InstanceInternalRepository;
+import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -59,7 +59,7 @@ public class HoldingsService {
   private final HoldingsRepository holdingsRepository;
   private final ItemDomainEventPublisher itemEventService;
   private final HoldingDomainEventPublisher domainEventPublisher;
-  private final InstanceInternalRepository instanceRepository;
+  private final InstanceRepository instanceRepository;
   private final ConsortiumService consortiumService;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
@@ -72,7 +72,7 @@ public class HoldingsService {
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
-    instanceRepository = new InstanceInternalRepository(context, okapiHeaders);
+    instanceRepository = new InstanceRepository(context, okapiHeaders);
     consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
       context.get(ConsortiumDataCache.class.getName()));
   }

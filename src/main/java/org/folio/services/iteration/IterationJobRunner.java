@@ -18,7 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.KafkaTopicNameHelper;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.persist.InstanceInternalRepository;
+import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
@@ -43,19 +43,19 @@ public class IterationJobRunner {
   private final Map<String, String> okapiHeaders;
   private final PostgresClientFuturized postgresClient;
   private final IterationJobRepository jobRepository;
-  private final InstanceInternalRepository instanceRepository;
+  private final InstanceRepository instanceRepository;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
     this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
       new IterationJobRepository(vertxContext, okapiHeaders),
-      new InstanceInternalRepository(vertxContext, okapiHeaders),
+      new InstanceRepository(vertxContext, okapiHeaders),
       vertxContext,
       okapiHeaders);
   }
 
   public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
-                            InstanceInternalRepository instanceRepository, Context vertxContext,
+                            InstanceRepository instanceRepository, Context vertxContext,
                             Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
