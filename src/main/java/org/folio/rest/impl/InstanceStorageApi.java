@@ -18,13 +18,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.persist.entity.GetInstanceStorageInstancesResponseInternal;
-import org.folio.persist.entity.InstanceInternal;
-import org.folio.persist.entity.InstancesInternal;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
+import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
@@ -220,9 +218,9 @@ public class InstanceStorageApi implements InstanceStorage {
     if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
       try {
         PreparedCql preparedCql = handleCql(query, limit, offset);
-        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), InstanceInternal.class, InstancesInternal.class,
+        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
           "title", query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponseInternal.class, asyncResultHandler);
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -231,7 +229,7 @@ public class InstanceStorageApi implements InstanceStorage {
       return;
     }
 
-    PgUtil.streamGet(INSTANCE_TABLE, InstanceInternal.class, query, offset, limit, null,
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
       "instances", routingContext, okapiHeaders, vertxContext);
   }
 
