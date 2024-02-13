@@ -30,13 +30,14 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
-import org.folio.persist.InstanceInternalRepository;
+import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
@@ -58,7 +59,7 @@ public class HoldingsService {
   private final HoldingsRepository holdingsRepository;
   private final ItemDomainEventPublisher itemEventService;
   private final HoldingDomainEventPublisher domainEventPublisher;
-  private final InstanceInternalRepository instanceRepository;
+  private final InstanceRepository instanceRepository;
   private final ConsortiumService consortiumService;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
@@ -71,7 +72,7 @@ public class HoldingsService {
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
     domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
-    instanceRepository = new InstanceInternalRepository(context, okapiHeaders);
+    instanceRepository = new InstanceRepository(context, okapiHeaders);
     consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
       context.get(ConsortiumDataCache.class.getName()));
   }
@@ -114,7 +115,8 @@ public class HoldingsService {
 
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
-      });
+      })
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> deleteHolding(String hrId) {
@@ -169,7 +171,8 @@ public class HoldingsService {
           holdingsRepository, HoldingsRecord::getId))
         .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
           upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))));
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))))
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

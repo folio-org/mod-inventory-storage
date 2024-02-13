@@ -280,7 +280,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -301,6 +301,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     final String inTransitServicePointId = UUID.randomUUID().toString();
     String adminNote = "an admin note";
+    String displaySummary = "Important item";
 
     final var statisticalCode = statisticalCodeFixture
       .createSerialManagementCode(new StatisticalCodeBuilder()
@@ -316,6 +317,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("displaySummary", displaySummary);
     itemToCreate.put("materialTypeId", journalMaterialTypeID);
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
@@ -339,7 +341,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -351,6 +353,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromPost.getString("barcode"), is("565578437802"));
     assertThat(itemFromPost.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
     assertThat(itemFromPost.getString("materialTypeId"),
       is(journalMaterialTypeID));
     assertThat(itemFromPost.getString("permanentLoanTypeId"),
@@ -376,6 +379,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
     assertThat(itemFromGet.getString("materialTypeId"),
       is(journalMaterialTypeID));
     assertThat(itemFromGet.getString("permanentLoanTypeId"),
@@ -418,7 +422,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -476,7 +480,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -516,6 +520,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final UUID id = UUID.randomUUID();
     final String expectedCopyNumber = "copy1";
     final String adminNote = "an admin note";
+    final String displaySummary = "Important item";
 
     JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId);
     createItem(itemToCreate);
@@ -524,14 +529,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(createdItem.getString("copyNumber"), nullValue());
 
     JsonObject updatedItem = createdItem.copy()
-      .put("copyNumber", expectedCopyNumber);
-    updatedItem.put("administrativeNotes", new JsonArray().add(adminNote));
+      .put("copyNumber", expectedCopyNumber)
+      .put("displaySummary", displaySummary)
+      .put("administrativeNotes", new JsonArray().add(adminNote));
+
     itemsClient.replace(id, updatedItem);
 
     JsonObject updatedItemResponse = itemsClient.getById(id).getJson();
 
     assertThat(updatedItemResponse.getString("copyNumber"), is(expectedCopyNumber));
     assertThat(updatedItemResponse.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+    assertThat(updatedItemResponse.getString("displaySummary"), is(displaySummary));
 
     itemMessageChecks.updatedMessagePublished(createdItem, getById(id).getJson());
   }
@@ -615,7 +623,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -673,7 +681,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    final Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(String.format("Failed to create item: %s", postResponse.getBody()),
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -805,7 +813,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
@@ -836,7 +844,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
@@ -867,7 +875,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
@@ -894,7 +902,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
 
@@ -925,7 +933,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(postResponse.getBody(),
@@ -948,7 +956,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(422));
   }
@@ -970,7 +978,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(422));
   }
@@ -996,7 +1004,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
       ResponseHandler.json(completed));
-    Response response = completed.get(10, TimeUnit.SECONDS);
+    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
   }
@@ -1046,7 +1054,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       json(createCompleted));
 
-    final Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
 
@@ -1056,7 +1064,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors(), notNullValue());
     assertThat(errors.getErrors().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getMessage(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table item: it00000000001"));
+      is("HRID value already exists in table item: it00000000001"));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
@@ -1098,7 +1106,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       text(createCompleted));
 
-    final Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HTTP_INTERNAL_ERROR));
     assertThat(postResponse.getBody(), isMaximumSequenceValueError("hrid_items_seq"));
@@ -1128,7 +1136,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
       ResponseHandler.text(completed));
-    Response response = completed.get(10, TimeUnit.SECONDS);
+    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(), allOf(
@@ -1161,7 +1169,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
       ResponseHandler.text(completed));
 
-    final Response response = completed.get(10, TimeUnit.SECONDS);
+    final Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
@@ -1196,7 +1204,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl("/" + itemId), itemToCreate, TENANT_ID,
       ResponseHandler.text(completed));
 
-    final Response response = completed.get(10, TimeUnit.SECONDS);
+    final Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
@@ -1263,7 +1271,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate,
       TENANT_ID, ResponseHandler.empty(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
@@ -1306,7 +1314,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), requestWithAdditionalProperty,
       TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
@@ -1331,7 +1339,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), requestWithAdditionalProperty,
       TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
@@ -1356,7 +1364,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), requestWithAdditionalProperty,
       TENANT_ID, ResponseHandler.jsonErrors(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
@@ -1531,10 +1539,22 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsArray.getJsonObject(0).put("hrid", duplicateHrid);
     itemsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
-    assertThat(postSynchronousBatch(itemsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
-      errorParametersValueIs(duplicateHrid)));
+    Response response = postSynchronousBatch(itemsArray);
+    assertThat(response.getStatusCode(), is(422));
+
+    final Errors errors = response.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+      is("HRID value already exists in table item: it00000000001"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("it00000000001"));
 
     for (int i = 0; i < itemsArray.size(); i++) {
       assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
@@ -1586,7 +1606,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
-    Response putResponse = replaceCompleted.get(10, TimeUnit.SECONDS);
+    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1639,7 +1659,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
-    Response putResponse = replaceCompleted.get(10, TimeUnit.SECONDS);
+    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1687,7 +1707,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
-    Response putResponse = replaceCompleted.get(10, TimeUnit.SECONDS);
+    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1728,7 +1748,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
       TENANT_ID, ResponseHandler.empty(replaceCompleted));
 
-    Response putResponse = replaceCompleted.get(10, TimeUnit.SECONDS);
+    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1757,7 +1777,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl(String.format("/%s", id)), secondReplacement,
       TENANT_ID, ResponseHandler.empty(secondReplaceCompleted));
 
-    Response secondPutResponse = secondReplaceCompleted.get(10, TimeUnit.SECONDS);
+    Response secondPutResponse = secondReplaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(secondPutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1931,7 +1951,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().delete(itemsStorageUrl(String.format("/%s", id)),
       TENANT_ID, ResponseHandler.empty(deleteCompleted));
 
-    Response deleteResponse = deleteCompleted.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -1940,7 +1960,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(itemsStorageUrl(String.format("/%s", id)),
       TENANT_ID, ResponseHandler.empty(getCompleted));
 
-    Response getResponse = getCompleted.get(10, TimeUnit.SECONDS);
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
 
@@ -1971,8 +1991,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(itemsStorageUrl("") + "?limit=3&offset=3", TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
-    Response firstPageResponse = firstPageCompleted.get(10, TimeUnit.SECONDS);
-    Response secondPageResponse = secondPageCompleted.get(10, TimeUnit.SECONDS);
+    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
@@ -2066,7 +2086,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
@@ -2104,7 +2124,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(200));
 
@@ -2140,7 +2160,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(200));
     JsonObject searchBody = searchResponse.getJson();
@@ -2173,7 +2193,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     JsonObject searchBody = searchResponse.getJson();
     JsonArray foundItems = searchBody.getJsonArray("items");
     assertThat(foundItems.size(), is(1));
@@ -2197,7 +2217,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
 
     Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-                            itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
+      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
 
     for (Item item : itemsToCreate) {
       IndividualResource createdItem = createItem(item);
@@ -2249,7 +2269,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url,
       TENANT_ID, ResponseHandler.text(searchCompleted));
 
-    Response searchResponse = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(searchResponse.getStatusCode(), is(400));
 
@@ -2279,7 +2299,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().delete(itemsStorageUrl("?query=cql.allRecords=1"), TENANT_ID,
       ResponseHandler.empty(deleteAllFinished));
 
-    Response deleteResponse = deleteAllFinished.get(10, TimeUnit.SECONDS);
+    Response deleteResponse = deleteAllFinished.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
@@ -2288,7 +2308,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(itemsStorageUrl(""), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
@@ -2358,7 +2378,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().post(itemsStorageUrl(""), smallAngryPlanet(holdingsRecordId), null, ResponseHandler.any(postCompleted));
 
-    Response response = postCompleted.get(10, TimeUnit.SECONDS);
+    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -2375,7 +2395,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().get(getInstanceUrl, null, ResponseHandler.any(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -2389,7 +2409,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().get(itemsStorageUrl(""), null, ResponseHandler.any(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -2437,7 +2457,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.text(createCompleted));
 
-    Response postResponse = createCompleted.get(10, TimeUnit.SECONDS);
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(400));
     assertThat(postResponse.getBody(),
       containsString("problem: Wrong status name")
@@ -2466,7 +2486,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl("/" + id), replacement,
       TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
 
-    JsonErrorResponse updateResponse = updateCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(422));
     assertThat(updateResponse.getErrors().size(), is(1));
 
@@ -2498,7 +2518,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(itemsStorageUrl("/" + id), replacement,
       TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
 
-    JsonErrorResponse updateResponse = updateCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(updateResponse.getStatusCode(), is(422));
     assertThat(updateResponse.getErrors().size(), is(1));
 
@@ -2961,7 +2981,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID,
       ResponseHandler.empty(completed));
-    Response response = completed.get(10, TimeUnit.SECONDS);
+    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
@@ -2987,7 +3007,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID,
       ResponseHandler.text(completed));
-    Response response = completed.get(10, TimeUnit.SECONDS);
+    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(), allOf(
@@ -3036,7 +3056,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(itemsStorageUrl("?query=") + urlEncode(searchQuery),
       TENANT_ID, ResponseHandler.json(searchCompleted));
 
-    Response response = searchCompleted.get(10, TimeUnit.SECONDS);
+    Response response = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(200));
 

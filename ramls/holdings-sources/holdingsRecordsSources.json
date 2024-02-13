@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of holdings note types",
+  "description": "A collection of holdings records sources",
   "type": "object",
   "properties": {
-    "holdingsNoteTypes": {
-      "description": "List of holdings note types",
-      "id": "holdingsNoteType",
+    "holdingsRecordsSources": {
+      "description": "List of holdings records sources",
+      "id": "holdingsRecordsSources",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "holdingsnotetype.json"
+        "$ref": "holdingsRecordsSource.json"
       }
     },
     "totalRecords": {
@@ -18,7 +18,7 @@
     }
   },
   "required": [
-    "holdingsNoteTypes",
+    "holdingsRecordsSources",
     "totalRecords"
   ]
 }

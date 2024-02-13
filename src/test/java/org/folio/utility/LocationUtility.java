@@ -1,5 +1,6 @@
 package org.folio.utility;
 
+import static org.folio.rest.api.TestBase.TIMEOUT;
 import static org.folio.rest.api.TestBase.get;
 import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
@@ -248,7 +249,7 @@ public final class LocationUtility {
     send(servicePointsUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
       SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId,
       ResponseHandler.json(createServicePoint));
-    return createServicePoint.get(10, TimeUnit.SECONDS);
+    return createServicePoint.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   public static UUID getInstitutionId() {

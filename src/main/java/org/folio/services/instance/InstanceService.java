@@ -23,26 +23,26 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.persist.InstanceInternalRepository;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
+import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
-
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final InstanceDomainEventPublisher domainEventPublisher;
-  private final InstanceInternalRepository instanceRepository;
+  private final InstanceRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final InstanceEffectiveValuesService effectiveValuesService;
@@ -54,7 +54,7 @@ public class InstanceService {
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(postgresClient);
     domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
-    instanceRepository = new InstanceInternalRepository(vertxContext, okapiHeaders);
+    instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     effectiveValuesService = new InstanceEffectiveValuesService();
@@ -70,7 +70,8 @@ public class InstanceService {
       });
   }
 
-  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
                                          boolean precedingTitles, boolean succeedingTitles,
                                          boolean superInstanceRelationships, boolean subInstanceRelationships,
@@ -101,7 +102,8 @@ public class InstanceService {
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
           .onSuccess(domainEventPublisher.publishCreated());
-      });
+      })
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
@@ -118,7 +120,8 @@ public class InstanceService {
         return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      });
+      })
+      .map(ResponseHandlerUtil::handleHridError);
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {

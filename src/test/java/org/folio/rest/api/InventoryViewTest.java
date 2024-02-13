@@ -12,9 +12,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.folio.rest.jaxrs.model.HoldingsItem;
-import org.folio.rest.jaxrs.model.HoldingsRecords2;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
+import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -97,7 +97,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
     var returnedInstances = instances.stream()
       .map(resource -> resource.getJson().mapTo(InventoryViewInstance.class))
-      .collect(Collectors.toList());
+      .toList();
 
     for (InventoryViewInstance returnedInstance : returnedInstances) {
       isNonNullEmpty(returnedInstance.getHoldingsRecords());
@@ -110,14 +110,14 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
     return instance.getHoldingsRecords().stream()
-      .map(HoldingsRecords2::getId)
+      .map(HoldingsRecord::getId)
       .map(UUID::fromString)
       .collect(toList());
   }
 
   private List<String> getItemIds(InventoryViewInstance instance) {
     return instance.getItems().stream()
-      .map(HoldingsItem::getId)
+      .map(Item::getId)
       .collect(toList());
   }
 

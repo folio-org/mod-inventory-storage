@@ -370,7 +370,10 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   }
 
   private HoldingsRecord getHoldings(UUID id) throws Exception {
-    return holdingsClient.getById(id).getJson().mapTo(HoldingsRecord.class);
+    JsonObject json = holdingsClient.getById(id).getJson();
+    json.remove("holdingsItems");
+    json.remove("bareHoldingsItems");
+    return json.mapTo(HoldingsRecord.class);
   }
 
   private void runSql(String sql) {
@@ -385,7 +388,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
     });
 
     try {
-      future.get(1, TimeUnit.SECONDS);
+      future.get(TIMEOUT, TimeUnit.SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

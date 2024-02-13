@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecordView;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
@@ -29,7 +30,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecord.class, query, offset,
+    PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecordView.class, query, offset,
       limit, null, "holdingsRecords", routingContext, okapiHeaders, vertxContext);
   }
 

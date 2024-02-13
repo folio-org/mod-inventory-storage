@@ -114,6 +114,6 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
       future.complete(handler.result());
     });
 
-    return future.get(10, TimeUnit.SECONDS);
+    return future.get(TIMEOUT, TimeUnit.SECONDS);
   }
 }

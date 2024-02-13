@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A holdings record",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecord",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "the unique ID of the holdings record; UUID",
+      "$ref": "../uuid.json"
+    },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
+    "sourceId": {
+      "description": "(A reference to) the source of a holdings record",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "the human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+    },
+    "holdingsTypeId": {
+      "type": "string",
+      "description": "unique ID for the type of this holdings record, a UUID",
+      "$ref": "../uuid.json"
+    },
+    "formerIds": {
+      "type": "array",
+      "description": "Previous ID(s) assigned to the holdings record",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "instanceId": {
+      "description": "Inventory instances identifier",
+      "type": "string",
+      "$ref": "../uuid.json"
+    },
+    "permanentLocationId": {
+      "type": "string",
+      "description": "The permanent shelving location in which an item resides.",
+      "$ref" : "../uuid.json"
+    },
+    "temporaryLocationId": {
+      "type": "string",
+      "description": "Temporary location is the temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
+      "$ref": "../uuid.json"
+    },
+    "effectiveLocationId": {
+      "type": "string",
+      "description": "Effective location is calculated by the system based on the values in the permanent and temporary locationId fields.",
+      "$ref": "../uuid.json"
+    },
+    "electronicAccess": {
+      "description": "List of electronic access items",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "electronicAccessItem.json"
+      }
+    },
+    "callNumberTypeId": {
+      "type": "string",
+      "description": "unique ID for the type of call number on a holdings record, a UUID",
+      "$ref": "../uuid.json"
+    },
+    "callNumberPrefix": {
+      "type": "string",
+      "description": "Prefix of the call number on the holding level."
+    },
+    "callNumber": {
+      "type": "string",
+      "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item."
+    },
+    "callNumberSuffix": {
+      "type": "string",
+      "description": "Suffix of the call number on the holding level."
+    },
+    "shelvingTitle": {
+      "type": "string",
+      "description": "Indicates the shelving form of title."
+    },
+    "acquisitionFormat": {
+      "type": "string",
+      "description": "Format of holdings record acquisition"
+    },
+    "acquisitionMethod": {
+      "type": "string",
+      "description": "Method of holdings record acquisition"
+    },
+    "receiptStatus": {
+      "type": "string",
+      "description": "Receipt status (e.g. pending, awaiting receipt, partially received, fully received, receipt not required, and cancelled)"
+    },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Notes about action, copy, binding etc.",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsNote.json"
+      }
+    },
+    "illPolicyId": {
+      "type": "string",
+      "description": "unique ID for an ILL policy, a UUID",
+      "$ref" : "../uuid.json"
+    },
+    "retentionPolicy": {
+      "type": "string",
+      "description": "Records information regarding how long we have agreed to keep something."
+    },
+    "digitizationPolicy": {
+      "description": "Records information regarding digitization aspects.",
+      "type": "string"
+    },
+    "holdingsStatements": {
+      "description": "Holdings record statements",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsStatement.json"
+      }
+    },
+    "holdingsStatementsForIndexes": {
+      "description": "Holdings record indexes statements",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsStatement.json"
+      }
+    },
+    "holdingsStatementsForSupplements": {
+      "description": "Holdings record supplements statements",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsStatement.json"
+      }
+    },
+    "copyNumber": {
+      "type": "string",
+      "description": "Item/Piece ID (usually barcode) for systems that do not use item records. Ability to designate the copy number if institution chooses to use copy numbers."
+    },
+    "numberOfItems": {
+      "type": "string",
+      "description": "Text (Number)"
+    },
+    "receivingHistory": {
+      "description": "Receiving history of holdings record",
+      "$ref": "holdingsReceivingHistory.json"
+    },
+    "discoverySuppress": {
+      "type": "boolean",
+      "description": "records the fact that the record should not be displayed in a discovery system"
+    },
+    "statisticalCodeIds": {
+      "type": "array",
+      "description": "List of statistical code IDs",
+      "items": {
+        "type": "string",
+        "$ref" : "../uuid.json"
+      },
+      "uniqueItems": true
+    },
+    "tags": {
+      "description": "arbitrary tags associated with this holding",
+      "id": "tags",
+      "type": "object",
+      "$ref": "../raml-util/schemas/tags.schema"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "instanceId",
+    "permanentLocationId"
+  ]
+}
+

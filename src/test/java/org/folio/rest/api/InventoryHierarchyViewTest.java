@@ -575,7 +575,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     getClient().post(inventoryHierarchyItemsAndHoldings(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("\nResponse from inventory instance ids view: " + response);
 
@@ -593,14 +593,14 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private void withFaultyViewFunction(Callable<Void> callable) throws Exception {
     String sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.get_items_and_holdings_view RENAME TO x";
     PostgresClient.getInstance(getVertx()).execute(sql)
-      .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+      .toCompletionStage().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
 
     try {
       callable.call();
     } finally {
       sql = "ALTER FUNCTION " + TENANT_ID + "_mod_inventory_storage.x RENAME TO get_items_and_holdings_view";
       PostgresClient.getInstance(getVertx()).execute(sql)
-        .toCompletionStage().toCompletableFuture().get(10, TimeUnit.SECONDS);
+        .toCompletionStage().toCompletableFuture().get(TIMEOUT, TimeUnit.SECONDS);
     }
   }
 
@@ -625,7 +625,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     getClient().get(inventoryHierarchyUpdatedInstanceIds("?" + queryParams), TENANT_ID, ResponseHandler.any(future));
 
-    final Response response = future.get(2, TimeUnit.SECONDS);
+    final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
     log.info("response from oai pmh updated instances view: {}", response);
 

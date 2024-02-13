@@ -607,7 +607,7 @@ public class ReferenceTablesTest extends TestBase {
     String url = baseUrl.toString() + "?limit=400&query="
       + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8);
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
-    return searchCompleted.get(10, TimeUnit.SECONDS);
+    return searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private void validateNumberOfReferenceRecords(String dataDescription, Response searchResponse, int min, int max) {
@@ -630,7 +630,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
       ResponseHandler.any(createCompleted)
     );
-    return createCompleted.get(10, TimeUnit.SECONDS);
+    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response getById(URL getByIdUrl) throws InterruptedException,
@@ -641,7 +641,7 @@ public class ReferenceTablesTest extends TestBase {
     getClient().get(getByIdUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response getByQuery(URL getByQueryUrl) throws InterruptedException,
@@ -651,7 +651,7 @@ public class ReferenceTablesTest extends TestBase {
     getClient().get(getByQueryUrl, TENANT_ID,
       ResponseHandler.any(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response deleteReferenceRecordById(URL entityUrl)
@@ -662,7 +662,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
       ResponseHandler.any(deleteCompleted)
     );
-    return deleteCompleted.get(10, TimeUnit.SECONDS);
+    return deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response updateRecord(URL entityUrl, JsonEntity referenceObject)
@@ -674,7 +674,7 @@ public class ReferenceTablesTest extends TestBase {
       TENANT_ID,
       ResponseHandler.any(updateCompleted)
     );
-    return updateCompleted.get(10, TimeUnit.SECONDS);
+    return updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private void testGetPutDeletePost(String path, String entityId, JsonEntity entity, String updateProperty)

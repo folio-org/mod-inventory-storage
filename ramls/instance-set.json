@@ -15,7 +15,7 @@
       "type": "array",
       "description": "Holdings records of the instance",
       "items": {
-        "$ref": "holdingsrecord.json"
+        "$ref": "holdings-storage/holdingsRecord.json"
       }
     },
     "items": {

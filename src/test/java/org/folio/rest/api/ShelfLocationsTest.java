@@ -118,7 +118,7 @@ public class ShelfLocationsTest extends TestBase {
     send(shelfLocationsStorageUrl("/" + id.toString()), HttpMethod.GET,
       null, SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
 }

@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
+import static org.folio.rest.support.AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -290,7 +291,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    Response response = createCompleted.get(10, TimeUnit.SECONDS);
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
     JsonArray errors = response.getJson().getJsonArray("errors");
@@ -358,7 +359,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
       ResponseHandler.jsonErrors(createCompleted));
 
-    JsonErrorResponse response = createCompleted.get(10, TimeUnit.SECONDS);
+    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
@@ -506,7 +507,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(holdingsStorageUrl(""), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
@@ -537,7 +538,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(holdingsStorageUrl("?limit=-3"), TENANT_ID,
       ResponseHandler.text(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
@@ -559,7 +560,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(holdingsStorageUrl("?offset=-3"), TENANT_ID,
       ResponseHandler.text(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
@@ -581,7 +582,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
       TENANT_ID, ResponseHandler.text(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
@@ -631,8 +632,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(holdingsStorageUrl("") + "?limit=3&offset=3", TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
-    Response firstPageResponse = firstPageCompleted.get(10, TimeUnit.SECONDS);
-    Response secondPageResponse = secondPageCompleted.get(10, TimeUnit.SECONDS);
+    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
@@ -756,7 +757,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().post(holdingsStorageUrl(""), request, null, ResponseHandler.any(postCompleted));
 
-    Response response = postCompleted.get(10, TimeUnit.SECONDS);
+    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -781,7 +782,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().get(getHoldingUrl, null, ResponseHandler.any(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -795,7 +796,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().get(holdingsStorageUrl(""), null, ResponseHandler.any(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), is("Unable to process request Tenant must be set"));
@@ -1466,7 +1467,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().post(holdingsStorageUrl(""), invalidHolding, TENANT_ID, ResponseHandler.json(createCompleted));
 
-    final Response response = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
   }
@@ -1493,7 +1494,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().post(holdingsStorageUrl(""), invalidHolding, TENANT_ID, ResponseHandler.json(createCompleted));
 
-    final Response response = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
   }
@@ -2197,7 +2198,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
 
-    assertThat(duplicateResponse.getStatusCode(), is(422));
+    assertThat(duplicateResponse.getStatusCode(), is(UNPROCESSABLE_ENTITY));
 
     final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
 
@@ -2206,7 +2207,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.getErrors().size(), is(1));
     assertThat(errors.getErrors().get(0), notNullValue());
     assertThat(errors.getErrors().get(0).getMessage(),
-      containsString("value already exists in table holdings_record: ho00000000001"));
+      containsString("HRID value already exists in table holdings_record: ho00000000001"));
     assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
     assertThat(errors.getErrors().get(0).getParameters().size(), is(1));
     assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
@@ -2246,7 +2247,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().post(holdingsStorageUrl(""), badHoldings, TENANT_ID, text(createCompleted));
 
-    final Response response = createCompleted.get(10, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
     assertThat(response.getBody(), isMaximumSequenceValueError("hrid_holdings_seq"));
@@ -2280,16 +2281,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(holdingsStorageUrl(""), holdingsRequest, TENANT_ID,
       json(createCompleted));
 
-    final Response response = createCompleted.get(5, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(422));
 
-    JsonArray errors = response.getJson().getJsonArray("errors");
-    assertThat(errors.size(), is(1));
+    final Errors errors = response.getJson().mapTo(Errors.class);
 
-    JsonObject firstError = errors.getJsonObject(0);
-    assertThat(firstError.getString("message"), is(
-      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table holdings_record: ho00000001000"));
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+      is("HRID value already exists in table holdings_record: ho00000001000"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("ho00000001000"));
   }
 
   @Test
@@ -2321,7 +2329,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
       text(updateCompleted));
 
-    final Response response = updateCompleted.get(10, TimeUnit.SECONDS);
+    final Response response = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
@@ -2359,7 +2367,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(holdingsStorageUrl(String.format("/%s", holdingsId)), holdings, TENANT_ID,
       text(updateCompleted));
 
-    final Response response = updateCompleted.get(10, TimeUnit.SECONDS);
+    final Response response = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(response.getBody(),
@@ -2509,10 +2517,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final String duplicateHrid = "ho00000000001";
     holdingsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
-    assertThat(postSynchronousBatch(holdingsArray), allOf(
-      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
-      anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate key")),
-      errorParametersValueIs(duplicateHrid)));
+    Response response = postSynchronousBatch(holdingsArray);
+    assertThat(response.getStatusCode(), is(422));
+
+    final Errors errors = response.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    assertThat(errors.getErrors().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getMessage(),
+      is("HRID value already exists in table holdings_record: ho00000000001"));
+    assertThat(errors.getErrors().get(0).getParameters(), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0), notNullValue());
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(),
+      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(),
+      is("ho00000000001"));
 
     for (int i = 0; i < holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
@@ -3203,7 +3223,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(url, entity, TENANT_ID,
       ResponseHandler.json(createCompleted));
 
-    return createCompleted.get(10, TimeUnit.SECONDS);
+    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response get(URL url) throws InterruptedException, ExecutionException, TimeoutException {
@@ -3212,7 +3232,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(url, TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    return getCompleted.get(10, TimeUnit.SECONDS);
+    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private List<UUID> searchByCallNumberEyeReadable(String searchTerm) {
@@ -3231,7 +3251,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(url, entity, TENANT_ID,
       ResponseHandler.empty(putCompleted));
 
-    return putCompleted.get(10, TimeUnit.SECONDS);
+    return putCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   private Response update(JsonObject holding) {

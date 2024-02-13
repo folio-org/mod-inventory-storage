@@ -699,7 +699,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(instancesStorageUrl(format("?query=%s", query)), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(10, TimeUnit.SECONDS);
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     JsonObject responseBody = response.getJson();
 
@@ -2000,8 +2000,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text)) value already "
-        + "exists in table instance: in00000000001"));
+      is("HRID value already exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2113,12 +2112,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageUrl(""), instanceRequest, TENANT_ID,
       text(createCompleted));
 
-    final Response response = createCompleted.get(5, TimeUnit.SECONDS);
+    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
 
     assertThat(response.getBody(), is(
-      "lower(f_unaccent(jsonb ->> 'hrid'::text)) value already exists in table instance: in00000001000"));
+      "HRID value already exists in table instance: in00000001000"));
   }
 
   @Test

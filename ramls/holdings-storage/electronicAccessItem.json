@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Electronic access item",
+  "javaType": "org.folio.rest.jaxrs.model.ElectronicAccessItem",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": "string",
+      "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+    },
+    "linkText": {
+      "type": "string",
+      "description": "the value of the MARC tag field 856 2nd indicator, where the values are: no information provided, resource, version of resource, related resource, no display constant generated"
+    },
+    "materialsSpecification": {
+      "type": "string",
+      "description": "materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+    },
+    "publicNote": {
+      "type": "string",
+      "description": "URL public note to be displayed in the discovery"
+    },
+    "relationshipId": {
+      "type": "string",
+      "description": "relationship between the electronic resource at the location identified and the item described in the record as a whole"
+    }
+  },
+  "required": [
+    "uri"
+  ]
+}
+
