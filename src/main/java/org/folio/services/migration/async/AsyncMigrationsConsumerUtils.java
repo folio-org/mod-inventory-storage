@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -59,9 +58,9 @@ public final class AsyncMigrationsConsumerUtils {
               .map(javaMigration -> javaMigration.runMigrationForIds(ids)
                 .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
                 .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
-              .collect(Collectors.toList());
+              .toList();
             return CompositeFuture.all(new ArrayList<>(startedMigrations));
-          }).collect(Collectors.toList());
+          }).toList();
 
         CompositeFuture.all(new ArrayList<>(migrations))
           .onSuccess(composite -> consumer.commit())

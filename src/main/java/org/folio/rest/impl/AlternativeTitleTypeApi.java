@@ -6,6 +6,8 @@
 
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -34,7 +36,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
 
   @Validate
   @Override
-  public void getAlternativeTitleTypes(String query, int offset, int limit, String lang,
+  public void getAlternativeTitleTypes(String query, String totalRecords, int offset, int limit,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(REFERENCE_TABLE, AlternativeTitleType.class, AlternativeTitleTypes.class, query, offset, limit,
@@ -43,7 +45,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
 
   @Validate
   @Override
-  public void postAlternativeTitleTypes(String lang, AlternativeTitleType entity, Map<String, String> okapiHeaders,
+  public void postAlternativeTitleTypes(AlternativeTitleType entity, Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -66,7 +68,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -74,18 +76,18 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getAlternativeTitleTypesById(String id,  Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, AlternativeTitleType.class, id,
       okapiHeaders, vertxContext, GetAlternativeTitleTypesByIdResponse.class, asyncResultHandler);
@@ -93,7 +95,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
 
   @Validate
   @Override
-  public void deleteAlternativeTitleTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteAlternativeTitleTypesById(String id,  Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -105,7 +107,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -115,7 +117,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
                   .respond404WithTextPlain(msg)));
@@ -124,18 +126,18 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               asyncResultHandler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putAlternativeTitleTypesById(String id, String lang, AlternativeTitleType entity,
+  public void putAlternativeTitleTypesById(String id,  AlternativeTitleType entity,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -150,7 +152,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               if (reply.succeeded()) {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
-                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
                     .respond204()));
@@ -158,7 +160,7 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -166,31 +168,31 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e,  Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostAlternativeTitleTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e,  Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteAlternativeTitleTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e,  Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

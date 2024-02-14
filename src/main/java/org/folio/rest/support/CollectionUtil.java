@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.stream.Collectors;
 import org.folio.dbschema.ObjectMapperTool;
 
 public final class CollectionUtil {
@@ -22,7 +21,7 @@ public final class CollectionUtil {
 
     return collection.stream()
       .map(r -> clone(r, type))
-      .collect(Collectors.toList());
+      .toList();
   }
 
   public static <T> T getFirst(Collection<T> collection) {

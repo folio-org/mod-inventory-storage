@@ -6,7 +6,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PgUtil;
@@ -45,7 +44,7 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
     var items = batch.stream()
       .map(row -> rowToClass(row, Item.class))
       .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
-      .collect(Collectors.toList());
+      .toList();
 
     return itemRepository.updateBatch(items, connection).map(notUsed -> items.size());
   }

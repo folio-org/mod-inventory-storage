@@ -24,11 +24,10 @@ public class ItemStorageApi implements ItemStorage {
 
   @Validate
   @Override
-  public void getItemStorageItems(
-    int offset, int limit, String query, String lang,
-    RoutingContext routingContext, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getItemStorageItems(String totalRecords, int offset, int limit, String query,
+                                  RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                  Handler<AsyncResult<Response>> asyncResultHandler,
+                                  Context vertxContext) {
 
     PgUtil.streamGet(ITEM_TABLE, Item.class, query, offset, limit, null, "items",
       routingContext, okapiHeaders, vertxContext);
@@ -37,7 +36,7 @@ public class ItemStorageApi implements ItemStorage {
   @Validate
   @Override
   public void postItemStorageItems(
-    String lang, Item entity,
+    Item entity,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -61,7 +60,7 @@ public class ItemStorageApi implements ItemStorage {
   @Validate
   @Override
   public void getItemStorageItemsByItemId(
-    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+    String itemId, java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -72,7 +71,7 @@ public class ItemStorageApi implements ItemStorage {
   @Validate
   @Override
   public void deleteItemStorageItemsByItemId(
-    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+    String itemId, java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -84,7 +83,7 @@ public class ItemStorageApi implements ItemStorage {
   @Validate
   @Override
   public void putItemStorageItemsByItemId(
-    String itemId, String lang, Item entity, java.util.Map<String, String> okapiHeaders,
+    String itemId, Item entity, java.util.Map<String, String> okapiHeaders,
     io.vertx.core.Handler<io.vertx.core.AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 

@@ -105,8 +105,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String TAG_VALUE = "test-tag";
   private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
-  private static final String CONSORTIUM_MEMBER_TENANT = "consortium_member_tenant";
-  private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "no_permissions_tenant";
+  private static final String CONSORTIUM_MEMBER_TENANT = "consortium";
+  private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "nopermissions";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
@@ -565,28 +565,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
       is("'offset' parameter is incorrect. parameter value {-3} is not valid: must be greater than or equal to 0"));
-  }
-
-  @Test
-  public void cannotDeleteHoldingWhenLangParameterIsTooLong() throws Exception {
-    UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(instanceId));
-
-    UUID holdingId = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
-      TENANT_ID, ResponseHandler.text(getCompleted));
-
-    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(),
-      containsString("'lang' parameter is incorrect."));
   }
 
   @Test
@@ -2842,7 +2820,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(notSuppressedHoldings.size(), is(2));
     assertThat(notSuppressedHoldings.stream()
         .map(IndividualResource::getId)
-        .collect(Collectors.toList()),
+        .toList(),
       containsInAnyOrder(notSuppressedHolding.getId(), notSuppressedHoldingDefault.getId()));
   }
 
@@ -3242,7 +3220,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         searchTerm)
       .stream()
       .map(IndividualResource::getId)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private Response update(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
@@ -3267,7 +3245,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     return json.getJsonObject("tags").getJsonArray("tagList")
       .stream()
       .map(obj -> (String) obj)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private void mockUserTenantsForConsortiumMember() {

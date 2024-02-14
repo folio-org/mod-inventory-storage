@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -57,7 +56,7 @@ public final class InventoryHierarchyResponseMatchers {
         }
         final List<Object> actualValues = items.stream()
           .map(jsonPointer::queryJson)
-          .collect(Collectors.toList());
+          .toList();
 
         return Arrays.asList(expectedValue)
           .containsAll(actualValues);

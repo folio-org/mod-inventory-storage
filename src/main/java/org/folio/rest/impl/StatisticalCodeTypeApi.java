@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 
 import io.vertx.core.AsyncResult;
@@ -36,7 +37,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
 
   @Validate
   @Override
-  public void getStatisticalCodeTypes(String query, int offset, int limit, String lang,
+  public void getStatisticalCodeTypes(String query, String totalRecords, int offset, int limit,
                                       Map<String, String> okapiHeaders,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -64,12 +65,12 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodeTypesResponse
                 .respond500WithTextPlain(MESSAGES.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
+        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -81,7 +82,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
 
   @Validate
   @Override
-  public void postStatisticalCodeTypes(String lang, StatisticalCodeType entity, Map<String, String> okapiHeaders,
+  public void postStatisticalCodeTypes(StatisticalCodeType entity, Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -111,26 +112,27 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                         "name", entity.getName(), "Statistical Code Type exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodeTypesResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void deleteStatisticalCodeTypes(String lang, Map<String, String> okapiHeaders,
+  public void deleteStatisticalCodeTypes(Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     try {
@@ -158,7 +160,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
 
   @Validate
   @Override
-  public void getStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang,
+  public void getStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId,
                                                              Map<String, String> okapiHeaders,
                                                              Handler<AsyncResult<Response>> asyncResultHandler,
                                                              Context vertxContext) {
@@ -168,7 +170,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
 
   @Validate
   @Override
-  public void deleteStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang,
+  public void deleteStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId,
                                                                 Map<String, String> okapiHeaders,
                                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                                 Context vertxContext) {
@@ -184,37 +186,40 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                     io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
                       .respond204()));
                 } else {
-                  LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
+                  LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                    1, reply.result().rowCount()));
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
                       .respond404WithTextPlain(
-                        MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
+                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                          1, reply.result().rowCount()))));
                 }
               } else {
                 LOG.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(
           io.vertx.core.Future.succeededFuture(DeleteStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void putStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId, String lang,
+  public void putStatisticalCodeTypesByStatisticalCodeTypeId(String statisticalCodeTypeId,
                                                              StatisticalCodeType entity,
                                                              Map<String, String> okapiHeaders,
                                                              Handler<AsyncResult<Response>> asyncResultHandler,
@@ -232,7 +237,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
@@ -242,20 +247,21 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                 LOG.error(reply.cause().getMessage());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(
           io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }

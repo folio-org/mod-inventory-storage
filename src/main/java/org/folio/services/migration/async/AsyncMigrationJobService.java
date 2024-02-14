@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigration;
@@ -172,13 +171,13 @@ public final class AsyncMigrationJobService {
   private List<AsyncMigrationJobRunner> getMigrationJobRunnersByName(List<String> migrationNames) {
     return MIGRATION_JOB_RUNNERS.stream()
       .filter(runners -> migrationNames.contains(runners.getMigrationName()))
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private boolean isJobAvailable(AsyncMigrationJobRequest jobRequest) {
     var availableMigrations = getAvailableMigrations().getAsyncMigrations()
-      .stream().flatMap(v -> Stream.of(v.getMigrations())).collect(Collectors.toList())
-      .stream().flatMap(List::stream).collect(Collectors.toList());
+      .stream().flatMap(v -> Stream.of(v.getMigrations())).toList()
+      .stream().flatMap(List::stream).toList();
     return availableMigrations.containsAll(jobRequest.getMigrations());
   }
 
@@ -188,7 +187,7 @@ public final class AsyncMigrationJobService {
     jobRunners.forEach(asyncMigrationJobRunner -> affectedEntities.addAll(asyncMigrationJobRunner
       .getAffectedEntities()
       .stream().map(Enum::name)
-      .collect(Collectors.toList())));
+      .toList()));
     return new AsyncMigrationJob()
       .withJobStatus(AsyncMigrationJob.JobStatus.IN_PROGRESS)
       .withMigrations(request.getMigrations())

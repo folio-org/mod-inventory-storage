@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -36,7 +38,8 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
 
   @Validate
   @Override
-  public void getItemNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getItemNoteTypes(String query, String totalRecords, int offset, int limit,
+                               Map<String, String> okapiHeaders,
                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -62,12 +65,12 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               log.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetItemNoteTypesResponse
                 .respond500WithTextPlain(messages.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -79,7 +82,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
 
   @Validate
   @Override
-  public void postItemNoteTypes(String lang, ItemNoteType entity, Map<String, String> okapiHeaders,
+  public void postItemNoteTypes(ItemNoteType entity, Map<String, String> okapiHeaders,
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -102,7 +105,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -110,18 +113,18 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getItemNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getItemNoteTypesById(String id, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, ItemNoteType.class, id,
       okapiHeaders, vertxContext, GetItemNoteTypesByIdResponse.class, asyncResultHandler);
@@ -129,7 +132,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
 
   @Validate
   @Override
-  public void deleteItemNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteItemNoteTypesById(String id, Map<String, String> okapiHeaders,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -141,7 +144,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -151,7 +154,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteItemNoteTypesByIdResponse
                   .respond404WithTextPlain(msg)));
@@ -160,18 +163,18 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               asyncResultHandler.handle(Future.succeededFuture(DeleteItemNoteTypesByIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putItemNoteTypesById(String id, String lang, ItemNoteType entity, Map<String, String> okapiHeaders,
+  public void putItemNoteTypesById(String id, ItemNoteType entity, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -185,7 +188,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               if (reply.succeeded()) {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemNoteTypesByIdResponse
-                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutItemNoteTypesByIdResponse
                     .respond204()));
@@ -193,7 +196,7 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -201,11 +204,11 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -215,22 +218,22 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostItemNoteTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteItemNoteTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutItemNoteTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

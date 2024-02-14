@@ -287,7 +287,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     Row result = runSql(
       "SELECT jsonb, effectiveLocationId "
-        + "FROM test_tenant_mod_inventory_storage.item "
+        + "FROM test_mod_inventory_storage.item "
         + "WHERE id='" + item.getId() + "'");
     JsonObject jsonb = (JsonObject) result.getValue(0);
     String effectiveLocationId = result.getUUID(1).toString();

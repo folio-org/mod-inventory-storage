@@ -17,7 +17,7 @@ public class InstanceSetApi implements InventoryViewInstanceSet {
   public void getInventoryViewInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
                                           boolean precedingTitles, boolean succeedingTitles,
                                           boolean superInstanceRelationships, boolean subInstanceRelationships,
-                                          int offset, int limit, String query, String lang,
+                                          int offset, int limit, String query,
                                           Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 

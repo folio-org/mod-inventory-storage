@@ -22,8 +22,8 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
 
   @Validate
   @Override
-  public void getServicePointsUsers(String query, int offset, int limit,
-                                    String lang, Map<String, String> okapiHeaders,
+  public void getServicePointsUsers(String query, String totalRecords, int offset, int limit,
+                                    Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.get(SERVICE_POINT_USER_TABLE, ServicePointsUser.class, ServicePointsUsers.class,
@@ -33,7 +33,7 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
 
   @Validate
   @Override
-  public void postServicePointsUsers(String lang, ServicePointsUser entity,
+  public void postServicePointsUsers(ServicePointsUser entity,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -43,7 +43,7 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
 
   @Validate
   @Override
-  public void deleteServicePointsUsers(String lang, Map<String, String> okapiHeaders,
+  public void deleteServicePointsUsers(Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     final PostgresClient pgClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
@@ -63,7 +63,7 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
   @Validate
   @Override
   public void getServicePointsUsersByServicePointsUserId(String servicePointsUserId,
-                                                         String lang, Map<String, String> okapiHeaders,
+                                                         Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
 
@@ -75,7 +75,7 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
   @Validate
   @Override
   public void deleteServicePointsUsersByServicePointsUserId(String servicePointsUserId,
-                                                            String lang, Map<String, String> okapiHeaders,
+                                                             Map<String, String> okapiHeaders,
                                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                                             Context vertxContext) {
 
@@ -86,7 +86,7 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
   @Validate
   @Override
   public void putServicePointsUsersByServicePointsUserId(String servicePointsUserId,
-                                                         String lang, ServicePointsUser entity,
+                                                          ServicePointsUser entity,
                                                          Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {

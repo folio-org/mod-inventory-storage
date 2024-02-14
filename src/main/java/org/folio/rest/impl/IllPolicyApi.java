@@ -6,6 +6,8 @@
 
 package org.folio.rest.impl;
 
+import static org.folio.okapi.common.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -42,7 +44,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
 
   @Validate
   @Override
-  public void getIllPolicies(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getIllPolicies(String query, String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -69,12 +71,12 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               log.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetIllPoliciesResponse
                 .respond500WithTextPlain(messages.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  "en", MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage("en", MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -86,7 +88,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
 
   @Validate
   @Override
-  public void postIllPolicies(String lang, IllPolicy entity, Map<String, String> okapiHeaders,
+  public void postIllPolicies(IllPolicy entity, Map<String, String> okapiHeaders,
                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -109,7 +111,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -117,18 +119,18 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getIllPoliciesById(String id, Map<String, String> okapiHeaders,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, IllPolicy.class, id,
       okapiHeaders, vertxContext, GetIllPoliciesByIdResponse.class, asyncResultHandler);
@@ -136,7 +138,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
 
   @Validate
   @Override
-  public void deleteIllPoliciesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteIllPoliciesById(String id, Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -148,7 +150,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -158,7 +160,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
                   .respond404WithTextPlain(msg)));
@@ -167,18 +169,18 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               asyncResultHandler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putIllPoliciesById(String id, String lang, IllPolicy entity, Map<String, String> okapiHeaders,
+  public void putIllPoliciesById(String id, IllPolicy entity, Map<String, String> okapiHeaders,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -192,7 +194,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               if (reply.succeeded()) {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIllPoliciesByIdResponse
-                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutIllPoliciesByIdResponse
                     .respond204()));
@@ -200,7 +202,7 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -208,11 +210,11 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -222,22 +224,22 @@ public class IllPolicyApi implements org.folio.rest.jaxrs.resource.IllPolicies {
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostIllPoliciesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteIllPoliciesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutIllPoliciesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

@@ -12,7 +12,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
@@ -90,6 +89,6 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   private List<IndividualResource> create201Items() {
     return IntStream.range(0, 201)
       .mapToObj(this::createItem)
-      .collect(Collectors.toList());
+      .toList();
   }
 }

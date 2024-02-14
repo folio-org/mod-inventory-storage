@@ -32,7 +32,7 @@ public class ItemEffectiveValuesService {
     return getHoldingsRecordsForItems(items)
       .map(holdingsRecordMap -> items.stream()
         .map(item -> populateEffectiveValues(item, holdingsRecordMap.get(item.getHoldingsRecordId())))
-        .collect(Collectors.toList()));
+        .toList());
   }
 
   public Future<Item> populateEffectiveValues(Item item) {

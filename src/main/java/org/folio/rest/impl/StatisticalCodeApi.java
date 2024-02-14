@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -26,7 +28,6 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
-
 public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.StatisticalCodes {
   public static final String REFERENCE_TABLE = "statistical_code";
 
@@ -36,7 +37,8 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
 
   @Validate
   @Override
-  public void getStatisticalCodes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getStatisticalCodes(String query, String totalRecords, int offset, int limit,
+                                  Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -62,12 +64,12 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesResponse
                 .respond500WithTextPlain(MESSAGES.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
+        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -80,7 +82,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
 
   @Validate
   @Override
-  public void postStatisticalCodes(String lang, StatisticalCode entity, Map<String, String> okapiHeaders,
+  public void postStatisticalCodes(StatisticalCode entity, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -103,7 +105,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 LOG.info(msg);
@@ -111,18 +113,18 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getStatisticalCodesByStatisticalCodeId(String id, String lang, Map<String, String> okapiHeaders,
+  public void getStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, StatisticalCode.class, id, okapiHeaders, vertxContext,
@@ -131,7 +133,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
 
   @Validate
   @Override
-  public void deleteStatisticalCodesByStatisticalCodeId(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
                                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                                         Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -144,7 +146,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 LOG.info(msg);
@@ -154,7 +156,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 LOG.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
                   .respond404WithTextPlain(msg)));
@@ -163,18 +165,18 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               asyncResultHandler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putStatisticalCodesByStatisticalCodeId(String id, String lang, StatisticalCode entity,
+  public void putStatisticalCodesByStatisticalCodeId(String id, StatisticalCode entity,
                                                      Map<String, String> okapiHeaders,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
@@ -191,7 +193,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
@@ -200,7 +202,7 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 LOG.info(msg);
@@ -208,11 +210,11 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -222,22 +224,22 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     LOG.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostStatisticalCodesResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     LOG.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     LOG.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

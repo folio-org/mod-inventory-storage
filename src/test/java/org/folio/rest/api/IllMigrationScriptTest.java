@@ -17,9 +17,7 @@ public class IllMigrationScriptTest extends MigrationTestBase {
   @Test
   public void canMigrateIllPolicies() throws Exception {
     Map<String, JsonObject> initialIllPolicies = new HashMap<String, JsonObject>();
-    illPoliciesClient.getAll().forEach(policy -> {
-      initialIllPolicies.put(policy.getString("id"), policy);
-    });
+    illPoliciesClient.getAll().forEach(policy -> initialIllPolicies.put(policy.getString("id"), policy));
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 

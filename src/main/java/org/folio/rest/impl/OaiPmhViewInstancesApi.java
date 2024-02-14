@@ -20,7 +20,7 @@ public class OaiPmhViewInstancesApi extends AbstractInstanceRecordsApi implement
   @Validate
   @Override
   public void getOaiPmhViewInstances(String startDate, String endDate, boolean deletedRecordSupport,
-                                     boolean skipSuppressedFromDiscoveryRecords, String lang,
+                                     boolean skipSuppressedFromDiscoveryRecords,
                                      RoutingContext routingContext, Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -33,7 +33,7 @@ public class OaiPmhViewInstancesApi extends AbstractInstanceRecordsApi implement
   @Validate
   @Override
   public void getOaiPmhViewUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport,
-                                              boolean skipSuppressedFromDiscoveryRecords, String lang,
+                                              boolean skipSuppressedFromDiscoveryRecords,
                                               RoutingContext routingContext,
                                               Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {

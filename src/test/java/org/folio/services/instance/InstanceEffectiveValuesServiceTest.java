@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Publication;
@@ -155,7 +154,7 @@ public class InstanceEffectiveValuesServiceTest {
   private Instance createInstance(String... datesOfPublications) {
     var publications = Stream.of(datesOfPublications)
       .map(dateOfPublication -> new Publication().withDateOfPublication(dateOfPublication))
-      .collect(Collectors.toList());
+      .toList();
 
     return new Instance().withPublication(publications).withId(randomUUID().toString());
   }

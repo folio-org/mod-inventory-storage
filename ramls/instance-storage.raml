@@ -16,7 +16,6 @@ types:
   instanceRelationships: !include instancerelationships.json
 
 traits:
-  language: !include raml-util/traits/language.raml
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
 
@@ -102,7 +101,6 @@ resourceTypes:
           the storage layer only knows how to insert or retrieve instance records by ID.
       /source-record:
         delete:
-          is: [language]
           responses:
             204:
               description: "Source record deleted"
@@ -126,14 +124,12 @@ resourceTypes:
             Note: When the Inventory instance record is deleted, its source record in mod-inventory-storage is automatically deleted. If the Inventory instance record is linked to a corresponding record in mod-source-record-storage, that SRS record is NOT automatically deleted.
         /marc-json:
           displayName: MARC source record as JSON
-          is: [language]
           type:
             collection-item:
               exampleItem: !include examples/marc.json
               schema: marcJson
         /mods:
           displayName: MODS source record - not implemented yet
-          is: [language]
           get:
             responses:
               500:

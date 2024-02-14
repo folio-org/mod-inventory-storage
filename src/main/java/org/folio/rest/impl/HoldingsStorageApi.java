@@ -24,11 +24,10 @@ public class HoldingsStorageApi implements HoldingsStorage {
 
   @Validate
   @Override
-  public void getHoldingsStorageHoldings(
-    int offset, int limit, String query, String lang,
-    RoutingContext routingContext, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getHoldingsStorageHoldings(String totalRecords, int offset, int limit, String query,
+                                         RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                         Handler<AsyncResult<Response>> asyncResultHandler,
+                                         Context vertxContext) {
 
     PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecordView.class, query, offset,
       limit, null, "holdingsRecords", routingContext, okapiHeaders, vertxContext);
@@ -36,7 +35,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
 
   @Validate
   @Override
-  public void postHoldingsStorageHoldings(String lang,
+  public void postHoldingsStorageHoldings(
                                           HoldingsRecord entity,
                                           RoutingContext routingContext, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
@@ -63,7 +62,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
   @Validate
   @Override
   public void getHoldingsStorageHoldingsByHoldingsRecordId(
-    String holdingsRecordId, String lang,
+    String holdingsRecordId,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -76,7 +75,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
   @Validate
   @Override
   public void deleteHoldingsStorageHoldingsByHoldingsRecordId(
-    String holdingsRecordId, String lang,
+    String holdingsRecordId,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -89,7 +88,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
   @Validate
   @Override
   public void putHoldingsStorageHoldingsByHoldingsRecordId(
-    String holdingsRecordId, String lang,
+    String holdingsRecordId,
     HoldingsRecord entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,

@@ -7,6 +7,7 @@
 package org.folio.rest.impl;
 
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -37,7 +38,8 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
 
   @Validate
   @Override
-  public void getCallNumberTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getCallNumberTypes(String query, String totalRecords, int offset, int limit,
+                                 Map<String, String> okapiHeaders,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(REFERENCE_TABLE, CallNumberType.class, CallNumberTypes.class, query, offset, limit,
       okapiHeaders, vertxContext, GetCallNumberTypesResponse.class, asyncResultHandler);
@@ -45,7 +47,7 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
 
   @Validate
   @Override
-  public void postCallNumberTypes(String lang, CallNumberType entity, Map<String, String> okapiHeaders,
+  public void postCallNumberTypes(CallNumberType entity, Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.post(REFERENCE_TABLE, entity, okapiHeaders, vertxContext, PostCallNumberTypesResponse.class,
       asyncResultHandler);
@@ -53,7 +55,7 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
 
   @Validate
   @Override
-  public void getCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getCallNumberTypesById(String id, Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, CallNumberType.class, id,
       okapiHeaders, vertxContext, GetCallNumberTypesByIdResponse.class, asyncResultHandler);
@@ -61,7 +63,7 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
 
   @Validate
   @Override
-  public void deleteCallNumberTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteCallNumberTypesById(String id, Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -71,14 +73,13 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
         .onFailure(handleFailure(asyncResultHandler))
         .onSuccess(event -> asyncResultHandler.handle(Future.succeededFuture(event)));
     } catch (Exception e) {
-      internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+      internalServerErrorDuringDelete(e, asyncResultHandler);
     }
   }
 
   @Validate
   @Override
   public void putCallNumberTypesById(String id,
-                                     String lang,
                                      CallNumberType entity,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler,
@@ -95,7 +96,7 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
         .onFailure(handleFailure(asyncResultHandler))
         .onSuccess(event -> asyncResultHandler.handle(Future.succeededFuture(event)));
     } catch (Exception e) {
-      internalServerErrorDuringPut(e, lang, asyncResultHandler);
+      internalServerErrorDuringPut(e, asyncResultHandler);
     }
   }
 
@@ -115,15 +116,15 @@ public class CallNumberTypeApi implements org.folio.rest.jaxrs.resource.CallNumb
     return SYSTEM_CALL_NUMBER_TYPE_SOURCE.equals(callNumberType.getSource());
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteCallNumberTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutCallNumberTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 }

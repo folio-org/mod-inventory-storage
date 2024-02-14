@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 
 import io.vertx.core.AsyncResult;
@@ -37,7 +38,8 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
 
   @Validate
   @Override
-  public void getInstanceStatuses(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getInstanceStatuses(String query, String totalRecords, int offset, int limit,
+                                  Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -64,12 +66,12 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceStatusesResponse
                 .respond500WithTextPlain(MESSAGES.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
+        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -81,7 +83,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
 
   @Validate
   @Override
-  public void postInstanceStatuses(String lang, InstanceStatus entity, Map<String, String> okapiHeaders,
+  public void postInstanceStatuses(InstanceStatus entity, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -111,26 +113,27 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                         "name", entity.getName(), "Instance status exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostInstanceStatusesResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void deleteInstanceStatuses(String lang, Map<String, String> okapiHeaders,
+  public void deleteInstanceStatuses(Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
 
@@ -159,7 +162,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
 
   @Validate
   @Override
-  public void getInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang,
+  public void getInstanceStatusesByInstanceStatusId(String instanceStatusId,
                                                     Map<String, String> okapiHeaders,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
@@ -169,7 +172,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
 
   @Validate
   @Override
-  public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang,
+  public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId,
                                                        Map<String, String> okapiHeaders,
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
@@ -185,36 +188,39 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                     io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
                       .respond204()));
                 } else {
-                  LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
+                  LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                    1, reply.result().rowCount()));
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
                       .respond404WithTextPlain(
-                        MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
+                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                          1, reply.result().rowCount()))));
                 }
               } else {
                 LOG.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
+                      MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteInstanceStatusesByInstanceStatusIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, String lang, InstanceStatus entity,
+  public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, InstanceStatus entity,
                                                     Map<String, String> okapiHeaders,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
@@ -231,7 +237,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
@@ -241,19 +247,20 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                 LOG.error(reply.cause().getMessage());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
+                      MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceStatusesByInstanceStatusIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }

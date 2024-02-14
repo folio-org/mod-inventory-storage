@@ -44,7 +44,7 @@ public class PublicationPeriodMigrationService extends AsyncBaseMigrationService
     var instances = batch.stream()
       .map(row -> rowToClass(row, Instance.class))
       .peek(valuesService::populatePublicationPeriod)
-      .collect(Collectors.toList());
+      .toList();
     return instanceRepository.updateBatch(instances, connection)
       .map(notUsed -> instances.size());
   }
