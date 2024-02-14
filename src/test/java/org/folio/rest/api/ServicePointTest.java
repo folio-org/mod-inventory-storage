@@ -23,7 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -775,7 +774,7 @@ public class ServicePointTest extends TestBase {
     return getCompleted.get(TIMEOUT, TimeUnit.SECONDS).getJson()
       .getJsonArray("servicepoints").stream()
       .map(obj -> (JsonObject) obj)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private Response getById(UUID id)

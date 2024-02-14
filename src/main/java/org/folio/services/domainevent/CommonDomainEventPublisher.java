@@ -1,6 +1,6 @@
 package org.folio.services.domainevent;
 
-import static io.vertx.core.CompositeFuture.all;
+import static io.vertx.core.Future.all;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.LongFunction;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -124,7 +123,7 @@ public class CommonDomainEventPublisher<T> {
 
     return all(updatedRecords.stream()
       .map(triple -> publishRecordUpdated(triple.getLeft(), triple.getMiddle(), triple.getRight()))
-      .collect(Collectors.toList()))
+      .toList())
       .map(notUsed -> null);
   }
 
@@ -141,7 +140,7 @@ public class CommonDomainEventPublisher<T> {
 
     return all(records.stream()
       .map(pair -> publishRecordCreated(pair.getKey(), pair.getValue()))
-      .collect(Collectors.toList()))
+      .toList())
       .map(notUsed -> null);
   }
 

@@ -45,7 +45,7 @@ public class SubjectSeriesMigrationService extends AsyncBaseMigrationService {
     var instances = batch.stream()
       .map(row -> row.getJsonObject("jsonb"))
       .map(json -> json.mapTo(Instance.class))
-      .collect(Collectors.toList());
+      .toList();
     return instanceRepository.updateBatch(instances, connection)
       .map(notUsed -> instances.size());
   }

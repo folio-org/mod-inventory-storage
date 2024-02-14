@@ -308,15 +308,11 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("startDate", "invalidDate");
     // then
-    requestOaiPmhView(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400)));
 
     // The same call using newly added API
     // then
-    getOiaPmhViewInstances(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
   }
 
   /**
@@ -331,14 +327,10 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put("endDate", "invalidDate");
     // then
-    requestOaiPmhView(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400)));
 
     // The same call using newly added API
-    getOiaPmhViewInstances(params, response -> {
-      assertThat(response.getStatusCode(), is(400));
-    });
+    getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
   }
 
   void clearAuditTables() {
@@ -358,9 +350,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
   private List<JsonObject> getOiaPmhViewInstances(Map<String, String> queryParams)
     throws InterruptedException, ExecutionException, TimeoutException {
-    return getOiaPmhViewInstances(queryParams, response -> {
-      assertThat(response.getStatusCode(), is(200));
-    });
+    return getOiaPmhViewInstances(queryParams, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> getOiaPmhViewInstances(Map<String, String> queryParams, Handler<Response> responseMatcher)
@@ -402,9 +392,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private List<JsonObject> requestOaiPmhView(Map<String, String> params)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    return requestOaiPmhView(params, response -> {
-      assertThat(response.getStatusCode(), is(200));
-    });
+    return requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> requestOaiPmhView(Map<String, String> params, Handler<Response> responseMatcher)
@@ -441,7 +429,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     final List<JsonObject> results = new ArrayList<>();
 
     OaipmhInstanceIds instanceIdsPayload = new OaipmhInstanceIds();
-    instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
+    instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).toList());
     instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscoveryRecords);
 
     getClient().post(oaiPmhViewEnrichedInstances(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));
@@ -461,9 +449,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private List<JsonObject> requestOaiPmhViewUpdatedInstanceIds(Map<String, String> queryParamsMap)
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    return requestOaiPmhViewUpdatedInstanceIds(queryParamsMap, response -> {
-      assertThat(response.getStatusCode(), is(200));
-    });
+    return requestOaiPmhViewUpdatedInstanceIds(queryParamsMap,
+      response -> assertThat(response.getStatusCode(), is(200)));
   }
 
   private List<JsonObject> requestOaiPmhViewUpdatedInstanceIds(Map<String, String> queryParamsMap,

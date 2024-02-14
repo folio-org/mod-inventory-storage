@@ -104,7 +104,7 @@ public class SuDocCallNumber extends AbstractCallNumber {
     }
     var parts = cnPart.split("[./ -]");
     for (String part : parts) {
-      if (key.length() > 0) {
+      if (!key.isEmpty()) {
         key.append(' ');
       }
       part = part.trim();

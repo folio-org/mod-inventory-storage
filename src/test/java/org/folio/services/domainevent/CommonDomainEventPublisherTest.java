@@ -33,7 +33,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommonDomainEventPublisherTest {
-  private static final String TENANT_ID = "foo-tenant";
+  private static final String TENANT_ID = "foo";
 
   @Mock
   private KafkaProducer<String, String> producer;

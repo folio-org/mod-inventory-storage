@@ -17,7 +17,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -246,7 +245,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(o -> ((JsonObject) o).getString("id"))
       .map(UUID::fromString)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private List<UUID> ids(JsonObject set, String arrayName, String stringName) {
@@ -254,6 +253,6 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(o -> ((JsonObject) o).getString(stringName))
       .map(UUID::fromString)
-      .collect(Collectors.toList());
+      .toList();
   }
 }

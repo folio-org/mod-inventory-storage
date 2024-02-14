@@ -201,9 +201,8 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
 
   @SafeVarargs
   private CompositeFuture runLocationChecks(Future<LocationCheckError>... futures) {
-    @SuppressWarnings("rawtypes")
-    List<Future> allFutures = new ArrayList<>(Arrays.asList(futures));
-    return CompositeFuture.all(allFutures);
+    List<Future<LocationCheckError>> allFutures = new ArrayList<>(Arrays.asList(futures));
+    return Future.all(allFutures);
   }
 
   private Future<LocationCheckError> checkIdProvided(Location entity) {

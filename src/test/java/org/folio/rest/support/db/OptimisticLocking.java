@@ -20,13 +20,10 @@ public class OptimisticLocking {
     for (int i = 0; i < TABLES.size(); i++) {
       JsonObject table = TABLES.getJsonObject(i);
       if (tableName.equals(table.getString("tableName"))) {
-        switch (table.getString("withOptimisticLocking", "")) {
-          case "failOnConflict":
-          case "failOnConflictUnlessSuppressed":
-            return true;
-          default:
-            return false;
-        }
+        return switch (table.getString("withOptimisticLocking", "")) {
+          case "failOnConflict", "failOnConflictUnlessSuppressed" -> true;
+          default -> false;
+        };
       }
     }
     throw new InvalidParameterException("Table not found: " + tableName);

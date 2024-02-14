@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.folio.rest.support.messages.EventMessage;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,14 +14,14 @@ public final class FakeKafkaConsumer {
   // These definitions are deliberately separate to the production definitions
   // This is so these can be changed independently to demonstrate
   // tests failing for the right reason prior to changing the production code
-  static final String INSTANCE_TOPIC_NAME = "folio.test_tenant.inventory.instance";
-  static final String HOLDINGS_TOPIC_NAME = "folio.test_tenant.inventory.holdings-record";
-  static final String ITEM_TOPIC_NAME = "folio.test_tenant.inventory.item";
-  static final String BOUND_WITH_TOPIC_NAME = "folio.test_tenant.inventory.bound-with";
-  static final String SERVICE_POINT_TOPIC_NAME = "folio.test_tenant.inventory.service-point";
+  static final String INSTANCE_TOPIC_NAME = "folio.test.inventory.instance";
+  static final String HOLDINGS_TOPIC_NAME = "folio.test.inventory.holdings-record";
+  static final String ITEM_TOPIC_NAME = "folio.test.inventory.item";
+  static final String BOUND_WITH_TOPIC_NAME = "folio.test.inventory.bound-with";
+  static final String SERVICE_POINT_TOPIC_NAME = "folio.test.inventory.service-point";
 
   static final String HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT =
-    "folio.consortium_member_tenant.inventory.holdings-record";
+    "folio.consortium.inventory.holdings-record";
 
   private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
@@ -74,7 +73,7 @@ public final class FakeKafkaConsumer {
     return instanceIds.stream()
       .map(this::getMessagesForInstance)
       .flatMap(Collection::stream)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   public Collection<EventMessage> getMessagesForHoldings(String instanceId, String holdingsId) {

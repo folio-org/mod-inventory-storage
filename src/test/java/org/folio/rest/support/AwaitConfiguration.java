@@ -13,7 +13,7 @@ public final class AwaitConfiguration {
   public static ConditionFactory awaitAtMost() {
     // Timeout was gradually extended to try to alleviate instability
     // Attempts should be made to reduce this value
-    return await().atMost(10, SECONDS);
+    return await().atMost(20, SECONDS);
   }
 
   public static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {

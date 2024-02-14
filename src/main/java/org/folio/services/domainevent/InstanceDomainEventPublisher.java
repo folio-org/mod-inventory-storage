@@ -10,7 +10,6 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
@@ -35,14 +34,14 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
 
     return domainEventService.publishRecordsCreated(instances.stream()
       .map(instance -> pair(instance.getId(), instance))
-      .collect(Collectors.toList()));
+      .toList());
   }
 
   @Override
   protected Future<List<Pair<String, Instance>>> getInstanceIds(Collection<Instance> instances) {
     return succeededFuture(instances.stream()
       .map(instance -> pair(instance.getId(), instance))
-      .collect(Collectors.toList()));
+      .toList());
   }
 
   @Override

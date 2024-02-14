@@ -68,7 +68,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
@@ -234,6 +233,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(identifiersFromGet.size(), is(1));
     assertThat(identifiersFromGet, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
 
+    @SuppressWarnings("unchecked")
     List<String> tags = instanceFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
 
     assertThat(tags.size(), is(1));
@@ -1812,7 +1812,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(json -> json.getString("id"))
       .map(this::getById)
       .map(Response::getJson)
-      .collect(Collectors.toList());
+      .toList();
 
     instanceMessageChecks.createdMessagesPublished(createdInstances);
   }
@@ -2615,7 +2615,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(notSuppressedInstances.size(), is(2));
     assertThat(notSuppressedInstances.stream()
         .map(IndividualResource::getId)
-        .collect(Collectors.toList()),
+        .toList(),
       containsInAnyOrder(notSuppressedInstance.getId(), notSuppressedInstanceDefault.getId()));
   }
 
