@@ -1,7 +1,7 @@
 package org.folio.services;
 
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.marc4j.callnum.AbstractCallNumber;
 import org.marc4j.callnum.Utils;
 
