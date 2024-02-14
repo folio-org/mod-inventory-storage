@@ -34,8 +34,8 @@ public class ReindexInstanceApi implements InstanceStorageReindex {
 
   @Validate
   @Override
-  public void getInstanceStorageReindex(String query, int offset, int limit,
-                                        String lang,
+  public void getInstanceStorageReindex(String query, String totalRecords, int offset, int limit,
+
                                         Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {

@@ -42,9 +42,9 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
   @Override
   public void getLocations(
     String query,
+    String totalRecords,
     int offset,
     int limit,
-    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -82,7 +82,6 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
   @Validate
   @Override
   public void postLocations(
-    String lang,
     Location entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -130,8 +129,7 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
 
   @Validate
   @Override
-  public void deleteLocations(String lang,
-                              Map<String, String> okapiHeaders,
+  public void deleteLocations(Map<String, String> okapiHeaders,
                               Handler<AsyncResult<Response>> asyncResultHandler,
                               Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -152,7 +150,6 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
   @Override
   public void getLocationsById(
     String id,
-    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -165,7 +162,6 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
   @Override
   public void putLocationsById(
     String id,
-    String lang,
     Location entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -190,7 +186,6 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
   @Override
   public void deleteLocationsById(
     String id,
-    String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {

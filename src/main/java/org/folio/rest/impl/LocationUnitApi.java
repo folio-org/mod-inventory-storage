@@ -32,11 +32,10 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsInstitutions(
-    String query, int offset, int limit,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLocationUnitsInstitutions(String query, String totalRecords, int offset, int limit,
+                                           Map<String, String> okapiHeaders,
+                                           Handler<AsyncResult<Response>> asyncResultHandler,
+                                           Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
     try {
@@ -69,8 +68,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsInstitutions(String lang,
-                                            Locinst entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsInstitutions(Locinst entity, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
 
@@ -109,8 +107,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void deleteLocationUnitsInstitutions(String lang,
-                                              Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsInstitutions(Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler,
                                               Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -131,8 +128,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsInstitutionsById(String id,
-                                               String lang, Map<String, String> okapiHeaders,
+  public void getLocationUnitsInstitutionsById(String id, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
 
@@ -142,11 +138,9 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsInstitutionsById(
-    String id,
-    String lang, Locinst entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void putLocationUnitsInstitutionsById(String id, Locinst entity, Map<String, String> okapiHeaders,
+                                               Handler<AsyncResult<Response>> asyncResultHandler,
+                                               Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: Institution id cannot be changed";
@@ -162,8 +156,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void deleteLocationUnitsInstitutionsById(String id,
-                                                  String lang, Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsInstitutionsById(String id, Map<String, String> okapiHeaders,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                   Context vertxContext) {
 
@@ -173,11 +166,10 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsCampuses(
-    String query, int offset, int limit,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLocationUnitsCampuses(String query, String totalRecords, int offset, int limit,
+                                       Map<String, String> okapiHeaders,
+                                       Handler<AsyncResult<Response>> asyncResultHandler,
+                                       Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
@@ -211,8 +203,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsCampuses(String lang,
-                                        Loccamp entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsCampuses(Loccamp entity, Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
 
@@ -248,11 +239,9 @@ public class LocationUnitApi implements LocationUnits {
       });
   }
 
-  ////////////////////////////////////////////
   @Validate
   @Override
-  public void deleteLocationUnitsCampuses(String lang,
-                                          Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsCampuses(Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -274,8 +263,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsCampusesById(String id,
-                                           String lang, Map<String, String> okapiHeaders,
+  public void getLocationUnitsCampusesById(String id, Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
 
@@ -285,11 +273,9 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsCampusesById(
-    String id,
-    String lang, Loccamp entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void putLocationUnitsCampusesById(String id, Loccamp entity, Map<String, String> okapiHeaders,
+                                           Handler<AsyncResult<Response>> asyncResultHandler,
+                                           Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation:Campus  id cannot be changed";
@@ -303,8 +289,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void deleteLocationUnitsCampusesById(String id,
-                                              String lang, Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsCampusesById(String id, Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.deleteById(CAMPUS_TABLE, id, okapiHeaders, vertxContext,
@@ -313,11 +298,10 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsLibraries(
-    String query, int offset, int limit,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getLocationUnitsLibraries(String query, String totalRecords, int offset, int limit,
+                                        Map<String, String> okapiHeaders,
+                                        Handler<AsyncResult<Response>> asyncResultHandler,
+                                        Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
     CQLWrapper cql;
@@ -351,8 +335,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsLibraries(String lang,
-                                         Loclib entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsLibraries(Loclib entity, Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {
 
@@ -391,8 +374,7 @@ public class LocationUnitApi implements LocationUnits {
   ////////////////////////////////////////////
   @Validate
   @Override
-  public void deleteLocationUnitsLibraries(String lang,
-                                           Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsLibraries(Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
 
@@ -415,8 +397,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsLibrariesById(String id,
-                                            String lang, Map<String, String> okapiHeaders,
+  public void getLocationUnitsLibrariesById(String id, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
 
@@ -426,11 +407,9 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsLibrariesById(
-    String id,
-    String lang, Loclib entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void putLocationUnitsLibrariesById(String id, Loclib entity, Map<String, String> okapiHeaders,
+                                            Handler<AsyncResult<Response>> asyncResultHandler,
+                                            Context vertxContext) {
 
     if (!id.equals(entity.getId())) {
       String message = "Illegal operation: Library id cannot be changed";
@@ -444,8 +423,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void deleteLocationUnitsLibrariesById(String id,
-                                               String lang, Map<String, String> okapiHeaders,
+  public void deleteLocationUnitsLibrariesById(String id, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
 

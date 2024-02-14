@@ -41,7 +41,7 @@ public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements
   @Override
   public void getInventoryHierarchyUpdatedInstanceIds(String startDate, String endDate, boolean deletedRecordSupport,
                                                       boolean skipSuppressedFromDiscoveryRecords,
-                                                      boolean onlyInstanceUpdateDate, String source, String lang,
+                                                      boolean onlyInstanceUpdateDate, String source,
                                                       RoutingContext routingContext, Map<String, String> okapiHeaders,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {

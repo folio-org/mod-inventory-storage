@@ -24,7 +24,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void getPrecedingSucceedingTitles(int offset, int limit, String query, String lang,
+  public void getPrecedingSucceedingTitles(String totalRecords, int offset, int limit, String query,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.get(PRECEDING_SUCCEEDING_TITLE_TABLE, PrecedingSucceedingTitle.class, PrecedingSucceedingTitles.class, query,
@@ -34,7 +34,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void postPrecedingSucceedingTitles(String lang, PrecedingSucceedingTitle entity,
+  public void postPrecedingSucceedingTitles(PrecedingSucceedingTitle entity,
                                             Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -48,7 +48,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void getPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId, String lang,
+  public void getPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
                                                                        Map<String, String> okapiHeaders,
                                                                        Handler<AsyncResult<Response>> resultHandler,
                                                                        Context vertxContext) {
@@ -59,7 +59,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void putPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId, String lang,
+  public void putPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
                                                                        PrecedingSucceedingTitle entity,
                                                                        Map<String, String> okapiHeaders,
                                                                        Handler<AsyncResult<Response>> resultHandler,
@@ -76,7 +76,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
   @Validate
   @Override
   public void deletePrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
-                                                                          String lang, Map<String, String> okapiHeaders,
+                                                                          Map<String, String> okapiHeaders,
                                                                           Handler<AsyncResult<Response>> resultHandler,
                                                                           Context vertxContext) {
     PgUtil.deleteById(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitleId, okapiHeaders, vertxContext,

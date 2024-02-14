@@ -568,28 +568,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteHoldingWhenLangParameterIsTooLong() throws Exception {
-    UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(instanceId));
-
-    UUID holdingId = holdingsClient.create(new HoldingRequestBuilder()
-      .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().delete(holdingsStorageUrl("/" + holdingId + "?lang=eng"),
-      TENANT_ID, ResponseHandler.text(getCompleted));
-
-    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(),
-      containsString("'lang' parameter is incorrect."));
-  }
-
-  @Test
   public void canPageAllHoldings()
     throws InterruptedException,
     ExecutionException,

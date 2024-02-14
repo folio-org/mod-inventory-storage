@@ -6,6 +6,8 @@
 
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -42,7 +44,8 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
 
   @Validate
   @Override
-  public void getHoldingsNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getHoldingsNoteTypes(String query, String totalRecords, int offset, int limit,
+                                   Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -68,12 +71,12 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               log.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsNoteTypesResponse
                 .respond500WithTextPlain(messages.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -85,7 +88,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
 
   @Validate
   @Override
-  public void postHoldingsNoteTypes(String lang, HoldingsNoteType entity, Map<String, String> okapiHeaders,
+  public void postHoldingsNoteTypes(HoldingsNoteType entity, Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -108,7 +111,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -116,18 +119,18 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, DEFAULT_LANGUAGE, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, DEFAULT_LANGUAGE, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getHoldingsNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getHoldingsNoteTypesById(String id, Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, HoldingsNoteType.class, id,
       okapiHeaders, vertxContext, GetHoldingsNoteTypesByIdResponse.class, asyncResultHandler);
@@ -135,7 +138,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
 
   @Validate
   @Override
-  public void deleteHoldingsNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteHoldingsNoteTypesById(String id, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -147,7 +150,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -157,7 +160,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsNoteTypesByIdResponse
                   .respond404WithTextPlain(msg)));
@@ -166,18 +169,18 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsNoteTypesByIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, DEFAULT_LANGUAGE, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, DEFAULT_LANGUAGE, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putHoldingsNoteTypesById(String id, String lang, HoldingsNoteType entity,
+  public void putHoldingsNoteTypesById(String id, HoldingsNoteType entity,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -192,7 +195,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               if (reply.succeeded()) {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutHoldingsNoteTypesByIdResponse
-                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutHoldingsNoteTypesByIdResponse
                     .respond204()));
@@ -200,7 +203,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -208,11 +211,11 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, DEFAULT_LANGUAGE, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, DEFAULT_LANGUAGE, asyncResultHandler);
       }
     });
   }

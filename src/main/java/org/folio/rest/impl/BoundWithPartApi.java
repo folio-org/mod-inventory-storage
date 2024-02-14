@@ -20,7 +20,7 @@ public class BoundWithPartApi implements org.folio.rest.jaxrs.resource.Inventory
 
   @Validate
   @Override
-  public void getInventoryStorageBoundWithParts(String query, int offset, int limit, String lang,
+  public void getInventoryStorageBoundWithParts(String query, String totalRecords, int offset, int limit,
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
@@ -31,7 +31,7 @@ public class BoundWithPartApi implements org.folio.rest.jaxrs.resource.Inventory
 
   @Validate
   @Override
-  public void postInventoryStorageBoundWithParts(String lang, BoundWithPart entity, Map<String, String> okapiHeaders,
+  public void postInventoryStorageBoundWithParts(BoundWithPart entity, Map<String, String> okapiHeaders,
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                                  Context vertxContext) {
     new BoundWithPartService(vertxContext, okapiHeaders).create(entity)
@@ -41,7 +41,7 @@ public class BoundWithPartApi implements org.folio.rest.jaxrs.resource.Inventory
 
   @Validate
   @Override
-  public void getInventoryStorageBoundWithPartsById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getInventoryStorageBoundWithPartsById(String id, Map<String, String> okapiHeaders,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
     PgUtil.getById(BOUND_WITH_TABLE, BoundWithPart.class, id,
@@ -50,7 +50,7 @@ public class BoundWithPartApi implements org.folio.rest.jaxrs.resource.Inventory
 
   @Validate
   @Override
-  public void deleteInventoryStorageBoundWithPartsById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteInventoryStorageBoundWithPartsById(String id, Map<String, String> okapiHeaders,
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
     new BoundWithPartService(vertxContext, okapiHeaders).delete(id)
@@ -60,7 +60,7 @@ public class BoundWithPartApi implements org.folio.rest.jaxrs.resource.Inventory
 
   @Validate
   @Override
-  public void putInventoryStorageBoundWithPartsById(String id, String lang, BoundWithPart entity,
+  public void putInventoryStorageBoundWithPartsById(String id, BoundWithPart entity,
                                                     Map<String, String> okapiHeaders,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {

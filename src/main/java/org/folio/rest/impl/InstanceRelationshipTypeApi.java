@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -26,7 +28,6 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
-
 public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resource.InstanceRelationshipTypes {
 
   public static final String INSTANCE_RELATIONSHIP_TYPE_TABLE = "instance_relationship_type";
@@ -37,7 +38,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void getInstanceRelationshipTypes(String query, int offset, int limit, String lang,
+  public void getInstanceRelationshipTypes(String query, String totalRecords, int offset, int limit,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
@@ -67,12 +68,12 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetInstanceRelationshipTypesResponse
                   .respond500WithTextPlain(messages.getMessage(
-                    lang, MessageConsts.InternalServerError))));
+                    DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -84,7 +85,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void postInstanceRelationshipTypes(String lang, InstanceRelationshipType entity,
+  public void postInstanceRelationshipTypes(InstanceRelationshipType entity,
                                             Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -109,7 +110,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -117,18 +118,18 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang,
+  public void getInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
                                                                Map<String, String> okapiHeaders,
                                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                                Context vertxContext) {
@@ -138,7 +139,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void deleteInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang,
+  public void deleteInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
                                                                   Map<String, String> okapiHeaders,
                                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                                   Context vertxContext) {
@@ -153,7 +154,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -164,7 +165,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(
                   Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
@@ -175,18 +176,18 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                 Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
                   .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId, String lang,
+  public void putInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
                                                                InstanceRelationshipType entity,
                                                                Map<String, String> okapiHeaders,
                                                                Handler<AsyncResult<Response>> asyncResultHandler,
@@ -206,7 +207,8 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                   if (reply.result().rowCount() == 0) {
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-                        .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(
+                          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                   } else {
                     asyncResultHandler.handle(
                       io.vertx.core.Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
@@ -215,7 +217,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                 } else {
                   String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                   if (msg == null) {
-                    internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                    internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                     return;
                   }
                   log.info(msg);
@@ -224,11 +226,11 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
                       .respond400WithTextPlain(msg)));
                 }
               } catch (Exception e) {
-                internalServerErrorDuringPut(e, lang, asyncResultHandler);
+                internalServerErrorDuringPut(e, asyncResultHandler);
               }
             });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -238,22 +240,22 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostInstanceRelationshipTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -37,7 +39,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
 
   @Validate
   @Override
-  public void getNatureOfContentTerms(String query, int offset, int limit, String lang,
+  public void getNatureOfContentTerms(String query, String totalRecords, int offset, int limit,
                                       Map<String, String> okapiHeaders,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -62,7 +64,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -74,7 +76,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
 
   @Validate
   @Override
-  public void postNatureOfContentTerms(String lang, NatureOfContentTerm entity, Map<String, String> okapiHeaders,
+  public void postNatureOfContentTerms(NatureOfContentTerm entity, Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -104,14 +106,14 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(PostNatureOfContentTermsResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void getNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getNatureOfContentTermsById(String id, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     PgUtil.getById(REFERENCE_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
       vertxContext, GetNatureOfContentTermsByIdResponse.class, asyncResultHandler);
@@ -119,7 +121,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
 
   @Validate
   @Override
-  public void deleteNatureOfContentTermsById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteNatureOfContentTermsById(String id, Map<String, String> okapiHeaders,
                                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -137,7 +139,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
             }
             int updated = reply.result().rowCount();
             if (updated != 1) {
-              String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+              String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
               log.error(msg);
               asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
                 .respond404WithTextPlain(msg)));
@@ -149,14 +151,14 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void putNatureOfContentTermsById(String id, String lang, NatureOfContentTerm entity,
+  public void putNatureOfContentTermsById(String id, NatureOfContentTerm entity,
                                           Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -170,7 +172,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
             if (reply.succeeded()) {
               if (reply.result().rowCount() == 0) {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutNatureOfContentTermsByIdResponse
-                  .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                  .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
               } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutNatureOfContentTermsByIdResponse
                   .respond204()));
@@ -186,7 +188,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(PutNatureOfContentTermsByIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
 
     });

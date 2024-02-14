@@ -42,14 +42,9 @@ public class ShelfLocationApi implements ShelfLocations {
    */
   @Validate
   @Override
-  public void getShelfLocations(
-    String query,
-    int offset,
-    int limit,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getShelfLocations(String totalRecords, String query, int offset, int limit,
+                                Map<String, String> okapiHeaders,
+                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = TenantTool.tenantId(okapiHeaders);
       CQLWrapper cql = getCql(query, limit, offset, LocationApi.LOCATION_TABLE);
@@ -93,7 +88,7 @@ public class ShelfLocationApi implements ShelfLocations {
   @Validate
   @Override
   public void postShelfLocations(
-    String lang,
+
     Shelflocation entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -104,7 +99,7 @@ public class ShelfLocationApi implements ShelfLocations {
   @Validate
   @Override
   public void deleteShelfLocations(
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -119,7 +114,7 @@ public class ShelfLocationApi implements ShelfLocations {
   @Override
   public void getShelfLocationsById(
     String id,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -146,7 +141,7 @@ public class ShelfLocationApi implements ShelfLocations {
   @Override
   public void putShelfLocationsById(
     String id,
-    String lang,
+
     Shelflocation entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -158,7 +153,7 @@ public class ShelfLocationApi implements ShelfLocations {
   @Override
   public void deleteShelfLocationsById(
     String id,
-    String lang, Map<String, String> okapiHeaders,
+    Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     throw new NotImplementedException("Deleting shelf-locations is DEPRECATED. " + USE_NEW);

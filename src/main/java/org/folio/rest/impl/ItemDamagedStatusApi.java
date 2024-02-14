@@ -9,6 +9,7 @@ import static org.folio.rest.jaxrs.resource.ItemDamagedStatuses.PostItemDamagedS
 import static org.folio.rest.jaxrs.resource.ItemDamagedStatuses.PostItemDamagedStatusesResponse.respond500WithTextPlain;
 import static org.folio.rest.tools.messages.MessageConsts.DeletedCountError;
 import static org.folio.rest.tools.messages.MessageConsts.InternalServerError;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -42,14 +43,10 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
 
   @Validate
   @Override
-  public void getItemDamagedStatuses(
-    String query,
-    int offset,
-    int limit,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getItemDamagedStatuses(String query, String totalRecords, int offset, int limit,
+                                     Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -63,7 +60,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, InternalServerError);
         Response response = GetItemDamagedStatusesResponse.respond500WithTextPlain(message);
         asyncResultHandler.handle(succeededFuture(response));
       }
@@ -72,12 +69,9 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
 
   @Validate
   @Override
-  public void postItemDamagedStatuses(
-    String lang,
-    ItemDamageStatus entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void postItemDamagedStatuses(ItemDamageStatus entity, Map<String, String> okapiHeaders,
+                                      Handler<AsyncResult<Response>> asyncResultHandler,
+                                      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -86,13 +80,13 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
           .otherwise(ex ->
             ofNullable(PgExceptionUtil.badRequestMessage(ex))
               .map(PostItemDamagedStatusesResponse::respond400WithTextPlain)
-              .orElseGet(() -> respond500WithTextPlain(messages.getMessage(lang, InternalServerError)))
+              .orElseGet(() -> respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, InternalServerError)))
           )
           .map(Response.class::cast)
           .onComplete(asyncResultHandler);
       } catch (Exception e) {
         LOGGER.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, InternalServerError);
         asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(message)));
       }
     });
@@ -100,12 +94,9 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
 
   @Validate
   @Override
-  public void getItemDamagedStatusesById(
-    String id,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getItemDamagedStatusesById(String id, Map<String, String> okapiHeaders,
+                                         Handler<AsyncResult<Response>> asyncResultHandler,
+                                         Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -119,7 +110,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
           .onComplete(asyncResultHandler);
       } catch (Exception e) {
         LOGGER.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, InternalServerError);
         Response response = GetItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
         asyncResultHandler.handle(succeededFuture(response));
       }
@@ -129,23 +120,20 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
 
   @Validate
   @Override
-  public void deleteItemDamagedStatusesById(
-    String id,
-    String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void deleteItemDamagedStatusesById(String id, Map<String, String> okapiHeaders,
+                                            Handler<AsyncResult<Response>> asyncResultHandler,
+                                            Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
         deleteItemDamagedStatus(id, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleDeleteItemDamagedStatusResult(lang, updatedCount))
-          .otherwise(ex -> handleDeleteDamagedStatusException(lang, ex))
+          .map(updatedCount -> handleDeleteItemDamagedStatusResult(updatedCount))
+          .otherwise(ex -> handleDeleteDamagedStatusException(ex))
           .map(Response.class::cast)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, InternalServerError);
         Response response = DeleteItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
         asyncResultHandler.handle(succeededFuture(response));
       }
@@ -154,24 +142,21 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
 
   @Validate
   @Override
-  public void putItemDamagedStatusesById(
-    String id,
-    String lang,
-    ItemDamageStatus entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void putItemDamagedStatusesById(String id, ItemDamageStatus entity,
+                                         Map<String, String> okapiHeaders,
+                                         Handler<AsyncResult<Response>> asyncResultHandler,
+                                         Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
         updateItemDamagedStatus(id, entity, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleUpdateItemDamagedStatusResult(lang, updatedCount))
-          .otherwise(ex -> handleUpdateItemDamagedStatusesException(lang, ex))
+          .map(updatedCount -> handleUpdateItemDamagedStatusResult(updatedCount))
+          .otherwise(ex -> handleUpdateItemDamagedStatusesException(ex))
           .map(Response.class::cast)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, InternalServerError);
         Response response = PutItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
         asyncResultHandler.handle(succeededFuture(response));
       }
@@ -222,24 +207,24 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
       .map(entity::withId);
   }
 
-  private Response handleDeleteDamagedStatusException(String lang, Throwable ex) {
+  private Response handleDeleteDamagedStatusException(Throwable ex) {
     return ofNullable(PgExceptionUtil.badRequestMessage(ex))
       .map(badRequestMessage -> {
         LOGGER.error(badRequestMessage, ex);
         return DeleteItemDamagedStatusesByIdResponse.respond400WithTextPlain(badRequestMessage);
       }).orElseGet(() -> {
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(Messages.DEFAULT_LANGUAGE, InternalServerError);
         LOGGER.error(message, ex);
         return DeleteItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
       });
   }
 
-  private Response handleDeleteItemDamagedStatusResult(String lang, Integer updatedCount) {
+  private Response handleDeleteItemDamagedStatusResult(Integer updatedCount) {
     Response response;
     if (updatedCount == 1) {
       response = DeleteItemDamagedStatusesByIdResponse.respond204();
     } else {
-      String msg = messages.getMessage(lang, DeletedCountError, 1, updatedCount);
+      String msg = messages.getMessage(Messages.DEFAULT_LANGUAGE, DeletedCountError, 1, updatedCount);
       LOGGER.error(msg);
       response = DeleteItemDamagedStatusesByIdResponse.respond404WithTextPlain(msg);
     }
@@ -256,22 +241,22 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
       .map(RowSet<Row>::rowCount);
   }
 
-  private Response handleUpdateItemDamagedStatusesException(String lang, Throwable ex) {
+  private Response handleUpdateItemDamagedStatusesException(Throwable ex) {
     return ofNullable(PgExceptionUtil.badRequestMessage(ex))
       .map(badRequestMessage -> {
         LOGGER.error(badRequestMessage, ex);
         return PutItemDamagedStatusesByIdResponse.respond400WithTextPlain(badRequestMessage);
       }).orElseGet(() -> {
-        String message = messages.getMessage(lang, InternalServerError);
+        String message = messages.getMessage(Messages.DEFAULT_LANGUAGE, InternalServerError);
         LOGGER.error(message, ex);
         return PutItemDamagedStatusesByIdResponse.respond500WithTextPlain(message);
       });
   }
 
-  private Response handleUpdateItemDamagedStatusResult(String lang, Integer updatedCount) {
+  private Response handleUpdateItemDamagedStatusResult(Integer updatedCount) {
     Response response;
     if (updatedCount == 0) {
-      String message = messages.getMessage(lang, MessageConsts.NoRecordsUpdated);
+      String message = messages.getMessage(Messages.DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated);
       LOGGER.error(message);
       response = PutItemDamagedStatusesByIdResponse.respond404WithTextPlain(message);
     } else {

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -32,7 +34,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
 
   @Validate
   @Override
-  public void getContributorNameTypes(String query, int offset, int limit, String lang,
+  public void getContributorNameTypes(String query, String totalRecords, int offset, int limit,
                                       Map<String, String> okapiHeaders,
                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                       Context vertxContext) {
@@ -42,7 +44,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
 
   @Validate
   @Override
-  public void postContributorNameTypes(String lang, ContributorNameType entity, Map<String, String> okapiHeaders,
+  public void postContributorNameTypes(ContributorNameType entity, Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
@@ -66,7 +68,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -74,18 +76,18 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang,
+  public void getContributorNameTypesByContributorNameTypeId(String contributorNameTypeId,
                                                              Map<String, String> okapiHeaders,
                                                              Handler<AsyncResult<Response>> asyncResultHandler,
                                                              Context vertxContext) {
@@ -96,7 +98,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
 
   @Validate
   @Override
-  public void deleteContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang,
+  public void deleteContributorNameTypesByContributorNameTypeId(String contributorNameTypeId,
                                                                 Map<String, String> okapiHeaders,
                                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                                 Context vertxContext) {
@@ -111,7 +113,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -122,7 +124,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(
                   Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
@@ -132,18 +134,18 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
               asyncResultHandler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putContributorNameTypesByContributorNameTypeId(String contributorNameTypeId, String lang,
+  public void putContributorNameTypesByContributorNameTypeId(String contributorNameTypeId,
                                                              ContributorNameType entity,
                                                              Map<String, String> okapiHeaders,
                                                              Handler<AsyncResult<Response>> asyncResultHandler,
@@ -163,7 +165,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-                      .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
@@ -172,7 +174,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -180,30 +182,30 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostContributorNameTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteContributorNameTypesByContributorNameTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutContributorNameTypesByContributorNameTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 }

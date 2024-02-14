@@ -15,7 +15,7 @@ import org.folio.rest.jaxrs.resource.InventoryViewInstances;
 public class InventoryViewApi implements InventoryViewInstances {
   @Validate
   @Override
-  public void getInventoryViewInstances(int offset, int limit, String query, String lang,
+  public void getInventoryViewInstances(String totalRecords, int offset, int limit, String query,
                                         RoutingContext routingContext, Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
