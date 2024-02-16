@@ -358,7 +358,7 @@ public class ItemService {
     return Future.succeededFuture(item);
   }
 
-  private static class PutData {
+  private static final class PutData {
     private Item oldItem;
     private HoldingsRecord oldHoldings;
     private HoldingsRecord newHoldings;
