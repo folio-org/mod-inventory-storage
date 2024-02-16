@@ -179,7 +179,9 @@ public final class InventoryHierarchyResponseMatchers {
   }
 
   public static Matcher<JsonObject> hasTemporaryLocationLibraryCodeForItems(String... libraryCodes) {
-    return hasItemsElement(JsonPointer.from("/location/temporaryLocation/libraryCode"), ArrayUtils.toArray(libraryCodes));
+    return hasItemsElement(
+      JsonPointer.from("/location/temporaryLocation/libraryCode"),
+      ArrayUtils.toArray(libraryCodes));
   }
 
   public static Matcher<JsonObject> hasTemporaryLocationIdForItems(String... locationIds) {
