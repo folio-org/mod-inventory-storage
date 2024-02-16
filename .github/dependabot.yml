@@ -16,3 +16,6 @@ updates:
       plugins:
         patterns:
           - "*plugin*"
+          - "*checkstyle*"
+      development:
+        dependency-type: "development"

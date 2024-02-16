@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.impl.ItemDamagedStatusApi;
 import org.folio.rest.jaxrs.model.ItemDamageStatus;
 import org.folio.rest.jaxrs.model.ItemDamageStatuses;
@@ -234,7 +233,7 @@ public class ItemDamagedStatusApiUnitTest {
     return testContext.asyncAssertSuccess(response -> assertThat(response.getStatus(), is(expected)));
   }
 
-  private Answer setExceptionForHandlerArgument(int indexOfHandler, Exception ex) {
+  private <T> Answer<T> setExceptionForHandlerArgument(int indexOfHandler, Exception ex) {
     return invocation -> {
       Handler<AsyncResult<Results<ItemDamageStatus>>> handler = invocation.getArgument(indexOfHandler);
       handler.handle(Future.failedFuture(ex));
@@ -242,22 +241,17 @@ public class ItemDamagedStatusApiUnitTest {
     };
   }
 
-  private class FailingItemDamagedStatusApi extends ItemDamagedStatusApi {
+  private static final class FailingItemDamagedStatusApi extends ItemDamagedStatusApi {
     @Override
-    protected Future<ItemDamageStatuses> searchItemDamagedStatuses(
-      String query,
-      int offset,
-      int limit,
-      Map<String, String> okapiHeaders,
-      Context vertxContext) throws FieldException {
+    protected Future<ItemDamageStatuses> searchItemDamagedStatuses(String query, int offset, int limit,
+                                                                   Map<String, String> okapiHeaders,
+                                                                   Context vertxContext) {
       throw new RuntimeException("mock");
     }
 
     @Override
-    protected Future<ItemDamageStatus> getItemDamagedStatus(
-      String id,
-      Map<String, String> okapiHeaders,
-      Context vertxContext) {
+    protected Future<ItemDamageStatus> getItemDamagedStatus(String id, Map<String, String> okapiHeaders,
+                                                            Context vertxContext) {
       throw new RuntimeException("mock");
     }
   }
