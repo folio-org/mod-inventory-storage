@@ -18,7 +18,7 @@
     <aspectj.version>1.9.21</aspectj.version>
     <folio-kafka-wrapper.version>3.0.2</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
-    <lombok.version>1.18.24</lombok.version>
+    <lombok.version>1.18.30</lombok.version>
     <snappy-java.version>1.1.10.5</snappy-java.version>
     <commons-lang3.version>3.12.0</commons-lang3.version>
 
