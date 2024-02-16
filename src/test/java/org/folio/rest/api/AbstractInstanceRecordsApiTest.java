@@ -45,9 +45,8 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
     RoutingContext routingContext = mock(RoutingContext.class);
     when(routingContext.response()).thenReturn(mock(HttpServerResponse.class));
     new MyAbstractInstanceRecordsApi().fetchRecordsByQuery("SELECT 1",
-      routingContext, null, testContext.asyncAssertSuccess(response -> {
-        assertThat(response.getStatus(), is(500));
-      }));
+      routingContext, null,
+      testContext.asyncAssertSuccess(response -> assertThat(response.getStatus(), is(500))));
   }
 
   @Test

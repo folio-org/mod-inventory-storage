@@ -243,7 +243,7 @@ public class HoldingsService {
       String instanceId = holdingRecord.getInstanceId();
       instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
     }
-    return CompositeFuture.all(new ArrayList<>(instanceFuturesMap.values()));
+    return Future.all(new ArrayList<>(instanceFuturesMap.values()));
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {

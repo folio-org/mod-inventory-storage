@@ -21,10 +21,9 @@ public final class CqlQuery {
     } catch (Exception e) {
       return false;
     }
-    if (!(cqlNode instanceof CQLTermNode)) {
+    if (!(cqlNode instanceof CQLTermNode node)) {
       return false;
     }
-    var node = (CQLTermNode) cqlNode;
     // cql.allRecords: A special index which matches every record available. Every record is matched no matter what
     // values are provided for the relation and term, but the recommended syntax is: cql.allRecords = 1
     // http://docs.oasis-open.org/search-ws/searchRetrieve/v1.0/os/part5-cql/searchRetrieve-v1.0-os-part5-cql.html#_Toc324166821

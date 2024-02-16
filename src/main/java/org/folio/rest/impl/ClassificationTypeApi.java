@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -39,7 +41,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
 
   @Validate
   @Override
-  public void getClassificationTypes(String query, int offset, int limit, String lang,
+  public void getClassificationTypes(String query, String totalRecords, int offset, int limit,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                      Context vertxContext) {
@@ -69,12 +71,12 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
                 log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetClassificationTypesResponse
                   .respond500WithTextPlain(messages.getMessage(
-                    lang, MessageConsts.InternalServerError))));
+                    DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -86,7 +88,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
 
   @Validate
   @Override
-  public void postClassificationTypes(String lang, ClassificationType entity, Map<String, String> okapiHeaders,
+  public void postClassificationTypes(ClassificationType entity, Map<String, String> okapiHeaders,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
@@ -111,7 +113,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -119,18 +121,18 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getClassificationTypesByClassificationTypeId(String instanceTypeId, String lang,
+  public void getClassificationTypesByClassificationTypeId(String instanceTypeId,
                                                            Map<String, String> okapiHeaders,
                                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                                            Context vertxContext) {
@@ -141,7 +143,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
 
   @Validate
   @Override
-  public void deleteClassificationTypesByClassificationTypeId(String instanceTypeId, String lang,
+  public void deleteClassificationTypesByClassificationTypeId(String instanceTypeId,
                                                               Map<String, String> okapiHeaders,
                                                               Handler<AsyncResult<Response>> asyncResultHandler,
                                                               Context vertxContext) {
@@ -156,7 +158,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -166,7 +168,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
                   .respond404WithTextPlain(msg)));
@@ -175,18 +177,18 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
               asyncResultHandler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putClassificationTypesByClassificationTypeId(String instanceTypeId, String lang,
+  public void putClassificationTypesByClassificationTypeId(String instanceTypeId,
                                                            ClassificationType entity,
                                                            Map<String, String> okapiHeaders,
                                                            Handler<AsyncResult<Response>> asyncResultHandler,
@@ -206,7 +208,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-                      .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
@@ -215,7 +217,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -223,11 +225,11 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -237,21 +239,21 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostClassificationTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteClassificationTypesByClassificationTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutClassificationTypesByClassificationTypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 }

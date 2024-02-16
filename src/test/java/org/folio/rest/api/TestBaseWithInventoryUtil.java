@@ -203,7 +203,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumber("testCallNumber")
-    ).getId();
+        .create(),
+      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberPrefix(UUID holdingsPermanentLocationId) {
@@ -216,7 +217,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberPrefix("testCallNumberPrefix")
-    ).getId();
+        .create(),
+      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberSuffix(UUID holdingsPermanentLocationId) {
@@ -229,7 +231,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberSuffix("testCallNumberSuffix")
-    ).getId();
+        .create(),
+      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
 
   protected static JsonObject instance(UUID id) {

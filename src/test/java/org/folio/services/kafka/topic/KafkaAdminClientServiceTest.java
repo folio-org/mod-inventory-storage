@@ -23,7 +23,6 @@ import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
@@ -117,7 +116,7 @@ public class KafkaAdminClientServiceTest {
   private List<String> getTopicNames(ArgumentCaptor<List<NewTopic>> createTopicsCaptor) {
     return createTopicsCaptor.getAllValues().get(0).stream()
       .map(NewTopic::getName)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private Future<Void> createKafkaTopicsAsync(KafkaAdminClient client) {

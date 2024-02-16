@@ -16,7 +16,6 @@ types:
 traits:
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
-  language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
@@ -47,7 +46,6 @@ resourceTypes:
             type: errors
   delete:
     description: "Delete all service points"
-    is: [language]
     responses:
       204:
         description: "All service points delete"

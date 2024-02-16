@@ -75,11 +75,10 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
 
   @Validate
   @Override
-  public void getItemStorageDereferencedItems(
-    int offset, int limit, String query, String lang,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getItemStorageDereferencedItems(String totalRecords, int offset, int limit, String query,
+                                              Map<String, String> okapiHeaders,
+                                              Handler<AsyncResult<Response>> asyncResultHandler,
+                                              Context vertxContext) {
 
     List<DereferencedItem> mappedResults = new ArrayList<>();
     String whereClause;
@@ -118,7 +117,7 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
   @Validate
   @Override
   public void getItemStorageDereferencedItemsByItemId(
-    String itemId, String lang, java.util.Map<String, String> okapiHeaders,
+    String itemId, java.util.Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 

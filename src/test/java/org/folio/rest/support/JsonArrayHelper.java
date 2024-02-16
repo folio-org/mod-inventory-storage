@@ -3,7 +3,7 @@ package org.folio.rest.support;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class JsonArrayHelper {
   public static List<JsonObject> toList(JsonArray array) {
@@ -16,7 +16,7 @@ public class JsonArrayHelper {
           return null;
         }
       })
-      .filter(item -> item != null)
-      .collect(Collectors.toList());
+      .filter(Objects::nonNull)
+      .toList();
   }
 }

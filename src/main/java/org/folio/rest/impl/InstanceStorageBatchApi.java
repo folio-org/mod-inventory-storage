@@ -10,7 +10,6 @@ import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUp
 
 import com.google.common.collect.Lists;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,12 +100,12 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
    * @return succeeded future containing the list of completed (failed and succeeded)
    *   individual result futures, one per instance
    */
-  private Future<List<Future>> executeInBatch(List<Instance> instances,
-                                              Function<List<Instance>, Future<List<Future>>> action) {
-    List<Future> totalFutures = new ArrayList<>();
+  private Future<List<Future<Instance>>> executeInBatch(List<Instance> instances,
+                                              Function<List<Instance>, Future<List<Future<Instance>>>> action) {
+    List<Future<Instance>> totalFutures = new ArrayList<>();
 
     List<List<Instance>> batches = Lists.partition(instances, PARALLEL_DB_CONNECTIONS_LIMIT);
-    Future<List<Future>> future = succeededFuture();
+    Future<List<Future<Instance>>> future = succeededFuture();
     for (List<Instance> batch : batches) {
       future = future.compose(x -> action.apply(batch))
         .onSuccess(totalFutures::addAll);
@@ -122,12 +120,12 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
    * @param postgresClient Postgres Client
    * @return succeeded future containing the list of completed (succeeded and failed) individual result futures
    */
-  private Future<List<Future>> saveInstances(List<Instance> instances, PostgresClient postgresClient) {
-    List<Future> futures = instances.stream()
+  private Future<List<Future<Instance>>> saveInstances(List<Instance> instances, PostgresClient postgresClient) {
+    List<Future<Instance>> futures = instances.stream()
       .map(instance -> saveInstance(instance, postgresClient))
-      .collect(Collectors.toList());
+      .toList();
 
-    return CompositeFuture.join(futures)
+    return Future.join(futures)
       // on success and on failure return succeeding future with list of all (succeeded and failed) futures
       .map(futures)
       .otherwise(futures);
@@ -165,14 +163,14 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
    * @param saveFutures list of completed individual result futures
    * @return InstancesBatchResponse
    */
-  private InstancesBatchResponse constructResponse(List<Future> saveFutures) {
+  private InstancesBatchResponse constructResponse(List<Future<Instance>> saveFutures) {
     InstancesBatchResponse response = new InstancesBatchResponse();
 
     saveFutures.forEach(save -> {
       if (save.failed()) {
         response.getErrorMessages().add(save.cause().getMessage());
       } else {
-        response.getInstances().add((Instance) save.result());
+        response.getInstances().add(save.result());
       }
     });
 

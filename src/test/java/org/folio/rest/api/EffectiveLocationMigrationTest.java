@@ -29,14 +29,14 @@ import org.junit.runner.RunWith;
 public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   private static final String SET_EFFECTIVE_LOCATION = ResourceUtil
     .asString("templates/db_scripts/setEffectiveHoldingsLocation.sql")
-    .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
+    .replace("${myuniversity}_${mymodule}", "test_mod_inventory_storage");
   private static final Vertx VERTX = Vertx.vertx();
   private static final UUID INSTANCE_ID = UUID.randomUUID();
   private static final UUID HOLDINGS_ID = UUID.randomUUID();
   private static final String REMOVE_EXISTING_FIELD =
-    "UPDATE test_tenant_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
+    "UPDATE test_mod_inventory_storage.holdings_record SET jsonb = jsonb - 'effectiveLocationId';";
   private static final String QUERY =
-    "SELECT jsonb FROM test_tenant_mod_inventory_storage.holdings_record WHERE id = '" + HOLDINGS_ID + "';";
+    "SELECT jsonb FROM test_mod_inventory_storage.holdings_record WHERE id = '" + HOLDINGS_ID + "';";
 
   @Before
   public void beforeEach() {

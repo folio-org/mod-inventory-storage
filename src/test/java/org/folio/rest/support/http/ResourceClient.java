@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -380,7 +379,7 @@ public final class ResourceClient {
     return JsonArrayHelper.toList(response.getJson()
         .getJsonArray(collectionArrayPropertyName)).stream()
       .map(IndividualResource::new)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   /**

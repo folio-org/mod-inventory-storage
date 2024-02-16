@@ -2240,7 +2240,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(onlineLibraryItems.getItems()
         .stream()
         .map(Item::getId)
-        .collect(Collectors.toList()),
+        .toList(),
       hasItems(itemWithTempLocation.getId(), itemWithAllLocation.getId()));
 
     assertEquals(1, secondFloorLibraryItems.getTotalRecords().intValue());
@@ -2733,7 +2733,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(notSuppressedItems.size(), is(2));
     assertThat(notSuppressedItems.stream()
         .map(IndividualResource::getId)
-        .collect(Collectors.toList()),
+        .toList(),
       containsInAnyOrder(notSuppressedItem.getId(), notSuppressedItemDefault.getId()));
   }
 
@@ -3150,7 +3150,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private List<String> getTags(JsonObject item) {
     return item.getJsonObject("tags").getJsonArray("tagList").stream()
       .map(Object::toString)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   @SneakyThrows
@@ -3169,6 +3169,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
         + "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
       .stream()
       .map(IndividualResource::getId)
-      .collect(Collectors.toList());
+      .toList();
   }
 }

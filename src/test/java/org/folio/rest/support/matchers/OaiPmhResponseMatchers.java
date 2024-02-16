@@ -5,7 +5,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -34,7 +33,7 @@ public final class OaiPmhResponseMatchers {
         }
         final List<Object> actualValues = items.stream()
           .map(jsonPointer::queryJson)
-          .collect(Collectors.toList());
+          .toList();
 
         return Arrays.asList(expectedValue)
           .containsAll(actualValues);

@@ -22,7 +22,7 @@ import org.junit.runner.RunWith;
 public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil {
   private static final String ADD_INSTANCE_FORMAT_AUDIO_BELT = ResourceUtil
     .asString("templates/db_scripts/addInstanceFormatsAudioBelt.sql")
-    .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
+    .replace("${myuniversity}_${mymodule}", "test_mod_inventory_storage");
   private static final Vertx VERTX = Vertx.vertx();
 
   @SneakyThrows
@@ -42,7 +42,7 @@ public class InstanceFormatUpgradeTest extends TestBaseWithInventoryUtil {
     runSql(ADD_INSTANCE_FORMAT_AUDIO_BELT);
 
     String query =
-      "SELECT jsonb FROM test_tenant_mod_inventory_storage.instance_format WHERE id "
+      "SELECT jsonb FROM test_mod_inventory_storage.instance_format WHERE id "
         + "= '0d9b1c3d-2d13-4f18-9472-cc1b91bf1752'";
 
     RowSet<Row> result = runSql(query);

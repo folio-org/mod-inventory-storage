@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -42,7 +44,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   @Validate
   @Override
-  public void getLoanTypes(String query, int offset, int limit, String lang,
+  public void getLoanTypes(String query, String totalRecords, int offset, int limit,
                            Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
                            Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -69,12 +71,12 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               log.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetLoanTypesResponse
                 .respond500WithTextPlain(messages.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -86,7 +88,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   @Validate
   @Override
-  public void deleteLoanTypes(String lang, Map<String, String> okapiHeaders,
+  public void deleteLoanTypes(Map<String, String> okapiHeaders,
                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     try {
@@ -113,7 +115,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   @Validate
   @Override
-  public void postLoanTypes(String lang, Loantype entity, Map<String, String> okapiHeaders,
+  public void postLoanTypes(Loantype entity, Map<String, String> okapiHeaders,
                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
@@ -137,7 +139,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -145,18 +147,18 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, lang, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, lang, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void getLoanTypesByLoantypeId(String loantypeId, String lang,
+  public void getLoanTypesByLoantypeId(String loantypeId,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
@@ -166,7 +168,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   @Validate
   @Override
-  public void deleteLoanTypesByLoantypeId(String loantypeId, String lang,
+  public void deleteLoanTypesByLoantypeId(String loantypeId,
                                           Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
@@ -180,7 +182,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -190,7 +192,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               }
               int updated = reply.result().rowCount();
               if (updated != 1) {
-                String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
                 log.error(msg);
                 asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
                   .respond404WithTextPlain(msg)));
@@ -199,18 +201,18 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               asyncResultHandler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, lang, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
 
   @Validate
   @Override
-  public void putLoanTypesByLoantypeId(String loantypeId, String lang, Loantype entity,
+  public void putLoanTypesByLoantypeId(String loantypeId, Loantype entity,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
@@ -227,7 +229,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               if (reply.succeeded()) {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-                    .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                    .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
                     .respond204()));
@@ -235,7 +237,7 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), lang, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -243,11 +245,11 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, lang, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, lang, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
@@ -264,22 +266,22 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostLoanTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteLoanTypesByLoantypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutLoanTypesByLoantypeIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {

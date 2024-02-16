@@ -570,7 +570,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     final List<JsonObject> results = new ArrayList<>();
 
     InventoryInstanceIds instanceIdsPayload = new InventoryInstanceIds();
-    instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).collect(Collectors.toList()));
+    instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).toList());
     instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscovery);
 
     getClient().post(inventoryHierarchyItemsAndHoldings(), instanceIdsPayload, TENANT_ID, ResponseHandler.any(future));

@@ -6,6 +6,7 @@
 
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 
 import io.vertx.core.AsyncResult;
@@ -42,7 +43,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
 
   @Validate
   @Override
-  public void getElectronicAccessRelationships(String query, int offset, int limit, String lang,
+  public void getElectronicAccessRelationships(String query, String totalRecords, int offset, int limit,
                                                Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
@@ -73,12 +74,12 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                 LOG.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsResponse
                   .respond500WithTextPlain(MESSAGES.getMessage(
-                    lang, MessageConsts.InternalServerError))));
+                    DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
+        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -90,7 +91,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
 
   @Validate
   @Override
-  public void postElectronicAccessRelationships(String lang, ElectronicAccessRelationship entity,
+  public void postElectronicAccessRelationships(ElectronicAccessRelationship entity,
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
@@ -124,19 +125,20 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                      .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                      .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
+                        MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -145,7 +147,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
   @Override
   public void getElectronicAccessRelationshipsByElectronicAccessRelationshipId(
     String electronicAccessRelationshipId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -158,7 +160,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
   @Override
   public void deleteElectronicAccessRelationshipsByElectronicAccessRelationshipId(
     String electronicAccessRelationshipId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -175,30 +177,34 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                       DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
                         .respond204()));
                   } else {
-                    LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
+                    LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                      1, reply.result().rowCount()));
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
                         .respond404WithTextPlain(
-                          MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
+                          MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
+                            1, reply.result().rowCount()))));
                   }
                 } else {
                   LOG.error(reply.cause().getMessage(), reply.cause());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                      .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                      .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
+                        MessageConsts.InternalServerError))));
                 }
               } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond500WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
           DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
@@ -207,7 +213,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
   @Override
   public void putElectronicAccessRelationshipsByElectronicAccessRelationshipId(
     String electronicAccessRelationshipId,
-    String lang,
+
     ElectronicAccessRelationship entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -226,7 +232,8 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                   if (reply.result().rowCount() == 0) {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                        .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                        .respond404WithTextPlain(
+                          MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                   } else {
                     asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                       PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
@@ -236,20 +243,22 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                   LOG.error(reply.cause().getMessage());
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                     PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                      .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                      .respond400WithTextPlain(
+                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 }
               } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
                   PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                    .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond500WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(
           io.vertx.core.Future.succeededFuture(PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }

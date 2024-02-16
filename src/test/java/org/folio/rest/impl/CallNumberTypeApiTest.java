@@ -97,7 +97,6 @@ public class CallNumberTypeApiTest extends TestBase {
       callNumberTypesApi.putCallNumberTypesById(null,
         null,
         null,
-        null,
         errorHandler,
         null);
 
@@ -113,7 +112,6 @@ public class CallNumberTypeApiTest extends TestBase {
       mockedTenantTool.when(() -> TenantTool.tenantId(any())).thenThrow(new RuntimeException("Test"));
 
       callNumberTypesApi.deleteCallNumberTypesById(null,
-        null,
         null,
         errorHandler,
         null);
@@ -151,7 +149,6 @@ public class CallNumberTypeApiTest extends TestBase {
 
       //When
       callNumberTypesApi.putCallNumberTypesById(id,
-        "us",
         entity,
         okapiHeaders,
         errorHandler,

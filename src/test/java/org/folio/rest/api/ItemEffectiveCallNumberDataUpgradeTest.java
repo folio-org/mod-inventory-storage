@@ -35,7 +35,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
   private static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
   private static final String POPULATE_EFFECTIVE_CALL_NUMBER_SQL = ResourceUtil
     .asString("templates/db_scripts/populateEffectiveCallNumberComponentsForExistingItems.sql")
-    .replace("${myuniversity}_${mymodule}", "test_tenant_mod_inventory_storage");
+    .replace("${myuniversity}_${mymodule}", "test_mod_inventory_storage");
   private static final Vertx VERTX = Vertx.vertx();
   private static final UUID INSTANCE_ID = UUID.randomUUID();
   private final ObjectMapper mapper = new ObjectMapper();
@@ -70,7 +70,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
     item.setEffectiveCallNumberComponents(components);
 
     String query = String.format(
-      "INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
+      "INSERT INTO test_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
       item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
@@ -96,7 +96,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumber"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+    String template = "UPDATE test_mod_inventory_storage.holdings_record "
       + "SET jsonb = jsonb_set(jsonb, '{callNumber}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumber", holding);
     runSql(query);
@@ -125,7 +125,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumber"));
 
     // Update item directly without updating item effective call number
-    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+    String template = "UPDATE test_mod_inventory_storage.item "
       + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumber}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumber", item.getId());
     runSql(query);
@@ -154,7 +154,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
     item.setEffectiveCallNumberComponents(components);
 
-    String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
+    String query = String.format("INSERT INTO test_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
       item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
@@ -180,7 +180,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberPrefix"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+    String template = "UPDATE test_mod_inventory_storage.holdings_record "
       + "SET jsonb = jsonb_set(jsonb, '{callNumberPrefix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberPrefix", holding);
     runSql(query);
@@ -209,7 +209,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberPrefix"));
 
     // Update item directly without updating item effective call number prefix
-    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+    String template = "UPDATE test_mod_inventory_storage.item "
       + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberPrefix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberPrefix", item.getId());
     runSql(query);
@@ -238,7 +238,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
     EffectiveCallNumberComponents components = new EffectiveCallNumberComponents();
     item.setEffectiveCallNumberComponents(components);
 
-    String query = String.format("INSERT INTO test_tenant_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
+    String query = String.format("INSERT INTO test_mod_inventory_storage.item (id, jsonb) values ('%s','%s');",
       item.getId(), mapper.writeValueAsString(item));
     runSql(query);
 
@@ -264,7 +264,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberSuffix"));
 
     // Update holdings directly without updating item
-    String template = "UPDATE test_tenant_mod_inventory_storage.holdings_record "
+    String template = "UPDATE test_mod_inventory_storage.holdings_record "
       + "SET jsonb = jsonb_set(jsonb, '{callNumberSuffix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberSuffix", holding);
     runSql(query);
@@ -293,7 +293,7 @@ public class ItemEffectiveCallNumberDataUpgradeTest extends TestBaseWithInventor
       is("testCallNumberSuffix"));
 
     // Update item directly without updating item effective call number suffix
-    String template = "UPDATE test_tenant_mod_inventory_storage.item "
+    String template = "UPDATE test_mod_inventory_storage.item "
       + "SET jsonb = jsonb_set(jsonb, '{itemLevelCallNumberSuffix}', '\"%s\"') WHERE id = '%s';";
     String query = String.format(template, "updatedCallNumberSuffix", item.getId());
     runSql(query);

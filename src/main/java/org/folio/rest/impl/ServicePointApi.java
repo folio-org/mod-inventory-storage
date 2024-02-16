@@ -35,7 +35,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void getServicePoints(String query, int offset, int limit, String lang,
+  public void getServicePoints(String query, String totalRecords, int offset, int limit,
                                Map<String, String> okapiHeaders,
                                Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
@@ -46,7 +46,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void postServicePoints(String lang, Servicepoint entity,
+  public void postServicePoints(Servicepoint entity,
                                 Map<String, String> okapiHeaders,
                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                 Context vertxContext) {
@@ -102,7 +102,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void deleteServicePoints(String lang, Map<String, String> okapiHeaders,
+  public void deleteServicePoints(Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -132,7 +132,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   @Validate
   @Override
-  public void putServicePointsByServicepointId(String servicepointId, String lang,
+  public void putServicePointsByServicepointId(String servicepointId,
     Servicepoint entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -162,7 +162,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Validate
   @Override
   public void getServicePointsByServicepointId(String servicepointId,
-                                               String lang, Map<String, String> okapiHeaders,
+                                               Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
 
@@ -173,7 +173,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Validate
   @Override
   public void deleteServicePointsByServicepointId(String servicepointId,
-                                                  String lang, Map<String, String> okapiHeaders,
+                                                  Map<String, String> okapiHeaders,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                   Context vertxContext) {
     vertxContext.runOnContext(v -> {

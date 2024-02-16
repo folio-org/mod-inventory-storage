@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
 
 import io.vertx.core.AsyncResult;
@@ -37,7 +38,7 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
 
   @Validate
   @Override
-  public void getModesOfIssuance(String query, int offset, int limit, String lang,
+  public void getModesOfIssuance(String query, String totalRecords, int offset, int limit,
                                  Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
 
@@ -66,12 +67,12 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
                 .respond500WithTextPlain(MESSAGES.getMessage(
-                  lang, MessageConsts.InternalServerError))));
+                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(lang, MessageConsts.InternalServerError);
+        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -83,7 +84,7 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
 
   @Validate
   @Override
-  public void postModesOfIssuance(String lang, IssuanceMode entity, Map<String, String> okapiHeaders,
+  public void postModesOfIssuance(IssuanceMode entity, Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
 
@@ -115,26 +116,27 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                         "name", entity.getName(), "Mode of issuance exists"))));
                 } else {
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 }
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void deleteModesOfIssuance(String lang, Map<String, String> okapiHeaders,
+  public void deleteModesOfIssuance(Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     String tenantId = TenantTool.tenantId(okapiHeaders);
@@ -163,7 +165,7 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
 
   @Validate
   @Override
-  public void getModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang,
+  public void getModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId,
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
@@ -173,7 +175,7 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
 
   @Validate
   @Override
-  public void deleteModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang,
+  public void deleteModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId,
                                                       Map<String, String> okapiHeaders,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
@@ -189,36 +191,39 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                     io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
                       .respond204()));
                 } else {
-                  LOG.error(MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
+                  LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1,
+                    reply.result().rowCount()));
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
                       .respond404WithTextPlain(
-                        MESSAGES.getMessage(lang, MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
+                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1,
+                          reply.result().rowCount()))));
                 }
               } else {
                 LOG.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void putModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, String lang, IssuanceMode entity,
+  public void putModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, IssuanceMode entity,
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
@@ -235,7 +240,7 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
@@ -245,19 +250,20 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                 LOG.error(reply.cause().getMessage());
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                    .respond400WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                    .respond400WithTextPlain(
+                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
             } catch (Exception e) {
               LOG.error(e.getMessage(), e);
               asyncResultHandler.handle(
                 io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
           });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }

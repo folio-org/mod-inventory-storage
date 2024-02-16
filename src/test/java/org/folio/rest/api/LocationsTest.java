@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.HttpClient;
@@ -241,7 +240,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     return get(getCompleted).getJson()
       .getJsonArray("locations").stream()
       .map(obj -> (JsonObject) obj)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private JsonObject createItemRequest(String holdingsRecordId, String temporaryLocationId) {

@@ -81,9 +81,9 @@ public class ItemDamagedStatusApiUnitTest {
 
     itemDamagedStatusApi.getItemDamagedStatuses(
       "cql=bad*?/format",
+      null,
       DEFAULT_OFFSET,
       DEFAULT_LIMIT,
-      DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
       assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
@@ -96,9 +96,9 @@ public class ItemDamagedStatusApiUnitTest {
 
     new FailingItemDamagedStatusApi().getItemDamagedStatuses(
       DEFAULT_QUERY,
+      null,
       DEFAULT_OFFSET,
       DEFAULT_LIMIT,
-      DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
       assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
@@ -117,7 +117,6 @@ public class ItemDamagedStatusApiUnitTest {
         any(Handler.class)
       );
     itemDamagedStatusApi.postItemDamagedStatuses(
-      DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
       assertStatus(testContext, 400),
@@ -137,7 +136,6 @@ public class ItemDamagedStatusApiUnitTest {
         any(Handler.class)
       );
     itemDamagedStatusApi.postItemDamagedStatuses(
-      DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
       assertStatus(testContext, 500),
@@ -150,7 +148,6 @@ public class ItemDamagedStatusApiUnitTest {
     TestContext testContext) {
     new FailingItemDamagedStatusApi().getItemDamagedStatusesById(
       UUID.randomUUID().toString(),
-      DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
       assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
@@ -169,7 +166,6 @@ public class ItemDamagedStatusApiUnitTest {
       );
     itemDamagedStatusApi.deleteItemDamagedStatusesById(
       UUID.randomUUID().toString(),
-      DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
       assertStatus(testContext, 500),
       rule.vertx().getOrCreateContext()
@@ -188,7 +184,6 @@ public class ItemDamagedStatusApiUnitTest {
       );
     itemDamagedStatusApi.deleteItemDamagedStatusesById(
       UUID.randomUUID().toString(),
-      DEFAULT_LANGUAGE,
       DEFAULT_HEADERS,
       assertStatus(testContext, 400),
       rule.vertx().getOrCreateContext()
@@ -208,7 +203,6 @@ public class ItemDamagedStatusApiUnitTest {
       );
     itemDamagedStatusApi.putItemDamagedStatusesById(
       UUID.randomUUID().toString(),
-      DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
       assertStatus(testContext, 400),
@@ -229,7 +223,6 @@ public class ItemDamagedStatusApiUnitTest {
       );
     itemDamagedStatusApi.putItemDamagedStatusesById(
       UUID.randomUUID().toString(),
-      DEFAULT_LANGUAGE,
       new ItemDamageStatus(),
       DEFAULT_HEADERS,
       assertStatus(testContext, 500),

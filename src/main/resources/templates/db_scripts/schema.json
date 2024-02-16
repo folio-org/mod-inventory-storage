@@ -1145,8 +1145,13 @@
     },
     {
       "run": "after",
+      "snippetPath": "addIdentifierTypeCancelledLCCN.sql",
+      "fromModuleVersion": "27.1.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportAdditionalFields.sql",
-      "fromModuleVersion": "26.0.1"
+      "fromModuleVersion": "27.1.0"
     }
   ]
 }

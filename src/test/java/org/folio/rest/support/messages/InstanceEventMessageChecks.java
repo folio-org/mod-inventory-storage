@@ -14,7 +14,6 @@ import static org.hamcrest.Matchers.hasSize;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.hamcrest.Matcher;
@@ -47,17 +46,15 @@ public class InstanceEventMessageChecks {
   public void createdMessagesPublished(List<JsonObject> instances) {
     final var instanceIds = instances.stream()
       .map(InstanceEventMessageChecks::getId)
-      .collect(Collectors.toList());
+      .toList();
 
     // This is a compromise because checking a large number of messages in
     // one go seems to cause instability in the Jenkins builds
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstances(instanceIds),
       hasSize(instances.size()));
 
-    instances.forEach(instance -> {
-      assertThat(kafkaConsumer.getMessagesForInstances(instanceIds),
-        EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(instance));
-    });
+    instances.forEach(instance -> assertThat(kafkaConsumer.getMessagesForInstances(instanceIds),
+      EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(instance)));
   }
 
   public void updatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {

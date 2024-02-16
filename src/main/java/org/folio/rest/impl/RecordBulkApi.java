@@ -32,7 +32,7 @@ public class RecordBulkApi implements org.folio.rest.jaxrs.resource.RecordBulk {
   @Override
   public void getRecordBulkIds(RecordBulkIdsGetField field,
                                RecordBulkIdsGetRecordType recordType, int limit, String query,
-                               int offset, String lang, RoutingContext routingContext,
+                               String totalRecords, int offset, RoutingContext routingContext,
                                Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
     try {

@@ -21,7 +21,6 @@ types:
 traits:
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
-  language: !include raml-util/traits/language.raml
   validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
@@ -48,7 +47,6 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all institutions"
-      is: [language]
       responses:
         204:
           description: "All institutions deleted"
@@ -84,7 +82,6 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all campuses"
-      is: [language]
       responses:
         204:
           description: "All campuses deleted"
@@ -120,7 +117,6 @@ resourceTypes:
       is: [validate]
     delete:
       description: "Delete all libraries"
-      is: [language]
       responses:
         204:
           description: "All libraries deleted"

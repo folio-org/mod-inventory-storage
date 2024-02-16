@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class RestUtility {
-  public static final String TENANT_ID = "test_tenant";
+  public static final String TENANT_ID = "test";
 
   private static final Logger logger = LogManager.getLogger();
 

@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -37,7 +39,8 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
 
   @Validate
   @Override
-  public void getInstanceNoteTypes(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders,
+  public void getInstanceNoteTypes(String query, String totalRecords, int offset, int limit,
+                                   Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -61,7 +64,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
           });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+        String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
         if (e.getCause() instanceof CQLParseException) {
           message = " CQL parse error " + e.getLocalizedMessage();
         }
@@ -73,7 +76,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
 
   @Validate
   @Override
-  public void postInstanceNoteTypes(String lang, InstanceNoteType entity, Map<String, String> okapiHeaders,
+  public void postInstanceNoteTypes(InstanceNoteType entity, Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -103,14 +106,14 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(PostInstanceNoteTypesResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void getInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void getInstanceNoteTypesById(String id, Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.getById(REFERENCE_TABLE, InstanceNoteType.class, id, okapiHeaders,
@@ -119,7 +122,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
 
   @Validate
   @Override
-  public void deleteInstanceNoteTypesById(String id, String lang, Map<String, String> okapiHeaders,
+  public void deleteInstanceNoteTypesById(String id, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
@@ -137,7 +140,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
             }
             int updated = reply.result().rowCount();
             if (updated != 1) {
-              String msg = messages.getMessage(lang, MessageConsts.DeletedCountError, 1, updated);
+              String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
               log.error(msg);
               asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse
                 .respond404WithTextPlain(msg)));
@@ -149,14 +152,14 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceNoteTypesByIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void putInstanceNoteTypesById(String id, String lang, InstanceNoteType entity,
+  public void putInstanceNoteTypesById(String id, InstanceNoteType entity,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
@@ -170,7 +173,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
             if (reply.succeeded()) {
               if (reply.result().rowCount() == 0) {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
-                  .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                  .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
               } else {
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutInstanceNoteTypesByIdResponse
                   .respond204()));
@@ -186,7 +189,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse.respond500WithTextPlain(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
 
     });

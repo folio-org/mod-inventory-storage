@@ -5,6 +5,7 @@ import static org.folio.persist.InstanceMarcRepository.INSTANCE_SOURCE_MARC_TABL
 import static org.folio.persist.InstanceRelationshipRepository.INSTANCE_RELATIONSHIP_TABLE;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -41,22 +42,9 @@ public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
   private final Messages messages = Messages.getInstance();
 
-  private static CQLWrapper createCqlWrapper(
-    String query,
-    int limit,
-    int offset,
-    String tableName) throws FieldException {
-
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-
-    return new CQLWrapper(cql2pgJson, query)
-      .setLimit(new Limit(limit))
-      .setOffset(new Offset(offset));
-  }
-
   @Validate
   @Override
-  public void getInstanceStorageInstanceRelationships(int offset, int limit, String query, String lang,
+  public void getInstanceStorageInstanceRelationships(String totalRecords, int offset, int limit, String query,
                                                       Map<String, String> okapiHeaders,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
@@ -111,7 +99,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
   @Validate
   @Override
-  public void postInstanceStorageInstanceRelationships(String lang, InstanceRelationship entity,
+  public void postInstanceStorageInstanceRelationships(InstanceRelationship entity,
                                                        Map<String, String> okapiHeaders,
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
@@ -121,7 +109,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
   @Validate
   @Override
-  public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang,
+  public void getInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId,
                                                                       Map<String, String> okapiHeaders,
                                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                                       Context vertxContext) {
@@ -132,7 +120,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Validate
   @Override
   public void deleteInstanceStorageInstanceRelationshipsByRelationshipId(
-    String relationshipId, String lang,
+    String relationshipId,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -153,7 +141,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
   @Validate
   @Override
-  public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId, String lang,
+  public void putInstanceStorageInstanceRelationshipsByRelationshipId(String relationshipId,
                                                                       InstanceRelationship entity,
                                                                       Map<String, String> okapiHeaders,
                                                                       Handler<AsyncResult<Response>> asyncResultHandler,
@@ -172,7 +160,7 @@ public class InstanceStorageApi implements InstanceStorage {
                 if (reply.result().rowCount() == 0) {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                      .respond404WithTextPlain(messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                      .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
                 } else {
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
@@ -183,7 +171,8 @@ public class InstanceStorageApi implements InstanceStorage {
                 if (msg == null) {
                   asyncResultHandler.handle(
                     Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE,
+                        MessageConsts.InternalServerError))));
                 }
                 log.info(msg);
                 asyncResultHandler.handle(
@@ -193,27 +182,23 @@ public class InstanceStorageApi implements InstanceStorage {
             } catch (Exception e) {
               asyncResultHandler.handle(
                 Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-                  .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
 
           });
       } catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-          .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+          .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
     });
   }
 
   @Validate
   @Override
-  public void getInstanceStorageInstances(
-    int offset,
-    int limit,
-    String query,
-    String lang,
-    RoutingContext routingContext, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+  public void getInstanceStorageInstances(String totalRecords, int offset, int limit, String query,
+                                          RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                          Handler<AsyncResult<Response>> asyncResultHandler,
+                                          Context vertxContext) {
 
     if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
       try {
@@ -236,7 +221,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Validate
   @Override
   public void postInstanceStorageInstances(
-    String lang,
+
     Instance entity,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -265,7 +250,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void getInstanceStorageInstancesByInstanceId(
     String instanceId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -279,7 +264,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void deleteInstanceStorageInstancesByInstanceId(
     String instanceId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -294,7 +279,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void putInstanceStorageInstancesByInstanceId(
     String instanceId,
-    String lang,
+
     Instance entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -310,7 +295,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void deleteInstanceStorageInstancesSourceRecordByInstanceId(
     String instanceId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -322,7 +307,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Validate
   @Override
   public void getInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
-    String instanceId, String lang, Map<String, String> okapiHeaders,
+    String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     PgUtil.getById(INSTANCE_SOURCE_MARC_TABLE, MarcJson.class, instanceId,
@@ -334,7 +319,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void deleteInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
     String instanceId,
-    String lang,
+
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -347,7 +332,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId(
     String instanceId,
-    String lang,
+
     MarcJson entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
@@ -362,7 +347,7 @@ public class InstanceStorageApi implements InstanceStorage {
         return;
       }
       if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
-        && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+          && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
         asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
             .respond404WithTextPlain(reply.cause().getMessage())));
@@ -380,7 +365,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Validate
   @Override
   public void getInstanceStorageInstancesSourceRecordModsByInstanceId(
-    String instanceId, String lang, Map<String, String> okapiHeaders,
+    String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     asyncResultHandler.handle(Future.succeededFuture(
@@ -394,7 +379,7 @@ public class InstanceStorageApi implements InstanceStorage {
   @Validate
   @Override
   public void putInstanceStorageInstancesSourceRecordModsByInstanceId(
-    String instanceId, String lang, Map<String, String> okapiHeaders,
+    String instanceId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     asyncResultHandler.handle(Future.succeededFuture(
@@ -404,6 +389,19 @@ public class InstanceStorageApi implements InstanceStorage {
 
   PreparedCql handleCql(String query, int limit, int offset) throws FieldException {
     return new PreparedCql(INSTANCE_TABLE, query, limit, offset);
+  }
+
+  private static CQLWrapper createCqlWrapper(
+    String query,
+    int limit,
+    int offset,
+    String tableName) throws FieldException {
+
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
+
+    return new CQLWrapper(cql2pgJson, query)
+      .setLimit(new Limit(limit))
+      .setOffset(new Offset(offset));
   }
 
   static class PreparedCql {
