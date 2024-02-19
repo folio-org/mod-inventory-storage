@@ -15,11 +15,16 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasIdForInstance;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationCodeForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationIdForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationLibraryCodeForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasMaterialTypeIdForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasSourceForInstance;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationForHoldings;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationIdForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasTemporaryLocationLibraryCodeForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.isDeleted;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -89,6 +94,11 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       allOf(
         hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
         hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasLocationLibraryCodeForItems("ML", "ML"),
+        hasTemporaryLocationLibraryCodeForItems("ML", "ML"),
+        hasLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
+        hasTemporaryLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
+        hasMaterialTypeIdForItems(journalMaterialTypeID, bookMaterialTypeID),
         hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
         hasAggregatedNumberOfItems(2)
       )

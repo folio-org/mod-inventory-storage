@@ -17,16 +17,20 @@
       ],
       "location": {
         "permanentLocation": {
+          "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
+          "libraryCode": "DI",
           "institutionName": "Københavns Universitet",
           "code": "KU/CC/DI/A"
         },
         "temporaryLocation": {
+          "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
+          "libraryCode": "DI",
           "institutionName": "Københavns Universitet",
           "code": "KU/CC/DI/A"
         }
@@ -118,23 +122,29 @@
       ],
       "location": {
         "location": {
+          "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
+          "libraryCode": "DI",
           "institutionName": "Københavns Universitet",
           "code": "KU/CC/DI/A"
         },
         "permanentLocation": {
+          "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
+          "libraryCode": "DI",
           "institutionName": "Københavns Universitet",
           "code": "KU/CC/DI/A"
         },
         "temporaryLocation": {
+          "id": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
           "name": "Annex",
           "campusName": "City Campus",
           "libraryName": "Datalogisk Institut",
+          "libraryCode": "DI",
           "institutionName": "Københavns Universitet",
           "code": "KU/CC/DI/A"
         }
@@ -163,6 +173,7 @@
       "itemDamagedStatus": "Not Damaged",
       "itemDamagedStatusDate": "2020-07-28T09:34:40.562Z",
       "materialType": "book",
+      "materialTypeId": "059f3856-2659-45aa-b35a-e0b10d63141d",
       "permanentLoanType": "Can circulate",
       "temporaryLoanType": "Can circulate",
       "electronicAccess": [

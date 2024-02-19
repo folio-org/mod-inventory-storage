@@ -170,6 +170,28 @@ public final class InventoryHierarchyResponseMatchers {
     return hasItemsElement(JsonPointer.from("/location/location/code"), ArrayUtils.toArray(code));
   }
 
+  public static Matcher<JsonObject> hasLocationLibraryCodeForItems(String... code) {
+    return hasItemsElement(JsonPointer.from("/location/location/libraryCode"), ArrayUtils.toArray(code));
+  }
+
+  public static Matcher<JsonObject> hasLocationIdForItems(String... locationIds) {
+    return hasItemsElement(JsonPointer.from("/location/location/id"), ArrayUtils.toArray(locationIds));
+  }
+
+  public static Matcher<JsonObject> hasTemporaryLocationLibraryCodeForItems(String... libraryCodes) {
+    return hasItemsElement(
+      JsonPointer.from("/location/temporaryLocation/libraryCode"),
+      ArrayUtils.toArray(libraryCodes));
+  }
+
+  public static Matcher<JsonObject> hasTemporaryLocationIdForItems(String... locationIds) {
+    return hasItemsElement(JsonPointer.from("/location/temporaryLocation/id"), ArrayUtils.toArray(locationIds));
+  }
+
+  public static Matcher<JsonObject> hasMaterialTypeIdForItems(String... materialTypeIds) {
+    return hasItemsElement(JsonPointer.from("/materialTypeId"), ArrayUtils.toArray(materialTypeIds));
+  }
+
   public static Matcher<JsonObject> hasAggregatedNumberOfHoldings(int size) {
     return hasHoldingsCount(size);
   }
