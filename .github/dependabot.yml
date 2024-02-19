@@ -16,3 +16,24 @@ updates:
       plugins:
         patterns:
           - "*plugin*"
+          - "*checkstyle*"
+      development:
+        dependency-type: "development"
+        patterns:
+          - "*testcontainers*"
+          - "*joda-time*"
+          - "*hamcrest*"
+          - "*mockito*"
+          - "*JUnitParams*"
+          - "*wiremock*"
+          - "*rest-assured*"
+          - "*awaitility*"
+      production:
+        dependency-type: "production"
+        patterns:
+          - "*log4j*"
+          - "*lombok*"
+          - "*caffeine*"
+          - "*aspectj*"
+          - "*marc4j*"
+          - "*commons-lang*"

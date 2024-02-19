@@ -13,25 +13,26 @@
     <argLine />
 
     <raml-module-builder-version>35.1.1</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.4.6</vertx.version>
+    <vertx.version>4.5.3</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
-    <aspectj.version>1.9.21</aspectj.version>
+    <aspectj.version>1.9.21.1</aspectj.version>
     <folio-kafka-wrapper.version>3.0.2</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.30</lombok.version>
     <snappy-java.version>1.1.10.5</snappy-java.version>
-    <commons-lang3.version>3.12.0</commons-lang3.version>
+    <commons-lang3.version>3.14.0</commons-lang3.version>
+    <log4j.version>2.22.1</log4j.version>
 
     <okapi-testing.version>5.2.0</okapi-testing.version>
     <junit.version>5.10.2</junit.version>
-    <testcontainers.version>1.19.0</testcontainers.version>
+    <testcontainers.version>1.19.5</testcontainers.version>
     <joda-time.version>2.12.7</joda-time.version>
     <hamcrest.version>2.2</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
-    <mockito.version>4.8.0</mockito.version>
+    <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
     <wiremock.version>2.27.2</wiremock.version>
-    <rest-assured.version>5.1.1</rest-assured.version>
+    <rest-assured.version>5.4.0</rest-assured.version>
     <awaitility.version>4.2.0</awaitility.version>
 
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
@@ -44,7 +45,7 @@
     <maven-shade-plugin.version>3.5.1</maven-shade-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.3.1</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.4</checkstyle.version>
+    <checkstyle.version>10.13.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
     <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
   </properties>
@@ -54,7 +55,7 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-bom</artifactId>
-        <version>2.22.0</version>
+        <version>${log4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
