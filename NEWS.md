@@ -4,6 +4,7 @@
 
 ### New APIs versions
 * Provides `item-storage v10.1`
+* Provides `inventory-hierarchy 0.4`
 
 ### Features
 * Add location properties and material type id to inventory-hierarchy items-and-holdings response ([MODINVSTOR-1133](https://issues.folio.org/browse/MODINVSTOR-1133))
