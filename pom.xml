@@ -31,9 +31,10 @@
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
-    <wiremock.version>2.27.2</wiremock.version>
+    <wiremock.version>3.4.0</wiremock.version>
     <rest-assured.version>5.4.0</rest-assured.version>
     <awaitility.version>4.2.0</awaitility.version>
+    <assertj.version>3.25.3</assertj.version>
 
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
@@ -133,6 +134,10 @@
 
     <!-- Test Dependencies  -->
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.folio</groupId>
       <artifactId>testing</artifactId>
       <version>${raml-module-builder-version}</version>
@@ -229,9 +234,20 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.tomakehurst</groupId>
+      <groupId>org.wiremock</groupId>
       <artifactId>wiremock</artifactId>
       <version>${wiremock.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>  <!-- for testcontainers -->

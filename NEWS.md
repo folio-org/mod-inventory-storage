@@ -16,6 +16,7 @@
 
 ### Tech Dept
 * Prevent virtual fields populating for holdings records ([MODINVSTOR-1094](https://issues.folio.org/browse/MODINVSTOR-1094))
+* Create base for reference data APIs integration tests ([MODINVSTOR-1164](https://issues.folio.org/browse/MODINVSTOR-1164))
 
 ---
 
