@@ -4,9 +4,10 @@
 
 ### New APIs versions
 * Provides `item-storage v10.1`
-* Provides `inventory-hierarchy 0.4`
+* Provides `inventory-hierarchy 0.5`
 
 ### Features
+* Provide inventory hierarchy response with new displaySummary field ([MODINVSTOR-1170](https://folio-org.atlassian.net/browse/MODINVSTOR-1170))
 * Add location properties and material type id to inventory-hierarchy items-and-holdings response ([MODINVSTOR-1133](https://issues.folio.org/browse/MODINVSTOR-1133))
 * Add new field "Display summary" for the item schema ([MODINVSTOR-1154](https://issues.folio.org/browse/MODINVSTOR-1154))
 * Add new Identifier type Cancelled LCCN ([MODINVSTOR-1156](https://folio-org.atlassian.net/browse/MODINVSTOR-1156))

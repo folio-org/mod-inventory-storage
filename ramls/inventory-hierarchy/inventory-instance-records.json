@@ -609,6 +609,10 @@
             "description": "Descriptive information for the dating scheme of a serial",
             "type": "string"
           },
+          "displaySummary": {
+            "description": "Display summary about the item",
+            "type": "string"
+          },
           "yearCaption": {
             "description": "Character(s) used to label a level of chronology, e.g., year 1985",
             "type": "array",
