@@ -166,6 +166,7 @@ WITH
                                                                  'volume', item.jsonb ->> 'volume',
                                                                  'enumeration', item.jsonb ->> 'enumeration',
                                                                  'chronology', item.jsonb ->>'chronology',
+                                                                 'displaySummary', item.jsonb ->>'displaySummary',
                                                                  'yearCaption', item.jsonb -> 'yearCaption',
                                                                  'itemIdentifier', item.jsonb ->> 'itemIdentifier',
                                                                  'numberOfPieces', item.jsonb ->> 'numberOfPieces',

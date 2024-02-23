@@ -161,6 +161,7 @@
       "volume": "volume",
       "enumeration": "enumeration",
       "chronology": "chronology",
+      "displaySummary": "displaySummary",
       "yearCaption": [
         "Year, caption"
       ],
