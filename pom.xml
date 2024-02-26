@@ -12,8 +12,8 @@
     <generate_routing_context>/instance-storage/instances,/holdings-storage/holdings,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
 
-    <raml-module-builder-version>35.1.1</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.3</vertx.version>
+    <raml-module-builder-version>35.1.2</raml-module-builder-version> <!-- also update vertx.version -->
+    <vertx.version>4.5.4</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.21.1</aspectj.version>
     <folio-kafka-wrapper.version>3.0.2</folio-kafka-wrapper.version>
@@ -23,7 +23,7 @@
     <commons-lang3.version>3.14.0</commons-lang3.version>
     <log4j.version>2.23.0</log4j.version>
 
-    <okapi-testing.version>5.2.0</okapi-testing.version>
+    <okapi-testing.version>5.3.0</okapi-testing.version>
     <junit.version>5.10.2</junit.version>
     <testcontainers.version>1.19.5</testcontainers.version>
     <joda-time.version>2.12.7</joda-time.version>
