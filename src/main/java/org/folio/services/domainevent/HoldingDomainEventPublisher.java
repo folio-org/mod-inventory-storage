@@ -24,7 +24,7 @@ public class HoldingDomainEventPublisher
   }
 
   @Override
-  protected Future<List<Pair<String, HoldingsRecord>>> getInstanceIds(
+  protected Future<List<Pair<String, HoldingsRecord>>> getRecordIds(
     Collection<HoldingsRecord> holdingsRecords) {
 
     return succeededFuture(holdingsRecords.stream()

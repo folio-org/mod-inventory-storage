@@ -38,7 +38,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   }
 
   @Override
-  protected Future<List<Pair<String, Instance>>> getInstanceIds(Collection<Instance> instances) {
+  protected Future<List<Pair<String, Instance>>> getRecordIds(Collection<Instance> instances) {
     return succeededFuture(instances.stream()
       .map(instance -> pair(instance.getId(), instance))
       .toList());
