@@ -23,20 +23,20 @@ public class ClassificationTypeDomainEventPublisher
   }
 
   @Override
-  protected Future<List<Pair<String, ClassificationType>>> getRecordIds(Collection<ClassificationType> records) {
-    return succeededFuture(records.stream()
-      .map(record -> pair(record.getId(), record))
+  protected Future<List<Pair<String, ClassificationType>>> getRecordIds(Collection<ClassificationType> types) {
+    return succeededFuture(types.stream()
+      .map(type -> pair(type.getId(), type))
       .toList()
     );
   }
 
   @Override
-  protected ClassificationType convertDomainToEvent(String instanceId, ClassificationType domain) {
-    return domain;
+  protected ClassificationType convertDomainToEvent(String instanceId, ClassificationType type) {
+    return type;
   }
 
   @Override
-  protected String getId(ClassificationType entity) {
-    return entity.getId();
+  protected String getId(ClassificationType type) {
+    return type.getId();
   }
 }

@@ -6,6 +6,8 @@ import static org.folio.rest.jaxrs.resource.ClassificationTypes.GetClassificatio
 import static org.folio.rest.jaxrs.resource.ClassificationTypes.PostClassificationTypesResponse;
 import static org.folio.rest.jaxrs.resource.ClassificationTypes.PutClassificationTypesByClassificationTypeIdResponse;
 import static org.folio.rest.persist.PgUtil.deleteById;
+import static org.folio.rest.persist.PgUtil.get;
+import static org.folio.rest.persist.PgUtil.getById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
 
@@ -16,7 +18,6 @@ import javax.ws.rs.core.Response;
 import org.folio.persist.ClassificationTypeRepository;
 import org.folio.rest.jaxrs.model.ClassificationType;
 import org.folio.rest.jaxrs.model.ClassificationTypes;
-import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.ClassificationTypeDomainEventPublisher;
 
 public class ClassificationTypeService {
@@ -37,34 +38,34 @@ public class ClassificationTypeService {
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(CLASSIFICATION_TYPE_TABLE, ClassificationType.class, ClassificationTypes.class,
-      cql, offset, limit, okapiHeaders, context,
-      GetClassificationTypesResponse.class);
+    return get(CLASSIFICATION_TYPE_TABLE, ClassificationType.class, ClassificationTypes.class,
+      cql, offset, limit, okapiHeaders, context, GetClassificationTypesResponse.class);
   }
 
-  public Future<Response> getById(String id) {
-    return PgUtil.getById(CLASSIFICATION_TYPE_TABLE, ClassificationType.class, id, okapiHeaders, context,
+  public Future<Response> getByTypeId(String id) {
+    return getById(CLASSIFICATION_TYPE_TABLE, ClassificationType.class, id, okapiHeaders, context,
       GetClassificationTypesByClassificationTypeIdResponse.class);
   }
 
-  public Future<Response> create(ClassificationType entity) {
-    return post(CLASSIFICATION_TYPE_TABLE, entity, okapiHeaders, context,
-      PostClassificationTypesResponse.class)
+  public Future<Response> create(ClassificationType type) {
+    return post(CLASSIFICATION_TYPE_TABLE, type, okapiHeaders, context, PostClassificationTypesResponse.class)
       .onSuccess(domainEventService.publishCreated());
   }
 
-  public Future<Response> update(String id, ClassificationType entity) {
+  public Future<Response> update(String id, ClassificationType type) {
     return repository.getById(id)
-      .compose(oldRecord -> put(CLASSIFICATION_TYPE_TABLE, entity, id, okapiHeaders, context,
+      .compose(oldType -> put(CLASSIFICATION_TYPE_TABLE, type, id, okapiHeaders, context,
         PutClassificationTypesByClassificationTypeIdResponse.class)
-        .onSuccess(domainEventService.publishUpdated(oldRecord)));
+        .onSuccess(domainEventService.publishUpdated(oldType))
+      );
   }
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldRecord -> deleteById(CLASSIFICATION_TYPE_TABLE, id, okapiHeaders, context,
+      .compose(oldType -> deleteById(CLASSIFICATION_TYPE_TABLE, id, okapiHeaders, context,
         DeleteClassificationTypesByClassificationTypeIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldRecord)));
+        .onSuccess(domainEventService.publishRemoved(oldType))
+      );
   }
 
 }

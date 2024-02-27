@@ -41,7 +41,7 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
   public void getClassificationTypesByClassificationTypeId(String recordId, Map<String, String> okapiHeaders,
                                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                                            Context vertxContext) {
-    new ClassificationTypeService(vertxContext, okapiHeaders).getById(recordId)
+    new ClassificationTypeService(vertxContext, okapiHeaders).getByTypeId(recordId)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
