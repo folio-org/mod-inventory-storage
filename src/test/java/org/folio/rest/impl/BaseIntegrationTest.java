@@ -5,6 +5,7 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,7 +46,7 @@ public class BaseIntegrationTest {
   public static final String USER_ID = UUID.randomUUID().toString();
 
   @Container
-  private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:12-alpine")
+  private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>(getImageName())
     .withDatabaseName("okapi_modules")
     .withUsername("admin_user")
     .withPassword("admin_password");
