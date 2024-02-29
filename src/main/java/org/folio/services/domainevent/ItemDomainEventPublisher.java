@@ -60,7 +60,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected Future<List<Pair<String, Item>>> getInstanceIds(Collection<Item> items) {
+  protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items) {
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
         .map(item -> pair(getInstanceId(holdings, item), item))

@@ -11,6 +11,7 @@
 * Add location properties and material type id to inventory-hierarchy items-and-holdings response ([MODINVSTOR-1133](https://issues.folio.org/browse/MODINVSTOR-1133))
 * Add new field "Display summary" for the item schema ([MODINVSTOR-1154](https://issues.folio.org/browse/MODINVSTOR-1154))
 * Add new Identifier type Cancelled LCCN ([MODINVSTOR-1156](https://folio-org.atlassian.net/browse/MODINVSTOR-1156))
+* Classification-types: Publish domain events on changes ([MODINVSTOR-1171](https://folio-org.atlassian.net/browse/MODINVSTOR-1171))
 
 ### Bug fixes
 * Fix reference and sample data ([MODINVSTOR-1116](https://issues.folio.org/browse/MODINVSTOR-1116), [MODINVSTOR-1115](https://issues.folio.org/browse/MODINVSTOR-1115))

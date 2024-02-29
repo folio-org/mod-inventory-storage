@@ -116,7 +116,7 @@ abstract class AbstractDomainEventPublisher<D, E> {
       .compose(domainEventService::publishRecordsUpdated);
   }
 
-  protected abstract Future<List<Pair<String, D>>> getInstanceIds(Collection<D> domainTypes);
+  protected abstract Future<List<Pair<String, D>>> getRecordIds(Collection<D> domainTypes);
 
   protected abstract E convertDomainToEvent(String instanceId, D domain);
 
@@ -139,7 +139,7 @@ abstract class AbstractDomainEventPublisher<D, E> {
   }
 
   private Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains) {
-    return getInstanceIds(domains).map(pairs -> pairs.stream()
+    return getRecordIds(domains).map(pairs -> pairs.stream()
       .map(pair -> pair(pair.getKey(), convertDomainToEvent(pair.getKey(), pair.getValue())))
       .collect(toList()));
   }
@@ -147,11 +147,11 @@ abstract class AbstractDomainEventPublisher<D, E> {
   private Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
                                                                     Collection<D> oldRecords) {
 
-    return getInstanceIds(oldRecords).compose(oldRecordsInstanceIds -> getInstanceIds(newRecords).map(
+    return getRecordIds(oldRecords).compose(oldRecordsInstanceIds -> getRecordIds(newRecords).map(
       newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
   }
 
   private Future<String> getInstanceId(D domainType) {
-    return getInstanceIds(List.of(domainType)).map(CollectionUtil::getFirst).map(Pair::getKey);
+    return getRecordIds(List.of(domainType)).map(CollectionUtil::getFirst).map(Pair::getKey);
   }
 }

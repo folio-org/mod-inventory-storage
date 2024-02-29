@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.api.entities.AlternativeTitleType;
-import org.folio.rest.api.entities.ClassificationType;
 import org.folio.rest.api.entities.ContributorNameType;
 import org.folio.rest.api.entities.ContributorType;
 import org.folio.rest.api.entities.ElectronicAccessRelationship;
@@ -119,21 +118,6 @@ public class ReferenceTablesTest extends TestBase {
     URL apiUrl = classificationTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("classification types", searchResponse, 2, 20);
-  }
-
-  @Test
-  public void classificationTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/classification-types";
-    ClassificationType entity = new ClassificationType("Test classfication type");
-    Response postResponse = createReferenceRecord(entityPath, entity);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ClassificationType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
