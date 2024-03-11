@@ -22,10 +22,10 @@ public final class CallNumberUtils {
   }
 
   static {
-    logCallNumberMap.put(DEWEY_CN_TYPE_ID, (String cn) -> getValidShelfKey(new DeweyCallNumber(cn)));
-    logCallNumberMap.put(LC_CN_TYPE_ID, (String cn) -> getValidShelfKey(new LCCallNumber(cn)));
-    logCallNumberMap.put(NLM_CN_TYPE_ID, (String cn) -> getValidShelfKey(new NlmCallNumber(cn)));
-    logCallNumberMap.put(SU_DOC_CN_TYPE_ID, (String cn) -> getValidShelfKey(new SuDocCallNumber(cn)));
+    logCallNumberMap.put(DEWEY_CN_TYPE_ID, (String cn) -> getShelfKey(new DeweyCallNumber(cn)));
+    logCallNumberMap.put(LC_CN_TYPE_ID, (String cn) -> getShelfKey(new LCCallNumber(cn)));
+    logCallNumberMap.put(NLM_CN_TYPE_ID, (String cn) -> getShelfKey(new NlmCallNumber(cn)));
+    logCallNumberMap.put(SU_DOC_CN_TYPE_ID, (String cn) -> getShelfKey(new SuDocCallNumber(cn)));
   }
 
   public static Optional<String> getShelfKeyFromCallNumber(String callNumberTypeId, String callNumber) {
@@ -39,9 +39,8 @@ public final class CallNumberUtils {
       .map(String::trim);
   }
 
-  private static Optional<String> getValidShelfKey(CallNumber value) {
+  private static Optional<String> getShelfKey(CallNumber value) {
     return Optional.of(value)
-      .filter(CallNumber::isValid)
       .map(CallNumber::getShelfKey);
   }
 }
