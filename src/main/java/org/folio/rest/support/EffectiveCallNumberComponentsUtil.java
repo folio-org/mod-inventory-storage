@@ -43,9 +43,7 @@ public final class EffectiveCallNumberComponentsUtil {
       String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
 
       item.setEffectiveShelvingOrder(
-        shelfKey.stream()
-          .map(shelfKeyValue -> shelfKeyValue + nonNullableSuffixValue)
-          .findFirst()
+        shelfKey.map(shelfKeyValue -> shelfKeyValue + nonNullableSuffixValue)
           .orElse(nonNullableSuffixValue));
     } else {
       item.setEffectiveShelvingOrder(null);
