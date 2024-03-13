@@ -41,6 +41,7 @@ public class CallNumberUtilsTest {
     "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,," + LC_CN_TYPE_ID,
     "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,," + LC_CN_TYPE_ID,
     "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,," + LC_CN_TYPE_ID,
+    "47307 I5 S5,,,7307.I5 S5,,,,,," + LC_CN_TYPE_ID,
     "3341.7,,,341.7,,,,,," + DEWEY_CN_TYPE_ID,
     "3341.7 258 221,,,341.7/58 / 21,,,,,," + DEWEY_CN_TYPE_ID,
     "3341.7 258 221,,T1,341.7/58 / 21,,,,,," + DEWEY_CN_TYPE_ID,
@@ -51,12 +52,15 @@ public class CallNumberUtilsTest {
     "3325 D A 41908 FREETOWN MAP,,,325-d A-1908 (Freetown) Map,,,,,," + DEWEY_CN_TYPE_ID,
     "45001 MICROFILM,,,5001 Microfilm,,,,,," + DEWEY_CN_TYPE_ID,
     "19 A2 C 6444218 MUSIC CD,,,9A2 C0444218 Music CD,,,,,," + DEWEY_CN_TYPE_ID,
+    "N 47307.I 15 S 15,,,N7307.I5 S5,,,,,," + DEWEY_CN_TYPE_ID,
     "GROUP Smith,,,GROUP Smith,,,,,,",
     "free-text,,,free-text,,,,,,",
     "RR 3718,,,RR 718,,,,,," + LC_CN_TYPE_ID,
     "QS 211 G A1 E53 42005 42005,QS11 .GA1 E53 2005,,QS 11 .GA1 E53 2005,,,2005,,," + NLM_CN_TYPE_ID,
     "WB 3102.5 B62 42018 42018,WB102.5 .B62 2018,,WB 102.5 B62 2018,,,2018,,," + NLM_CN_TYPE_ID,
-    "T 222 219 12  !V 288 !3989  !STUDENT  !SPANISH,,,T22.19/2:V88/989/student/spanish,,,,,," + SU_DOC_CN_TYPE_ID
+    "N 47307 I5 S5,,,N7307.I5 S5,,,,,," + NLM_CN_TYPE_ID,
+    "T 222 219 12  !V 288 !3989  !STUDENT  !SPANISH,,,T22.19/2:V88/989/student/spanish,,,,,," + SU_DOC_CN_TYPE_ID,
+    "!47307  !I 15  !S 15,,,7307.I5 S5,,,,,," + SU_DOC_CN_TYPE_ID
   })
   void inputForShelvingNumber(
     String desiredShelvingOrder,
