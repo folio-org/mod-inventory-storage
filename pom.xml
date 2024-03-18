@@ -33,7 +33,7 @@
     <JUnitParams.version>1.1.1</JUnitParams.version>
     <wiremock.version>3.4.2</wiremock.version>
     <rest-assured.version>5.4.0</rest-assured.version>
-    <awaitility.version>4.2.0</awaitility.version>
+    <awaitility.version>4.2.1</awaitility.version>
     <assertj.version>3.25.3</assertj.version>
 
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
