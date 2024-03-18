@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>27.0.5-SNAPSHOT</version>
+  <version>27.0.6-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>

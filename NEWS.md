@@ -1,3 +1,7 @@
+## v 27.0.5 2024-03-18
+### Features
+* Remove call number format validation [MODINVSTOR-1177](https://issues.folio.org/browse/MODINVSTOR-1177)
+
 ## v 27.0.4 2023-11-29
 ### Bug Fixes
 * Upgrade snappy-java from 1.1.8.1 to 1.1.10.5 fixing security vulnerabilities [MODINVSTOR-1139](https://issues.folio.org/browse/MODINVSTOR-1139)

@@ -1155,6 +1155,11 @@
       "run": "before",
       "snippetPath": "instance-hr-item/write.sql",
       "fromModuleVersion": "27.0.1"
+    },
+    {
+      "run": "before",
+      "snippetPath": "instance-hr-item/item-effective-values.sql",
+      "fromModuleVersion": "27.0.5"
     }
   ]
 }
