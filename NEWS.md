@@ -1,7 +1,4 @@
-## v27.1.0 In progress
-### Breaking changes
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
-
+## v27.1.0 2024-03-19
 ### New APIs versions
 * Provides `item-storage v10.1`
 * Provides `inventory-hierarchy 0.5`
@@ -11,6 +8,7 @@
 * Add location properties and material type id to inventory-hierarchy items-and-holdings response ([MODINVSTOR-1133](https://issues.folio.org/browse/MODINVSTOR-1133))
 * Add new field "Display summary" for the item schema ([MODINVSTOR-1154](https://issues.folio.org/browse/MODINVSTOR-1154))
 * Add new Identifier type Cancelled LCCN ([MODINVSTOR-1156](https://folio-org.atlassian.net/browse/MODINVSTOR-1156))
+* Add source field to contributor name type ([MODINVSTOR-1143](https://folio-org.atlassian.net/browse/MODINVSTOR-1143))
 * Classification-types: Publish domain events on changes ([MODINVSTOR-1171](https://folio-org.atlassian.net/browse/MODINVSTOR-1171))
 
 ### Bug fixes
@@ -19,6 +17,19 @@
 ### Tech Dept
 * Prevent virtual fields populating for holdings records ([MODINVSTOR-1094](https://issues.folio.org/browse/MODINVSTOR-1094))
 * Create base for reference data APIs integration tests ([MODINVSTOR-1164](https://issues.folio.org/browse/MODINVSTOR-1164))
+* Make response message more informative for hrid exceptions ([MODINVSTOR-1100](https://issues.folio.org/browse/MODINVSTOR-1100))
+
+
+### Dependencies
+* Bump `vertx` from `4.3.5` to `4.5.5`
+* Bump `log4j` from `2.17.2` to `2.23.1`
+* Bump `domain-models-runtime` from `35.0.4` to `35.2.0`
+* Bump `folio-kafka-wrapper` from `3.0.0` to `3.1.0`
+* Bump `caffeine` from `3.1.3` to `3.1.5`
+* Bump `lombok` from `1.18.24` to `1.18.30`
+* Bump `marc4j` from `2.9.4` to `2.9.5`
+* Bump `commons-lang3` from `3.12.0` to `3.14.0`
+* Bump `aspectj` from `1.9.19` to `1.9.21.2`
 
 ---
 
