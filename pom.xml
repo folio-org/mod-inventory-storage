@@ -13,7 +13,7 @@
     <argLine />
 
     <raml-module-builder-version>35.2.0</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.5</vertx.version>
+    <vertx.version>4.5.6</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.21.2</aspectj.version>
     <folio-kafka-wrapper.version>3.1.0</folio-kafka-wrapper.version>
