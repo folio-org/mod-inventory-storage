@@ -79,13 +79,13 @@
     },
     "primaryServicePoint": {
       "description": "The UUID of the primary service point of this (shelf) location.",
-      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      "format": "uuid",
       "type": "string"
     },
     "primaryServicePointObject": {
       "type": "object",
       "description": "Dereferenced object for primary service point. This should really just be called 'primaryServicePoint', but the field containing the ID of this object has that name -- it should really be called 'primaryServicePointId' -- so we need something different for this one.",
-      "$ref": "servicepoint.json",
+      "$ref": "../servicepoint.json",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "service-points",
@@ -99,7 +99,7 @@
       "items": {
         "description": "The UUID of a service point that belongs to this (shelf) location.",
         "type": "string",
-        "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+        "format": "uuid",
         "not": {
           "type": "null"
         }
@@ -110,7 +110,7 @@
       "description": "List of dereferenced service points",
       "items": {
         "type": "object",
-        "$ref": "servicepoint.json"
+        "$ref": "../servicepoint.json"
       },
       "readonly": true,
       "folio:isVirtual": true,
@@ -121,7 +121,7 @@
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema",
+      "$ref": "../raml-util/schemas/metadata.schema",
       "readonly": true
     }
   },
