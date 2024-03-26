@@ -1,8 +1,8 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.impl.LocationApi.LOCATION_TABLE;
 import static org.folio.rest.impl.StorageHelper.getCql;
 import static org.folio.rest.impl.StorageHelper.logAndSaveError;
+import static org.folio.services.location.LocationService.LOCATION_TABLE;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -32,8 +32,6 @@ import org.folio.rest.tools.utils.TenantTool;
  * @author kurt
  */
 public class ShelfLocationApi implements ShelfLocations {
-  public static final String SHELF_LOCATION_TABLE = "shelflocation";
-  public static final String URL_PREFIX = "/shelflocations";
   public static final String USE_NEW = "Use the new /locations interface instead.";
 
   /**
@@ -47,10 +45,10 @@ public class ShelfLocationApi implements ShelfLocations {
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       String tenantId = TenantTool.tenantId(okapiHeaders);
-      CQLWrapper cql = getCql(query, limit, offset, LocationApi.LOCATION_TABLE);
+      CQLWrapper cql = getCql(query, limit, offset, LOCATION_TABLE);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(
-          LocationApi.LOCATION_TABLE, Location.class, new String[] {"*"},
+          LOCATION_TABLE, Location.class, new String[] {"*"},
           cql, true, true, reply -> {
             try {
               if (reply.failed()) {
