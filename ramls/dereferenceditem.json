@@ -307,17 +307,17 @@
     "permanentLocation": {
       "type": "object",
       "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
-      "$ref": "location.json"
+      "$ref": "locations/location.json"
     },
     "temporaryLocation": {
       "type": "object",
       "description": "Temporary item location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
-      "$ref": "location.json"
+      "$ref": "locations/location.json"
     },
     "effectiveLocation": {
       "type": "object",
       "description": "Read only current home location for the item.",
-      "$ref": "location.json",
+      "$ref": "locations/location.json",
       "readonly": true
     },
     "electronicAccess": {

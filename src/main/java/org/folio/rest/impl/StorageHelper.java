@@ -24,7 +24,7 @@ public final class StorageHelper {
     throw new UnsupportedOperationException("Cannot instantiate utility class");
   }
 
-  static String logAndSaveError(Throwable err) {
+  public static String logAndSaveError(Throwable err) {
     String message = err.getLocalizedMessage();
     logger.error(message, err);
     return message;
