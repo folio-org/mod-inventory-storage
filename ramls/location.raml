@@ -10,8 +10,8 @@ documentation:
       (shelf) locations of the system
 
 types:
-  location: !include location.json
-  locations: !include locations.json
+  location: !include locations/location.json
+  locations: !include locations/locations.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -27,8 +27,8 @@ resourceTypes:
 /locations:
   type:
     collection:
-      exampleCollection: !include examples/locations.json
-      exampleItem: !include examples/location.json
+      exampleCollection: !include examples/locations/locations.json
+      exampleItem: !include examples/locations/location.json
       schemaCollection: locations
       schemaItem: location
   get:
@@ -54,7 +54,7 @@ resourceTypes:
     description: "Pass in the  location id"
     type:
       collection-item:
-        exampleItem: !include examples/location.json
+        exampleItem: !include examples/locations/location.json
         schema: location
     get:
     put:

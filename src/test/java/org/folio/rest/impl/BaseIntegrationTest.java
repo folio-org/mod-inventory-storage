@@ -84,6 +84,7 @@ public class BaseIntegrationTest {
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext ctx) throws Throwable {
     port = NetworkUtils.nextFreePort();
+    System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
     System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
     System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
     Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
@@ -115,10 +116,10 @@ public class BaseIntegrationTest {
       })));
   }
 
-  private static JsonObject getJob(String moduleFrom, String moduleTo, boolean loadSample) {
+  private static JsonObject getJob(String moduleFrom, String moduleTo, boolean loadReference) {
     JsonArray ar = new JsonArray();
-    ar.add(new JsonObject().put("key", "loadReference").put("value", "false"));
-    ar.add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample)));
+    ar.add(new JsonObject().put("key", "loadReference").put("value", Boolean.toString(loadReference)));
+    ar.add(new JsonObject().put("key", "loadSample").put("value", "false"));
 
     JsonObject jo = new JsonObject();
     jo.put("parameters", ar);
