@@ -74,6 +74,7 @@ public class ServicePointTest extends TestBase {
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("code"), is("cd1"));
     assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
+    assertThat(response.getJson().getBoolean("ecsRequestRouting"), is(false));
   }
 
   @Test
@@ -780,8 +781,7 @@ public class ServicePointTest extends TestBase {
   private Response getById(UUID id)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
