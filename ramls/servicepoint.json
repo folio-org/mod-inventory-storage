@@ -74,7 +74,7 @@
     },
     "ecsRequestRouting": {
       "type": "boolean",
-      "description": "indicates service point used for ECS functionality",
+      "description": "Indicates a service point used for the ECS functionality",
       "default" : false
     },
     "metadata": {
