@@ -246,7 +246,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(itemFetched.getEffectiveLocationId(), ANNEX_LIBRARY_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
+      pojo2JsonObject(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
@@ -265,7 +265,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(itemFetched.getEffectiveLocationId(), ONLINE_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
+      pojo2JsonObject(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
@@ -283,7 +283,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     item = getItem(item.getId());
 
     item.setTemporaryLocationId(SECOND_FLOOR_LOCATION_ID.toString());
-    itemsClient.replace(UUID.fromString(item.getId()), JsonObject.mapFrom(item));
+    itemsClient.replace(UUID.fromString(item.getId()), pojo2JsonObject(item));
 
     Row result = runSql(
       "SELECT jsonb, effectiveLocationId "

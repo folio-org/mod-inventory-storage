@@ -21,7 +21,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-import lombok.SneakyThrows;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.InstanceType;
@@ -82,7 +81,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String nonCirculatingLoanTypeID;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
-  @SneakyThrows
   @BeforeClass
   public static void testBaseWithInvUtilBeforeClass() {
     logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
@@ -276,7 +274,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       it.withName("Default Instance Type");
       it.withSource("local");
 
-      instanceTypesClient.create(JsonObject.mapFrom(it));
+      instanceTypesClient.create(pojo2JsonObject(it));
     }
   }
 
@@ -336,7 +334,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected IndividualResource createItem(Item item) {
-    return itemsClient.create(JsonObject.mapFrom(item));
+    return itemsClient.create(pojo2JsonObject(item));
   }
 
   protected IndividualResource createItem(ItemRequestBuilder item) {

@@ -17,6 +17,7 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
@@ -202,6 +204,14 @@ public abstract class TestBase {
     getClient().get(url, tenantId, ResponseHandler.text(getCompleted));
     Response response = get(getCompleted);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+  }
+
+  public static JsonObject pojo2JsonObject(Object entity) {
+    try {
+      return PostgresClient.pojo2JsonObject(entity);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }

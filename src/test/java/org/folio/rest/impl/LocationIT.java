@@ -10,7 +10,6 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
@@ -140,7 +139,7 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
     HttpClient client = vertx.createHttpClient();
     var invalidRecord = sampleRecord().withServicePointIds(null).withId(UUID.randomUUID().toString());
 
-    doPut(client, resourceUrlById(invalidRecord.getId()), JsonObject.mapFrom(invalidRecord))
+    doPut(client, resourceUrlById(invalidRecord.getId()), pojo2JsonObject(invalidRecord))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var actual = response.bodyAsClass(Errors.class);
