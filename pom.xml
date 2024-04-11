@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>27.0.6</version>
+  <version>27.0.7-SNAPSHOT</version>
   <licenses>
     <license>
       <name>Apache License 2.0</name>
@@ -259,7 +259,7 @@
     <url>https://github.com/folio-org/mod-inventory-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
-    <tag>v27.0.6</tag>
+    <tag>v24.0.3</tag>
   </scm>
 
   <build>
