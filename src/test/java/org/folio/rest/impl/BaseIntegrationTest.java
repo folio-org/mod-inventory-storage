@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.api.TestBase;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -152,6 +153,10 @@ public class BaseIntegrationTest {
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
 
     return request;
+  }
+
+  public static JsonObject pojo2JsonObject(Object entity) {
+    return TestBase.pojo2JsonObject(entity);
   }
 
   public record TestResponse(int status, Buffer body) {

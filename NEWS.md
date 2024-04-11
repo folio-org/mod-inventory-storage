@@ -1,6 +1,6 @@
 ## v27.2.0 In progress
 ### Breaking changes
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
@@ -10,13 +10,15 @@
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
 
 ### Bug fixes
+* Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
 
 ### Tech Dept
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `domain-models-runtime` from `35.2.0` to `35.2.1`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 
