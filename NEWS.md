@@ -1,3 +1,12 @@
+## v 27.0.6 not yet released
+### Bug Fixes
+* RMB 35.1.3 (Vert.x 4.4.9, log4j 2.20.0) fixing unintended optimistic locking [MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186)
+
+### Dependencies
+* Bump `RMB` (`domain-models-runtime`, `util`, ...) from Orchid `35.0.4` to Poppy `35.1.3`
+* Bump `Vert.x` from Orchid `4.3.5` to Poppy `4.4.9` fixing CVE-2024-1023: https://github.com/advisories/GHSA-5667-3wch-7q7w
+* Bump `Log4j` from Orchid 2.17.2 to Poppy `2.20.0`.
+
 ## v 27.0.5 2024-03-18
 ### Features
 * Remove call number format validation [MODINVSTOR-1177](https://issues.folio.org/browse/MODINVSTOR-1177)
