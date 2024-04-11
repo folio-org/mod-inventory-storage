@@ -1,4 +1,4 @@
-## v 27.0.6 not yet released
+## v 27.0.6 2024-04-11
 ### Bug Fixes
 * RMB 35.1.3 (Vert.x 4.4.9, log4j 2.20.0) fixing unintended optimistic locking [MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186)
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
