@@ -1,3 +1,9 @@
+## v27.1.1 2024-04-11
+### Bug fixes
+* Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
+
+---
+
 ## v27.1.0 2024-03-19
 ### New APIs versions
 * Provides `item-storage v10.1`
