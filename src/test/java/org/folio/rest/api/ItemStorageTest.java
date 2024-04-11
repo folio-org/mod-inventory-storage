@@ -15,6 +15,8 @@ import static org.folio.rest.support.JsonObjectMatchers.validationErrorMatches;
 import static org.folio.rest.support.ResponseHandler.empty;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
+import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
@@ -2995,6 +2997,70 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       containsString(nonExistentStatisticalCodeId.toString()),
       containsString("foreign key violation in statisticalCodeIds array of item"),
       containsString(itemId)));
+  }
+
+  /**
+   * <a href="https://folio-org.atlassian.net/browse/MODINVSTOR-1186">
+   * MODINVSTOR-1186: Unintended update of instance records _version (optimistic locking)
+   * whenever any of its holdings or items are created, updated or deleted.
+   * </a>.
+   *
+   * <p>When changing holding or item all instance properties including _version should
+   * remain unchanged.
+   */
+  @Test
+  @SneakyThrows
+  public void canChangeItemWithoutChangingInstance() {
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var holding = getHolding(holdingId);
+    var instanceId = holding.getString("instanceId");
+    var instance = getInstance(instanceId);
+
+    // POST new item
+    var itemId = UUID.randomUUID();
+    var item = nod(itemId, holdingId);
+    var res = getClient().post(itemsStorageUrl(""), item, TENANT_ID).get(5, SECONDS);
+    item = res.getJson();
+    assertThat(res.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(getInstance(instanceId), is(instance));
+
+    // PUT changed item
+    item.put("barcode", "98765");
+    res = getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID).get(5, SECONDS);
+    assertThat(res.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getInstance(instanceId), is(instance));
+
+    // DELETE item
+    res = getClient().delete(itemsStorageUrl("/" + itemId), TENANT_ID).get(5, SECONDS);
+    assertThat(res.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getInstance(instanceId), is(instance));
+
+    // PUT changed holding
+    holding.put("tags", new JsonObject().put("tagList", new JsonArray().add("foo")));
+    res = getClient().put(holdingsStorageUrl("/" + holdingId), holding, TENANT_ID).get(5, SECONDS);
+    assertThat(res.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getInstance(instanceId), is(instance));
+
+    // DELETE holding
+    res = getClient().delete(holdingsStorageUrl("/" + holdingId), TENANT_ID).get(5, SECONDS);
+    assertThat(res.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertThat(getInstance(instanceId), is(instance));
+  }
+
+  @SneakyThrows
+  private JsonObject getHolding(UUID holdingId) {
+    var response = getClient().get(holdingsStorageUrl("/" + holdingId), TENANT_ID)
+        .get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    return response.getJson();
+  }
+
+  @SneakyThrows
+  private JsonObject getInstance(String instanceId) {
+    var response = getClient().get(instancesStorageUrl("/" + instanceId), TENANT_ID)
+        .get(5, SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    return response.getJson();
   }
 
   private JsonArray threeItems() {
