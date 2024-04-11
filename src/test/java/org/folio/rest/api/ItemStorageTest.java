@@ -2416,11 +2416,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testItemHasLastCheckInProperties()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  @SneakyThrows
+  public void testItemHasLastCheckInProperties() {
     UUID itemId = UUID.randomUUID();
     UUID userId = UUID.randomUUID();
     UUID servicePointId = UUID.randomUUID();
@@ -2433,7 +2430,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     expected.setStaffMemberId(userId.toString());
     expected.setServicePointId(servicePointId.toString());
     expected.setDateTime(new Date());
-    JsonObject lastCheckInData = JsonObject.mapFrom(expected);
+    JsonObject lastCheckInData = pojo2JsonObject(expected);
     itemData.put("lastCheckIn", lastCheckInData);
 
     itemsClient.replace(itemId, itemData);

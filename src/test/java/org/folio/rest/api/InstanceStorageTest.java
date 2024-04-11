@@ -194,7 +194,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
-    instanceToCreate.put("publication", new JsonArray().add(JsonObject.mapFrom(publication)));
+    instanceToCreate.put("publication", new JsonArray().add(pojo2JsonObject(publication)));
     instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -1568,9 +1568,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
     }
 
-    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+    JsonObject instanceCollection = new JsonObject()
       .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances));
+      .put(TOTAL_RECORDS_KEY, numberOfInstances);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1609,10 +1609,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject secondErrorInstance = firstErrorInstance.copy()
       .put("id", UUID.randomUUID().toString());
 
-    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+    JsonObject instanceCollection = new JsonObject()
       .put(INSTANCES_KEY, new JsonArray().add(firstCorrectInstance).add(firstErrorInstance)
         .add(secondCorrectInstance).add(secondErrorInstance))
-      .put(TOTAL_RECORDS_KEY, 4));
+      .put(TOTAL_RECORDS_KEY, 4);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1648,9 +1648,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
 
-    JsonObject instanceCollection = JsonObject.mapFrom(new JsonObject()
+    JsonObject instanceCollection = new JsonObject()
       .put(INSTANCES_KEY, new JsonArray().add(errorInstance).add(errorInstance).add(errorInstance))
-      .put(TOTAL_RECORDS_KEY, 3));
+      .put(TOTAL_RECORDS_KEY, 3);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -2082,7 +2082,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .put("source", "CONSORTIUM-MARC").put("hrid", newHrid);
 
     final IndividualResource updateInstance =
-      updateInstance(JsonObject.mapFrom(instance));
+      updateInstance(pojo2JsonObject(instance));
 
     assertThat(updateInstance.getJson().mapTo(Instance.class).getHrid(), is(newHrid));
 
@@ -2564,11 +2564,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var entity = smallAngryPlanet(UUID.randomUUID()).mapTo(Instance.class)
       .withPublication(Collections.singletonList(new Publication().withDateOfPublication("1997")));
 
-    IndividualResource instance = createInstance(JsonObject.mapFrom(entity));
+    IndividualResource instance = createInstance(pojo2JsonObject(entity));
     entity = instance.getJson().mapTo(Instance.class)
       .withPublication(Collections.singletonList(new Publication().withDateOfPublication("2006")));
 
-    final IndividualResource updateInstance = updateInstance(JsonObject.mapFrom(entity));
+    final IndividualResource updateInstance = updateInstance(pojo2JsonObject(entity));
 
     assertEquals(Integer.valueOf(2006),
       updateInstance.getJson().mapTo(Instance.class).getPublicationPeriod().getStart());

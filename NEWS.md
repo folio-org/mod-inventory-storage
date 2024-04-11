@@ -1,6 +1,10 @@
 ## v27.1.1 2024-04-11
 ### Bug fixes
+* Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
+
+### Dependencies
+* Bump `domain-models-runtime` from `35.2.0` to `35.2.1`
 
 ---
 

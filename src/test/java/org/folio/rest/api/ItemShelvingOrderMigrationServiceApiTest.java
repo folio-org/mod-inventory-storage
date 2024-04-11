@@ -50,7 +50,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   }
 
   private JsonObject getTenantAttributes() {
-    return JsonObject.mapFrom(new TenantAttributes()
+    return pojo2JsonObject(new TenantAttributes()
       .withModuleFrom("20.1.1")
       .withModuleTo("20.2." + nextPatch.incrementAndGet())
       .withParameters(List.of(

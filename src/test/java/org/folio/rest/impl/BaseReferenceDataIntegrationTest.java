@@ -13,7 +13,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -178,7 +177,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
     var newRecord = sampleRecord();
 
-    doPost(client, resourceUrl(), JsonObject.mapFrom(newRecord))
+    doPost(client, resourceUrl(), pojo2JsonObject(newRecord))
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var createdRecord = response.bodyAsClass(targetClass());
@@ -219,7 +218,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
     postgresClient.save(referenceTable(), newRecord)
       .compose(id -> {
         var updatedRecord = recordModifyingFunction().apply(newRecord);
-        return doPut(client, resourceUrlById(id), JsonObject.mapFrom(updatedRecord))
+        return doPut(client, resourceUrlById(id), pojo2JsonObject(updatedRecord))
           .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
           .compose(r -> postgresClient.getById(referenceTable(), id, targetClass())
             .onComplete(ctx.succeeding(dbRecord -> ctx.verify(() -> {

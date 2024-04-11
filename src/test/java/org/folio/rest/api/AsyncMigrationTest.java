@@ -79,7 +79,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-      itemsClient.create(JsonObject.mapFrom(buildItem(holdingsRecordId, ONLINE_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
+      itemsClient.create(pojo2JsonObject(buildItem(holdingsRecordId, ONLINE_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
         .withItemLevelCallNumber("K1 .M44")
         .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
 
