@@ -120,7 +120,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-kafka-wrapper</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.3</version>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
