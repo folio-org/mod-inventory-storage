@@ -1156,7 +1156,7 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/createIndexCompleteUpdatedDate.sql",
-      "fromModuleVersion": "27.1.0"
+      "fromModuleVersion": "27.1.2"
     }
   ]
 }
