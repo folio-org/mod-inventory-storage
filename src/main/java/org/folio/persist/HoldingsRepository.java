@@ -8,7 +8,6 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.Map;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.persist.cql.CQLWrapper;
 
@@ -23,7 +22,7 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
    */
   public Future<RowSet<Row>> delete(String cql) {
     try {
-      CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
+      CQLWrapper cqlWrapper = new CQLWrapper(Cql2PgJsonHolder.getCql2PgJson(tableName), cql, -1, -1);
       String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
         + " " + cqlWrapper.getWhereClause()
         + " RETURNING instanceId::text, jsonb::text";

@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.persist.Cql2PgJsonHolder;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
@@ -87,7 +87,7 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
     if (query != null) {
       try {
         CQLWrapper wrapper = new CQLWrapper(
-          new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
+          Cql2PgJsonHolder.getCql2PgJson(ITEM_TABLE), query, limit, offset);
         whereClause = wrapper.toString();
       } catch (Exception e) {
         respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);

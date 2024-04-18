@@ -16,7 +16,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.persist.entity.GetInstanceStorageInstancesResponseInternal;
 import org.folio.persist.entity.InstanceInternal;
@@ -27,8 +26,6 @@ import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -49,11 +46,7 @@ public class InstanceStorageApi implements InstanceStorage {
     int offset,
     String tableName) throws FieldException {
 
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-
-    return new CQLWrapper(cql2pgJson, query)
-      .setLimit(new Limit(limit))
-      .setOffset(new Offset(offset));
+    return StorageHelper.getCql(query, limit, offset, tableName);
   }
 
   @Validate

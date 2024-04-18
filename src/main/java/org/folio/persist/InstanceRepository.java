@@ -10,7 +10,6 @@ import io.vertx.sqlclient.RowStream;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.SQLConnection;
@@ -39,7 +38,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
    */
   public Future<RowSet<Row>> delete(String cql) {
     try {
-      CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
+      CQLWrapper cqlWrapper = new CQLWrapper(Cql2PgJsonHolder.getCql2PgJson(tableName), cql, -1, -1);
       String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
         + " " + cqlWrapper.getWhereClause()
         + " RETURNING id::text, jsonb::text";
@@ -85,7 +84,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         .append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE))
         .append(" USING (id) ");
 
-      var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
+      var field = Cql2PgJsonHolder.getCql2PgJson(INSTANCE_TABLE);
       var cqlWrapper = new CQLWrapper(field, query, limit, offset, "none");
       sql.append(cqlWrapper);
 
