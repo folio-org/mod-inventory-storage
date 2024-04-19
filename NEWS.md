@@ -1,3 +1,7 @@
+## v27.1.3 2024-04-19
+### Bug fixes
+* Create missing index for instance.complete_updated_date (MODINVSTOR-1190)[https://folio-org.atlassian.net/browse/MODINVSTOR-1190]
+
 ## v27.1.2 2024-04-12
 ### Bug fixes
 * Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
