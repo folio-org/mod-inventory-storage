@@ -13,6 +13,7 @@
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
 * Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
+* Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
 
 ### Tech Dept
 * Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
