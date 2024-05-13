@@ -88,6 +88,11 @@ public class HoldingsService {
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
+    try {
+      Thread.sleep(300000);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
