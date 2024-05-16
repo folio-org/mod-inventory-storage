@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Service Points API
-version: v3.4
+version: v3.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -34,6 +34,12 @@ resourceTypes:
       searchable: { description: "with valid searchable fields", example: "name=aaa"},
       pageable
     ]
+    queryParameters:
+      includeRoutingServicePoints:
+        description: "Should routing service points (used in ECS) be included in the response"
+        default: false
+        required: false
+        type: boolean
     description: Return a list of service points
   post:
     description: Create a new service point

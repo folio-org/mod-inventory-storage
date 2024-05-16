@@ -184,7 +184,7 @@ public final class LocationUtility {
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description,
-      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), TENANT_ID);
+      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), null, TENANT_ID);
   }
 
   public static Response createServicePoint(UUID id, String name, String code,
@@ -194,7 +194,7 @@ public final class LocationUtility {
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description,
-      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), tenantId);
+      shelvingLagTime, pickupLocation, shelfExpiryPeriod, Collections.emptyList(), null, tenantId);
   }
 
   public static Response createServicePoint(UUID id, String name, String code,
@@ -204,13 +204,13 @@ public final class LocationUtility {
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description, shelvingLagTime, pickupLocation,
-      shelfExpiryPeriod, slips, TENANT_ID);
+      shelfExpiryPeriod, slips, null, TENANT_ID);
   }
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
                                             Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
-                                            List<StaffSlip> slips, String tenantId)
+                                            List<StaffSlip> slips, Boolean ecsRequestRouting, String tenantId)
     throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
@@ -219,6 +219,9 @@ public final class LocationUtility {
       .put("name", name)
       .put("code", code)
       .put("discoveryDisplayName", discoveryDisplayName);
+    if (ecsRequestRouting != null) {
+      request.put("ecsRequestRouting", ecsRequestRouting);
+    }
     if (id != null) {
       request.put("id", id.toString());
     }

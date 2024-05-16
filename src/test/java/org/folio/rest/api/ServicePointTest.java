@@ -1,19 +1,18 @@
 package org.folio.rest.api;
 
+import static java.util.Collections.emptyList;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 import static org.folio.utility.LocationUtility.createServicePoint;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.RestUtility.send;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import lombok.SneakyThrows;
+
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.StaffSlip;
@@ -33,6 +32,12 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.messages.ServicePointEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
+
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import lombok.SneakyThrows;
 
 public class ServicePointTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
@@ -763,12 +768,45 @@ public class ServicePointTest extends TestBase {
       is(pickupLocationServicePointId.toString()));
   }
 
+  @Test
+  public void routingServicePointsAreNotReturnedByDefault() throws Exception {
+    UUID regularSpId = UUID.randomUUID();
+    UUID routingSpId = UUID.randomUUID();
+
+    createServicePoint(regularSpId, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", null, 20,
+      true, createHoldShelfExpiryPeriod(), emptyList(), null, TENANT_ID);
+    createServicePoint(routingSpId, "Circ Desk 2", "cd2", "Circulation Desk -- Basement",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), true, TENANT_ID);
+
+    List<String> regularServicePointIds = get("")
+      .stream()
+      .map(json -> json.getString("id"))
+      .toList();
+
+    assertThat(regularServicePointIds.size(), is(1));
+    assertThat(regularServicePointIds, hasItems(regularSpId.toString()));
+
+    List<String> allServicePointIds = get("?includeRoutingServicePoints=true")
+      .stream()
+      .map(json -> json.getString("id"))
+      .toList();
+
+    assertThat(allServicePointIds.size(), is(2));
+    assertThat(allServicePointIds, hasItems(regularSpId.toString(), routingSpId.toString()));
+  }
+
   private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
+    return get("?query=" + String.format(cql, args));
+  }
+
+  private List<JsonObject> get(String queryParams) throws InterruptedException,
     ExecutionException, TimeoutException {
 
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(servicePointsUrl("?query=" + String.format(cql, args)),
+    send(servicePointsUrl(queryParams),
       HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 

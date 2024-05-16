@@ -11,6 +11,8 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -32,13 +34,22 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC =
     "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
   private static final Logger logger = LogManager.getLogger();
+  private static final String DEFAULT_QUERY = "cql.allRecords=1";
+  private static final String ECS_ROUTING_QUERY_FILTER = " NOT ecsRequestRouting=true";
 
   @Validate
   @Override
-  public void getServicePoints(String query, String totalRecords, int offset, int limit,
-                               Map<String, String> okapiHeaders,
-                               Handler<AsyncResult<Response>> asyncResultHandler,
-                               Context vertxContext) {
+  public void getServicePoints(boolean includeRoutingServicePoints, String query,
+    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    if (!includeRoutingServicePoints) {
+      if (StringUtils.isBlank(query)) {
+        query = DEFAULT_QUERY;
+      }
+      query += ECS_ROUTING_QUERY_FILTER;
+    }
 
     PgUtil.get(SERVICE_POINT_TABLE, Servicepoint.class, Servicepoints.class,
       query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
