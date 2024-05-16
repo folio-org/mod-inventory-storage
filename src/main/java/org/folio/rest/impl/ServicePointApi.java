@@ -40,9 +40,10 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Validate
   @Override
   public void getServicePoints(boolean includeRoutingServicePoints, String query,
-    String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
+                               String totalRecords, int offset, int limit,
+                               Map<String, String> okapiHeaders,
+                               Handler<AsyncResult<Response>> asyncResultHandler,
+                               Context vertxContext) {
 
     if (!includeRoutingServicePoints) {
       if (StringUtils.isBlank(query)) {
