@@ -12,6 +12,8 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
@@ -26,6 +28,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -36,7 +41,9 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.messages.ServicePointEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class ServicePointTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private final ServicePointEventMessageChecks servicePointEventMessageChecks =
@@ -715,6 +722,44 @@ public class ServicePointTest extends TestBase {
   }
 
   @Test
+  @Parameters({
+    "false, ", // no query parameters
+    "false, ?query=code=cd*",
+    "false, ?includeRoutingServicePoints=false",
+    "false, ?includeRoutingServicePoints=false&query=code=cd*",
+    "true,  ?includeRoutingServicePoints=true",
+    "true,  ?includeRoutingServicePoints=true&query=code=cd*"
+  })
+  public void ecsRequestRoutingServicePointsAreOnlyReturnedWhenExplicitlyRequested(
+    boolean isRoutingServicePointExpectedInResponse, String queryParameters) throws Exception {
+
+    UUID regularServicePointId1 = UUID.randomUUID();
+    UUID regularServicePointId2 = UUID.randomUUID();
+    UUID routingServicePointId = UUID.randomUUID();
+
+    createServicePoint(regularServicePointId1, "Circ Desk 1", "cd1", "Circulation Desk 1",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), null, TENANT_ID);
+    createServicePoint(regularServicePointId2, "Circ Desk 2", "cd2", "Circulation Desk 2",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), false, TENANT_ID);
+    createServicePoint(routingServicePointId, "Circ Desk 3", "cd3", "Circulation Desk 3",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), true, TENANT_ID);
+
+    List<String> regularServicePointIds = get(queryParameters)
+      .stream()
+      .map(json -> json.getString("id"))
+      .toList();
+
+    assertThat(regularServicePointIds,
+      hasItems(regularServicePointId1.toString(), regularServicePointId2.toString()));
+    if (isRoutingServicePointExpectedInResponse) {
+      assertThat(regularServicePointIds, hasItem(routingServicePointId.toString()));
+      assertThat(regularServicePointIds, hasSize(3));
+    } else {
+      assertThat(regularServicePointIds, hasSize(2));
+    }
+  }
+
+  @Test
   public void canUpdateServicePointWithStaffSlips() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
@@ -764,34 +809,6 @@ public class ServicePointTest extends TestBase {
     assertThat(servicePoints.size(), is(1));
     assertThat(servicePoints.get(0).getString("id"),
       is(pickupLocationServicePointId.toString()));
-  }
-
-  @Test
-  public void ecsRequestRoutingServicePointsAreNotReturnedByDefault() throws Exception {
-    UUID regularServicePointId = UUID.randomUUID();
-    UUID routingServicePointId = UUID.randomUUID();
-
-    createServicePoint(regularServicePointId, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway",
-      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), null, TENANT_ID);
-    createServicePoint(routingServicePointId, "Circ Desk 2", "cd2", "Circulation Desk -- Basement",
-      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), true, TENANT_ID);
-
-    List<String> regularServicePointIds = get("")
-      .stream()
-      .map(json -> json.getString("id"))
-      .toList();
-
-    assertThat(regularServicePointIds.size(), is(1));
-    assertThat(regularServicePointIds, hasItems(regularServicePointId.toString()));
-
-    List<String> allServicePointIds = get("?includeRoutingServicePoints=true")
-      .stream()
-      .map(json -> json.getString("id"))
-      .toList();
-
-    assertThat(allServicePointIds.size(), is(2));
-    assertThat(allServicePointIds,
-      hasItems(regularServicePointId.toString(), routingServicePointId.toString()));
   }
 
   private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
