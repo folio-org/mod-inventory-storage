@@ -729,7 +729,7 @@ public class ServicePointTest extends TestBase {
     "true,  ?includeRoutingServicePoints=true",
     "true,  ?includeRoutingServicePoints=true&query=code=cd*"
   })
-  public void ecsRequestRoutingServicePointsAreOnlyReturnedWhenExplicitlyRequested(
+  public void ecsRequestRoutingServicePointsAreReturnedOnlyWhenExplicitlyRequested(
     boolean isRoutingServicePointExpectedInResponse, String queryParameters) throws Exception {
 
     UUID regularServicePointId1 = UUID.randomUUID();
@@ -743,18 +743,18 @@ public class ServicePointTest extends TestBase {
     createServicePoint(routingServicePointId, "Circ Desk 3", "cd3", "Circulation Desk 3",
       null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), true, TENANT_ID);
 
-    List<String> regularServicePointIds = get(queryParameters)
+    List<String> servicePointIds = get(queryParameters)
       .stream()
       .map(json -> json.getString("id"))
       .toList();
 
-    assertThat(regularServicePointIds,
+    assertThat(servicePointIds,
       hasItems(regularServicePointId1.toString(), regularServicePointId2.toString()));
     if (isRoutingServicePointExpectedInResponse) {
-      assertThat(regularServicePointIds, hasItem(routingServicePointId.toString()));
-      assertThat(regularServicePointIds, hasSize(3));
+      assertThat(servicePointIds, hasItem(routingServicePointId.toString()));
+      assertThat(servicePointIds, hasSize(3));
     } else {
-      assertThat(regularServicePointIds, hasSize(2));
+      assertThat(servicePointIds, hasSize(2));
     }
   }
 
