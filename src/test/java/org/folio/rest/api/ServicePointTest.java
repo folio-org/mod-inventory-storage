@@ -730,7 +730,7 @@ public class ServicePointTest extends TestBase {
     "true,  ?includeRoutingServicePoints=true&query=code=cd*"
   })
   public void ecsRequestRoutingServicePointsAreReturnedOnlyWhenExplicitlyRequested(
-    boolean isRoutingServicePointExpectedInResponse, String queryParameters) throws Exception {
+    boolean shouldReturnRoutingServicePoints, String queryParameters) throws Exception {
 
     UUID regularServicePointId1 = UUID.randomUUID();
     UUID regularServicePointId2 = UUID.randomUUID();
@@ -750,7 +750,7 @@ public class ServicePointTest extends TestBase {
 
     assertThat(servicePointIds,
       hasItems(regularServicePointId1.toString(), regularServicePointId2.toString()));
-    if (isRoutingServicePointExpectedInResponse) {
+    if (shouldReturnRoutingServicePoints) {
       assertThat(servicePointIds, hasItem(routingServicePointId.toString()));
       assertThat(servicePointIds, hasSize(3));
     } else {
