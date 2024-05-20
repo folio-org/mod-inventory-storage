@@ -14,6 +14,7 @@ import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
@@ -32,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
-import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -91,7 +92,8 @@ public class HoldingsService {
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
     if (holdingsRecord.getSourceId() == null) {
-      return failedFuture(new BadRequestException("The sourceId field required: cannot be null or deleted"));
+      return failedFuture(new ValidationException(createValidationErrorMessage("sourceId",
+        holdingsRecord.getSourceId(), "The sourceId field required: cannot be null or deleted")));
     }
 
     return holdingsRepository.getById(holdingId)
