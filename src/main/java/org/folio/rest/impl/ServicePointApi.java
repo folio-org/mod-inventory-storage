@@ -44,12 +44,16 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
 
+    logger.info("includeRoutingServicePoints: {}, query: {}", includeRoutingServicePoints, query);
+
     if (!includeRoutingServicePoints) {
       if (StringUtils.isBlank(query)) {
         query = DEFAULT_QUERY;
       }
       query += ECS_ROUTING_QUERY_FILTER;
     }
+
+    logger.info("new query: {}", query);
 
     PgUtil.get(SERVICE_POINT_TABLE, Servicepoint.class, Servicepoints.class,
       query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);

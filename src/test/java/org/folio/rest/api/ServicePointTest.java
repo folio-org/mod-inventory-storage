@@ -723,11 +723,11 @@ public class ServicePointTest extends TestBase {
   @Test
   @Parameters({
     "false, ", // no query parameters
-    "false, ?query=code=cd*",
+    "false, ?query=code%3D%22cd*%22%20sortby%20name",
     "false, ?includeRoutingServicePoints=false",
-    "false, ?includeRoutingServicePoints=false&query=code=cd*",
+    "false, ?includeRoutingServicePoints=false&query=code%3D%22cd*%22%20sortby%20name",
     "true,  ?includeRoutingServicePoints=true",
-    "true,  ?includeRoutingServicePoints=true&query=code=cd*"
+    "true,  ?includeRoutingServicePoints=true&query=code%3D%22cd*%22%20sortby%20name"
   })
   public void ecsRequestRoutingServicePointsAreReturnedOnlyWhenExplicitlyRequested(
     boolean shouldReturnRoutingServicePoints, String queryParameters) throws Exception {
