@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.Boolean.TRUE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
@@ -11,7 +12,6 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
@@ -33,8 +33,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC =
     "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
   private static final Logger logger = LogManager.getLogger();
-  private static final String DEFAULT_QUERY = "cql.allRecords=1";
-  private static final String ECS_ROUTING_QUERY_FILTER = " NOT ecsRequestRouting=true";
+  private static final String ECS_ROUTING_QUERY_FILTER = "cql.allRecords=1 NOT ecsRequestRouting=true";
 
   @Validate
   @Override
@@ -44,13 +43,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
 
-    if (!includeRoutingServicePoints) {
-      if (StringUtils.isBlank(query)) {
-        query = DEFAULT_QUERY;
-      }
-      query += ECS_ROUTING_QUERY_FILTER;
-    }
-
+    query = updateGetServicePointsQuery(query, includeRoutingServicePoints);
     PgUtil.get(SERVICE_POINT_TABLE, Servicepoint.class, Servicepoints.class,
       query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
   }
@@ -270,6 +263,21 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   private Future<Boolean> checkServicePointInUse() {
     return Future.succeededFuture(false);
+  }
+
+  private static String updateGetServicePointsQuery(String query, boolean includeRoutingServicePoints) {
+    if (includeRoutingServicePoints) {
+      return query;
+    }
+
+    logger.debug("updateGetServicePointsQuery:: original query: {}", query);
+    String newQuery = ECS_ROUTING_QUERY_FILTER;
+    if (!isBlank(query)) {
+      newQuery += " and " + query;
+    }
+    logger.debug("updateGetServicePointsQuery:: updated query: {}", newQuery);
+
+    return newQuery;
   }
 
 }
