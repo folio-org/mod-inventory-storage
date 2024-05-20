@@ -43,11 +43,11 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     JsonObject source = holdingsSourceClient.create(
       new JsonObject()
         .put("id", sourceId.toString())
-        .put("name", "test source")
+        .put("name", "test source name")
     ).getJson();
 
     assertThat(source.getString("id"), is(sourceId.toString()));
-    assertThat(source.getString("name"), is("test source"));
+    assertThat(source.getString("name"), is("test source name"));
 
     Response getResponse = holdingsSourceClient.getById(sourceId);
 
@@ -56,7 +56,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
     JsonObject sourceFromGet = getResponse.getJson();
 
     assertThat(sourceFromGet.getString("id"), is(sourceId.toString()));
-    assertThat(sourceFromGet.getString("name"), is("test source"));
+    assertThat(sourceFromGet.getString("name"), is("test source name"));
   }
 
   @Test

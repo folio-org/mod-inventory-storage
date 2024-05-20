@@ -1114,6 +1114,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(expectedHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .forInstance(expectedInstanceId)
       .create());
@@ -1132,6 +1133,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(otherHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .forInstance(otherInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create());
@@ -1159,6 +1161,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(mainLibrarySmallAngryHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .forInstance(smallAngryPlanetInstanceId)
       .create());
@@ -1174,6 +1177,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(annexSmallAngryHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)
       .forInstance(smallAngryPlanetInstanceId)
       .create());
@@ -1192,6 +1196,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(nodHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .forInstance(nodInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create());
@@ -1226,6 +1231,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     createHoldings(new HoldingRequestBuilder()
       .withId(mainLibrarySmallAngryHoldingId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .forInstance(smallAngryPlanetInstanceId)
       .create());
@@ -1454,17 +1460,20 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     String holdings1Uuid = loc1.toString();
     jho1.put("id", UUID.randomUUID().toString());
     jho1.put("instanceId", idJ1.toString());
+    jho1.put("sourceId", getPreparedHoldingSourceId().toString());
     jho1.put("permanentLocationId", holdings1Uuid);
 
     JsonObject jho2 = new JsonObject();
     String holdings2Uuid = loc2.toString();
     jho2.put("id", UUID.randomUUID().toString());
     jho2.put("instanceId", idJ2.toString());
+    jho2.put("sourceId", getPreparedHoldingSourceId().toString());
     jho2.put("permanentLocationId", holdings2Uuid);
 
     JsonObject jho3 = new JsonObject();
     jho3.put("id", UUID.randomUUID().toString());
     jho3.put("instanceId", idJ3.toString());
+    jho3.put("sourceId", getPreparedHoldingSourceId().toString());
     jho3.put("permanentLocationId", holdings2Uuid);
 
     createHoldings(jho1);

@@ -38,6 +38,7 @@ public class TenantRefApi extends TenantAPI {
   private static final String REFERENCE_LEAD = "ref-data";
   private static final String INSTANCES = "instance-storage/instances";
   private static final String HOLDINGS = "holdings-storage/holdings";
+  private static final String HOLDINGS_SOURCES = "holdings-sources";
   private static final String ITEMS = "item-storage/items";
   private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
   private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
@@ -140,6 +141,7 @@ public class TenantRefApi extends TenantAPI {
       tl.add("location-units/campuses");
       tl.add("location-units/libraries");
       tl.add("locations");
+      tl.add("holdings-sources");
       tl.add("instances", INSTANCES);
       tl.add("holdingsrecords", HOLDINGS);
       tl.add("items", ITEMS);

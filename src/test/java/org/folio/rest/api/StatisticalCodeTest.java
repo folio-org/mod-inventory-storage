@@ -127,6 +127,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     final var holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withStatisticalCodeIds(codes);
 
@@ -163,6 +164,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     final var holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     holdingsClient.create(holdingToCreate);

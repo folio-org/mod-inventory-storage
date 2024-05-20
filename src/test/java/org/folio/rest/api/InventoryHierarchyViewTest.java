@@ -192,8 +192,14 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet()
     throws InterruptedException, ExecutionException, TimeoutException {
 
+    UUID sourceId = UUID.randomUUID();
+    holdingsSourceClient.create(new JsonObject()
+      .put("id", sourceId.toString())
+      .put("name", "inventoryHierarchyTest name for holdingSource"));
+
     JsonObject record = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
     record.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    record.put("sourceId", sourceId);
     holdingsClient.replace(holdingsRecordIdPredefined, record);
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");

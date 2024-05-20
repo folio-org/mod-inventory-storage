@@ -1,5 +1,6 @@
 package org.folio.services.holding;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Promise.promise;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -88,6 +90,10 @@ public class HoldingsService {
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
+    if (holdingsRecord.getSourceId() == null) {
+      return failedFuture(new BadRequestException("The sourceId field required: cannot be null or deleted"));
+    }
+
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {

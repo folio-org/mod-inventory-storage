@@ -88,6 +88,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
@@ -113,6 +114,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.remove("temporaryLocationId");
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
@@ -135,6 +137,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     // fetch items
@@ -204,6 +207,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject holdingToUpdate = createdHolding.copy();
     holdingToUpdate.remove("holdingsItems");
     holdingToUpdate.remove("bareHoldingsItems");
+    holdingToUpdate.put("sourceId", getPreparedHoldingSourceId().toString());
     setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
     holdingsClient.replace(holdingsRecordId, holdingToUpdate);
 

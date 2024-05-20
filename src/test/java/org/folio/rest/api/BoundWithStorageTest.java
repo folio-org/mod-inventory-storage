@@ -422,6 +422,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   private IndividualResource createHoldingsRecord(UUID instanceId) {
     HoldingRequestBuilder holdingRequestBuilder = new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
     return holdingsClient.create(holdingRequestBuilder.create(), TENANT_ID,
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
