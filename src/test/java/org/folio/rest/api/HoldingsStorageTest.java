@@ -839,10 +839,63 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
+  public void updatingHoldingsWithSourceIdShouldUpdate()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
 
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("testCallNumber")).getJson();
+
+    assertThat(holding.getString("callNumber"), is("testCallNumber"));
+
+    UUID newSourceId = getPreparedHoldingSourceId();
+    holding.put("sourceId", newSourceId.toString());
+    holding.put("callNumber", "updatedTestCallNumber");
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    Response updateResponse = update(holdingsUrl, holding);
+    Response updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getJson().getString("callNumber"), is("updatedTestCallNumber"));
+    assertThat(updateResponse.getStatusCode(), is(204));
+
+  }
+
+  @Test
+  public void updatingHoldingsWithoutSourceIdShouldNotUpdate()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("testCallNumber")).getJson();
+
+    assertThat(holding.getString("callNumber"), is("testCallNumber"));
+
+    holding.put("sourceId", null);
+    holding.put("callNumber", "updatedTestCallNumber");
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    Response updateResponse = update(holdingsUrl, holding);
+    Response updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getJson().getString("callNumber"), is("testCallNumber"));
+    assertThat(updateResponse.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
