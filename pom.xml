@@ -37,7 +37,7 @@
     <assertj.version>3.25.3</assertj.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-    <build-helper-maven-plugin.version>3.5.0</build-helper-maven-plugin.version>
+    <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     <properties-maven-plugin.version>1.2.1</properties-maven-plugin.version>
     <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
