@@ -72,7 +72,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
-  public void canCalculateEffectiveLocationOnHoldingUpdate() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingUpdate() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
@@ -98,7 +98,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
@@ -124,7 +124,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     Item itemWithPermLocation = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
@@ -239,7 +239,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() throws Exception {
+  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID);
 
@@ -258,7 +258,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() throws Exception {
+  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
 
@@ -280,7 +280,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
    * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
    */
   @Test
-  public void canSetTableFieldOnItemUpdate() throws Exception {
+  public void canSetTableFieldOnItemUpdate() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     Item item = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
     createItem(item);

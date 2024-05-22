@@ -192,8 +192,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     // box. (Could it be a contributing factor that the box uses 90-100% of all four CPUs for
     // most of the 14 minutes that Inventory Storage's tests take?)
     // Increasing the wait from 10 to 30 seconds makes the tests pass more often than not.
-    //  boundWithEventMessageChecks.createdMessagePublished(part1, instance1.getId());
-    //  boundWithEventMessageChecks.createdMessagePublished(part2, instance2.getId());
+    // "boundWithEventMessageChecks.createdMessagePublished(part1, instance1.getId());"
+    // "boundWithEventMessageChecks.createdMessagePublished(part2, instance2.getId());"
 
     // Listing the main holdings record plus two more
     JsonObject boundWithFirstUpdate = createBoundWithCompositeJson(item.getId(),

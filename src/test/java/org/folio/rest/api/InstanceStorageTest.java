@@ -774,7 +774,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instances.size(), is(0));
     // Reports 0, not sure if this is to due with record count approximation
-    //* assertThat(page.getInteger(TOTAL_RECORDS_KEY), is(5));
+    // "assertThat(page.getInteger(TOTAL_RECORDS_KEY), is(5));"
   }
 
   @Test
@@ -936,7 +936,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotGetNonExistingSourceRecord() throws Exception {
+  public void cannotGetNonExistingSourceRecord() {
     getMarcJsonNotFound(UUID.randomUUID());
   }
 

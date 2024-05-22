@@ -591,7 +591,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info(String.format("\nResponse from inventory instance ids view: %s", response));
+    log.info(String.format("%nResponse from inventory instance ids view: %s", response));
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body) && response.getStatusCode() != HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()) {
