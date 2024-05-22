@@ -64,11 +64,11 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withBarcode("766043059304")
       .create());
-    final JsonObject record = itemsClient.getAll().get(0);
-    final String itemId = record.getString("id");
+    final JsonObject recordJsonObject = itemsClient.getAll().get(0);
+    final String itemId = recordJsonObject.getString("id");
     //when
-    record.remove("yearCaption");
-    itemsClient.replace(UUID.fromString(itemId), record);
+    recordJsonObject.remove("yearCaption");
+    itemsClient.replace(UUID.fromString(itemId), recordJsonObject);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_ITEM).size(), is(0));
     //when
@@ -84,11 +84,11 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     ExecutionException {
 
     //given
-    final JsonObject record = instancesClient.getAll().get(0);
-    UUID instanceId = UUID.fromString(record.getString("id"));
+    final JsonObject recordJsonObject = instancesClient.getAll().get(0);
+    UUID instanceId = UUID.fromString(recordJsonObject.getString("id"));
     //when
-    record.remove("notes");
-    instancesClient.replace(instanceId, record);
+    recordJsonObject.remove("notes");
+    instancesClient.replace(instanceId, recordJsonObject);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_INSTANCE).size(), is(0));
     //when
@@ -106,13 +106,13 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     ExecutionException {
 
     //given
-    final JsonObject record = holdingsClient.getAll().get(0);
+    final JsonObject recordJsonObject = holdingsClient.getAll().get(0);
     //when
-    record.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    record.put("sourceId", getPreparedHoldingSourceId().toString());
-    record.remove("holdingsItems");
-    record.remove("bareHoldingsItems");
-    holdingsClient.replace(holdingsRecordId, record);
+    recordJsonObject.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    recordJsonObject.put("sourceId", getPreparedHoldingSourceId().toString());
+    recordJsonObject.remove("holdingsItems");
+    recordJsonObject.remove("bareHoldingsItems");
+    holdingsClient.replace(holdingsRecordId, recordJsonObject);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));
     //when

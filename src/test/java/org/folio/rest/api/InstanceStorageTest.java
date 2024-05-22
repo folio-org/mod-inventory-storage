@@ -549,9 +549,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final var instance2 = createInstance(nod(UUID.randomUUID()).put("hrid", "2123")).getJson();
     final var instance3 = createInstance(nod(UUID.randomUUID()).put("hrid", "12")).getJson();
     final var instance4 = createInstance(nod(UUID.randomUUID()).put("hrid", "345 12")).getJson();
-    var instance5 = createInstance(nod(id5).put("hrid", "123")).getJson();
+    createInstance(nod(id5).put("hrid", "123")).getJson();
     put(id5, marcJson);
-    instance5 = getById(id5).getJson();
+    final var instance5 = getById(id5).getJson();
 
     var response = getClient().delete(instancesStorageUrl("?query=hrid==12*"), TENANT_ID).get(10, SECONDS);
 
@@ -774,7 +774,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(instances.size(), is(0));
     // Reports 0, not sure if this is to due with record count approximation
-    //assertThat(page.getInteger(TOTAL_RECORDS_KEY), is(5));
+    //* assertThat(page.getInteger(TOTAL_RECORDS_KEY), is(5));
   }
 
   @Test
@@ -1839,7 +1839,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithInvalidInstance() throws Exception {
+  public void cannotPostSynchronousBatchWithInvalidInstance() {
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
     instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("invalidPropertyName", "bar"));
@@ -1902,7 +1902,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateId() throws Exception {
+  public void cannotPostSynchronousBatchWithDuplicateId() {
     UUID duplicateId = UUID.randomUUID();
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(duplicateId));
@@ -2228,7 +2228,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateHrids() throws Exception {
+  public void cannotPostSynchronousBatchWithDuplicateHrids() {
     log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2266,7 +2266,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithHridFailure() throws Exception {
+  public void cannotPostSynchronousBatchWithHridFailure() {
     log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2499,7 +2499,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithDiscoverySuppressedInstances() throws Exception {
+  public void canPostSynchronousBatchWithDiscoverySuppressedInstances() {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();
     final UUID uprootedId = UUID.randomUUID();
@@ -2521,7 +2521,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostInstanceStorageBatchWithDiscoverySuppressedInstances() throws Exception {
+  public void canPostInstanceStorageBatchWithDiscoverySuppressedInstances() {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();
     final UUID uprootedId = UUID.randomUUID();
@@ -2686,7 +2686,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     return getCompleted.get(10, SECONDS);
   }
 
-  private void getMarcJsonNotFound(UUID id) throws Exception {
+  private void getMarcJsonNotFound(UUID id) {
     assertGetNotFound(instancesStorageUrl("/" + id + "/source-record/marc-json"));
   }
 
@@ -2951,7 +2951,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private Response getById(String id) {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    getClient().get(instancesStorageUrl(format("/" + id)), TENANT_ID, json(getCompleted));
+    getClient().get(instancesStorageUrl(format("/%s", id)), TENANT_ID, json(getCompleted));
     try {
       return getCompleted.get(10, SECONDS);
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
@@ -2959,7 +2959,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private void assertExists(JsonObject expectedInstance) throws Exception {
+  private void assertExists(JsonObject expectedInstance) {
     Response response = getById(expectedInstance.getString("id"));
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
     assertThat(response.getBody(), containsString(expectedInstance.getString("title")));

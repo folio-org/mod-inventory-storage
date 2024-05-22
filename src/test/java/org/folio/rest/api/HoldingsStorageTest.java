@@ -2947,7 +2947,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() throws Exception {
+  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2982,7 +2982,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void explicitRightTruncationCanBeApplied() throws Exception {
+  public void explicitRightTruncationCanBeApplied() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 

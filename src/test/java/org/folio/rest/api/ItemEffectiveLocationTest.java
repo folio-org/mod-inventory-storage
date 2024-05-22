@@ -169,7 +169,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
               method = "canCalculateEffectiveLocationOnItemUpdateParams")
   public void canCalculateEffectiveLocationOnItemUpdate(
-    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) throws Exception {
+    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) {
 
     UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingLoc.perm, holdingLoc.temp);
 
@@ -317,7 +317,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private Item getItem(String id) throws Exception {
+  private Item getItem(String id) {
     return itemsClient.getById(UUID.fromString(id)).getJson().mapTo(Item.class);
   }
 
