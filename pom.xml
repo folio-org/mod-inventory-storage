@@ -15,7 +15,7 @@
     <raml-module-builder-version>35.2.2</raml-module-builder-version> <!-- also update vertx.version -->
     <vertx.version>4.5.7</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
-    <aspectj.version>1.9.22</aspectj.version>
+    <aspectj.version>1.9.22.1</aspectj.version>
     <folio-kafka-wrapper.version>3.1.1</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.32</lombok.version>
