@@ -1,6 +1,6 @@
 ## v27.2.0 In progress
 ### Breaking changes
-* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
+* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
@@ -8,7 +8,7 @@
 
 ### Features
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
-* Make holdings sourceId field required to restrict updating holdings with null or deleted sourceId field ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
+* Make holdings' sourceId field required to restrict updating holdings without sourceId field ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
@@ -22,6 +22,9 @@
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
 * Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
+* Bump `holdings-storage` from `6.0` to `7.0`
+* Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
+* Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 
