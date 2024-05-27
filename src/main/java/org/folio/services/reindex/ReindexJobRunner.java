@@ -90,7 +90,7 @@ public class ReindexJobRunner {
     return postgresClient.startTx()
       .map(context::withConnection)
       .compose(ctx -> postgresClient.selectStream(ctx.connection,
-        "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE)))
+        "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE) + " LIMIT 1000000"))
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
