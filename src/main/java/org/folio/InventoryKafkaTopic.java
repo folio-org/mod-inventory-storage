@@ -16,7 +16,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   ASYNC_MIGRATION("async-migration"),
   SERVICE_POINT("service-point"),
   CLASSIFICATION_TYPE("classification-type"),
-  LOCATION("location");
+  LOCATION("location"),
+  LIBRARY("library");
 
   private static final String DEFAULT_NUM_PARTITIONS_PROPERTY = "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS";
   private static final String DEFAULT_NUM_PARTITIONS_VALUE = "50";
@@ -27,7 +28,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
    */
   private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_PARTITION_MAP = Map.of(
     CLASSIFICATION_TYPE, Pair.of("KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "1"),
-    LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1")
+    LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"),
+    LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "1")
   );
 
   private final String topic;
