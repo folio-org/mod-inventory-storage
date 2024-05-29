@@ -5,18 +5,10 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import lombok.Getter;
 import org.folio.persist.LibraryRepository;
 import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Loclib;
-import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsLibrariesResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsLibrariesByIdResponse;
+import org.folio.rest.jaxrs.model.*;
+import org.folio.rest.jaxrs.resource.LocationUnits.*;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.LibraryDomainEventPublisher;
 
@@ -37,15 +29,15 @@ public class LibraryService {
   private final LibraryRepository repository;
   private final LibraryDomainEventPublisher domainEventService;
 
-  public LibraryService(Context context, Map<String, String> okapiHeaders, LibraryRepository repository, LibraryDomainEventPublisher domainEventService) {
+  public LibraryService(Context context, Map<String, String> okapiHeaders) {
     this.context = context;
     this.okapiHeaders = okapiHeaders;
-    this.repository = repository;
-    this.domainEventService = domainEventService;
+    this.repository = new LibraryRepository(context, okapiHeaders);
+    this.domainEventService = new LibraryDomainEventPublisher(context, okapiHeaders);
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(LIBRARY_TABLE, Loclib.class, Loclib.class,
+    return PgUtil.get(LIBRARY_TABLE, Loclib.class, Loclibs.class,
       cql, offset, limit, okapiHeaders, context, GetLocationUnitsLibrariesResponse.class);
   }
 
@@ -68,11 +60,10 @@ public class LibraryService {
       .compose(exceptions -> {
         if (exceptions.isEmpty()) {
           return repository.getById(id)
-            .compose(
-              oldLoclib ->
-                PgUtil.put(LIBRARY_TABLE, loclib, id, okapiHeaders, context,
-                    PutLocationUnitsLibrariesByIdResponse.class)
-                  .onSuccess(domainEventService.publishUpdated(oldLoclib))
+            .compose(oldLoclib ->
+              PgUtil.put(LIBRARY_TABLE, loclib, id, okapiHeaders, context,
+                  PutLocationUnitsLibrariesByIdResponse.class)
+                .onSuccess(domainEventService.publishUpdated(oldLoclib))
             );
         } else {
           return Future.succeededFuture(PostLocationUnitsLibrariesResponse
@@ -83,11 +74,10 @@ public class LibraryService {
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(
-        oldLocation ->
-          PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, context,
-              DeleteLocationUnitsLibrariesByIdResponse.class)
-            .onSuccess(domainEventService.publishRemoved(oldLocation))
+      .compose(oldLocation ->
+        PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, context,
+            DeleteLocationUnitsLibrariesByIdResponse.class)
+          .onSuccess(domainEventService.publishRemoved(oldLocation))
       );
   }
 
@@ -101,7 +91,7 @@ public class LibraryService {
     return reply -> reply.succeeded()
       ? Future.succeededFuture(DeleteLocationUnitsLibrariesResponse.respond204())
       : Future.succeededFuture(
-        DeleteLocationUnitsLibrariesResponse.respond500WithTextPlain(reply.cause().getMessage())
+      DeleteLocationUnitsLibrariesResponse.respond500WithTextPlain(reply.cause().getMessage())
     );
   }
 
@@ -113,7 +103,6 @@ public class LibraryService {
     if (!id.equals(entity.getId())) {
       return Optional.of(new LocationUnitLibraryException("id", "Illegal operation: id cannot be changed"));
     }
-
     return Optional.empty();
   }
 
@@ -124,7 +113,6 @@ public class LibraryService {
     return new Errors().withErrors(errorList);
   }
 
-  @Getter
   private static class LocationUnitLibraryException extends Exception {
 
     private final String field;
@@ -132,6 +120,10 @@ public class LibraryService {
     LocationUnitLibraryException(String field, String message) {
       super(message);
       this.field = field;
+    }
+
+    public String getField() {
+      return field;
     }
 
     public Error toError() {

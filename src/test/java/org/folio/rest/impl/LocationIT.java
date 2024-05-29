@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.rest.impl.LocationUnitApi.INSTITUTION_TABLE;
-import static org.folio.rest.impl.LocationUnitApi.LIBRARY_TABLE;
 import static org.folio.services.location.LocationService.LOCATION_TABLE;
+import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
