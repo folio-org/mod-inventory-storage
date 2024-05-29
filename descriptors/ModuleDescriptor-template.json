@@ -83,6 +83,10 @@
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings",
           "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/holdings-storage/holdings/retrieve",
+          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings/{id}",
@@ -148,7 +152,12 @@
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances",
           "permissionsRequired": ["inventory-storage.instances.collection.get"]
-        }, {
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/retrieve",
+          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.get"]

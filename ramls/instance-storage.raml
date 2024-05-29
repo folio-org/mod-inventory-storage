@@ -14,10 +14,13 @@ types:
   marcJson: !include marc.json
   instanceRelationship: !include instancerelationship.json
   instanceRelationships: !include instancerelationships.json
+  retrieveDto: !include retrieveEntitiesDto.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
   searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
 
 resourceTypes:
   collection: !include raml-util/rtypes/collection.raml
@@ -144,3 +147,14 @@ resourceTypes:
                 body:
                   text/plain:
                     example: "Not implemented yet"
+    /retrieve:
+      post:
+        is: [ validate ]
+        body:
+          application/json:
+            type: retrieveDto
+            example:
+              strict: false
+              value: !include examples/retrieveEntitiesDto.json
+        description: |
+          Get Instances by POST request

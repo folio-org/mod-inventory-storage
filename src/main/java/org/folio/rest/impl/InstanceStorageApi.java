@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -385,6 +386,31 @@ public class InstanceStorageApi implements InstanceStorage {
     asyncResultHandler.handle(Future.succeededFuture(
       PutInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
         .respond500WithTextPlain("Not implemented yet.")));
+  }
+
+  @Validate
+  @Override
+  public void postInstanceStorageInstancesRetrieve(RetrieveDto entity,
+                                                   RoutingContext routingContext,
+                                                   Map<String, String> okapiHeaders,
+                                                   Handler<AsyncResult<Response>> asyncResultHandler,
+                                                   Context vertxContext) {
+    if (PgUtil.checkOptimizedCQL(entity.getQuery(), "title") != null) {
+      try {
+        PreparedCql preparedCql = handleCql(entity.getQuery(), entity.getLimit(), entity.getOffset());
+        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+          "title", entity.getQuery(), entity.getOffset(), entity.getLimit(),
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          GetInstanceStorageInstancesResponse.respond500WithTextPlain(e.getMessage())));
+      }
+      return;
+    }
+
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, entity.getQuery(), entity.getOffset(), entity.getLimit(), null,
+      "instances", routingContext, okapiHeaders, vertxContext);
   }
 
   PreparedCql handleCql(String query, int limit, int offset) throws FieldException {
