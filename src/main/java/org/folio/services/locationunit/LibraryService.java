@@ -1,10 +1,17 @@
 package org.folio.services.locationunit;
 
+import static org.folio.rest.impl.StorageHelper.logAndSaveError;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import javax.ws.rs.core.Response;
 import org.folio.persist.LibraryRepository;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -19,14 +26,6 @@ import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsLibrariesRes
 import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsLibrariesByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.LibraryDomainEventPublisher;
-
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
-import static org.folio.rest.impl.StorageHelper.logAndSaveError;
 
 public class LibraryService {
 

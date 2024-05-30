@@ -1,9 +1,20 @@
 package org.folio.rest.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
+import static org.folio.rest.impl.LocationUnitApi.INSTITUTION_TABLE;
+import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
+import static org.folio.utility.RestUtility.TENANT_ID;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loccamp;
@@ -17,18 +28,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
-import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
-import static org.folio.rest.impl.LocationUnitApi.INSTITUTION_TABLE;
-import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitLibraryIT extends BaseReferenceDataIntegrationTest<Loclib, Loclibs> {

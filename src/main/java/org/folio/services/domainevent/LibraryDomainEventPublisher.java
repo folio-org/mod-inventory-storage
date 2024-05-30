@@ -1,17 +1,16 @@
 package org.folio.services.domainevent;
 
+import static org.folio.InventoryKafkaTopic.LIBRARY;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import org.apache.commons.lang3.tuple.Pair;
-import org.folio.persist.LibraryRepository;
-import org.folio.rest.jaxrs.model.Loclib;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import static org.folio.InventoryKafkaTopic.LIBRARY;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import org.apache.commons.lang3.tuple.Pair;
+import org.folio.persist.LibraryRepository;
+import org.folio.rest.jaxrs.model.Loclib;
 
 
 public class LibraryDomainEventPublisher extends AbstractDomainEventPublisher<Loclib, Loclib> {

@@ -1,8 +1,15 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Loccamps;
@@ -16,14 +23,6 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.locationunit.LibraryService;
-
-import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 public class LocationUnitApi implements LocationUnits {
   public static final String URL_PREFIX = "/location-units";
