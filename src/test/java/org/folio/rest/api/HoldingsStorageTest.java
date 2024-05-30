@@ -533,28 +533,27 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    final var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
-    var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    final var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
-    var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    final var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
-
-    var getCompleted = new CompletableFuture<Response>();
 
     getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
     var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     var responseBody = response.getJson();
-    var allHoldings = JsonArrayHelper.toList(
-      responseBody.getJsonArray("holdingsRecords"));
+    var allHoldings = JsonArrayHelper.toList(responseBody.getJsonArray("holdingsRecords"));
 
     assertThat(allHoldings.size(), is(3));
     assertThat(responseBody.getInteger("totalRecords"), is(3));

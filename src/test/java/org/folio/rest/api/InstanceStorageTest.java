@@ -667,11 +667,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
     var secondInstanceId = UUID.randomUUID();
     var secondInstanceToCreate = nod(secondInstanceId);
-    var query = "title=\"Nod\"";
 
     createInstance(firstInstanceToCreate);
     createInstance(secondInstanceToCreate);
 
+    var query = "title=\"Nod\"";
     var retrieveCompleted = new CompletableFuture<Response>();
     var retrieveByTitleCompleted = new CompletableFuture<Response>();
 
@@ -692,7 +692,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var firstInstance = allInstances.getJsonObject(0);
     var secondInstance = allInstances.getJsonObject(1);
-    var foundInstance = foundInstances.getJsonObject(0);
     // no "sortBy" used so the database can return them in any order.
     // swap if needed:
     if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
@@ -700,6 +699,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       firstInstance = secondInstance;
       secondInstance = tmp;
     }
+    final var foundInstance = foundInstances.getJsonObject(0);
 
     assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
     assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
