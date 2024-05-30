@@ -7,8 +7,16 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import org.folio.persist.LibraryRepository;
 import org.folio.rest.jaxrs.model.Error;
-import org.folio.rest.jaxrs.model.*;
-import org.folio.rest.jaxrs.resource.LocationUnits.*;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Loclib;
+import org.folio.rest.jaxrs.model.Loclibs;
+import org.folio.rest.jaxrs.model.Parameter;
+import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesByIdResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesByIdResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsLibrariesResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsLibrariesByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.LibraryDomainEventPublisher;
 
@@ -95,8 +103,12 @@ public class LibraryService {
     );
   }
 
-  private Future<List<LocationUnitLibraryException>> doLibraryCheck(List<Optional<LocationUnitLibraryException>> optionals) {
-    return Future.succeededFuture(optionals.stream().filter(Optional::isPresent).map(Optional::get).toList());
+  private Future<List<LocationUnitLibraryException>> doLibraryCheck(
+    List<Optional<LocationUnitLibraryException>> optionals) {
+    return Future.succeededFuture(optionals.stream()
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .toList());
   }
 
   private Optional<LocationUnitLibraryException> checkIdChange(String id, Loclib entity) {

@@ -13,6 +13,7 @@ import java.util.Map;
 import static org.folio.InventoryKafkaTopic.LIBRARY;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+
 public class LibraryDomainEventPublisher extends AbstractDomainEventPublisher<Loclib, Loclib> {
 
   public LibraryDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
