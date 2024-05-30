@@ -13,7 +13,7 @@
     <argLine />
 
     <raml-module-builder-version>35.2.2</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.7</vertx.version>
+    <vertx.version>4.5.8</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
     <folio-kafka-wrapper.version>3.1.1</folio-kafka-wrapper.version>
@@ -31,10 +31,10 @@
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
-    <wiremock.version>3.5.4</wiremock.version>
+    <wiremock.version>3.6.0</wiremock.version>
     <rest-assured.version>5.4.0</rest-assured.version>
     <awaitility.version>4.2.1</awaitility.version>
-    <assertj.version>3.25.3</assertj.version>
+    <assertj.version>3.26.0</assertj.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
