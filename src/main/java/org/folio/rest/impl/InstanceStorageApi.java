@@ -43,6 +43,8 @@ public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
   private final Messages messages = Messages.getInstance();
 
+  private static final String TITLE = "title";
+
   @Validate
   @Override
   public void getInstanceStorageInstanceRelationships(String totalRecords, int offset, int limit, String query,
@@ -201,11 +203,11 @@ public class InstanceStorageApi implements InstanceStorage {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
 
-    if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
+    if (PgUtil.checkOptimizedCQL(query, TITLE) != null) { // Until RMB-573 is fixed
       try {
         PreparedCql preparedCql = handleCql(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          "title", query, offset, limit,
+          TITLE, query, offset, limit,
           okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
@@ -395,11 +397,11 @@ public class InstanceStorageApi implements InstanceStorage {
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    if (PgUtil.checkOptimizedCQL(entity.getQuery(), "title") != null) {
+    if (PgUtil.checkOptimizedCQL(entity.getQuery(), TITLE) != null) {
       try {
         PreparedCql preparedCql = handleCql(entity.getQuery(), entity.getLimit(), entity.getOffset());
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          "title", entity.getQuery(), entity.getOffset(), entity.getLimit(),
+          TITLE, entity.getQuery(), entity.getOffset(), entity.getLimit(),
           okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
