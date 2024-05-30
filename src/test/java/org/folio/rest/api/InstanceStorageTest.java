@@ -663,40 +663,40 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canRetrieveAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
-
-    UUID firstInstanceId = UUID.randomUUID();
-
-    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
+    var firstInstanceId = UUID.randomUUID();
+    var firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
+    var secondInstanceId = UUID.randomUUID();
+    var secondInstanceToCreate = nod(secondInstanceId);
+    var query = "title=\"Nod\"";
 
     createInstance(firstInstanceToCreate);
-
-    UUID secondInstanceId = UUID.randomUUID();
-
-    JsonObject secondInstanceToCreate = nod(secondInstanceId);
-
     createInstance(secondInstanceToCreate);
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    var retrieveCompleted = new CompletableFuture<Response>();
+    var retrieveByTitleCompleted = new CompletableFuture<Response>();
 
     getClient().post(instancesStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
-      json(getCompleted));
+      json(retrieveCompleted));
+    getClient().post(instancesStorageUrl("/retrieve"), new JsonObject().put("query", query), TENANT_ID,
+      json(retrieveByTitleCompleted));
 
-    Response response = getCompleted.get(10, SECONDS);
+    var retrieveBody = retrieveCompleted.get(10, SECONDS).getJson();
+    var allInstances = retrieveBody.getJsonArray(INSTANCES_KEY);
 
-    JsonObject responseBody = response.getJson();
-
-    JsonArray allInstances = responseBody.getJsonArray(INSTANCES_KEY);
+    var retrieveByTitleBody = retrieveByTitleCompleted.get(10, SECONDS).getJson();
+    var foundInstances = retrieveByTitleBody.getJsonArray(INSTANCES_KEY);
 
     assertThat(allInstances.size(), is(2));
-    assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(2));
+    assertThat(foundInstances.size(), is(1));
+    assertThat(retrieveBody.getInteger(TOTAL_RECORDS_KEY), is(2));
 
-    JsonObject firstInstance = allInstances.getJsonObject(0);
-    JsonObject secondInstance = allInstances.getJsonObject(1);
-
+    var firstInstance = allInstances.getJsonObject(0);
+    var secondInstance = allInstances.getJsonObject(1);
+    var foundInstance = foundInstances.getJsonObject(0);
     // no "sortBy" used so the database can return them in any order.
     // swap if needed:
     if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
-      JsonObject tmp = firstInstance;
+      var tmp = firstInstance;
       firstInstance = secondInstance;
       secondInstance = tmp;
     }
@@ -714,6 +714,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
     assertThat(secondInstance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
+
+    assertThat(foundInstance.getString("title"), is("Nod"));
   }
 
   @Test

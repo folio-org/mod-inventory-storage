@@ -525,37 +525,35 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Test
   public void canRetrieveAllHoldings() {
-    UUID firstInstanceId = UUID.randomUUID();
-    UUID secondInstanceId = UUID.randomUUID();
-    UUID thirdInstanceId = UUID.randomUUID();
+    var firstInstanceId = UUID.randomUUID();
+    var secondInstanceId = UUID.randomUUID();
+    var thirdInstanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(firstInstanceId));
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    final UUID firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
-    final UUID secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
-    final UUID thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+    var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    var getCompleted = new CompletableFuture<Response>();
 
     getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
       ResponseHandler.json(getCompleted));
 
-    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    List<JsonObject> allHoldings = JsonArrayHelper.toList(
+    var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    var responseBody = response.getJson();
+    var allHoldings = JsonArrayHelper.toList(
       responseBody.getJsonArray("holdingsRecords"));
 
     assertThat(allHoldings.size(), is(3));
