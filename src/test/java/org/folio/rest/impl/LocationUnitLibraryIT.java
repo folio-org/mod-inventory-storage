@@ -31,7 +31,7 @@ import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 @ExtendWith(VertxExtension.class)
-public class LocationUnitLibraryIT extends BaseReferenceDataIntegrationTest<Loclib, Loclibs> {
+class LocationUnitLibraryIT extends BaseReferenceDataIntegrationTest<Loclib, Loclibs> {
 
   private String campusId;
 
@@ -121,9 +121,9 @@ public class LocationUnitLibraryIT extends BaseReferenceDataIntegrationTest<Locl
   void put_shouldReturn422_whenIdIsNotMatchWithPayload(Vertx vertx, VertxTestContext ctx) {
     HttpClient client = vertx.createHttpClient();
     var invalidId = UUID.randomUUID().toString();
-    var record = sampleRecord().withId(UUID.randomUUID().toString());
+    var library = sampleRecord().withId(UUID.randomUUID().toString());
 
-    doPut(client, resourceUrlById(invalidId), pojo2JsonObject(record))
+    doPut(client, resourceUrlById(invalidId), pojo2JsonObject(library))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var actual = response.bodyAsClass(Errors.class);
