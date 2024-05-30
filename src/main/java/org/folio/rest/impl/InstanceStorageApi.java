@@ -41,9 +41,8 @@ import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
-  private final Messages messages = Messages.getInstance();
-
   private static final String TITLE = "title";
+  private final Messages messages = Messages.getInstance();
 
   @Validate
   @Override
