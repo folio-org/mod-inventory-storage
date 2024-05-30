@@ -662,6 +662,61 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canRetrieveAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+
+    UUID firstInstanceId = UUID.randomUUID();
+
+    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
+
+    createInstance(firstInstanceToCreate);
+
+    UUID secondInstanceId = UUID.randomUUID();
+
+    JsonObject secondInstanceToCreate = nod(secondInstanceId);
+
+    createInstance(secondInstanceToCreate);
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
+      json(getCompleted));
+
+    Response response = getCompleted.get(10, SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    JsonArray allInstances = responseBody.getJsonArray(INSTANCES_KEY);
+
+    assertThat(allInstances.size(), is(2));
+    assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(2));
+
+    JsonObject firstInstance = allInstances.getJsonObject(0);
+    JsonObject secondInstance = allInstances.getJsonObject(1);
+
+    // no "sortBy" used so the database can return them in any order.
+    // swap if needed:
+    if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
+      JsonObject tmp = firstInstance;
+      firstInstance = secondInstance;
+      secondInstance = tmp;
+    }
+
+    assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
+    assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
+
+    assertThat(firstInstance.getJsonArray("identifiers").size(), is(1));
+    assertThat(firstInstance.getJsonArray("identifiers"),
+      hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+
+    assertThat(secondInstance.getString("id"), is(secondInstanceId.toString()));
+    assertThat(secondInstance.getString("title"), is("Nod"));
+
+    assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
+    assertThat(secondInstance.getJsonArray("identifiers"),
+      hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
+  }
+
+  @Test
   public void canSearchByClassificationNumberWithoutArrayModifier()
     throws InterruptedException, ExecutionException, TimeoutException {
 

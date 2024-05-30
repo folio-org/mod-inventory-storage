@@ -522,6 +522,50 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
   }
 
+  @SneakyThrows
+  @Test
+  public void canRetrieveAllHoldings() {
+    UUID firstInstanceId = UUID.randomUUID();
+    UUID secondInstanceId = UUID.randomUUID();
+    UUID thirdInstanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(firstInstanceId));
+    instancesClient.create(nod(secondInstanceId));
+    instancesClient.create(uprooted(thirdInstanceId));
+
+    final UUID firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(firstInstanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
+
+    final UUID secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(secondInstanceId)
+      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
+
+    final UUID thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(thirdInstanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    JsonObject responseBody = response.getJson();
+
+    List<JsonObject> allHoldings = JsonArrayHelper.toList(
+      responseBody.getJsonArray("holdingsRecords"));
+
+    assertThat(allHoldings.size(), is(3));
+    assertThat(responseBody.getInteger("totalRecords"), is(3));
+
+    assertThat(allHoldings.stream().anyMatch(filterById(firstHoldingId)), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(secondHoldingId)), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
+  }
+
   @Test
   public void cannotPageWithNegativeLimit() throws Exception {
     UUID instanceId = UUID.randomUUID();
