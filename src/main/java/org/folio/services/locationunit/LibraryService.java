@@ -26,8 +26,6 @@ import org.folio.services.domainevent.LibraryDomainEventPublisher;
 public class LibraryService {
 
   public static final String LIBRARY_TABLE = "loclibrary";
-  private static final String MSG_ALREADY_EXISTS =
-    "Illegal operation: Library already exists";
   private static final String MSG_ID_NOT_MATCH =
     "Illegal operation: Library ID cannot be changed";
   private final Context context;
