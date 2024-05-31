@@ -671,7 +671,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     createInstance(firstInstanceToCreate);
     createInstance(secondInstanceToCreate);
 
-    var query = "title=\"Nod\"";
+    var query = "(cql.allRecords=1) sortBy title";
     var retrieveCompleted = new CompletableFuture<Response>();
     var retrieveByTitleCompleted = new CompletableFuture<Response>();
 
@@ -684,10 +684,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var allInstances = retrieveBody.getJsonArray(INSTANCES_KEY);
 
     var retrieveByTitleBody = retrieveByTitleCompleted.get(10, SECONDS).getJson();
-    var foundInstances = retrieveByTitleBody.getJsonArray(INSTANCES_KEY);
+    var sortedInstances = retrieveByTitleBody.getJsonArray(INSTANCES_KEY);
 
     assertThat(allInstances.size(), is(2));
-    assertThat(foundInstances.size(), is(1));
+    assertThat(sortedInstances.size(), is(2));
     assertThat(retrieveBody.getInteger(TOTAL_RECORDS_KEY), is(2));
 
     var firstInstance = allInstances.getJsonObject(0);
@@ -699,7 +699,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       firstInstance = secondInstance;
       secondInstance = tmp;
     }
-    final var foundInstance = foundInstances.getJsonObject(0);
+    final var sortedInstance = sortedInstances.getJsonObject(0);
 
     assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
     assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
@@ -715,7 +715,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(secondInstance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
 
-    assertThat(foundInstance.getString("title"), is("Nod"));
+    assertThat(sortedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
   }
 
   @Test
