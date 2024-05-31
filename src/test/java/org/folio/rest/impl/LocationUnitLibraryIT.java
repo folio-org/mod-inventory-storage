@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
-import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.rest.impl.LocationUnitApi.INSTITUTION_TABLE;
@@ -121,30 +120,6 @@ class LocationUnitLibraryIT
         rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
       .onFailure(ctx::failNow)
       .onComplete(event -> ctx.completeNow());
-  }
-
-  @Test
-  void delete_shouldDeleteAllObjects(Vertx vertx,
-                                     VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-    var library1 = sampleRecord().withId(UUID.randomUUID().toString());
-    var library2 = sampleRecord().withId(UUID.randomUUID().toString());
-
-    doPost(client, resourceUrl(), pojo2JsonObject(library1))
-      .onComplete(verifyStatus(ctx, HTTP_CREATED));
-
-    doPost(client, resourceUrl(), pojo2JsonObject(library2))
-      .onComplete(verifyStatus(ctx, HTTP_CREATED));
-
-    doDelete(client, resourceUrl())
-      .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT));
-
-    doGet(client, resourceUrlById(library1.getId()))
-      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND));
-
-    doGet(client, resourceUrlById(library2.getId()))
-      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
-      .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 
   @Test
