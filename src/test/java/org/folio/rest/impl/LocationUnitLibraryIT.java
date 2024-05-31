@@ -5,6 +5,7 @@ import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.rest.impl.LocationUnitApi.INSTITUTION_TABLE;
@@ -137,7 +138,13 @@ class LocationUnitLibraryIT
       .onComplete(verifyStatus(ctx, HTTP_CREATED));
 
     doDelete(client, resourceUrl())
-      .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
+      .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT));
+
+    doGet(client, resourceUrlById(library1.getId()))
+      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND));
+
+    doGet(client, resourceUrlById(library2.getId()))
+      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
       .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 
