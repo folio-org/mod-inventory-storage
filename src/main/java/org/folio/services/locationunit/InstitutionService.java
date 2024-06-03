@@ -17,12 +17,12 @@ import org.folio.persist.InstitutionRepository;
 import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsByIdResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsInstitutionsResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.InstitutionDomainEventPublisher;
 
@@ -111,7 +111,7 @@ public class InstitutionService {
         DeleteLocationUnitsInstitutionsResponse.respond500WithTextPlain(
           reply.cause().getMessage());
 
-      return succeededFuture(reply.succeeded() ? respond204 :respond500);
+      return succeededFuture(reply.succeeded() ? respond204 : respond500);
     };
   }
 }
