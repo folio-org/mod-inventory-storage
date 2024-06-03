@@ -1,6 +1,7 @@
 package org.folio.services.locationunit;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.impl.LocationUnitApi.URL_PREFIX;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
@@ -55,6 +56,11 @@ public class LibraryService {
   public Future<Response> create(Loclib loclib) {
     return PgUtil.post(LIBRARY_TABLE, loclib, okapiHeaders, context,
         PostLocationUnitsLibrariesResponse.class)
+      .onSuccess(response ->
+        PostLocationUnitsLibrariesResponse
+          .respond201WithApplicationJson(response,
+            PostLocationUnitsLibrariesResponse.headersFor201()
+              .withLocation(URL_PREFIX + response)))
       .otherwise(throwable ->
         PostLocationUnitsLibrariesResponse.respond500WithTextPlain(
           throwable.getMessage()));
