@@ -316,7 +316,11 @@ public class LocationUnitApi implements LocationUnits {
                                          Context vertxContext) {
     new LibraryService(vertxContext, okapiHeaders)
       .create(entity)
-      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(
+        PostLocationUnitsLibrariesResponse
+          .respond201WithApplicationJson(entity,
+            PostLocationUnitsLibrariesResponse.headersFor201()
+              .withLocation(URL_PREFIX + response)))))
       .onFailure(handleFailure(asyncResultHandler));
   }
 

@@ -48,8 +48,7 @@ public class LibraryService {
   }
 
   public Future<Response> getById(String id) {
-    return PgUtil.getById(LIBRARY_TABLE, Loclib.class, id, okapiHeaders,
-      context,
+    return PgUtil.getById(LIBRARY_TABLE, Loclib.class, id, okapiHeaders, context,
       GetLocationUnitsLibrariesByIdResponse.class);
   }
 

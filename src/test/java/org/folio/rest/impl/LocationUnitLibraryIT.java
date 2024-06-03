@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
@@ -129,19 +128,22 @@ class LocationUnitLibraryIT
     String libraryId = UUID.randomUUID().toString();
     var library = sampleRecord().withId(libraryId);
 
+    // Create first library
     doPost(client, resourceUrl(), pojo2JsonObject(library))
-      .onComplete(verifyStatus(ctx, HTTP_CREATED));
-
-    doPost(client, resourceUrl(), pojo2JsonObject(library))
-      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
-        var actual = response.bodyAsClass(Errors.class);
-        assertThat(actual.getErrors())
-          .hasSize(1)
-          .extracting(Error::getMessage)
-          .containsExactly(
-            "id value already exists in table loclibrary: " + libraryId);
-        ctx.completeNow();
+
+        // Trying to create same library in second time
+        doPost(client, resourceUrl(), pojo2JsonObject(library))
+          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+          .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
+            var actual = duplicateResponse.bodyAsClass(Errors.class);
+            assertThat(actual.getErrors())
+              .hasSize(1)
+              .extracting(Error::getMessage)
+              .containsExactly("id value already exists in table loclibrary: " + libraryId);
+            ctx.completeNow();
+          })));
       })));
   }
 
