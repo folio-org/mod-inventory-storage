@@ -14,9 +14,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import lombok.extern.log4j.Log4j2;
 import org.folio.persist.InstitutionRepository;
-import org.folio.rest.jaxrs.model.Locinst;
-
 import javax.ws.rs.core.Response;
+import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsByIdResponse;
