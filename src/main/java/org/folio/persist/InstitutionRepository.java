@@ -5,7 +5,6 @@ import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TAB
 
 import io.vertx.core.Context;
 import java.util.Map;
-
 import org.folio.rest.jaxrs.model.Locinst;
 
 public class InstitutionRepository extends AbstractRepository<Locinst> {
