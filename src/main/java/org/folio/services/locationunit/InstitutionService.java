@@ -62,6 +62,8 @@ public class InstitutionService {
     return PgUtil.post(INSTITUTION_TABLE, institution, okapiHeaders,
         vertxContext, PostLocationUnitsInstitutionsResponse.class)
       .onSuccess(response -> {
+        domainEventService.publishCreated().handle(response);
+
         var headers = PostLocationUnitsInstitutionsResponse.headersFor201()
           .withLocation(URL_PREFIX + response);
 
