@@ -2712,7 +2712,11 @@
       { "name": "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING", "value": "0001-01-01T00:00:00Z" },
       { "name": "KAFKA_HOST", "value": "kafka" },
       { "name": "KAFKA_PORT", "value": "9092" },
-      { "name": "REPLICATION_FACTOR", "value": "1" }
+      { "name": "REPLICATION_FACTOR", "value": "1" },
+      { "name": "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "value": "50"},
+      { "name": "KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"}
     ]
   }
 }
