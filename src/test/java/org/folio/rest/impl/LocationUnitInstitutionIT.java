@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-public class LocationUnitInstitutionIT
+class LocationUnitInstitutionIT
   extends BaseReferenceDataIntegrationTest<Locinst, Locinsts> {
 
   @Override
@@ -103,15 +103,15 @@ public class LocationUnitInstitutionIT
                                                   VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
-    var record = sampleRecord().withId(id);
+    var institution = sampleRecord().withId(id);
     var message =
       String.format("id value already exists in table locinstitution: %s", id);
 
     var successfulRecord =
-      doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+      doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
         verifyStatus(ctx, HTTP_CREATED));
     var failedRecord =
-      doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+      doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
         verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY));
 
     Future.all(successfulRecord, failedRecord).map(CompositeFuture::list).map(
@@ -133,9 +133,9 @@ public class LocationUnitInstitutionIT
   void post_shouldReturn422_whenCodeIsBlank(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
-    var record = sampleRecord().withId(id).withCode(null);
+    var institution = sampleRecord().withId(id).withCode(null);
 
-    doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+    doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
         verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
         var actual = duplicateResponse.bodyAsClass(Errors.class);
@@ -152,9 +152,9 @@ public class LocationUnitInstitutionIT
   void post_shouldReturn422_whenNameIsBlank(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
-    var record = sampleRecord().withId(id).withName(null);
+    var institution = sampleRecord().withId(id).withName(null);
 
-    doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+    doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
         verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
         var actual = duplicateResponse.bodyAsClass(Errors.class);
@@ -172,10 +172,10 @@ public class LocationUnitInstitutionIT
                                                        VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var invalidId = UUID.randomUUID().toString();
-    var record = sampleRecord().withId(UUID.randomUUID().toString());
+    var institution = sampleRecord().withId(UUID.randomUUID().toString());
 
     doPut(client, resourceUrlById(invalidId),
-      pojo2JsonObject(record)).onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      pojo2JsonObject(institution)).onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var actual = response.bodyAsClass(Errors.class);
         var message = "Illegal operation: Institution ID cannot be changed";
@@ -191,8 +191,8 @@ public class LocationUnitInstitutionIT
   void put_shouldReturn422_whenIdIsNullWithPayload(Vertx vertx,
                                                    VertxTestContext ctx) {
     var client = vertx.createHttpClient();
-    var record = sampleRecord().withId(UUID.randomUUID().toString());
-    var body = pojo2JsonObject(record);
+    var institution = sampleRecord().withId(UUID.randomUUID().toString());
+    var body = pojo2JsonObject(institution);
 
     doPut(client, resourceUrlById(null), body).onComplete(
         verifyStatus(ctx, HTTP_BAD_REQUEST))
