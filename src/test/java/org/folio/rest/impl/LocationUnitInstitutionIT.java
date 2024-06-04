@@ -2,7 +2,6 @@ package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
