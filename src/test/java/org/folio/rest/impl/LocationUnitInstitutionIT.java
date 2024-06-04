@@ -1,10 +1,10 @@
 package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
-import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
@@ -94,8 +94,7 @@ public class LocationUnitInstitutionIT
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     var institution = new Locinst().withName("institution").withCode("ic");
 
-    postgresClient.save(INSTITUTION_TABLE, institution)
-      .onFailure(ctx::failNow)
+    postgresClient.save(INSTITUTION_TABLE, institution).onFailure(ctx::failNow)
       .onSuccess(id -> ctx.completeNow());
   }
 
@@ -103,8 +102,7 @@ public class LocationUnitInstitutionIT
   void afterEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    postgresClient.delete(referenceTable(), (CQLWrapper) null)
-      .compose(
+    postgresClient.delete(referenceTable(), (CQLWrapper) null).compose(
         rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
       .onFailure(ctx::failNow).onComplete(event -> ctx.completeNow());
   }
@@ -119,24 +117,21 @@ public class LocationUnitInstitutionIT
       String.format("id value already exists in table locinstitution: %s", id);
 
     var successfulRecord =
-      doPost(client, resourceUrl(), pojo2JsonObject(record))
-        .onComplete(verifyStatus(ctx, HTTP_CREATED));
-    var failedRecord = doPost(client, resourceUrl(), pojo2JsonObject(record))
-      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY));
+      doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+        verifyStatus(ctx, HTTP_CREATED));
+    var failedRecord =
+      doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY));
 
-    Future.all(successfulRecord, failedRecord)
-      .map(CompositeFuture::list)
-      .map(results -> results.stream()
-        .filter(Objects::nonNull)
-        .peek(System.out::println)
-        .map(v -> (TestResponse) v)
-        .filter(v -> v.status() == HTTP_UNPROCESSABLE_ENTITY.toInt())
-        .findAny().orElse(null))
+    Future.all(successfulRecord, failedRecord).map(CompositeFuture::list).map(
+        results -> results.stream().filter(Objects::nonNull)
+          .peek(System.out::println).map(v -> (TestResponse) v)
+          .filter(v -> v.status() == HTTP_UNPROCESSABLE_ENTITY.toInt()).findAny()
+          .orElse(null))
       .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
         var actual = duplicateResponse.bodyAsClass(Errors.class);
 
-        assertThat(actual.getErrors()).hasSize(1)
-          .extracting(Error::getMessage)
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
           .containsExactly(message);
 
         ctx.completeNow();
@@ -144,20 +139,18 @@ public class LocationUnitInstitutionIT
   }
 
   @Test
-  void post_shouldReturn422_whenCodeIsBlank(Vertx vertx,
-                                            VertxTestContext ctx) {
+  void post_shouldReturn422_whenCodeIsBlank(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
     var record = sampleRecord().withId(id).withCode(null);
 
-    doPost(client, resourceUrl(), pojo2JsonObject(record))
-      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+    doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
         var actual = duplicateResponse.bodyAsClass(Errors.class);
         var message = "must not be null";
 
-        assertThat(actual.getErrors()).hasSize(1)
-          .extracting(Error::getMessage)
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
           .containsExactly(message);
 
         ctx.completeNow();
@@ -165,20 +158,18 @@ public class LocationUnitInstitutionIT
   }
 
   @Test
-  void post_shouldReturn422_whenNameIsBlank(Vertx vertx,
-                                            VertxTestContext ctx) {
+  void post_shouldReturn422_whenNameIsBlank(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
     var record = sampleRecord().withId(id).withName(null);
 
-    doPost(client, resourceUrl(), pojo2JsonObject(record))
-      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+    doPost(client, resourceUrl(), pojo2JsonObject(record)).onComplete(
+        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
         var actual = duplicateResponse.bodyAsClass(Errors.class);
         var message = "must not be null";
 
-        assertThat(actual.getErrors()).hasSize(1)
-          .extracting(Error::getMessage)
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
           .containsExactly(message);
 
         ctx.completeNow();
@@ -192,14 +183,13 @@ public class LocationUnitInstitutionIT
     var invalidId = UUID.randomUUID().toString();
     var record = sampleRecord().withId(UUID.randomUUID().toString());
 
-    doPut(client, resourceUrlById(invalidId), pojo2JsonObject(record))
-      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+    doPut(client, resourceUrlById(invalidId),
+      pojo2JsonObject(record)).onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var actual = response.bodyAsClass(Errors.class);
         var message = "Illegal operation: Institution ID cannot be changed";
 
-        assertThat(actual.getErrors()).hasSize(1)
-          .extracting(Error::getMessage)
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
           .containsExactly(message);
 
         ctx.completeNow();
@@ -213,14 +203,13 @@ public class LocationUnitInstitutionIT
     var record = sampleRecord().withId(UUID.randomUUID().toString());
     var body = pojo2JsonObject(record);
 
-    doPut(client, resourceUrlById(null), body)
-      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+    doPut(client, resourceUrlById(null), body).onComplete(
+        verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var actual = response.bodyAsClass(Errors.class);
         var message = "Illegal operation: Institution ID cannot be changed";
 
-        assertThat(actual.getErrors()).hasSize(1)
-          .extracting(Error::getMessage)
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
           .containsExactly(message);
 
         ctx.completeNow();
@@ -228,12 +217,10 @@ public class LocationUnitInstitutionIT
   }
 
   @Test
-  void delete_shouldReturn404_notConfigured(Vertx vertx,
-                                            VertxTestContext ctx) {
+  void delete_shouldReturn404_notConfigured(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
 
-    doDelete(client, "")
-      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
+    doDelete(client, "").onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
       .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 }
