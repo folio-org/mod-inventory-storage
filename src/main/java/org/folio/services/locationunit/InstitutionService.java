@@ -104,14 +104,11 @@ public class InstitutionService {
   }
 
   private Function<AsyncResult<RowSet<Row>>, Future<Response>> prepareDeleteAllResponse() {
-    return reply -> {
-      var respond204 =
-        DeleteLocationUnitsInstitutionsResponse.respond204();
-      var respond500 =
-        DeleteLocationUnitsInstitutionsResponse.respond500WithTextPlain(
-          reply.cause().getMessage());
-
-      return succeededFuture(reply.succeeded() ? respond204 : respond500);
-    };
+    return reply -> reply.succeeded()
+      ? succeededFuture(DeleteLocationUnitsInstitutionsResponse.respond204())
+      : succeededFuture(
+      DeleteLocationUnitsInstitutionsResponse.respond500WithTextPlain(
+        reply.cause().getMessage())
+    );
   }
 }
