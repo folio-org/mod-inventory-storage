@@ -99,22 +99,18 @@ class LocationUnitInstitutionIT
   }
 
   @Test
-  void post_shouldReturn422_whenObjectIsDuplicate(Vertx vertx,
+    void post_shouldReturn422_whenObjectIsDuplicate(Vertx vertx,
                                                   VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
     var institution = sampleRecord().withId(id);
     var message =
       String.format("id value already exists in table locinstitution: %s", id);
+    var body = pojo2JsonObject(institution);
+    var requestOne = doPost(client, resourceUrl(), body);
+    var requestTwo = doPost(client, resourceUrl(), body);
 
-    var successfulRecord =
-      doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
-        verifyStatus(ctx, HTTP_CREATED));
-    var failedRecord =
-      doPost(client, resourceUrl(), pojo2JsonObject(institution)).onComplete(
-        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY));
-
-    Future.all(successfulRecord, failedRecord).map(CompositeFuture::list).map(
+    Future.all(requestOne, requestTwo).map(CompositeFuture::list).map(
         results -> results.stream().filter(Objects::nonNull)
           .peek(System.out::println).map(v -> (TestResponse) v)
           .filter(v -> v.status() == HTTP_UNPROCESSABLE_ENTITY.toInt()).findAny()
