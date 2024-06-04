@@ -1,7 +1,6 @@
 package org.folio.services.locationunit;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.LocationUnitApi.URL_PREFIX;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
@@ -43,9 +42,8 @@ public class LibraryService {
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(LIBRARY_TABLE, Loclib.class, Loclibs.class,
-      cql, offset, limit, okapiHeaders, context,
-      GetLocationUnitsLibrariesResponse.class);
+    return PgUtil.get(LIBRARY_TABLE, Loclib.class, Loclibs.class, cql, offset,
+      limit, okapiHeaders, context, GetLocationUnitsLibrariesResponse.class);
   }
 
   public Future<Response> getById(String id) {
@@ -56,15 +54,7 @@ public class LibraryService {
   public Future<Response> create(Loclib loclib) {
     return PgUtil.post(LIBRARY_TABLE, loclib, okapiHeaders, context,
         PostLocationUnitsLibrariesResponse.class)
-      .onSuccess(response -> {
-        PostLocationUnitsLibrariesResponse.respond201WithApplicationJson(response,
-            PostLocationUnitsLibrariesResponse.headersFor201()
-              .withLocation(URL_PREFIX + response));
-        domainEventService.publishCreated();
-      })
-      .otherwise(throwable ->
-        PostLocationUnitsLibrariesResponse.respond500WithTextPlain(
-          throwable.getMessage()));
+      .onSuccess(domainEventService.publishCreated());
   }
 
   public Future<Response> update(String id, Loclib loclib) {
@@ -79,22 +69,17 @@ public class LibraryService {
     }
 
     return repository.getById(id)
-      .compose(oldLoclib ->
-        PgUtil.put(LIBRARY_TABLE, loclib, id, okapiHeaders, context,
-            PutLocationUnitsLibrariesByIdResponse.class)
-          .onSuccess(domainEventService.publishUpdated(oldLoclib))
-          .otherwise(throwable ->
-            PostLocationUnitsLibrariesResponse.respond500WithTextPlain(
-              throwable.getMessage()))
+      .compose(oldLoclib -> PgUtil.put(LIBRARY_TABLE, loclib, id, okapiHeaders, context,
+          PutLocationUnitsLibrariesByIdResponse.class)
+        .onSuccess(domainEventService.publishUpdated(oldLoclib))
       );
   }
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldLibrary ->
-        PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, context,
-            DeleteLocationUnitsLibrariesByIdResponse.class)
-          .onSuccess(domainEventService.publishRemoved(oldLibrary))
+      .compose(oldLibrary -> PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, context,
+          DeleteLocationUnitsLibrariesByIdResponse.class)
+        .onSuccess(domainEventService.publishRemoved(oldLibrary))
       );
   }
 
