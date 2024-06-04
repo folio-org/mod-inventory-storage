@@ -17,7 +17,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.persist.InstitutionRepository;
 import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
-import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesByIdResponse;
+import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsResponse;
@@ -96,7 +96,8 @@ public class InstitutionService {
     return repository.getById(id)
       .compose(oldInstitution ->
         PgUtil.deleteById(INSTITUTION_TABLE, id, okapiHeaders,
-          vertxContext, DeleteLocationUnitsCampusesByIdResponse.class)
+          vertxContext,
+          DeleteLocationUnitsInstitutionsByIdResponse.class)
         .onSuccess(domainEventService.publishRemoved(oldInstitution)));
   }
 
