@@ -56,11 +56,12 @@ public class LibraryService {
   public Future<Response> create(Loclib loclib) {
     return PgUtil.post(LIBRARY_TABLE, loclib, okapiHeaders, context,
         PostLocationUnitsLibrariesResponse.class)
-      .onSuccess(response ->
-        PostLocationUnitsLibrariesResponse
-          .respond201WithApplicationJson(response,
+      .onSuccess(response -> {
+        PostLocationUnitsLibrariesResponse.respond201WithApplicationJson(response,
             PostLocationUnitsLibrariesResponse.headersFor201()
-              .withLocation(URL_PREFIX + response)))
+              .withLocation(URL_PREFIX + response));
+        domainEventService.publishCreated();
+      })
       .otherwise(throwable ->
         PostLocationUnitsLibrariesResponse.respond500WithTextPlain(
           throwable.getMessage()));
@@ -90,10 +91,10 @@ public class LibraryService {
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldLocation ->
+      .compose(oldLibrary ->
         PgUtil.deleteById(LIBRARY_TABLE, id, okapiHeaders, context,
             DeleteLocationUnitsLibrariesByIdResponse.class)
-          .onSuccess(domainEventService.publishRemoved(oldLocation))
+          .onSuccess(domainEventService.publishRemoved(oldLibrary))
       );
   }
 
