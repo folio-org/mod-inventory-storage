@@ -26,7 +26,6 @@ import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -89,22 +88,14 @@ public class LocationUnitInstitutionIT
     return List.of("name==test-institution", "code=code");
   }
 
-  @BeforeEach
-  void beforeEach(Vertx vertx, VertxTestContext ctx) {
-    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
-
-    postgresClient.save(INSTITUTION_TABLE, institution).onFailure(ctx::failNow)
-      .onSuccess(id -> ctx.completeNow());
-  }
-
   @AfterEach
   void afterEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    postgresClient.delete(referenceTable(), (CQLWrapper) null).compose(
-        rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
-      .onFailure(ctx::failNow).onComplete(event -> ctx.completeNow());
+    postgresClient.delete(referenceTable(), (CQLWrapper) null)
+      .compose(rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
+      .onFailure(ctx::failNow)
+      .onComplete(event -> ctx.completeNow());
   }
 
   @Test
