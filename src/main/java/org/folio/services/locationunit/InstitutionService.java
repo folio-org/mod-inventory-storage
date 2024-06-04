@@ -89,7 +89,7 @@ public class InstitutionService {
         PgUtil.put(INSTITUTION_TABLE, institution, id,
           okapiHeaders, vertxContext,
           PutLocationUnitsInstitutionsByIdResponse.class)
-        .onSuccess(domainEventService.publishUpdated(oldInstitution)));
+        .onSuccess(domainEventService.publishUpdated(institution)));
   }
 
   public Future<Response> delete(String id) {
