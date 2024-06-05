@@ -174,7 +174,7 @@ class CampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
         assertThat(actual.getErrors())
           .hasSize(1)
           .extracting(Error::getMessage)
-          .containsExactly("Cannot set loccampus.institutionId = "
+          .containsExactly("Cannot set loccampus.institutionid = "
             + invalidInstitutionId + " because it does not exist in locinstitution.id.");
         ctx.completeNow();
       })));
