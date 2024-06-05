@@ -265,7 +265,7 @@ class LocationUnitInstitutionIT
   }
 
   @Test
-  void deleteAll_shouldReturn500_whenInstitutionHasFKs(Vertx vertx, VertxTestContext ctx) {
+  void deleteAll_shouldReturn500_whenInstitutionHasFks(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     var institution = new Locinst().withName("institution").withCode("ic");
