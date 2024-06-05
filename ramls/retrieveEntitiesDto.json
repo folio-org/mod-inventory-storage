@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "DTO for fetching Holding and Instances by POST request",
+  "description": "DTO for fetching records by POST request",
   "type": "object",
   "properties": {
     "offset": {
