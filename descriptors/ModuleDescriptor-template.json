@@ -77,7 +77,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "6.0",
+      "version": "6.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -146,7 +146,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.0",
+      "version": "10.1",
       "handlers": [
         {
           "methods": ["GET"],

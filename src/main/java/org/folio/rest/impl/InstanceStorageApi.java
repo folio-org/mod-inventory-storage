@@ -202,22 +202,7 @@ public class InstanceStorageApi implements InstanceStorage {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
 
-    if (PgUtil.checkOptimizedCQL(query, TITLE) != null) { // Until RMB-573 is fixed
-      try {
-        PreparedCql preparedCql = handleCql(query, limit, offset);
-        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          TITLE, query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          GetInstanceStorageInstancesResponse.respond500WithTextPlain(e.getMessage())));
-      }
-      return;
-    }
-
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
-      "instances", routingContext, okapiHeaders, vertxContext);
+    fetchInstances(query, limit, offset, routingContext, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
   @Validate
@@ -396,11 +381,20 @@ public class InstanceStorageApi implements InstanceStorage {
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    if (PgUtil.checkOptimizedCQL(entity.getQuery(), TITLE) != null) {
+    fetchInstances(entity.getQuery(), entity.getLimit(), entity.getOffset(),
+      routingContext, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
+  private void fetchInstances(String query, int limit, int offset,
+                              RoutingContext routingContext,
+                              Map<String, String> okapiHeaders,
+                              Handler<AsyncResult<Response>> asyncResultHandler,
+                              Context vertxContext) {
+    if (PgUtil.checkOptimizedCQL(query, TITLE) != null) {
       try {
-        PreparedCql preparedCql = handleCql(entity.getQuery(), entity.getLimit(), entity.getOffset());
+        PreparedCql preparedCql = handleCql(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          TITLE, entity.getQuery(), entity.getOffset(), entity.getLimit(),
+          TITLE, query, offset, limit,
           okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
@@ -410,7 +404,7 @@ public class InstanceStorageApi implements InstanceStorage {
       return;
     }
 
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, entity.getQuery(), entity.getOffset(), entity.getLimit(), null,
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
       "instances", routingContext, okapiHeaders, vertxContext);
   }
 
