@@ -60,7 +60,7 @@ public class InstitutionService {
   public Future<Response> create(Locinst institution) {
     return PgUtil.post(INSTITUTION_TABLE, institution, okapiHeaders,
         vertxContext, PostLocationUnitsInstitutionsResponse.class)
-      .onSuccess(response ->  domainEventService.publishCreated().handle(response));
+      .onSuccess(response ->  domainEventService.publishCreated());
   }
 
   public Future<Response> update(String id, Locinst institution) {
