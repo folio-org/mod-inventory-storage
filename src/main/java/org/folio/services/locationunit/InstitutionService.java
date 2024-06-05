@@ -80,16 +80,16 @@ public class InstitutionService {
         PgUtil.put(INSTITUTION_TABLE, institution, id,
           okapiHeaders, vertxContext,
           PutLocationUnitsInstitutionsByIdResponse.class)
-        .onSuccess(domainEventService.publishUpdated(institution)));
+        .onSuccess(domainEventService.publishUpdated(oldInstitution)));
   }
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldInstitution ->
+      .compose(institution ->
         PgUtil.deleteById(INSTITUTION_TABLE, id, okapiHeaders,
           vertxContext,
           DeleteLocationUnitsInstitutionsByIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldInstitution)));
+        .onSuccess(domainEventService.publishRemoved(institution)));
   }
 
   public Future<Response> deleteAll() {
