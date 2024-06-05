@@ -2,8 +2,11 @@ package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_NOT_FOUND;
+import static org.folio.HttpStatus.HTTP_INTERNAL_SERVER_ERROR;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
+import static org.folio.rest.impl.LocationUnitApi.LIBRARY_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
@@ -19,12 +22,15 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
+import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -87,18 +93,28 @@ class LocationUnitInstitutionIT
     return List.of("name==test-institution", "code=code");
   }
 
+  @BeforeEach
+  void beforeEach(Vertx vertx, VertxTestContext ctx) {
+    deleteAllLocationData(vertx, ctx);
+  }
+
   @AfterEach
   void afterEach(Vertx vertx, VertxTestContext ctx) {
+    deleteAllLocationData(vertx, ctx);
+  }
+
+  private static void deleteAllLocationData(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    postgresClient.delete(referenceTable(), (CQLWrapper) null)
+    postgresClient.delete(LIBRARY_TABLE, (CQLWrapper) null)
+      .compose(rows -> postgresClient.delete(CAMPUS_TABLE, (CQLWrapper) null))
       .compose(rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
       .onFailure(ctx::failNow)
       .onComplete(event -> ctx.completeNow());
   }
 
   @Test
-    void post_shouldReturn422_whenObjectIsDuplicate(Vertx vertx,
+    void post_shouldReturn500_whenObjectIsDuplicate(Vertx vertx,
                                                   VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
@@ -203,10 +219,66 @@ class LocationUnitInstitutionIT
   }
 
   @Test
-  void delete_shouldReturn404_notConfigured(Vertx vertx, VertxTestContext ctx) {
+  void put_shouldReturn422_whenCodeIsBlank(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var id = UUID.randomUUID().toString();
+    var institution = sampleRecord().withId(id).withCode(null);
+
+    doPut(client, resourceUrlById(id), pojo2JsonObject(institution)).onComplete(
+        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
+        var actual = duplicateResponse.bodyAsClass(Errors.class);
+        var message = "must not be null";
+
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
+          .containsExactly(message);
+
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void put_shouldReturn422_whenNameIsBlank(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var id = UUID.randomUUID().toString();
+    var institution = sampleRecord().withId(id).withName(null);
+
+    doPut(client, resourceUrlById(id), pojo2JsonObject(institution)).onComplete(
+        verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(duplicateResponse -> ctx.verify(() -> {
+        var actual = duplicateResponse.bodyAsClass(Errors.class);
+        var message = "must not be null";
+
+        assertThat(actual.getErrors()).hasSize(1).extracting(Error::getMessage)
+          .containsExactly(message);
+
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void deleteAll_shouldReturn204(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
 
-    doDelete(client, "").onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
+    doDelete(client, resourceUrl()).onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
+  }
+
+  @Test
+  void deleteAll_shouldReturn500_whenInstitutionHasFKs(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+    var institution = new Locinst().withName("institution").withCode("ic");
+    var campus = new Loccamp().withName("campus").withCode("cc");
+    var library = new Loclib().withName("library").withCode("lc");
+
+    postgresClient.save(INSTITUTION_TABLE, institution)
+      .compose(id -> postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(id)))
+      .compose(id -> postgresClient.save(LIBRARY_TABLE, library.withCampusId(id)))
+      .onFailure(ctx::failNow)
+      .onSuccess(result ->
+        doDelete(client, resourceUrl()).onComplete(verifyStatus(ctx, HTTP_INTERNAL_SERVER_ERROR))
+          .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)))
+      );
   }
 }

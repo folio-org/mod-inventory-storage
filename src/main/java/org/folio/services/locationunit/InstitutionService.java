@@ -1,7 +1,6 @@
 package org.folio.services.locationunit;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.LocationUnitApi.URL_PREFIX;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
@@ -61,15 +60,7 @@ public class InstitutionService {
   public Future<Response> create(Locinst institution) {
     return PgUtil.post(INSTITUTION_TABLE, institution, okapiHeaders,
         vertxContext, PostLocationUnitsInstitutionsResponse.class)
-      .onSuccess(response -> {
-        domainEventService.publishCreated().handle(response);
-
-        var headers = PostLocationUnitsInstitutionsResponse.headersFor201()
-          .withLocation(URL_PREFIX + response);
-
-        PostLocationUnitsInstitutionsResponse.respond201WithApplicationJson(
-          response, headers);
-      });
+      .onSuccess(response ->  domainEventService.publishCreated().handle(response));
   }
 
   public Future<Response> update(String id, Locinst institution) {
