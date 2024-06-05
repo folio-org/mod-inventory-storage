@@ -8,6 +8,7 @@
 
 ### Features
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
+* Implement domain event production for library create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
