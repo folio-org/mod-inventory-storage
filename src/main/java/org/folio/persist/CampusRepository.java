@@ -1,7 +1,7 @@
 package org.folio.persist;
 
-import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
+import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
 import java.util.Map;
