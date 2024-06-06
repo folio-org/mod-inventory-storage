@@ -25,6 +25,7 @@ import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
+import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
@@ -40,6 +41,7 @@ import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
+  private static final String TITLE = "title";
   private final Messages messages = Messages.getInstance();
 
   @Validate
@@ -200,22 +202,7 @@ public class InstanceStorageApi implements InstanceStorage {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
 
-    if (PgUtil.checkOptimizedCQL(query, "title") != null) { // Until RMB-573 is fixed
-      try {
-        PreparedCql preparedCql = handleCql(query, limit, offset);
-        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
-          "title", query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          GetInstanceStorageInstancesResponse.respond500WithTextPlain(e.getMessage())));
-      }
-      return;
-    }
-
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
-      "instances", routingContext, okapiHeaders, vertxContext);
+    fetchInstances(query, limit, offset, routingContext, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
   @Validate
@@ -385,6 +372,40 @@ public class InstanceStorageApi implements InstanceStorage {
     asyncResultHandler.handle(Future.succeededFuture(
       PutInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
         .respond500WithTextPlain("Not implemented yet.")));
+  }
+
+  @Validate
+  @Override
+  public void postInstanceStorageInstancesRetrieve(RetrieveDto entity,
+                                                   RoutingContext routingContext,
+                                                   Map<String, String> okapiHeaders,
+                                                   Handler<AsyncResult<Response>> asyncResultHandler,
+                                                   Context vertxContext) {
+    fetchInstances(entity.getQuery(), entity.getLimit(), entity.getOffset(),
+      routingContext, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
+  private void fetchInstances(String query, int limit, int offset,
+                              RoutingContext routingContext,
+                              Map<String, String> okapiHeaders,
+                              Handler<AsyncResult<Response>> asyncResultHandler,
+                              Context vertxContext) {
+    if (PgUtil.checkOptimizedCQL(query, TITLE) != null) {
+      try {
+        PreparedCql preparedCql = handleCql(query, limit, offset);
+        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+          TITLE, query, offset, limit,
+          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+          GetInstanceStorageInstancesResponse.respond500WithTextPlain(e.getMessage())));
+      }
+      return;
+    }
+
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
+      "instances", routingContext, okapiHeaders, vertxContext);
   }
 
   PreparedCql handleCql(String query, int limit, int offset) throws FieldException {
