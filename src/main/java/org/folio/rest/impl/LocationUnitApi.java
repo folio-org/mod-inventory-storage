@@ -5,6 +5,7 @@ import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.List;
 import java.util.Map;
@@ -253,7 +254,6 @@ public class LocationUnitApi implements LocationUnits {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
-  ////////////////////////////////////////////
   @Validate
   @Override
   public void deleteLocationUnitsLibraries(Map<String, String> okapiHeaders,
