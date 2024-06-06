@@ -107,8 +107,8 @@ These properties can be changed by setting env variable.
 * `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS` Default value - `50`
 * `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS` Default value - `1`
 * `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS` Default value - `1`
 * `KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS` Default value - `1`
-
 
 # Building
 
@@ -124,18 +124,13 @@ These environment variables configure Kafka, for details see [Kafka](#kafka):
 * `REPLICATION_FACTOR`
 * `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS`
 * `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
+
+These environment variables configure Kafka topic for specific business-related topics
+* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS`
+* `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS`
+* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS`
 * `KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS`
-
-These environment variables configure Kafka topic for specific business-related topics
-* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
-* `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS`
-* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS`
-
-These environment variables configure Kafka topic for specific business-related topics
-* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
-* `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS`
-* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS`
 
 mod-inventory-storage also supports all Raml Module Builder (RMB) environment variables,
 for details see [RMB](https://github.com/folio-org/raml-module-builder#environment-variables):
