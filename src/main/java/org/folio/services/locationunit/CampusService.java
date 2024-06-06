@@ -55,13 +55,7 @@ public class CampusService {
   public Future<Response> create(Loccamp loccamp) {
     return PgUtil.post(CAMPUS_TABLE, loccamp, okapiHeaders, context,
         PostLocationUnitsCampusesResponse.class)
-      .onSuccess(response ->
-        PostLocationUnitsCampusesResponse
-          .respond201WithApplicationJson(response,
-            PostLocationUnitsCampusesResponse.headersFor201()))
-      .otherwise(throwable ->
-        PostLocationUnitsCampusesResponse.respond500WithTextPlain(
-          throwable.getMessage()));
+      .onSuccess(domainEventService.publishCreated());
   }
 
   public Future<Response> update(String id, Loccamp loccamp) {
@@ -80,18 +74,15 @@ public class CampusService {
         PgUtil.put(CAMPUS_TABLE, loccamp, id, okapiHeaders, context,
             PutLocationUnitsCampusesByIdResponse.class)
           .onSuccess(domainEventService.publishUpdated(oldLoccamp))
-          .otherwise(throwable ->
-            PostLocationUnitsCampusesResponse.respond500WithTextPlain(
-              throwable.getMessage()))
       );
   }
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldLocation ->
+      .compose(oldLoccamp ->
         PgUtil.deleteById(CAMPUS_TABLE, id, okapiHeaders, context,
             DeleteLocationUnitsCampusesByIdResponse.class)
-          .onSuccess(domainEventService.publishRemoved(oldLocation))
+          .onSuccess(domainEventService.publishRemoved(oldLoccamp))
       );
   }
 

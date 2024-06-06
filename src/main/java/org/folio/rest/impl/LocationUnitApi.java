@@ -108,7 +108,7 @@ public class LocationUnitApi implements LocationUnits {
 
     new CampusService(vertxContext, okapiHeaders)
       .getByQuery(query, offset, limit)
-      .onSuccess(response ->  asyncResultHandler.handle(succeededFuture(response)))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 
@@ -119,7 +119,7 @@ public class LocationUnitApi implements LocationUnits {
                                         Context vertxContext) {
     new CampusService(vertxContext, okapiHeaders)
       .create(entity)
-      .onSuccess(response ->  asyncResultHandler.handle(succeededFuture(response)))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 
@@ -130,7 +130,7 @@ public class LocationUnitApi implements LocationUnits {
                                           Context vertxContext) {
     new CampusService(vertxContext, okapiHeaders)
       .deleteAll()
-      .onSuccess(response ->  asyncResultHandler.handle(succeededFuture(response)))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 
@@ -141,7 +141,7 @@ public class LocationUnitApi implements LocationUnits {
                                            Context vertxContext) {
     new CampusService(vertxContext, okapiHeaders)
       .getById(id)
-      .onSuccess(response ->  asyncResultHandler.handle(succeededFuture(response)))
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
 
