@@ -40,7 +40,7 @@ public class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.instance-contribution",
     "folio.foo-tenant.inventory.bound-with", "folio.foo-tenant.inventory.async-migration",
     "folio.foo-tenant.inventory.service-point", "folio.foo-tenant.inventory.classification-type",
-    "folio.foo-tenant.inventory.location");
+    "folio.foo-tenant.inventory.location", "folio.foo-tenant.inventory.institution");
   private KafkaAdminClient mockClient;
   private Vertx vertx;
 
