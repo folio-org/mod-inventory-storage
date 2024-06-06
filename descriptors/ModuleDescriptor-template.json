@@ -77,11 +77,15 @@
     },
     {
       "id": "holdings-storage",
-      "version": "6.0",
+      "version": "6.1",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings",
+          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/holdings-storage/holdings/retrieve",
           "permissionsRequired": ["inventory-storage.holdings.collection.get"]
         }, {
           "methods": ["GET"],
@@ -142,13 +146,18 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.0",
+      "version": "10.1",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances",
           "permissionsRequired": ["inventory-storage.instances.collection.get"]
-        }, {
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/retrieve",
+          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.get"]
@@ -2713,9 +2722,11 @@
       { "name": "KAFKA_HOST", "value": "kafka" },
       { "name": "KAFKA_PORT", "value": "9092" },
       { "name": "REPLICATION_FACTOR", "value": "1" },
-      { "name": "KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "value": "1" },
-      { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1" },
-      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1" }
+      { "name": "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "value": "50"},
+      { "name": "KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1" },
+      { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"}
     ]
   }
 }
