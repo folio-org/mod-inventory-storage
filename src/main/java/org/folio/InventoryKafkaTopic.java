@@ -17,6 +17,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   SERVICE_POINT("service-point"),
   CLASSIFICATION_TYPE("classification-type"),
   LOCATION("location"),
+  INSTITUTION("institution"),
   CAMPUS("campus");
 
   private static final String DEFAULT_NUM_PARTITIONS_PROPERTY = "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS";
@@ -29,6 +30,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_PARTITION_MAP = Map.of(
     CLASSIFICATION_TYPE, Pair.of("KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "1"),
     LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"),
+    INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1"),
     CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "1")
   );
 

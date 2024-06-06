@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Loclibs;
 import org.folio.rest.jaxrs.resource.LocationUnits;
@@ -23,10 +22,10 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.locationunit.CampusService;
+import org.folio.services.locationunit.InstitutionService;
 
 public class LocationUnitApi implements LocationUnits {
   public static final String URL_PREFIX = "/location-units";
-  public static final String INSTITUTION_TABLE = "locinstitution";
   public static final String CAMPUS_TABLE = "loccampus";
   public static final String LIBRARY_TABLE = "loclibrary";
   private static final String MOD_NAME = "mod_inventory_storage";
@@ -38,34 +37,10 @@ public class LocationUnitApi implements LocationUnits {
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    CQLWrapper cql;
-    try {
-      cql = StorageHelper.getCql(query, limit, offset, INSTITUTION_TABLE);
-    } catch (Exception e) {
-      String message = StorageHelper.logAndSaveError(e);
-      asyncResultHandler.handle(succeededFuture(
-        GetLocationUnitsInstitutionsResponse
-          .respond500WithTextPlain(message)));
-      return;
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .get(INSTITUTION_TABLE, Locinst.class, new String[] {"*"},
-        cql, true, true, reply -> {
-          if (reply.failed()) {
-            String message = StorageHelper.logAndSaveError(reply.cause());
-            asyncResultHandler.handle(succeededFuture(
-              GetLocationUnitsInstitutionsResponse
-                .respond400WithTextPlain(message)));
-          } else {
-            Locinsts insts = new Locinsts();
-            List<Locinst> items = reply.result().getResults();
-            insts.setLocinsts(items);
-            insts.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-            asyncResultHandler.handle(succeededFuture(
-              GetLocationUnitsInstitutionsResponse.respond200WithApplicationJson(insts)));
-          }
-        });
+    new InstitutionService(vertxContext, okapiHeaders)
+      .getByQuery(query, offset, limit)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -73,38 +48,10 @@ public class LocationUnitApi implements LocationUnits {
   public void postLocationUnitsInstitutions(Locinst entity, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
-
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    String id = entity.getId();
-    if (id == null) {
-      id = UUID.randomUUID().toString();
-      entity.setId(id);
-    }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .save(INSTITUTION_TABLE, id, entity, reply -> {
-        if (reply.failed()) {
-          String message = StorageHelper.logAndSaveError(reply.cause());
-          if (StorageHelper.isDuplicate(message)) {
-            asyncResultHandler.handle(succeededFuture(
-              PostLocationUnitsInstitutionsResponse
-                .respond422WithApplicationJson(
-                  ValidationHelper.createValidationErrorMessage(
-                    "locinst", entity.getId(),
-                    "Institution already exists"))));
-          } else {
-            asyncResultHandler.handle(succeededFuture(
-              PostLocationUnitsInstitutionsResponse
-                .respond500WithTextPlain(message)));
-          }
-        } else {
-          String responseObject = reply.result();
-          entity.setId(responseObject);
-          asyncResultHandler.handle(succeededFuture(
-            PostLocationUnitsInstitutionsResponse
-              .respond201WithApplicationJson(entity,
-                PostLocationUnitsInstitutionsResponse.headersFor201().withLocation(URL_PREFIX + responseObject))));
-        }
-      });
+    new InstitutionService(vertxContext, okapiHeaders)
+      .create(entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -112,20 +59,10 @@ public class LocationUnitApi implements LocationUnits {
   public void deleteLocationUnitsInstitutions(Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler,
                                               Context vertxContext) {
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    PostgresClient.getInstance(vertxContext.owner(),
-        TenantTool.calculateTenantId(tenantId))
-      .execute(String.format(DELETE_SQL_TEMPLATE, tenantId, MOD_NAME, INSTITUTION_TABLE),
-        reply -> {
-          if (reply.succeeded()) {
-            asyncResultHandler.handle(succeededFuture(
-              DeleteLocationUnitsInstitutionsResponse.respond204()));
-          } else {
-            asyncResultHandler.handle(succeededFuture(
-              DeleteLocationUnitsInstitutionsResponse
-                .respond500WithTextPlain(reply.cause().getMessage())));
-          }
-        });
+    new InstitutionService(vertxContext, okapiHeaders)
+      .deleteAll()
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -133,9 +70,10 @@ public class LocationUnitApi implements LocationUnits {
   public void getLocationUnitsInstitutionsById(String id, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-
-    PgUtil.getById(INSTITUTION_TABLE, Locinst.class, id, okapiHeaders, vertxContext,
-      GetLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
+    new InstitutionService(vertxContext, okapiHeaders)
+      .getById(id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -143,17 +81,10 @@ public class LocationUnitApi implements LocationUnits {
   public void putLocationUnitsInstitutionsById(String id, Locinst entity, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-
-    if (!id.equals(entity.getId())) {
-      String message = "Illegal operation: Institution id cannot be changed";
-      asyncResultHandler.handle(succeededFuture(
-        PutLocationUnitsInstitutionsByIdResponse
-          .respond400WithTextPlain(message)));
-      return;
-    }
-
-    PgUtil.put(INSTITUTION_TABLE, entity, id, okapiHeaders, vertxContext,
-      PutLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
+    new InstitutionService(vertxContext, okapiHeaders)
+      .update(id, entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -161,9 +92,10 @@ public class LocationUnitApi implements LocationUnits {
   public void deleteLocationUnitsInstitutionsById(String id, Map<String, String> okapiHeaders,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                   Context vertxContext) {
-
-    PgUtil.deleteById(INSTITUTION_TABLE, id, okapiHeaders, vertxContext,
-      DeleteLocationUnitsInstitutionsByIdResponse.class, asyncResultHandler);
+    new InstitutionService(vertxContext, okapiHeaders)
+      .delete(id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
