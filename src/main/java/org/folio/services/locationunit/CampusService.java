@@ -2,7 +2,6 @@ package org.folio.services.locationunit;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
-import static org.folio.rest.impl.LocationUnitApi.URL_PREFIX;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
@@ -59,8 +58,7 @@ public class CampusService {
       .onSuccess(response ->
         PostLocationUnitsCampusesResponse
           .respond201WithApplicationJson(response,
-            PostLocationUnitsCampusesResponse.headersFor201()
-              .withLocation(URL_PREFIX + response)))
+            PostLocationUnitsCampusesResponse.headersFor201()))
       .otherwise(throwable ->
         PostLocationUnitsCampusesResponse.respond500WithTextPlain(
           throwable.getMessage()));
