@@ -37,8 +37,7 @@ public class CampusService {
     this.context = context;
     this.okapiHeaders = okapiHeaders;
     this.repository = new CampusRepository(context, okapiHeaders);
-    this.domainEventService =
-      new CampusDomainEventPublisher(context, okapiHeaders);
+    this.domainEventService = new CampusDomainEventPublisher(context, okapiHeaders);
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
