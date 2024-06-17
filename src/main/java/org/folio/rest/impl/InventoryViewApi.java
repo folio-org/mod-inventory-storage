@@ -48,12 +48,16 @@ public class InventoryViewApi implements InventoryViewInstances {
                                          Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {
-    if(entity.getIds() == null) asyncResultHandler.handle(
-      Future.succeededFuture(EndpointFailureHandler
-        .failureResponse(new RuntimeException("no id(s) presents"))));
-    if(entity.getIds().size() > 30_000) asyncResultHandler.handle(
-      Future.succeededFuture(EndpointFailureHandler
-        .failureResponse(new RuntimeException("Over the limit of the identifiers present"))));
+    if (entity.getIds() == null) {
+      asyncResultHandler.handle(
+        Future.succeededFuture(EndpointFailureHandler
+          .failureResponse(new RuntimeException("no id(s) presents"))));
+    }
+    if (entity.getIds().size() > 30_000) {
+      asyncResultHandler.handle(
+        Future.succeededFuture(EndpointFailureHandler
+          .failureResponse(new RuntimeException("Over the limit of the identifiers present"))));
+    }
     log.info("postInventoryViewInstances:: {} id(s)", entity.getIds().size());
 
     //region create subscriber with the response object so that objects can be piped to it
