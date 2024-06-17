@@ -1239,7 +1239,7 @@
       "version": "2.0",
       "handlers": [
         {
-          "methods": ["GET"],
+          "methods": ["GET", "POST"],
           "pathPattern": "/inventory-view/instances",
           "permissionsRequired": ["inventory-storage.inventory-view.instances.collection.get"]
         }

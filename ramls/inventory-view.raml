@@ -10,6 +10,7 @@ documentation:
 
 types:
   inventoryViewInstance: !include inventory-view-instance.json
+  idsRequest: !include ids-request.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -29,3 +30,11 @@ resourceTypes:
     description: Get instances by id with their holdings and items
     is: [pageable, searchable: {description: "using CQL",
                       example: "title=\"*uproot*\""}]
+  post:
+    description: Return Instances by id with their holdings and items
+    is: [validate]
+    body:
+      application/json:
+        type: idsRequest
+
+
