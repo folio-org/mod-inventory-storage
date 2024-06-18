@@ -1164,13 +1164,13 @@
     },
     {
       "run": "after",
-      "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
-      "fromModuleVersion": "27.2.0"
+      "snippetPath": "migrateHoldingsOutdatedFields.sql",
+      "fromModuleVersion": "27.1.4"
     },
     {
       "run": "after",
-      "snippetPath": "migrateHoldingsOutdatedFields.sql",
-      "fromModuleVersion": "27.1.4"
+      "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
+      "fromModuleVersion": "27.2.0"
     }
   ]
 }
