@@ -441,17 +441,19 @@
       "fullTextIndex": [
         {
           "fieldName": "identifiers",
-          "arraySubfield" : "value",
-          "arrayModifiers": ["identifierTypeId"]
+          "arraySubfield": "value",
+          "arrayModifiers": [
+            "identifierTypeId"
+          ]
         },
         {
           "fieldName": "invalidIsbn",
-          "sqlExpression" : "normalize_invalid_isbns(jsonb->'identifiers')",
+          "sqlExpression": "normalize_invalid_isbns(jsonb->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         },
         {
           "fieldName": "isbn",
-          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpression": "normalize_isbns(jsonb->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         }
       ]
@@ -596,7 +598,7 @@
           "fieldName": "instanceId",
           "targetTable": "instance",
           "targetTableAlias": "instance",
-          "tableAlias" : "holdingsRecords",
+          "tableAlias": "holdingsRecords",
           "tOps": "ADD"
         },
         {
@@ -687,13 +689,16 @@
         {
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
-          "targetTableAlias" : "holdingsRecords",
+          "targetTableAlias": "holdingsRecords",
           "tableAlias": "item",
           "tOps": "ADD"
         },
         {
-          "targetPath": ["holdingsRecordId", "instanceId"],
-          "targetTable":      "instance",
+          "targetPath": [
+            "holdingsRecordId",
+            "instanceId"
+          ],
+          "targetTable": "instance",
           "targetTableAlias": "instance",
           "tableAlias": "item"
         },
@@ -727,7 +732,6 @@
           "targetTable": "location",
           "tOps": "ADD"
         }
-
       ],
       "uniqueIndex": [
         {
@@ -884,9 +888,9 @@
   ],
   "scripts": [
     {
-        "run":"after",
-        "snippetPath":"setPreviouslyHeldDefault.sql",
-        "fromModuleVersion":"20.2.0"
+      "run": "after",
+      "snippetPath": "setPreviouslyHeldDefault.sql",
+      "fromModuleVersion": "20.2.0"
     },
     {
       "run": "before",
@@ -899,9 +903,9 @@
       "fromModuleVersion": "19.2.0"
     },
     {
-      "run":"after",
-      "snippetPath":"setEffectiveHoldingsLocation.sql",
-      "fromModuleVersion":"25.0.0"
+      "run": "after",
+      "snippetPath": "setEffectiveHoldingsLocation.sql",
+      "fromModuleVersion": "25.0.0"
     },
     {
       "run": "after",
@@ -1059,9 +1063,9 @@
       "fromModuleVersion": "23.1.0"
     },
     {
-        "run":"after",
-        "snippetPath":"dropCallNumberNormalizationFunctions.sql",
-        "fromModuleVersion":"24.0.0"
+      "run": "after",
+      "snippetPath": "dropCallNumberNormalizationFunctions.sql",
+      "fromModuleVersion": "24.0.0"
     },
     {
       "run": "after",
