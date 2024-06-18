@@ -1157,6 +1157,11 @@
       "run": "after",
       "snippetPath": "oaipmh/createIndexCompleteUpdatedDate.sql",
       "fromModuleVersion": "27.1.3"
+    },
+    {
+      "run": "after",
+      "snippetPath": "migrateHoldingsOutdatedFields.sql",
+      "fromModuleVersion": "27.1.4"
     }
   ]
 }
