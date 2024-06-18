@@ -557,14 +557,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     final var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
     final var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
 
