@@ -3,6 +3,7 @@
   "hrid" : "hold000000000002",
   "formerIds" : [ "ABW4508", "442882" ],
   "instanceId" : "69640328-788e-43fc-9c3c-af39e243f3b7",
+  "sourceId": "7fbd5d84-abcd-1978-8899-6cb173998bbd",
   "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
   "electronicAccess" : [ {
     "uri" : "http://www.ebscohost.com",

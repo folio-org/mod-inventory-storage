@@ -108,6 +108,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String CONSORTIUM_MEMBER_TENANT = "consortium";
   private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "nopermissions";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final UUID[] HOLDING_SOURCE_IDS = {
+    UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b00"),
+    UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
+    UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
+  };
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
@@ -129,6 +134,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     setupLocations(CONSORTIUM_MEMBER_TENANT);
 
     prepareTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS, false);
+    prepareThreeHoldingSource();
   }
 
 
@@ -201,6 +207,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create();
 
@@ -242,6 +249,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .withId(null)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
     IndividualResource holdingResponse = holdingsClient.create(holdingBuilder.create());
@@ -282,6 +290,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject request = new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create();
 
     request.put("id", nonUuidId);
@@ -307,7 +316,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void canCreateHoldingAtSpecificLocation() {
 
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     setHoldingsSequence(1);
@@ -317,6 +325,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.replace(holdingId, new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
@@ -373,8 +382,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String adminNote = "an admin note";
     setHoldingsSequence(1);
 
+    UUID sourceId = getPreparedHoldingSourceId();
     IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(sourceId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
@@ -388,6 +399,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject replacement = holdingResource.copyJson()
       .put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString())
+      .put("sourceId", sourceId.toString())
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(NEW_TEST_TAG)))
       .put("administrativeNotes", new JsonArray().add(adminNote));
 
@@ -401,6 +413,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
     assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holdingFromGet.getString("sourceId"), is(sourceId.toString()));
     assertThat(holdingFromGet.getString("permanentLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
     assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
     assertThat(holdingFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
@@ -417,14 +430,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID instanceId = UUID.randomUUID();
     UUID newInstanceId = UUID.randomUUID();
 
+
     instancesClient.create(smallAngryPlanet(instanceId));
     instancesClient.create(smallAngryPlanet(newInstanceId));
     setHoldingsSequence(1);
 
     JsonObject holdingToCreate = new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
+
     IndividualResource holdingResource = holdingsClient.create(holdingToCreate);
 
     UUID holdingId = holdingResource.getId();
@@ -465,6 +481,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     IndividualResource holdingResource = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     UUID holdingId = holdingResource.getId();
@@ -491,14 +508,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final UUID firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     final UUID secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
     final UUID thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
 
@@ -537,14 +557,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     final var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
     final var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
 
@@ -571,6 +594,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create());
 
@@ -594,6 +618,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
@@ -624,22 +649,27 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
 
     CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
@@ -685,14 +715,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(firstInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(secondInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID));
 
     holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(thirdInstanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     holdingsClient.deleteAll();
@@ -714,26 +747,31 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final var h1 = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId1)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid("1234")
       .create()).getJson();
     final var h2 = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId1)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid("21234")
       .create()).getJson();
     final var h3 = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId2)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid("12")
       .create()).getJson();
     final var h4 = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId2)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid("3123")
       .create()).getJson();
     final var h5 = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId2)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid("123")
       .create()).getJson();
@@ -793,6 +831,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID id = holdingsClient.create(new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
 
     URL getHoldingUrl = holdingsStorageUrl(String.format("/%s", id.toString()));
@@ -826,6 +865,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonObject holding = getById(holdingId.toString()).getJson();
     holding.put(PERMANENT_LOCATION_ID_KEY, ANNEX_LIBRARY_LOCATION_ID);
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     // updating with current _version 1 succeeds and increments _version to 2
     assertThat(update(holding).getStatusCode(), is(204));
     holding.put(PERMANENT_LOCATION_ID_KEY, SECOND_FLOOR_LOCATION_ID);
@@ -843,17 +883,72 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void updatingHoldingsWithSourceIdShouldUpdate()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("testCallNumber")).getJson();
+
+    assertThat(holding.getString("callNumber"), is("testCallNumber"));
+
+    UUID newSourceId = getPreparedHoldingSourceId();
+    holding.put("sourceId", newSourceId.toString());
+    holding.put("callNumber", "updatedTestCallNumber");
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    Response updateResponse = update(holdingsUrl, holding);
+    Response updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getJson().getString("callNumber"), is("updatedTestCallNumber"));
+    assertThat(updateResponse.getStatusCode(), is(204));
+
+  }
+
+  @Test
+  public void updatingHoldingsWithoutSourceIdShouldNotUpdate()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber("testCallNumber")).getJson();
+
+    assertThat(holding.getString("callNumber"), is("testCallNumber"));
+
+    holding.put("sourceId", null);
+    holding.put("callNumber", "updatedTestCallNumber");
+    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    Response updateResponse = update(holdingsUrl, holding);
+    Response updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getJson().getString("callNumber"), is("testCallNumber"));
+    assertThat(updateResponse.getStatusCode(), is(422));
+  }
+
+  @Test
   public void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-    UUID holdingId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
+    UUID holdingId = UUID.randomUUID();
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -878,6 +973,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTemporaryLocation(ANNEX_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -895,14 +991,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-    UUID holdingId = UUID.randomUUID();
-
+    
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
+    UUID holdingId = UUID.randomUUID();
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .create()).getJson();
@@ -961,6 +1058,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   ) throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
 
+
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -968,6 +1066,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("testCallNumber")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1063,6 +1162,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("testCallNumber")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1141,7 +1241,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1149,6 +1248,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("testCallNumber")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1212,7 +1312,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1220,6 +1319,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("holdingsCallNumber")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1278,7 +1378,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updateHoldingsCallNumberUpdatesItemLevelMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1286,6 +1385,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -1339,7 +1439,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updateHoldingsLocationUpdatesItemLevelMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1347,6 +1446,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("holdingsCallNumber")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1404,7 +1504,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updateHoldingsFieldsNotRelatedToItemShouldNotChangeItemMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1412,6 +1511,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("holdingsCallNumber")).getJson();
 
@@ -1478,6 +1578,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject invalidHolding = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withAdministrativeNotes(List.of("x".repeat(MAX_NOTE_LENGTH + 1)))
       .create();
@@ -1504,6 +1605,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject invalidHolding = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
 
@@ -1532,6 +1634,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getJson();
 
     holding.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
@@ -1554,6 +1657,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getJson();
 
     holding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
@@ -1569,6 +1673,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID instanceId = UUID.randomUUID();
 
+
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID firstHoldings = UUID.randomUUID();
@@ -1577,6 +1682,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject firstHolding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(firstHoldings)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("firstTestCallNumber")
       .withCallNumberPrefix("firstTestCallNumberPrefix")
@@ -1586,6 +1692,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(new HoldingRequestBuilder()
       .withId(secondHoldings)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumber("secondTestCallNumber")
       .withCallNumberPrefix("secondTestCallNumberPrefix")
@@ -1685,7 +1792,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1693,6 +1799,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberSuffix("testCallNumberSuffix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1771,7 +1878,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1779,6 +1885,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberSuffix("testCallNumberSuffix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1837,7 +1944,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1845,6 +1951,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberSuffix("holdingsCallNumberSuffix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1905,7 +2012,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -1913,6 +2019,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberPrefix("testCallNumberPrefix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -1992,7 +2099,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -2000,6 +2106,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberPrefix("testCallNumberPrefix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -2058,7 +2165,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
     throws InterruptedException, TimeoutException, ExecutionException {
     UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
@@ -2066,6 +2172,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberPrefix("holdingsCallNumberPrefix")
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -2128,6 +2235,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject holdingsRecord = new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(null)
       .create();
 
@@ -2159,6 +2267,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid(hrid)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
@@ -2190,10 +2299,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final UUID holdingsId = UUID.randomUUID();
 
     setHoldingsSequence(1);
-
+    UUID sourceId = getPreparedHoldingSourceId();
     final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
+      .withSource(sourceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -2210,6 +2320,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject duplicateHoldings = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
+      .withSource(sourceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withHrid("ho00000000001")
@@ -2250,6 +2361,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject goodHholdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -2258,6 +2370,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject badHoldings = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .create();
@@ -2283,6 +2396,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final var holdingsRequest = new HoldingRequestBuilder()
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
 
@@ -2328,7 +2442,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final UUID instanceId = UUID.randomUUID();
     final UUID holdingsId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     setHoldingsSequence(1);
@@ -2336,6 +2449,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -2366,7 +2480,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     final UUID instanceId = UUID.randomUUID();
     final UUID holdingsId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     setHoldingsSequence(1);
@@ -2374,6 +2487,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holdings = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getJson();
 
@@ -2400,7 +2514,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     log.info("Starting canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
-
     instancesClient.create(smallAngryPlanet(instanceId));
 
     final UUID holdingsId = UUID.randomUUID();
@@ -2410,6 +2523,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.replace(holdingsId, new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withHrid(hrid)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))));
@@ -2439,6 +2553,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     HoldingRequestBuilder builder = new HoldingRequestBuilder()
       .withId(null)
       .forInstance(instanceId)
+      .withSource(HOLDING_SOURCE_IDS[0])
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject holding = holdingsClient.create(builder.create(), CONSORTIUM_MEMBER_TENANT,
@@ -2464,6 +2579,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     HoldingRequestBuilder builder = new HoldingRequestBuilder()
       .withId(null)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     Response response = holdingsClient.attemptToCreate("", builder.create(), TENANT_WITHOUT_USER_TENANTS_PERMISSIONS,
@@ -2589,6 +2705,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final IndividualResource wholeCallNumberHolding = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withCallNumberPrefix("prefix")
         .withCallNumber("callNumber")
@@ -2597,6 +2714,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withCallNumberPrefix("prefix")
         .withCallNumber("callNumber"));
@@ -2604,6 +2722,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withCallNumberPrefix("prefix")
         .withCallNumber("differentCallNumber")
@@ -2625,6 +2744,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumberPrefix("prefix")
         .withCallNumber("callNumber")
         .withCallNumberSuffix("suffix"));
@@ -2632,6 +2752,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withCallNumberPrefix("prefix")
         .withCallNumber("callNumber"));
@@ -2639,6 +2760,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource noPrefixHolding = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withCallNumber("callNumber")
         .withCallNumberSuffix("suffix"));
@@ -2836,18 +2958,21 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final IndividualResource suppressedHolding = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withDiscoverySuppress(true));
 
     final IndividualResource notSuppressedHolding = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
         .withDiscoverySuppress(false));
 
     final IndividualResource notSuppressedHoldingDefault = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     final List<IndividualResource> suppressedHoldings = holdingsClient
@@ -2866,19 +2991,21 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() throws Exception {
+  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
     final IndividualResource firstHoldingsToMatch = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 2014")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     final IndividualResource secondHoldingsToMatch = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 2014")
         .withCallNumberSuffix("Curriculum Materials Collection")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -2886,6 +3013,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 ")
         .withCallNumberSuffix("2014 Curriculum Materials Collection")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -2898,19 +3026,21 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void explicitRightTruncationCanBeApplied() throws Exception {
+  public void explicitRightTruncationCanBeApplied() {
     final IndividualResource instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
     final IndividualResource firstHoldingsToMatch = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 2014")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
     final IndividualResource secondHoldingsToMatch = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 2014")
         .withCallNumberSuffix("Curriculum Materials Collection")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -2918,6 +3048,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final IndividualResource thirdHoldingsToMatch = holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F73 ")
         .withCallNumberSuffix("2014 Curriculum Materials Collection")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -2925,6 +3056,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
+        .withSource(getPreparedHoldingSourceId())
         .withCallNumber("GE77 .F74 ")
         .withCallNumberSuffix("2014 Curriculum Materials Collection")
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
@@ -2954,6 +3086,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withHoldingsStatements(holdingsStatements));
@@ -2988,6 +3121,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withHoldingsStatementsForIndexes(holdingsStatements));
@@ -3023,6 +3157,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     IndividualResource holdingResponse = holdingsClient.create(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
       .withHoldingsStatementsForSupplements(holdingsStatements));
@@ -3093,6 +3228,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       holdingsArray.add(new JsonObject()
         .put("id", UUID.randomUUID().toString())
         .put("instanceId", instanceId.toString())
+        .put("sourceId", HOLDING_SOURCE_IDS[i].toString())
         .put("_version", 1)
         .put("permanentLocationId", MAIN_LIBRARY_LOCATION_ID.toString()));
     }
@@ -3106,10 +3242,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       holdingsArray.add(new JsonObject()
         .put("id", UUID.randomUUID().toString())
         .put("instanceId", instanceId.toString())
+        .put("sourceId", HOLDING_SOURCE_IDS[i].toString())
         .put("_version", 1)
         .put("permanentLocationId", MAIN_LIBRARY_LOCATION_ID.toString()));
     }
     return holdingsArray;
+  }
+
+  private static void prepareThreeHoldingSource() {
+    for (int i = 0; i < 3; i++) {
+      String sourceId = HOLDING_SOURCE_IDS[i].toString();
+      holdingsSourceClient.create(new JsonObject()
+        .put("id", sourceId)
+        .put("name", "holding source name for " + sourceId));
+      holdingsSourceClient.create(new JsonObject()
+        .put("id", sourceId)
+        .put("name", "holding source name for " + sourceId),
+        CONSORTIUM_MEMBER_TENANT);
+    }
   }
 
   private Response postSynchronousBatchUnsafe(JsonArray holdingsArray) {

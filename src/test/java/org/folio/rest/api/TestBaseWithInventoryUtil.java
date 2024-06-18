@@ -166,10 +166,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
+    UUID sourceId = getPreparedHoldingSourceId();
 
     HoldingRequestBuilder holdingsBuilder = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
+      .withSource(sourceId)
       .withPermanentLocation(holdingsPermanentLocationId);
 
     return holdingsClient
@@ -184,6 +186,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withTemporaryLocation(holdingsTemporaryLocationId)
@@ -198,6 +201,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumber("testCallNumber")
@@ -212,6 +216,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberPrefix("testCallNumberPrefix")
@@ -226,6 +231,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberSuffix("testCallNumberSuffix")
