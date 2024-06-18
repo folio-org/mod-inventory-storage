@@ -542,6 +542,47 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
   }
 
+  @SneakyThrows
+  @Test
+  public void canRetrieveAllHoldings() {
+    var firstInstanceId = UUID.randomUUID();
+    var secondInstanceId = UUID.randomUUID();
+    var thirdInstanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(firstInstanceId));
+    instancesClient.create(nod(secondInstanceId));
+    instancesClient.create(uprooted(thirdInstanceId));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+
+    final var firstHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(firstInstanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)).getId();
+
+    final var secondHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(secondInstanceId)
+      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)).getId();
+
+    final var thirdHoldingId = holdingsClient.create(new HoldingRequestBuilder()
+      .forInstance(thirdInstanceId)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))).getId();
+
+    getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    var responseBody = response.getJson();
+    var allHoldings = JsonArrayHelper.toList(responseBody.getJsonArray("holdingsRecords"));
+
+    assertThat(allHoldings.size(), is(3));
+    assertThat(responseBody.getInteger("totalRecords"), is(3));
+
+    assertThat(allHoldings.stream().anyMatch(filterById(firstHoldingId)), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(secondHoldingId)), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
+  }
+
   @Test
   public void cannotPageWithNegativeLimit() throws Exception {
     UUID instanceId = UUID.randomUUID();
