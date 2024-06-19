@@ -71,6 +71,7 @@ public abstract class TestBase {
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
   static ResourceClient boundWithClient;
+  static ResourceClient holdingsSourceClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -95,6 +96,7 @@ public abstract class TestBase {
     inventoryViewClient = ResourceClient.forInventoryView(getClient());
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     boundWithClient = ResourceClient.forBoundWithParts(getClient());
+    holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
@@ -214,4 +216,11 @@ public abstract class TestBase {
     }
   }
 
+  protected static UUID getPreparedHoldingSourceId() {
+    UUID sourceId = UUID.randomUUID();
+    holdingsSourceClient.create(new JsonObject()
+      .put("id", sourceId.toString())
+      .put("name", "holding source name for " + sourceId));
+    return sourceId;
+  }
 }

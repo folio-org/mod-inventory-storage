@@ -140,6 +140,7 @@ public class TenantRefApi extends TenantAPI {
       tl.add("location-units/campuses");
       tl.add("location-units/libraries");
       tl.add("locations");
+      tl.add("holdings-sources");
       tl.add("instances", INSTANCES);
       tl.add("holdingsrecords", HOLDINGS);
       tl.add("items", ITEMS);

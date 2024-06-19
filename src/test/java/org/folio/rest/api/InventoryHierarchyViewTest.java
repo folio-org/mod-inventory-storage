@@ -192,9 +192,15 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet()
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    JsonObject record = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
-    record.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    holdingsClient.replace(holdingsRecordIdPredefined, record);
+    UUID sourceId = UUID.randomUUID();
+    holdingsSourceClient.create(new JsonObject()
+      .put("id", sourceId.toString())
+      .put("name", "inventoryHierarchyTest name for holdingSource"));
+
+    JsonObject recordJsonObject = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
+    recordJsonObject.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    recordJsonObject.put("sourceId", sourceId);
+    holdingsClient.replace(holdingsRecordIdPredefined, recordJsonObject);
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
@@ -345,7 +351,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     data = getInventoryHierarchyInstances(params);
-    log.info("Inventory hierarchy instances data: " + data);
+    log.info(String.format("Inventory hierarchy instances data: %s", data));
     // then
     assertThat(data.get(0),
       allOf(
@@ -585,7 +591,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("\nResponse from inventory instance ids view: " + response);
+    log.info(String.format("%nResponse from inventory instance ids view: %s", response));
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body) && response.getStatusCode() != HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()) {

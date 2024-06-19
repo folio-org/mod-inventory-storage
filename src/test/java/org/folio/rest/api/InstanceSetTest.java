@@ -73,6 +73,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
     holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(holdingId)
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
   }

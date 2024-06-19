@@ -71,6 +71,7 @@
   },
   "additionalProperties": false,
   "required": [
+    "sourceId",
     "instanceId",
     "permanentLocationId"
   ]

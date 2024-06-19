@@ -276,6 +276,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     JsonObject holdingToCreate = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instance.getId())
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create()
       .put(propertyName, propertyValue);

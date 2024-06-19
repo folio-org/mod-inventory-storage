@@ -1,7 +1,7 @@
 ## v27.2.0 In progress
 
 ### Breaking changes
-* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
+* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
 * Provides `instance-storage 10.1`
@@ -26,6 +26,9 @@
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
 * Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
+* Bump `holdings-storage` from `6.0` to `7.0`
+* Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
+* Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 

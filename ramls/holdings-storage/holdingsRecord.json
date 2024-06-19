@@ -188,6 +188,7 @@
     }
   },
   "required": [
+    "sourceId",
     "instanceId",
     "permanentLocationId"
   ]
