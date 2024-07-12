@@ -1,0 +1,38 @@
+#%RAML 1.0
+title: Instance Bulk API
+version: 1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Instance Storage Bulk API
+    content: API to update existing instances or create if they do not exist
+
+types:
+  instanceBulkRequest: !include instanceBulkRequest.json
+  instanceBulkResponse: !include instanceBulkResponse.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/instance-storage/instances/bulk:
+  displayName: Update or create a collection of instances
+  post:
+    description: "Update or create a list of instances"
+    is: [validate]
+    body:
+      application/json:
+        type: instanceBulkRequest
+    responses:
+      201:
+        description: "At least one Instance from the list was updated/created"
+        body:
+          application/json:
+            type: instanceBulkResponse
+      500:
+        description: "Internal server error"
+        body:
+          text/plain:
+            example: "Internal server error"
+

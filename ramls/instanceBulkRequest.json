@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk instances upsert request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recordsFileName": {
+      "description": "File name of instances records",
+      "type": "string"
+    }
+  },
+  "required": [
+    "recordsFileName"
+  ]
+}
