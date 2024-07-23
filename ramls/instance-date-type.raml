@@ -1,0 +1,84 @@
+#%RAML 1.0
+title: Inventory Storage Instance Date Type API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+types:
+  instanceDateTypes: !include instance-date-types/instanceDateTypes.json
+  instanceDateTypePatch: !include instance-date-types/instanceDateTypePatch.json
+  errors: !include raml-util/schemas/errors.schema
+
+/instance-date-types:
+  displayName: Instances Date Types API
+  get:
+    description: Retrieve a list of instances date type items.
+    is: [
+      searchable: {description: "with valid searchable fields", example: "code=a"},
+      pageable
+    ]
+    responses:
+      200:
+        description: "Returns a list of instances date type items"
+        body:
+          application/json:
+            type: instanceDateTypes
+            example:
+              strict: false
+              value: examples/instance-date-types/instanceDateTypes.json
+      400:
+        description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
+        body:
+          text/plain:
+            example: "unable to list instances date type -- malformed parameter 'query', syntax error at column 6"
+      401:
+        description: "Not authorized to perform requested action"
+        body:
+          text/plain:
+            example: "unable to list instances date type -- unauthorized"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "internal server error, contact administrator"
+  /{id}:
+      patch:
+        description: "Update Instances Date Type item with given id"
+        is: [ validate ]
+        body:
+          application/json:
+            type: instanceDateTypePatch
+            example:
+              strict: false
+              value: examples/instance-date-types/instanceDateTypePatch.json
+        responses:
+          204:
+            description: "Update accepted"
+          400:
+            description: "Bad request, e.g. malformed request body or query parameter. Details of the error (e.g. name of the parameter or line/character number with malformed data) provided in the response."
+            body:
+              text/plain:
+                example: |
+                  "unable to list instances date type -- malformed parameter 'query', syntax error at column 6"
+          401:
+            description: "Not authorized to perform requested action"
+            body:
+              text/plain:
+                example: |
+                  "unable to list instances date type -- unauthorized"
+          404:
+            description: "Item with a given ID not found"
+            body:
+              text/plain:
+                example: |
+                  "instances date type not found"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "internal server error, contact administrator"

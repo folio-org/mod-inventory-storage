@@ -1,0 +1,10 @@
+{
+  "id": "8fa6d067-41ff-4362-96a0-96b16ddce267",
+  "name": "Multiple dates",
+  "code": "m",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

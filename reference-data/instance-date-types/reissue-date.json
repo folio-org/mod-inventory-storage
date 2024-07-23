@@ -1,0 +1,10 @@
+{
+  "id": "47622598-61eb-4348-899a-1208275c3882",
+  "name": "Reprint/reissue date and original date",
+  "code": "r",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "9669a463-5971-42dc-9eee-046bbd678fb1",
+  "name": "Detailed date",
+  "code": "e",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

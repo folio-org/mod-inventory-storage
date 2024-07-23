@@ -1,0 +1,10 @@
+{
+  "id": "6de732c5-c29b-4a10-9db0-0729ca960f12",
+  "name": "Inclusive dates of collection",
+  "code": "i",
+  "displayFormat": {
+    "delimiter": "-",
+    "keepDelimiter": true
+  },
+  "source": "folio"
+}
