@@ -1,25 +1,26 @@
 package org.folio.services.subjecttype;
 
+import static org.folio.rest.persist.PgUtil.deleteById;
+import static org.folio.rest.persist.PgUtil.get;
+import static org.folio.rest.persist.PgUtil.post;
+import static org.folio.rest.persist.PgUtil.put;
+
+import java.util.Map;
+import javax.ws.rs.core.Response;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+
 import org.folio.persist.SubjectTypeRepository;
 import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.jaxrs.model.SubjectType;
+import org.folio.rest.jaxrs.resource.SubjectTypes.DeleteSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.GetSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.GetSubjectTypesResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.PostSubjectTypesResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.PutSubjectTypesBySubjectTypeIdResponse;
-import org.folio.rest.jaxrs.resource.SubjectTypes.DeleteSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.domainevent.SubjectTypeDomainEventPublisher;
-
-import javax.ws.rs.core.Response;
-import java.util.Map;
-
-import static org.folio.rest.persist.PgUtil.get;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.put;
-import static org.folio.rest.persist.PgUtil.deleteById;
 
 public class SubjectTypeService {
 

@@ -1,17 +1,19 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
+import java.util.Map;
+import javax.ws.rs.core.Response;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+
 import org.folio.rest.jaxrs.model.SubjectType;
 import org.folio.rest.jaxrs.resource.SubjectTypes;
 import org.folio.services.subjecttype.SubjectTypeService;
-
-import javax.ws.rs.core.Response;
-import java.util.Map;
-
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 public class SubjectTypeApi implements SubjectTypes {
 
