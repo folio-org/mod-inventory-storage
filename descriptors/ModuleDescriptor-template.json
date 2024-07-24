@@ -516,6 +516,33 @@
       ]
     },
     {
+      "id": "subject-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/identifier-types",
+          "permissionsRequired": ["inventory-storage.subject-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/identifier-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/subject-types",
+          "permissionsRequired": ["inventory-storage.subject-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "contributor-types",
       "version": "2.0",
       "handlers": [

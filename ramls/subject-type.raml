@@ -1,0 +1,47 @@
+#%RAML 1.0
+title: Subject Types API
+version: v2.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Subject Types API
+    content: This documents the API calls that can be made to query and manage subject resource types
+
+types:
+  subjectType: !include subjecttype.json
+  subjectTypes: !include subjecttypes.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/subject-types:
+  type:
+    collection:
+      exampleCollection: !include examples/subjecttypes.json
+      exampleItem: !include examples/subjecttype.json
+      schemaCollection: subjectTypes
+      schemaItem: subjectType
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of subject types
+  post:
+    description: Create a new subject type
+    is: [validate]
+  /{subjectTypeId}:
+    description: Pass in the subject type id
+    type:
+      collection-item:
+        exampleItem: !include examples/subjecttype.json
+        schema: subjectType
