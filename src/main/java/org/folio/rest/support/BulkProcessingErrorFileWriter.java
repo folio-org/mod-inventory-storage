@@ -8,20 +8,16 @@ import io.vertx.core.file.OpenOptions;
 import io.vertx.core.json.Json;
 import java.nio.file.Path;
 import java.util.function.Function;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.model.InstanceBulkRequest;
+import org.folio.services.BulkProcessingContext;
 
 public class BulkProcessingErrorFileWriter {
 
   private static final Logger log = LogManager.getLogger(BulkProcessingErrorFileWriter.class);
-  private static final String ROOT_FOLDER = "temp/";
-  private static final String FAILED_ENTITIES_FILE_SUFFIX = "_failedEntities";
-  private static final String ERRORS_FILE_SUFFIX = "_errors";
 
   private final Vertx vertx;
-  private String errorEntitiesFilePath;
+  private String failedEntitiesFilePath;
   private String errorsFilePath;
   private AsyncFile errorEntitiesAsyncFile;
   private AsyncFile errorsAsyncFile;
@@ -31,23 +27,18 @@ public class BulkProcessingErrorFileWriter {
     this.vertx = vertx;
   }
 
-  public Future<Void> initialize(InstanceBulkRequest bulkRequest) {
-    String recordsFilePath = StringUtils.removeStart(bulkRequest.getRecordsFileName(), '/');
-    this.errorEntitiesFilePath = ROOT_FOLDER + recordsFilePath + FAILED_ENTITIES_FILE_SUFFIX;
-    this.errorsFilePath = ROOT_FOLDER + recordsFilePath + ERRORS_FILE_SUFFIX;
+  public Future<Void> initialize(BulkProcessingContext bulkContext) {
+    this.failedEntitiesFilePath = bulkContext.getErrorEntitiesFileLocalPath();
+    this.errorsFilePath = bulkContext.getErrorsFileLocalPath();
 
     OpenOptions openOptions = new OpenOptions()
       .setWrite(true)
       .setAppend(true);
 
-    Path parentDirectoryPath = Path.of(recordsFilePath).getParent();
-    Future<Void> future = parentDirectoryPath != null
-      ? vertx.fileSystem().mkdirs(parentDirectoryPath.toString())
-      : Future.succeededFuture();
-
-    return future
+    return ensureParentDirectory(failedEntitiesFilePath)
+      .compose(v -> ensureParentDirectory(errorsFilePath))
       .compose(v -> Future.all(
-        vertx.fileSystem().open(errorEntitiesFilePath, openOptions),
+        vertx.fileSystem().open(failedEntitiesFilePath, openOptions),
         vertx.fileSystem().open(errorsFilePath, openOptions)
       ))
       .onSuccess(compositeFuture -> {
@@ -59,6 +50,13 @@ public class BulkProcessingErrorFileWriter {
       .mapEmpty();
   }
 
+  private Future<Void> ensureParentDirectory(String filePath) {
+    Path parentPath = Path.of(filePath).getParent();
+    return parentPath != null
+      ? vertx.fileSystem().mkdirs(parentPath.toString())
+      : Future.succeededFuture();
+  }
+
   public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, Throwable throwable) {
     Future<Void> entitiesWriteFuture = errorEntitiesAsyncFile.write(
       Buffer.buffer(Json.encode(entity) + System.lineSeparator()));
@@ -67,13 +65,14 @@ public class BulkProcessingErrorFileWriter {
 
     return Future.join(entitiesWriteFuture, errorsWriteFuture)
       .onFailure(e -> log.warn("write:: Failed to write bulk processing errors to the files: '{}' and '{}'",
-        errorEntitiesFilePath, errorsFilePath, e))
+        failedEntitiesFilePath, errorsFilePath, e))
       .mapEmpty();
   }
 
   public Future<Void> close() {
     return errorEntitiesAsyncFile.flush()
-      .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", errorEntitiesFilePath))
+      .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'",
+        failedEntitiesFilePath))
       .eventually(() -> errorEntitiesAsyncFile.close())
       .transform(ar -> errorsAsyncFile.flush())
       .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", errorsFilePath))
