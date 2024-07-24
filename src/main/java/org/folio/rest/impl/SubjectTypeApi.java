@@ -17,7 +17,8 @@ public class SubjectTypeApi implements SubjectTypes {
   @Override
   public void getSubjectTypes(String query, String totalRecords, int offset, int limit,
                               Map<String, String> okapiHeaders,
-                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                              Handler<AsyncResult<Response>> asyncResultHandler,
+                              Context vertxContext) {
 
     new SubjectTypeService(vertxContext, okapiHeaders)
       .getByQuery(query, offset, limit)
@@ -28,7 +29,8 @@ public class SubjectTypeApi implements SubjectTypes {
   @Override
   public void postSubjectTypes(SubjectType entity,
                                Map<String, String> okapiHeaders,
-                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                               Handler<AsyncResult<Response>> asyncResultHandler,
+                               Context vertxContext) {
     new SubjectTypeService(vertxContext, okapiHeaders)
       .create(entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
@@ -36,8 +38,10 @@ public class SubjectTypeApi implements SubjectTypes {
   }
 
   @Override
-  public void getSubjectTypesBySubjectTypeId(String subjectTypeId, Map<String, String> okapiHeaders,
-                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getSubjectTypesBySubjectTypeId(String subjectTypeId,
+                                             Map<String, String> okapiHeaders,
+                                             Handler<AsyncResult<Response>> asyncResultHandler,
+                                             Context vertxContext) {
     new SubjectTypeService(vertxContext, okapiHeaders)
       .getById(subjectTypeId)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
@@ -45,8 +49,10 @@ public class SubjectTypeApi implements SubjectTypes {
   }
 
   @Override
-  public void deleteSubjectTypesBySubjectTypeId(String subjectTypeId, Map<String, String> okapiHeaders,
-                                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deleteSubjectTypesBySubjectTypeId(String subjectTypeId,
+                                                Map<String, String> okapiHeaders,
+                                                Handler<AsyncResult<Response>> asyncResultHandler,
+                                                Context vertxContext) {
     new SubjectTypeService(vertxContext, okapiHeaders)
       .delete(subjectTypeId)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
@@ -54,8 +60,10 @@ public class SubjectTypeApi implements SubjectTypes {
   }
 
   @Override
-  public void putSubjectTypesBySubjectTypeId(String subjectTypeId, SubjectType entity, Map<String, String> okapiHeaders,
-                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putSubjectTypesBySubjectTypeId(String subjectTypeId, SubjectType entity,
+                                             Map<String, String> okapiHeaders,
+                                             Handler<AsyncResult<Response>> asyncResultHandler,
+                                             Context vertxContext) {
     new SubjectTypeService(vertxContext, okapiHeaders)
       .update(subjectTypeId, entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
