@@ -4,6 +4,7 @@
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
+* Provides `instance-date-types 1.0`
 * Provides `instance-storage 10.1`
 * Requires `holdings-storage 6.1`
 
@@ -13,6 +14,7 @@
 * Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
 * Implement domain event production for institution create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))
 * Implement a POST request to get Holdings and Instances ([MODINVSTOR-1223](https://folio-org.atlassian.net/browse/MODINVSTOR-1223))
+* Implement instance-date-types endpoint ([MODINVSTOR-1235](https://folio-org.atlassian.net/browse/MODINVSTOR-1235))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
