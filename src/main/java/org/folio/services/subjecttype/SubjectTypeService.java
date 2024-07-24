@@ -5,12 +5,10 @@ import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
 
-import java.util.Map;
-import javax.ws.rs.core.Response;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-
+import java.util.Map;
+import javax.ws.rs.core.Response;
 import org.folio.persist.SubjectTypeRepository;
 import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.jaxrs.model.SubjectType;
