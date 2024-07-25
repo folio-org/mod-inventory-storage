@@ -884,6 +884,17 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName": "subject_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
@@ -1170,6 +1181,11 @@
     {
       "run": "after",
       "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addSubjectTypes.sql",
       "fromModuleVersion": "27.2.0"
     }
   ]

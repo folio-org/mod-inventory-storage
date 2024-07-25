@@ -10,8 +10,8 @@ import io.vertx.core.Future;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.SubjectTypeRepository;
-import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.jaxrs.model.SubjectType;
+import org.folio.rest.jaxrs.model.SubjectTypes;
 import org.folio.rest.jaxrs.resource.SubjectTypes.DeleteSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.GetSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.GetSubjectTypesResponse;
@@ -37,7 +37,7 @@ public class SubjectTypeService {
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return get(SUBJECT_TYPE, SubjectType.class, Locations.class,
+    return get(SUBJECT_TYPE, SubjectType.class, SubjectTypes.class,
       cql, offset, limit, okapiHeaders, context, GetSubjectTypesResponse.class);
   }
 

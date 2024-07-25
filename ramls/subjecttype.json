@@ -12,7 +12,11 @@
     },
     "source": {
       "type": "string",
-      "description": "label indicating where the identifier type entry originates from, i.e. 'folio' or 'local'"
+      "description": "label indicating where the identifier type entry originates from, i.e. 'folio' or 'local'",
+      "enum": [
+        "folio",
+        "local"
+      ]
     },
     "metadata": {
       "type": "object",
