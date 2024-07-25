@@ -1,0 +1,25 @@
+{
+  "instanceDateTypes": [
+    {
+      "id": "c0b423e1-a885-4c09-a965-4d6979a97e53",
+      "name": "Detailed date",
+      "code": "e",
+      "displayFormat": {
+        "delimiter": ",",
+        "keepDelimiter": true
+      },
+      "source": "folio"
+    },
+    {
+      "id": "2a0915ff-7246-463b-96a4-4473cd027c6b",
+      "name": "Range of years of bulk of collection",
+      "code": "k",
+      "displayFormat": {
+        "delimiter": "-",
+        "keepDelimiter": false
+      },
+      "source": "folio"
+    }
+  ],
+  "totalRecords": 2
+}

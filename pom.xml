@@ -13,25 +13,25 @@
     <argLine />
 
     <raml-module-builder-version>35.2.2</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.8</vertx.version>
+    <vertx.version>4.5.9</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
     <folio-kafka-wrapper.version>3.1.1</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.34</lombok.version>
     <snappy-java.version>1.1.10.5</snappy-java.version>
-    <commons-lang3.version>3.14.0</commons-lang3.version>
+    <commons-lang3.version>3.15.0</commons-lang3.version>
     <log4j.version>2.23.1</log4j.version>
 
     <okapi-testing.version>6.0.2</okapi-testing.version>
     <junit.version>5.10.3</junit.version>
-    <testcontainers.version>1.19.8</testcontainers.version>
+    <testcontainers.version>1.20.0</testcontainers.version>
     <joda-time.version>2.12.7</joda-time.version>
     <hamcrest.version>2.2</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
-    <wiremock.version>3.8.0</wiremock.version>
+    <wiremock.version>3.9.0</wiremock.version>
     <rest-assured.version>5.5.0</rest-assured.version>
     <awaitility.version>4.2.1</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
@@ -39,7 +39,7 @@
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     <properties-maven-plugin.version>1.2.1</properties-maven-plugin.version>
-    <maven-release-plugin.version>3.1.0</maven-release-plugin.version>
+    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
     <aspectj-maven-plugin.version>1.14</aspectj-maven-plugin.version>
     <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
@@ -49,7 +49,7 @@
     <checkstyle.version>10.17.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.3.1</maven-failsafe-plugin.version>
     <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
-    <versions-maven-plugin.version>2.17.0</versions-maven-plugin.version>
+    <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
   </properties>
 
   <dependencyManagement>

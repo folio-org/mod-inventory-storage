@@ -1,0 +1,10 @@
+{
+  "id": "42dac21e-3c81-4cb1-9f16-9e50c81bacc4",
+  "name": "Continuing resource ceased publication",
+  "code": "d",
+  "displayFormat": {
+    "delimiter": "-",
+    "keepDelimiter": true
+  },
+  "source": "folio"
+}

@@ -54,6 +54,21 @@
       ]
     },
     {
+      "id": "instance-date-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-date-types",
+          "permissionsRequired": ["inventory-storage.instance-date-types.collection.get"]
+        }, {
+          "methods": ["PATCH"],
+          "pathPattern": "/instance-date-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-date-types.item.patch"]
+        }
+      ]
+    },
+    {
       "id": "item-storage-batch-sync",
       "version": "1.0",
       "handlers": [
@@ -2485,7 +2500,16 @@
       "displayName": "inventory storage - submit migration job",
       "description": "submit migration instance job"
     },
-
+    {
+      "permissionName": "inventory-storage.instance-date-types.collection.get",
+      "displayName": "inventory storage - get list of instance-date-types",
+      "description": "get list of instance-date-types"
+    },
+    {
+      "permissionName": "inventory-storage.instance-date-types.item.patch",
+      "displayName": "inventory storage - patch instance-date-type",
+      "description": "patch instance-date-type"
+    },
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
@@ -2714,7 +2738,9 @@
         "inventory-storage.migration.job.item.delete",
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
-        "inventory-storage.migration.item.get"
+        "inventory-storage.migration.item.get",
+        "inventory-storage.instance-date-types.collection.get",
+        "inventory-storage.instance-date-types.item.patch"
       ]
     }
   ],
