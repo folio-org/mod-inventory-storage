@@ -4,6 +4,7 @@
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
+* Provides `subject-types 1.0`
 * Provides `instance-date-types 1.0`
 * Provides `instance-storage 10.1`
 * Requires `holdings-storage 6.1`
