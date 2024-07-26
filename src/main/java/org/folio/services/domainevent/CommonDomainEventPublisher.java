@@ -7,6 +7,7 @@ import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.createEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
+import static org.folio.services.domainevent.DomainEvent.reindexEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 
 import io.vertx.core.Context;
@@ -140,6 +141,23 @@ public class CommonDomainEventPublisher<T> {
 
     return all(records.stream()
       .map(pair -> publishRecordCreated(pair.getKey(), pair.getValue()))
+      .toList())
+      .map(notUsed -> null);
+  }
+
+  public Future<Void> publishReindexRecord(String recordId, T reindexRecord) {
+    final DomainEvent<T> domainEvent = reindexEvent(tenantId(okapiHeaders), reindexRecord);
+
+    return publish(recordId, domainEvent);
+  }
+
+  public Future<Void> publishReindexRecords(List<Pair<String, T>> records) {
+    if (records.isEmpty()) {
+      return succeededFuture();
+    }
+
+    return all(records.stream()
+      .map(pair -> publishReindexRecord(pair.getKey(), pair.getValue()))
       .toList())
       .map(notUsed -> null);
   }

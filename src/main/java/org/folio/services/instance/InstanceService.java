@@ -1,6 +1,7 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Promise.promise;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
@@ -12,6 +13,7 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
@@ -23,15 +25,20 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
@@ -46,6 +53,7 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final InstanceEffectiveValuesService effectiveValuesService;
+  private final CommonDomainEventPublisher<Instance> reindexEventPublisher;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -58,6 +66,8 @@ public class InstanceService {
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     effectiveValuesService = new InstanceEffectiveValuesService();
+    reindexEventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
   public Future<Response> getInstance(String id) {
@@ -197,6 +207,23 @@ public class InstanceService {
         )
       ))
       .map(Response.noContent().build());
+  }
+
+  public Future<Void> publishReindexInstanceRecords(String idStart, String idEnd) {
+    var criteriaFrom = new Criteria()
+      .addField("id").setOperation(">=").setVal(idStart);
+    var criteriaTo = new Criteria()
+      .addField("id").setOperation("<=").setVal(idEnd);
+    final Criterion criterion = new Criterion(criteriaFrom)
+      .addCriterion(criteriaTo);
+
+    return instanceRepository.get(criterion)
+      .map(items -> items.stream().map(this::pair).toList())
+      .compose(reindexEventPublisher::publishReindexRecords);
+  }
+
+  private Pair<String, Instance> pair(Instance item) {
+    return new ImmutablePair<>(item.getId(), item);
   }
 
 }

@@ -1,0 +1,36 @@
+#%RAML 1.0
+title: Inventory Reindex Records API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+types:
+  reindexSyncRecords: !include reindex-records/reindexSyncRecords.json
+  errors: !include raml-util/schemas/errors.schema
+
+/inventory-reindex-records/sync:
+  displayName: Inventory Storage Reindex Records Sync API
+  post:
+    description: Bulk sync inventory storage reindex records.
+    is: [ validate ]
+    body:
+      application/json:
+        type: reindexSyncRecords
+    responses:
+      201:
+        description: "Records of the given range were submitted for sync"
+      400:
+        description: "Bad request: malformed request body"
+      401:
+        description: "Not authorized to perform requested action"
+        body:
+          text/plain:
+            example: "unable to retrieve records -- unauthorized"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "internal server error, contact administrator"

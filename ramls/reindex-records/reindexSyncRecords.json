@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance date types",
+  "type": "object",
+  "properties": {
+    "recordType": {
+      "description": "Inventory storage record type (e.g. instance, item, holding)",
+      "type": "string",
+      "enum": ["INSTANCE", "ITEM", "HOLDING"]
+    },
+    "recordIdsRange": {
+      "description": "Estimated or exact total number of records",
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "UUID of first record",
+          "$ref": "../uuid.json"
+        },
+        "to": {
+          "type": "string",
+          "description": "UUID of last record",
+          "$ref": "../uuid.json"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "recordType",
+    "recordIdsRange"
+  ]
+}

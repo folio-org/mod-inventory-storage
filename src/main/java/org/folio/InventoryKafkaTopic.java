@@ -19,7 +19,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   LOCATION("location"),
   LIBRARY("library"),
   CAMPUS("campus"),
-  INSTITUTION("institution");
+  INSTITUTION("institution"),
+  REINDEX_RECORDS("reindex-records");
 
   private static final String DEFAULT_NUM_PARTITIONS_PROPERTY = "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS";
   private static final String DEFAULT_NUM_PARTITIONS_VALUE = "50";

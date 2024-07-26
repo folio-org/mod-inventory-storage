@@ -6,6 +6,7 @@ import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -21,6 +22,7 @@ import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
@@ -43,6 +45,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -50,6 +54,8 @@ import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -59,6 +65,7 @@ import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -78,6 +85,7 @@ public class ItemService {
   private final PostgresClient postgresClient;
   private final PostgresClientFuturized postgresClientFuturized;
   private final HoldingsRepository holdingsRepository;
+  private final CommonDomainEventPublisher<Item> domainEventPublisher;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -90,6 +98,8 @@ public class ItemService {
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
     holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
+    domainEventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
   private static Response putFailure(Throwable e) {
@@ -237,6 +247,23 @@ public class ItemService {
         // so that domain events will have proper 'old' item state.
         deepCopy(items, Item.class), holdingsRecord)
         .map(items));
+  }
+
+  public Future<Void> publishReindexItemRecords(UUID idStart, UUID idEnd) {
+    var criteriaFrom = new Criteria()
+      .addField("id").setOperation(">=").setVal(idStart.toString());
+    var criteriaTo = new Criteria()
+      .addField("id").setOperation("<=").setVal(idEnd.toString());
+    final Criterion criterion = new Criterion(criteriaFrom)
+      .addCriterion(criteriaTo);
+
+    return itemRepository.get(criterion)
+      .map(items -> items.stream().map(this::pair).toList())
+      .compose(domainEventPublisher::publishReindexRecords);
+  }
+
+  private Pair<String, Item> pair(Item item) {
+    return new ImmutablePair<>(item.getId(), item);
   }
 
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
