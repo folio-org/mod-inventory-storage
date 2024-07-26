@@ -536,11 +536,11 @@
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/identifier-types",
+          "pathPattern": "/subject-types",
           "permissionsRequired": ["inventory-storage.subject-types.collection.get"]
         }, {
           "methods": ["GET"],
-          "pathPattern": "/identifier-types/{id}",
+          "pathPattern": "/subject-types/{id}",
           "permissionsRequired": ["inventory-storage.subject-types.item.get"]
         }, {
           "methods": ["POST"],
@@ -2811,7 +2811,8 @@
       { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"}
+      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"}
     ]
   }
 }
