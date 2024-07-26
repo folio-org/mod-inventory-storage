@@ -210,9 +210,9 @@ public class InstanceService {
   }
 
   public Future<Void> publishReindexInstanceRecords(String idStart, String idEnd) {
-    var criteriaFrom = new Criteria()
+    var criteriaFrom = new Criteria().setJSONB(false)
       .addField("id").setOperation(">=").setVal(idStart);
-    var criteriaTo = new Criteria()
+    var criteriaTo = new Criteria().setJSONB(false)
       .addField("id").setOperation("<=").setVal(idEnd);
     final Criterion criterion = new Criterion(criteriaFrom)
       .addCriterion(criteriaTo);
