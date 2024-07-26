@@ -586,7 +586,7 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/sync",
+          "pathPattern": "/inventory-reindex-records/sync",
           "permissionsRequired": ["inventory-storage.reindex-records.sync.post"]
         }
       ]
