@@ -22,7 +22,12 @@
           "description": "UUID of last record",
           "$ref": "../uuid.json"
         }
-      }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ]
     }
   },
   "additionalProperties": false,

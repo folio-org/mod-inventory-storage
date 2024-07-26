@@ -11,6 +11,7 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -51,6 +52,18 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return repository.getById(oldItems, Item::getId)
       .map(updatedItems -> mapOldItemsToNew(oldHoldings, newHoldings, oldItems, updatedItems.values()))
       .compose(domainEventService::publishRecordsUpdated);
+  }
+
+  public Future<Void> publishReindexItems(List<Item> items) {
+    if (CollectionUtils.isEmpty(items)) {
+      return succeededFuture();
+    }
+
+    var itemPairs = items.stream()
+      .map(item -> pair(item.getId(), new ItemWithInstanceId(item, null)))
+      .toList();
+
+    return domainEventService.publishReindexRecords(itemPairs);
   }
 
   @Override

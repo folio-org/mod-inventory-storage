@@ -10,6 +10,7 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -21,6 +22,18 @@ public class HoldingDomainEventPublisher
     super(new HoldingsRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         HOLDINGS_RECORD.fullTopicName(tenantId(okapiHeaders))));
+  }
+
+  public Future<Void> publishReindexHoldings(List<HoldingsRecord> holdings) {
+    if (CollectionUtils.isEmpty(holdings)) {
+      return succeededFuture();
+    }
+
+    var holdingPairs = holdings.stream()
+      .map(holding -> pair(holding.getId(), holding))
+      .toList();
+
+    return domainEventService.publishReindexRecords(holdingPairs);
   }
 
   @Override

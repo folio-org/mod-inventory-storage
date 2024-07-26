@@ -10,6 +10,7 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
@@ -22,6 +23,18 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
     super(new InstanceRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         INSTANCE.fullTopicName(tenantId(okapiHeaders))));
+  }
+
+  public Future<Void> publishReindexInstances(List<Instance> instances) {
+    if (CollectionUtils.isEmpty(instances)) {
+      return succeededFuture();
+    }
+
+    var instancePairs = instances.stream()
+      .map(instance -> pair(instance.getId(), instance))
+      .toList();
+
+    return domainEventService.publishReindexRecords(instancePairs);
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {

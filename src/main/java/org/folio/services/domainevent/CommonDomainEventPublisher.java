@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.all;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.domainevent.DomainEvent.createEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
@@ -70,7 +71,7 @@ public class CommonDomainEventPublisher<T> {
                                         LongFunction<Future<?>> progressHandler) {
 
     var promise = Promise.<Long>promise();
-    var kafkaProducer = getOrCreateProducer("stream_");
+    var kafkaProducer = getOrCreateProducer(kafkaTopic, "stream_");
     var recordsProcessed = new AtomicLong(0);
 
     readStream.exceptionHandler(error -> {
@@ -148,7 +149,7 @@ public class CommonDomainEventPublisher<T> {
   public Future<Void> publishReindexRecord(String recordId, T reindexRecord) {
     final DomainEvent<T> domainEvent = reindexEvent(tenantId(okapiHeaders), reindexRecord);
 
-    return publish(recordId, domainEvent);
+    return publish(reindexKafkaTopic(), recordId, domainEvent);
   }
 
   public Future<Void> publishReindexRecords(List<Pair<String, T>> records) {
@@ -179,16 +180,20 @@ public class CommonDomainEventPublisher<T> {
   }
 
   private Future<Void> publish(String key, Object value) {
+    return publish(kafkaTopic, key, value);
+  }
+
+  private Future<Void> publish(String topic, String key, Object value) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
     var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
       .key(key)
       .value(value)
-      .topic(kafkaTopic)
+      .topic(topic)
       .propagateOkapiHeaders(okapiHeaders)
       .build();
 
-    KafkaProducer<String, String> producer = getOrCreateProducer();
+    KafkaProducer<String, String> producer = getOrCreateProducer(topic);
 
     return producer.send(producerRecord)
       .<Void>mapEmpty()
@@ -202,11 +207,15 @@ public class CommonDomainEventPublisher<T> {
       });
   }
 
-  private KafkaProducer<String, String> getOrCreateProducer() {
-    return getOrCreateProducer("");
+  private KafkaProducer<String, String> getOrCreateProducer(String topic) {
+    return getOrCreateProducer(topic, "");
   }
 
-  private KafkaProducer<String, String> getOrCreateProducer(String prefix) {
-    return producerManager.createShared(prefix + kafkaTopic);
+  private KafkaProducer<String, String> getOrCreateProducer(String topic, String prefix) {
+    return producerManager.createShared(prefix + topic);
+  }
+
+  private String reindexKafkaTopic() {
+    return REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders));
   }
 }
