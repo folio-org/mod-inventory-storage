@@ -8,20 +8,23 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 types:
-  reindexSyncRecords: !include reindex-records/reindexSyncRecords.json
+  publishReindexRecords: !include reindex-records/publishReindexRecords.json
   errors: !include raml-util/schemas/errors.schema
 
-/inventory-reindex-records/sync:
-  displayName: Inventory Storage Reindex Records Sync API
+/inventory-reindex-records/publish:
+  displayName: Inventory Storage Reindex Records Publish API
   post:
-    description: Bulk sync inventory storage reindex records.
+    description: Publish inventory storage reindex records.
     is: [ validate ]
     body:
       application/json:
-        type: reindexSyncRecords
+        type: publishReindexRecords
+        example:
+          strict: false
+          value: ../examples/reindex-records/publishReindexRecords.json
     responses:
       201:
-        description: "Records of the given range were submitted for sync"
+        description: "Records of the given range were published for reindex"
       400:
         description: "Bad request: malformed request body"
       401:

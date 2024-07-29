@@ -586,8 +586,8 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/inventory-reindex-records/sync",
-          "permissionsRequired": ["inventory-storage.reindex-records.sync.post"]
+          "pathPattern": "/inventory-reindex-records/publish",
+          "permissionsRequired": ["inventory-storage.reindex-records.publish.post"]
         }
       ]
     },
@@ -1889,9 +1889,9 @@
       "description": "get a bulk set of record ids from storage"
     },
     {
-      "permissionName": "inventory-storage.reindex-records.sync.post",
-      "displayName": "inventory storage - sync inventory storage records for reindex",
-      "description": "bulk sync inventory storage reindex records"
+      "permissionName": "inventory-storage.reindex-records.publish.post",
+      "displayName": "inventory storage - publish inventory records for reindex",
+      "description": "publish inventory storage reindex records"
     },
     {
       "permissionName": "inventory-storage.instance-formats.collection.get",
@@ -2704,7 +2704,7 @@
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
         "inventory-storage.migration.item.get",
-        "inventory-storage.reindex-records.sync.post"
+        "inventory-storage.reindex-records.publish.post"
       ]
     }
   ],

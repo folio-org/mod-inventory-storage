@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of instance date types",
+  "description": "Inventory Storage records for reindex",
   "type": "object",
   "properties": {
     "recordType": {
@@ -9,17 +9,17 @@
       "enum": ["INSTANCE", "ITEM", "HOLDING"]
     },
     "recordIdsRange": {
-      "description": "Estimated or exact total number of records",
+      "description": "Range of records IDs",
       "type": "object",
       "properties": {
         "from": {
           "type": "string",
-          "description": "UUID of first record",
+          "description": "UUID of the first record",
           "$ref": "../uuid.json"
         },
         "to": {
           "type": "string",
-          "description": "UUID of last record",
+          "description": "UUID of the last record",
           "$ref": "../uuid.json"
         }
       },

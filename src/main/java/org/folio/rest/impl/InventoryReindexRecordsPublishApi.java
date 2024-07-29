@@ -9,19 +9,19 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.ReindexSyncRecords;
-import org.folio.rest.jaxrs.resource.InventoryReindexRecordsSync;
+import org.folio.rest.jaxrs.model.PublishReindexRecords;
+import org.folio.rest.jaxrs.resource.InventoryReindexRecordsPublish;
 import org.folio.services.holding.HoldingsService;
 import org.folio.services.instance.InstanceService;
 import org.folio.services.item.ItemService;
 
-public class InventoryReindexRecordsSyncApi implements InventoryReindexRecordsSync {
+public class InventoryReindexRecordsPublishApi implements InventoryReindexRecordsPublish {
 
   @Override
-  public void postInventoryReindexRecordsSync(ReindexSyncRecords entity,
-                                              Map<String, String> okapiHeaders,
-                                              Handler<AsyncResult<Response>> asyncResultHandler,
-                                              Context vertxContext) {
+  public void postInventoryReindexRecordsPublish(PublishReindexRecords entity,
+                                                 Map<String, String> okapiHeaders,
+                                                 Handler<AsyncResult<Response>> asyncResultHandler,
+                                                 Context vertxContext) {
     var fromId = entity.getRecordIdsRange().getFrom();
     var toId = entity.getRecordIdsRange().getTo();
 
@@ -42,9 +42,8 @@ public class InventoryReindexRecordsSyncApi implements InventoryReindexRecordsSy
     }
 
     publishFuture
-      .<Response>map(x -> PostInventoryReindexRecordsSyncResponse.respond201())
+      .<Response>map(x -> PostInventoryReindexRecordsPublishResponse.respond201())
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
-
   }
 }
