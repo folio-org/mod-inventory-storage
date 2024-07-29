@@ -1,0 +1,10 @@
+{
+  "id": "3a4296bf-504b-451b-9355-5806f8d88253",
+  "name": "Publication date and copyright date",
+  "code": "t",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

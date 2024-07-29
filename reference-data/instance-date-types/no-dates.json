@@ -1,0 +1,10 @@
+{
+  "id": "77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8",
+  "name": "No dates given; BC date involved",
+  "code": "b",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

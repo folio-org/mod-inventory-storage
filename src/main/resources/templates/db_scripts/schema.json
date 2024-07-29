@@ -866,6 +866,11 @@
       "withAuditing": false
     },
     {
+      "tableName": "instance_date_type",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
       "tableName": "authority_source_file",
       "mode": "delete",
       "withMetadata": true,
@@ -1170,6 +1175,11 @@
     {
       "run": "after",
       "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addInstanceDateTypes.sql",
       "fromModuleVersion": "27.2.0"
     }
   ]

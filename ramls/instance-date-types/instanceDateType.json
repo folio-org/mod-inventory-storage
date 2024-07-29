@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An instance date type that indicates the type of dates given in Date 1 and Date 2",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID of the instance date type; a UUID",
+      "readonly": true
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the instance date type",
+      "readonly": true
+    },
+    "code": {
+      "type": "string",
+      "description": "Code of the instance date type",
+      "maxLength": 1,
+      "readonly": true
+    },
+    "displayFormat": {
+      "type": "object",
+      "description": "Describes how to format Date 1 and Date 2",
+      "properties": {
+        "delimiter": {
+          "type": "string",
+          "description": "Delimiter that will be used to format Date 1 and Date 2",
+          "example": ",",
+          "readonly": true
+        },
+        "keepDelimiter": {
+          "type": "boolean",
+          "description": "Define if formated date string should keep delimiter if one of dates is not exist",
+          "example": false,
+          "readonly": true
+        }
+      },
+      "readonly": true,
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the instance date type entry originates from, i.e. 'folio' or 'local'",
+      "enum": [
+        "folio",
+        "local"
+      ],
+      "readonly": true
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false
+}
+

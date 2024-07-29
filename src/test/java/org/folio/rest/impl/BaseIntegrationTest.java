@@ -75,6 +75,10 @@ public class BaseIntegrationTest {
     return doRequest(client, HttpMethod.PUT, requestUri, body);
   }
 
+  protected static Future<TestResponse> doPatch(HttpClient client, String requestUri, JsonObject body) {
+    return doRequest(client, HttpMethod.PATCH, requestUri, body);
+  }
+
   protected static Future<TestResponse> doDelete(HttpClient client, String requestUri) {
     return doRequest(client, HttpMethod.DELETE, requestUri, null);
   }
