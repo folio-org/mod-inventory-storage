@@ -1,9 +1,12 @@
 package org.folio.services.subjecttype;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.SubjectTypes.PostSubjectTypesResponse.respond422WithApplicationJson;
 import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -23,6 +26,10 @@ import org.folio.services.domainevent.SubjectTypeDomainEventPublisher;
 public class SubjectTypeService {
 
   public static final String SUBJECT_TYPE = "subject_type";
+  private static final String SOURCE_CANNOT_BE_FOLIO =
+    "Illegal operation: Source field cannot be set to folio";
+  private static final String SOURCE_CANNOT_BE_UPDATED =
+    "Illegal operation: Source field cannot be updated";
 
   private final Context context;
   private final Map<String, String> okapiHeaders;
@@ -47,13 +54,22 @@ public class SubjectTypeService {
   }
 
   public Future<Response> create(SubjectType subjectType) {
+    if (subjectType.getSource().equals(SubjectType.Source.FOLIO)) {
+      return sourceValidationError(subjectType.getSource().value(), SOURCE_CANNOT_BE_FOLIO);
+    }
     return post(SUBJECT_TYPE, subjectType, okapiHeaders, context, PostSubjectTypesResponse.class)
       .onSuccess(domainEventService.publishCreated());
   }
 
   public Future<Response> update(String id, SubjectType subjectType) {
-    return put(SUBJECT_TYPE, subjectType, id, okapiHeaders, context, PutSubjectTypesBySubjectTypeIdResponse.class)
-      .onSuccess(domainEventService.publishUpdated(subjectType));
+    return repository.getById(id)
+      .compose(oldSubjectType -> {
+        if (!oldSubjectType.getSource().equals(subjectType.getSource())) {
+          return sourceValidationError(subjectType.getSource().value(), SOURCE_CANNOT_BE_UPDATED);
+        }
+        return put(SUBJECT_TYPE, subjectType, id, okapiHeaders, context, PutSubjectTypesBySubjectTypeIdResponse.class)
+          .onSuccess(domainEventService.publishUpdated(subjectType));
+      });
   }
 
   public Future<Response> delete(String id) {
@@ -62,5 +78,12 @@ public class SubjectTypeService {
         DeleteSubjectTypesBySubjectTypeIdResponse.class)
         .onSuccess(domainEventService.publishRemoved(oldSubjectType))
       );
+  }
+
+  private Future<Response> sourceValidationError(String field, String message) {
+    return succeededFuture(
+      respond422WithApplicationJson(
+        createValidationErrorMessage("source", field,
+          message)));
   }
 }
