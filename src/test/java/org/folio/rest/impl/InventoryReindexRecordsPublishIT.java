@@ -17,7 +17,6 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.Holding;
-import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.PublishReindexRecords;
 import org.folio.rest.jaxrs.model.RecordIdsRange;
