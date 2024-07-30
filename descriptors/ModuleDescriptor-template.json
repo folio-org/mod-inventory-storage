@@ -602,7 +602,10 @@
         {
           "methods": ["POST"],
           "pathPattern": "/inventory-reindex-records/publish",
-          "permissionsRequired": ["inventory-storage.reindex-records.publish.post"]
+          "permissionsRequired": ["inventory-storage.reindex-records.publish.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }
       ]
     },
