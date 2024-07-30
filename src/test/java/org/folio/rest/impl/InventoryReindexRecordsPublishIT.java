@@ -32,7 +32,6 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
   private static final String RECORD2_ID = "10cd3a5a-d36f-4c7a-bc4f-e1ae3cf820c9";
   private static final String ITEM_TABLE = "item";
   private static final String HOLDING_TABLE = "holdings_record";
-  private static final String INSTANCE_TABLE = "instance";
 
   private static final EventMessageMatchers EVENT_MESSAGE_MATCHERS
     = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
