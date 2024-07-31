@@ -1944,7 +1944,6 @@
       "displayName": "inventory storage - delete individual format",
       "description": "delete individual instance format from storage"
     },
-
     {
       "permissionName": "inventory-storage.subject-types.collection.get",
       "displayName": "inventory storage - get subject types collection",

@@ -19,7 +19,6 @@ public class SubjectTypeApi implements SubjectTypes {
                               Map<String, String> okapiHeaders,
                               Handler<AsyncResult<Response>> asyncResultHandler,
                               Context vertxContext) {
-
     new SubjectTypeService(vertxContext, okapiHeaders)
       .getByQuery(query, offset, limit)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))

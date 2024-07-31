@@ -103,5 +103,4 @@ public class SubjectTypeTest extends TestBase {
 
     return get(updateSubjectType);
   }
-
 }
