@@ -226,7 +226,7 @@ public class InstanceService {
           return instanceRepository.get(criterion);
         }
         var nonConsortia = new Criteria()
-          .addField("jsonb->>source").setOperation("NOT LIKE").setVal("CONSORTIUM-");
+          .addField("source").setOperation("NOT LIKE").setVal("CONSORTIUM-");
         criterion.addCriterion(nonConsortia);
         return instanceRepository.get(criterion);
       })
