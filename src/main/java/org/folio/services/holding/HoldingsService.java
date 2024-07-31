@@ -177,7 +177,7 @@ public class HoldingsService {
       .map(ResponseHandlerUtil::handleHridError);
   }
 
-  public Future<Void> publishReindexHoldingsRecords(String idStart, String idEnd) {
+  public Future<Void> publishReindexHoldingsRecords(String rangeId, String idStart, String idEnd) {
     var criteriaFrom = new Criteria().setJSONB(false)
       .addField("id").setOperation(">=").setVal(idStart);
     var criteriaTo = new Criteria().setJSONB(false)
@@ -186,7 +186,7 @@ public class HoldingsService {
       .addCriterion(criteriaTo);
 
     return holdingsRepository.get(criterion)
-      .compose(domainEventPublisher::publishReindexHoldings);
+      .compose(holdings -> domainEventPublisher.publishReindexHoldings(rangeId, holdings));
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

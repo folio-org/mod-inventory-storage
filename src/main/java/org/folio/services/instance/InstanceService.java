@@ -209,11 +209,11 @@ public class InstanceService {
       .map(Response.noContent().build());
   }
 
-  public Future<Void> publishReindexInstanceRecords(String idStart, String idEnd) {
+  public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
     var criteriaFrom = new Criteria().setJSONB(false)
-      .addField("id").setOperation(">=").setVal(idStart);
+      .addField("id").setOperation(">=").setVal(fromId);
     var criteriaTo = new Criteria().setJSONB(false)
-      .addField("id").setOperation("<=").setVal(idEnd);
+      .addField("id").setOperation("<=").setVal(toId);
     final Criterion criterion = new Criterion(criteriaFrom)
       .addCriterion(criteriaTo);
 
@@ -230,7 +230,7 @@ public class InstanceService {
         criterion.addCriterion(nonConsortia);
         return instanceRepository.get(criterion);
       })
-      .compose(domainEventPublisher::publishReindexInstances);
+      .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {

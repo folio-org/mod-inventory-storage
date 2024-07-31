@@ -1,17 +1,20 @@
 package org.folio.services.domainevent;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -19,6 +22,7 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.PublishReindexRecords;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
@@ -54,16 +58,22 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
       .compose(domainEventService::publishRecordsUpdated);
   }
 
-  public Future<Void> publishReindexItems(List<Item> items) {
-    if (CollectionUtils.isEmpty(items)) {
+  public Future<Void> publishReindexItems(String key, List<Item> items) {
+    if (CollectionUtils.isEmpty(items) || StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    var itemPairs = items.stream()
-      .map(item -> pair(item.getId(), new ItemWithInstanceId(item, null)))
+    var itemsWithInstance = items.stream()
+      .map(item -> new ItemWithInstanceId(item, null))
       .toList();
 
-    return domainEventService.publishReindexRecords(itemPairs);
+    try {
+      return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.ITEM, itemsWithInstance);
+    } catch (JsonProcessingException e) {
+      log.error("Publishing {} items has failed: {}",
+        itemsWithInstance.size(), e.getMessage());
+      return failedFuture(e);
+    }
   }
 
   @Override
@@ -77,7 +87,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
         .map(item -> pair(getInstanceId(holdings, item), item))
-        .collect(toList()));
+        .toList());
   }
 
   @Override
@@ -94,8 +104,8 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     HoldingsRecord oldHoldings, HoldingsRecord newHoldings, Collection<Item> oldItems, Collection<Item> newItems) {
 
     return mapOldRecordsToNew(
-      oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).collect(toList()),
-      newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).collect(toList()));
+      oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).toList(),
+      newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).toList());
   }
 
   private String getInstanceId(Map<String, HoldingsRecord> holdings, Item item) {

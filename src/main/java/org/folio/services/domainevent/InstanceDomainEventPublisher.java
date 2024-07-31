@@ -1,20 +1,24 @@
 package org.folio.services.domainevent;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.PublishReindexRecords;
 
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
@@ -25,16 +29,18 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
         INSTANCE.fullTopicName(tenantId(okapiHeaders))));
   }
 
-  public Future<Void> publishReindexInstances(List<Instance> instances) {
-    if (CollectionUtils.isEmpty(instances)) {
+  public Future<Void> publishReindexInstances(String key, List<Instance> instances) {
+    if (CollectionUtils.isEmpty(instances) || StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    var instancePairs = instances.stream()
-      .map(instance -> pair(instance.getId(), instance))
-      .toList();
-
-    return domainEventService.publishReindexRecords(instancePairs);
+    try {
+      return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
+    } catch (JsonProcessingException e) {
+      log.error("Publishing {} instances has failed: {}",
+        instances.size(), e.getMessage());
+      return failedFuture(e);
+    }
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {

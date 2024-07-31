@@ -15,6 +15,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.Holding;
 import org.folio.rest.jaxrs.model.Item;
@@ -28,8 +29,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
 
-  private static final String RECORD1_ID = "0c45bb50-7c9b-48b0-86eb-178a494e25fe";
-  private static final String RECORD2_ID = "10cd3a5a-d36f-4c7a-bc4f-e1ae3cf820c9";
+  private static final String RECORD1_ID = "0b96a642-5e7f-452d-9cae-9cee66c9a892";
+  private static final String RECORD2_ID = "0e67c5b4-8585-49c7-bc8a-e5c7c5fc3f34";
   private static final String ITEM_TABLE = "item";
   private static final String HOLDING_TABLE = "holdings_record";
 
@@ -53,7 +54,9 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       .onSuccess(id -> ctx.completeNow());
 
     HttpClient client = vertx.createHttpClient();
+    var rangeId = UUID.randomUUID().toString();
     var publishRequestBody = new PublishReindexRecords()
+      .withId(rangeId)
       .withRecordType(recordType)
       .withRecordIdsRange(
         new RecordIdsRange().withFrom(RECORD1_ID).withTo(RECORD2_ID));
@@ -61,14 +64,9 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
     doPost(client, "/inventory-reindex-records/publish", pojo2JsonObject(publishRequestBody))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> assertEquals(HTTP_CREATED.toInt(), response.status()))))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
-        var jsonItems = Stream.of(RECORD1_ID, RECORD2_ID, RECORD2_ID)
-          .map(id -> {
-            var jsonItem = new JsonObject();
-            jsonItem.put("id", id);
-            return jsonItem;
-          })
-          .toList();
-        reindexMessagesPublished(jsonItems);
+        var jsonItem = new JsonObject();
+        jsonItem.put("id", rangeId);
+        reindexMessagePublished(jsonItem);
       })))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
@@ -86,15 +84,12 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
     );
   }
 
-  private void reindexMessagesPublished(List<JsonObject> records) {
-    final var recordIds = records.stream()
-      .map(json -> json.getString("id"))
-      .toList();
+  private void reindexMessagePublished(JsonObject record) {
+    var id = record.getString("id");
+    awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForReindexRecords(List.of(id)),
+      hasSize(1));
 
-    awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForReindexRecords(recordIds),
-      hasSize(records.size()));
-
-    records.forEach(instance -> assertThat(KAFKA_CONSUMER.getMessagesForReindexRecords(recordIds),
-      EVENT_MESSAGE_MATCHERS.hasReindexEventMessageFor(instance)));
+    assertThat(KAFKA_CONSUMER.getMessagesForReindexRecords(List.of(id)),
+      EVENT_MESSAGE_MATCHERS.hasReindexEventMessageFor(record));
   }
 }

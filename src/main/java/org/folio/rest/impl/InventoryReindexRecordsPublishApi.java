@@ -24,18 +24,19 @@ public class InventoryReindexRecordsPublishApi implements InventoryReindexRecord
                                                  Context vertxContext) {
     var fromId = entity.getRecordIdsRange().getFrom();
     var toId = entity.getRecordIdsRange().getTo();
+    var rangeId = entity.getId();
 
     Future<Void> publishFuture;
     switch (entity.getRecordType()) {
       case INSTANCE ->
         publishFuture = new InstanceService(vertxContext, okapiHeaders)
-          .publishReindexInstanceRecords(fromId, toId);
+          .publishReindexInstanceRecords(rangeId, fromId, toId);
       case ITEM ->
         publishFuture = new ItemService(vertxContext, okapiHeaders)
-          .publishReindexItemRecords(fromId, toId);
+          .publishReindexItemRecords(rangeId, fromId, toId);
       case HOLDING ->
         publishFuture = new HoldingsService(vertxContext, okapiHeaders)
-          .publishReindexHoldingsRecords(fromId, toId);
+          .publishReindexHoldingsRecords(rangeId, fromId, toId);
       default -> publishFuture = Future.failedFuture(
         "Not supported record type is provided: %s"
           .formatted(entity.getRecordType().value()));

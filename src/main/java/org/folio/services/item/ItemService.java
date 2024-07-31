@@ -241,7 +241,7 @@ public class ItemService {
         .map(items));
   }
 
-  public Future<Void> publishReindexItemRecords(String idStart, String idEnd) {
+  public Future<Void> publishReindexItemRecords(String rangeId, String idStart, String idEnd) {
     var criteriaFrom = new Criteria().setJSONB(false)
       .addField("id").setOperation(">=").setVal(idStart);
     var criteriaTo = new Criteria().setJSONB(false)
@@ -250,7 +250,7 @@ public class ItemService {
       .addCriterion(criteriaTo);
 
     return itemRepository.get(criterion)
-      .compose(domainEventService::publishReindexItems);
+      .compose(items -> domainEventService.publishReindexItems(rangeId, items));
   }
 
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
@@ -277,7 +277,7 @@ public class ItemService {
         return item;
       })
       .map(this::updateSingleItemBatchFactory)
-      .collect(toList());
+      .toList();
 
     final SQLConnection connection = connectionResult.result();
     Future<RowSet<Row>> lastUpdate = succeededFuture();
