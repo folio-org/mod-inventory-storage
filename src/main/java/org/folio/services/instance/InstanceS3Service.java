@@ -46,11 +46,12 @@ public class InstanceS3Service {
     return vertx.executeBlocking(() -> {
       FolioS3Client s3Client = folioS3ClientFactory.getFolioS3Client();
       InputStream inputStream = s3Client.read(bulkRequest.getRecordsFileName());
-      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
-      return reader.lines()
-        .map(instanceJson -> Json.decodeValue(instanceJson, Instance.class))
-        .toList();
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        return reader.lines()
+          .map(instanceJson -> Json.decodeValue(instanceJson, Instance.class))
+          .toList();
+      }
     });
   }
 
