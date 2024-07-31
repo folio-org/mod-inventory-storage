@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.model.InstanceBulkResponse;
@@ -26,18 +25,19 @@ public class InstanceS3Service {
   private final FolioS3ClientFactory folioS3ClientFactory;
   private final Vertx vertx;
   private final FolioS3Client folioS3Client;
+  private final InstanceService instanceService;
 
-  public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx) {
+  public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
+    this.vertx = vertx;
     this.folioS3ClientFactory = folioS3ClientFactory;
     this.folioS3Client = folioS3ClientFactory.getFolioS3Client();
-    this.vertx = vertx;
+    this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
   }
 
-  public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest,
-                                                       Map<String, String> okapiHeaders) {
+  public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest) {
     log.debug("processInstances:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());
     return loadInstances(bulkRequest)
-      .compose(instances -> upsert(instances, bulkRequest, okapiHeaders))
+      .compose(instances -> upsert(instances, bulkRequest))
       .onFailure(e -> log.warn("Failed to process instances bulk request, filename: '{}'",
         bulkRequest.getRecordsFileName(), e));
   }
@@ -54,24 +54,22 @@ public class InstanceS3Service {
     });
   }
 
-  private Future<InstanceBulkResponse> upsert(List<Instance> instances, InstanceBulkRequest bulkRequest,
-                                              Map<String, String> okapiHeaders) {
+  private Future<InstanceBulkResponse> upsert(List<Instance> instances, InstanceBulkRequest bulkRequest) {
     BulkProcessingContext bulkProcessingContext = new BulkProcessingContext(bulkRequest.getRecordsFileName());
-    InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
 
-    return instanceRepository.update(instances)
+    return instanceService.createInstances(instances, true, true)
       .map(rows -> new InstanceBulkResponse().withErrorsNumber(0))
-      .recover(e -> processSequentially(instances, bulkProcessingContext, instanceRepository));
+      .recover(e -> processSequentially(instances, bulkProcessingContext));
   }
 
-  private Future<InstanceBulkResponse> processSequentially(List<Instance> instances, BulkProcessingContext bulkContext,
-                                                           InstanceRepository instanceRepository) {
+  private Future<InstanceBulkResponse> processSequentially(List<Instance> instances,
+                                                           BulkProcessingContext bulkContext) {
     AtomicInteger errorsCounter = new AtomicInteger();
     BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx);
 
     return errorsWriter.initialize(bulkContext)
       .map(v -> instances.stream()
-        .map(instance -> instanceRepository.update(List.of(instance)) // maybe better to add new method for upsert that receives only instance
+        .map(instance -> instanceService.createInstances(List.of(instance), true, true)
           .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instance, e)))
         .toList())
       .compose(futures -> Future.join(futures))

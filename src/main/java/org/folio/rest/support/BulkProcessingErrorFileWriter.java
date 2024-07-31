@@ -71,8 +71,7 @@ public class BulkProcessingErrorFileWriter {
 
   public Future<Void> close() {
     return errorEntitiesAsyncFile.flush()
-      .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'",
-        failedEntitiesFilePath))
+      .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", failedEntitiesFilePath))
       .eventually(() -> errorEntitiesAsyncFile.close())
       .transform(ar -> errorsAsyncFile.flush())
       .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", errorsFilePath))
