@@ -2,7 +2,6 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
-import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;

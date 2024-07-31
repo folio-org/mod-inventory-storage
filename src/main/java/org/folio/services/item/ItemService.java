@@ -3,7 +3,6 @@ package org.folio.services.item;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
