@@ -1,5 +1,7 @@
 package org.folio.services.instance;
 
+import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
+
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -58,9 +60,21 @@ public class InstanceS3Service {
   private Future<InstanceBulkResponse> upsert(List<Instance> instances, InstanceBulkRequest bulkRequest) {
     BulkProcessingContext bulkProcessingContext = new BulkProcessingContext(bulkRequest.getRecordsFileName());
 
-    return instanceService.createInstances(instances, true, true)
-      .map(rows -> new InstanceBulkResponse().withErrorsNumber(0))
+    return upsert(instances)
+      .map(v -> new InstanceBulkResponse().withErrorsNumber(0))
       .recover(e -> processSequentially(instances, bulkProcessingContext));
+  }
+
+  private Future<Void> upsert(List<Instance> instances) {
+    return instanceService.createInstances(instances, true, true)
+      .compose(response -> {
+        if (!isCreateSuccessResponse(response)) {
+          String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
+            response.getStatus(), Json.encode(response.getEntity()));
+          return Future.failedFuture(msg);
+        }
+        return Future.succeededFuture();
+      });
   }
 
   private Future<InstanceBulkResponse> processSequentially(List<Instance> instances,
@@ -70,7 +84,7 @@ public class InstanceS3Service {
 
     return errorsWriter.initialize(bulkContext)
       .map(v -> instances.stream()
-        .map(instance -> instanceService.createInstances(List.of(instance), true, true)
+        .map(instance -> upsert(List.of(instance))
           .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instance, e)))
         .toList())
       .compose(futures -> Future.join(futures))
@@ -83,9 +97,8 @@ public class InstanceS3Service {
       ));
   }
 
-  private void handleInstanceUpsertFailure(AtomicInteger errorsCounter,
-                                                  BulkProcessingErrorFileWriter errorsWriter,
-                                                  Instance instance, Throwable e) {
+  private void handleInstanceUpsertFailure(AtomicInteger errorsCounter, BulkProcessingErrorFileWriter errorsWriter,
+                                           Instance instance, Throwable e) {
     log.warn("processSequentially: Failed to process single instance upsert operation, instanceId: '{}'",
       instance.getId(), e);
     errorsCounter.incrementAndGet();
@@ -103,7 +116,7 @@ public class InstanceS3Service {
       vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
       vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
     ))
-    .onFailure(e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3 like storage"))
+    .onFailure(e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage"))
     .mapEmpty();
   }
 
