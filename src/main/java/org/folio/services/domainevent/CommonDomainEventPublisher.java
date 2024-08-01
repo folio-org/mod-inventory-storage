@@ -10,7 +10,6 @@ import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -149,7 +148,7 @@ public class CommonDomainEventPublisher<T> {
 
   public Future<Void> publishReindexRecords(String key,
                                             PublishReindexRecords.RecordType recordType,
-                                            List<T> records) throws JsonProcessingException {
+                                            List<T> records) {
     var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(okapiHeaders), recordType, records);
     return publish(reindexKafkaTopic(), key, domainEvent);
   }

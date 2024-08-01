@@ -1,12 +1,10 @@
 package org.folio.services.domainevent;
 
-import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collection;
@@ -34,13 +32,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
       return succeededFuture();
     }
 
-    try {
-      return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
-    } catch (JsonProcessingException e) {
-      log.error("Publishing {} instances has failed: {}",
-        instances.size(), e.getMessage());
-      return failedFuture(e);
-    }
+    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {

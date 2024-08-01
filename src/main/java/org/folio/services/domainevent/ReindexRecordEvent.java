@@ -27,6 +27,18 @@ public class ReindexRecordEvent<T> {
     return new ReindexRecordEvent<>(records, recordType, tenant);
   }
 
+  public List<T> getRecords() {
+    return records;
+  }
+
+  public RecordType getRecordType() {
+    return recordType;
+  }
+
+  public String getTenant() {
+    return tenant;
+  }
+
   @Override
   public String toString() {
     return "ReindexRecordEvent{"
