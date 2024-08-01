@@ -11,8 +11,6 @@ import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -43,7 +41,6 @@ public class CommonDomainEventPublisher<T> {
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
   private final String kafkaTopic;
-  private final ObjectMapper objectMapper;
 
   CommonDomainEventPublisher(Map<String, String> okapiHeaders, String kafkaTopic,
                              KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
@@ -52,7 +49,6 @@ public class CommonDomainEventPublisher<T> {
     this.kafkaTopic = kafkaTopic;
     this.producerManager = kafkaProducerManager;
     this.failureHandler = failureHandler;
-    this.objectMapper = new ObjectMapper();
   }
 
   public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
@@ -154,13 +150,7 @@ public class CommonDomainEventPublisher<T> {
   public Future<Void> publishReindexRecords(String key,
                                             PublishReindexRecords.RecordType recordType,
                                             List<T> records) throws JsonProcessingException {
-    if (records.isEmpty()) {
-      return succeededFuture();
-    }
-
-    var payload = objectMapper
-      .writerFor(new TypeReference<List<T>>() { }).writeValueAsString(records);
-    var domainEvent = ReindexEventRaw.reindexEvent(tenantId(okapiHeaders), recordType, payload);
+    var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(okapiHeaders), recordType, records);
     return publish(reindexKafkaTopic(), key, domainEvent);
   }
 
