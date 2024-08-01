@@ -1951,7 +1951,7 @@
     },
     {
       "permissionName": "inventory-storage.subject-types.item.get",
-      "displayName": "inventory storage - get individual instance type",
+      "displayName": "inventory storage - get individual subject type",
       "description": "get individual subject type from storage"
     },
     {
