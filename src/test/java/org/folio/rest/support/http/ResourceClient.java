@@ -126,11 +126,6 @@ public final class ResourceClient {
       "subject types", "subjectTypes");
   }
 
-  public static ResourceClient forSubjectSources(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::subjectSourcesUrl,
-      "subject sources", "subjectSources");
-  }
-
   public static ResourceClient forCallNumberTypes(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::callNumberTypesUrl,
       "call number types", "callNumberTypes");

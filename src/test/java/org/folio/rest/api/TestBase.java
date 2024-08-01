@@ -52,6 +52,7 @@ public abstract class TestBase {
    * timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS)
    */
   public static final long TIMEOUT = 100;
+  public static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   public static ResourceClient holdingsClient;
   protected static final Logger logger = LogManager.getLogger();
   protected static ResourceClient instancesClient;
