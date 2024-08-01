@@ -22,6 +22,10 @@ public class InterfaceUrls {
     return vertxUrl("/instance-types" + subPath);
   }
 
+  public static URL subjectTypesUrl(String subPath) {
+    return vertxUrl("/subject-types" + subPath);
+  }
+
   public static URL itemsStorageUrl(String subPath) {
     return vertxUrl("/item-storage/items" + subPath);
   }

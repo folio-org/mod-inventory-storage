@@ -19,6 +19,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   LOCATION("location"),
   LIBRARY("library"),
   CAMPUS("campus"),
+  SUBJECT_TYPE("subject-types"),
   INSTITUTION("institution"),
   REINDEX_RECORDS("reindex-records");
 
@@ -34,7 +35,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"),
     LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "1"),
     CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "1"),
-    INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1")
+    INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1"),
+    SUBJECT_TYPE, Pair.of("KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "1")
   );
 
   private final String topic;

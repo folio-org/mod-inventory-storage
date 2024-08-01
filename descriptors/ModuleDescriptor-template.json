@@ -531,6 +531,33 @@
       ]
     },
     {
+      "id": "subject-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/subject-types",
+          "permissionsRequired": ["inventory-storage.subject-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/subject-types",
+          "permissionsRequired": ["inventory-storage.subject-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "contributor-types",
       "version": "2.0",
       "handlers": [
@@ -1937,6 +1964,31 @@
       "description": "delete individual instance format from storage"
     },
     {
+      "permissionName": "inventory-storage.subject-types.collection.get",
+      "displayName": "inventory storage - get subject types collection",
+      "description": "get subject-types collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.get",
+      "displayName": "inventory storage - get individual subject type",
+      "description": "get individual subject type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.post",
+      "displayName": "inventory storage - create individual subject type",
+      "description": "create individual subject type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.put",
+      "displayName": "inventory storage - modify subject type",
+      "description": "modify subject type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.delete",
+      "displayName": "inventory storage - delete individual subject type",
+      "description": "delete subject type in storage"
+    },
+    {
       "permissionName": "inventory-storage.instance-types.collection.get",
       "displayName": "inventory storage - get instance types collection",
       "description": "get instance-type collection from storage"
@@ -2604,6 +2656,11 @@
         "inventory-storage.instance-formats.item.post",
         "inventory-storage.instance-formats.item.put",
         "inventory-storage.instance-formats.item.delete",
+        "inventory-storage.subject-types.collection.get",
+        "inventory-storage.subject-types.item.get",
+        "inventory-storage.subject-types.item.post",
+        "inventory-storage.subject-types.item.put",
+        "inventory-storage.subject-types.item.delete",
         "inventory-storage.instance-types.collection.get",
         "inventory-storage.instance-types.item.get",
         "inventory-storage.instance-types.item.post",
@@ -2773,7 +2830,8 @@
       { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"}
+      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"}
     ]
   }
 }
