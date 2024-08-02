@@ -250,4 +250,8 @@ public class InterfaceUrls {
     return vertxUrl("/inventory-storage/migrations/jobs" + subPath);
   }
 
+  public static URL instancesBulk() {
+    return vertxUrl("/instance-storage/instances/bulk");
+  }
+
 }
