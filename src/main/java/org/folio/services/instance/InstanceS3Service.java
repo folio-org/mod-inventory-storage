@@ -1,10 +1,12 @@
 package org.folio.services.instance;
 
+import static org.folio.rest.support.InstanceUtil.mapInstanceDtoJsonToInstance;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,7 +53,7 @@ public class InstanceS3Service {
 
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
         return reader.lines()
-          .map(instanceJson -> Json.decodeValue(instanceJson, Instance.class))
+          .map(instanceJson -> mapInstanceDtoJsonToInstance(new JsonObject(instanceJson)))
           .toList();
       }
     });
