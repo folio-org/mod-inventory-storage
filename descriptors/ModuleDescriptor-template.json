@@ -2831,7 +2831,8 @@
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"}
+      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"}
     ]
   }
 }
