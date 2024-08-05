@@ -82,9 +82,9 @@ public class InstanceS3Service {
   private Future<InstanceBulkResponse> processSequentially(List<Instance> instances,
                                                            BulkProcessingContext bulkContext) {
     AtomicInteger errorsCounter = new AtomicInteger();
-    BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx);
+    BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx, bulkContext);
 
-    return errorsWriter.initialize(bulkContext)
+    return errorsWriter.initialize()
       .map(v -> instances.stream()
         .map(instance -> upsert(List.of(instance))
           .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instance, e)))

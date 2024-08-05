@@ -18,6 +18,7 @@ import org.apache.commons.io.FileUtils;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.BulkProcessingContext;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,8 +29,14 @@ public class BulkProcessingErrorFileWriterTest {
   private static final String BULK_INSTANCES_FILE_PATH = "/parent-folder/bulkInstances";
 
   private final Vertx vertx = Vertx.vertx();
-  private final BulkProcessingErrorFileWriter writer = new BulkProcessingErrorFileWriter(vertx);
   private BulkProcessingContext bulkContext;
+  private BulkProcessingErrorFileWriter writer;
+
+  @Before
+  public void setUp() {
+    bulkContext = new BulkProcessingContext(BULK_INSTANCES_FILE_PATH);
+    writer = new BulkProcessingErrorFileWriter(vertx, bulkContext);
+  }
 
   @After
   public void tearDown() throws Exception {
@@ -44,10 +51,9 @@ public class BulkProcessingErrorFileWriterTest {
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
     String expectedErrorEntitiesFileRecord = Json.encode(instance) + System.lineSeparator();
     String expectedErrorFileRecord = String.format("%s, %s%s", instance.getId(), errorMessage, System.lineSeparator());
-    bulkContext = new BulkProcessingContext(BULK_INSTANCES_FILE_PATH);
 
     // when
-    Future<Void> future = writer.initialize(bulkContext)
+    Future<Void> future = writer.initialize()
       .compose(v -> writer.write(instance, Instance::getId, new RuntimeException(errorMessage)))
       .compose(v -> writer.close());
 
@@ -55,6 +61,12 @@ public class BulkProcessingErrorFileWriterTest {
     future.toCompletionStage().toCompletableFuture().get(10, SECONDS);
     assertFileContentEquals(bulkContext.getErrorEntitiesFileLocalPath(), expectedErrorEntitiesFileRecord);
     assertFileContentEquals(bulkContext.getErrorsFileLocalPath(), expectedErrorFileRecord);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void shouldThrowExceptionOnWriteIfWriterIsNotInitialized() {
+    Instance instance = new Instance().withId(UUID.randomUUID().toString());
+    writer.write(instance, Instance::getId, new RuntimeException("Test error"));
   }
 
   private void assertFileContentEquals(String filePath, String expectedContent) throws IOException {

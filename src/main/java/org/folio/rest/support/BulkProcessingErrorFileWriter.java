@@ -15,22 +15,24 @@ import org.folio.services.BulkProcessingContext;
 public class BulkProcessingErrorFileWriter {
 
   private static final Logger log = LogManager.getLogger(BulkProcessingErrorFileWriter.class);
+  private static final String WRITER_IS_NOT_INITIALIZED_MSG =
+    "BulkProcessingErrorFileWriter is not initialized, the BulkProcessingErrorFileWriter::initialize method "
+      + "should be called prior BulkProcessingErrorFileWriter::write method";
 
   private final Vertx vertx;
-  private String failedEntitiesFilePath;
-  private String errorsFilePath;
+  private final String failedEntitiesFilePath;
+  private final String errorsFilePath;
+
   private AsyncFile errorEntitiesAsyncFile;
   private AsyncFile errorsAsyncFile;
 
-
-  public BulkProcessingErrorFileWriter(Vertx vertx) {
+  public BulkProcessingErrorFileWriter(Vertx vertx, BulkProcessingContext bulkContext) {
     this.vertx = vertx;
-  }
-
-  public Future<Void> initialize(BulkProcessingContext bulkContext) {
     this.failedEntitiesFilePath = bulkContext.getErrorEntitiesFileLocalPath();
     this.errorsFilePath = bulkContext.getErrorsFileLocalPath();
+  }
 
+  public Future<Void> initialize() {
     OpenOptions openOptions = new OpenOptions()
       .setWrite(true)
       .setAppend(true);
@@ -58,6 +60,10 @@ public class BulkProcessingErrorFileWriter {
   }
 
   public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, Throwable throwable) {
+    if (!isInitialized()) {
+      throw new IllegalStateException(WRITER_IS_NOT_INITIALIZED_MSG);
+    }
+
     Future<Void> entitiesWriteFuture = errorEntitiesAsyncFile.write(
       Buffer.buffer(Json.encode(entity) + System.lineSeparator()));
     Future<Void> errorsWriteFuture = errorsAsyncFile.write(
@@ -67,6 +73,10 @@ public class BulkProcessingErrorFileWriter {
       .onFailure(e -> log.warn("write:: Failed to write bulk processing errors to the files: '{}' and '{}'",
         failedEntitiesFilePath, errorsFilePath, e))
       .mapEmpty();
+  }
+
+  private boolean isInitialized() {
+    return errorEntitiesAsyncFile != null && errorsAsyncFile != null;
   }
 
   public Future<Void> close() {
