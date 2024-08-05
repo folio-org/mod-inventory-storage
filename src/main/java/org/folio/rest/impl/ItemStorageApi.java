@@ -31,6 +31,7 @@ public class ItemStorageApi implements ItemStorage {
 
     PgUtil.streamGet(ITEM_TABLE, Item.class, query, offset, limit, null, "items",
       routingContext, okapiHeaders, vertxContext);
+
   }
 
   @Validate

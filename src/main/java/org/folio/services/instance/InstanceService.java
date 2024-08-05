@@ -1,6 +1,7 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Promise.promise;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
@@ -28,10 +29,16 @@ import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.caches.ConsortiumData;
+import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.consortium.ConsortiumService;
+import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
@@ -46,6 +53,7 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final InstanceEffectiveValuesService effectiveValuesService;
+  private final ConsortiumService consortiumService;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -58,6 +66,8 @@ public class InstanceService {
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     effectiveValuesService = new InstanceEffectiveValuesService();
+    consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
+      vertxContext.get(ConsortiumDataCache.class.getName()));
   }
 
   public Future<Response> getInstance(String id) {
@@ -197,6 +207,34 @@ public class InstanceService {
         )
       ))
       .map(Response.noContent().build());
+  }
+
+  public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
+    var criteriaFrom = new Criteria().setJSONB(false)
+      .addField("id").setOperation(">=").setVal(fromId);
+    var criteriaTo = new Criteria().setJSONB(false)
+      .addField("id").setOperation("<=").setVal(toId);
+    final Criterion criterion = new Criterion(criteriaFrom)
+      .addCriterion(criteriaTo);
+
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .map(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
+        .orElse(false))
+      .compose(isCentralTenant -> {
+        if (Boolean.TRUE.equals(isCentralTenant)) {
+          return instanceRepository.get(criterion);
+        }
+        var nonConsortia = new Criteria()
+          .addField("'source'").setOperation("NOT LIKE").setVal("CONSORTIUM-");
+        criterion.addCriterion(nonConsortia);
+        return instanceRepository.get(criterion);
+      })
+      .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
+  }
+
+  private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
+    return tenantId.equals(consortiumData.getCentralTenantId());
   }
 
 }
