@@ -94,6 +94,23 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(JsonObject representation) {
+    return hasReindexEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(JsonObject representation,
+                                                                           String expectedTenantId,
+                                                                           String okapiUrlExpected) {
+    return hasItem(allOf(
+      isReindexEvent(),
+      isForTenant(expectedTenantId),
+      hasHeaders(expectedTenantId, okapiUrlExpected),
+      hasNoOldRepresentation(),
+      hasNewRepresentation(representation)));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasNoDeleteEventMessage() {
     return not(hasItem(isDeleteEvent()));
   }
@@ -111,6 +128,11 @@ public class EventMessageMatchers {
   @NotNull
   public Matcher<EventMessage> isUpdateEvent() {
     return hasType("UPDATE");
+  }
+
+  @NotNull
+  public Matcher<EventMessage> isReindexEvent() {
+    return hasType("REINDEX");
   }
 
   @NotNull

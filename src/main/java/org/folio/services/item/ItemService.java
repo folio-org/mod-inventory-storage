@@ -3,7 +3,6 @@ package org.folio.services.item;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
@@ -50,6 +49,8 @@ import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.Criteria.Criteria;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -239,6 +240,18 @@ public class ItemService {
         .map(items));
   }
 
+  public Future<Void> publishReindexItemRecords(String rangeId, String idStart, String idEnd) {
+    var criteriaFrom = new Criteria().setJSONB(false)
+      .addField("id").setOperation(">=").setVal(idStart);
+    var criteriaTo = new Criteria().setJSONB(false)
+      .addField("id").setOperation("<=").setVal(idEnd);
+    final Criterion criterion = new Criterion(criteriaFrom)
+      .addCriterion(criteriaTo);
+
+    return itemRepository.get(criterion)
+      .compose(items -> domainEventService.publishReindexItems(rangeId, items));
+  }
+
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
     return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
       || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
@@ -263,7 +276,7 @@ public class ItemService {
         return item;
       })
       .map(this::updateSingleItemBatchFactory)
-      .collect(toList());
+      .toList();
 
     final SQLConnection connection = connectionResult.result();
     Future<RowSet<Row>> lastUpdate = succeededFuture();

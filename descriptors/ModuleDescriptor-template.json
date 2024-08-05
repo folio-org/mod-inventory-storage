@@ -623,6 +623,20 @@
       ]
     },
     {
+      "id": "inventory-reindex-records",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-reindex-records/publish",
+          "permissionsRequired": ["inventory-storage.reindex-records.publish.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
+        }
+      ]
+    },
+    {
       "id": "instance-formats",
       "version": "2.0",
       "handlers": [
@@ -1920,6 +1934,11 @@
       "description": "get a bulk set of record ids from storage"
     },
     {
+      "permissionName": "inventory-storage.reindex-records.publish.post",
+      "displayName": "inventory storage - publish inventory records for reindex",
+      "description": "publish inventory storage reindex records"
+    },
+    {
       "permissionName": "inventory-storage.instance-formats.collection.get",
       "displayName": "inventory storage - get formats collection",
       "description": "get contributor-name-type collection from storage"
@@ -2769,6 +2788,7 @@
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
         "inventory-storage.migration.item.get",
+        "inventory-storage.reindex-records.publish.post",
         "inventory-storage.instance-date-types.collection.get",
         "inventory-storage.instance-date-types.item.patch"
       ]
@@ -2811,7 +2831,8 @@
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"}
+      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"}
     ]
   }
 }

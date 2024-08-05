@@ -8,9 +8,9 @@ import org.junit.Test;
 public class DomainEventRawTest {
 
   @Test
-  public void updateEventIncludesOldAndNewRecordRespresentationsAndEventTypeAndTenant() {
-    assertThat(DomainEventRaw.updateEvent("myold", "mynew", "mytenant").toString(),
-      endsWith("[oldEntity=myold,newEntity=mynew,type=UPDATE,tenant=mytenant]"));
+  public void deleteEventIncludesOldRecordRespresentationAndEventTypeAndTenant() {
+    assertThat(DomainEventRaw.deleteEvent("myold", "mytenant").toString(),
+      endsWith("[oldEntity=myold,newEntity=<null>,type=DELETE,tenant=mytenant]"));
   }
 
 }

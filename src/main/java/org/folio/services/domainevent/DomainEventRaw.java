@@ -1,11 +1,6 @@
 package org.folio.services.domainevent;
 
-import static org.folio.services.domainevent.DomainEventType.CREATE;
 import static org.folio.services.domainevent.DomainEventType.DELETE;
-import static org.folio.services.domainevent.DomainEventType.DELETE_ALL;
-import static org.folio.services.domainevent.DomainEventType.MIGRATION;
-import static org.folio.services.domainevent.DomainEventType.REINDEX;
-import static org.folio.services.domainevent.DomainEventType.UPDATE;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,32 +31,8 @@ public class DomainEventRaw {
     this.tenant = tenant;
   }
 
-  public static DomainEventRaw updateEvent(String oldEntity, String newEntity, String tenant) {
-    return new DomainEventRaw(oldEntity, newEntity, UPDATE, tenant);
-  }
-
-  public static DomainEventRaw createEvent(String newEntity, String tenant) {
-    return new DomainEventRaw(null, newEntity, CREATE, tenant);
-  }
-
   public static DomainEventRaw deleteEvent(String oldEntity, String tenant) {
     return new DomainEventRaw(oldEntity, null, DELETE, tenant);
-  }
-
-  public static DomainEventRaw deleteAllEvent(String tenant) {
-    return new DomainEventRaw(null, null, DELETE_ALL, tenant);
-  }
-
-  public static DomainEventRaw reindexEvent(String tenant) {
-    return new DomainEventRaw(null, null, REINDEX, tenant);
-  }
-
-  public static DomainEventRaw reindexEvent(String tenant, String newEntity) {
-    return new DomainEventRaw(null, newEntity, REINDEX, tenant);
-  }
-
-  public static DomainEventRaw asyncMigrationEvent(String job, String tenant) {
-    return new DomainEventRaw(null, job, MIGRATION, tenant);
   }
 
   public String getOldEntity() {
