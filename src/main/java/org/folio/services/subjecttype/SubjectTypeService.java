@@ -6,6 +6,8 @@ import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_FOLIO;
+import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_UPDATED;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.Context;
@@ -26,10 +28,6 @@ import org.folio.services.domainevent.SubjectTypeDomainEventPublisher;
 public class SubjectTypeService {
 
   public static final String SUBJECT_TYPE = "subject_type";
-  private static final String SOURCE_CANNOT_BE_FOLIO =
-    "Illegal operation: Source field cannot be set to folio";
-  private static final String SOURCE_CANNOT_BE_UPDATED =
-    "Illegal operation: Source field cannot be updated";
 
   private final Context context;
   private final Map<String, String> okapiHeaders;

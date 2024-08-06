@@ -558,6 +558,33 @@
       ]
     },
     {
+      "id": "subject-sources",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/subject-sources",
+          "permissionsRequired": ["inventory-storage.subject-sources.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/subject-sources",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "contributor-types",
       "version": "2.0",
       "handlers": [
@@ -1989,6 +2016,31 @@
       "description": "delete subject type in storage"
     },
     {
+      "permissionName": "inventory-storage.subject-sources.collection.get",
+      "displayName": "inventory storage - get subject sources collection",
+      "description": "get subject-sources collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.get",
+      "displayName": "inventory storage - get individual subject source",
+      "description": "get individual subject source from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.post",
+      "displayName": "inventory storage - create individual subject source",
+      "description": "create individual subject source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.put",
+      "displayName": "inventory storage - modify subject source",
+      "description": "modify subject source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.delete",
+      "displayName": "inventory storage - delete individual subject source",
+      "description": "delete subject source in storage"
+    },
+    {
       "permissionName": "inventory-storage.instance-types.collection.get",
       "displayName": "inventory storage - get instance types collection",
       "description": "get instance-type collection from storage"
@@ -2661,6 +2713,11 @@
         "inventory-storage.subject-types.item.post",
         "inventory-storage.subject-types.item.put",
         "inventory-storage.subject-types.item.delete",
+        "inventory-storage.subject-sources.collection.get",
+        "inventory-storage.subject-sources.item.get",
+        "inventory-storage.subject-sources.item.post",
+        "inventory-storage.subject-sources.item.put",
+        "inventory-storage.subject-sources.item.delete",
         "inventory-storage.instance-types.collection.get",
         "inventory-storage.instance-types.item.get",
         "inventory-storage.instance-types.item.post",
@@ -2832,6 +2889,7 @@
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"}
     ]
   }
