@@ -68,14 +68,15 @@ public class ConsortiumDataCache {
     headers.forEach(request::putHeader);
 
     return request.send().compose(response -> {
+      if (response.statusCode() == HTTP_FORBIDDEN) {
+        LOG.info("loadConsortiumData:: Skipping for tenant {} because {} returns 403 (forbidden)",
+            tenantId, USER_TENANTS_PATH);
+        return Future.succeededFuture(Optional.<ConsortiumData>empty());
+      }
       if (response.statusCode() != HTTP_OK) {
         String msg = String.format("Error loading consortium data, tenantId: '%s' response status: '%s', body: '%s'",
           tenantId, response.statusCode(), response.bodyAsString());
         LOG.warn("loadConsortiumData:: {}", msg);
-        if (response.statusCode() == HTTP_FORBIDDEN) {
-          return Future.succeededFuture(Optional.<ConsortiumData>empty());
-        }
-
         return Future.failedFuture(msg);
       }
       JsonArray userTenants = response.bodyAsJsonObject().getJsonArray(USER_TENANTS_FIELD);
