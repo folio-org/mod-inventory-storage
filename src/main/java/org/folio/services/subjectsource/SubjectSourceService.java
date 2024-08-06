@@ -65,7 +65,8 @@ public class SubjectSourceService {
         if (!oldSubjectSource.getSource().equals(subjectSource.getSource())) {
           return sourceValidationError(subjectSource.getSource().value(), SOURCE_CANNOT_BE_UPDATED);
         }
-        return put(SUBJECT_SOURCE, subjectSource, id, okapiHeaders, context, PutSubjectSourcesBySubjectSourceIdResponse.class)
+        return put(SUBJECT_SOURCE, subjectSource, id, okapiHeaders, context,
+          PutSubjectSourcesBySubjectSourceIdResponse.class)
           .onSuccess(domainEventService.publishUpdated(subjectSource));
       });
   }

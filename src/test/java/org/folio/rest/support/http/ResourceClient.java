@@ -130,6 +130,7 @@ public final class ResourceClient {
     return new ResourceClient(client, InterfaceUrls::subjectSourcesUrl,
       "subject sources", "subjectSources");
   }
+
   public static ResourceClient forCallNumberTypes(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::callNumberTypesUrl,
       "call number types", "callNumberTypes");

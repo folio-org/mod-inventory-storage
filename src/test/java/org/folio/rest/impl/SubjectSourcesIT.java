@@ -9,7 +9,7 @@ import org.folio.rest.jaxrs.model.SubjectSource;
 import org.folio.rest.jaxrs.model.SubjectSources;
 import org.folio.services.subjectsource.SubjectSourceService;
 
-public class SubjectSourcesIT extends BaseReferenceDataIntegrationTest<SubjectSource, SubjectSources>{
+public class SubjectSourcesIT extends BaseReferenceDataIntegrationTest<SubjectSource, SubjectSources> {
 
   @Override
   protected String referenceTable() {
