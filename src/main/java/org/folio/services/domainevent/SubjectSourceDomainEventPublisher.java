@@ -1,7 +1,7 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.folio.InventoryKafkaTopic.SUBJECT_TYPE;
+import static org.folio.InventoryKafkaTopic.SUBJECT_SOURCE;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
@@ -17,14 +17,14 @@ public class SubjectSourceDomainEventPublisher extends AbstractDomainEventPublis
 
   public SubjectSourceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new SubjectSourceRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders, SUBJECT_TYPE.fullTopicName(tenantId(okapiHeaders))));
+      new CommonDomainEventPublisher<>(context, okapiHeaders, SUBJECT_SOURCE.fullTopicName(tenantId(okapiHeaders))));
   }
 
   @Override
   protected Future<List<Pair<String, SubjectSource>>> getRecordIds(
-    Collection<SubjectSource> subjectTypes) {
-    return succeededFuture(subjectTypes.stream()
-      .map(subjectType -> pair(subjectType.getId(), subjectType))
+    Collection<SubjectSource> subjectSources) {
+    return succeededFuture(subjectSources.stream()
+      .map(subjectSource -> pair(subjectSource.getId(), subjectSource))
       .toList()
     );
   }
