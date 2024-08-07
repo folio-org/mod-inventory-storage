@@ -4,6 +4,7 @@
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
+* Provides `subject-source 1.0`
 * Provides `subject-types 1.0`
 * Provides `instance-date-types 1.0`
 * Provides `instance-storage 10.1`
@@ -19,6 +20,8 @@
 * Implement Subject types management ([MODINVSTOR-1221](https://folio-org.atlassian.net/browse/MODINVSTOR-1221))
 * Implement endpoint to publish reindex event for the range of instance/item/holding records ([MODINVSTOR-1230](https://folio-org.atlassian.net/browse/MODINVSTOR-1230))
 * Info, not warn, about expected 403 from /user-tenants ([MODINVSTOR-1237](https://folio-org.atlassian.net/browse/MODINVSTOR-1237))
+* Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
+
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
