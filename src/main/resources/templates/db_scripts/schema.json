@@ -866,6 +866,11 @@
       "withAuditing": false
     },
     {
+      "tableName": "instance_date_type",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
       "tableName": "authority_source_file",
       "mode": "delete",
       "withMetadata": true,
@@ -881,6 +886,28 @@
         },
         {
           "fieldName": "baseUrl",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "subject_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "subject_source",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
           "tOps": "ADD"
         }
       ]
@@ -1166,6 +1193,26 @@
       "run": "after",
       "snippetPath": "migrateHoldingsOutdatedFields.sql",
       "fromModuleVersion": "27.1.4"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addInstanceDateTypes.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addSubjectTypes.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addSubjectSources.sql",
+      "fromModuleVersion": "27.2.0"
     }
   ]
 }

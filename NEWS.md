@@ -1,29 +1,45 @@
-## v27.1.4 2024-06-19
-### Bug fixes
-* Add manual holdings migration script to module migrations [MODINVSTOR-1189](https://folio-org.atlassian.net/browse/MODINVSTOR-1189)
+## v27.2.0 In progress
 
-* ## v27.1.3 2024-04-19
-### Bug fixes
-* Create missing index for instance.complete_updated_date (MODINVSTOR-1190)[https://folio-org.atlassian.net/browse/MODINVSTOR-1190]
+### Breaking changes
+* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
-## v27.1.2 2024-04-12
-### Bug fixes
-* Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
+### New APIs versions
+* Provides `subject-source 1.0`
+* Provides `subject-types 1.0`
+* Provides `instance-date-types 1.0`
+* Provides `instance-storage 10.1`
+* Requires `holdings-storage 6.1`
 
-### Dependencies
-* Bump `domain-models-runtime` from `35.2.1` to `35.2.2`
+### Features
+* Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
+* Implement domain event production for library create/update/delete ([MODINVSTOR-1216](https://issues.folio.org/browse/MODINVSTOR-1216))
+* Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
+* Implement domain event production for institution create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))
+* Implement a POST request to get Holdings and Instances ([MODINVSTOR-1223](https://folio-org.atlassian.net/browse/MODINVSTOR-1223))
+* Implement instance-date-types endpoint ([MODINVSTOR-1235](https://folio-org.atlassian.net/browse/MODINVSTOR-1235))
+* Implement Subject types management ([MODINVSTOR-1221](https://folio-org.atlassian.net/browse/MODINVSTOR-1221))
+* Implement endpoint to publish reindex event for the range of instance/item/holding records ([MODINVSTOR-1230](https://folio-org.atlassian.net/browse/MODINVSTOR-1230))
+* Info, not warn, about expected 403 from /user-tenants ([MODINVSTOR-1237](https://folio-org.atlassian.net/browse/MODINVSTOR-1237))
+* Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
 
----
 
-## v27.1.1 2024-04-11
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
+* Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
+* Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
+
+### Tech Dept
+* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
 
 ### Dependencies
-* Bump `domain-models-runtime` from `35.2.0` to `35.2.1`
-
----
+* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
+* Bump `holdings-storage` from `6.0` to `7.0`
+* Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
+* Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
+* Add `LIB_NAME` `2.7.4`
+* Remove `LIB_NAME`
 
 ## v27.1.0 2024-03-19
 ### New APIs versions

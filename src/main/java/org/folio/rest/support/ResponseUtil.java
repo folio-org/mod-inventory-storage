@@ -7,6 +7,12 @@ import javax.ws.rs.core.Response;
 import org.folio.HttpStatus;
 
 public final class ResponseUtil {
+
+  public static final String SOURCE_CANNOT_BE_FOLIO =
+    "Illegal operation: Source field cannot be set to folio";
+  public static final String SOURCE_CANNOT_BE_UPDATED =
+    "Illegal operation: Source field cannot be updated";
+
   private ResponseUtil() { }
 
   public static boolean isUpdateSuccessResponse(Response response) {

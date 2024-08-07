@@ -1,0 +1,47 @@
+#%RAML 1.0
+title: Subject Sources API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Subject Sources API
+    content: This documents the API calls that can be made to query and manage subject types
+
+types:
+  subjectSource: !include subject-source.json
+  subjectSources: !include subject-sources.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+  get-delete-only: !include raml-util/rtypes/get-delete.raml
+
+/subject-sources:
+  type:
+    collection:
+      exampleCollection: !include examples/subject-sources.json
+      exampleItem: !include examples/subject-source.json
+      schemaCollection: subjectSources
+      schemaItem: subjectSource
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of subject sources
+  post:
+    description: Create a new subject source
+    is: [validate]
+  /{subjectSourceId}:
+    description: Pass in the subject source id
+    type:
+      collection-item:
+        exampleItem: !include examples/subject-source.json
+        schema: subjectSource
