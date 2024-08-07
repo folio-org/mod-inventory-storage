@@ -26,6 +26,10 @@ public class InterfaceUrls {
     return vertxUrl("/subject-types" + subPath);
   }
 
+  public static URL subjectSourcesUrl(String subPath) {
+    return vertxUrl("/subject-sources" + subPath);
+  }
+
   public static URL itemsStorageUrl(String subPath) {
     return vertxUrl("/item-storage/items" + subPath);
   }
