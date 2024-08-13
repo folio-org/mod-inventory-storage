@@ -10,9 +10,11 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -30,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
+import org.folio.rest.api.entities.PrecedingSucceedingTitle;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.model.InstanceBulkResponse;
@@ -89,6 +92,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @Before
   public void setUp() {
+    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     clearData();
     removeAllEvents();
   }
@@ -116,6 +120,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     IndividualResource existingInstance1 = createInstance(smallAngryPlanet(UUID.fromString(instancesIds.get(0))));
     IndividualResource existingInstance2 = createInstance(uprooted(UUID.fromString(instancesIds.get(1))));
 
+    PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
+      existingInstance2.getId().toString(), null, "Houston oil directory", null, null);
+    precedingSucceedingTitleClient.create(precedingSucceedingTitle1.getJson());
+    PrecedingSucceedingTitle precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
+      existingInstance2.getId().toString(), null, "International trade statistics", null, null);
+    precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
+
     InstanceBulkRequest bulkRequest = new InstanceBulkRequest()
       .withRecordsFileName(bulkFilePath);
 
@@ -137,6 +148,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
     instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1.getJson());
     instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2.getJson());
+
+    List<JsonObject> updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
+    updatedTitles.forEach(titleJson -> {
+      assertThat(titleJson.getString("succeedingInstanceId"), equalTo(existingInstance2.getId().toString()));
+      assertThat(titleJson.getString("precedingInstanceId"), nullValue());
+      assertThat(titleJson.getString("title"), notNullValue());
+    });
   }
 
   @Test
@@ -196,6 +214,12 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     return new IndividualResource(response);
   }
 
+  private JsonObject getInstanceById(String id) {
+    Response response = instancesClient.getById(UUID.fromString(id));
+    assertThat(response.getStatusCode(), is(HTTP_OK));
+    return response.getJson();
+  }
+
   public static JsonObject smallAngryPlanet(UUID id) {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -221,6 +245,18 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
     return createInstanceRequest(id, "MARC", "Uprooted",
       identifiers, contributors, UUID_INSTANCE_TYPE, tags);
+  }
+
+  private List<JsonObject> getPrecedingSucceedingTitlesByInstanceId(UUID instanceId) {
+    return precedingSucceedingTitleClient.getByQuery(
+      format("?query=succeedingInstanceId==(%1$s)+or+precedingInstanceId==(%1$s)", instanceId));
+  }
+
+  private IndividualResource createInstance(String title) {
+    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "TEST",
+      title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
+
+    return instancesClient.create(instanceRequest);
   }
 
 }
