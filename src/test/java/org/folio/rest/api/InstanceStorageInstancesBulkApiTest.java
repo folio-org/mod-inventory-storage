@@ -7,6 +7,12 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_ACCESS_KEY_ID_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_BUCKET_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_REGION_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_SDK_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_SECRET_ACCESS_KEY_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_URL_CONFIG;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -15,6 +21,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -33,7 +40,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
-import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.model.InstanceBulkResponse;
 import org.folio.rest.support.IndividualResource;
@@ -51,30 +57,32 @@ import org.testcontainers.utility.DockerImageName;
 
 public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUtil {
 
-  public static final String BULK_INSTANCES_PATH = "src/test/resources/instances/bulk/bulkInstances.ndjson";
-  public static final String BULK_INSTANCES_WITH_INVALID_TYPE_PATH =
+  private static final String BULK_INSTANCES_PATH = "src/test/resources/instances/bulk/bulkInstances.ndjson";
+  private static final String BULK_INSTANCES_WITH_INVALID_TYPE_PATH =
     "src/test/resources/instances/bulk/bulkInstancesWithInvalidInstanceType.ndjson";
   private static final String MINIO_BUCKET = "test-bucket";
-  public static final String BULK_FILE_TO_UPLOAD = "parentLocation/filePath/bulkInstances";
+  private static final String BULK_FILE_TO_UPLOAD = "parentLocation/filePath/bulkInstances";
+  private static final String INSTANCE_TITLE_1 = "Long Way to a Small Angry Planet";
+  private static final String INSTANCE_TITLE_2 = "Novik, Naomi";
+  private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
 
   private static LocalStackContainer localStackContainer;
+  private static FolioS3Client s3Client;
 
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
-
-  private static FolioS3Client s3Client;
 
   @BeforeClass
   public static void setUpClass() {
     localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:0.11.3"))
-      .withServices(LocalStackContainer.Service.S3);
+      .withServices(S3);
 
     localStackContainer.start();
-    System.setProperty("AWS_URL", localStackContainer.getEndpoint().toString());
-    System.setProperty("AWS_REGION", localStackContainer.getRegion());
-    System.setProperty("AWS_ACCESS_KEY_ID", localStackContainer.getAccessKey());
-    System.setProperty("AWS_SECRET_ACCESS_KEY", localStackContainer.getSecretKey());
-    System.setProperty("AWS_BUCKET", MINIO_BUCKET);
-    System.setProperty("AWS_SDK", Boolean.FALSE.toString());
+    System.setProperty(AWS_URL_CONFIG, localStackContainer.getEndpoint().toString());
+    System.setProperty(AWS_REGION_CONFIG, localStackContainer.getRegion());
+    System.setProperty(AWS_ACCESS_KEY_ID_CONFIG, localStackContainer.getAccessKey());
+    System.setProperty(AWS_SECRET_ACCESS_KEY_CONFIG, localStackContainer.getSecretKey());
+    System.setProperty(AWS_BUCKET_CONFIG, MINIO_BUCKET);
+    System.setProperty(AWS_SDK_CONFIG, Boolean.FALSE.toString());
 
     s3Client = S3ClientFactory.getS3Client(
       S3ClientProperties
@@ -92,7 +100,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @Before
   public void setUp() {
-    StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
     clearData();
     removeAllEvents();
   }
@@ -104,21 +112,17 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @Test
   public void shouldUpdateInstancesWithoutErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
-    List<String> instancesIds;
-    try (BufferedReader bufferedReader = Files.newBufferedReader(Path.of(
-      BULK_INSTANCES_PATH))) {
-      instancesIds = bufferedReader
-        .lines()
-        .map(JsonObject::new)
-        .map(json -> json.getString("id"))
-        .toList();
-    }
+    List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_PATH))
+      .stream()
+      .map(JsonObject::new)
+      .map(json -> json.getString("id"))
+      .toList();
 
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_PATH));
     String bulkFilePath = s3Client.write(BULK_INSTANCES_PATH, inputStream);
 
-    IndividualResource existingInstance1 = createInstance(smallAngryPlanet(UUID.fromString(instancesIds.get(0))));
-    IndividualResource existingInstance2 = createInstance(uprooted(UUID.fromString(instancesIds.get(1))));
+    IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
     PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
       existingInstance2.getId().toString(), null, "Houston oil directory", null, null);
@@ -130,24 +134,16 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     InstanceBulkRequest bulkRequest = new InstanceBulkRequest()
       .withRecordsFileName(bulkFilePath);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesBulk(), bulkRequest, TENANT_ID, json(createCompleted));
+    InstanceBulkResponse bulkResponse = postInstancesBulk(bulkRequest);
 
-    Response response = createCompleted.get(30, SECONDS);
-    assertThat(response.getStatusCode(), is(HTTP_CREATED));
-
-    InstanceBulkResponse bulkResponse = Json.decodeValue(response.getBody(), InstanceBulkResponse.class);
     assertThat(bulkResponse.getErrorsNumber(), is(0));
     assertThat(bulkResponse.getErrorRecordsFileName(), nullValue());
     assertThat(bulkResponse.getErrorsFileName(), nullValue());
 
-    Response updatedInstance1 = instancesClient.getById(existingInstance1.getId());
-    assertThat(updatedInstance1.getStatusCode(), is(HTTP_OK));
-    Response updatedInstance2 = instancesClient.getById(existingInstance2.getId());
-    assertThat(updatedInstance1.getStatusCode(), is(HTTP_OK));
-
-    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1.getJson());
-    instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2.getJson());
+    JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
+    JsonObject updatedInstance2 = getInstanceById(existingInstance2.getId().toString());
+    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+    instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
 
     List<JsonObject> updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
     updatedTitles.forEach(titleJson -> {
@@ -161,30 +157,23 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   public void shouldUpdateInstancesWithErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
-    List<String> instancesIds;
 
-    try (BufferedReader bufferedReader = Files.newBufferedReader(Path.of(BULK_INSTANCES_WITH_INVALID_TYPE_PATH))) {
-      instancesIds = bufferedReader
-        .lines()
-        .map(JsonObject::new)
-        .map(json -> json.getString("id"))
-        .toList();
-    }
+    List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_WITH_INVALID_TYPE_PATH))
+      .stream()
+      .map(JsonObject::new)
+      .map(json -> json.getString("id"))
+      .toList();
 
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_TYPE_PATH));
     String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
 
-    IndividualResource existingInstance1 = createInstance(smallAngryPlanet(UUID.fromString(instancesIds.get(0))));
-    IndividualResource existingInstance2 = createInstance(uprooted(UUID.fromString(instancesIds.get(1))));
+    IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
     InstanceBulkRequest bulkRequest = new InstanceBulkRequest().withRecordsFileName(bulkFilePath);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesBulk(), bulkRequest, TENANT_ID, json(createCompleted));
-    Response response = createCompleted.get(30, SECONDS);
-    assertThat(response.getStatusCode(), is(HTTP_CREATED));
+    InstanceBulkResponse bulkResponse = postInstancesBulk(bulkRequest);
 
-    InstanceBulkResponse bulkResponse = Json.decodeValue(response.getBody(), InstanceBulkResponse.class);
     assertThat(bulkResponse.getErrorsNumber(), is(1));
     assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
     assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
@@ -195,23 +184,35 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     List<String> errors = new BufferedReader(new InputStreamReader(s3Client.read(expectedErrorsFileName))).lines().toList();
     assertThat(errors.size(), is(1));
 
-    Response updatedInstance1 = instancesClient.getById(existingInstance1.getId());
-    assertThat(updatedInstance1.getStatusCode(), is(HTTP_OK));
-    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1.getJson());
+    JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
+    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
   }
 
-  private IndividualResource createInstance(JsonObject instanceToCreate) throws InterruptedException, ExecutionException, TimeoutException {
+  private JsonObject buildInstance(String id, String title) {
+    return createInstanceRequest(
+      UUID.fromString(id), "MARC", title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
+  }
+
+  private IndividualResource createInstance(JsonObject instanceToCreate) {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(instancesStorageUrl(""), instanceToCreate,
       TENANT_ID, json(createCompleted));
 
-    Response response = createCompleted.get(2, SECONDS);
-
+    Response response = TestBase.get(createCompleted);
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(HTTP_CREATED));
 
     return new IndividualResource(response);
+  }
+
+  private InstanceBulkResponse postInstancesBulk(InstanceBulkRequest bulkRequest)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> future = getClient().post(instancesBulk(), bulkRequest, TENANT_ID);
+    Response response = future.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED));
+
+    return Json.decodeValue(response.getBody(), InstanceBulkResponse.class);
   }
 
   private JsonObject getInstanceById(String id) {
@@ -220,43 +221,9 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     return response.getJson();
   }
 
-  public static JsonObject smallAngryPlanet(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-
-    return createInstanceRequest(id, "MARC", "Long Way to a Small Angry Planet",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-  }
-
-  private JsonObject uprooted(UUID id) {
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "1447294149"));
-    identifiers.add(identifier(UUID_ISBN, "9781447294146"));
-
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Novik, Naomi"));
-
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-
-    return createInstanceRequest(id, "MARC", "Uprooted",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-  }
-
   private List<JsonObject> getPrecedingSucceedingTitlesByInstanceId(UUID instanceId) {
     return precedingSucceedingTitleClient.getByQuery(
-      format("?query=succeedingInstanceId==(%1$s)+or+precedingInstanceId==(%1$s)", instanceId));
-  }
-
-  private IndividualResource createInstance(String title) {
-    JsonObject instanceRequest = createInstanceRequest(UUID.randomUUID(), "TEST",
-      title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
-
-    return instancesClient.create(instanceRequest);
+      format("?query=succeedingInstanceId==%1$s+or+precedingInstanceId==%1$s", instanceId));
   }
 
 }
