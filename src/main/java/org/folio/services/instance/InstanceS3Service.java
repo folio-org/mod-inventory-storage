@@ -3,6 +3,7 @@ package org.folio.services.instance;
 import static org.folio.rest.support.InstanceUtil.mapInstanceDtoJsonToInstance;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -15,8 +16,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,6 +41,7 @@ import org.folio.services.s3storage.FolioS3ClientFactory;
 public class InstanceS3Service {
 
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
+  private static final String INSTANCES_PARALLEL_UPSERT_COUNT_PARAM = "bulk-processing.parallel.upsert.count";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String PRECEDING_TITLES_FIELD = "precedingTitles";
   private static final String SUCCEEDING_TITLES_FIELD = "succeedingTitles";
@@ -167,11 +171,13 @@ public class InstanceS3Service {
     BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx, bulkContext);
 
     return errorsWriter.initialize()
-      .map(v -> instances.stream()
-        .map(instancePair -> upsert(List.of(instancePair))
-          .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e)))
-        .toList())
-      .compose(futures -> Future.join(futures))
+      .map(v -> processInBatches(instances, instancePair -> upsert(List.of(instancePair))
+          .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
+//      .map(v -> instances.stream()
+//        .map(instancePair -> upsert(List.of(instancePair))
+//          .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e)))
+//        .toList())
+//      .compose(futures -> Future.join(futures))
       .eventually(errorsWriter::close)
       .eventually(() -> uploadErrorsFiles(bulkContext))
       .transform(ar -> Future.succeededFuture(new InstanceBulkResponse()
@@ -179,6 +185,26 @@ public class InstanceS3Service {
         .withErrorRecordsFileName(bulkContext.getErrorEntitiesFilePath())
         .withErrorsFileName(bulkContext.getErrorsFilePath())
       ));
+  }
+
+  private Future<Void> processInBatches(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances,
+                                        Function<Pair<Instance, List<PrecedingSucceedingTitle>>, Future<Void>> task) {
+    Future<Void> future = Future.succeededFuture();
+    List<List<Pair<Instance, List<PrecedingSucceedingTitle>>>> instancesBatches = ListUtils.partition(instances, 10);
+
+    for (List<Pair<Instance, List<PrecedingSucceedingTitle>>> batch : instancesBatches) {
+      future = future.eventually(() -> processBatch(batch, task));
+    }
+    return future;
+  }
+
+  private CompositeFuture processBatch(List<Pair<Instance, List<PrecedingSucceedingTitle>>> batch,
+    Function<Pair<Instance, List<PrecedingSucceedingTitle>>, Future<Void>> task) {
+    ArrayList<Future<Void>> futures = new ArrayList<>();
+    for (Pair<Instance, List<PrecedingSucceedingTitle>> instanceListPair : batch) {
+      futures.add(task.apply(instanceListPair));
+    }
+    return Future.join(futures);
   }
 
   private void handleInstanceUpsertFailure(AtomicInteger errorsCounter, BulkProcessingErrorFileWriter errorsWriter,
