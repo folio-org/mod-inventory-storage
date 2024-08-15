@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.model.InstanceBulkResponse;
@@ -29,6 +30,7 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.BulkProcessingErrorFileWriter;
+import org.folio.rest.support.InstanceUtil;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.services.BulkProcessingContext;
 import org.folio.services.s3storage.FolioS3ClientFactory;
@@ -45,12 +47,14 @@ public class InstanceS3Service {
   private final FolioS3Client folioS3Client;
   private final InstanceService instanceService;
   private final PostgresClient postgresClient;
+  private final InstanceRepository instanceRepository;
 
   public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
     this.vertx = vertx;
     this.folioS3ClientFactory = folioS3ClientFactory;
     this.folioS3Client = folioS3ClientFactory.getFolioS3Client();
     this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
+    this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
     this.postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
   }
 
@@ -105,7 +109,8 @@ public class InstanceS3Service {
   private Future<Void> upsert(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances) {
     List<Instance> instanceList = instances.stream().map(Pair::getLeft).toList();
 
-    return instanceService.createInstances(instanceList, true, true)
+    return ensureInstancesWithNonMarcControlledFields(instanceList)
+      .compose(v -> instanceService.createInstances(instanceList, true, true))
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
@@ -115,6 +120,17 @@ public class InstanceS3Service {
         return Future.succeededFuture();
       })
       .compose(v -> updatePrecedingSucceedingTitles(instances));
+  }
+
+  private Future<Void> ensureInstancesWithNonMarcControlledFields(List<Instance> instances) {
+    return instanceRepository.getById(instances, Instance::getId).map(existingInstances -> {
+      instances.forEach(instance -> {
+        if (existingInstances.get(instance.getId()) != null) {
+          InstanceUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));
+        }
+      });
+      return null;
+    });
   }
 
   private Future<Void> updatePrecedingSucceedingTitles(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances) {

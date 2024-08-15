@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.support.InstanceUtil.ADMINISTRATIVE_NOTES_FIELD;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -21,6 +22,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
@@ -40,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.model.InstanceBulkResponse;
 import org.folio.rest.support.IndividualResource;
@@ -112,6 +115,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @Test
   public void shouldUpdateInstancesWithoutErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    // given
     List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_PATH))
       .stream()
       .map(JsonObject::new)
@@ -131,19 +135,18 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
       existingInstance2.getId().toString(), null, "International trade statistics", null, null);
     precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
 
-    InstanceBulkRequest bulkRequest = new InstanceBulkRequest()
-      .withRecordsFileName(bulkFilePath);
+    // when
+    InstanceBulkResponse bulkResponse = postInstancesBulk(new InstanceBulkRequest().withRecordsFileName(bulkFilePath));
 
-    InstanceBulkResponse bulkResponse = postInstancesBulk(bulkRequest);
-
+    // then
     assertThat(bulkResponse.getErrorsNumber(), is(0));
     assertThat(bulkResponse.getErrorRecordsFileName(), nullValue());
     assertThat(bulkResponse.getErrorsFileName(), nullValue());
 
     JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
     JsonObject updatedInstance2 = getInstanceById(existingInstance2.getId().toString());
-    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
-    instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
+    assertNotControlledByMarcFields(existingInstance1.getJson(), updatedInstance1);
+    assertNotControlledByMarcFields(existingInstance2.getJson(), updatedInstance2);
 
     List<JsonObject> updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
     updatedTitles.forEach(titleJson -> {
@@ -151,10 +154,14 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
       assertThat(titleJson.getString("precedingInstanceId"), nullValue());
       assertThat(titleJson.getString("title"), notNullValue());
     });
+
+    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+    instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
   }
 
   @Test
   public void shouldUpdateInstancesWithErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    // given
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
 
@@ -170,10 +177,10 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
     IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
-    InstanceBulkRequest bulkRequest = new InstanceBulkRequest().withRecordsFileName(bulkFilePath);
+    // when
+    InstanceBulkResponse bulkResponse = postInstancesBulk(new InstanceBulkRequest().withRecordsFileName(bulkFilePath));
 
-    InstanceBulkResponse bulkResponse = postInstancesBulk(bulkRequest);
-
+    // then
     assertThat(bulkResponse.getErrorsNumber(), is(1));
     assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
     assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
@@ -190,8 +197,10 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   private JsonObject buildInstance(String id, String title) {
-    return createInstanceRequest(
-      UUID.fromString(id), "MARC", title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, new JsonArray());
+    JsonArray tags = JsonArray.of("test-tag");
+    JsonObject instanceJson = createInstanceRequest(
+      UUID.fromString(id), "MARC", title, new JsonArray(), new JsonArray(), UUID_INSTANCE_TYPE, tags);
+    return instanceJson.put(ADMINISTRATIVE_NOTES_FIELD, JsonArray.of("test-note"));
   }
 
   private IndividualResource createInstance(JsonObject instanceToCreate) {
@@ -219,6 +228,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     Response response = instancesClient.getById(UUID.fromString(id));
     assertThat(response.getStatusCode(), is(HTTP_OK));
     return response.getJson();
+  }
+
+  private void assertNotControlledByMarcFields(JsonObject expectedInstanceJson, JsonObject actualInstanceJson) {
+    Instance expectedInstance = expectedInstanceJson.mapTo(Instance.class);
+    Instance actualInstance = actualInstanceJson.mapTo(Instance.class);
+    assertEquals(expectedInstance.getTags(), actualInstance.getTags());
+    assertEquals(expectedInstance.getAdministrativeNotes(), actualInstance.getAdministrativeNotes());
   }
 
   private List<JsonObject> getPrecedingSucceedingTitlesByInstanceId(UUID instanceId) {

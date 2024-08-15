@@ -25,54 +25,94 @@ import org.folio.rest.jaxrs.model.Tags;
 
 public final class InstanceUtil {
 
+  public static final String ID_FIELD = "id";
+
+  public static final String VERSION_FIELD = "_version";
+  public static final String HRID_FIELD = "hrid";
+  public static final String SOURCE_FIELD = "source";
+  public static final String MATCH_KEY_FIELD = "matchKey";
+  public static final String TITLE_FIELD = "title";
+  public static final String INDEX_TITLE_FIELD = "indexTitle";
+  public static final String ALTERNATIVE_TITLES_FIELD = "alternativeTitles";
+  public static final String EDITIONS_FIELD = "editions";
+  public static final String SERIES_FIELD = "series";
+  public static final String IDENTIFIERS_FIELD = "identifiers";
+  public static final String CONTRIBUTORS_FIELD = "contributors";
+  public static final String SUBJECTS_FIELD = "subjects";
+  public static final String CLASSIFICATIONS_FIELD = "classifications";
+  public static final String PUBLICATION_FIELD = "publication";
+  public static final String PUBLICATION_FREQUENCY_FIELD = "publicationFrequency";
+  public static final String PUBLICATION_RANGE_FIELD = "publicationRange";
+  public static final String PUBLICATION_PERIOD_FIELD = "publicationPeriod";
+  public static final String ELECTRONIC_ACCESS_FIELD = "electronicAccess";
+  public static final String INSTANCE_TYPE_ID_FIELD = "instanceTypeId";
+  public static final String INSTANCE_FORMAT_IDS_FIELD = "instanceFormatIds";
+  public static final String PHYSICAL_DESCRIPTIONS_FIELD = "physicalDescriptions";
+  public static final String LANGUAGES_FIELD = "languages";
+  public static final String NOTES_FIELD = "notes";
+  public static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
+  public static final String MODE_OF_ISSUANCE_ID_FIELD = "modeOfIssuanceId";
+  public static final String CATALOGED_DATE_FIELD = "catalogedDate";
+  public static final String PREVIOUSLY_HELD_FIELD = "previouslyHeld";
+  public static final String STAFF_SUPPRESS_FIELD = "staffSuppress";
+  public static final String DISCOVERY_SUPPRESS_FIELD = "discoverySuppress";
+  public static final String STATISTICAL_CODE_IDS_FIELD = "statisticalCodeIds";
+  public static final String SOURCE_RECORD_FORMAT_FIELD = "sourceRecordFormat";
+  public static final String STATUS_ID_FIELD = "statusId";
+  public static final String STATUS_UPDATED_DATE_FIELD = "statusUpdatedDate";
+  public static final String TAGS_FIELD = "tags";
+  public static final String NATURE_OF_CONTENT_TERM_IDS_FIELD = "natureOfContentTermIds";
+
   private InstanceUtil() {
   }
 
   public static Instance mapInstanceDtoJsonToInstance(JsonObject instanceDtoJson) {
     return new Instance()
-      .withId(instanceDtoJson.getString("id"))
-      .withVersion(Integer.parseInt(instanceDtoJson.getString("_version")))
-      .withHrid(instanceDtoJson.getString("hrid"))
-      .withSource(instanceDtoJson.getString("source"))
-      .withMatchKey(instanceDtoJson.getString("matchKey"))
-      .withTitle(instanceDtoJson.getString("title"))
-      .withIndexTitle(instanceDtoJson.getString("indexTitle"))
+      .withId(instanceDtoJson.getString(ID_FIELD))
+      .withVersion(Integer.parseInt(instanceDtoJson.getString(VERSION_FIELD)))
+      .withHrid(instanceDtoJson.getString(HRID_FIELD))
+      .withSource(instanceDtoJson.getString(SOURCE_FIELD))
+      .withMatchKey(instanceDtoJson.getString(MATCH_KEY_FIELD))
+      .withTitle(instanceDtoJson.getString(TITLE_FIELD))
+      .withIndexTitle(instanceDtoJson.getString(INDEX_TITLE_FIELD))
       .withAlternativeTitles(toSetOfObjects(
-        instanceDtoJson.getJsonArray("alternativeTitles"), InstanceUtil::mapJsonObjectToAlternativeTitle))
-      .withEditions(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray("editions"))))
-      .withSeries(toSetOfObjects(instanceDtoJson.getJsonArray("series"), InstanceUtil::mapJsonObjectToSeries))
+        instanceDtoJson.getJsonArray(ALTERNATIVE_TITLES_FIELD), InstanceUtil::mapJsonObjectToAlternativeTitle))
+      .withEditions(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(EDITIONS_FIELD))))
+      .withSeries(toSetOfObjects(instanceDtoJson.getJsonArray(SERIES_FIELD), InstanceUtil::mapJsonObjectToSeries))
       .withIdentifiers(
-        toListOfObjects(instanceDtoJson.getJsonArray("identifiers"), InstanceUtil::mapJsonObjectToIdentifier))
+        toListOfObjects(instanceDtoJson.getJsonArray(IDENTIFIERS_FIELD), InstanceUtil::mapJsonObjectToIdentifier))
       .withContributors(
-        toListOfObjects(instanceDtoJson.getJsonArray("contributors"), InstanceUtil::mapJsonObjectToContributor))
-      .withSubjects(toSetOfObjects(instanceDtoJson.getJsonArray("subjects"), InstanceUtil::mapJsonObjectToSubject))
+        toListOfObjects(instanceDtoJson.getJsonArray(CONTRIBUTORS_FIELD), InstanceUtil::mapJsonObjectToContributor))
+      .withSubjects(toSetOfObjects(instanceDtoJson.getJsonArray(SUBJECTS_FIELD), InstanceUtil::mapJsonObjectToSubject))
       .withClassifications(toListOfObjects(
-        instanceDtoJson.getJsonArray("classifications"), InstanceUtil::mapJsonObjectToClassification))
+        instanceDtoJson.getJsonArray(CLASSIFICATIONS_FIELD), InstanceUtil::mapJsonObjectToClassification))
       .withPublication(
-        toListOfObjects(instanceDtoJson.getJsonArray("publication"), InstanceUtil::mapJsonObjectToPublication))
-      .withPublicationFrequency(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray("publicationFrequency"))))
-      .withPublicationRange(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray("publicationRange"))))
-      .withPublicationPeriod(mapJsonObjectToPublicationPeriod(instanceDtoJson.getJsonObject("publicationPeriod")))
+        toListOfObjects(instanceDtoJson.getJsonArray(PUBLICATION_FIELD), InstanceUtil::mapJsonObjectToPublication))
+      .withPublicationFrequency(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_FREQUENCY_FIELD))))
+      .withPublicationRange(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_RANGE_FIELD))))
+      .withPublicationPeriod(mapJsonObjectToPublicationPeriod(instanceDtoJson.getJsonObject(PUBLICATION_PERIOD_FIELD)))
       .withElectronicAccess(toListOfObjects(
-        instanceDtoJson.getJsonArray("electronicAccess"), InstanceUtil::mapJsonObjectToElectronicAccess))
-      .withInstanceTypeId(instanceDtoJson.getString("instanceTypeId"))
-      .withInstanceFormatIds(toListOfStrings(instanceDtoJson.getJsonArray("instanceFormatIds")))
-      .withPhysicalDescriptions(toListOfStrings(instanceDtoJson.getJsonArray("physicalDescriptions")))
-      .withLanguages(toListOfStrings(instanceDtoJson.getJsonArray("languages")))
-      .withNotes(toListOfObjects(instanceDtoJson.getJsonArray("notes"), InstanceUtil::mapJsonObjectToInstanceNote))
-      .withAdministrativeNotes(toListOfStrings(instanceDtoJson.getJsonArray("administrativeNotes")))
-      .withModeOfIssuanceId(instanceDtoJson.getString("modeOfIssuanceId"))
-      .withCatalogedDate(instanceDtoJson.getString("catalogedDate"))
-      .withPreviouslyHeld(instanceDtoJson.getBoolean("previouslyHeld"))
-      .withStaffSuppress(instanceDtoJson.getBoolean("staffSuppress"))
-      .withDiscoverySuppress(instanceDtoJson.getBoolean("discoverySuppress"))
-      .withStatisticalCodeIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray("statisticalCodeIds"))))
-      .withSourceRecordFormat(mapStringToSourceRecordFormat(instanceDtoJson.getString("sourceRecordFormat")))
-      .withStatusId(instanceDtoJson.getString("statusId"))
-      .withStatusUpdatedDate(instanceDtoJson.getString("statusUpdatedDate"))
-      .withTags(mapJsonObjectToTags(instanceDtoJson.getJsonObject("tags")))
-      .withNatureOfContentTermIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray("natureOfContentTermIds"))));
+        instanceDtoJson.getJsonArray(ELECTRONIC_ACCESS_FIELD), InstanceUtil::mapJsonObjectToElectronicAccess))
+      .withInstanceTypeId(instanceDtoJson.getString(INSTANCE_TYPE_ID_FIELD))
+      .withInstanceFormatIds(toListOfStrings(instanceDtoJson.getJsonArray(INSTANCE_FORMAT_IDS_FIELD)))
+      .withPhysicalDescriptions(toListOfStrings(instanceDtoJson.getJsonArray(PHYSICAL_DESCRIPTIONS_FIELD)))
+      .withLanguages(toListOfStrings(instanceDtoJson.getJsonArray(LANGUAGES_FIELD)))
+      .withNotes(toListOfObjects(instanceDtoJson.getJsonArray(NOTES_FIELD), InstanceUtil::mapJsonObjectToInstanceNote))
+      .withAdministrativeNotes(toListOfStrings(instanceDtoJson.getJsonArray(ADMINISTRATIVE_NOTES_FIELD)))
+      .withModeOfIssuanceId(instanceDtoJson.getString(MODE_OF_ISSUANCE_ID_FIELD))
+      .withCatalogedDate(instanceDtoJson.getString(CATALOGED_DATE_FIELD))
+      .withPreviouslyHeld(instanceDtoJson.getBoolean(PREVIOUSLY_HELD_FIELD))
+      .withStaffSuppress(instanceDtoJson.getBoolean(STAFF_SUPPRESS_FIELD))
+      .withDiscoverySuppress(instanceDtoJson.getBoolean(DISCOVERY_SUPPRESS_FIELD))
+      .withStatisticalCodeIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(STATISTICAL_CODE_IDS_FIELD))))
+      .withSourceRecordFormat(mapStringToSourceRecordFormat(instanceDtoJson.getString(SOURCE_RECORD_FORMAT_FIELD)))
+      .withStatusId(instanceDtoJson.getString(STATUS_ID_FIELD))
+      .withStatusUpdatedDate(instanceDtoJson.getString(STATUS_UPDATED_DATE_FIELD))
+      .withTags(mapJsonObjectToTags(instanceDtoJson.getJsonObject(TAGS_FIELD)))
+      .withNatureOfContentTermIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(NATURE_OF_CONTENT_TERM_IDS_FIELD))));
   }
+
+
 
   private static <T> List<T> toListOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {
     if (array == null) {
@@ -184,6 +224,19 @@ public final class InstanceUtil {
   private static Tags mapJsonObjectToTags(JsonObject json) {
     return json == null ? null : new Tags()
       .withTagList(toListOfStrings(json.getJsonArray("tagList")));
+  }
+
+  public static void copyNonMarcControlledFields(Instance targetInstance, Instance sourceInstance) {
+    targetInstance.setStaffSuppress(sourceInstance.getStaffSuppress());
+    targetInstance.setDiscoverySuppress(sourceInstance.getDiscoverySuppress());
+    targetInstance.setCatalogedDate(sourceInstance.getCatalogedDate());
+    targetInstance.setStatusId(sourceInstance.getStatusId());
+    targetInstance.setStatusUpdatedDate(sourceInstance.getStatusUpdatedDate());
+    targetInstance.setStatisticalCodeIds(sourceInstance.getStatisticalCodeIds());
+    targetInstance.setAdministrativeNotes(sourceInstance.getAdministrativeNotes());
+    targetInstance.setNatureOfContentTermIds(sourceInstance.getNatureOfContentTermIds());
+    targetInstance.setTags(sourceInstance.getTags());
+    targetInstance.setPreviouslyHeld(sourceInstance.getPreviouslyHeld());
   }
 
 }
