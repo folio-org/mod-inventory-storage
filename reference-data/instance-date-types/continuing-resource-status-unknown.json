@@ -1,7 +1,7 @@
 {
   "id": "5a1a1adb-de71-45e6-ba94-1c0838969f04",
   "name": "Continuing resource status unknown",
-  "code": "e",
+  "code": "u",
   "displayFormat": {
     "delimiter": "-",
     "keepDelimiter": true

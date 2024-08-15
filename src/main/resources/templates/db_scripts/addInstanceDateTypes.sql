@@ -2,7 +2,7 @@ INSERT INTO ${myuniversity}_${mymodule}.instance_date_type (id, jsonb)
 VALUES
     ('42dac21e-3c81-4cb1-9f16-9e50c81bacc4', '{"id":"42dac21e-3c81-4cb1-9f16-9e50c81bacc4","name":"Continuing resource ceased publication","code":"d","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
     ('0750f52b-3bfc-458d-9307-e9afc8bcdffa', '{"id":"0750f52b-3bfc-458d-9307-e9afc8bcdffa","name":"Continuing resource currently published","code":"c","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
-    ('5a1a1adb-de71-45e6-ba94-1c0838969f04', '{"id":"5a1a1adb-de71-45e6-ba94-1c0838969f04","name":"Continuing resource status unknown","code":"e","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+    ('5a1a1adb-de71-45e6-ba94-1c0838969f04', '{"id":"5a1a1adb-de71-45e6-ba94-1c0838969f04","name":"Continuing resource status unknown","code":"u","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
     ('5f84208a-0aa6-4694-a58f-5310b654f012', '{"id":"5f84208a-0aa6-4694-a58f-5310b654f012","name":"Date of distribution/release/issue and production/recording session when different","code":"p","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('e77bb7ed-2e53-4c62-8b06-5907b8934ba7', '{"id":"e77bb7ed-2e53-4c62-8b06-5907b8934ba7","name":"Dates unknown","code":"n","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('9669a463-5971-42dc-9eee-046bbd678fb1', '{"id":"9669a463-5971-42dc-9eee-046bbd678fb1","name":"Detailed date","code":"e","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
