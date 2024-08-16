@@ -285,6 +285,17 @@
       ]
     },
     {
+      "id": "instance-storage-bulk",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/bulk",
+          "permissionsRequired": ["inventory-storage.instances.bulk.post"]
+        }
+      ]
+    },
+    {
       "id": "loan-types",
       "version": "2.3",
       "handlers": [
@@ -2458,7 +2469,11 @@
       "displayName": "inventory storage - submit migration job",
       "description": "submit migration instance job"
     },
-
+    {
+      "permissionName": "inventory-storage.instances.bulk.post",
+      "displayName": "inventory storage - create or update instances records in bulk",
+      "description": "create or update instances records in bulk"
+    },
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
@@ -2727,7 +2742,13 @@
       { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"}
+      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "AWS_URL", "value": "http://127.0.0.1:9000/" },
+      { "name": "AWS_REGION", "value": "" },
+      { "name": "AWS_BUCKET", "value": "marc-migrations" },
+      { "name": "AWS_ACCESS_KEY_ID", "value": "" },
+      { "name": "AWS_SECRET_ACCESS_KEY", "value": "" },
+      { "name": "AWS_SDK", "value": "true" }
     ]
   }
 }
