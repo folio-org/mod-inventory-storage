@@ -19,13 +19,13 @@
     <folio-kafka-wrapper.version>3.1.1</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.34</lombok.version>
-    <snappy-java.version>1.1.10.5</snappy-java.version>
-    <commons-lang3.version>3.15.0</commons-lang3.version>
+    <snappy-java.version>1.1.10.6</snappy-java.version>
+    <commons-lang3.version>3.16.0</commons-lang3.version>
     <log4j.version>2.23.1</log4j.version>
 
     <okapi-testing.version>6.0.2</okapi-testing.version>
-    <junit.version>5.10.3</junit.version>
-    <testcontainers.version>1.20.0</testcontainers.version>
+    <junit.version>5.11.0</junit.version>
+    <testcontainers.version>1.20.1</testcontainers.version>
     <joda-time.version>2.12.7</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
