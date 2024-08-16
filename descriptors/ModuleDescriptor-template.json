@@ -2620,7 +2620,7 @@
     {
       "permissionName": "inventory-storage.instances.bulk.post",
       "displayName": "inventory storage - create or update instances records in bulk",
-      "description": "create or update instances records in bulk"
+      "description": "create or update instances records in bulk from external file"
     },
     {
       "permissionName": "inventory-storage.all",
@@ -2658,6 +2658,7 @@
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
         "inventory-storage.instances.batch-unsafe.post",
+        "inventory-storage.instances.bulk.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",

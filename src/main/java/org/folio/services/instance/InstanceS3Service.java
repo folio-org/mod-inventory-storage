@@ -51,7 +51,6 @@ public class InstanceS3Service {
   private static final String OR_OPERATOR = " or ";
   private static final String ID_FIELD = "id";
 
-
   private final FolioS3ClientFactory folioS3ClientFactory;
   private final Vertx vertx;
   private final FolioS3Client folioS3Client;

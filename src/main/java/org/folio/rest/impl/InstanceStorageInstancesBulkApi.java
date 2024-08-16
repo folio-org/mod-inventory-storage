@@ -5,8 +5,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
 import org.folio.rest.jaxrs.resource.InstanceStorageInstancesBulk;
 import org.folio.rest.support.EndpointFailureHandler;

@@ -6,6 +6,7 @@
 ### New APIs versions
 * Provides `subject-source 1.0`
 * Provides `subject-types 1.0`
+* Provides `instance-storage-bulk`
 * Provides `instance-date-types 1.0`
 * Provides `instance-storage 10.1`
 * Requires `holdings-storage 6.1`
@@ -21,6 +22,7 @@
 * Implement endpoint to publish reindex event for the range of instance/item/holding records ([MODINVSTOR-1230](https://folio-org.atlassian.net/browse/MODINVSTOR-1230))
 * Info, not warn, about expected 403 from /user-tenants ([MODINVSTOR-1237](https://folio-org.atlassian.net/browse/MODINVSTOR-1237))
 * Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
+* Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 
 
 ### Bug fixes
@@ -38,6 +40,7 @@
 * Bump `holdings-storage` from `6.0` to `7.0`
 * Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
 * Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
+* Add `folio-s3-client` ` 2.2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 
