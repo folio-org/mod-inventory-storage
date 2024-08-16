@@ -1,0 +1,10 @@
+{
+  "id": "0750f52b-3bfc-458d-9307-e9afc8bcdffa",
+  "name": "Continuing resource currently published",
+  "code": "c",
+  "displayFormat": {
+    "delimiter": "-",
+    "keepDelimiter": true
+  },
+  "source": "folio"
+}

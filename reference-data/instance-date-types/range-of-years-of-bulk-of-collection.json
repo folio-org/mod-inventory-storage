@@ -1,0 +1,10 @@
+{
+  "id": "ccc293d5-9e88-4222-ac04-d058351ddb7b",
+  "name": "Range of years of bulk of collection",
+  "code": "k",
+  "displayFormat": {
+    "delimiter": "-",
+    "keepDelimiter": true
+  },
+  "source": "folio"
+}

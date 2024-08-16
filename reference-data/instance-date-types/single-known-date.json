@@ -1,0 +1,10 @@
+{
+  "id": "24a506e8-2a92-4ecc-bd09-ff849321fd5a",
+  "name": "Single known date/probable date",
+  "code": "s",
+  "displayFormat": {
+    "delimiter": ",",
+    "keepDelimiter": false
+  },
+  "source": "folio"
+}

@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
@@ -10,6 +11,7 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -30,9 +32,12 @@ import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -45,12 +50,14 @@ import org.testcontainers.utility.DockerImageName;
 public class BaseIntegrationTest {
 
   public static final String USER_ID = UUID.randomUUID().toString();
+  static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @Container
   private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>(getImageName())
     .withDatabaseName("okapi_modules")
     .withUsername("admin_user")
     .withPassword("admin_password");
+
   @Container
   private static final KafkaContainer KAFKA_CONTAINER
     = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
@@ -66,6 +73,10 @@ public class BaseIntegrationTest {
 
   protected static Future<TestResponse> doPut(HttpClient client, String requestUri, JsonObject body) {
     return doRequest(client, HttpMethod.PUT, requestUri, body);
+  }
+
+  protected static Future<TestResponse> doPatch(HttpClient client, String requestUri, JsonObject body) {
+    return doRequest(client, HttpMethod.PATCH, requestUri, body);
   }
 
   protected static Future<TestResponse> doDelete(HttpClient client, String requestUri) {
@@ -88,6 +99,8 @@ public class BaseIntegrationTest {
     System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
     System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
     System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
+    KAFKA_CONTAINER.start();
+
     Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
       POSTGRESQL_CONTAINER.getFirstMappedPort(),
       POSTGRESQL_CONTAINER.getUsername(),
@@ -104,6 +117,24 @@ public class BaseIntegrationTest {
     if (ctx.failed()) {
       throw ctx.causeOfFailure();
     }
+
+
+    KAFKA_CONSUMER.discardAllMessages();
+    KAFKA_CONSUMER.consume(vertx);
+    await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
+  }
+
+  @AfterAll
+  static void afterAll() {
+    if (KAFKA_CONTAINER.isRunning()) {
+      KAFKA_CONTAINER.stop();
+    }
+    KAFKA_CONSUMER.unsubscribe();
+  }
+
+  @BeforeEach
+  public void removeAllEvents() {
+    KAFKA_CONSUMER.discardAllMessages();
   }
 
   private static Future<TestResponse> enableTenant(VertxTestContext ctx, HttpClient client) {
