@@ -42,6 +42,7 @@ public class InstanceS3Service {
 
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
   private static final String INSTANCES_PARALLEL_UPSERT_COUNT_PARAM = "bulk-processing.parallel.upsert.count";
+  private static final String DEFAULT_INSTANCES_PARALLEL_UPSERT_COUNT = "10";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String PRECEDING_TITLES_FIELD = "precedingTitles";
   private static final String SUCCEEDING_TITLES_FIELD = "succeedingTitles";
@@ -52,8 +53,11 @@ public class InstanceS3Service {
   private final InstanceService instanceService;
   private final PostgresClient postgresClient;
   private final InstanceRepository instanceRepository;
+  private final int instancesParallelUpsertLimit;
 
   public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
+    this.instancesParallelUpsertLimit = Integer.parseInt(
+      System.getProperty(INSTANCES_PARALLEL_UPSERT_COUNT_PARAM, DEFAULT_INSTANCES_PARALLEL_UPSERT_COUNT));
     this.vertx = vertx;
     this.folioS3ClientFactory = folioS3ClientFactory;
     this.folioS3Client = folioS3ClientFactory.getFolioS3Client();
@@ -172,12 +176,7 @@ public class InstanceS3Service {
 
     return errorsWriter.initialize()
       .map(v -> processInBatches(instances, instancePair -> upsert(List.of(instancePair))
-          .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
-//      .map(v -> instances.stream()
-//        .map(instancePair -> upsert(List.of(instancePair))
-//          .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e)))
-//        .toList())
-//      .compose(futures -> Future.join(futures))
+        .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
       .eventually(errorsWriter::close)
       .eventually(() -> uploadErrorsFiles(bulkContext))
       .transform(ar -> Future.succeededFuture(new InstanceBulkResponse()
@@ -190,7 +189,8 @@ public class InstanceS3Service {
   private Future<Void> processInBatches(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances,
                                         Function<Pair<Instance, List<PrecedingSucceedingTitle>>, Future<Void>> task) {
     Future<Void> future = Future.succeededFuture();
-    List<List<Pair<Instance, List<PrecedingSucceedingTitle>>>> instancesBatches = ListUtils.partition(instances, 10);
+    List<List<Pair<Instance, List<PrecedingSucceedingTitle>>>> instancesBatches =
+      ListUtils.partition(instances, instancesParallelUpsertLimit);
 
     for (List<Pair<Instance, List<PrecedingSucceedingTitle>>> batch : instancesBatches) {
       future = future.eventually(() -> processBatch(batch, task));
@@ -209,7 +209,7 @@ public class InstanceS3Service {
 
   private void handleInstanceUpsertFailure(AtomicInteger errorsCounter, BulkProcessingErrorFileWriter errorsWriter,
                                            Instance instance, Throwable e) {
-    log.warn("processSequentially: Failed to process single instance upsert operation, instanceId: '{}'",
+    log.warn("handleInstanceUpsertFailure: Failed to process single instance upsert operation, instanceId: '{}'",
       instance.getId(), e);
     errorsCounter.incrementAndGet();
     errorsWriter.write(instance, Instance::getId, e);
@@ -226,7 +226,8 @@ public class InstanceS3Service {
       vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
       vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
     ))
-    .onFailure(e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
+      .onFailure(
+        e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
     .mapEmpty();
   }
 
