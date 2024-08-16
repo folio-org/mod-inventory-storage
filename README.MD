@@ -153,6 +153,14 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 * `DB_EXPLAIN_QUERY_THRESHOLD`
 * `DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING`
 
+These environment variables configure the module interaction with S3-compatible storage (AWS S3, Minio Server):
+* `AWS_URL`
+* `AWS_REGION`
+* `AWS_BUCKET`
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_ACCESS_KEY`
+* `AWS_SDK`
+
 # Local Deployment using Docker
 
 ## Preparation
