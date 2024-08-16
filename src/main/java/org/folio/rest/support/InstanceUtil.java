@@ -67,6 +67,13 @@ public final class InstanceUtil {
   private InstanceUtil() {
   }
 
+  /**
+   * Maps instance json representation that corresponds to the mod-inventory module instance schema to instance object
+   * corresponding to the inventory storage module schema.
+   *
+   * @param instanceDtoJson - mod-inventory instance representation as json object
+   * @return {@link Instance} object
+   */
   public static Instance mapInstanceDtoJsonToInstance(JsonObject instanceDtoJson) {
     return new Instance()
       .withId(instanceDtoJson.getString(ID_FIELD))
@@ -235,6 +242,13 @@ public final class InstanceUtil {
       .withTagList(toListOfStrings(json.getJsonArray("tagList")));
   }
 
+  /**
+   * Copies fields from the source {@code sourceInstance} to the target {@code targetInstance}
+   * that are not controlled by underlying MARC record.
+   *
+   * @param targetInstance - instance object that is populated by not controlled by MARC fields values
+   * @param sourceInstance - instance object from which the field values will be copied
+   */
   public static void copyNonMarcControlledFields(Instance targetInstance, Instance sourceInstance) {
     targetInstance.setStaffSuppress(sourceInstance.getStaffSuppress());
     targetInstance.setDiscoverySuppress(sourceInstance.getDiscoverySuppress());

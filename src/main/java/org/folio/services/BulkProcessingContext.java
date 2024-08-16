@@ -22,10 +22,6 @@ public class BulkProcessingContext {
     this.errorsFileLocalPath = ROOT_FOLDER + errorsFilePath;
   }
 
-  public String getInitialFilePath() {
-    return initialFilePath;
-  }
-
   public String getErrorEntitiesFilePath() {
     return errorEntitiesFilePath;
   }

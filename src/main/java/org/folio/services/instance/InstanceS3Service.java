@@ -43,9 +43,14 @@ public class InstanceS3Service {
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
   private static final String INSTANCES_PARALLEL_UPSERT_COUNT_PARAM = "bulk-processing.parallel.upsert.count";
   private static final String DEFAULT_INSTANCES_PARALLEL_UPSERT_COUNT = "10";
+  private static final String PRECEDING_SUCCEEDING_TITLES_BY_INSTANCE_IDS_CQL =
+    "succeedingInstanceId==(%1$s) or precedingInstanceId==(%1$s)";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String PRECEDING_TITLES_FIELD = "precedingTitles";
   private static final String SUCCEEDING_TITLES_FIELD = "succeedingTitles";
+  private static final String OR_OPERATOR = " or ";
+  private static final String ID_FIELD = "id";
+
 
   private final FolioS3ClientFactory folioS3ClientFactory;
   private final Vertx vertx;
@@ -103,13 +108,13 @@ public class InstanceS3Service {
     instanceJson.getJsonArray(PRECEDING_TITLES_FIELD).stream()
       .map((JsonObject.class::cast))
       .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
-      .map(title -> title.withSucceedingInstanceId(instanceJson.getString("id")))
+      .map(title -> title.withSucceedingInstanceId(instanceJson.getString(ID_FIELD)))
       .forEach(titles::add);
 
     instanceJson.getJsonArray(SUCCEEDING_TITLES_FIELD).stream()
       .map((JsonObject.class::cast))
       .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
-      .map(title -> title.withPrecedingInstanceId(instanceJson.getString("id")))
+      .map(title -> title.withPrecedingInstanceId(instanceJson.getString(ID_FIELD)))
       .forEach(titles::add);
     return titles;
   }
@@ -162,9 +167,9 @@ public class InstanceS3Service {
     String idsValue = instances.stream()
       .map(Pair::getLeft)
       .map(Instance::getId)
-      .collect(Collectors.joining(" or "));
+      .collect(Collectors.joining(OR_OPERATOR));
 
-    String cql = String.format("succeedingInstanceId==(%1$s) or precedingInstanceId==(%1$s)", idsValue);
+    String cql = String.format(PRECEDING_SUCCEEDING_TITLES_BY_INSTANCE_IDS_CQL, idsValue);
     return new CQLWrapper(new CQL2PgJSON(PRECEDING_SUCCEEDING_TITLE_TABLE + ".jsonb"), cql);
   }
 
@@ -221,14 +226,14 @@ public class InstanceS3Service {
         () -> folioS3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
       vertx.executeBlocking(
         () -> folioS3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
-    )
-    .compose(v -> Future.join(
-      vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
-      vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
-    ))
+      )
+      .compose(v -> Future.join(
+        vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
+        vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
+      ))
       .onFailure(
         e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
-    .mapEmpty();
+      .mapEmpty();
   }
 
 }
