@@ -26,7 +26,6 @@ import org.folio.rest.jaxrs.model.Tags;
 public final class InstanceUtil {
 
   public static final String ID_FIELD = "id";
-
   public static final String VERSION_FIELD = "_version";
   public static final String HRID_FIELD = "hrid";
   public static final String SOURCE_FIELD = "source";
@@ -62,6 +61,8 @@ public final class InstanceUtil {
   public static final String STATUS_UPDATED_DATE_FIELD = "statusUpdatedDate";
   public static final String TAGS_FIELD = "tags";
   public static final String NATURE_OF_CONTENT_TERM_IDS_FIELD = "natureOfContentTermIds";
+  public static final String AUTHORITY_ID_FIELD = "authorityId";
+  public static final String VALUE_FIELD = "value";
 
   private InstanceUtil() {
   }
@@ -69,7 +70,7 @@ public final class InstanceUtil {
   public static Instance mapInstanceDtoJsonToInstance(JsonObject instanceDtoJson) {
     return new Instance()
       .withId(instanceDtoJson.getString(ID_FIELD))
-      .withVersion(Integer.parseInt(instanceDtoJson.getString(VERSION_FIELD)))
+      .withVersion(instanceDtoJson.getInteger(VERSION_FIELD))
       .withHrid(instanceDtoJson.getString(HRID_FIELD))
       .withSource(instanceDtoJson.getString(SOURCE_FIELD))
       .withMatchKey(instanceDtoJson.getString(MATCH_KEY_FIELD))
@@ -77,7 +78,7 @@ public final class InstanceUtil {
       .withIndexTitle(instanceDtoJson.getString(INDEX_TITLE_FIELD))
       .withAlternativeTitles(toSetOfObjects(
         instanceDtoJson.getJsonArray(ALTERNATIVE_TITLES_FIELD), InstanceUtil::mapJsonObjectToAlternativeTitle))
-      .withEditions(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(EDITIONS_FIELD))))
+      .withEditions(toSetOfStrings(instanceDtoJson.getJsonArray(EDITIONS_FIELD)))
       .withSeries(toSetOfObjects(instanceDtoJson.getJsonArray(SERIES_FIELD), InstanceUtil::mapJsonObjectToSeries))
       .withIdentifiers(
         toListOfObjects(instanceDtoJson.getJsonArray(IDENTIFIERS_FIELD), InstanceUtil::mapJsonObjectToIdentifier))
@@ -88,8 +89,8 @@ public final class InstanceUtil {
         instanceDtoJson.getJsonArray(CLASSIFICATIONS_FIELD), InstanceUtil::mapJsonObjectToClassification))
       .withPublication(
         toListOfObjects(instanceDtoJson.getJsonArray(PUBLICATION_FIELD), InstanceUtil::mapJsonObjectToPublication))
-      .withPublicationFrequency(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_FREQUENCY_FIELD))))
-      .withPublicationRange(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_RANGE_FIELD))))
+      .withPublicationFrequency(toSetOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_FREQUENCY_FIELD)))
+      .withPublicationRange(toSetOfStrings(instanceDtoJson.getJsonArray(PUBLICATION_RANGE_FIELD)))
       .withPublicationPeriod(mapJsonObjectToPublicationPeriod(instanceDtoJson.getJsonObject(PUBLICATION_PERIOD_FIELD)))
       .withElectronicAccess(toListOfObjects(
         instanceDtoJson.getJsonArray(ELECTRONIC_ACCESS_FIELD), InstanceUtil::mapJsonObjectToElectronicAccess))
@@ -104,36 +105,12 @@ public final class InstanceUtil {
       .withPreviouslyHeld(instanceDtoJson.getBoolean(PREVIOUSLY_HELD_FIELD))
       .withStaffSuppress(instanceDtoJson.getBoolean(STAFF_SUPPRESS_FIELD))
       .withDiscoverySuppress(instanceDtoJson.getBoolean(DISCOVERY_SUPPRESS_FIELD))
-      .withStatisticalCodeIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(STATISTICAL_CODE_IDS_FIELD))))
+      .withStatisticalCodeIds(toSetOfStrings(instanceDtoJson.getJsonArray(STATISTICAL_CODE_IDS_FIELD)))
       .withSourceRecordFormat(mapStringToSourceRecordFormat(instanceDtoJson.getString(SOURCE_RECORD_FORMAT_FIELD)))
       .withStatusId(instanceDtoJson.getString(STATUS_ID_FIELD))
       .withStatusUpdatedDate(instanceDtoJson.getString(STATUS_UPDATED_DATE_FIELD))
       .withTags(mapJsonObjectToTags(instanceDtoJson.getJsonObject(TAGS_FIELD)))
-      .withNatureOfContentTermIds(new LinkedHashSet<>(toListOfStrings(instanceDtoJson.getJsonArray(NATURE_OF_CONTENT_TERM_IDS_FIELD))));
-  }
-
-
-
-  private static <T> List<T> toListOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {
-    if (array == null) {
-      return new ArrayList<>();
-    }
-
-    return array.stream()
-      .map(JsonObject.class::cast)
-      .map(objectMapper)
-      .toList();
-  }
-
-  private static <T> Set<T> toSetOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {
-    if (array == null) {
-      return new LinkedHashSet<>();
-    }
-
-    return array.stream()
-      .map(JsonObject.class::cast)
-      .map(objectMapper)
-      .collect(Collectors.toSet());
+      .withNatureOfContentTermIds(toSetOfStrings(instanceDtoJson.getJsonArray(NATURE_OF_CONTENT_TERM_IDS_FIELD)));
   }
 
   private static List<String> toListOfStrings(JsonArray array) {
@@ -146,22 +123,54 @@ public final class InstanceUtil {
       .collect(Collectors.toList());
   }
 
+  private static <T> List<T> toListOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {
+    if (array == null) {
+      return new ArrayList<>();
+    }
+
+    return array.stream()
+      .map(JsonObject.class::cast)
+      .map(objectMapper)
+      .toList();
+  }
+
+  private static Set<String> toSetOfStrings(JsonArray array) {
+    if (array == null) {
+      return new LinkedHashSet<>();
+    }
+
+    return IntStream.range(0, array.size())
+      .mapToObj(array::getString)
+      .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  private static <T> Set<T> toSetOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {
+    if (array == null) {
+      return new LinkedHashSet<>();
+    }
+
+    return array.stream()
+      .map(JsonObject.class::cast)
+      .map(objectMapper)
+      .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
   private static AlternativeTitle mapJsonObjectToAlternativeTitle(JsonObject json) {
     return new AlternativeTitle()
       .withAlternativeTitleTypeId(json.getString("alternativeTitleTypeId"))
       .withAlternativeTitle(json.getString("alternativeTitle"))
-      .withAuthorityId(json.getString("authorityId"));
+      .withAuthorityId(json.getString(AUTHORITY_ID_FIELD));
   }
 
   private static Series mapJsonObjectToSeries(JsonObject json) {
     return new Series()
-      .withValue(json.getString("value"))
-      .withAuthorityId(json.getString("authorityId"));
+      .withValue(json.getString(VALUE_FIELD))
+      .withAuthorityId(json.getString(AUTHORITY_ID_FIELD));
   }
 
   private static Identifier mapJsonObjectToIdentifier(JsonObject json) {
     return new Identifier()
-      .withValue(json.getString("value"))
+      .withValue(json.getString(VALUE_FIELD))
       .withIdentifierTypeId(json.getString("identifierTypeId"));
   }
 
@@ -171,14 +180,14 @@ public final class InstanceUtil {
       .withContributorTypeId(json.getString("contributorTypeId"))
       .withContributorTypeText(json.getString("contributorTypeText"))
       .withContributorNameTypeId(json.getString("contributorNameTypeId"))
-      .withAuthorityId(json.getString("authorityId"))
+      .withAuthorityId(json.getString(AUTHORITY_ID_FIELD))
       .withPrimary(json.getBoolean("primary"));
   }
 
   private static Subject mapJsonObjectToSubject(JsonObject json) {
     return new Subject()
-      .withValue(json.getString("value"))
-      .withAuthorityId(json.getString("authorityId"));
+      .withValue(json.getString(VALUE_FIELD))
+      .withAuthorityId(json.getString(AUTHORITY_ID_FIELD));
   }
 
   private static Classification mapJsonObjectToClassification(JsonObject json) {

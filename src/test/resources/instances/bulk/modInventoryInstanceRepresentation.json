@@ -1,0 +1,155 @@
+{
+  "id": "0079916b-7b70-41d6-8c2d-3282b4f2e3d2",
+  "_version": 1,
+  "hrid": "in00001",
+  "source": "MARC",
+  "matchKey": "1579450",
+  "title": "The Journal of ecclesiastical history.",
+  "indexTitle": "Journal of ecclesiastical history.",
+  "alternativeTitles": [
+    {
+      "alternativeTitleTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+      "alternativeTitle": "Herpetological conservation and biology (Online)"
+    },
+    {
+      "alternativeTitleTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+      "alternativeTitle": "HCB"
+    },
+    {
+      "alternativeTitleTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+      "alternativeTitle": "testingAlternativeTitle"
+    }
+  ],
+  "editions": [
+    "1st Ballantine Books trade pbk. ed."
+  ],
+  "series": [
+    {
+      "value": "Smithsonian global sound for libraries."
+    }
+  ],
+  "identifiers": [
+    {
+      "value": "58020553",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "value": "0022-0469",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "value": "(CStRLIN)NYCX1604275S",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "value": "(NIC)notisABP6388",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "value": "366832",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "value": "(OCoLC)1604275",
+      "identifierTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Dugmore, C. W. (Clifford William)",
+      "contributorTypeText": "ed.",
+      "contributorNameTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+      "primary": false
+    }
+  ],
+  "subjects": [
+    {
+      "value": "Church history--Periodicals"
+    },
+    {
+      "value": "Church history"
+    },
+    {
+      "value": "Periodicals"
+    }
+  ],
+  "classifications": [
+    {
+      "classificationNumber": "BR140 .J6",
+      "classificationTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    },
+    {
+      "classificationNumber": "270.05",
+      "classificationTypeId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    }
+  ],
+  "publication": [
+    {
+      "publisher": "Cambridge University Press [etc.]",
+      "place": "London"
+    }
+  ],
+  "publicationFrequency": [
+    "Quarterly, 1970-",
+    "Semiannual, 1950-69"
+  ],
+  "publicationRange": [
+    "v. 1-   Apr. 1950-"
+  ],
+  "publicationPeriod": {
+    "start": 2000,
+    "end": 2001
+  },
+  "electronicAccess": [
+    {
+      "uri": "http://resolver.library.cornell.edu/cgi-bin/EADresolver?id=RMA01776",
+      "materialsSpecification": "Finding aid",
+      "relationshipId": "fe19bae4-da28-472b-be90-d442e2428ead"
+    }
+  ],
+  "instanceTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+  "instanceFormatIds": [
+    "5cb91d15-96b1-4b8a-bf60-ec310538da66"
+  ],
+  "physicalDescriptions": [
+    "v. 25 cm."
+  ],
+  "languages": [
+    "eng"
+  ],
+  "notes": [
+    {
+      "instanceNoteTypeId": "fe19bae4-da28-472b-be90-d442e2428ead",
+      "note": "Includes index",
+      "staffOnly": false
+    }
+  ],
+  "administrativeNotes": [],
+  "modeOfIssuanceId": "09314e47-4609-42e4-8fe5-a22cecc368bc",
+  "catalogedDate": "2020-08-17",
+  "previouslyHeld": true,
+  "staffSuppress": false,
+  "discoverySuppress": true,
+  "statisticalCodeIds": [
+    "53d5c842-67c1-4035-9964-29b25897222f"
+  ],
+  "sourceRecordFormat": "MARC-JSON",
+  "statusId": "52a2ff34-2a12-420d-8539-21aa8d3cf5d8",
+  "statusUpdatedDate": "1970-01-01T12:07:47.602+0000",
+  "tags": {
+    "tagList": [
+      "important"
+    ]
+  },
+  "natureOfContentTermIds": [
+    "96879b60-098b-453b-bf9a-c47866f1ab2a"
+  ],
+  "precedingTitles": [
+    {
+      "title": "Houston oil directory"
+    }
+  ],
+  "succeedingTitles": [],
+  "parentInstances": [],
+  "childInstances": []
+}

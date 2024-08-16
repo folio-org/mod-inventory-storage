@@ -15,8 +15,6 @@ import org.folio.services.s3storage.FolioS3ClientFactory;
 
 public class InstanceStorageInstancesBulkApi implements InstanceStorageInstancesBulk {
 
-  private static final Logger log = LogManager.getLogger();
-
   @Override
   public void postInstanceStorageInstancesBulk(InstanceBulkRequest bulkRequest, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
