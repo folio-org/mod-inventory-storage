@@ -1,5 +1,6 @@
 package org.folio.services.instance;
 
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.folio.rest.support.InstanceUtil.mapInstanceDtoJsonToInstance;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 
@@ -18,12 +19,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.SneakyThrows;
+import javax.ws.rs.ServerErrorException;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceBulkRequest;
@@ -41,6 +43,8 @@ import org.folio.services.s3storage.FolioS3ClientFactory;
 public class InstanceS3Service {
 
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
+  private static final String PRECEDING_SUCCEEDING_TITLES_CQL_BUILD_ERROR_MSG =
+    "buildPrecedingSucceedingTitlesCql:: Failed to build CQL wrapper for preceding and succeeding titles search";
   private static final String INSTANCES_PARALLEL_UPSERT_COUNT_PARAM = "bulk-processing.parallel.upsert.count";
   private static final String DEFAULT_INSTANCES_PARALLEL_UPSERT_COUNT = "10";
   private static final String PRECEDING_SUCCEEDING_TITLES_BY_INSTANCE_IDS_CQL =
@@ -155,26 +159,29 @@ public class InstanceS3Service {
       return Future.succeededFuture();
     }
 
-    CQLWrapper cqlQuery = buildPrecedingSucceedingTitleCql(instances);
+    CQLWrapper cqlQuery = buildPrecedingSucceedingTitlesCql(instances);
     return postgresClient.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery)
       .compose(v -> postgresClient.saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitles))
       .mapEmpty();
   }
 
-  @SneakyThrows
-  private CQLWrapper buildPrecedingSucceedingTitleCql(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances) {
-    String idsValue = instances.stream()
-      .map(Pair::getLeft)
-      .map(Instance::getId)
-      .collect(Collectors.joining(OR_OPERATOR));
+  private CQLWrapper buildPrecedingSucceedingTitlesCql(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances) {
+    try {
+      String idsValue = instances.stream()
+        .map(Pair::getLeft)
+        .map(Instance::getId)
+        .collect(Collectors.joining(OR_OPERATOR));
 
-    String cql = String.format(PRECEDING_SUCCEEDING_TITLES_BY_INSTANCE_IDS_CQL, idsValue);
-    return new CQLWrapper(new CQL2PgJSON(PRECEDING_SUCCEEDING_TITLE_TABLE + ".jsonb"), cql);
+      String cql = String.format(PRECEDING_SUCCEEDING_TITLES_BY_INSTANCE_IDS_CQL, idsValue);
+      return new CQLWrapper(new CQL2PgJSON(PRECEDING_SUCCEEDING_TITLE_TABLE + ".jsonb"), cql);
+    } catch (FieldException e) {
+      log.warn(PRECEDING_SUCCEEDING_TITLES_CQL_BUILD_ERROR_MSG, e);
+      throw new ServerErrorException(e.getMessage(), INTERNAL_SERVER_ERROR);
+    }
   }
 
-    private Future<InstanceBulkResponse> processSequentially(
-      List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances,
-      BulkProcessingContext bulkContext) {
+  private Future<InstanceBulkResponse> processSequentially(
+    List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances, BulkProcessingContext bulkContext) {
     AtomicInteger errorsCounter = new AtomicInteger();
     BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx, bulkContext);
 
@@ -213,7 +220,7 @@ public class InstanceS3Service {
 
   private void handleInstanceUpsertFailure(AtomicInteger errorsCounter, BulkProcessingErrorFileWriter errorsWriter,
                                            Instance instance, Throwable e) {
-    log.warn("handleInstanceUpsertFailure: Failed to process single instance upsert operation, instanceId: '{}'",
+    log.warn("handleInstanceUpsertFailure:: Failed to process single instance upsert operation, instanceId: '{}'",
       instance.getId(), e);
     errorsCounter.incrementAndGet();
     errorsWriter.write(instance, Instance::getId, e);
