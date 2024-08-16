@@ -32,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,7 +115,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldUpdateInstancesWithoutErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  public void shouldUpdateInstancesWithoutErrors()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
     // given
     List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_PATH))
       .stream()
@@ -125,8 +127,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_PATH));
     String bulkFilePath = s3Client.write(BULK_INSTANCES_PATH, inputStream);
 
-    IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
-    IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
+    final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
     PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
       existingInstance2.getId().toString(), null, "Houston oil directory", null, null);
@@ -160,7 +162,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldUpdateInstancesWithErrors() throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  public void shouldUpdateInstancesWithErrors()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
     // given
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
@@ -174,8 +177,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_TYPE_PATH));
     String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
 
-    IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
-    IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
+    final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
     // when
     InstanceBulkResponse bulkResponse = postInstancesBulk(new InstanceBulkRequest().withRecordsFileName(bulkFilePath));
@@ -188,7 +191,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     List<String> filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
     assertThat(filesList.size(), is(3));
     assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
-    List<String> errors = new BufferedReader(new InputStreamReader(s3Client.read(expectedErrorsFileName))).lines().toList();
+    List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
     assertThat(errors.size(), is(1));
 
     JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
@@ -240,6 +243,12 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private List<JsonObject> getPrecedingSucceedingTitlesByInstanceId(UUID instanceId) {
     return precedingSucceedingTitleClient.getByQuery(
       format("?query=succeedingInstanceId==%1$s+or+precedingInstanceId==%1$s", instanceId));
+  }
+
+  private List<String> readLinesFromInputStream(InputStream inputStream) throws IOException {
+    try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+      return bufferedReader.lines().toList();
+    }
   }
 
 }

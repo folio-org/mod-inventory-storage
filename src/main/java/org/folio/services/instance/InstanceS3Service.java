@@ -106,22 +106,6 @@ public class InstanceS3Service {
       .recover(e -> processSequentially(instancesPairs, bulkProcessingContext));
   }
 
-  private List<PrecedingSucceedingTitle> extractPrecedingSucceedingTitles(JsonObject instanceJson) {
-    List<PrecedingSucceedingTitle> titles = new ArrayList<>();
-    instanceJson.getJsonArray(PRECEDING_TITLES_FIELD).stream()
-      .map((JsonObject.class::cast))
-      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
-      .map(title -> title.withSucceedingInstanceId(instanceJson.getString(ID_FIELD)))
-      .forEach(titles::add);
-
-    instanceJson.getJsonArray(SUCCEEDING_TITLES_FIELD).stream()
-      .map((JsonObject.class::cast))
-      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
-      .map(title -> title.withPrecedingInstanceId(instanceJson.getString(ID_FIELD)))
-      .forEach(titles::add);
-    return titles;
-  }
-
   private Future<Void> upsert(List<Pair<Instance, List<PrecedingSucceedingTitle>>> instances) {
     List<Instance> instanceList = instances.stream().map(Pair::getLeft).toList();
 
@@ -136,6 +120,22 @@ public class InstanceS3Service {
         return Future.succeededFuture();
       })
       .compose(v -> updatePrecedingSucceedingTitles(instances));
+  }
+
+  private List<PrecedingSucceedingTitle> extractPrecedingSucceedingTitles(JsonObject instanceJson) {
+    List<PrecedingSucceedingTitle> titles = new ArrayList<>();
+    instanceJson.getJsonArray(PRECEDING_TITLES_FIELD).stream()
+      .map(JsonObject.class::cast)
+      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
+      .map(title -> title.withSucceedingInstanceId(instanceJson.getString(ID_FIELD)))
+      .forEach(titles::add);
+
+    instanceJson.getJsonArray(SUCCEEDING_TITLES_FIELD).stream()
+      .map(JsonObject.class::cast)
+      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
+      .map(title -> title.withPrecedingInstanceId(instanceJson.getString(ID_FIELD)))
+      .forEach(titles::add);
+    return titles;
   }
 
   private Future<Void> ensureInstancesWithNonMarcControlledFields(List<Instance> instances) {
@@ -228,10 +228,10 @@ public class InstanceS3Service {
 
   private Future<Void> uploadErrorsFiles(BulkProcessingContext bulkContext) {
     return Future.join(
-      vertx.executeBlocking(
-        () -> folioS3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
-      vertx.executeBlocking(
-        () -> folioS3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
+      vertx.executeBlocking(() ->
+        folioS3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
+      vertx.executeBlocking(() ->
+        folioS3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
       )
       .compose(v -> Future.join(
         vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
