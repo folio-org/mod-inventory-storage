@@ -6,7 +6,7 @@
 ### New APIs versions
 * Provides `subject-source 1.0`
 * Provides `subject-types 1.0`
-* Provides `instance-storage-bulk`
+* Provides `instance-storage-bulk 1.0`
 * Provides `instance-date-types 1.0`
 * Provides `instance-storage 10.1`
 * Requires `holdings-storage 6.1`
@@ -40,7 +40,7 @@
 * Bump `holdings-storage` from `6.0` to `7.0`
 * Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
 * Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
-* Add `folio-s3-client` ` 2.2.0`
+* Add `folio-s3-client` `2.2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 

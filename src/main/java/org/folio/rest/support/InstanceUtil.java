@@ -243,10 +243,10 @@ public final class InstanceUtil {
   }
 
   /**
-   * Copies fields from the source {@code sourceInstance} to the target {@code targetInstance}
-   * that are not controlled by underlying MARC record.
+   * Copies fields that are not controlled by underlying MARC record from the specified {@code sourceInstance}
+   * to the {@code targetInstance}.
    *
-   * @param targetInstance - instance object that is populated by not controlled by MARC fields values
+   * @param targetInstance - instance object that is populated with not controlled by MARC fields values
    * @param sourceInstance - instance object from which the field values will be copied
    */
   public static void copyNonMarcControlledFields(Instance targetInstance, Instance sourceInstance) {
