@@ -1,5 +1,7 @@
 package org.folio.services.caches;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -16,6 +18,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +34,9 @@ public class ConsortiumDataCache {
   private static final String EXPIRATION_TIME_PARAM = "cache.consortium-data.expiration.time.seconds";
   private static final String DEFAULT_EXPIRATION_TIME_SECONDS = "300";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1"; //NOSONAR
+  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants"; //NOSONAR
   private static final String USER_TENANTS_FIELD = "userTenants";
+  private static final String CONSORTIUM_TENANTS_FIELD = "tenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
   private static final String CONSORTIUM_ID_FIELD = "consortiumId";
 
@@ -72,39 +78,75 @@ public class ConsortiumDataCache {
       return Future.fromCompletionStage(cache.get(tenantId, (tenant, executor) -> loadConsortiumData(tenant, headers)));
     } catch (Exception e) {
       LOG.warn("getConsortiumData:: Error loading consortium data, tenantId: '{}'", tenantId, e);
-      return Future.failedFuture(e);
+      return failedFuture(e);
     }
   }
 
   private CompletableFuture<Optional<ConsortiumData>> loadConsortiumData(String tenantId, Map<String, String> headers) {
-    String okapiUrl = headers.get(URL);
-    WebClient client = WebClient.wrap(httpClient);
-    HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + USER_TENANTS_PATH);
-    headers.forEach(request::putHeader);
+    var request = getHttpRequest(headers, USER_TENANTS_PATH);
 
-    return request.send().compose(response -> {
-      if (response.statusCode() == HTTP_FORBIDDEN) {
-        LOG.info("loadConsortiumData:: Skipping for tenant {} because {} returns 403 (forbidden)",
-            tenantId, USER_TENANTS_PATH);
-        return Future.succeededFuture(Optional.<ConsortiumData>empty());
-      }
-      if (response.statusCode() != HTTP_OK) {
-        String msg = String.format("Error loading consortium data, tenantId: '%s' response status: '%s', body: '%s'",
-          tenantId, response.statusCode(), response.bodyAsString());
-        LOG.warn("loadConsortiumData:: {}", msg);
-        return Future.failedFuture(msg);
-      }
-      JsonArray userTenants = response.bodyAsJsonObject().getJsonArray(USER_TENANTS_FIELD);
-      if (userTenants.isEmpty()) {
-        return Future.succeededFuture(Optional.<ConsortiumData>empty());
-      }
+    return getResponse(tenantId, request)
+      .compose(responseBody -> {
+        if (responseBody.isEmpty()) {
+          return succeededFuture(Optional.<ConsortiumData>empty());
+        }
+        JsonArray userTenants = responseBody.get().getJsonArray(USER_TENANTS_FIELD);
+        if (userTenants.isEmpty()) {
+          return succeededFuture(Optional.<ConsortiumData>empty());
+        }
 
-      LOG.info("loadConsortiumData:: Consortium data was loaded, tenantId: '{}'", tenantId);
-      JsonObject userTenant = userTenants.getJsonObject(0);
-      return Future.succeededFuture(Optional.of(
-        new ConsortiumData(userTenant.getString(CENTRAL_TENANT_ID_FIELD), userTenant.getString(CONSORTIUM_ID_FIELD))));
-    }).toCompletionStage()
+        LOG.info("loadConsortiumData:: Consortium data was loaded, tenantId: '{}'", tenantId);
+        JsonObject userTenant = userTenants.getJsonObject(0);
+        var centralTenantId = userTenant.getString(CENTRAL_TENANT_ID_FIELD);
+        var consortiumId = userTenant.getString(CONSORTIUM_ID_FIELD);
+        return loadConsortiumTenants(consortiumId, tenantId, headers)
+          .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
+      })
+      .recover(throwable -> Future.succeededFuture(Optional.empty()))
+      .toCompletionStage()
       .toCompletableFuture();
   }
 
+  private Future<List<String>> loadConsortiumTenants(String consortiumId, String tenantId,
+                                                     Map<String, String> headers) {
+    var request = getHttpRequest(headers, CONSORTIUM_TENANTS_PATH.formatted(consortiumId));
+    return getResponse(tenantId, request)
+      .map(responseBody -> responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
+        .stream()
+        .map(o -> new JsonObject().mapTo(ConsortiumTenant.class))
+        .filter(consortiumTenant -> !consortiumTenant.isCentral())
+        .map(ConsortiumTenant::id)
+        .toList()).orElse(Collections.emptyList())
+      )
+      .recover(throwable -> succeededFuture(Collections.emptyList()));
+  }
+
+  private HttpRequest<Buffer> getHttpRequest(Map<String, String> headers, String path) {
+    String okapiUrl = headers.get(URL);
+    WebClient client = WebClient.wrap(httpClient);
+    HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + path);
+    headers.forEach(request::putHeader);
+    return request;
+  }
+
+  private Future<Optional<JsonObject>> getResponse(String tenantId, HttpRequest<Buffer> request) {
+    LOG.info("getResponse:: Try to request method='{}' uri='{}'", request.method().name(), request.uri());
+    return request.send().compose(response -> {
+      if (response.statusCode() == HTTP_FORBIDDEN) {
+        LOG.info("loadConsortiumData:: Skipping for tenant {} because {} returns 403 (forbidden)",
+          tenantId, USER_TENANTS_PATH);
+        return succeededFuture(Optional.empty());
+      }
+      if (response.statusCode() != HTTP_OK) {
+        String msg = String.format("Failed to request method='%s' uri='%s', status='%s', body='%s'",
+          request.method().name(), request.uri(), response.statusCode(), response.bodyAsString());
+        LOG.warn("getResponse:: {}", msg);
+        return failedFuture(msg);
+      }
+      var responseBody = response.bodyAsJsonObject();
+      return succeededFuture(Optional.of(responseBody));
+    });
+  }
+
+  record ConsortiumTenant(String id, boolean isCentral) { }
 }

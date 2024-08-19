@@ -43,8 +43,15 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
 
     var domainEvent = Json.decodeValue(kafkaRecord.value(), DomainEvent.class);
     var headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(kafkaRecord.headers()));
-    var synchronizationContext = new SynchronizationContext(consortiaDataCache, headers, vertx, httpClient);
-    return processor.process(domainEvent, kafkaRecord.key(), synchronizationContext);
+    return consortiaDataCache.getConsortiumData(headers)
+      .compose(consortiumData -> {
+        if (consortiumData.isPresent()) {
+          var synchronizationContext = new SynchronizationContext(consortiumData.get(), headers, vertx, httpClient);
+          return processor.process(domainEvent, kafkaRecord.key(), synchronizationContext);
+        } else {
+          return Future.succeededFuture(kafkaRecord.key());
+        }
+      });
   }
 
   private InventoryKafkaTopic getKafkaTopic(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {

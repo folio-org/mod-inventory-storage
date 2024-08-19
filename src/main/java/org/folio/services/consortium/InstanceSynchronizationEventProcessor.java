@@ -24,7 +24,6 @@ import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.services.caches.ConsortiumData;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.utils.ConsortiumUtils;
 
@@ -37,7 +36,6 @@ public class InstanceSynchronizationEventProcessor implements SynchronizationEve
     "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s"; //NOSONAR
   private static final String INSTANCES_PARALLEL_UPDATES_COUNT_PARAM =
     "instance-synchronization.parallel.updates.count";
-  private static final String DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT2 = "10";
   private static final int DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT = 10;
   private static final String LIMIT_QUERY_PARAM = "limit";
   private static final String TENANT_IDS_LIMIT = "1000";
@@ -55,39 +53,37 @@ public class InstanceSynchronizationEventProcessor implements SynchronizationEve
 
   @Override
   public Future<String> process(DomainEvent<?> event, String instanceId, SynchronizationContext context) {
+    LOG.debug("process:: Processing event, tenantId: '{}'", event.getTenant());
     try {
-      LOG.debug("handle:: Processing event, tenantId: '{}'", event.getTenant());
 
       if (event.getType() != UPDATE) {
         return Future.succeededFuture(instanceId);
       }
 
-      var consortiumDataFuture = context.consortiaDataCache().getConsortiumData(context.tenantId(), context.headers());
-      return consortiumDataFuture
-        .map(consortiumDataOptional -> consortiumDataOptional
-          .map(consortiumData -> ConsortiumUtils.isCentralTenant(event.getTenant(), consortiumData))
-          .orElse(false))
-        .compose(isCentralTenant -> Boolean.TRUE.equals(isCentralTenant)
-                                    ? synchronizeShadowInstances(event, instanceId, consortiumDataFuture.result().get(),
-          context)
-                                      .map(instanceId)
-                                    : Future.succeededFuture(instanceId))
-        .onFailure(e -> LOG.warn(EVENT_HANDLING_ERROR_MSG, event.getTenant(), instanceId, e));
+      var isCentralTenant = ConsortiumUtils.isCentralTenant(event.getTenant(), context.consortiaData());
+      if (isCentralTenant) {
+        return synchronizeShadowInstances(event, instanceId, context)
+          .map(instanceId)
+          .onFailure(e -> LOG.warn(EVENT_HANDLING_ERROR_MSG, event.getTenant(), instanceId, e));
+      } else {
+        return Future.succeededFuture(instanceId);
+      }
     } catch (Exception e) {
-      LOG.warn("handle:: Error while handling event for shadow instances synchronization", e);
+      LOG.warn("process:: Error while handling event for shadow instances synchronization", e);
       return Future.failedFuture(e);
     }
   }
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<?> event, String instanceId,
-                                                  ConsortiumData consortiumData, SynchronizationContext context) {
-    return getShadowInstancesTenantIds(consortiumData.consortiumId(), consortiumData.centralTenantId(), instanceId,
-      context)
+                                                  SynchronizationContext context) {
+    return getShadowInstancesTenantIds(instanceId, context)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, context));
   }
 
-  private Future<List<String>> getShadowInstancesTenantIds(String consortiumId, String centralTenantId,
-                                                           String instanceId, SynchronizationContext context) {
+  private Future<List<String>> getShadowInstancesTenantIds(String instanceId, SynchronizationContext context) {
+    var consortiumData = context.consortiaData();
+    var consortiumId = consortiumData.consortiumId();
+    var centralTenantId = consortiumData.centralTenantId();
     var headers = context.headers();
     String okapiUrl = headers.get(URL);
     String preparedPath = format(SHARING_INSTANCES_PATH, consortiumId, instanceId);

@@ -54,7 +54,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
 
   @Override
   public Future<Optional<ConsortiumData>> getConsortiumData(Map<String, String> headers) {
-    return consortiumDataCache.getConsortiumData(headers.get(TENANT), headers);
+    return consortiumDataCache.getConsortiumData(headers);
   }
 
   // Returns successful future if the sharing status is "IN_PROGRESS" or "COMPLETE"

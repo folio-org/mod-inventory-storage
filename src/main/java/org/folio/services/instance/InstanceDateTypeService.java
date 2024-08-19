@@ -1,7 +1,6 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Promise.promise;
-import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.persist.PgUtil.put;
 
 import io.vertx.core.Context;
@@ -15,7 +14,6 @@ import org.folio.rest.jaxrs.model.InstanceDateType;
 import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
 import org.folio.rest.jaxrs.model.InstanceDateTypes;
 import org.folio.rest.jaxrs.resource.InstanceDateTypes.GetInstanceDateTypesResponse;
-import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.InstanceDateTypeDomainEventPublisher;
@@ -48,21 +46,34 @@ public class InstanceDateTypeService {
   public Future<Response> patchInstanceDateTypes(String id, InstanceDateTypePatch entity) {
     return consortiumDataCache.getConsortiumData(okapiHeaders)
       .compose(consortiumData -> {
-        if (consortiumData.isPresent() && ConsortiumUtils.isCentralTenant(okapiHeaders, consortiumData.get())) {
-          return doPatch(id, entity);
+        if (consortiumData.isEmpty() || ConsortiumUtils.isCentralTenant(okapiHeaders, consortiumData.get())) {
+          return doUpdate(id, entity);
         } else {
           throw new BadRequestException("Action ‘UPDATE' is not supported for consortium member tenant.");
         }
       });
   }
 
-  private Future<Response> doPatch(String id, InstanceDateTypePatch entity) {
+  public Future<Response> putInstanceDateType(String id, InstanceDateType entity) {
     return repository.getById(id)
       .compose(oldDateType -> {
         final Promise<Response> putResult = promise();
 
-        put(INSTANCE_TABLE, oldDateType.withName(entity.getName()), id, okapiHeaders, vertxContext,
-          InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
+        put(INSTANCE_DATE_TYPE_TABLE, entity, id, okapiHeaders, vertxContext,
+          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult);
+
+        return putResult.future()
+          .onSuccess(eventPublisher.publishUpdated(oldDateType));
+      });
+  }
+
+  private Future<Response> doUpdate(String id, InstanceDateTypePatch entity) {
+    return repository.getById(id)
+      .compose(oldDateType -> {
+        final Promise<Response> putResult = promise();
+
+        put(INSTANCE_DATE_TYPE_TABLE, oldDateType.withName(entity.getName()), id, okapiHeaders, vertxContext,
+          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult);
 
         return putResult.future()
           .onSuccess(eventPublisher.publishUpdated(oldDateType));

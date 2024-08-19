@@ -17,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,7 +81,7 @@ public class ConsortiumServiceImplTest {
   @Test
   public void shouldCreateSharedInstance(TestContext context) {
     Async async = context.async();
-    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID);
+    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
     JsonObject sharingInstance = new JsonObject()
       .put(SOURCE_TENANT_ID_FIELD, CENTRAL_TENANT_ID)
@@ -109,7 +110,7 @@ public class ConsortiumServiceImplTest {
   @Test
   public void shouldReturnFailureForSharingErrorStatus(TestContext context) {
     Async async = context.async();
-    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID);
+    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
     JsonObject sharingInstance = new JsonObject()
       .put(SOURCE_TENANT_ID_FIELD, CENTRAL_TENANT_ID)
@@ -133,7 +134,7 @@ public class ConsortiumServiceImplTest {
   @Test
   public void shouldReturnFailureForErrorOnSharing(TestContext context) {
     Async async = context.async();
-    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID);
+    ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
     WireMock.stubFor(post(INSTANCE_SHARE_PATH).willReturn(WireMock.serverError()));
 
@@ -180,7 +181,7 @@ public class ConsortiumServiceImplTest {
   public void shouldGetConsortiumData(TestContext testContext) {
     Async async = testContext.async();
 
-    ConsortiumData consortiumData = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID);
+    ConsortiumData consortiumData = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
     when(consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders))
       .thenReturn(Future.succeededFuture(Optional.of(consortiumData)));
 
