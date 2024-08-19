@@ -81,9 +81,9 @@ public class InstanceS3Service {
    * and their associated errors to S3-compatible storage.
    *
    * @param bulkRequest - {@link InstanceBulkRequest} containing processing errors count, and names of uploaded files
-   * with failed instances and their associated processing errors
+   *   with failed instances and their associated processing errors
    * @return a {@link Future} that will complete with an {@link InstanceBulkResponse} indicating the result
-   * of the bulk processing operation, including any errors encountered
+   *   of the bulk processing operation, including any errors encountered
    */
   public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest) {
     log.debug("processInstances:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());

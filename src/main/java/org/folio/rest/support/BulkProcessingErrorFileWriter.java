@@ -70,7 +70,7 @@ public class BulkProcessingErrorFileWriter {
    * @param entityIdExtractor - a {@link Function} that extracts the ID from the {@code entity}
    * @param throwable         - the {@link Throwable} containing the error information to be written to the errors file
    * @return {@link Future} representing the completion of write operations to file with failed entities
-   * and to file containing their associated errors information
+   *   and to file containing their associated errors information
    * @throws IllegalStateException if the writer is not initialized
    */
   public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, Throwable throwable) {
