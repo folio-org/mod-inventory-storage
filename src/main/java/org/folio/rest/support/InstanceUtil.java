@@ -131,7 +131,7 @@ public final class InstanceUtil {
 
     return IntStream.range(0, array.size())
       .mapToObj(array::getString)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   private static <T> List<T> toListOfObjects(JsonArray array, Function<JsonObject, T> objectMapper) {

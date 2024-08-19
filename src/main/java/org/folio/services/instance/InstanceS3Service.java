@@ -58,6 +58,8 @@ public class InstanceS3Service {
   private static final String SUCCEEDING_TITLES_FIELD = "succeedingTitles";
   private static final String OR_OPERATOR = " or ";
   private static final String ID_FIELD = "id";
+  private static final boolean APPLY_UPSERT = true;
+  private static final boolean APPLY_OPTIMISTIC_LOCKING = true;
 
   private final FolioS3ClientFactory folioS3ClientFactory;
   private final Vertx vertx;
@@ -124,7 +126,7 @@ public class InstanceS3Service {
     List<Instance> instanceList = instances.stream().map(Pair::getLeft).toList();
 
     return ensureInstancesWithNonMarcControlledFields(instanceList)
-      .compose(v -> instanceService.createInstances(instanceList, true, true))
+      .compose(v -> instanceService.createInstances(instanceList, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING))
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
