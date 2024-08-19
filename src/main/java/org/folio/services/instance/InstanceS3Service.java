@@ -74,6 +74,17 @@ public class InstanceS3Service {
     this.postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
   }
 
+  /**
+   * Processes a bulk request for instances by loading instances from the specified file in {@link InstanceBulkRequest}
+   * located on S3-compatible storage, and upserts them into the database.
+   * If an errors occurs during the processing, the method uploads two files containing the failed instances
+   * and their associated errors to S3-compatible storage.
+   *
+   * @param bulkRequest - {@link InstanceBulkRequest} containing processing errors count, and names of uploaded files
+   * with failed instances and their associated processing errors
+   * @return a {@link Future} that will complete with an {@link InstanceBulkResponse} indicating the result
+   * of the bulk processing operation, including any errors encountered
+   */
   public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest) {
     log.debug("processInstances:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());
     return loadInstances(bulkRequest)

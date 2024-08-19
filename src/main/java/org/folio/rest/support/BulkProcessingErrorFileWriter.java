@@ -59,6 +59,20 @@ public class BulkProcessingErrorFileWriter {
       : Future.succeededFuture();
   }
 
+  /**
+   * Writes the {@code entity} and its associated processing error information to separate files.
+   * <em><strong>Note</strong></em>: this method call should be preceded
+   * by {@link BulkProcessingErrorFileWriter#initialize()} method call to initialize writer.
+   * The method will throw {@link IllegalStateException} if the writer is not initialized.
+   *
+   * @param <T>               - the type of the entity to be written
+   * @param entity            - the entity to be written to the failed entities file
+   * @param entityIdExtractor - a {@link Function} that extracts the ID from the {@code entity}
+   * @param throwable         - the {@link Throwable} containing the error information to be written to the errors file
+   * @return {@link Future} representing the completion of write operations to file with failed entities
+   * and to file containing their associated errors information
+   * @throws IllegalStateException if the writer is not initialized
+   */
   public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, Throwable throwable) {
     if (!isInitialized()) {
       throw new IllegalStateException(WRITER_IS_NOT_INITIALIZED_MSG);
