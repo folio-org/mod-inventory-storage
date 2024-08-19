@@ -336,11 +336,13 @@
         },
         "date1": {
           "type": "string",
-          "description": "Date 1"
+          "description": "Date 1",
+          "maxLength": 4
         },
         "date2": {
           "type": "string",
-          "description": "Date 2"
+          "description": "Date 2",
+          "maxLength": 4
         }
       },
       "additionalProperties": false
