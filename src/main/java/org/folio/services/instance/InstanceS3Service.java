@@ -187,7 +187,7 @@ public class InstanceS3Service {
 
     return errorsWriter.initialize()
       .map(v -> processInBatches(instances, instancePair -> upsert(List.of(instancePair))
-        .onFailure(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
+        .recover(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
       .eventually(errorsWriter::close)
       .eventually(() -> uploadErrorsFiles(bulkContext))
       .transform(ar -> Future.succeededFuture(new InstanceBulkResponse()
@@ -218,12 +218,13 @@ public class InstanceS3Service {
     return Future.join(futures);
   }
 
-  private void handleInstanceUpsertFailure(AtomicInteger errorsCounter, BulkProcessingErrorFileWriter errorsWriter,
-                                           Instance instance, Throwable e) {
+  private Future<Void> handleInstanceUpsertFailure(AtomicInteger errorsCounter,
+                                                   BulkProcessingErrorFileWriter errorsWriter,
+                                                   Instance instance, Throwable e) {
     log.warn("handleInstanceUpsertFailure:: Failed to process single instance upsert operation, instanceId: '{}'",
       instance.getId(), e);
     errorsCounter.incrementAndGet();
-    errorsWriter.write(instance, Instance::getId, e);
+    return errorsWriter.write(instance, Instance::getId, e);
   }
 
   private Future<Void> uploadErrorsFiles(BulkProcessingContext bulkContext) {
