@@ -2,6 +2,10 @@ package org.folio.services;
 
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * Encapsulates the context for bulk processing of entities from external file.
+ * Holds the file paths necessary for bulk processing operation.
+ */
 public class BulkProcessingContext {
 
   private static final String ROOT_FOLDER = "temp/";

@@ -23,6 +23,9 @@ import org.folio.rest.jaxrs.model.Series;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.model.Tags;
 
+/**
+ * Class that provides utility methods for work with instance.
+ */
 public final class InstanceUtil {
 
   public static final String ID_FIELD = "id";
@@ -65,6 +68,7 @@ public final class InstanceUtil {
   public static final String VALUE_FIELD = "value";
 
   private InstanceUtil() {
+    throw new UnsupportedOperationException("Cannot instantiate utility class");
   }
 
   /**

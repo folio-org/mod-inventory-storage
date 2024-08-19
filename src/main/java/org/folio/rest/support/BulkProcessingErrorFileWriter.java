@@ -12,6 +12,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.services.BulkProcessingContext;
 
+/**
+ * The class is responsible for writing entities and their associated processing errors to separate files
+ * during a bulk processing operation. The failed entities and processing errors are written to separate files,
+ * which are specified through the {@link BulkProcessingContext}.
+ * Before using the {@link #write(Object, Function, Throwable)} method, the writer must be initialized
+ * by calling {@link #initialize()}.
+ * When writing operations are completed, the {@link #close()} method should be called
+ * to flush and close files properly.
+ */
 public class BulkProcessingErrorFileWriter {
 
   private static final Logger log = LogManager.getLogger(BulkProcessingErrorFileWriter.class);
@@ -67,7 +76,7 @@ public class BulkProcessingErrorFileWriter {
    *
    * @param <T>               - the type of the entity to be written
    * @param entity            - the entity to be written to the failed entities file
-   * @param entityIdExtractor - a {@link Function} that extracts the ID from the {@code entity}
+   * @param entityIdExtractor - {@link Function} that extracts the ID from the specified {@code entity}
    * @param throwable         - the {@link Throwable} containing the error information to be written to the errors file
    * @return {@link Future} representing the completion of write operations to file with failed entities
    *   and to file containing their associated errors information

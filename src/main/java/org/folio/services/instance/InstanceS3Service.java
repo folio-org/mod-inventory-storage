@@ -40,6 +40,10 @@ import org.folio.s3.client.FolioS3Client;
 import org.folio.services.BulkProcessingContext;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 
+/**
+ * The service that interacts with S3-compatible storage to perform upsert operations on instances retrieved
+ * from external file. The file to be processed is specified through {@link InstanceBulkRequest}.
+ */
 public class InstanceS3Service {
 
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
@@ -80,16 +84,15 @@ public class InstanceS3Service {
    * If an errors occurs during the processing, the method uploads two files containing the failed instances
    * and their associated errors to S3-compatible storage.
    *
-   * @param bulkRequest - {@link InstanceBulkRequest} containing processing errors count, and names of uploaded files
-   *   with failed instances and their associated processing errors
-   * @return a {@link Future} that will complete with an {@link InstanceBulkResponse} indicating the result
-   *   of the bulk processing operation, including any errors encountered
+   * @param bulkRequest - bulk instances request containing external file to be processed
+   * @return {@link Future} of {@link InstanceBulkResponse} containing errors count, and files with failed instances
+   *   and errors encountered during processing
    */
   public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest) {
     log.debug("processInstances:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());
     return loadInstances(bulkRequest)
       .compose(instances -> upsert(instances, bulkRequest))
-      .onFailure(e -> log.warn("Failed to process instances bulk request, filename: '{}'",
+      .onFailure(e -> log.warn("processInstances:: Failed to process instances bulk request, filename: '{}'",
         bulkRequest.getRecordsFileName(), e));
   }
 
@@ -150,13 +153,13 @@ public class InstanceS3Service {
   }
 
   private Future<Void> ensureInstancesWithNonMarcControlledFields(List<Instance> instances) {
-    return instanceRepository.getById(instances, Instance::getId).map(existingInstances -> {
+    return instanceRepository.getById(instances, Instance::getId).compose(existingInstances -> {
       instances.forEach(instance -> {
         if (existingInstances.get(instance.getId()) != null) {
           InstanceUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));
         }
       });
-      return null;
+      return Future.succeededFuture();
     });
   }
 
