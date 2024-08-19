@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.utils.ConsortiumUtils.getConsortiumDataCache;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.DeploymentOptions;
@@ -11,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.caches.ConsortiumDataCache;
-import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
+import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -53,7 +55,7 @@ public class InitApiImpl implements InitAPI {
       .setWorker(true)
       .setInstances(1);
 
-    return vertx.deployVerticle(() -> new ShadowInstanceSynchronizationVerticle(consortiumDataCache), options)
+    return vertx.deployVerticle(() -> new SynchronizationVerticle(consortiumDataCache), options)
       .onSuccess(v -> log.info("initShadowInstanceSynchronizationVerticle:: "
         + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
       .onFailure(e -> log.error("initShadowInstanceSynchronizationVerticle:: "
@@ -66,8 +68,5 @@ public class InitApiImpl implements InitAPI {
     context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
   }
 
-  private ConsortiumDataCache getConsortiumDataCache(Context context) {
-    return context.get(ConsortiumDataCache.class.getName());
-  }
 
 }

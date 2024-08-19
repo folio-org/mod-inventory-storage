@@ -70,8 +70,8 @@ public class ConsortiumDataCacheTest {
       context.assertTrue(ar.succeeded());
       context.assertTrue(ar.result().isPresent());
       ConsortiumData consortiumData = ar.result().get();
-      context.assertEquals(expectedCentralTenantId, consortiumData.getCentralTenantId());
-      context.assertEquals(expectedConsortiumId, consortiumData.getConsortiumId());
+      context.assertEquals(expectedCentralTenantId, consortiumData.centralTenantId());
+      context.assertEquals(expectedConsortiumId, consortiumData.consortiumId());
       async.complete();
     });
   }

@@ -3,6 +3,7 @@ package org.folio.services.caches;
 import static io.vertx.core.http.HttpMethod.GET;
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 
 import com.github.benmanes.caffeine.cache.AsyncCache;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,6 +49,19 @@ public class ConsortiumDataCache {
   /**
    * Returns consortium data by specified {@code tenantId}.
    *
+   * @param headers - okapi headers
+   * @return future of Optional with consortium data for the specified {@code tenantId},
+   *   if the specified {@code tenantId} is not included to any consortium, then returns future with empty Optional
+   */
+  public Future<Optional<ConsortiumData>> getConsortiumData(Map<String, String> headers) {
+    Map<String, String> caseInsensitiveHeaders = new CaseInsensitiveMap<>(headers);
+    String tenantId = caseInsensitiveHeaders.get(TENANT);
+    return getConsortiumData(tenantId, headers);
+  }
+
+  /**
+   * Returns consortium data by specified {@code tenantId}.
+   *
    * @param tenantId - tenant id
    * @param headers  - okapi headers
    * @return future of Optional with consortium data for the specified {@code tenantId},
@@ -54,7 +69,7 @@ public class ConsortiumDataCache {
    */
   public Future<Optional<ConsortiumData>> getConsortiumData(String tenantId, Map<String, String> headers) {
     try {
-      return Future.fromCompletionStage(cache.get(tenantId, (key, executor) -> loadConsortiumData(key, headers)));
+      return Future.fromCompletionStage(cache.get(tenantId, (tenant, executor) -> loadConsortiumData(tenant, headers)));
     } catch (Exception e) {
       LOG.warn("getConsortiumData:: Error loading consortium data, tenantId: '{}'", tenantId, e);
       return Future.failedFuture(e);

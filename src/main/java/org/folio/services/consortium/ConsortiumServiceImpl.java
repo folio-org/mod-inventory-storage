@@ -41,7 +41,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   public Future<SharingInstance> createShadowInstance(String instanceId, ConsortiumData consortiumData,
                                                       Map<String, String> headers) {
     SharingInstance sharingInstance = new SharingInstance();
-    String centralTenantId = consortiumData.getCentralTenantId();
+    String centralTenantId = consortiumData.centralTenantId();
     sharingInstance.setSourceTenantId(centralTenantId);
     sharingInstance.setInstanceIdentifier(UUID.fromString(instanceId));
     sharingInstance.setTargetTenantId(headers.get(TENANT));
@@ -49,7 +49,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
     Map<String, String> requestHeaders = new CaseInsensitiveMap<>(headers);
     requestHeaders.put(TENANT, centralTenantId);
 
-    return shareInstance(consortiumData.getConsortiumId(), sharingInstance, requestHeaders);
+    return shareInstance(consortiumData.consortiumId(), sharingInstance, requestHeaders);
   }
 
   @Override
