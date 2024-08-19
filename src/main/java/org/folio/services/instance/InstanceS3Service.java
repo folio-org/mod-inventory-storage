@@ -197,7 +197,7 @@ public class InstanceS3Service {
     BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx, bulkContext);
 
     return errorsWriter.initialize()
-      .map(v -> processInBatches(instances, instancePair -> upsert(List.of(instancePair))
+      .compose(v -> processInBatches(instances, instancePair -> upsert(List.of(instancePair))
         .recover(e -> handleInstanceUpsertFailure(errorsCounter, errorsWriter, instancePair.getLeft(), e))))
       .eventually(errorsWriter::close)
       .eventually(() -> uploadErrorsFiles(bulkContext))
