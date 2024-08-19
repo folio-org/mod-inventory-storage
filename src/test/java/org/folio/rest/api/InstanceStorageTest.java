@@ -42,7 +42,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import io.vertx.core.json.JsonArray;
@@ -56,7 +55,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,14 +74,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.rest.jaxrs.model.Dates;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.Note;
-import org.folio.rest.jaxrs.model.Publication;
-import org.folio.rest.jaxrs.model.PublicationPeriod;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -107,6 +104,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
+  private static final String DATES_KEY = "dates";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();
@@ -189,13 +187,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .map(NatureOfContentTerm::getId)
       .toArray(String[]::new);
 
-    var publication = new Publication().withDateOfPublication("2000-2001");
     String adminNote = "Administrative note";
+    var dates = new Dates()
+      .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
+      .withDate1("2023")
+      .withDate2("2024");
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
-    instanceToCreate.put("publication", new JsonArray().add(pojo2JsonObject(publication)));
     instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
+    instanceToCreate.put(DATES_KEY, pojo2JsonObject(dates));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -248,10 +249,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     instanceMessageChecks.createdMessagePublished(instanceFromGet);
 
-    var storedPublicationPeriod = instance.getJsonObject("publicationPeriod")
-      .mapTo(PublicationPeriod.class);
-    assertThat(storedPublicationPeriod.getStart(), is(2000));
-    assertThat(storedPublicationPeriod.getEnd(), is(2001));
+    var storedDates = instance.getJsonObject(DATES_KEY)
+      .mapTo(Dates.class);
+
+    assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
+    assertThat(storedDates.getDate1(), is("2023"));
+    assertThat(storedDates.getDate2(), is("2024"));
   }
 
   @Test
@@ -2623,22 +2626,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertSuppressedFromDiscovery(instance.getId().toString());
 
     instanceMessageChecks.updatedMessagePublished(instance.getJson(), updateInstance.getJson());
-  }
-
-  @Test
-  public void canUpdateInstanceWithPublicationPeriod() throws Exception {
-    var entity = smallAngryPlanet(UUID.randomUUID()).mapTo(Instance.class)
-      .withPublication(Collections.singletonList(new Publication().withDateOfPublication("1997")));
-
-    IndividualResource instance = createInstance(pojo2JsonObject(entity));
-    entity = instance.getJson().mapTo(Instance.class)
-      .withPublication(Collections.singletonList(new Publication().withDateOfPublication("2006")));
-
-    final IndividualResource updateInstance = updateInstance(pojo2JsonObject(entity));
-
-    assertEquals(Integer.valueOf(2006),
-      updateInstance.getJson().mapTo(Instance.class).getPublicationPeriod().getStart());
-
   }
 
   @Test

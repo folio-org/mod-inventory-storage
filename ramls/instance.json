@@ -325,6 +325,26 @@
         ]
       }
     },
+    "dates": {
+      "type": "object",
+      "description": "Instance Dates",
+      "properties": {
+        "dateTypeId": {
+          "type": "string",
+          "description": "Date type ID",
+          "$ref": "uuid.json"
+        },
+        "date1": {
+          "type": "string",
+          "description": "Date 1"
+        },
+        "date2": {
+          "type": "string",
+          "description": "Date 2"
+        }
+      },
+      "additionalProperties": false
+    },
     "instanceTypeId": {
       "type": "string",
       "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
