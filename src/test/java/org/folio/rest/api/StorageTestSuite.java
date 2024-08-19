@@ -38,7 +38,6 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   AsyncMigrationTest.class,
-  PublicationPeriodMigrationTest.class,
   CallNumberUtilsTest.class,
   InstanceStorageTest.class,
   RecordBulkTest.class,

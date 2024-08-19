@@ -41,7 +41,6 @@ public final class AsyncMigrationsConsumerUtils {
         headers.put(TENANT_HEADER, tenantId);
 
         var availableMigrations = Set.of(
-          new PublicationPeriodMigrationService(vertxContext, headers),
           new ShelvingOrderAsyncMigrationService(vertxContext, headers),
           new SubjectSeriesMigrationService(vertxContext, headers));
         var jobService = new AsyncMigrationJobService(vertxContext, headers);
