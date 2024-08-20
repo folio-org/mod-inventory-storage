@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.InstanceUtil.ADMINISTRATIVE_NOTES_FIELD;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
@@ -197,6 +198,14 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
     instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+  }
+
+  @Test
+  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecify()
+    throws ExecutionException, InterruptedException, TimeoutException {
+    CompletableFuture<Response> future = getClient().post(instancesBulk(), new InstanceBulkRequest(), TENANT_ID);
+    Response response = future.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   private JsonObject buildInstance(String id, String title) {
