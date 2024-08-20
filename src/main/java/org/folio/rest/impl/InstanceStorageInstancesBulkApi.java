@@ -18,7 +18,7 @@ public class InstanceStorageInstancesBulkApi implements InstanceStorageInstances
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
     new InstanceS3Service(new FolioS3ClientFactory(), vertxContext.owner(), okapiHeaders)
-      .processInstances(bulkRequest)
+      .processBulkUpsert(bulkRequest)
       .map(PostInstanceStorageInstancesBulkResponse::respond201WithApplicationJson)
       .map(Response.class::cast)
       .onFailure(EndpointFailureHandler::failureResponse)

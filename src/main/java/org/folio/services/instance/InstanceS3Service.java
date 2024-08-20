@@ -61,9 +61,8 @@ public class InstanceS3Service {
   private static final boolean APPLY_UPSERT = true;
   private static final boolean APPLY_OPTIMISTIC_LOCKING = true;
 
-  private final FolioS3ClientFactory folioS3ClientFactory;
   private final Vertx vertx;
-  private final FolioS3Client folioS3Client;
+  private final FolioS3Client s3Client;
   private final InstanceService instanceService;
   private final PostgresClient postgresClient;
   private final InstanceRepository instanceRepository;
@@ -73,8 +72,7 @@ public class InstanceS3Service {
     this.instancesParallelUpsertLimit = Integer.parseInt(
       System.getProperty(INSTANCES_PARALLEL_UPSERT_COUNT_PARAM, DEFAULT_INSTANCES_PARALLEL_UPSERT_COUNT));
     this.vertx = vertx;
-    this.folioS3ClientFactory = folioS3ClientFactory;
-    this.folioS3Client = folioS3ClientFactory.getFolioS3Client();
+    this.s3Client = folioS3ClientFactory.getFolioS3Client();
     this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
     this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
     this.postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
@@ -90,17 +88,16 @@ public class InstanceS3Service {
    * @return {@link Future} of {@link InstanceBulkResponse} containing errors count, and files with failed instances
    *   and errors encountered during processing
    */
-  public Future<InstanceBulkResponse> processInstances(InstanceBulkRequest bulkRequest) {
-    log.debug("processInstances:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());
+  public Future<InstanceBulkResponse> processBulkUpsert(InstanceBulkRequest bulkRequest) {
+    log.debug("processBulkUpsert:: Processing bulk instances request, filename: '{}'", bulkRequest.getRecordsFileName());
     return loadInstances(bulkRequest)
-      .compose(instances -> upsert(instances, bulkRequest))
-      .onFailure(e -> log.warn("processInstances:: Failed to process instances bulk request, filename: '{}'",
+      .compose(instances -> upsertInstances(instances, bulkRequest))
+      .onFailure(e -> log.warn("processBulkUpsert:: Failed to process instances bulk request, filename: '{}'",
         bulkRequest.getRecordsFileName(), e));
   }
 
   private Future<List<JsonObject>> loadInstances(InstanceBulkRequest bulkRequest) {
     return vertx.executeBlocking(() -> {
-      FolioS3Client s3Client = folioS3ClientFactory.getFolioS3Client();
       InputStream inputStream = s3Client.read(bulkRequest.getRecordsFileName());
 
       try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
@@ -111,7 +108,7 @@ public class InstanceS3Service {
     });
   }
 
-  private Future<InstanceBulkResponse> upsert(List<JsonObject> instances, InstanceBulkRequest bulkRequest) {
+  private Future<InstanceBulkResponse> upsertInstances(List<JsonObject> instances, InstanceBulkRequest bulkRequest) {
     BulkProcessingContext bulkProcessingContext = new BulkProcessingContext(bulkRequest.getRecordsFileName());
     List<Pair<Instance, List<PrecedingSucceedingTitle>>> instancesPairs = instances.stream()
       .map(json -> Pair.of(mapInstanceDtoJsonToInstance(json), extractPrecedingSucceedingTitles(json)))
@@ -246,17 +243,17 @@ public class InstanceS3Service {
   private Future<Void> uploadErrorsFiles(BulkProcessingContext bulkContext) {
     return Future.join(
       vertx.executeBlocking(() ->
-        folioS3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
+        s3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
       vertx.executeBlocking(() ->
-        folioS3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
-      )
-      .compose(v -> Future.join(
-        vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
-        vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
-      ))
-      .onFailure(
-        e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
-      .mapEmpty();
+        s3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
+    )
+    .compose(v -> Future.join(
+      vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
+      vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
+    ))
+    .onFailure(
+      e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
+    .mapEmpty();
   }
 
 }
