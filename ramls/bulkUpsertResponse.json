@@ -1,11 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Bulk instances upsert response",
+  "description": "Bulk entities upsert response",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "errorRecordsFileName": {
-      "description": "File name of error authorities",
+      "description": "File name of failed entities",
       "type": "string"
     },
     "errorsFileName": {
