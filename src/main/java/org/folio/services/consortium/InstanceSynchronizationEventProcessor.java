@@ -121,7 +121,7 @@ public class InstanceSynchronizationEventProcessor implements SynchronizationEve
 
       Future<CompositeFuture> future = Future.succeededFuture();
       for (List<String> tenantsChunk : tenantsChunks) {
-        future = future.eventually(v -> updateShadowInstances(tenantsChunk, instance, context));
+        future = future.eventually(() -> updateShadowInstances(tenantsChunk, instance, context));
       }
       return future.mapEmpty();
     } catch (Exception e) {

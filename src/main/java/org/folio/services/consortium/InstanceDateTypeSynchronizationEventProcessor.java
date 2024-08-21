@@ -11,25 +11,28 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
 import org.folio.services.instance.InstanceDateTypeService;
+import org.folio.utils.ConsortiumUtils;
 
 public class InstanceDateTypeSynchronizationEventProcessor implements SynchronizationEventProcessor<InstanceDateType> {
 
   private static final Logger LOG = LogManager.getLogger(InstanceDateTypeSynchronizationEventProcessor.class);
 
   @Override
-  public Future<String> process(DomainEvent<?> event, String typeId, SynchronizationContext synchronizationContext) {
+  public Future<String> process(DomainEvent<?> event, String typeId, SynchronizationContext context) {
     LOG.debug("process:: Processing event, tenantId: '{}'", event.getTenant());
-    if (event.getType() != DomainEventType.UPDATE) {
+    if (!ConsortiumUtils.isCentralTenant(event.getTenant(), context.consortiaData())
+        || event.getType() != DomainEventType.UPDATE) {
       return Future.succeededFuture(typeId);
     }
     try {
       var dateType = PostgresClient.pojo2JsonObject(event.getNewEntity()).mapTo(InstanceDateType.class);
-      var vertxContext = synchronizationContext.vertx().getOrCreateContext();
-      var headers = synchronizationContext.headers();
+      var vertxContext = context.vertx().getOrCreateContext();
+      var headers = context.headers();
       var future = Future.succeededFuture(typeId);
-      for (String memberTenant : synchronizationContext.consortiaData().memberTenants()) {
+      for (String memberTenant : context.consortiaData().memberTenants()) {
+        vertxContext.putLocal("folio_tenantid", memberTenant);
         headers.put(TENANT, memberTenant);
-        future.eventually(() -> new InstanceDateTypeService(vertxContext, headers)
+        future = future.eventually(() -> new InstanceDateTypeService(vertxContext, headers)
           .putInstanceDateType(dateType.getId(), dateType)
         );
       }

@@ -34,7 +34,7 @@ public class ConsortiumDataCache {
   private static final String EXPIRATION_TIME_PARAM = "cache.consortium-data.expiration.time.seconds";
   private static final String DEFAULT_EXPIRATION_TIME_SECONDS = "300";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1"; //NOSONAR
-  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants"; //NOSONAR
+  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants";
   private static final String USER_TENANTS_FIELD = "userTenants";
   private static final String CONSORTIUM_TENANTS_FIELD = "tenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
@@ -102,7 +102,7 @@ public class ConsortiumDataCache {
         return loadConsortiumTenants(consortiumId, tenantId, headers)
           .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
       })
-      .recover(throwable -> Future.succeededFuture(Optional.empty()))
+      .recover(throwable -> succeededFuture(Optional.empty()))
       .toCompletionStage()
       .toCompletableFuture();
   }
@@ -113,7 +113,7 @@ public class ConsortiumDataCache {
     return getResponse(tenantId, request)
       .map(responseBody -> responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
         .stream()
-        .map(o -> new JsonObject().mapTo(ConsortiumTenant.class))
+        .map(o -> ((JsonObject) o).mapTo(ConsortiumTenant.class))
         .filter(consortiumTenant -> !consortiumTenant.isCentral())
         .map(ConsortiumTenant::id)
         .toList()).orElse(Collections.emptyList())

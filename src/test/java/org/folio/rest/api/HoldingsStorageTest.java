@@ -26,6 +26,9 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.ModuleUtility.prepareTenant;
 import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
+import static org.folio.utility.RestUtility.CONSORTIUM_ID;
+import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import static org.hamcrest.CoreMatchers.allOf;
@@ -73,6 +76,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
@@ -100,14 +104,14 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
-  public static final String NEW_TEST_TAG = "new test tag";
+
   private static final Logger log = LogManager.getLogger();
+
+  private static final String NEW_TEST_TAG = "new test tag";
   private static final String TAG_VALUE = "test-tag";
-  private static final String X_OKAPI_URL = "X-Okapi-Url";
-  private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
-  private static final String CONSORTIUM_MEMBER_TENANT = "consortium";
   private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "nopermissions";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants".formatted(CONSORTIUM_ID);
   private static final UUID[] HOLDING_SOURCE_IDS = {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b00"),
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
@@ -118,32 +122,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
-
-  @SneakyThrows
-  @BeforeClass
-  public static void beforeClass() {
-    prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
-
-    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
-    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "instance_relationship");
-    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "bound_with_part");
-    clearData(CONSORTIUM_MEMBER_TENANT);
-
-    setupMaterialTypes(CONSORTIUM_MEMBER_TENANT);
-    setupLoanTypes(CONSORTIUM_MEMBER_TENANT);
-    setupLocations(CONSORTIUM_MEMBER_TENANT);
-
-    prepareTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS, false);
-    prepareThreeHoldingSource();
-  }
-
-
-  @SneakyThrows
-  @AfterClass
-  public static void afterClass() {
-    removeTenant(CONSORTIUM_MEMBER_TENANT);
-    removeTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS);
-  }
 
   @SneakyThrows
   @Before
@@ -166,23 +144,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     WireMock.reset();
     mockUserTenantsForNonConsortiumMember();
     mockUserTenantsForConsortiumMember();
+    mockConsortiumTenants();
     mockUserTenantsForTenantWithoutPermissions();
-  }
-
-  private void canPostSynchronousBatchUnsafeAndCreateShadowInstance(String subpath) {
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    mockSharingInstance();
-
-    JsonArray holdingsArray = threeHoldingsWithoutInstance();
-    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT),
-      statusCodeIs(HTTP_CREATED));
-    for (Object hrObj : holdingsArray) {
-      final JsonObject holding = (JsonObject) hrObj;
-      assertExists(holding, CONSORTIUM_MEMBER_TENANT);
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
-        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
-    }
   }
 
   @SneakyThrows
@@ -429,7 +392,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void canMoveHoldingsToNewInstance() throws ExecutionException, InterruptedException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
     UUID newInstanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
     instancesClient.create(smallAngryPlanet(newInstanceId));
@@ -991,7 +953,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-    
+
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
@@ -1057,7 +1019,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String suffix
   ) throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -1672,7 +1633,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2557,7 +2517,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject holding = holdingsClient.create(builder.create(), CONSORTIUM_MEMBER_TENANT,
-      Map.of(X_OKAPI_URL, mockServer.baseUrl())).getJson();
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getJson();
 
     assertThat(holding.getString("id"), is(notNullValue()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
@@ -2583,7 +2543,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
     Response response = holdingsClient.attemptToCreate("", builder.create(), TENANT_WITHOUT_USER_TENANTS_PERMISSIONS,
-      Map.of(X_OKAPI_URL, mockServer.baseUrl()));
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     verify(1, getRequestedFor(urlEqualTo(USER_TENANTS_PATH)));
     verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
@@ -2878,7 +2838,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject firstError = errors.getJsonObject(0);
     assertThat(firstError.getString("message"), matchesPattern("Cannot set holdings_record.instanceid = [\\S]+ "
-      + "because it does not exist in instance.id."));
+                                                               + "because it does not exist in instance.id."));
     assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("holdings_record.instanceid"));
 
@@ -3175,6 +3135,47 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
   }
 
+  @SneakyThrows
+  @BeforeClass
+  public static void beforeClass() {
+    prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
+
+    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
+    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "instance_relationship");
+    StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "bound_with_part");
+    clearData(CONSORTIUM_MEMBER_TENANT);
+
+    setupMaterialTypes(CONSORTIUM_MEMBER_TENANT);
+    setupLoanTypes(CONSORTIUM_MEMBER_TENANT);
+    setupLocations(CONSORTIUM_MEMBER_TENANT);
+
+    prepareTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS, false);
+    prepareThreeHoldingSource();
+  }
+
+  @SneakyThrows
+  @AfterClass
+  public static void afterClass() {
+    removeTenant(CONSORTIUM_MEMBER_TENANT);
+    removeTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS);
+  }
+
+  private void canPostSynchronousBatchUnsafeAndCreateShadowInstance(String subpath) {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+    mockSharingInstance();
+
+    JsonArray holdingsArray = threeHoldingsWithoutInstance();
+    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT),
+      statusCodeIs(HTTP_CREATED));
+    for (Object hrObj : holdingsArray) {
+      final JsonObject holding = (JsonObject) hrObj;
+      assertExists(holding, CONSORTIUM_MEMBER_TENANT);
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
+        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+    }
+  }
+
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {
     mockSharingInstance();
 
@@ -3256,8 +3257,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         .put("id", sourceId)
         .put("name", "holding source name for " + sourceId));
       holdingsSourceClient.create(new JsonObject()
-        .put("id", sourceId)
-        .put("name", "holding source name for " + sourceId),
+          .put("id", sourceId)
+          .put("name", "holding source name for " + sourceId),
         CONSORTIUM_MEMBER_TENANT);
     }
   }
@@ -3289,7 +3290,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private Response postSynchronousBatch(URL url, JsonArray holdingsArray, String tenantId) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(url, holdingsCollection, Map.of(X_OKAPI_URL, mockServer.baseUrl()), tenantId,
+    getClient().post(url, holdingsCollection, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()), tenantId,
       ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(10, SECONDS);
@@ -3443,16 +3444,30 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject userTenantsCollection = new JsonObject()
       .put("userTenants", new JsonArray()
         .add(new JsonObject()
-          .put("centralTenantId", "CENTRAL_TENANT_ID")
-          .put("consortiumId", "mobius")));
+          .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
+          .put("consortiumId", CONSORTIUM_ID)));
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
+  }
+
+  private void mockConsortiumTenants() {
+    JsonObject tenantsCollection = new JsonObject()
+      .put("tenants", new JsonArray()
+        .add(new JsonObject()
+          .put("id", CONSORTIUM_CENTRAL_TENANT)
+          .put("isCentral", true))
+        .add(new JsonObject()
+          .put("id", CONSORTIUM_MEMBER_TENANT)
+          .put("isCentral", false)));
+    WireMock.stubFor(WireMock.get(CONSORTIUM_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
+      .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
   }
 
   private void mockUserTenantsForTenantWithoutPermissions() {
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS))
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS))
       .willReturn(WireMock.forbidden()));
   }
 

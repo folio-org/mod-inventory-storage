@@ -17,7 +17,7 @@ import org.folio.services.domainevent.DomainEvent;
 
 public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<String, String> {
 
-  private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor<?>>> MAP = Map.of(
+  private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor<?>>> PROCESSORS = Map.of(
     InventoryKafkaTopic.INSTANCE, InstanceSynchronizationEventProcessor::new,
     InventoryKafkaTopic.INSTANCE_DATE_TYPE, InstanceDateTypeSynchronizationEventProcessor::new
   );
@@ -37,7 +37,7 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaRecord) {
     var kafkaTopic = getKafkaTopic(kafkaRecord);
 
-    var processor = Optional.ofNullable(MAP.get(kafkaTopic))
+    var processor = Optional.ofNullable(PROCESSORS.get(kafkaTopic))
       .map(Supplier::get)
       .orElseThrow(() -> new IllegalStateException("Synchronization is unsupported. Topic:" + kafkaTopic.topicName()));
 

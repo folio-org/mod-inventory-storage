@@ -6,7 +6,6 @@ import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Future;
@@ -62,7 +61,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
         new RecordIdsRange().withFrom(RECORD1_ID).withTo(RECORD2_ID));
 
     doPost(client, "/inventory-reindex-records/publish", pojo2JsonObject(publishRequestBody))
-      .onComplete(ctx.succeeding(response -> ctx.verify(() -> assertEquals(HTTP_CREATED.toInt(), response.status()))))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var jsonItem = new JsonObject();
         jsonItem.put("id", rangeId);

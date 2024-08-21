@@ -14,7 +14,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class RestUtility {
+
   public static final String TENANT_ID = "test";
+  public static final String CONSORTIUM_ID = "0060045d-35a6-4935-a923-641bc135a47d";
+  public static final String CONSORTIUM_MEMBER_TENANT = "member";
+  public static final String CONSORTIUM_CENTRAL_TENANT = "central";
 
   private static final Logger logger = LogManager.getLogger();
 
