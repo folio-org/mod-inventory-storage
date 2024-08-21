@@ -44,9 +44,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.folio.rest.api.entities.PrecedingSucceedingTitle;
+import org.folio.rest.jaxrs.model.BulkUpsertRequest;
+import org.folio.rest.jaxrs.model.BulkUpsertResponse;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.InstanceBulkRequest;
-import org.folio.rest.jaxrs.model.InstanceBulkResponse;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
@@ -139,7 +139,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
 
     // when
-    InstanceBulkResponse bulkResponse = postInstancesBulk(new InstanceBulkRequest().withRecordsFileName(bulkFilePath));
+    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest().withRecordsFileName(bulkFilePath));
 
     // then
     assertThat(bulkResponse.getErrorsNumber(), is(0));
@@ -182,7 +182,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
     // when
-    InstanceBulkResponse bulkResponse = postInstancesBulk(new InstanceBulkRequest().withRecordsFileName(bulkFilePath));
+    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest().withRecordsFileName(bulkFilePath));
 
     // then
     assertThat(bulkResponse.getErrorsNumber(), is(1));
@@ -201,9 +201,9 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecify()
+  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecified()
     throws ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<Response> future = getClient().post(instancesBulk(), new InstanceBulkRequest(), TENANT_ID);
+    CompletableFuture<Response> future = getClient().post(instancesBulk(), new BulkUpsertRequest(), TENANT_ID);
     Response response = future.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
@@ -227,13 +227,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     return new IndividualResource(response);
   }
 
-  private InstanceBulkResponse postInstancesBulk(InstanceBulkRequest bulkRequest)
+  private BulkUpsertResponse postInstancesBulk(BulkUpsertRequest bulkRequest)
     throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> future = getClient().post(instancesBulk(), bulkRequest, TENANT_ID);
     Response response = future.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(HTTP_CREATED));
 
-    return Json.decodeValue(response.getBody(), InstanceBulkResponse.class);
+    return Json.decodeValue(response.getBody(), BulkUpsertResponse.class);
   }
 
   private JsonObject getInstanceById(String id) {

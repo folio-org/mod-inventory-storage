@@ -41,6 +41,11 @@ public class BulkProcessingErrorFileWriter {
     this.errorsFilePath = bulkContext.getErrorsFileLocalPath();
   }
 
+  /**
+   * Prepares the writer for writing errors to files by initializing the necessary resources.
+   *
+   * @return Future of Void
+   */
   public Future<Void> initialize() {
     OpenOptions openOptions = new OpenOptions()
       .setWrite(true)
@@ -102,6 +107,12 @@ public class BulkProcessingErrorFileWriter {
     return errorEntitiesAsyncFile != null && errorsAsyncFile != null;
   }
 
+  /**
+   * Flushes any remaining data to the files used for writing errors and then closes them,
+   * releasing any system resources associated with the writer.
+   *
+   * @return Future of Void
+   */
   public Future<Void> close() {
     return errorEntitiesAsyncFile.flush()
       .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", failedEntitiesFilePath))
