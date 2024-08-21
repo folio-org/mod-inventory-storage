@@ -9,8 +9,8 @@ documentation:
     content: API to update existing instances or create if they do not exist
 
 types:
-  instanceBulkRequest: !include instanceBulkRequest.json
-  instanceBulkResponse: !include instanceBulkResponse.json
+  bulkUpsertRequest: !include bulkUpsertRequest.json
+  bulkUpsertResponse: !include bulkUpsertResponse.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -23,13 +23,13 @@ traits:
     is: [validate]
     body:
       application/json:
-        type: instanceBulkRequest
+        type: bulkUpsertRequest
     responses:
       201:
         description: "At least one Instance from the list was updated/created"
         body:
           application/json:
-            type: instanceBulkResponse
+            type: bulkUpsertResponse
       500:
         description: "Internal server error"
         body:
