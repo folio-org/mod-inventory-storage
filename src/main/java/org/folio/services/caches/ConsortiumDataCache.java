@@ -103,7 +103,6 @@ public class ConsortiumDataCache {
         return loadConsortiumTenants(consortiumId, tenantId, headers)
           .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
       })
-      .recover(throwable -> succeededFuture(Optional.empty()))
       .toCompletionStage()
       .toCompletableFuture();
   }

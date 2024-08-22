@@ -182,7 +182,7 @@ public class ConsortiumServiceImplTest {
     Async async = testContext.async();
 
     ConsortiumData consortiumData = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
-    when(consortiumDataCache.getConsortiumData(okapiHeaders))
+    when(consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders))
       .thenReturn(Future.succeededFuture(Optional.of(consortiumData)));
 
     consortiumServiceImpl.getConsortiumData(okapiHeaders).onComplete(ar -> {

@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
@@ -8,11 +9,13 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.vertx.core.AsyncResult;
@@ -174,6 +177,7 @@ public class BaseIntegrationTest {
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(vertx);
     await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
+    mockUserTenantsForNonConsortiumMember();
   }
 
   @AfterAll
@@ -186,6 +190,14 @@ public class BaseIntegrationTest {
 
   public static JsonObject pojo2JsonObject(Object entity) {
     return TestBase.pojo2JsonObject(entity);
+  }
+
+  private static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
   private static Future<TestResponse> enableTenant(String tenant, VertxTestContext ctx, HttpClient client) {
