@@ -1,16 +1,22 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.DisplayFormat;
 import org.folio.rest.jaxrs.model.InstanceDateType;
 import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
@@ -112,6 +118,7 @@ class InstanceDateTypesIT extends BaseReferenceDataIntegrationTest<InstanceDateT
 
   @BeforeEach
   void setUp(Vertx vertx, VertxTestContext ctx) {
+    mockUserTenantsForNonConsortiumMember();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     postgresClient.delete(referenceTable(), (CQLWrapper) null)
       .onComplete(event -> ctx.completeNow());
@@ -140,5 +147,13 @@ class InstanceDateTypesIT extends BaseReferenceDataIntegrationTest<InstanceDateT
               ctx.completeNow();
             }))));
       });
+  }
+
+  public static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 }
