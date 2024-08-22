@@ -30,6 +30,7 @@ public class InstanceDateTypeSynchronizationEventProcessor implements Synchroniz
       var headers = context.headers();
       var future = Future.succeededFuture(typeId);
       for (String memberTenant : context.consortiaData().memberTenants()) {
+        LOG.info("process:: propagate instance date type id={} to tenant='{}'", typeId, memberTenant);
         vertxContext.putLocal("folio_tenantid", memberTenant);
         headers.put(TENANT, memberTenant);
         future = future.eventually(() -> new InstanceDateTypeService(vertxContext, headers)

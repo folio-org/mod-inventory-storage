@@ -102,6 +102,7 @@ public class ConsortiumDataCache {
         return loadConsortiumTenants(consortiumId, tenantId, headers)
           .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
       })
+      .recover(throwable -> succeededFuture(Optional.empty()))
       .toCompletionStage()
       .toCompletableFuture();
   }
@@ -110,12 +111,15 @@ public class ConsortiumDataCache {
                                                      Map<String, String> headers) {
     var request = getHttpRequest(headers, CONSORTIUM_TENANTS_PATH.formatted(consortiumId));
     return getResponse(tenantId, request)
-      .map(responseBody -> responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
-        .stream()
-        .map(o -> ((JsonObject) o).mapTo(ConsortiumTenant.class))
-        .filter(consortiumTenant -> !consortiumTenant.isCentral())
-        .map(ConsortiumTenant::id)
-        .toList()).orElse(Collections.emptyList())
+      .map(responseBody -> {
+          LOG.info("consortium-tenants:: {}", responseBody);
+          return responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
+            .stream()
+            .map(o -> ((JsonObject) o).mapTo(ConsortiumTenant.class))
+            .filter(consortiumTenant -> !consortiumTenant.isCentral())
+            .map(ConsortiumTenant::id)
+            .toList()).orElse(Collections.emptyList());
+        }
       )
       .recover(throwable -> succeededFuture(Collections.emptyList()));
   }

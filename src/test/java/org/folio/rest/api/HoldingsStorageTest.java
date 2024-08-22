@@ -2546,7 +2546,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     verify(1, getRequestedFor(urlEqualTo(USER_TENANTS_PATH)));
-    verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
+    verify(0, postRequestedFor(urlEqualTo("/consortia/" + CONSORTIUM_ID + "/sharing/instances")));
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
@@ -3472,7 +3472,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void mockSharingInstance() {
-    WireMock.stubFor(WireMock.post("/consortia/mobius/sharing/instances")
+    WireMock.stubFor(WireMock.post("/consortia/" + CONSORTIUM_ID + "/sharing/instances")
       .willReturn(WireMock.created().withTransformers(ConsortiumInstanceSharingTransformer.NAME)));
   }
 

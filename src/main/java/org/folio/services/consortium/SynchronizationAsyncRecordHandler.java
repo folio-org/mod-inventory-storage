@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
@@ -16,6 +18,8 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
 
 public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<String, String> {
+
+  private static final Logger LOG = LogManager.getLogger(SynchronizationAsyncRecordHandler.class);
 
   private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor<?>>> PROCESSORS = Map.of(
     InventoryKafkaTopic.INSTANCE, InstanceSynchronizationEventProcessor::new,
@@ -35,6 +39,7 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
 
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaRecord) {
+    LOG.info("handle:: Processing event={}", kafkaRecord.topic());
     var kafkaTopic = getKafkaTopic(kafkaRecord);
 
     var processor = Optional.ofNullable(PROCESSORS.get(kafkaTopic))
@@ -45,6 +50,7 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
     var headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(kafkaRecord.headers()));
     return consortiaDataCache.getConsortiumData(headers)
       .compose(consortiumData -> {
+        LOG.info("consortiumData:: {}}", consortiumData);
         if (consortiumData.isPresent()) {
           var synchronizationContext = new SynchronizationContext(consortiumData.get(), headers, vertx, httpClient);
           return processor.process(domainEvent, kafkaRecord.key(), synchronizationContext);

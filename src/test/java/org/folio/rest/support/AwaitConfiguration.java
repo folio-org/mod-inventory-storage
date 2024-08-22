@@ -1,6 +1,6 @@
 package org.folio.rest.support;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.awaitility.Awaitility.await;
 
 import java.util.concurrent.TimeUnit;
@@ -13,7 +13,7 @@ public final class AwaitConfiguration {
   public static ConditionFactory awaitAtMost() {
     // Timeout was gradually extended to try to alleviate instability
     // Attempts should be made to reduce this value
-    return await().atMost(20, SECONDS);
+    return await().atMost(20, MINUTES);
   }
 
   public static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {

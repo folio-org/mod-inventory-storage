@@ -91,7 +91,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
       .build();
 
     return consumerWrapper
-      .start(recordHandler, topic.moduleName() + "." + SynchronizationVerticle.class.getName())
+      .start(recordHandler, topic.topicName() + "." + SynchronizationVerticle.class.getName())
       .map(consumerWrapper);
   }
 

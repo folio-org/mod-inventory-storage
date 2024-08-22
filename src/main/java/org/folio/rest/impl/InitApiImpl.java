@@ -24,7 +24,7 @@ public class InitApiImpl implements InitAPI {
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initConsortiumDataCache(vertx, context);
     initAsyncMigrationVerticle(vertx)
-      .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
+      .compose(v -> initSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .map(true)
       .onComplete(handler);
   }
@@ -50,16 +50,16 @@ public class InitApiImpl implements InitAPI {
     return promise.future();
   }
 
-  private Future<Void> initShadowInstanceSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
+  private Future<Void> initSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
     DeploymentOptions options = new DeploymentOptions()
       .setWorker(true)
       .setInstances(1);
 
     return vertx.deployVerticle(() -> new SynchronizationVerticle(consortiumDataCache), options)
-      .onSuccess(v -> log.info("initShadowInstanceSynchronizationVerticle:: "
-        + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
-      .onFailure(e -> log.error("initShadowInstanceSynchronizationVerticle:: "
-        + "ShadowInstanceSynchronizationVerticle verticle was not successfully started", e))
+      .onSuccess(v -> log.info("initSynchronizationVerticle:: "
+        + "SynchronizationVerticle verticle was successfully started"))
+      .onFailure(e -> log.error("initSynchronizationVerticle:: "
+        + "SynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 
