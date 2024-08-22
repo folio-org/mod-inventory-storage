@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
-import static java.lang.String.format;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -8,13 +9,19 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -24,8 +31,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.folio.HttpStatus;
@@ -39,6 +44,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -50,6 +56,11 @@ import org.testcontainers.utility.DockerImageName;
 public class BaseIntegrationTest {
 
   public static final String USER_ID = UUID.randomUUID().toString();
+  @RegisterExtension
+  protected static WireMockExtension wm = WireMockExtension.newInstance()
+    .options(wireMockConfig().dynamicPort()
+      .notifier(new ConsoleNotifier(true)))
+    .build();
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @Container
@@ -62,6 +73,12 @@ public class BaseIntegrationTest {
   private static final KafkaContainer KAFKA_CONTAINER
     = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
   private static int port;
+
+  @BeforeEach
+  public void removeAllEvents() {
+    mockUserTenantsForNonConsortiumMember();
+    KAFKA_CONSUMER.discardAllMessages();
+  }
 
   protected static Future<TestResponse> doGet(HttpClient client, String requestUri) {
     return doRequest(client, HttpMethod.GET, requestUri, null);
@@ -93,6 +110,10 @@ public class BaseIntegrationTest {
       });
   }
 
+  protected static Handler<AsyncResult<TestResponse>> verifyStatus(VertxTestContext ctx, HttpStatus expectedStatus) {
+    return ctx.succeeding(response -> ctx.verify(() -> assertEquals(expectedStatus.toInt(), response.status())));
+  }
+
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext ctx) throws Throwable {
     port = NetworkUtils.nextFreePort();
@@ -118,7 +139,6 @@ public class BaseIntegrationTest {
       throw ctx.causeOfFailure();
     }
 
-
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(vertx);
     await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
@@ -132,9 +152,16 @@ public class BaseIntegrationTest {
     KAFKA_CONSUMER.unsubscribe();
   }
 
-  @BeforeEach
-  public void removeAllEvents() {
-    KAFKA_CONSUMER.discardAllMessages();
+  public static JsonObject pojo2JsonObject(Object entity) {
+    return TestBase.pojo2JsonObject(entity);
+  }
+
+  public static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
   private static Future<TestResponse> enableTenant(VertxTestContext ctx, HttpClient client) {
@@ -171,23 +198,11 @@ public class BaseIntegrationTest {
       request.putHeader(XOkapiHeaders.TENANT, tenantId);
       request.putHeader(XOkapiHeaders.TOKEN, "TEST_TOKEN");
       request.putHeader(XOkapiHeaders.USER_ID, USER_ID);
+      request.putHeader(XOkapiHeaders.URL, wm.baseUrl());
     }
-    String baseUrl;
-    try {
-      var url = URI.create(request.absoluteURI()).toURL();
-      baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-    } catch (MalformedURLException e) {
-      baseUrl = "http://localhost:" + port;
-    }
-    request.putHeader(XOkapiHeaders.URL, baseUrl);
-    request.putHeader(XOkapiHeaders.URL_TO, baseUrl);
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
 
     return request;
-  }
-
-  public static JsonObject pojo2JsonObject(Object entity) {
-    return TestBase.pojo2JsonObject(entity);
   }
 
   public record TestResponse(int status, Buffer body) {

@@ -1,20 +1,7 @@
 package org.folio.services.caches;
 
-public class ConsortiumData {
+import java.util.List;
 
-  private String centralTenantId;
-  private String consortiumId;
+public record ConsortiumData(String centralTenantId, String consortiumId, List<String> memberTenants) {
 
-  public ConsortiumData(String centralTenantId, String consortiumId) {
-    this.centralTenantId = centralTenantId;
-    this.consortiumId = consortiumId;
-  }
-
-  public String getCentralTenantId() {
-    return centralTenantId;
-  }
-
-  public String getConsortiumId() {
-    return consortiumId;
-  }
 }

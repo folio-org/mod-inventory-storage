@@ -8,21 +8,22 @@ import org.folio.kafka.services.KafkaTopic;
 
 public enum InventoryKafkaTopic implements KafkaTopic {
 
-  INSTANCE("instance"),
-  ITEM("item"),
-  HOLDINGS_RECORD("holdings-record"),
-  INSTANCE_CONTRIBUTION("instance-contribution"),
-  BOUND_WITH("bound-with"),
   ASYNC_MIGRATION("async-migration"),
-  SERVICE_POINT("service-point"),
-  CLASSIFICATION_TYPE("classification-type"),
-  LOCATION("location"),
-  LIBRARY("library"),
+  BOUND_WITH("bound-with"),
   CAMPUS("campus"),
-  SUBJECT_TYPE("subject-types"),
+  CLASSIFICATION_TYPE("classification-type"),
+  HOLDINGS_RECORD("holdings-record"),
+  INSTANCE("instance"),
+  INSTANCE_CONTRIBUTION("instance-contribution"),
+  INSTANCE_DATE_TYPE("instance-date-type"),
   INSTITUTION("institution"),
+  ITEM("item"),
+  LIBRARY("library"),
+  LOCATION("location"),
   REINDEX_RECORDS("reindex-records"),
-  SUBJECT_SOURCE("subject-sources");
+  SERVICE_POINT("service-point"),
+  SUBJECT_SOURCE("subject-source"),
+  SUBJECT_TYPE("subject-type");
 
   private static final String DEFAULT_NUM_PARTITIONS_PROPERTY = "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS";
   private static final String DEFAULT_NUM_PARTITIONS_VALUE = "50";
@@ -39,7 +40,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1"),
     SUBJECT_TYPE, Pair.of("KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "1"),
     REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "16"),
-    SUBJECT_SOURCE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1")
+    SUBJECT_SOURCE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1"),
+    INSTANCE_DATE_TYPE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1")
   );
 
   private final String topic;
@@ -63,6 +65,15 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     return Optional.ofNullable(TOPIC_PARTITION_MAP.get(this))
       .map(pair -> getNumberOfPartitions(pair.getKey(), pair.getValue()))
       .orElse(getNumberOfPartitions(DEFAULT_NUM_PARTITIONS_PROPERTY, DEFAULT_NUM_PARTITIONS_VALUE));
+  }
+
+  public static InventoryKafkaTopic byTopic(String topic) {
+    for (InventoryKafkaTopic kafkaTopic : values()) {
+      if (kafkaTopic.topicName().equals(topic)) {
+        return kafkaTopic;
+      }
+    }
+    throw new IllegalArgumentException("Unknown topic " + topic);
   }
 
   private int getNumberOfPartitions(String propertyName, String defaultNumPartitions) {
