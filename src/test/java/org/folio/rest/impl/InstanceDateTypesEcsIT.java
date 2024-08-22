@@ -80,7 +80,7 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
         });
     });
 
-    await().atMost(5, TimeUnit.MINUTES).untilAsserted(() -> {
+    await().atMost(1, TimeUnit.MINUTES).untilAsserted(() -> {
       assertThat(atomicReference.get()).isNotNull()
         .extracting(InstanceDateType::getName)
         .isEqualTo("Updated");
