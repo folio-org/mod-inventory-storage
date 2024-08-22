@@ -64,7 +64,10 @@
         }, {
           "methods": ["PATCH"],
           "pathPattern": "/instance-date-types/{id}",
-          "permissionsRequired": ["inventory-storage.instance-date-types.item.patch"]
+          "permissionsRequired": ["inventory-storage.instance-date-types.item.patch"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }
       ]
     },

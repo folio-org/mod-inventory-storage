@@ -8,6 +8,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
@@ -151,5 +152,6 @@ public class ConsortiumDataCache {
     });
   }
 
-  record ConsortiumTenant(String id, boolean isCentral) { }
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public record ConsortiumTenant(String id, boolean isCentral) { }
 }

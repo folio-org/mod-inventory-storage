@@ -53,7 +53,6 @@ public class InstanceSynchronizationEventProcessor implements SynchronizationEve
 
   @Override
   public Future<String> process(DomainEvent<?> event, String instanceId, SynchronizationContext context) {
-    LOG.debug("process:: Processing event, tenantId: '{}'", event.getTenant());
     try {
 
       if (event.getType() != UPDATE) {
