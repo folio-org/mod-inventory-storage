@@ -14,7 +14,7 @@ import org.folio.services.domainevent.DomainEventType;
 import org.folio.services.instance.InstanceDateTypeService;
 import org.folio.utils.ConsortiumUtils;
 
-public class InstanceDateTypeSynchronizationEventProcessor implements SynchronizationEventProcessor<InstanceDateType> {
+public class InstanceDateTypeSynchronizationEventProcessor implements SynchronizationEventProcessor {
 
   private static final Logger LOG = LogManager.getLogger(InstanceDateTypeSynchronizationEventProcessor.class);
 

@@ -10,7 +10,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
@@ -49,7 +48,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
 
     var futures = TOPICS.stream()
       .map(kafkaTopic -> createKafkaConsumerWrapper(kafkaTopic, handler))
-      .collect(Collectors.toList());
+      .toList();
 
     GenericCompositeFuture.all(futures)
       .onFailure(startPromise::fail)
@@ -63,9 +62,9 @@ public class SynchronizationVerticle extends AbstractVerticle {
   public void stop(Promise<Void> stopPromise) {
     List<Future<Void>> stopFutures = consumerWrappers.stream()
       .map(KafkaConsumerWrapper::stop)
-      .collect(Collectors.toList());
+      .toList();
 
-    GenericCompositeFuture.join(stopFutures).onComplete(ar -> stopPromise.complete());
+    GenericCompositeFuture.all(stopFutures).onComplete(ar -> stopPromise.complete());
   }
 
   private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(

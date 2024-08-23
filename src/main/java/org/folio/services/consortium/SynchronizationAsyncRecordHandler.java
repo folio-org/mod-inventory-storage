@@ -21,7 +21,7 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
 
   private static final Logger LOG = LogManager.getLogger(SynchronizationAsyncRecordHandler.class);
 
-  private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor<?>>> PROCESSORS = Map.of(
+  private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor>> PROCESSORS = Map.of(
     InventoryKafkaTopic.INSTANCE_DATE_TYPE, InstanceDateTypeSynchronizationEventProcessor::new
   );
 
