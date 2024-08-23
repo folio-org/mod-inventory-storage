@@ -7,6 +7,7 @@ import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -80,7 +81,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String canCirculateLoanTypeID;
   protected static UUID nonCirculatingLoanTypeId;
   protected static String nonCirculatingLoanTypeID;
-  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
   @BeforeClass
   public static void testBaseWithInvUtilBeforeClass() {

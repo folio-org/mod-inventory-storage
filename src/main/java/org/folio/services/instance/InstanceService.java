@@ -227,7 +227,7 @@ public class InstanceService {
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
-    return tenantId.equals(consortiumData.getCentralTenantId());
+    return tenantId.equals(consortiumData.centralTenantId());
   }
 
 }
