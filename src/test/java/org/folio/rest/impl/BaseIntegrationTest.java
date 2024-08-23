@@ -43,7 +43,6 @@ import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -178,14 +177,6 @@ public class BaseIntegrationTest {
     KAFKA_CONSUMER.consume(vertx);
     await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
     mockUserTenantsForNonConsortiumMember();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    if (KAFKA_CONTAINER.isRunning()) {
-      KAFKA_CONTAINER.stop();
-    }
-    KAFKA_CONSUMER.unsubscribe();
   }
 
   public static JsonObject pojo2JsonObject(Object entity) {
