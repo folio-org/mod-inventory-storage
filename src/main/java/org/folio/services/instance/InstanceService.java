@@ -52,7 +52,6 @@ public class InstanceService {
   private final InstanceRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
-  private final InstanceEffectiveValuesService effectiveValuesService;
   private final ConsortiumService consortiumService;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -65,7 +64,6 @@ public class InstanceService {
     instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
-    effectiveValuesService = new InstanceEffectiveValuesService();
     consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
       vertxContext.get(ConsortiumDataCache.class.getName()));
   }
@@ -94,8 +92,6 @@ public class InstanceService {
 
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
-    effectiveValuesService.populateEffectiveValues(entity);
-
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
@@ -124,13 +120,12 @@ public class InstanceService {
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
-      .compose(batchOperation -> {
-        effectiveValuesService.populateEffectiveValues(instances, batchOperation);
+      .compose(batchOperation ->
         // Can use instances list here directly because the class is stateful
-        return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
+        postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      })
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))
+      )
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -146,8 +141,6 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
-
-        effectiveValuesService.populateEffectiveValues(newInstance, oldInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 

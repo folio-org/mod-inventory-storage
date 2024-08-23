@@ -339,6 +339,11 @@
       ]
     },
     {
+      "tableName": "instance_date_type",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
       "tableName": "instance",
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
@@ -356,6 +361,11 @@
         {
           "fieldName": "modeOfIssuanceId",
           "targetTable": "mode_of_issuance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "dates.dateTypeId",
+          "targetTable": "instance_date_type",
           "tOps": "ADD"
         },
         {
@@ -866,11 +876,6 @@
       "withAuditing": false
     },
     {
-      "tableName": "instance_date_type",
-      "withMetadata": true,
-      "withAuditing": false
-    },
-    {
       "tableName": "authority_source_file",
       "mode": "delete",
       "withMetadata": true,
@@ -1028,11 +1033,6 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/addNullChecksToRecordsViewFunctions.sql",
       "fromModuleVersion": "19.5.0"
-    },
-    {
-      "run": "after",
-      "snippetPath": "publication-period/publication-period-functions.sql",
-      "fromModuleVersion": "23.0.0"
     },
     {
       "run": "after",
@@ -1212,6 +1212,11 @@
     {
       "run": "after",
       "snippetPath": "addSubjectSources.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "publication-period/drop-publication-period-functions.sql",
       "fromModuleVersion": "27.2.0"
     }
   ]

@@ -72,6 +72,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final UUID UUID_PERSONAL_NAME = UUID.fromString("2b94c631-fca9-4892-a730-03ee529ffe2a");
   protected static final UUID UUID_TEXT = UUID.fromString("6312d172-f0cf-40f6-b27d-9fa8feaf332f");
   protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
+  protected static final UUID UUID_INSTANCE_DATE_TYPE = UUID.fromString("42dac21e-3c81-4cb1-9f16-9e50c81bacc4");
   protected static UUID journalMaterialTypeId;
   protected static String journalMaterialTypeID;
   protected static UUID bookMaterialTypeId;
