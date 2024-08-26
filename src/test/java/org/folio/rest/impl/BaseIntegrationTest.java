@@ -43,15 +43,15 @@ import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.utility.KafkaUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.kafka.KafkaContainer;
 
 @EnableTenant
 @Testcontainers(parallel = true)
@@ -73,8 +73,7 @@ public class BaseIntegrationTest {
     .withPassword("admin_password");
 
   @Container
-  private static final KafkaContainer KAFKA_CONTAINER
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName());
   private static int port;
 
   @BeforeEach
