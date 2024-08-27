@@ -81,6 +81,7 @@ import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -105,6 +106,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String DATES_KEY = "dates";
+  private static final String SUBJECTS_KEY = "subjects";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();
@@ -192,11 +194,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
       .withDate1("2023")
       .withDate2("2024");
-
+    var subject = new Subject()
+      .withSubjectSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withSubjectTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
     instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     instanceToCreate.put(DATES_KEY, pojo2JsonObject(dates));
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -255,6 +263,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
     assertThat(storedDates.getDate1(), is("2023"));
     assertThat(storedDates.getDate2(), is("2024"));
+
+    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
+
+    assertThat(storedSubject.getSubjectSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
+    assertThat(storedSubject.getSubjectTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
+    assertThat(storedSubject.getValue(), is(is(subject.getValue())));
   }
 
   @Test

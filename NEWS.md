@@ -7,7 +7,7 @@
 * Provides `subject-source 1.0`
 * Provides `subject-types 1.0`
 * Provides `instance-date-types 1.0`
-* Provides `instance-storage 10.2`
+* Provides `instance-storage 10.3`
 * Requires `holdings-storage 6.1`
 
 ### Features
@@ -22,6 +22,7 @@
 * Info, not warn, about expected 403 from /user-tenants ([MODINVSTOR-1237](https://folio-org.atlassian.net/browse/MODINVSTOR-1237))
 * Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
+* Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 
 
 ### Bug fixes
