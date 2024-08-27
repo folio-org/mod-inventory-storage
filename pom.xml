@@ -48,7 +48,6 @@
     <maven-checkstyle-plugin.version>3.4.0</maven-checkstyle-plugin.version>
     <checkstyle.version>10.17.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.3.1</maven-failsafe-plugin.version>
-    <license-maven-plugin.version>2.4.0</license-maven-plugin.version>
     <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
   </properties>
 
@@ -261,7 +260,7 @@
   <build>
     <resources>
       <resource><directory>src/main/resources</directory></resource>
-      <resource><directory>target/generated-resources</directory></resource><!-- license-maven-plugin -->
+      <resource><directory>target/generated-resources</directory></resource>
     </resources>
 
     <plugins>
@@ -610,27 +609,6 @@
                 <goal>integration-test</goal>
                 <goal>verify</goal>
               </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>${license-maven-plugin.version}</version>
-        <executions>
-          <execution>
-            <configuration>
-              <sortArtifactByName>true</sortArtifactByName>
-              <!-- specify "missing file" licenses for not detected dependencies -->
-              <useMissingFile>true</useMissingFile>
-              <failOnMissing>true</failOnMissing>
-            </configuration>
-            <id>add-third-party</id>
-            <goals>
-              <goal>download-licenses</goal>
-              <goal>add-third-party</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>

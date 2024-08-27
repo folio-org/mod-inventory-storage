@@ -1,6 +1,7 @@
 package org.folio.services.caches;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
@@ -33,6 +34,7 @@ public class ConsortiumDataCacheTest {
   private static final String TENANT_ID = "diku";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private static final String USER_TENANTS_FIELD = "userTenants";
+  private static final String ECS_TENANTS_FIELD = "tenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
   private static final String CONSORTIUM_ID_FIELD = "consortiumId";
 
@@ -47,6 +49,12 @@ public class ConsortiumDataCacheTest {
       XOkapiHeaders.TENANT, TENANT_ID,
       XOkapiHeaders.TOKEN, "token",
       XOkapiHeaders.URL, mockServer.baseUrl());
+
+    JsonObject emptyEcsTenantsCollection = new JsonObject()
+      .put(ECS_TENANTS_FIELD, JsonArray.of());
+
+    WireMock.stubFor(get(urlMatching("/consortia/.*/tenants"))
+      .willReturn(WireMock.ok().withBody(emptyEcsTenantsCollection.encodePrettily())));
   }
 
   @Test
@@ -70,8 +78,8 @@ public class ConsortiumDataCacheTest {
       context.assertTrue(ar.succeeded());
       context.assertTrue(ar.result().isPresent());
       ConsortiumData consortiumData = ar.result().get();
-      context.assertEquals(expectedCentralTenantId, consortiumData.getCentralTenantId());
-      context.assertEquals(expectedConsortiumId, consortiumData.getConsortiumId());
+      context.assertEquals(expectedCentralTenantId, consortiumData.centralTenantId());
+      context.assertEquals(expectedConsortiumId, consortiumData.consortiumId());
       async.complete();
     });
   }
