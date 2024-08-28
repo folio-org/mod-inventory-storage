@@ -32,7 +32,7 @@
 * Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
 
 ### Tech Dept
-* Description ([ISSUE\_NUMBER](https://folio-org.atlassian.net/browse/ISSUE_NUMBER))
+* Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
