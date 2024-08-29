@@ -5,7 +5,6 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
-import static org.folio.rest.support.InstanceUtil.ADMINISTRATIVE_NOTES_FIELD;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -70,6 +69,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String INSTANCE_TITLE_1 = "Long Way to a Small Angry Planet";
   private static final String INSTANCE_TITLE_2 = "Novik, Naomi";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
+  private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
 
   private static LocalStackContainer localStackContainer;
   private static FolioS3Client s3Client;

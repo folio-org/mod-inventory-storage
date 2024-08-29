@@ -1,7 +1,7 @@
 package org.folio.services.bulkprocessing;
 
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static org.folio.rest.support.InstanceUtil.mapInstanceDtoJsonToInstance;
+import static org.folio.rest.support.InstanceBulkProcessingUtil.mapBulkInstanceRecordToInstance;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 
 import io.vertx.core.Future;
@@ -26,7 +26,7 @@ import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.support.InstanceUtil;
+import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 
@@ -64,7 +64,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   protected List<InstanceWrapper> mapToEntities(Stream<String> linesStream) {
     return linesStream
       .map(JsonObject::new)
-      .map(json -> new InstanceWrapper(mapInstanceDtoJsonToInstance(json), extractPrecedingSucceedingTitles(json)))
+      .map(json -> new InstanceWrapper(mapBulkInstanceRecordToInstance(json), extractPrecedingSucceedingTitles(json)))
       .toList();
   }
 
@@ -91,7 +91,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     return instanceRepository.getById(instances, Instance::getId).compose(existingInstances -> {
       instances.forEach(instance -> {
         if (existingInstances.get(instance.getId()) != null) {
-          InstanceUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));
+          InstanceBulkProcessingUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));
         }
       });
       return Future.succeededFuture();
