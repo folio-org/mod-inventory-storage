@@ -51,14 +51,12 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
-  private final PostgresClient postgresClient;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
     final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
-    this.postgresClient = postgresClient;
     hridManager = new HridManager(postgresClient);
     domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
     instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
