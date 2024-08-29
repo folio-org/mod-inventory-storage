@@ -2,17 +2,18 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
-import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
@@ -42,6 +43,7 @@ import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.utility.KafkaUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +51,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 
 @EnableTenant
 @Testcontainers(parallel = true)
@@ -69,6 +72,8 @@ public class BaseIntegrationTest {
     .withUsername("admin_user")
     .withPassword("admin_password");
 
+  @Container
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName());
   private static int port;
 
   @BeforeEach
@@ -148,7 +153,9 @@ public class BaseIntegrationTest {
   static void beforeAll(Vertx vertx, VertxTestContext ctx, @Tenants List<String> tenants) throws Throwable {
     port = NetworkUtils.nextFreePort();
     System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
-    startKafka();
+    System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
+    System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
+    KAFKA_CONTAINER.start();
 
     Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
       POSTGRESQL_CONTAINER.getFirstMappedPort(),
@@ -175,6 +182,7 @@ public class BaseIntegrationTest {
 
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(vertx);
+    await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
     mockUserTenantsForNonConsortiumMember();
   }
 
