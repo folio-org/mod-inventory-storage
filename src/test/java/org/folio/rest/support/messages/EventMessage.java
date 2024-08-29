@@ -13,6 +13,7 @@ public class EventMessage {
   String tenant;
   JsonObject newRepresentation;
   JsonObject oldRepresentation;
+  JsonObject body;
   Map<String, String> headers;
 
   public static EventMessage fromConsumerRecord(
@@ -25,6 +26,7 @@ public class EventMessage {
       value.getString("tenant"),
       value.getJsonObject("new"),
       value.getJsonObject("old"),
+      value,
       kafkaHeadersToMap(consumerRecord.headers()));
   }
 }

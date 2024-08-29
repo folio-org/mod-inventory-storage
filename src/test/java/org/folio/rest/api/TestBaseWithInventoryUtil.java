@@ -60,6 +60,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static final UUID SECOND_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final UUID THIRD_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final UUID FOURTH_FLOOR_LOCATION_ID = UUID.randomUUID();
+  public static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   protected static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
@@ -302,7 +303,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .put("name", name);
   }
 
-  protected static JsonObject createInstanceRequest(
+  public static JsonObject createInstanceRequest(
     UUID id,
     String source,
     String title,
@@ -321,7 +322,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("source", source);
     instanceToCreate.put("identifiers", identifiers);
     instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
+    if (instanceTypeId != null) {
+      instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
+    }
     instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
     instanceToCreate.put("_version", 1);
     return instanceToCreate;

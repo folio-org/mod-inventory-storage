@@ -42,6 +42,11 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
+    return hasProperty("body", matcher);
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
     return hasCreateEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
   }
@@ -94,20 +99,15 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(JsonObject representation) {
-    return hasReindexEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor() {
+    return hasReindexEventMessageFor(expectedTenantId);
   }
 
   @NotNull
-  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(JsonObject representation,
-                                                                           String expectedTenantId,
-                                                                           String okapiUrlExpected) {
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(String expectedTenantId) {
     return hasItem(allOf(
-      isReindexEvent(),
       isForTenant(expectedTenantId),
-      hasHeaders(expectedTenantId, okapiUrlExpected),
-      hasNoOldRepresentation(),
-      hasNewRepresentation(representation)));
+      hasHeaders(expectedTenantId)));
   }
 
   @NotNull
@@ -128,11 +128,6 @@ public class EventMessageMatchers {
   @NotNull
   public Matcher<EventMessage> isUpdateEvent() {
     return hasType("UPDATE");
-  }
-
-  @NotNull
-  public Matcher<EventMessage> isReindexEvent() {
-    return hasType("REINDEX");
   }
 
   @NotNull
@@ -157,6 +152,12 @@ public class EventMessageMatchers {
     return hasProperty("headers", allOf(
       hasTenantHeader(tenantIdExpected),
       hasUrlHeader(okapiUrlExpected)));
+  }
+
+  @NotNull
+  public Matcher<EventMessage> hasHeaders(String tenantIdExpected) {
+    return hasProperty("headers", allOf(
+      hasTenantHeader(tenantIdExpected)));
   }
 
   @NotNull
