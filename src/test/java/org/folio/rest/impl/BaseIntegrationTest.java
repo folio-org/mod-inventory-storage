@@ -9,7 +9,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
 import static org.folio.utility.KafkaUtility.startKafka;
-import static org.folio.utility.KafkaUtility.stopKafka;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -43,7 +42,6 @@ import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -178,12 +176,6 @@ public class BaseIntegrationTest {
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(vertx);
     mockUserTenantsForNonConsortiumMember();
-  }
-
-  @AfterAll
-  static void afterAll() {
-    KAFKA_CONSUMER.unsubscribe();
-    stopKafka();
   }
 
   public static JsonObject pojo2JsonObject(Object entity) {
