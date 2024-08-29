@@ -39,6 +39,11 @@ import static org.folio.rest.support.InstanceUtil.VERSION_FIELD;
 import static org.folio.rest.support.InstanceUtil.copyNonMarcControlledFields;
 import static org.junit.Assert.assertEquals;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -46,7 +51,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceDto;
 import org.junit.Test;
 
 public class InstanceUtilTest {
@@ -54,10 +61,32 @@ public class InstanceUtilTest {
   public static final String INSTANCE_JSON_PATH =
     "src/test/resources/instances/bulk/modInventoryInstanceRepresentation.json";
 
+  @JsonIgnoreProperties({"precedingTitles", "succeedingTitles", "isBoundWith", "parentInstances", "childInstances"})
+  private abstract class InstanceMixIn {
+
+  }
+
   @Test
   @SuppressWarnings("java:S5961")
   public void shouldMapInventoryInstanceJsonRepresentationToInstanceEntity() throws IOException {
     JsonObject instanceJson = new JsonObject(Files.readString(Path.of(INSTANCE_JSON_PATH)));
+    instanceJson.put("testId", new JsonObject()
+      .put("value", "testVal")
+      .put("type", "testType")
+    );
+
+//    ObjectMapper mapper = ObjectMapperTool.getMapper();
+//    mapper.addMixIn(Person.class, PersonMixIn.class);
+//    String jsonString = "{\"name\":\"John\", \"age\":30, \"sensitiveData\":\"secret\", \"internalCode\":\"XYZ\"}";
+//    Person instance1 = mapper.readValue(jsonString, Person.class);
+
+
+    ObjectMapper mapper = ObjectMapperTool.getMapper();
+    mapper.addMixIn(Instance.class, InstanceMixIn.class);
+    Instance instance1 = mapper.readValue(instanceJson.encode(), Instance.class);
+
+    InstanceDto instanceDto = instanceJson.mapTo(InstanceDto.class);
+    Instance instance = ObjectMapperTool.getMapper().convertValue(instanceDto, Instance.class);
 
     JsonObject actualInstanceJson = JsonObject.mapFrom(InstanceUtil.mapInstanceDtoJsonToInstance(instanceJson));
 

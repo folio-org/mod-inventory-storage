@@ -1,5 +1,6 @@
 package org.folio.rest.support;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import org.folio.rest.jaxrs.model.ElectronicAccess;
 import org.folio.rest.jaxrs.model.Identifier;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Instance.SourceRecordFormat;
+import org.folio.rest.jaxrs.model.InstanceDto;
 import org.folio.rest.jaxrs.model.InstanceNote;
 import org.folio.rest.jaxrs.model.Publication;
 import org.folio.rest.jaxrs.model.PublicationPeriod;
@@ -69,6 +71,11 @@ public final class InstanceUtil {
 
   private InstanceUtil() {
     throw new UnsupportedOperationException("Cannot instantiate utility class");
+  }
+
+  @JsonIgnoreProperties({"precedingTitles", "succeedingTitles", "isBoundWith", "parentInstances", "childInstances"})
+  private abstract class InstanceMixIn {
+
   }
 
   /**

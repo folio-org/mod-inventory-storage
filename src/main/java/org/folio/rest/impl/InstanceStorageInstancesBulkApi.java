@@ -8,7 +8,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.resource.InstanceStorageInstancesBulk;
 import org.folio.rest.support.EndpointFailureHandler;
-import org.folio.services.instance.InstanceS3Service;
+import org.folio.services.bulkprocessing.InstanceS3Service;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 
 public class InstanceStorageInstancesBulkApi implements InstanceStorageInstancesBulk {
