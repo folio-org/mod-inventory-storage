@@ -69,6 +69,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String INSTANCE_TITLE_1 = "Long Way to a Small Angry Planet";
   private static final String INSTANCE_TITLE_2 = "Novik, Naomi";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
+  private static final String ID_FIELD = "id";
   private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
 
   private static LocalStackContainer localStackContainer;
@@ -119,12 +120,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   public void shouldUpdateInstancesWithoutErrors()
     throws ExecutionException, InterruptedException, TimeoutException, IOException {
     // given
-    List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_PATH))
-      .stream()
-      .map(JsonObject::new)
-      .map(json -> json.getString("id"))
-      .toList();
-
+    List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_PATH);
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_PATH));
     String bulkFilePath = s3Client.write(BULK_INSTANCES_PATH, inputStream);
 
@@ -169,12 +165,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
 
-    List<String> instancesIds = Files.readAllLines(Path.of(BULK_INSTANCES_WITH_INVALID_TYPE_PATH))
-      .stream()
-      .map(JsonObject::new)
-      .map(json -> json.getString("id"))
-      .toList();
-
+    List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_WITH_INVALID_TYPE_PATH);
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_TYPE_PATH));
     String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
 
@@ -206,6 +197,14 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     CompletableFuture<Response> future = getClient().post(instancesBulk(), new BulkUpsertRequest(), TENANT_ID);
     Response response = future.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  private List<String> extractInstancesIdsFromFile(String bulkInstancesFilePath) throws IOException {
+    return Files.readAllLines(Path.of(bulkInstancesFilePath))
+      .stream()
+      .map(JsonObject::new)
+      .map(json -> json.getString(ID_FIELD))
+      .toList();
   }
 
   private JsonObject buildInstance(String id, String title) {
