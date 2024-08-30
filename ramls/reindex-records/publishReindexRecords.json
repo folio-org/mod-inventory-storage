@@ -19,13 +19,11 @@
       "properties": {
         "from": {
           "type": "string",
-          "description": "UUID of the first record",
-          "$ref": "../uuid.json"
+          "description": "UUID of the first record"
         },
         "to": {
           "type": "string",
-          "description": "UUID of the last record",
-          "$ref": "../uuid.json"
+          "description": "UUID of the last record"
         }
       },
       "additionalProperties": false,

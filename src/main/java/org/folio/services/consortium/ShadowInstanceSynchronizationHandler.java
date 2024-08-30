@@ -99,12 +99,12 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
-    return tenantId.equals(consortiumData.getCentralTenantId());
+    return tenantId.equals(consortiumData.centralTenantId());
   }
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
-    return getShadowInstancesTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
+    return getShadowInstancesTenantIds(consortiumData.consortiumId(), consortiumData.centralTenantId(),
       instanceId, headers)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
   }

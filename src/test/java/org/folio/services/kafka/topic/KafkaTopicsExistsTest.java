@@ -2,29 +2,26 @@ package org.folio.services.kafka.topic;
 
 import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
-import static org.folio.utility.ModuleUtility.getVertx;
-import static org.folio.utility.ModuleUtility.removeTenant;
-import static org.folio.utility.ModuleUtility.startVerticleWebClientAndPrepareTenant;
-import static org.folio.utility.ModuleUtility.stopVerticleAndWebClient;
-import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
+import io.vertx.core.Future;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.RunTestOnContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.persist.PostgresClient;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -32,48 +29,31 @@ import org.junit.runner.RunWith;
 public class KafkaTopicsExistsTest {
   private static final short REPLICATION_FACTOR = 1;
 
+  @Rule
+  public RunTestOnContext rule = new RunTestOnContext();
+
   private KafkaAdminClient kafkaAdminClient;
 
   @BeforeClass
-  public static void beforeAll()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    // tests expect English error messages only, no Danish/German/...
-    Locale.setDefault(Locale.US);
-
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
+  public static void beforeAll() {
     startKafka();
-    startVerticleWebClientAndPrepareTenant(TENANT_ID);
   }
 
   @AfterClass
-  public static void afterAll(TestContext context)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
-    removeTenant(TENANT_ID);
-    stopVerticleAndWebClient();
+  public static void afterAll() {
     stopKafka();
-    PostgresClient.stopPostgresTester();
   }
 
   @Before
   public void beforeEach() {
-    kafkaAdminClient = KafkaAdminClient.create(getVertx(), KafkaConfig.builder()
+    kafkaAdminClient = KafkaAdminClient.create(rule.vertx(), KafkaConfig.builder()
       .kafkaHost(KafkaEnvironmentProperties.host())
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build().getProducerProps());
   }
 
   @After
-  public void afterEach(TestContext context)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void afterEach(TestContext context) {
     kafkaAdminClient.deleteTopics(List.of("T1", "T2", "T3"))
       .compose(x -> kafkaAdminClient.close())
       .onComplete(context.asyncAssertSuccess());
@@ -91,14 +71,27 @@ public class KafkaTopicsExistsTest {
           new NewTopic("T1", 1, REPLICATION_FACTOR),
           new NewTopic("T3", 1, REPLICATION_FACTOR)
         ))
-      ).otherwise(cause -> {
-        if (cause instanceof TopicExistsException) {
-          return null;
-        }
-        throw new RuntimeException(cause);
-      }).compose(x -> kafkaAdminClient.listTopics())
-      .onComplete(context.asyncAssertSuccess(topics ->
-        context.assertTrue(topics.containsAll(List.of("T1", "T2", "T3")))
-      ));
+      ).onComplete(context.asyncAssertFailure(cause ->
+        assertThat(cause, is(instanceOf(TopicExistsException.class)))
+      ))
+      .otherwiseEmpty()
+      .compose(x -> assertTopics(10000, List.of("T1", "T2", "T3")))
+      .onComplete(context.asyncAssertSuccess());
+  }
+
+  private <T> Future<Void> assertTopics(int retries, List<String> expectedTopics) {
+    return kafkaAdminClient.listTopics()
+        .compose(topics -> {
+          if (topics.containsAll(expectedTopics)) {
+            return Future.succeededFuture();
+          }
+          if (retries <= 0) {
+            var expected = expectedTopics.stream().collect(Collectors.joining(", "));
+            var actual = topics.stream().collect(Collectors.joining(", "));
+            return Future.failedFuture("listTopics() missing expected topics. "
+                + "Expected: " + expected + ". Actual: " + actual);
+          }
+          return assertTopics(retries - 1, expectedTopics);
+        });
   }
 }

@@ -6,6 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
@@ -115,7 +116,8 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     WireMock.stubFor(WireMock.get(new UrlPathPattern(new RegexPattern(SHARING_JOBS_PATH), true))
       .willReturn(WireMock.ok().withBody(sharingCollection.encodePrettily())));
     Mockito.when(consortiaDataCache.getConsortiumData(anyString(), anyMap()))
-      .thenReturn(Future.succeededFuture(Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID))));
+      .thenReturn(Future.succeededFuture(Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID,
+        emptyList()))));
   }
 
   @Test

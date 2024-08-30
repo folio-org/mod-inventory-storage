@@ -5,14 +5,16 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public final class KafkaUtility {
   private static final Logger logger = LogManager.getLogger();
 
-  private static final KafkaContainer KAFKA_CONTAINER
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+  private static final DockerImageName IMAGE_NAME
+    = DockerImageName.parse("apache/kafka-native:3.8.0");
+
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(IMAGE_NAME);
 
   private KafkaUtility() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -45,5 +47,9 @@ public final class KafkaUtility {
     } else {
       logger.info("Kafka container already stopped");
     }
+  }
+
+  public static DockerImageName getImageName() {
+    return IMAGE_NAME;
   }
 }

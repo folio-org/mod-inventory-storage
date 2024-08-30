@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
-import static java.lang.String.format;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -8,13 +9,19 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -24,32 +31,39 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.net.MalformedURLException;
-import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.support.extension.EnableTenant;
+import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.jupiter.api.AfterAll;
+import org.folio.utility.KafkaUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testcontainers.containers.KafkaContainer;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.kafka.KafkaContainer;
 
+@EnableTenant
 @Testcontainers(parallel = true)
 @ExtendWith(VertxExtension.class)
 public class BaseIntegrationTest {
 
   public static final String USER_ID = UUID.randomUUID().toString();
+  @RegisterExtension
+  protected static WireMockExtension wm = WireMockExtension.newInstance()
+    .options(wireMockConfig().dynamicPort()
+      .notifier(new ConsoleNotifier(true)))
+    .build();
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @Container
@@ -59,42 +73,76 @@ public class BaseIntegrationTest {
     .withPassword("admin_password");
 
   @Container
-  private static final KafkaContainer KAFKA_CONTAINER
-    = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:5.4.3"));
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName());
   private static int port;
+
+  @BeforeEach
+  public void removeAllEvents() {
+    KAFKA_CONSUMER.discardAllMessages();
+  }
 
   protected static Future<TestResponse> doGet(HttpClient client, String requestUri) {
     return doRequest(client, HttpMethod.GET, requestUri, null);
+  }
+
+  protected static Future<TestResponse> doGet(HttpClient client, String requestUri, String tenantId) {
+    return doRequest(client, HttpMethod.GET, requestUri, tenantId, null);
   }
 
   protected static Future<TestResponse> doPost(HttpClient client, String requestUri, JsonObject body) {
     return doRequest(client, HttpMethod.POST, requestUri, body);
   }
 
+  protected static Future<TestResponse> doPost(HttpClient client, String requestUri, String tenantId, JsonObject body) {
+    return doRequest(client, HttpMethod.POST, requestUri, tenantId, body);
+  }
+
   protected static Future<TestResponse> doPut(HttpClient client, String requestUri, JsonObject body) {
     return doRequest(client, HttpMethod.PUT, requestUri, body);
+  }
+
+  protected static Future<TestResponse> doPut(HttpClient client, String requestUri, String tenantId, JsonObject body) {
+    return doRequest(client, HttpMethod.PUT, requestUri, tenantId, body);
   }
 
   protected static Future<TestResponse> doPatch(HttpClient client, String requestUri, JsonObject body) {
     return doRequest(client, HttpMethod.PATCH, requestUri, body);
   }
 
+  protected static Future<TestResponse> doPatch(HttpClient client, String requestUri, String tenantId,
+                                                JsonObject body) {
+    return doRequest(client, HttpMethod.PATCH, requestUri, tenantId, body);
+  }
+
   protected static Future<TestResponse> doDelete(HttpClient client, String requestUri) {
     return doRequest(client, HttpMethod.DELETE, requestUri, null);
   }
 
+  protected static Future<TestResponse> doDelete(HttpClient client, String requestUri, String tenantId) {
+    return doRequest(client, HttpMethod.DELETE, requestUri, tenantId, null);
+  }
+
   protected static Future<TestResponse> doRequest(HttpClient client, HttpMethod method,
                                                   String requestUri, JsonObject body) {
+    return doRequest(client, method, requestUri, TENANT_ID, body);
+  }
+
+  protected static Future<TestResponse> doRequest(HttpClient client, HttpMethod method,
+                                                  String requestUri, String tenantId, JsonObject body) {
     return client.request(method, port, "localhost", requestUri)
       .compose(req -> {
-        var request = addDefaultHeaders(req, TENANT_ID);
+        var request = addDefaultHeaders(req, tenantId);
         return (body == null ? request.send() : request.send(body.toBuffer()))
           .compose(resp -> resp.body().map(respBody -> new TestResponse(resp.statusCode(), respBody)));
       });
   }
 
+  protected static Handler<AsyncResult<TestResponse>> verifyStatus(VertxTestContext ctx, HttpStatus expectedStatus) {
+    return ctx.succeeding(response -> ctx.verify(() -> assertEquals(expectedStatus.toInt(), response.status())));
+  }
+
   @BeforeAll
-  static void beforeAll(Vertx vertx, VertxTestContext ctx) throws Throwable {
+  static void beforeAll(Vertx vertx, VertxTestContext ctx, @Tenants List<String> tenants) throws Throwable {
     port = NetworkUtils.nextFreePort();
     System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
     System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
@@ -111,40 +159,44 @@ public class BaseIntegrationTest {
     HttpClient client = vertx.createHttpClient();
 
     vertx.deployVerticle(RestVerticle.class, options)
-      .compose(s -> enableTenant(ctx, client));
+      .compose(s -> {
+        var future = Future.succeededFuture();
+        for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
+          future = future.eventually(() -> enableTenant(tenant, ctx, client));
+        }
+        return future.onComplete(event -> ctx.completeNow());
+      });
 
     assertTrue(ctx.awaitCompletion(65, TimeUnit.SECONDS));
     if (ctx.failed()) {
       throw ctx.causeOfFailure();
     }
 
-
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(vertx);
     await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
+    mockUserTenantsForNonConsortiumMember();
   }
 
-  @AfterAll
-  static void afterAll() {
-    if (KAFKA_CONTAINER.isRunning()) {
-      KAFKA_CONTAINER.stop();
-    }
-    KAFKA_CONSUMER.unsubscribe();
+  public static JsonObject pojo2JsonObject(Object entity) {
+    return TestBase.pojo2JsonObject(entity);
   }
 
-  @BeforeEach
-  public void removeAllEvents() {
-    KAFKA_CONSUMER.discardAllMessages();
+  private static void mockUserTenantsForNonConsortiumMember() {
+    JsonObject emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
-  private static Future<TestResponse> enableTenant(VertxTestContext ctx, HttpClient client) {
-    return BaseIntegrationTest.doPost(client, "/_/tenant", BaseIntegrationTest.getJob(false))
+  private static Future<TestResponse> enableTenant(String tenant, VertxTestContext ctx, HttpClient client) {
+    return doPost(client, "/_/tenant", tenant, BaseIntegrationTest.getJob(false))
       .map(buffer -> buffer.jsonBody().getString("id"))
-      .compose(id -> BaseIntegrationTest.doGet(client, "/_/tenant/" + id + "?wait=60000"))
+      .compose(id -> doGet(client, "/_/tenant/" + id + "?wait=60000", tenant))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         assertEquals(HttpStatus.HTTP_OK.toInt(), response.status());
         assertFalse(response.body().toJsonObject().containsKey("error"));
-        ctx.completeNow();
       })));
   }
 
@@ -171,23 +223,11 @@ public class BaseIntegrationTest {
       request.putHeader(XOkapiHeaders.TENANT, tenantId);
       request.putHeader(XOkapiHeaders.TOKEN, "TEST_TOKEN");
       request.putHeader(XOkapiHeaders.USER_ID, USER_ID);
+      request.putHeader(XOkapiHeaders.URL, wm.baseUrl());
     }
-    String baseUrl;
-    try {
-      var url = URI.create(request.absoluteURI()).toURL();
-      baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-    } catch (MalformedURLException e) {
-      baseUrl = "http://localhost:" + port;
-    }
-    request.putHeader(XOkapiHeaders.URL, baseUrl);
-    request.putHeader(XOkapiHeaders.URL_TO, baseUrl);
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
 
     return request;
-  }
-
-  public static JsonObject pojo2JsonObject(Object entity) {
-    return TestBase.pojo2JsonObject(entity);
   }
 
   public record TestResponse(int status, Buffer body) {
