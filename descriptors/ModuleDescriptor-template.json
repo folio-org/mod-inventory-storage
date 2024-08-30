@@ -303,6 +303,17 @@
       ]
     },
     {
+      "id": "instance-storage-bulk",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/bulk",
+          "permissionsRequired": ["inventory-storage.instances.bulk.post"]
+        }
+      ]
+    },
+    {
       "id": "loan-types",
       "version": "2.3",
       "handlers": [
@@ -2610,6 +2621,11 @@
       "description": "patch instance-date-type"
     },
     {
+      "permissionName": "inventory-storage.instances.bulk.post",
+      "displayName": "inventory storage - create or update instances records in bulk",
+      "description": "create or update instances records in bulk from external file"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2645,6 +2661,7 @@
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
         "inventory-storage.instances.batch-unsafe.post",
+        "inventory-storage.instances.bulk.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",
@@ -2893,7 +2910,13 @@
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
-      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"}
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"},
+      { "name": "S3_URL", "value": "http://127.0.0.1:9000/" },
+      { "name": "S3_REGION", "value": "" },
+      { "name": "S3_BUCKET", "value": "marc-migrations" },
+      { "name": "S3_ACCESS_KEY_ID", "value": "" },
+      { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
+      { "name": "S3_IS_AWS", "value": "true" }
     ]
   }
 }

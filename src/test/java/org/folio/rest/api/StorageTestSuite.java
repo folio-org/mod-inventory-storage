@@ -91,6 +91,7 @@ import org.junit.runners.Suite;
   RetainLeadingZeroesMigrationScriptTest.class,
   StatisticalCodeTest.class,
   UpcIsmnMigrationScriptTest.class,
+  InstanceStorageInstancesBulkApiTest.class
 
   // These fail.
   //ReferenceTablesTest.class,
