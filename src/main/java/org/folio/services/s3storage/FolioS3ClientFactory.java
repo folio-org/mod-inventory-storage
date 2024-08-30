@@ -6,12 +6,15 @@ import org.folio.s3.client.S3ClientProperties;
 
 public class FolioS3ClientFactory {
 
-  public static final String AWS_URL_CONFIG = "AWS_URL";
-  public static final String AWS_REGION_CONFIG = "AWS_REGION";
-  public static final String AWS_BUCKET_CONFIG = "AWS_BUCKET";
-  public static final String AWS_ACCESS_KEY_ID_CONFIG = "AWS_ACCESS_KEY_ID";
-  public static final String AWS_SECRET_ACCESS_KEY_CONFIG = "AWS_SECRET_ACCESS_KEY";
-  public static final String AWS_SDK_CONFIG = "AWS_SDK";
+  public static final String S3_URL_CONFIG = "S3_URL";
+  public static final String S3_REGION_CONFIG = "S3_REGION";
+  public static final String S3_BUCKET_CONFIG = "S3_BUCKET";
+  public static final String S3_ACCESS_KEY_ID_CONFIG = "S3_ACCESS_KEY_ID";
+  public static final String S3_SECRET_ACCESS_KEY_CONFIG = "S3_SECRET_ACCESS_KEY";
+  public static final String S3_IS_AWS_CONFIG = "S3_IS_AWS_";
+  private static final String S3_URL_DEFAULT = "http://127.0.0.1:9000";
+  private static final String S3_BUCKET_DEFAULT = "marc-migrations";
+  private static final String S3_IS_AWS_DEFAULT = "false";
 
   public FolioS3Client getFolioS3Client() {
     return S3ClientFactory.getS3Client(getS3ClientProperties());
@@ -20,17 +23,21 @@ public class FolioS3ClientFactory {
   private S3ClientProperties getS3ClientProperties() {
     return S3ClientProperties
       .builder()
-      .endpoint(getValue(AWS_URL_CONFIG))
-      .region(getValue(AWS_REGION_CONFIG))
-      .bucket(getValue(AWS_BUCKET_CONFIG))
-      .accessKey(getValue(AWS_ACCESS_KEY_ID_CONFIG))
-      .secretKey(getValue(AWS_SECRET_ACCESS_KEY_CONFIG))
-      .awsSdk(Boolean.parseBoolean(getValue(AWS_SDK_CONFIG)))
+      .endpoint(getValue(S3_URL_CONFIG, S3_URL_DEFAULT))
+      .region(getValue(S3_REGION_CONFIG))
+      .bucket(getValue(S3_BUCKET_CONFIG, S3_BUCKET_DEFAULT))
+      .accessKey(getValue(S3_ACCESS_KEY_ID_CONFIG))
+      .secretKey(getValue(S3_SECRET_ACCESS_KEY_CONFIG))
+      .awsSdk(Boolean.parseBoolean(getValue(S3_IS_AWS_CONFIG, S3_IS_AWS_DEFAULT)))
       .build();
   }
 
   private String getValue(String key) {
-    return System.getProperty(key, System.getenv(key));
+    return getValue(key, null);
+  }
+
+  private String getValue(String key, String defaultValue) {
+    return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
   }
 
 }

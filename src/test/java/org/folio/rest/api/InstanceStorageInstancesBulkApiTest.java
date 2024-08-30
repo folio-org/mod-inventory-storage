@@ -8,12 +8,12 @@ import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_ACCESS_KEY_ID_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_BUCKET_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_REGION_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_SDK_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_SECRET_ACCESS_KEY_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.AWS_URL_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_ACCESS_KEY_ID_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_BUCKET_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_IS_AWS_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_REGION_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_SECRET_ACCESS_KEY_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3_URL_CONFIG;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -82,12 +82,12 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
       .withServices(S3);
 
     localStackContainer.start();
-    System.setProperty(AWS_URL_CONFIG, localStackContainer.getEndpoint().toString());
-    System.setProperty(AWS_REGION_CONFIG, localStackContainer.getRegion());
-    System.setProperty(AWS_ACCESS_KEY_ID_CONFIG, localStackContainer.getAccessKey());
-    System.setProperty(AWS_SECRET_ACCESS_KEY_CONFIG, localStackContainer.getSecretKey());
-    System.setProperty(AWS_BUCKET_CONFIG, MINIO_BUCKET);
-    System.setProperty(AWS_SDK_CONFIG, Boolean.FALSE.toString());
+    System.setProperty(S3_URL_CONFIG, localStackContainer.getEndpoint().toString());
+    System.setProperty(S3_REGION_CONFIG, localStackContainer.getRegion());
+    System.setProperty(S3_ACCESS_KEY_ID_CONFIG, localStackContainer.getAccessKey());
+    System.setProperty(S3_SECRET_ACCESS_KEY_CONFIG, localStackContainer.getSecretKey());
+    System.setProperty(S3_BUCKET_CONFIG, MINIO_BUCKET);
+    System.setProperty(S3_IS_AWS_CONFIG, Boolean.FALSE.toString());
 
     s3Client = S3ClientFactory.getS3Client(
       S3ClientProperties

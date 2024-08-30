@@ -2908,12 +2908,12 @@
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"},
-      { "name": "AWS_URL", "value": "http://127.0.0.1:9000/" },
-      { "name": "AWS_REGION", "value": "" },
-      { "name": "AWS_BUCKET", "value": "marc-migrations" },
-      { "name": "AWS_ACCESS_KEY_ID", "value": "" },
-      { "name": "AWS_SECRET_ACCESS_KEY", "value": "" },
-      { "name": "AWS_SDK", "value": "true" }
+      { "name": "S3_URL", "value": "http://127.0.0.1:9000/" },
+      { "name": "S3_REGION", "value": "" },
+      { "name": "S3_BUCKET", "value": "marc-migrations" },
+      { "name": "S3_ACCESS_KEY_ID", "value": "" },
+      { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
+      { "name": "S3_IS_AWS", "value": "true" }
     ]
   }
 }
