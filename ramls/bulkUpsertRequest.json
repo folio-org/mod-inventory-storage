@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk entities upsert request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recordsFileName": {
+      "description": "File name of entities records",
+      "type": "string"
+    }
+  },
+  "required": [
+    "recordsFileName"
+  ]
+}
