@@ -151,7 +151,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
         List.of(new Item().withId(RECORD1_ID), new Item().withId(RECORD2_ID))),
       arguments(
         HOLDING_TABLE,
-        PublishReindexRecords.RecordType.HOLDING,
+        PublishReindexRecords.RecordType.HOLDINGS,
         List.of(new Holding().withId(RECORD1_ID), new Holding().withId(RECORD2_ID)))
     );
   }
