@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
@@ -20,19 +21,23 @@ import org.folio.rest.jaxrs.model.PublishReindexRecords;
 
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
+  
+  private final CommonDomainEventPublisher<String> instanceReindexPublisher;
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstanceRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         INSTANCE.fullTopicName(tenantId(okapiHeaders))));
+    instanceReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
-  public Future<Void> publishReindexInstances(String key, List<Instance> instances) {
+  public Future<Void> publishReindexInstances(String key, List<String> instances) {
     if (CollectionUtils.isEmpty(instances) || StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
+    return instanceReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
   }
 
   public Future<Void> publishInstancesCreated(List<Instance> instances) {
