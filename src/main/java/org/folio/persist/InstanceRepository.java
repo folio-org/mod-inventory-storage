@@ -116,7 +116,8 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     }
   }
 
-  public Future<List<String>> getReindexInstances(String fromId, String toId, boolean notConsortiumCentralTenant) {
+  public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,
+                                                               boolean notConsortiumRecords) {
     var sql = new StringBuilder("SELECT i.jsonb || jsonb_build_object('isBoundWith', EXISTS(SELECT 1 FROM ");
     sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
     sql.append(" as bw JOIN ");
@@ -126,15 +127,15 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     sql.append(" as hr ON hr.id = bw.holdingsrecordid WHERE hr.instanceId = i.id LIMIT 1)) FROM ");
     sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
     sql.append(" i WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
-    if (notConsortiumCentralTenant) {
+    if (notConsortiumRecords) {
       sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
     }
     sql.append(";");
 
     return postgresClient.select(sql.toString()).map(rows -> {
-      var resultList = new LinkedList<String>();
+      var resultList = new LinkedList<Map<String, Object>>();
       for (var row : rows) {
-        resultList.add(row.getJsonObject(0).encode());
+        resultList.add(row.getJsonObject(0).getMap());
       }
       return resultList;
     });

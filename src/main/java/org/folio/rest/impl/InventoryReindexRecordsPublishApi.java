@@ -34,7 +34,7 @@ public class InventoryReindexRecordsPublishApi implements InventoryReindexRecord
       case ITEM ->
         publishFuture = new ItemService(vertxContext, okapiHeaders)
           .publishReindexItemRecords(rangeId, fromId, toId);
-      case HOLDING ->
+      case HOLDINGS ->
         publishFuture = new HoldingsService(vertxContext, okapiHeaders)
           .publishReindexHoldingsRecords(rangeId, fromId, toId);
       default -> publishFuture = Future.failedFuture(
