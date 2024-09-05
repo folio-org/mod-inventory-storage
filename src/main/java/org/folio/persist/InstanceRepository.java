@@ -1,5 +1,8 @@
 package org.folio.persist;
 
+import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
+import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
+import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
@@ -7,6 +10,8 @@ import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -109,5 +114,29 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
+  }
+
+  public Future<List<String>> getReindexInstances(String fromId, String toId, boolean notConsortiumCentralTenant) {
+    var sql = new StringBuilder("SELECT i.jsonb || jsonb_build_object('isBoundWith', EXISTS(SELECT 1 FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
+    sql.append(" as bw JOIN ");
+    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
+    sql.append(" as it ON it.id = bw.itemid JOIN ");
+    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(" as hr ON hr.id = bw.holdingsrecordid WHERE hr.instanceId = i.id LIMIT 1)) FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
+    sql.append(" i WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
+    if (notConsortiumCentralTenant) {
+      sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
+    }
+    sql.append(";");
+
+    return postgresClient.select(sql.toString()).map(rows -> {
+      var resultList = new LinkedList<String>();
+      for (var row : rows) {
+        resultList.add(row.getJsonObject(0).encode());
+      }
+      return resultList;
+    });
   }
 }
