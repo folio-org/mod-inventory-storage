@@ -30,7 +30,7 @@ public class HoldingDomainEventPublisher
       return succeededFuture();
     }
 
-    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDING, holdings);
+    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDINGS, holdings);
   }
 
   @Override
