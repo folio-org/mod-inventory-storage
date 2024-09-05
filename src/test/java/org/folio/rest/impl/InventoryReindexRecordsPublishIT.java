@@ -137,7 +137,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       EVENT_MESSAGE_MATCHERS.hasReindexEventMessageFor());
     var event = kafkaMessages.stream().toList().get(0).getBody();
     var records = event.getJsonArray("records").stream()
-      .map(o -> new JsonObject((String) o))
+      .map(JsonObject::mapFrom)
       .toList();
     Assertions.assertThat(event.getString("recordType")).isEqualTo(PublishReindexRecords.RecordType.INSTANCE.value());
     Assertions.assertThat(records).contains(mainInstance, anotherInstance);
