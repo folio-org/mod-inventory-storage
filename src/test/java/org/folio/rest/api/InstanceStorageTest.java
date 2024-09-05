@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.lang.String.format;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -345,6 +346,65 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotUpdateAnInstanceWithNotExistingSubjectIds()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    var instanceToCreate = smallAngryPlanet(null);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      json(createCompleted));
+
+    var response = createCompleted.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var instance = response.getJson();
+    var newId = instance.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var instanceFromGet = getResponse.getJson();
+    var subject = new Subject()
+      .withSubjectSourceId(UUID.randomUUID().toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceFromGet.put(SUBJECTS_KEY, subjects);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void cannotCreateAnInstanceWithNotExistingSubjectIds()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    var instanceToCreate = smallAngryPlanet(null);
+    var subject = new Subject()
+      .withSubjectSourceId(UUID.randomUUID().toString())
+      .withSubjectTypeId(UUID.randomUUID().toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      text(createCompleted));
+
+    var response = createCompleted.get(10, SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_NOT_FOUND));
+  }
+
+  @Test
   public void cannotPutAnInstanceAtNonexistingLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -359,7 +419,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.empty(createCompleted));
 
     Response putResponse = createCompleted.get(10, SECONDS);
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(putResponse.getStatusCode(), is(HTTP_NOT_FOUND));
 
     assertGetNotFound(url);
   }
@@ -1910,6 +1970,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item ->
       assertThat(getById(item.getString("id")).getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
         hasIsoFormat()));
+  }
+
+  @Test
+  public void cannotBatchCreateInstancesWithNonExistingSubjectIds() throws Exception {
+    var instanceCollection = createRequestForMultipleInstances(3);
+    var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
+    var invalidSubjectId = UUID.randomUUID().toString();
+    var subject = new Subject()
+      .withSubjectSourceId(invalidSubjectId)
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+    instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.text(createCompleted));
+    var result = createCompleted.get(30, SECONDS);
+    assertThat(result, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
+    assertThat(true, is(result.getBody().contains(invalidSubjectId)));
   }
 
   @Test
