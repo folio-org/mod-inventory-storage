@@ -3,9 +3,9 @@ package org.folio.validator;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 
-import java.util.ArrayList;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
