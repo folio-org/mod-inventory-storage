@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
- * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql)
+ * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql).
  */
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
@@ -277,7 +277,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
+   * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?.
    */
   @Test
   public void canSetTableFieldOnItemUpdate() {
