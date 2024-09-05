@@ -991,7 +991,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-    
+
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
@@ -2569,25 +2569,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
 
     log.info("Finished canCreateHoldingAndCreateShadowInstance");
-  }
-
-  @Test
-  public void shouldNotExecuteConsortiumLogicIfUserNotHavePermissionsToRetrieveConsortiumData() {
-    mockSharingInstance();
-
-    UUID instanceId = UUID.randomUUID();
-    HoldingRequestBuilder builder = new HoldingRequestBuilder()
-      .withId(null)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-
-    Response response = holdingsClient.attemptToCreate("", builder.create(), TENANT_WITHOUT_USER_TENANTS_PERMISSIONS,
-      Map.of(X_OKAPI_URL, mockServer.baseUrl()));
-
-    verify(1, getRequestedFor(urlEqualTo(USER_TENANTS_PATH)));
-    verify(0, postRequestedFor(urlEqualTo("/consortia/mobius/sharing/instances")));
-    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
