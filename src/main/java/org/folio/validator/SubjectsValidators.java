@@ -1,19 +1,18 @@
 package org.folio.validator;
 
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import org.folio.HttpStatus;
+import org.folio.okapi.common.GenericCompositeFuture;
+import org.folio.rest.exceptions.NotFoundException;
+import org.folio.rest.jaxrs.model.Instance;
+import org.folio.services.subjectsource.SubjectSourceService;
+import org.folio.services.subjecttype.SubjectTypeService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import io.vertx.core.Context;
-import io.vertx.core.Future;
-
-import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.exceptions.NotFoundException;
-import org.folio.okapi.common.GenericCompositeFuture;
-import org.folio.services.subjectsource.SubjectSourceService;
-import org.folio.services.subjecttype.SubjectTypeService;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
