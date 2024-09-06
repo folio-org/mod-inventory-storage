@@ -29,8 +29,6 @@ import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
@@ -203,25 +201,13 @@ public class InstanceService {
   }
 
   public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
-    var criteriaFrom = new Criteria().setJSONB(false)
-      .addField("id").setOperation(">=").setVal(fromId);
-    var criteriaTo = new Criteria().setJSONB(false)
-      .addField("id").setOperation("<=").setVal(toId);
-    final Criterion criterion = new Criterion(criteriaFrom)
-      .addCriterion(criteriaTo);
-
     return consortiumService.getConsortiumData(okapiHeaders)
       .map(consortiumDataOptional -> consortiumDataOptional
         .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
         .orElse(false))
       .compose(isCentralTenant -> {
-        if (Boolean.TRUE.equals(isCentralTenant)) {
-          return instanceRepository.get(criterion);
-        }
-        var nonConsortia = new Criteria()
-          .addField("'source'").setOperation("NOT LIKE").setVal("CONSORTIUM-");
-        criterion.addCriterion(nonConsortia);
-        return instanceRepository.get(criterion);
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
       })
       .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
   }

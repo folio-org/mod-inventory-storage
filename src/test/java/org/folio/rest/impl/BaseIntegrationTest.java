@@ -8,8 +8,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
+import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.RestUtility.USER_TENANTS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -137,6 +137,14 @@ public class BaseIntegrationTest {
       });
   }
 
+  public static void mockUserTenantsForNonConsortiumMember() {
+    var emptyUserTenantsCollection = new JsonObject()
+      .put("userTenants", JsonArray.of());
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+  }
+
   protected static Handler<AsyncResult<TestResponse>> verifyStatus(VertxTestContext ctx, HttpStatus expectedStatus) {
     return ctx.succeeding(response -> ctx.verify(() -> assertEquals(expectedStatus.toInt(), response.status())));
   }
@@ -180,14 +188,6 @@ public class BaseIntegrationTest {
 
   public static JsonObject pojo2JsonObject(Object entity) {
     return TestBase.pojo2JsonObject(entity);
-  }
-
-  private static void mockUserTenantsForNonConsortiumMember() {
-    JsonObject emptyUserTenantsCollection = new JsonObject()
-      .put("userTenants", JsonArray.of());
-    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
-      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
   private static Future<TestResponse> enableTenant(String tenant, VertxTestContext ctx, HttpClient client) {
