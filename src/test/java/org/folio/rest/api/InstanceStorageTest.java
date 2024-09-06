@@ -197,8 +197,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .withDate1("2023")
       .withDate2("2024");
     var subject = new Subject()
-      .withSubjectSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
-      .withSubjectTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
       .withValue("subject");
     var subjects = new JsonArray().add(subject);
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -268,8 +268,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
 
-    assertThat(storedSubject.getSubjectSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
-    assertThat(storedSubject.getSubjectTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
+    assertThat(storedSubject.getSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
+    assertThat(storedSubject.getTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
     assertThat(storedSubject.getValue(), is(is(subject.getValue())));
   }
 
@@ -372,7 +372,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var instanceFromGet = getResponse.getJson();
     var subject = new Subject()
-      .withSubjectSourceId(UUID.randomUUID().toString())
+      .withSourceId(UUID.randomUUID().toString())
       .withValue("subject");
     var subjects = new JsonArray().add(subject);
     instanceFromGet.put(SUBJECTS_KEY, subjects);
@@ -389,8 +389,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var instanceToCreate = smallAngryPlanet(null);
     var subject = new Subject()
-      .withSubjectSourceId(UUID.randomUUID().toString())
-      .withSubjectTypeId(UUID.randomUUID().toString())
+      .withSourceId(UUID.randomUUID().toString())
+      .withTypeId(UUID.randomUUID().toString())
       .withValue("subject");
     var subjects = new JsonArray().add(subject);
     instanceToCreate.put(SUBJECTS_KEY, subjects);
@@ -1979,7 +1979,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
     var invalidSubjectId = UUID.randomUUID().toString();
     var subject = new Subject()
-      .withSubjectSourceId(invalidSubjectId)
+      .withSourceId(invalidSubjectId)
       .withValue("subject");
     var subjects = new JsonArray().add(subject);
     instanceToCreate.put(SUBJECTS_KEY, subjects);
