@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION check_subject_references()
 RETURNS TRIGGER AS $$
 DECLARE
-invalid_subjectSourceId UUID;
-  invalid_subjectTypeId UUID;
+  invalid_subject_source_id UUID;
+  invalid_subject_type_id UUID;
 BEGIN
 
 SELECT subj->>'subjectSourceId'
