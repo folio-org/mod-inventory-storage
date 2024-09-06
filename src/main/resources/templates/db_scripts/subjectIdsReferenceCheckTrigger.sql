@@ -14,7 +14,7 @@ WHERE subj->>'subjectSourceId' IS NOT NULL AND id IS NULL
 
 IF FOUND THEN
     RAISE foreign_key_violation USING
-      MESSAGE = 'subjectSourceId doesn''t exist: ' || invalid_subjectSourceId,
+      MESSAGE = 'subject source doesn''t exist: ' || invalid_subjectSourceId,
       DETAIL = 'foreign key violation in subjects array of ' || TG_TABLE_NAME || ' with id=' || NEW.id,
       SCHEMA = TG_TABLE_SCHEMA,
       TABLE = TG_TABLE_NAME;
