@@ -1,6 +1,7 @@
 package org.folio.rest.api;
 
 import static java.lang.String.format;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -377,7 +378,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instanceFromGet.put(SUBJECTS_KEY, subjects);
 
     var updatedResponse = update(instanceFromGet);
-    assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -401,7 +402,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var response = createCompleted.get(10, SECONDS);
 
-    assertThat(response.getStatusCode(), is(HTTP_NOT_FOUND));
+    assertThat(response.getStatusCode(), is(HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -1984,10 +1985,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instanceToCreate.put(SUBJECTS_KEY, subjects);
     instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.text(createCompleted));
+    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
     var result = createCompleted.get(30, SECONDS);
-    assertThat(result, statusCodeIs(HttpStatus.HTTP_INTERNAL_SERVER_ERROR));
-    assertThat(true, is(result.getBody().contains(invalidSubjectId)));
+    assertThat(result, allOf(
+      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      errorMessageContains(invalidSubjectId)
+    ));
   }
 
   @Test

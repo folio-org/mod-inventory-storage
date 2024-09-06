@@ -41,7 +41,6 @@ import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
-import org.folio.validator.SubjectsValidators;
 
 public class InstanceService {
   private final HridManager hridManager;
@@ -93,7 +92,6 @@ public class InstanceService {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
-      .compose(instance -> SubjectsValidators.refuseIfSubjectIdsNotFound(instance, vertxContext, okapiHeaders))
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
 
@@ -118,7 +116,6 @@ public class InstanceService {
 
     return hridManager.populateHridForInstances(instances)
       .compose(NotesValidators::refuseInstanceLongNotes)
-      .compose(it -> SubjectsValidators.refuseIfSubjectIdsNotFound(it, vertxContext, okapiHeaders))
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
       .compose(batchOperation ->
@@ -132,7 +129,6 @@ public class InstanceService {
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
     return refuseLongNotes(newInstance)
-      .compose(it -> SubjectsValidators.refuseIfSubjectIdsNotFound(newInstance, vertxContext, okapiHeaders))
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> {
