@@ -8,8 +8,8 @@
 * Provides `subject-types 1.0`
 * Provides `instance-storage-bulk 1.0`
 * Provides `instance-date-types 1.0`
-* Provides `instance-storage 10.2`
 * Provides `locations 3.1`
+* Provides `instance-storage 10.3`
 * Requires `holdings-storage 6.1`
 
 ### Features
@@ -27,6 +27,7 @@
 * Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
+* Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 
 
 ### Bug fixes
@@ -34,6 +35,7 @@
 * Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
 * Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
+* Add user-tenants.collection.get to all ECS APIs ([MODINVSTOR-1253](https://folio-org.atlassian.net/browse/MODINVSTOR-1253))
 
 ### Tech Dept
 * Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
