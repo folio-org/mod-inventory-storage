@@ -167,7 +167,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.2",
+      "version": "10.3",
       "handlers": [
         {
           "methods": ["GET"],
