@@ -44,6 +44,14 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     INSTANCE_DATE_TYPE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1")
   );
 
+  private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_MESSAGE_RETENTION_MAP = Map.of(
+    REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION", "86400000") // 1 day
+  );
+
+  private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_MESSAGE_MAX_SIZE_MAP = Map.of(
+    REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE", "1048576") // 1 MB
+  );
+
   private final String topic;
 
   InventoryKafkaTopic(String topic) {
@@ -63,8 +71,22 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   @Override
   public int numPartitions() {
     return Optional.ofNullable(TOPIC_PARTITION_MAP.get(this))
-      .map(pair -> getNumberOfPartitions(pair.getKey(), pair.getValue()))
-      .orElse(getNumberOfPartitions(DEFAULT_NUM_PARTITIONS_PROPERTY, DEFAULT_NUM_PARTITIONS_VALUE));
+      .map(pair -> getPropertyValue(pair.getKey(), pair.getValue()))
+      .orElse(getPropertyValue(DEFAULT_NUM_PARTITIONS_PROPERTY, DEFAULT_NUM_PARTITIONS_VALUE));
+  }
+
+  @Override
+  public Integer messageRetentionTime() {
+    return Optional.ofNullable(TOPIC_MESSAGE_RETENTION_MAP.get(this))
+      .map(pair -> getPropertyValue(pair.getKey(), pair.getValue()))
+      .orElse(null);
+  }
+
+  @Override
+  public Integer messageMaxSize() {
+    return Optional.ofNullable(TOPIC_MESSAGE_MAX_SIZE_MAP.get(this))
+      .map(pair -> getPropertyValue(pair.getKey(), pair.getValue()))
+      .orElse(null);
   }
 
   public static InventoryKafkaTopic byTopic(String topic) {
@@ -76,7 +98,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     throw new IllegalArgumentException("Unknown topic " + topic);
   }
 
-  private int getNumberOfPartitions(String propertyName, String defaultNumPartitions) {
+  private int getPropertyValue(String propertyName, String defaultNumPartitions) {
     return Integer.parseInt(StringUtils.firstNonBlank(
       System.getenv(propertyName),
       System.getProperty(propertyName),
