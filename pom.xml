@@ -13,15 +13,15 @@
     <argLine />
 
     <raml-module-builder-version>35.2.2</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.9</vertx.version>
+    <vertx.version>4.5.10</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
     <folio-kafka-wrapper.version>3.2.0-SNAPSHOT</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.34</lombok.version>
     <snappy-java.version>1.1.10.6</snappy-java.version>
-    <commons-lang3.version>3.16.0</commons-lang3.version>
-    <log4j.version>2.23.1</log4j.version>
+    <commons-lang3.version>3.17.0</commons-lang3.version>
+    <log4j.version>2.24.0</log4j.version>
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
 
     <okapi-testing.version>6.0.2</okapi-testing.version>
@@ -46,10 +46,10 @@
     <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
-    <maven-surefire-plugin.version>3.3.1</maven-surefire-plugin.version>
-    <maven-checkstyle-plugin.version>3.4.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.17.0</checkstyle.version>
-    <maven-failsafe-plugin.version>3.3.1</maven-failsafe-plugin.version>
+    <maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
+    <maven-checkstyle-plugin.version>3.5.0</maven-checkstyle-plugin.version>
+    <checkstyle.version>10.18.1</checkstyle.version>
+    <maven-failsafe-plugin.version>3.5.0</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
   </properties>
 

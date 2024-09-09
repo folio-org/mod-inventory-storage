@@ -10,7 +10,6 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -56,7 +55,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   public Future<Void> publishReindexItems(String key, List<Item> items) {
-    if (CollectionUtils.isEmpty(items) || StringUtils.isBlank(key)) {
+    if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
