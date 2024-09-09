@@ -105,6 +105,10 @@
         }
       }
     },
+    "isFloatingCollection": {
+      "description": "Items checked in/out from this location can be checked in/out to other locations with the same flag.",
+      "type": "boolean"
+    },
     "servicePoints": {
       "type": "array",
       "description": "List of dereferenced service points",
