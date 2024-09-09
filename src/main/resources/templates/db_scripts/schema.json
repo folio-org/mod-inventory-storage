@@ -1218,6 +1218,11 @@
       "run": "after",
       "snippetPath": "publication-period/drop-publication-period-functions.sql",
       "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "subjectIdsReferenceCheckTrigger.sql",
+      "fromModuleVersion": "27.2.0"
     }
   ]
 }

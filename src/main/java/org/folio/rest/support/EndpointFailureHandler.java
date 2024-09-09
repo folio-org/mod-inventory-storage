@@ -40,7 +40,7 @@ public final class EndpointFailureHandler {
   }
 
   /**
-   * Use future.onError(handleFailure(asyncResultHandler, validationHandler, serverErrorHandler))
+   * Use future.onError(handleFailure(asyncResultHandler, validationHandler, serverErrorHandler)).
    */
   public static Handler<Throwable> handleFailure(
     Handler<AsyncResult<Response>> asyncResultHandler,

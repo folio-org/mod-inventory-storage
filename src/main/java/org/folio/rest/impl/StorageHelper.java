@@ -14,7 +14,7 @@ import org.folio.rest.persist.cql.CQLWrapper;
 public final class StorageHelper {
 
   /**
-   * Limit for PgUtil.postSync to avoid out-of-memory
+   * Limit for PgUtil.postSync to avoid out-of-memory.
    */
   public static final int MAX_ENTITIES = 10000;
 

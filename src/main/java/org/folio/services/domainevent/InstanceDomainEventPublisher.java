@@ -11,7 +11,6 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
@@ -33,7 +32,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   }
 
   public Future<Void> publishReindexInstances(String key, List<Map<String, Object>> instances) {
-    if (CollectionUtils.isEmpty(instances) || StringUtils.isBlank(key)) {
+    if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
