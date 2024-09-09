@@ -120,7 +120,10 @@
         }, {
           "methods": ["PUT"],
           "pathPattern": "/holdings-storage/holdings/{id}",
-          "permissionsRequired": ["inventory-storage.holdings.item.put"]
+          "permissionsRequired": ["inventory-storage.holdings.item.put"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/holdings-storage/holdings/{id}",
