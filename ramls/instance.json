@@ -190,6 +190,16 @@
             "type": "string",
             "description": "UUID of authority record that controls a subject heading",
             "$ref": "uuid.json"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "UUID of subject source",
+            "$ref": "uuid.json"
+          },
+          "typeId": {
+            "type": "string",
+            "description": "UUID of subject type",
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
