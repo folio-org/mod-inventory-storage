@@ -131,14 +131,15 @@ public class ConsortiumDataCacheTest {
   }
 
   @Test
-  public void shouldFailWhenGetForbiddenErrorOnConsortiumDataLoading(TestContext context) {
+  public void shouldReturnOptionalEmptyWhenGetForbiddenErrorOnConsortiumDataLoading(TestContext context) {
     Async async = context.async();
     WireMock.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.forbidden()));
 
     Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders);
 
     future.onComplete(ar -> {
-      context.assertTrue(ar.failed());
+      context.assertTrue(ar.succeeded());
+      context.assertTrue(ar.result().isEmpty());
       async.complete();
     });
   }
