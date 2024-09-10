@@ -47,6 +47,7 @@
 * Bump `holdings-storage` from `6.0` to `7.0`
 * Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
 * Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
+* Bump `folio-kafka-wrapper` from `3.1.1` to `3.2.0`
 * Add `folio-s3-client` `2.2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
