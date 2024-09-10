@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
+import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 
 public class InitApiImpl implements InitAPI {
@@ -23,6 +24,7 @@ public class InitApiImpl implements InitAPI {
     initConsortiumDataCache(vertx, context);
     initAsyncMigrationVerticle(vertx)
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
+      .compose(v -> initSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .map(true)
       .onComplete(handler);
   }
@@ -58,6 +60,19 @@ public class InitApiImpl implements InitAPI {
         + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
       .onFailure(e -> log.error("initShadowInstanceSynchronizationVerticle:: "
         + "ShadowInstanceSynchronizationVerticle verticle was not successfully started", e))
+      .mapEmpty();
+  }
+
+  private Future<Object> initSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
+    DeploymentOptions options = new DeploymentOptions()
+      .setWorker(true)
+      .setInstances(1);
+
+    return vertx.deployVerticle(() -> new SynchronizationVerticle(consortiumDataCache), options)
+      .onSuccess(v -> log.info("initSynchronizationVerticle:: "
+                               + "SynchronizationVerticle verticle was successfully started"))
+      .onFailure(e -> log.error("initSynchronizationVerticle:: "
+                                + "SynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 

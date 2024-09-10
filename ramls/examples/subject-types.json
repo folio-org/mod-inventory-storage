@@ -1,0 +1,20 @@
+{
+  "subjectTypes": [
+    {
+      "id": "06b2cbd8-66bf-4956-9d90-97c9776365b8",
+      "name": "Personal name",
+      "source": "folio"
+    },
+    {
+      "id": "f9e5b41b-8d5b-47d3-91d0-ca9004796400",
+      "name": "Occupation",
+      "source": "folio"
+    },
+    {
+      "id": "6e09d47d-95e2-4d8a-831b-f777b8ef6d99",
+      "name": "Phone number",
+      "source": "local"
+    }
+  ],
+  "totalRecords": 3
+}

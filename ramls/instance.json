@@ -190,6 +190,16 @@
             "type": "string",
             "description": "UUID of authority record that controls a subject heading",
             "$ref": "uuid.json"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "UUID of subject source",
+            "$ref": "uuid.json"
+          },
+          "typeId": {
+            "type": "string",
+            "description": "UUID of subject type",
+            "$ref": "uuid.json"
           }
         },
         "additionalProperties": false,
@@ -324,6 +334,28 @@
           "uri"
         ]
       }
+    },
+    "dates": {
+      "type": "object",
+      "description": "Instance Dates",
+      "properties": {
+        "dateTypeId": {
+          "type": "string",
+          "description": "Date type ID",
+          "$ref": "uuid.json"
+        },
+        "date1": {
+          "type": "string",
+          "description": "Date 1",
+          "maxLength": 4
+        },
+        "date2": {
+          "type": "string",
+          "description": "Date 2",
+          "maxLength": 4
+        }
+      },
+      "additionalProperties": false
     },
     "instanceTypeId": {
       "type": "string",

@@ -42,6 +42,11 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
+    return hasProperty("body", matcher);
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
     return hasCreateEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
   }
@@ -94,6 +99,18 @@ public class EventMessageMatchers {
   }
 
   @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor() {
+    return hasReindexEventMessageFor(expectedTenantId);
+  }
+
+  @NotNull
+  public Matcher<Iterable<? super EventMessage>> hasReindexEventMessageFor(String expectedTenantId) {
+    return hasItem(allOf(
+      isForTenant(expectedTenantId),
+      hasHeaders(expectedTenantId)));
+  }
+
+  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasNoDeleteEventMessage() {
     return not(hasItem(isDeleteEvent()));
   }
@@ -135,6 +152,12 @@ public class EventMessageMatchers {
     return hasProperty("headers", allOf(
       hasTenantHeader(tenantIdExpected),
       hasUrlHeader(okapiUrlExpected)));
+  }
+
+  @NotNull
+  public Matcher<EventMessage> hasHeaders(String tenantIdExpected) {
+    return hasProperty("headers", allOf(
+      hasTenantHeader(tenantIdExpected)));
   }
 
   @NotNull

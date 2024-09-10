@@ -54,6 +54,24 @@
       ]
     },
     {
+      "id": "instance-date-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-date-types",
+          "permissionsRequired": ["inventory-storage.instance-date-types.collection.get"]
+        }, {
+          "methods": ["PATCH"],
+          "pathPattern": "/instance-date-types/{id}",
+          "permissionsRequired": ["inventory-storage.instance-date-types.item.patch"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
+        }
+      ]
+    },
+    {
       "id": "item-storage-batch-sync",
       "version": "1.0",
       "handlers": [
@@ -77,11 +95,15 @@
     },
     {
       "id": "holdings-storage",
-      "version": "6.0",
+      "version": "7.0",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings",
+          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/holdings-storage/holdings/retrieve",
           "permissionsRequired": ["inventory-storage.holdings.collection.get"]
         }, {
           "methods": ["GET"],
@@ -98,7 +120,10 @@
         }, {
           "methods": ["PUT"],
           "pathPattern": "/holdings-storage/holdings/{id}",
-          "permissionsRequired": ["inventory-storage.holdings.item.put"]
+          "permissionsRequired": ["inventory-storage.holdings.item.put"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/holdings-storage/holdings/{id}",
@@ -112,7 +137,7 @@
     },
     {
       "id": "holdings-storage-batch-sync",
-      "version": "1.1",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -127,7 +152,7 @@
     },
     {
       "id": "holdings-storage-batch-sync-unsafe",
-      "version": "1.0",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -142,13 +167,18 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.0",
+      "version": "10.3",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances",
           "permissionsRequired": ["inventory-storage.instances.collection.get"]
-        }, {
+        },{
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/retrieve",
+          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.get"]
@@ -272,6 +302,17 @@
           "methods": ["POST"],
           "pathPattern": "/instance-storage/batch/synchronous-unsafe",
           "permissionsRequired": ["inventory-storage.instances.batch-unsafe.post"]
+        }
+      ]
+    },
+    {
+      "id": "instance-storage-bulk",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-storage/instances/bulk",
+          "permissionsRequired": ["inventory-storage.instances.bulk.post"]
         }
       ]
     },
@@ -427,7 +468,7 @@
     },
     {
       "id": "locations",
-      "version": "3.0",
+      "version": "3.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -507,6 +548,60 @@
       ]
     },
     {
+      "id": "subject-types",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/subject-types",
+          "permissionsRequired": ["inventory-storage.subject-types.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/subject-types",
+          "permissionsRequired": ["inventory-storage.subject-types.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/subject-types/{id}",
+          "permissionsRequired": ["inventory-storage.subject-types.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "subject-sources",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/subject-sources",
+          "permissionsRequired": ["inventory-storage.subject-sources.collection.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/subject-sources",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.post"]
+        }, {
+          "methods": ["PUT"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.put"]
+        }, {
+          "methods": ["DELETE"],
+          "pathPattern": "/subject-sources/{id}",
+          "permissionsRequired": ["inventory-storage.subject-sources.item.delete"]
+        }
+      ]
+    },
+    {
       "id": "contributor-types",
       "version": "2.0",
       "handlers": [
@@ -568,6 +663,20 @@
           "methods": ["GET"],
           "pathPattern": "/record-bulk/ids",
           "permissionsRequired": ["inventory-storage.record-bulk.ids.get"]
+        }
+      ]
+    },
+    {
+      "id": "inventory-reindex-records",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-reindex-records/publish",
+          "permissionsRequired": ["inventory-storage.reindex-records.publish.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }
       ]
     },
@@ -1869,6 +1978,11 @@
       "description": "get a bulk set of record ids from storage"
     },
     {
+      "permissionName": "inventory-storage.reindex-records.publish.post",
+      "displayName": "inventory storage - publish inventory records for reindex",
+      "description": "publish inventory storage reindex records"
+    },
+    {
       "permissionName": "inventory-storage.instance-formats.collection.get",
       "displayName": "inventory storage - get formats collection",
       "description": "get contributor-name-type collection from storage"
@@ -1892,6 +2006,56 @@
       "permissionName": "inventory-storage.instance-formats.item.delete",
       "displayName": "inventory storage - delete individual format",
       "description": "delete individual instance format from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.collection.get",
+      "displayName": "inventory storage - get subject types collection",
+      "description": "get subject-types collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.get",
+      "displayName": "inventory storage - get individual subject type",
+      "description": "get individual subject type from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.post",
+      "displayName": "inventory storage - create individual subject type",
+      "description": "create individual subject type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.put",
+      "displayName": "inventory storage - modify subject type",
+      "description": "modify subject type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-types.item.delete",
+      "displayName": "inventory storage - delete individual subject type",
+      "description": "delete subject type in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.collection.get",
+      "displayName": "inventory storage - get subject sources collection",
+      "description": "get subject-sources collection from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.get",
+      "displayName": "inventory storage - get individual subject source",
+      "description": "get individual subject source from storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.post",
+      "displayName": "inventory storage - create individual subject source",
+      "description": "create individual subject source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.put",
+      "displayName": "inventory storage - modify subject source",
+      "description": "modify subject source in storage"
+    },
+    {
+      "permissionName": "inventory-storage.subject-sources.item.delete",
+      "displayName": "inventory storage - delete individual subject source",
+      "description": "delete subject source in storage"
     },
     {
       "permissionName": "inventory-storage.instance-types.collection.get",
@@ -2449,7 +2613,21 @@
       "displayName": "inventory storage - submit migration job",
       "description": "submit migration instance job"
     },
-
+    {
+      "permissionName": "inventory-storage.instance-date-types.collection.get",
+      "displayName": "inventory storage - get list of instance-date-types",
+      "description": "get list of instance-date-types"
+    },
+    {
+      "permissionName": "inventory-storage.instance-date-types.item.patch",
+      "displayName": "inventory storage - patch instance-date-type",
+      "description": "patch instance-date-type"
+    },
+    {
+      "permissionName": "inventory-storage.instances.bulk.post",
+      "displayName": "inventory storage - create or update instances records in bulk",
+      "description": "create or update instances records in bulk from external file"
+    },
     {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
@@ -2486,6 +2664,7 @@
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
         "inventory-storage.instances.batch-unsafe.post",
+        "inventory-storage.instances.bulk.post",
         "inventory-storage.loan-types.collection.get",
         "inventory-storage.loan-types.item.get",
         "inventory-storage.loan-types.item.post",
@@ -2552,6 +2731,16 @@
         "inventory-storage.instance-formats.item.post",
         "inventory-storage.instance-formats.item.put",
         "inventory-storage.instance-formats.item.delete",
+        "inventory-storage.subject-types.collection.get",
+        "inventory-storage.subject-types.item.get",
+        "inventory-storage.subject-types.item.post",
+        "inventory-storage.subject-types.item.put",
+        "inventory-storage.subject-types.item.delete",
+        "inventory-storage.subject-sources.collection.get",
+        "inventory-storage.subject-sources.item.get",
+        "inventory-storage.subject-sources.item.post",
+        "inventory-storage.subject-sources.item.put",
+        "inventory-storage.subject-sources.item.delete",
         "inventory-storage.instance-types.collection.get",
         "inventory-storage.instance-types.item.get",
         "inventory-storage.instance-types.item.post",
@@ -2678,7 +2867,10 @@
         "inventory-storage.migration.job.item.delete",
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
-        "inventory-storage.migration.item.get"
+        "inventory-storage.migration.item.get",
+        "inventory-storage.reindex-records.publish.post",
+        "inventory-storage.instance-date-types.collection.get",
+        "inventory-storage.instance-date-types.item.patch"
       ]
     }
   ],
@@ -2712,7 +2904,22 @@
       { "name": "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING", "value": "0001-01-01T00:00:00Z" },
       { "name": "KAFKA_HOST", "value": "kafka" },
       { "name": "KAFKA_PORT", "value": "9092" },
-      { "name": "REPLICATION_FACTOR", "value": "1" }
+      { "name": "REPLICATION_FACTOR", "value": "1" },
+      { "name": "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "value": "50"},
+      { "name": "KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"},
+      { "name": "S3_URL", "value": "http://127.0.0.1:9000/" },
+      { "name": "S3_REGION", "value": "" },
+      { "name": "S3_BUCKET", "value": "marc-migrations" },
+      { "name": "S3_ACCESS_KEY_ID", "value": "" },
+      { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
+      { "name": "S3_IS_AWS", "value": "true" }
     ]
   }
 }

@@ -102,7 +102,17 @@ There is another important property - `number of partitions` for a topic - it ha
 description:
 > The partition count controls how many logs the topic will be sharded into.
 
-This property can be changed by setting `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS` env variable. Default value - `50`.
+These properties can be changed by setting env variable.
+
+* `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS` Default value - `50`
+* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS` Default value - `16`
+* `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS` Default value - `1`
 
 # Building
 
@@ -117,6 +127,21 @@ These environment variables configure Kafka, for details see [Kafka](#kafka):
 * `KAFKA_HOST`
 * `REPLICATION_FACTOR`
 * `KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS`
+* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
+* `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
+
+
+These environment variables configure Kafka topic for specific business-related topics
+* `KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_LOCATION_TOPIC_NUM_PARTITIONS`
+* `KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS`
+* `KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS`
+* `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS`
+* `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
+* `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
 
 mod-inventory-storage also supports all Raml Module Builder (RMB) environment variables,
 for details see [RMB](https://github.com/folio-org/raml-module-builder#environment-variables):
@@ -137,6 +162,14 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 * `DB_RECONNECTINTERVAL`
 * `DB_EXPLAIN_QUERY_THRESHOLD`
 * `DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING`
+
+These environment variables configure the module interaction with S3-compatible storage (AWS S3, Minio Server):
+* `S3_URL` (default value - `http://127.0.0.1:9000`)
+* `S3_REGION`
+* `S3_BUCKET` (default value - `marc-migrations`)
+* `S3_ACCESS_KEY_ID`
+* `S3_SECRET_ACCESS_KEY`
+* `S3_IS_AWS` (default value - `false`)
 
 # Local Deployment using Docker
 

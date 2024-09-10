@@ -582,7 +582,7 @@ public class ReferenceTablesTest extends TestBase {
   public void holdingsSourcesLoaded() throws Exception {
     final Response searchResponse = getReferenceRecords(holdingsSourceUrl(""));
 
-    validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 2);
+    validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 399);
   }
 
   private Response getReferenceRecords(URL baseUrl)

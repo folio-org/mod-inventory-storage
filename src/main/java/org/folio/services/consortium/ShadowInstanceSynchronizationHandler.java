@@ -32,6 +32,7 @@ import org.folio.kafka.KafkaHeaderUtils;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
@@ -98,12 +99,12 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
-    return tenantId.equals(consortiumData.getCentralTenantId());
+    return tenantId.equals(consortiumData.centralTenantId());
   }
 
   private Future<Void> synchronizeShadowInstances(DomainEvent<Instance> event, String instanceId,
                                                   ConsortiumData consortiumData, Map<String, String> headers) {
-    return getShadowInstancesTenantIds(consortiumData.getConsortiumId(), consortiumData.getCentralTenantId(),
+    return getShadowInstancesTenantIds(consortiumData.consortiumId(), consortiumData.centralTenantId(),
       instanceId, headers)
       .compose(tenantIds -> updateShadowInstances(event, tenantIds, headers));
   }
@@ -138,16 +139,20 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
 
   private Future<Void> updateShadowInstances(DomainEvent<Instance> event, List<String> tenantIds,
                                              Map<String, String> headers) {
-    LOG.info("updateShadowInstances:: Trying to update shadow instances in the following tenants: {} ", tenantIds);
-    Instance instance = JsonObject.mapFrom(event.getNewEntity()).mapTo(Instance.class);
-    prepareInstanceForUpdate(instance);
-    List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdatesLimit);
+    try {
+      LOG.info("updateShadowInstances:: Trying to update shadow instances in the following tenants: {} ", tenantIds);
+      Instance instance = PostgresClient.pojo2JsonObject(event.getNewEntity()).mapTo(Instance.class);
+      prepareInstanceForUpdate(instance);
+      List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdatesLimit);
 
-    Future<CompositeFuture> future = Future.succeededFuture();
-    for (List<String> tenantsChunk : tenantsChunks) {
-      future = future.eventually(v -> updateShadowInstances(tenantsChunk, instance, headers));
+      Future<CompositeFuture> future = Future.succeededFuture();
+      for (List<String> tenantsChunk : tenantsChunks) {
+        future = future.eventually(v -> updateShadowInstances(tenantsChunk, instance, headers));
+      }
+      return future.mapEmpty();
+    } catch (Exception e) {
+      return Future.failedFuture(e);
     }
-    return future.mapEmpty();
   }
 
   private CompositeFuture updateShadowInstances(List<String> tenantIds, Instance instance,

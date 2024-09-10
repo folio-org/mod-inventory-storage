@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of subject types",
+  "type": "object",
+  "properties": {
+    "subjectTypes": {
+      "description": "List of subject types",
+      "id": "subjectType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "subject-type.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "subjectTypes",
+    "totalRecords"
+  ]
+}

@@ -13,6 +13,7 @@ types:
   holdingsRecords: !include holdings-storage/holdingsRecords.json
   holdingsRecordView: !include holdings-storage/holdingsRecordView.json
   holdingsRecordViews: !include holdings-storage/holdingsRecordViews.json
+  retrieveDto: !include retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -82,3 +83,14 @@ resourceTypes:
             example:
               strict: false
               value: !include examples/holdings-storage/holdingsRecord_get.json
+    /retrieve:
+      post:
+        is: [ validate ]
+        body:
+          application/json:
+            type: retrieveDto
+            example:
+              strict: false
+              value: !include examples/retrieveEntitiesDto.json
+        description: |
+          Get Holdings by POST request

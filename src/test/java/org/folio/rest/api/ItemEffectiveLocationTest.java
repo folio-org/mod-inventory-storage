@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
- * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql)
+ * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql).
  */
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
@@ -72,7 +72,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
-  public void canCalculateEffectiveLocationOnHoldingUpdate() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingUpdate() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
@@ -88,6 +88,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
@@ -97,7 +98,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
@@ -113,6 +114,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.remove("temporaryLocationId");
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
@@ -122,7 +124,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() throws Exception {
+  public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     Item itemWithPermLocation = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
@@ -135,6 +137,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
     holdingsClient.replace(holdingsRecordId, holding);
 
     // fetch items
@@ -166,7 +169,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
               method = "canCalculateEffectiveLocationOnItemUpdateParams")
   public void canCalculateEffectiveLocationOnItemUpdate(
-    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) throws Exception {
+    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) {
 
     UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingLoc.perm, holdingLoc.temp);
 
@@ -204,6 +207,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject holdingToUpdate = createdHolding.copy();
     holdingToUpdate.remove("holdingsItems");
     holdingToUpdate.remove("bareHoldingsItems");
+    holdingToUpdate.put("sourceId", getPreparedHoldingSourceId().toString());
     setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
     holdingsClient.replace(holdingsRecordId, holdingToUpdate);
 
@@ -235,7 +239,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() throws Exception {
+  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID);
 
@@ -246,7 +250,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(itemFetched.getEffectiveLocationId(), ANNEX_LIBRARY_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
+      pojo2JsonObject(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
@@ -254,7 +258,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() throws Exception {
+  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
 
@@ -265,7 +269,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertEquals(itemFetched.getEffectiveLocationId(), ONLINE_LOCATION_ID.toString());
 
     itemsClient.replace(UUID.fromString(itemFetched.getId()),
-      JsonObject.mapFrom(itemFetched).copy()
+      pojo2JsonObject(itemFetched).copy()
         .put("holdingsRecordId", updatedHoldingRecordId.toString())
     );
 
@@ -273,17 +277,17 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   /**
-   * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?
+   * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?.
    */
   @Test
-  public void canSetTableFieldOnItemUpdate() throws Exception {
+  public void canSetTableFieldOnItemUpdate() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     Item item = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
     createItem(item);
     item = getItem(item.getId());
 
     item.setTemporaryLocationId(SECOND_FLOOR_LOCATION_ID.toString());
-    itemsClient.replace(UUID.fromString(item.getId()), JsonObject.mapFrom(item));
+    itemsClient.replace(UUID.fromString(item.getId()), pojo2JsonObject(item));
 
     Row result = runSql(
       "SELECT jsonb, effectiveLocationId "
@@ -313,7 +317,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private Item getItem(String id) throws Exception {
+  private Item getItem(String id) {
     return itemsClient.getById(UUID.fromString(id)).getJson().mapTo(Item.class);
   }
 

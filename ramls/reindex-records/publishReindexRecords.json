@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Inventory Storage records for reindex",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "UUID representing this range of records",
+      "$ref": "../uuid.json"
+    },
+    "recordType": {
+      "description": "Inventory storage record type (e.g. instance, item, holding)",
+      "type": "string",
+      "enum": ["instance", "item", "holdings"]
+    },
+    "recordIdsRange": {
+      "description": "Range of records IDs",
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "UUID of the first record"
+        },
+        "to": {
+          "type": "string",
+          "description": "UUID of the last record"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "recordType",
+    "recordIdsRange"
+  ]
+}

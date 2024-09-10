@@ -1,6 +1,7 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Promise.promise;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
@@ -32,6 +33,10 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.caches.ConsortiumData;
+import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.consortium.ConsortiumService;
+import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
@@ -45,7 +50,7 @@ public class InstanceService {
   private final InstanceRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
-  private final InstanceEffectiveValuesService effectiveValuesService;
+  private final ConsortiumService consortiumService;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -57,7 +62,8 @@ public class InstanceService {
     instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
     marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
-    effectiveValuesService = new InstanceEffectiveValuesService();
+    consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
+      vertxContext.get(ConsortiumDataCache.class.getName()));
   }
 
   public Future<Response> getInstance(String id) {
@@ -84,8 +90,6 @@ public class InstanceService {
 
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
-    effectiveValuesService.populateEffectiveValues(entity);
-
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
@@ -114,13 +118,12 @@ public class InstanceService {
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId))
-      .compose(batchOperation -> {
-        effectiveValuesService.populateEffectiveValues(instances, batchOperation);
+      .compose(batchOperation ->
         // Can use instances list here directly because the class is stateful
-        return postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
+        postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      })
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))
+      )
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -136,8 +139,6 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
-
-        effectiveValuesService.populateEffectiveValues(newInstance, oldInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
@@ -197,6 +198,22 @@ public class InstanceService {
         )
       ))
       .map(Response.noContent().build());
+  }
+
+  public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .map(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
+        .orElse(false))
+      .compose(isCentralTenant -> {
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
+      })
+      .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
+  }
+
+  private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
+    return tenantId.equals(consortiumData.centralTenantId());
   }
 
 }

@@ -22,6 +22,14 @@ public class InterfaceUrls {
     return vertxUrl("/instance-types" + subPath);
   }
 
+  public static URL subjectTypesUrl(String subPath) {
+    return vertxUrl("/subject-types" + subPath);
+  }
+
+  public static URL subjectSourcesUrl(String subPath) {
+    return vertxUrl("/subject-sources" + subPath);
+  }
+
   public static URL itemsStorageUrl(String subPath) {
     return vertxUrl("/item-storage/items" + subPath);
   }
@@ -248,6 +256,10 @@ public class InterfaceUrls {
 
   public static URL migrationJobsUrl(String subPath) {
     return vertxUrl("/inventory-storage/migrations/jobs" + subPath);
+  }
+
+  public static URL instancesBulk() {
+    return vertxUrl("/instance-storage/instances/bulk");
   }
 
 }

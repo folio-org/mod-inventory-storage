@@ -17,6 +17,7 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.fixtures.AsyncMigrationFixture;
@@ -50,6 +52,7 @@ public abstract class TestBase {
    * timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS)
    */
   public static final long TIMEOUT = 100;
+  public static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   public static ResourceClient holdingsClient;
   protected static final Logger logger = LogManager.getLogger();
   protected static ResourceClient instancesClient;
@@ -69,6 +72,7 @@ public abstract class TestBase {
   static ResourceClient inventoryViewClient;
   static ResourceClient statisticalCodeClient;
   static ResourceClient boundWithClient;
+  static ResourceClient holdingsSourceClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -93,6 +97,7 @@ public abstract class TestBase {
     inventoryViewClient = ResourceClient.forInventoryView(getClient());
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     boundWithClient = ResourceClient.forBoundWithParts(getClient());
+    holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
     instancesStorageBatchInstancesClient = ResourceClient
       .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
@@ -204,4 +209,19 @@ public abstract class TestBase {
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
   }
 
+  public static JsonObject pojo2JsonObject(Object entity) {
+    try {
+      return PostgresClient.pojo2JsonObject(entity);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected static UUID getPreparedHoldingSourceId() {
+    UUID sourceId = UUID.randomUUID();
+    holdingsSourceClient.create(new JsonObject()
+      .put("id", sourceId.toString())
+      .put("name", "holding source name for " + sourceId));
+    return sourceId;
+  }
 }

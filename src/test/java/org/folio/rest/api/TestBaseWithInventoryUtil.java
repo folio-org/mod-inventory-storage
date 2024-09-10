@@ -21,7 +21,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
-import lombok.SneakyThrows;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.InstanceType;
@@ -60,6 +59,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static final UUID SECOND_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final UUID THIRD_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final UUID FOURTH_FLOOR_LOCATION_ID = UUID.randomUUID();
+  public static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   protected static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
@@ -72,6 +72,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final UUID UUID_PERSONAL_NAME = UUID.fromString("2b94c631-fca9-4892-a730-03ee529ffe2a");
   protected static final UUID UUID_TEXT = UUID.fromString("6312d172-f0cf-40f6-b27d-9fa8feaf332f");
   protected static final UUID UUID_INSTANCE_TYPE = UUID.fromString("535e3160-763a-42f9-b0c0-d8ed7df6e2a2");
+  protected static final UUID UUID_INSTANCE_DATE_TYPE = UUID.fromString("42dac21e-3c81-4cb1-9f16-9e50c81bacc4");
+  protected static final UUID UUID_INSTANCE_SUBJECT_TYPE_ID = UUID.fromString("d6488f88-1e74-40ce-81b5-b19a928ff5b1");
+  protected static final UUID UUID_INSTANCE_SUBJECT_SOURCE_ID = UUID.fromString("e894d0dc-621d-4b1d-98f6-6f7120eb0d40");
   protected static UUID journalMaterialTypeId;
   protected static String journalMaterialTypeID;
   protected static UUID bookMaterialTypeId;
@@ -80,9 +83,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String canCirculateLoanTypeID;
   protected static UUID nonCirculatingLoanTypeId;
   protected static String nonCirculatingLoanTypeID;
-  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
-  @SneakyThrows
   @BeforeClass
   public static void testBaseWithInvUtilBeforeClass() {
     logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
@@ -168,10 +169,12 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
+    UUID sourceId = getPreparedHoldingSourceId();
 
     HoldingRequestBuilder holdingsBuilder = new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
+      .withSource(sourceId)
       .withPermanentLocation(holdingsPermanentLocationId);
 
     return holdingsClient
@@ -186,6 +189,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withTemporaryLocation(holdingsTemporaryLocationId)
@@ -200,6 +204,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumber("testCallNumber")
@@ -214,6 +219,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberPrefix("testCallNumberPrefix")
@@ -228,6 +234,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
+        .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberSuffix("testCallNumberSuffix")
@@ -276,7 +283,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       it.withName("Default Instance Type");
       it.withSource("local");
 
-      instanceTypesClient.create(JsonObject.mapFrom(it));
+      instanceTypesClient.create(pojo2JsonObject(it));
     }
   }
 
@@ -297,7 +304,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .put("name", name);
   }
 
-  protected static JsonObject createInstanceRequest(
+  public static JsonObject createInstanceRequest(
     UUID id,
     String source,
     String title,
@@ -316,7 +323,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("source", source);
     instanceToCreate.put("identifiers", identifiers);
     instanceToCreate.put("contributors", contributors);
-    instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
+    if (instanceTypeId != null) {
+      instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
+    }
     instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
     instanceToCreate.put("_version", 1);
     return instanceToCreate;
@@ -336,7 +345,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected IndividualResource createItem(Item item) {
-    return itemsClient.create(JsonObject.mapFrom(item));
+    return itemsClient.create(pojo2JsonObject(item));
   }
 
   protected IndividualResource createItem(ItemRequestBuilder item) {

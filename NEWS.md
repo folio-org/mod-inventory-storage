@@ -1,23 +1,53 @@
 ## v27.2.0 In progress
+
 ### Breaking changes
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
-* Requires `API_NAME vX.Y`
+* Provides `subject-source 1.0`
+* Provides `subject-types 1.0`
+* Provides `instance-storage-bulk 1.0`
+* Provides `instance-date-types 1.0`
+* Provides `locations 3.1`
+* Provides `instance-storage 10.3`
+* Requires `holdings-storage 6.1`
 
 ### Features
+* Add floating collection flag in location schema ([MODINVSTOR-1250](https://issues.folio.org/browse/MODINVSTOR-1250))
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
 * Add a new boolean field ecsRequestRouting to the service point schema ([MODINVSTOR-1179](https://issues.folio.org/browse/MODINVSTOR-1179))
+* Implement domain event production for library create/update/delete ([MODINVSTOR-1216](https://issues.folio.org/browse/MODINVSTOR-1216))
+* Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
+* Implement domain event production for institution create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))
+* Implement a POST request to get Holdings and Instances ([MODINVSTOR-1223](https://folio-org.atlassian.net/browse/MODINVSTOR-1223))
+* Implement instance-date-types endpoint ([MODINVSTOR-1235](https://folio-org.atlassian.net/browse/MODINVSTOR-1235))
+* Restrict instance-date-type changes to central tenant ([MODINVSTOR-1238](https://folio-org.atlassian.net/browse/MODINVSTOR-1238))
+* Implement Subject types management ([MODINVSTOR-1221](https://folio-org.atlassian.net/browse/MODINVSTOR-1221))
+* Implement endpoint to publish reindex event for the range of instance/item/holding records ([MODINVSTOR-1230](https://folio-org.atlassian.net/browse/MODINVSTOR-1230))
+* Info, not warn, about expected 403 from /user-tenants ([MODINVSTOR-1237](https://folio-org.atlassian.net/browse/MODINVSTOR-1237))
+* Implement Subject sources management ([MODINVSTOR-1222](https://folio-org.atlassian.net/browse/MODINVSTOR-1222))
+* Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
+* Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
+* Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
+
 
 ### Bug fixes
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
+* Deserialization of Date from long (MODINVSTOR-1198)[https://folio-org.atlassian.net/browse/MODINVSTOR-1198]
+* Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
+* Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
+* Add user-tenants.collection.get to all ECS APIs ([MODINVSTOR-1253](https://folio-org.atlassian.net/browse/MODINVSTOR-1253))
 
 ### Tech Dept
-* Description ([ISSUE_NUMBER](https://issues.folio.org/browse/ISSUE_NUMBER))
+* Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
+* Bump `holdings-storage` from `6.0` to `7.0`
+* Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
+* Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
+* Add `folio-s3-client` `2.2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`
 

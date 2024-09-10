@@ -69,6 +69,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     // create a holding so that instance is not allowed to be removed
     HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .forInstance(instance.getId())
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
     holdingsClient.create(holdingBuilder.create(), TENANT_ID,
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
@@ -89,6 +90,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
     // create a holding so that instance is not allowed to be removed
     HoldingRequestBuilder holdingBuilder = new HoldingRequestBuilder()
       .forInstance(instance.getId())
+      .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
     holdingsClient.create(holdingBuilder.create(), TENANT_ID,
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));

@@ -54,6 +54,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     InterruptedException, ExecutionException, TimeoutException {
     createHoldingsRecord(new HoldingRequestBuilder()
       .withId(HOLDINGS_ID)
+      .withSource(getPreparedHoldingSourceId())
       .forInstance(INSTANCE_ID)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
 
@@ -78,6 +79,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
     InterruptedException, ExecutionException, TimeoutException {
     createHoldingsRecord(new HoldingRequestBuilder()
       .withId(HOLDINGS_ID)
+      .withSource(getPreparedHoldingSourceId())
       .forInstance(INSTANCE_ID)
       .withTemporaryLocation(ANNEX_LIBRARY_LOCATION_ID)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));

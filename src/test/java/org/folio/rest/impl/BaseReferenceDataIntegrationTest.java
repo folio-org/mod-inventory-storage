@@ -8,19 +8,15 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -71,10 +67,6 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
         .extracting(method)
         .isEqualTo(method.apply(expected));
     }
-  }
-
-  protected static Handler<AsyncResult<TestResponse>> verifyStatus(VertxTestContext ctx, HttpStatus expectedStatus) {
-    return ctx.succeeding(response -> ctx.verify(() -> assertEquals(expectedStatus.toInt(), response.status())));
   }
 
   protected Metadata getMetadata(T createdRecord) {
@@ -178,7 +170,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
     var newRecord = sampleRecord();
 
-    doPost(client, resourceUrl(), JsonObject.mapFrom(newRecord))
+    doPost(client, resourceUrl(), pojo2JsonObject(newRecord))
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
         var createdRecord = response.bodyAsClass(targetClass());
@@ -219,7 +211,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
     postgresClient.save(referenceTable(), newRecord)
       .compose(id -> {
         var updatedRecord = recordModifyingFunction().apply(newRecord);
-        return doPut(client, resourceUrlById(id), JsonObject.mapFrom(updatedRecord))
+        return doPut(client, resourceUrlById(id), pojo2JsonObject(updatedRecord))
           .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
           .compose(r -> postgresClient.getById(referenceTable(), id, targetClass())
             .onComplete(ctx.succeeding(dbRecord -> ctx.verify(() -> {

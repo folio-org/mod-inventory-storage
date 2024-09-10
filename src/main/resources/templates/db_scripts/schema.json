@@ -339,6 +339,11 @@
       ]
     },
     {
+      "tableName": "instance_date_type",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
       "tableName": "instance",
       "fromModuleVersion": "19.2.0",
       "withMetadata": true,
@@ -356,6 +361,11 @@
         {
           "fieldName": "modeOfIssuanceId",
           "targetTable": "mode_of_issuance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "dates.dateTypeId",
+          "targetTable": "instance_date_type",
           "tOps": "ADD"
         },
         {
@@ -441,17 +451,19 @@
       "fullTextIndex": [
         {
           "fieldName": "identifiers",
-          "arraySubfield" : "value",
-          "arrayModifiers": ["identifierTypeId"]
+          "arraySubfield": "value",
+          "arrayModifiers": [
+            "identifierTypeId"
+          ]
         },
         {
           "fieldName": "invalidIsbn",
-          "sqlExpression" : "normalize_invalid_isbns(jsonb->'identifiers')",
+          "sqlExpression": "normalize_invalid_isbns(jsonb->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         },
         {
           "fieldName": "isbn",
-          "sqlExpression" : "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpression": "normalize_isbns(jsonb->'identifiers')",
           "sqlExpressionQuery": "normalize_digits($)"
         }
       ]
@@ -596,7 +608,7 @@
           "fieldName": "instanceId",
           "targetTable": "instance",
           "targetTableAlias": "instance",
-          "tableAlias" : "holdingsRecords",
+          "tableAlias": "holdingsRecords",
           "tOps": "ADD"
         },
         {
@@ -687,13 +699,16 @@
         {
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
-          "targetTableAlias" : "holdingsRecords",
+          "targetTableAlias": "holdingsRecords",
           "tableAlias": "item",
           "tOps": "ADD"
         },
         {
-          "targetPath": ["holdingsRecordId", "instanceId"],
-          "targetTable":      "instance",
+          "targetPath": [
+            "holdingsRecordId",
+            "instanceId"
+          ],
+          "targetTable": "instance",
           "targetTableAlias": "instance",
           "tableAlias": "item"
         },
@@ -727,7 +742,6 @@
           "targetTable": "location",
           "tOps": "ADD"
         }
-
       ],
       "uniqueIndex": [
         {
@@ -880,13 +894,35 @@
           "tOps": "ADD"
         }
       ]
+    },
+    {
+      "tableName": "subject_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "subject_source",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
     }
   ],
   "scripts": [
     {
-        "run":"after",
-        "snippetPath":"setPreviouslyHeldDefault.sql",
-        "fromModuleVersion":"20.2.0"
+      "run": "after",
+      "snippetPath": "setPreviouslyHeldDefault.sql",
+      "fromModuleVersion": "20.2.0"
     },
     {
       "run": "before",
@@ -899,9 +935,9 @@
       "fromModuleVersion": "19.2.0"
     },
     {
-      "run":"after",
-      "snippetPath":"setEffectiveHoldingsLocation.sql",
-      "fromModuleVersion":"25.0.0"
+      "run": "after",
+      "snippetPath": "setEffectiveHoldingsLocation.sql",
+      "fromModuleVersion": "25.0.0"
     },
     {
       "run": "after",
@@ -1000,11 +1036,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "publication-period/publication-period-functions.sql",
-      "fromModuleVersion": "23.0.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
       "fromModuleVersion": "23.0.0"
     },
@@ -1059,9 +1090,9 @@
       "fromModuleVersion": "23.1.0"
     },
     {
-        "run":"after",
-        "snippetPath":"dropCallNumberNormalizationFunctions.sql",
-        "fromModuleVersion":"24.0.0"
+      "run": "after",
+      "snippetPath": "dropCallNumberNormalizationFunctions.sql",
+      "fromModuleVersion": "24.0.0"
     },
     {
       "run": "after",
@@ -1152,6 +1183,46 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportAdditionalFields.sql",
       "fromModuleVersion": "27.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/createIndexCompleteUpdatedDate.sql",
+      "fromModuleVersion": "27.1.3"
+    },
+    {
+      "run": "after",
+      "snippetPath": "migrateHoldingsOutdatedFields.sql",
+      "fromModuleVersion": "27.1.4"
+    },
+    {
+      "run": "after",
+      "snippetPath": "updateIdentifierTypeCanceledLCCN.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addInstanceDateTypes.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addSubjectTypes.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "addSubjectSources.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "publication-period/drop-publication-period-functions.sql",
+      "fromModuleVersion": "27.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "subjectIdsReferenceCheckTrigger.sql",
+      "fromModuleVersion": "27.2.0"
     }
   ]
 }
