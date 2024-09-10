@@ -1,6 +1,8 @@
 package org.folio.rest.api;
 
 import static java.lang.String.format;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -81,6 +83,7 @@ import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
@@ -105,6 +108,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String DATES_KEY = "dates";
+  private static final String SUBJECTS_KEY = "subjects";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();
@@ -192,11 +196,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
       .withDate1("2023")
       .withDate2("2024");
-
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
     instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     instanceToCreate.put(DATES_KEY, pojo2JsonObject(dates));
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -255,6 +265,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
     assertThat(storedDates.getDate1(), is("2023"));
     assertThat(storedDates.getDate2(), is("2024"));
+
+    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
+
+    assertThat(storedSubject.getSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
+    assertThat(storedSubject.getTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
+    assertThat(storedSubject.getValue(), is(is(subject.getValue())));
   }
 
   @Test
@@ -331,6 +347,65 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotUpdateAnInstanceWithNotExistingSubjectIds()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    var instanceToCreate = smallAngryPlanet(null);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      json(createCompleted));
+
+    var response = createCompleted.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var instance = response.getJson();
+    var newId = instance.getString("id");
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var instanceFromGet = getResponse.getJson();
+    var subject = new Subject()
+      .withSourceId(UUID.randomUUID().toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceFromGet.put(SUBJECTS_KEY, subjects);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void cannotCreateAnInstanceWithNotExistingSubjectIds()
+    throws InterruptedException,
+    ExecutionException,
+    TimeoutException {
+
+    var instanceToCreate = smallAngryPlanet(null);
+    var subject = new Subject()
+      .withSourceId(UUID.randomUUID().toString())
+      .withTypeId(UUID.randomUUID().toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      text(createCompleted));
+
+    var response = createCompleted.get(10, SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
   public void cannotPutAnInstanceAtNonexistingLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -345,7 +420,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.empty(createCompleted));
 
     Response putResponse = createCompleted.get(10, SECONDS);
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
+    assertThat(putResponse.getStatusCode(), is(HTTP_NOT_FOUND));
 
     assertGetNotFound(url);
   }
@@ -1896,6 +1971,26 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item ->
       assertThat(getById(item.getString("id")).getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
         hasIsoFormat()));
+  }
+
+  @Test
+  public void cannotBatchCreateInstancesWithNonExistingSubjectIds() throws Exception {
+    var instanceCollection = createRequestForMultipleInstances(3);
+    var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
+    var invalidSubjectId = UUID.randomUUID().toString();
+    var subject = new Subject()
+      .withSourceId(invalidSubjectId)
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+    instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
+    var result = createCompleted.get(30, SECONDS);
+    assertThat(result, allOf(
+      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      errorMessageContains(invalidSubjectId)
+    ));
   }
 
   @Test

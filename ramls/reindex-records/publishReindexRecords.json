@@ -11,7 +11,7 @@
     "recordType": {
       "description": "Inventory storage record type (e.g. instance, item, holding)",
       "type": "string",
-      "enum": ["instance", "item", "holding"]
+      "enum": ["instance", "item", "holdings"]
     },
     "recordIdsRange": {
       "description": "Range of records IDs",

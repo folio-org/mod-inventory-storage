@@ -11,7 +11,6 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +21,7 @@ import org.folio.rest.jaxrs.model.PublishReindexRecords;
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
   
-  private final CommonDomainEventPublisher<String> instanceReindexPublisher;
+  private final CommonDomainEventPublisher<Map<String, Object>> instanceReindexPublisher;
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstanceRepository(context, okapiHeaders),
@@ -32,8 +31,8 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
       REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
-  public Future<Void> publishReindexInstances(String key, List<String> instances) {
-    if (CollectionUtils.isEmpty(instances) || StringUtils.isBlank(key)) {
+  public Future<Void> publishReindexInstances(String key, List<Map<String, Object>> instances) {
+    if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 

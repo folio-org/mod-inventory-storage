@@ -9,7 +9,6 @@ import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.HoldingsRepository;
@@ -26,11 +25,11 @@ public class HoldingDomainEventPublisher
   }
 
   public Future<Void> publishReindexHoldings(String key, List<HoldingsRecord> holdings) {
-    if (CollectionUtils.isEmpty(holdings) || StringUtils.isBlank(key)) {
+    if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDING, holdings);
+    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDINGS, holdings);
   }
 
   @Override
