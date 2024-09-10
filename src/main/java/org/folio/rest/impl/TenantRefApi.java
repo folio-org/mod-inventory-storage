@@ -103,8 +103,10 @@ public class TenantRefApi extends TenantAPI {
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
-
-    // create topics before loading data
+    headers
+      .entrySet()
+      .stream()
+      .forEach(entry -> log.info("loadData:: VALUE '{}', KEY '{}'", entry.getValue(), entry.getKey()));
     Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
       .createKafkaTopics(InventoryKafkaTopic.values(), tenantId)
       .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
