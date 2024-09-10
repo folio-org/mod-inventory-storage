@@ -1280,7 +1280,10 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/_/tenant"
+          "pathPattern": "/_/tenant",
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }, {
           "methods": ["DELETE", "GET"],
           "pathPattern": "/_/tenant/{id}"
