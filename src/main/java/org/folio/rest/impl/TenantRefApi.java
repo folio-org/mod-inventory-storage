@@ -103,6 +103,7 @@ public class TenantRefApi extends TenantAPI {
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
+    log.info("loadData:: start");
     headers
       .entrySet()
       .stream()
