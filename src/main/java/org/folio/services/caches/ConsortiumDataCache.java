@@ -3,7 +3,6 @@ package org.folio.services.caches;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.GET;
-import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -86,7 +85,7 @@ public class ConsortiumDataCache {
   private CompletableFuture<Optional<ConsortiumData>> loadConsortiumData(String tenantId, Map<String, String> headers) {
     var request = getHttpRequest(headers, USER_TENANTS_PATH);
 
-    return getResponse(tenantId, request)
+    return getResponse(request)
       .compose(responseBody -> {
         if (responseBody.isEmpty()) {
           return succeededFuture(Optional.<ConsortiumData>empty());
@@ -100,17 +99,17 @@ public class ConsortiumDataCache {
         JsonObject userTenant = userTenants.getJsonObject(0);
         var centralTenantId = userTenant.getString(CENTRAL_TENANT_ID_FIELD);
         var consortiumId = userTenant.getString(CONSORTIUM_ID_FIELD);
-        return loadConsortiumTenants(consortiumId, tenantId, headers)
+        return loadConsortiumTenants(consortiumId, headers)
           .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
       })
       .toCompletionStage()
       .toCompletableFuture();
   }
 
-  private Future<List<String>> loadConsortiumTenants(String consortiumId, String tenantId,
+  private Future<List<String>> loadConsortiumTenants(String consortiumId,
                                                      Map<String, String> headers) {
     var request = getHttpRequest(headers, CONSORTIUM_TENANTS_PATH.formatted(consortiumId));
-    return getResponse(tenantId, request)
+    return getResponse(request)
       .map(responseBody -> responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
         .stream()
         .map(o -> ((JsonObject) o).mapTo(ConsortiumTenant.class))
@@ -129,14 +128,9 @@ public class ConsortiumDataCache {
     return request;
   }
 
-  private Future<Optional<JsonObject>> getResponse(String tenantId, HttpRequest<Buffer> request) {
+  private Future<Optional<JsonObject>> getResponse(HttpRequest<Buffer> request) {
     LOG.info("getResponse:: Try to request method='{}' uri='{}'", request.method().name(), request.uri());
     return request.send().compose(response -> {
-      if (response.statusCode() == HTTP_FORBIDDEN) {
-        LOG.info("loadConsortiumData:: Skipping for tenant {} because {} returns 403 (forbidden)",
-          tenantId, USER_TENANTS_PATH);
-        return succeededFuture(Optional.empty());
-      }
       if (response.statusCode() != HTTP_OK) {
         String msg = String.format("Failed to request method='%s' uri='%s', status='%s', body='%s'",
           request.method().name(), request.uri(), response.statusCode(), response.bodyAsString());
