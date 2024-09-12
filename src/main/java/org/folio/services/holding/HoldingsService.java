@@ -33,8 +33,6 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
@@ -177,15 +175,8 @@ public class HoldingsService {
       .map(ResponseHandlerUtil::handleHridError);
   }
 
-  public Future<Void> publishReindexHoldingsRecords(String rangeId, String idStart, String idEnd) {
-    var criteriaFrom = new Criteria().setJSONB(false)
-      .addField("id").setOperation(">=").setVal(idStart);
-    var criteriaTo = new Criteria().setJSONB(false)
-      .addField("id").setOperation("<=").setVal(idEnd);
-    final Criterion criterion = new Criterion(criteriaFrom)
-      .addCriterion(criteriaTo);
-
-    return holdingsRepository.get(criterion)
+  public Future<Void> publishReindexHoldingsRecords(String rangeId, String fromId, String toId) {
+    return holdingsRepository.getReindexHoldingsRecords(fromId, toId)
       .compose(holdings -> domainEventPublisher.publishReindexHoldings(rangeId, holdings));
   }
 

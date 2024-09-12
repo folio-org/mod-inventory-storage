@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
@@ -24,6 +25,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
 
   private final HoldingsRepository holdingsRepository;
+  private final CommonDomainEventPublisher<Map<String, Object>> itemReindexPublisher;
 
   public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new ItemRepository(context, okapiHeaders),
@@ -31,6 +33,8 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
         ITEM.fullTopicName(tenantId(okapiHeaders))));
 
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
+    itemReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
   public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings,
@@ -54,16 +58,12 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
       .compose(domainEventService::publishRecordsUpdated);
   }
 
-  public Future<Void> publishReindexItems(String key, List<Item> items) {
+  public Future<Void> publishReindexItems(String key, List<Map<String, Object>> items) {
     if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    var itemsWithInstance = items.stream()
-      .map(item -> new ItemWithInstanceId(item, null))
-      .toList();
-
-    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.ITEM, itemsWithInstance);
+    return itemReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.ITEM, items);
   }
 
   @Override

@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.HOLDINGS_RECORD;
+import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
@@ -18,18 +19,22 @@ import org.folio.rest.jaxrs.model.PublishReindexRecords;
 public class HoldingDomainEventPublisher
   extends AbstractDomainEventPublisher<HoldingsRecord, HoldingsRecord> {
 
+  private final CommonDomainEventPublisher<Map<String, Object>> holdingsReindexPublisher;
+
   public HoldingDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new HoldingsRepository(context, okapiHeaders),
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         HOLDINGS_RECORD.fullTopicName(tenantId(okapiHeaders))));
+    holdingsReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
   }
 
-  public Future<Void> publishReindexHoldings(String key, List<HoldingsRecord> holdings) {
+  public Future<Void> publishReindexHoldings(String key, List<Map<String, Object>> holdings) {
     if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    return domainEventService.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDINGS, holdings);
+    return holdingsReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.HOLDINGS, holdings);
   }
 
   @Override
