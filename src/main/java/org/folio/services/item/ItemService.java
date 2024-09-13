@@ -49,8 +49,6 @@ import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -240,15 +238,8 @@ public class ItemService {
         .map(items));
   }
 
-  public Future<Void> publishReindexItemRecords(String rangeId, String idStart, String idEnd) {
-    var criteriaFrom = new Criteria().setJSONB(false)
-      .addField("id").setOperation(">=").setVal(idStart);
-    var criteriaTo = new Criteria().setJSONB(false)
-      .addField("id").setOperation("<=").setVal(idEnd);
-    final Criterion criterion = new Criterion(criteriaFrom)
-      .addCriterion(criteriaTo);
-
-    return itemRepository.get(criterion)
+  public Future<Void> publishReindexItemRecords(String rangeId, String fromId, String toId) {
+    return itemRepository.getReindexItemRecords(fromId, toId)
       .compose(items -> domainEventService.publishReindexItems(rangeId, items));
   }
 

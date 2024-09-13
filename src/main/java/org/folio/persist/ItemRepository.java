@@ -1,5 +1,6 @@
 package org.folio.persist;
 
+import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
@@ -8,6 +9,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -43,6 +45,22 @@ public class ItemRepository extends AbstractRepository<Item> {
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
+  }
+
+  public Future<List<Map<String, Object>>> getReindexItemRecords(String fromId, String toId) {
+    var sql = "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
+              + " FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " i"
+              + " JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+              + " hr ON i.holdingsrecordid = hr.id"
+              + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
+
+    return postgresClient.select(sql).map(rows -> {
+      var resultList = new LinkedList<Map<String, Object>>();
+      for (var row : rows) {
+        resultList.add(row.getJsonObject(0).getMap());
+      }
+      return resultList;
+    });
   }
 
 }
