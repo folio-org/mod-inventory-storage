@@ -37,6 +37,7 @@
 * Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
 * Add user-tenants.collection.get to all ECS APIs ([MODINVSTOR-1253](https://folio-org.atlassian.net/browse/MODINVSTOR-1253))
 * Add user-tenants.collection.get to POST /\_/tenant API ([MODINVSTOR-1260](https://folio-org.atlassian.net/browse/MODINVSTOR-1260))
+* Update "BC" name in GET instance-date-type to "B.C." ([MODINVSTOR-1255](https://folio-org.atlassian.net/browse/MODINVSTOR-1255))
 
 ### Tech Dept
 * Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
