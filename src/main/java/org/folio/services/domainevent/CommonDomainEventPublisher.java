@@ -61,6 +61,7 @@ public class CommonDomainEventPublisher<T> {
     var kafkaConfig = KafkaConfig.builder()
       .kafkaPort(KafkaEnvironmentProperties.port())
       .kafkaHost(KafkaEnvironmentProperties.host())
+      .maxRequestSize(10485760) // 10MB
       .build();
 
     return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
