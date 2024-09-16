@@ -9,7 +9,7 @@ VALUES
     ('6de732c5-c29b-4a10-9db0-0729ca960f12', '{"id":"6de732c5-c29b-4a10-9db0-0729ca960f12","name":"Inclusive dates of collection","code":"i","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
     ('8fa6d067-41ff-4362-96a0-96b16ddce267', '{"id":"8fa6d067-41ff-4362-96a0-96b16ddce267","name":"Multiple dates","code":"m","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8', '{"id":"6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8","name":"No attempt to code","code":"|","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
-    ('77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8', '{"id":"77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8","name":"No dates given; BC date involved","code":"b","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+    ('77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8', '{"id":"77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8","name":"No dates given; B.C. date involved","code":"b","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('3a4296bf-504b-451b-9355-5806f8d88253', '{"id":"3a4296bf-504b-451b-9355-5806f8d88253","name":"Publication date and copyright date","code":"t","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('4afa7d3d-e6f5-4134-9ab5-32ad377d2432', '{"id":"4afa7d3d-e6f5-4134-9ab5-32ad377d2432","name":"Questionable date","code":"q","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
     ('ccc293d5-9e88-4222-ac04-d058351ddb7b', '{"id":"ccc293d5-9e88-4222-ac04-d058351ddb7b","name":"Range of years of bulk of collection","code":"k","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
