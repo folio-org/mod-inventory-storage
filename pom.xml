@@ -19,7 +19,7 @@
     <folio-kafka-wrapper.version>3.2.0-SNAPSHOT</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.34</lombok.version>
-    <snappy-java.version>1.1.10.6</snappy-java.version>
+    <snappy-java.version>1.1.10.7</snappy-java.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.0</log4j.version>
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
