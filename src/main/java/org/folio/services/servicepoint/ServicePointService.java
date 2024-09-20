@@ -1,11 +1,16 @@
 package org.folio.services.servicepoint;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.jaxrs.resource.ServicePoints.PostServicePointsResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.ServicePoints.PostServicePointsResponse.respond201WithApplicationJson;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+
 import java.util.Map;
+
 import javax.ws.rs.core.Response;
+
 import org.folio.persist.ServicePointRepository;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -22,7 +27,8 @@ public class ServicePointService {
 
   public ServicePointService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.servicePointRepository = new ServicePointRepository(vertxContext, okapiHeaders);
-    this.servicePointDomainEventPublisher = new ServicePointDomainEventPublisher(vertxContext, okapiHeaders);
+    this.servicePointDomainEventPublisher = new ServicePointDomainEventPublisher(vertxContext,
+      okapiHeaders);
   }
 
   public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
@@ -50,6 +56,14 @@ public class ServicePointService {
 
     return servicePointRepository.getById(servicePointId)
       .compose(this::deleteServicePoint);
+  }
+
+  public Future<Response> createServicePoint(String servicePointId, Servicepoint servicePoint) {
+    servicePoint.setId(servicePointId);
+    return servicePointRepository.save(servicePointId, servicePoint)
+      .compose(notUsed ->
+        servicePointDomainEventPublisher.publishCreated(servicePoint)
+          .map(resp -> respond201WithApplicationJson(servicePoint, headersFor201())));
   }
 
   private Future<Boolean> deleteServicePoint(Servicepoint servicePoint) {

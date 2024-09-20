@@ -2919,7 +2919,8 @@
       { "name": "S3_BUCKET", "value": "marc-migrations" },
       { "name": "S3_ACCESS_KEY_ID", "value": "" },
       { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
-      { "name": "S3_IS_AWS", "value": "true" }
+      { "name": "S3_IS_AWS", "value": "true" },
+      { "name": "ECS_TLR_FEATURE_ENABLED", "value": "true"}
     ]
   }
 }
