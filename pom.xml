@@ -27,7 +27,7 @@
     <okapi-testing.version>6.0.2</okapi-testing.version>
     <junit.version>5.11.0</junit.version>
     <testcontainers.version>1.20.1</testcontainers.version>
-    <joda-time.version>2.12.7</joda-time.version>
+    <joda-time.version>2.13.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
