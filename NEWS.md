@@ -9,7 +9,7 @@
 * Provides `instance-storage-bulk 1.0`
 * Provides `instance-date-types 1.0`
 * Provides `locations 3.1`
-* Provides `instance-storage 10.3`
+* Provides `instance-storage 10.4`
 * Requires `holdings-storage 6.1`
 
 ### Features
@@ -28,6 +28,7 @@
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
+* Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
 
 
 ### Bug fixes
