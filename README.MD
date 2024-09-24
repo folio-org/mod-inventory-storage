@@ -125,6 +125,8 @@ These are the defined topic properties for `message retention` and `maximum mess
 
 in case, any of these topic properties are changed for `reindex-records` the topic needs to be recreated and module needs to be reinstalled.
 
+Changing maximum message size for kafka producer:
+* `KAFKA_REINDEX_PRODUCER_MAX_REQUEST_SIZE_BYTES` Default value - `10485760` (10 MB)
 
 # Building
 
