@@ -52,16 +52,21 @@ public class CommonDomainEventPublisher<T> {
 
   public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
                                     String kafkaTopic) {
+    this(vertxContext, okapiHeaders, kafkaTopic, 0);
+  }
 
-    this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext),
+  public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
+                                    String kafkaTopic, int maxRequestSize) {
+
+    this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext, maxRequestSize),
       new LogToDbFailureHandler(vertxContext, okapiHeaders));
   }
 
-  private static KafkaProducerManager createProducerManager(Context vertxContext) {
+  private static KafkaProducerManager createProducerManager(Context vertxContext, int maxRequestSize) {
     var kafkaConfig = KafkaConfig.builder()
       .kafkaPort(KafkaEnvironmentProperties.port())
       .kafkaHost(KafkaEnvironmentProperties.host())
-      .maxRequestSize(10485760) // 10MB
+      .maxRequestSize(maxRequestSize)
       .build();
 
     return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
