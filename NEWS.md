@@ -7,11 +7,8 @@
 * Provides `instance-storage-batch 3.0`
 * Provides `instance-storage-batch-sync 3.0`
 * Provides `instance-storage-batch-sync-unsafe 3.0`
-* Provides `instance-storage-bulk 2.0`
-* Provides `inventory-reindex-records 2.0`
 * Provides `inventory-view 3.0`
 * Provides `inventory-view-instance-set 3.0`
-* Provides `instance-reindex 1.0`
 * Provides `instance-iteration 1.0`
 
 ## v27.2.0 2024-09-24
