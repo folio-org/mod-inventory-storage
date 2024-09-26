@@ -28,7 +28,7 @@
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
-
+* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))

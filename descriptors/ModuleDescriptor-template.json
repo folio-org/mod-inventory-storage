@@ -104,7 +104,7 @@
         },{
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/holdings/retrieve",
-          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+          "permissionsRequired": ["inventory-storage.holdings.collection.post"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings/{id}",
@@ -176,7 +176,7 @@
         },{
           "methods": ["POST"],
           "pathPattern": "/instance-storage/instances/retrieve",
-          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+          "permissionsRequired": ["inventory-storage.instances.collection.post"]
         },
         {
           "methods": ["GET"],
@@ -290,7 +290,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/instance-storage/batch/synchronous",
-          "permissionsRequired": ["inventory-storage.instances.batch.post"]
+          "permissionsRequired": ["inventory-storage.instances.batch.execute"]
         }
       ]
     },
@@ -1266,9 +1266,7 @@
           "methods": ["PUT"],
           "pathPattern": "/inventory-storage/bound-withs",
           "permissionsRequired": [
-            "inventory-storage.bound-with-parts.collection.get",
-            "inventory-storage.bound-with-parts.item.post",
-            "inventory-storage.bound-with-parts.item.delete"
+            "inventory-storage.bound-with-parts.collection.put"
           ]
         }
       ]
@@ -1428,7 +1426,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/inventory-storage/migrations/jobs",
-          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+          "permissionsRequired": ["inventory-storage.migration.job.collection.get"]
         },
         {
           "methods": ["DELETE"],
@@ -1526,6 +1524,11 @@
       "description": "get holdings collection from storage"
     },
     {
+      "permissionName": "inventory-storage.holdings.collection.post",
+      "displayName": "inventory storage - retrieve holdings collection",
+      "description": "retrieve holdings collection from storage"
+    },
+    {
       "permissionName": "inventory-storage.holdings.collection.delete",
       "displayName": "inventory storage - delete entire holdings collection",
       "description": "delete entire holdings collection from storage"
@@ -1566,6 +1569,11 @@
       "description": "get instance collection from storage"
     },
     {
+      "permissionName": "inventory-storage.instances.collection.post",
+      "displayName": "inventory storage - retrieve instance collection",
+      "description": "retrieve instance collection from storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.collection.delete",
       "displayName": "inventory storage - delete entire instance collection",
       "description": "delete entire instance collection from storage"
@@ -1599,6 +1607,11 @@
       "permissionName": "inventory-storage.instances.batch.post",
       "displayName": "inventory storage - create or update a number of instances",
       "description": "create or update a number of instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.batch.execute",
+      "displayName": "inventory storage - create or update a collection of instances in a single synchronous request",
+      "description": "create or update a collection of instances in a single synchronous request"
     },
     {
       "permissionName": "inventory-storage.instances.batch-unsafe.post",
@@ -2542,6 +2555,11 @@
       "description":    "add a holdings record to a bound-with by associating it with the bound-with item"
     },
     {
+      "permissionName": "inventory-storage.bound-with-parts.collection.put",
+      "displayName":    "inventory storage - modify a bound-withs",
+      "description":    "replace a holdings-records of a bound-withs or move it to a different bound-withs"
+    },
+    {
       "permissionName": "inventory-storage.bound-with-parts.item.put",
       "displayName":    "inventory storage - modify a bound-with part",
       "description":    "replace a holdings-record of a bound-with or move it to a different bound-with"
@@ -2607,6 +2625,11 @@
       "description": "get migration job by id"
     },
     {
+      "permissionName": "inventory-storage.migration.job.collection.get",
+      "displayName": "inventory storage - get migration jobs",
+      "description": "get migration jobs"
+    },
+    {
       "permissionName": "inventory-storage.migration.item.get",
       "displayName": "inventory storage - get list of available migrations",
       "description": "get list of available migrations"
@@ -2647,6 +2670,7 @@
         "inventory-storage.items.batch.post",
         "inventory-storage.items.batch-unsafe.post",
         "inventory-storage.holdings.collection.get",
+        "inventory-storage.holdings.collection.post",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
         "inventory-storage.holdings.item.put",
@@ -2655,6 +2679,7 @@
         "inventory-storage.holdings.batch.post",
         "inventory-storage.holdings.batch-unsafe.post",
         "inventory-storage.instances.collection.get",
+        "inventory-storage.instances.collection.post",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
@@ -2666,6 +2691,7 @@
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
+        "inventory-storage.instances.batch.execute",
         "inventory-storage.instances.batch-unsafe.post",
         "inventory-storage.instances.bulk.post",
         "inventory-storage.loan-types.collection.get",
@@ -2853,6 +2879,7 @@
         "inventory-storage.bound-with-parts.collection.get",
         "inventory-storage.bound-with-parts.item.get",
         "inventory-storage.bound-with-parts.item.post",
+        "inventory-storage.bound-with-parts.collection.put",
         "inventory-storage.bound-with-parts.item.put",
         "inventory-storage.bound-with-parts.item.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
@@ -2870,6 +2897,7 @@
         "inventory-storage.migration.job.item.delete",
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
+        "inventory-storage.migration.job.collection.get",
         "inventory-storage.migration.item.get",
         "inventory-storage.reindex-records.publish.post",
         "inventory-storage.instance-date-types.collection.get",
