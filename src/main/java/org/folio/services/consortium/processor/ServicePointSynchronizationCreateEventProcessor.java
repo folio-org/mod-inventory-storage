@@ -9,35 +9,43 @@ import org.folio.services.domainevent.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
 
 import io.vertx.core.Future;
-import lombok.SneakyThrows;
 
 public class ServicePointSynchronizationCreateEventProcessor
   extends ServicePointSynchronizationEventProcessor {
 
-  private static final Logger LOG = LogManager.getLogger(
+  private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationCreateEventProcessor.class);
 
   public ServicePointSynchronizationCreateEventProcessor(DomainEvent<Servicepoint> domainEvent) {
     super(ServicePointEventType.INVENTORY_SERVICE_POINT_CREATED, domainEvent);
   }
 
-  @SneakyThrows
   @Override
   protected Future<?> processEvent(ServicePointService servicePointService, String servicePointId) {
-    var servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
-      .mapTo(Servicepoint.class);
-    return servicePointService.createServicePoint(servicePointId, servicePoint);
+    try {
+      Servicepoint servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+        .mapTo(Servicepoint.class);
+
+      return servicePointService.createServicePoint(servicePointId, servicePoint);
+    } catch (Exception e) {
+      log.error("processEvent:: failed due to {}", e.getMessage(), e);
+      return Future.failedFuture(e);
+    }
   }
 
-  @SneakyThrows
   @Override
   protected boolean validateEventEntity() {
-    var servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
-      .mapTo(Servicepoint.class);
-    if (servicePoint == null) {
-      LOG.warn("validateEventEntity:: failed to find new service point entity");
-      return false;
+    try {
+      Servicepoint servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+        .mapTo(Servicepoint.class);
+      if (servicePoint == null) {
+        log.warn("validateEventEntity:: failed to find new service point entity");
+        return false;
+      }
+      return true;
+    } catch (Exception e) {
+      log.error("validateEventEntity:: failed due to {}", e.getMessage(), e);
     }
-    return true;
+    return false;
   }
 }

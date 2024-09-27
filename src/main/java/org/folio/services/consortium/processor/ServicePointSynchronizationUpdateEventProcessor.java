@@ -9,38 +9,45 @@ import org.folio.services.domainevent.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
 
 import io.vertx.core.Future;
-import lombok.SneakyThrows;
 
 public class ServicePointSynchronizationUpdateEventProcessor
   extends ServicePointSynchronizationEventProcessor {
 
-  private static final Logger LOG = LogManager.getLogger(
+  private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationUpdateEventProcessor.class);
 
   public ServicePointSynchronizationUpdateEventProcessor(DomainEvent<Servicepoint> domainEvent) {
     super(ServicePointEventType.INVENTORY_SERVICE_POINT_UPDATED, domainEvent);
   }
 
-  @SneakyThrows
   @Override
   protected Future<?> processEvent(ServicePointService servicePointService, String servicePointId) {
-    var servicepoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity()).mapTo(
-      Servicepoint.class);
-    return servicePointService.updateServicePoint(servicePointId, servicepoint);
+    try {
+      Servicepoint servicepoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+        .mapTo(Servicepoint.class);
+      return servicePointService.updateServicePoint(servicePointId, servicepoint);
+    } catch (Exception e) {
+      log.warn("processEvent:: failed due to {}", e.getMessage(), e);
+      return Future.failedFuture(e);
+    }
   }
 
-  @SneakyThrows
   @Override
   protected boolean validateEventEntity() {
-    var oldServicePoint = domainEvent.getOldEntity();
-    var newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity()).mapTo(
-      Servicepoint.class);
+    try {
+      var oldServicePoint = domainEvent.getOldEntity();
+      Servicepoint newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+        .mapTo(Servicepoint.class);
 
-    if (oldServicePoint == null || newServicePoint == null) {
-      LOG.warn("validateEventEntity:: failed due to oldServicePoint {} newServicePoint {}",
-        oldServicePoint, newServicePoint);
-      return false;
+      if (oldServicePoint == null || newServicePoint == null) {
+        log.warn("validateEventEntity:: failed due to oldServicePoint {} newServicePoint {}",
+          oldServicePoint, newServicePoint);
+        return false;
+      }
+      return true;
+    } catch (Exception e) {
+      log.error("validateEventEntity:: failed to {}", e.getMessage(), e);
     }
-    return true;
+    return false;
   }
 }

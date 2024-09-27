@@ -12,7 +12,7 @@ import io.vertx.core.Future;
 public class ServicePointSynchronizationDeleteEventProcessor
   extends ServicePointSynchronizationEventProcessor {
 
-  private static final Logger LOG = LogManager.getLogger(
+  private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationDeleteEventProcessor.class);
 
   public ServicePointSynchronizationDeleteEventProcessor(DomainEvent<Servicepoint> domainEvent) {
@@ -28,7 +28,7 @@ public class ServicePointSynchronizationDeleteEventProcessor
   protected boolean validateEventEntity() {
     var servicePoint = domainEvent.getOldEntity();
     if (servicePoint == null) {
-      LOG.warn("processEvents:: service point is null");
+      log.warn("processEvents:: service point is null");
       return false;
     }
     return true;

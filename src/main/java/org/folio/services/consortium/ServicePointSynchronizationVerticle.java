@@ -31,7 +31,7 @@ import io.vertx.core.http.HttpClient;
 
 public class ServicePointSynchronizationVerticle extends AbstractVerticle {
 
-  private static final Logger LOG = LogManager.getLogger(ServicePointSynchronizationVerticle.class);
+  private static final Logger log = LogManager.getLogger(ServicePointSynchronizationVerticle.class);
   private static final String TENANT_PATTERN = "\\w{1,}";
   private static final String MODULE_ID = getModuleId();
   private static final int DEFAULT_LOAD_LIMIT = 5;
@@ -48,8 +48,8 @@ public class ServicePointSynchronizationVerticle extends AbstractVerticle {
     var httpClient = vertx.createHttpClient();
 
     createConsumers(httpClient)
-      .onSuccess(v -> LOG.info("start:: verticle started"))
-      .onFailure(t -> LOG.error("start:: verticle start failed", t))
+      .onSuccess(v -> log.info("start:: verticle started"))
+      .onFailure(t -> log.error("start:: verticle start failed", t))
       .onComplete(startPromise);
   }
 

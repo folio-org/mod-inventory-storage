@@ -1,5 +1,6 @@
 package org.folio.services.consortium.processor;
 
+import static io.vertx.core.Future.succeededFuture;
 import static java.lang.Boolean.FALSE;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.utils.ConsortiumUtils.isCentralTenant;
@@ -20,7 +21,7 @@ import io.vertx.core.Future;
 
 public abstract class ServicePointSynchronizationEventProcessor {
 
-  private static final Logger LOG = LogManager.getLogger(
+  private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationEventProcessor.class);
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
   private final ServicePointEventType servicePointEventType;
@@ -33,17 +34,20 @@ public abstract class ServicePointSynchronizationEventProcessor {
   }
 
   public Future<String> process(String eventKey, SynchronizationContext context) {
+    var future = succeededFuture(eventKey);
     if (!isCentralTenant(domainEvent.getTenant(), context.consortiaData())
       || !isEcsTlrFeatureEnabled()
       || servicePointEventType.getPayloadType() != domainEvent.getType()) {
-      return Future.succeededFuture(eventKey);
+      return future;
     }
-    validateEventEntity();
+    if (!validateEventEntity()) {
+      log.warn("process:: validation event entity failed");
+      return future;
+    }
     var vertxContext = context.vertx().getOrCreateContext();
     var headers = context.headers();
-    var future = Future.succeededFuture(eventKey);
     for (String memberTenant : context.consortiaData().memberTenants()) {
-      LOG.info("process:: tenant {} servicePointId {}", memberTenant, eventKey);
+      log.info("process:: tenant {} servicePointId {}", memberTenant, eventKey);
       future = future.eventually(() -> prepareHeaders(headers, memberTenant)
         .compose(lendingTenantHeader -> {
           var servicePointService = new ServicePointService(vertxContext, lendingTenantHeader);
@@ -51,7 +55,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
             .map(eventKey);
         })
         .onFailure(e ->
-          LOG.warn("process:: tenant {} servicePointId {} failed", memberTenant, eventKey, e)));
+          log.warn("process:: tenant {} servicePointId {} failed", memberTenant, eventKey, e)));
     }
     return future;
   }
@@ -70,7 +74,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
 
     var map = new HashMap<>(headers);
     map.put(TENANT, memberTenant);
-    return Future.succeededFuture(map);
+    return succeededFuture(map);
   }
 
 }
