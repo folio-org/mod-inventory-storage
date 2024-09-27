@@ -68,7 +68,8 @@ public class SubjectSourceTest extends TestBase {
     subjectSourceClient.create(subjectSource);
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    getClient().post(subjectSourcesUrl(""), subjectSource.put("name", "Test2"), TENANT_ID, ResponseHandler.json(postCompleted));
+    getClient().post(subjectSourcesUrl(""), subjectSource.put("name", "Test2"),
+      TENANT_ID, ResponseHandler.json(postCompleted));
 
     Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(422));
