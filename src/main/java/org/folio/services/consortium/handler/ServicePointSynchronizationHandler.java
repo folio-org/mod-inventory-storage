@@ -2,8 +2,12 @@ package org.folio.services.consortium.handler;
 
 import static io.vertx.core.Future.succeededFuture;
 
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.Json;
+import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import java.util.Optional;
-
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,12 +19,6 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.SynchronizationContext;
 import org.folio.services.consortium.processor.ServicePointSynchronizationEventProcessor;
 import org.folio.services.domainevent.DomainEvent;
-
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.Json;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 
 public abstract class ServicePointSynchronizationHandler
   implements AsyncRecordHandler<String, String> {

@@ -5,9 +5,9 @@ import static java.lang.Boolean.FALSE;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.utils.ConsortiumUtils.isCentralTenant;
 
+import io.vertx.core.Future;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -17,15 +17,13 @@ import org.folio.services.domainevent.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
 import org.folio.utils.Environment;
 
-import io.vertx.core.Future;
-
 public abstract class ServicePointSynchronizationEventProcessor {
 
   private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationEventProcessor.class);
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
-  private final ServicePointEventType servicePointEventType;
   protected final DomainEvent<Servicepoint> domainEvent;
+  private final ServicePointEventType servicePointEventType;
 
   protected ServicePointSynchronizationEventProcessor(ServicePointEventType eventType,
     DomainEvent<Servicepoint> domainEvent) {

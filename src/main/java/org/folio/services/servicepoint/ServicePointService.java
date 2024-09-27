@@ -6,11 +6,8 @@ import static org.folio.rest.jaxrs.resource.ServicePoints.PostServicePointsRespo
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-
 import java.util.Map;
-
 import javax.ws.rs.core.Response;
-
 import org.folio.persist.ServicePointRepository;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.Servicepoint;

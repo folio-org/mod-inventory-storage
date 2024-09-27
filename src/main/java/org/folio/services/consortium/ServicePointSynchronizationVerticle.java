@@ -6,9 +6,12 @@ import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SER
 import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_DELETED;
 import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_UPDATED;
 
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.http.HttpClient;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
@@ -23,11 +26,6 @@ import org.folio.services.consortium.handler.ServicePointSynchronizationCreateHa
 import org.folio.services.consortium.handler.ServicePointSynchronizationDeleteHandler;
 import org.folio.services.consortium.handler.ServicePointSynchronizationUpdateHandler;
 import org.folio.services.domainevent.ServicePointEventType;
-
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.http.HttpClient;
 
 public class ServicePointSynchronizationVerticle extends AbstractVerticle {
 

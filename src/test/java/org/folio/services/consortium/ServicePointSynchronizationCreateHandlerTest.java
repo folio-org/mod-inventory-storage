@@ -13,12 +13,24 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mockStatic;
 
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
+import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.InventoryKafkaTopic;
@@ -42,21 +54,6 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
-import lombok.SneakyThrows;
-
 @RunWith(VertxUnitRunner.class)
 public class ServicePointSynchronizationCreateHandlerTest extends TestBase {
 
@@ -70,7 +67,8 @@ public class ServicePointSynchronizationCreateHandlerTest extends TestBase {
   private static final String CONSORTIUM_ID = UUID.randomUUID().toString();
   private static final String COLLEGE_TENANT_ID = "college";
   private static final UUID SERVICE_POINT_ID = UUID.randomUUID();
-  public static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
+  private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
+
   @Mock
   private ConsortiumDataCache consortiumDataCache;
   private Vertx vertx = Vertx.vertx();

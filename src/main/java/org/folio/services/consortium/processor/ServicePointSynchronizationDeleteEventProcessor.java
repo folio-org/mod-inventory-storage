@@ -1,13 +1,12 @@
 package org.folio.services.consortium.processor;
 
+import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
-
-import io.vertx.core.Future;
 
 public class ServicePointSynchronizationDeleteEventProcessor
   extends ServicePointSynchronizationEventProcessor {
