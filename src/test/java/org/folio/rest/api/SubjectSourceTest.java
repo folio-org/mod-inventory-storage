@@ -6,6 +6,7 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.RestUtility.send;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.http.HttpMethod;
@@ -51,6 +52,30 @@ public class SubjectSourceTest extends TestBase {
 
     JsonArray errors = response.getJson().getJsonArray("errors");
     assertThat(errors.size(), is(1));
+    assertTrue(errors.getJsonObject(0).getString("message").contains("(jsonb ->> 'name'::text)) value already exists"));
+  }
+
+  @Test
+  public void cannotCreateSubjectSourceWithDuplicateCode()
+    throws InterruptedException, TimeoutException,
+    ExecutionException {
+
+    JsonObject subjectSource = new JsonObject()
+      .put("name", "Test")
+      .put("code", "test")
+      .put("source", "local");
+
+    subjectSourceClient.create(subjectSource);
+
+    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
+    getClient().post(subjectSourcesUrl(""), subjectSource.put("name", "Test2"), TENANT_ID, ResponseHandler.json(postCompleted));
+
+    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(422));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+    assertTrue(errors.getJsonObject(0).getString("message").contains("(jsonb ->> 'code'::text)) value already exists"));
   }
 
   @Test
