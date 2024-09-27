@@ -48,19 +48,19 @@ public class ServicePointService {
       .map(x -> ItemStorage.PutItemStorageItemsByItemIdResponse.respond204());
   }
 
-  public Future<Boolean> deleteServicePoint(String servicePointId) {
-    log.debug("deleteServicePoint:: parameters servicePointId: {}", servicePointId);
-
-    return servicePointRepository.getById(servicePointId)
-      .compose(this::deleteServicePoint);
-  }
-
   public Future<Response> createServicePoint(String servicePointId, Servicepoint servicePoint) {
     servicePoint.setId(servicePointId);
     return servicePointRepository.save(servicePointId, servicePoint)
       .compose(notUsed ->
         servicePointDomainEventPublisher.publishCreated(servicePoint)
           .map(resp -> respond201WithApplicationJson(servicePoint, headersFor201())));
+  }
+
+  public Future<Boolean> deleteServicePoint(String servicePointId) {
+    log.debug("deleteServicePoint:: parameters servicePointId: {}", servicePointId);
+
+    return servicePointRepository.getById(servicePointId)
+      .compose(this::deleteServicePoint);
   }
 
   private Future<Boolean> deleteServicePoint(Servicepoint servicePoint) {
