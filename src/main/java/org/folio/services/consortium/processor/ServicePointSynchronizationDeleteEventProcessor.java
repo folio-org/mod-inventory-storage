@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
@@ -25,11 +26,17 @@ public class ServicePointSynchronizationDeleteEventProcessor
 
   @Override
   protected boolean validateEventEntity() {
-    var servicePoint = domainEvent.getOldEntity();
-    if (servicePoint == null) {
-      log.warn("processEvents:: service point is null");
-      return false;
+    try {
+      var servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getOldEntity())
+        .mapTo(Servicepoint.class);
+      if (servicePoint == null) {
+        log.warn("validateEventEntity:: service point is null");
+        return false;
+      }
+      return true;
+    } catch (Exception e) {
+      log.error("validateEventEntity:: failed to {}", e.getMessage(), e);
     }
-    return true;
+    return false;
   }
 }

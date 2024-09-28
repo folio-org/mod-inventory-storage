@@ -34,7 +34,8 @@ public class ServicePointSynchronizationUpdateEventProcessor
   @Override
   protected boolean validateEventEntity() {
     try {
-      var oldServicePoint = domainEvent.getOldEntity();
+      var oldServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getOldEntity())
+        .mapTo(Servicepoint.class);
       Servicepoint newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
         .mapTo(Servicepoint.class);
 

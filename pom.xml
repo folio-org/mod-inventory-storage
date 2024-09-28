@@ -578,6 +578,9 @@
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
           -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+          <environmentVariables>
+            <ECS_TLR_FEATURE_ENABLED>true</ECS_TLR_FEATURE_ENABLED>
+          </environmentVariables>
         </configuration>
       </plugin>
 

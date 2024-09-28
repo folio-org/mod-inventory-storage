@@ -24,8 +24,7 @@ public class ServicePointService {
 
   public ServicePointService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.servicePointRepository = new ServicePointRepository(vertxContext, okapiHeaders);
-    this.servicePointDomainEventPublisher = new ServicePointDomainEventPublisher(vertxContext,
-      okapiHeaders);
+    this.servicePointDomainEventPublisher = new ServicePointDomainEventPublisher(vertxContext, okapiHeaders);
   }
 
   public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
