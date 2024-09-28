@@ -16,7 +16,7 @@ public class ServicePointSynchronizationDeleteEventProcessor
     ServicePointSynchronizationDeleteEventProcessor.class);
 
   public ServicePointSynchronizationDeleteEventProcessor(DomainEvent<Servicepoint> domainEvent) {
-    super(ServicePointEventType.INVENTORY_SERVICE_POINT_DELETED, domainEvent);
+    super(ServicePointEventType.SERVICE_POINT_DELETED, domainEvent);
   }
 
   @Override

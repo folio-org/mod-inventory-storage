@@ -16,7 +16,7 @@ public class ServicePointSynchronizationCreateEventProcessor
     ServicePointSynchronizationCreateEventProcessor.class);
 
   public ServicePointSynchronizationCreateEventProcessor(DomainEvent<Servicepoint> domainEvent) {
-    super(ServicePointEventType.INVENTORY_SERVICE_POINT_CREATED, domainEvent);
+    super(ServicePointEventType.SERVICE_POINT_CREATED, domainEvent);
   }
 
   @Override

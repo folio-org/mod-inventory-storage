@@ -15,9 +15,9 @@ import static org.folio.rest.api.ServicePointTest.createHoldShelfExpiryPeriod;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_CREATED;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_DELETED;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_UPDATED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_CREATED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_DELETED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_UPDATED;
 import static org.folio.utility.LocationUtility.createServicePoint;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -245,15 +245,15 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   }
 
   private static Integer getOffsetForServicePointCreateEvents() {
-    return getOffset(buildConsumerGroupId(INVENTORY_SERVICE_POINT_CREATED.name()));
+    return getOffset(buildConsumerGroupId(SERVICE_POINT_CREATED.name()));
   }
 
   private static Integer getOffsetForServicePointUpdateEvents() {
-    return getOffset(buildConsumerGroupId(INVENTORY_SERVICE_POINT_UPDATED.name()));
+    return getOffset(buildConsumerGroupId(SERVICE_POINT_UPDATED.name()));
   }
 
   private static Integer getOffsetForServicePointDeleteEvents() {
-    return getOffset(buildConsumerGroupId(INVENTORY_SERVICE_POINT_DELETED.name()));
+    return getOffset(buildConsumerGroupId(SERVICE_POINT_DELETED.name()));
   }
 
   private void publishEvent(JsonObject eventPayload) {

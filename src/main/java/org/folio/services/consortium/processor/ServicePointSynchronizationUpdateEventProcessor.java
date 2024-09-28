@@ -16,7 +16,7 @@ public class ServicePointSynchronizationUpdateEventProcessor
     ServicePointSynchronizationUpdateEventProcessor.class);
 
   public ServicePointSynchronizationUpdateEventProcessor(DomainEvent<Servicepoint> domainEvent) {
-    super(ServicePointEventType.INVENTORY_SERVICE_POINT_UPDATED, domainEvent);
+    super(ServicePointEventType.SERVICE_POINT_UPDATED, domainEvent);
   }
 
   @Override

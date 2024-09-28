@@ -2,9 +2,9 @@ package org.folio.services.consortium;
 
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_CREATED;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_DELETED;
-import static org.folio.services.domainevent.ServicePointEventType.INVENTORY_SERVICE_POINT_UPDATED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_CREATED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_DELETED;
+import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_UPDATED;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -54,11 +54,11 @@ public class ServicePointSynchronizationVerticle extends AbstractVerticle {
   private Future<Void> createConsumers(HttpClient httpClient) {
     final var config = getKafkaConfig();
 
-    return createEventConsumer(INVENTORY_SERVICE_POINT_CREATED, config,
+    return createEventConsumer(SERVICE_POINT_CREATED, config,
       new ServicePointSynchronizationCreateHandler(consortiumDataCache, httpClient, vertx))
-      .compose(r -> createEventConsumer(INVENTORY_SERVICE_POINT_UPDATED, config,
+      .compose(r -> createEventConsumer(SERVICE_POINT_UPDATED, config,
         new ServicePointSynchronizationUpdateHandler(consortiumDataCache, httpClient, vertx)))
-      .compose(r -> createEventConsumer(INVENTORY_SERVICE_POINT_DELETED, config,
+      .compose(r -> createEventConsumer(SERVICE_POINT_DELETED, config,
         new ServicePointSynchronizationDeleteHandler(consortiumDataCache, httpClient, vertx)))
       .mapEmpty();
   }
