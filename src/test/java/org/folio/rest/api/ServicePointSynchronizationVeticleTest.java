@@ -121,7 +121,7 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   }
 
   @Test
-  public void testServicePointSynchronization() {
+  public void shouldPropagateCreationOfServicePointOnLendingTenant() {
     var servicepoint = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
     publishServicePointCreateEvent(servicepoint);
     int initialOffset = getOffsetForServicePointCreateEvents();
@@ -137,7 +137,7 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   }
 
   @Test
-  public void shouldPropagateUpdateSynchronization() {
+  public void shouldPropagateUpdateOfServicePointOnLendingTenant() {
     var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID,
       true);
     var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID,
@@ -159,7 +159,7 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   }
 
   @Test
-  public void shouldPropagateDeleteSynchronization(TestContext context) {
+  public void shouldPropagateDeleteOfServicePointOnLendingTenant(TestContext context) {
     var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
     var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID,
       false);
