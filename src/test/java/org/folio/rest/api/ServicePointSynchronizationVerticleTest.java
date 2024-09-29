@@ -22,8 +22,6 @@ import static org.folio.utility.LocationUtility.createServicePoint;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.vertx.core.Future;
@@ -62,7 +60,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
-public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventoryUtil {
+public class ServicePointSynchronizationVerticleTest extends TestBaseWithInventoryUtil {
 
   private static final String CENTRAL_TENANT_ID = "consortium";
   private static final String COLLEGE_TENANT_ID = "college";
@@ -76,17 +74,6 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
-
-  @SneakyThrows
-  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
-    return future.toCompletionStage()
-      .toCompletableFuture()
-      .get(timeoutSeconds, TimeUnit.SECONDS);
-  }
-
-  public static <T> T waitFor(Future<T> future) {
-    return waitFor(future, 10);
-  }
 
   @BeforeClass
   public static void setUpClass()
@@ -121,60 +108,63 @@ public class ServicePointSynchronizationVeticleTest extends TestBaseWithInventor
   }
 
   @Test
-  public void shouldPropagateCreationOfServicePointOnLendingTenant() {
-    var servicepoint = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
-    publishServicePointCreateEvent(servicepoint);
+  public void shouldPropagateCreationOfServicePointOnLendingTenant(TestContext context) {
+    var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
+
     int initialOffset = getOffsetForServicePointCreateEvents();
+    publishServicePointCreateEvent(servicePointFromCentralTenant);
     waitUntilValueIsIncreased(initialOffset,
-      ServicePointSynchronizationVeticleTest::getOffsetForServicePointCreateEvents);
+      ServicePointSynchronizationVerticleTest::getOffsetForServicePointCreateEvents);
     getServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(asyncResult -> {
-        if (asyncResult.succeeded()) {
-          assertThat("reason failed " + asyncResult.result(),
-            asyncResult.result().getId().equals(eq(servicepoint.getId())));
-        }
-      });
+      .onComplete(context.asyncAssertSuccess(collegeServicePoint ->
+        context.assertEquals(servicePointFromCentralTenant.getId(), collegeServicePoint.getId())));
   }
 
   @Test
-  public void shouldPropagateUpdateOfServicePointOnLendingTenant() {
+  public void shouldPropagateUpdateOfServicePointOnLendingTenant(TestContext context) {
     var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID,
       true);
     var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID,
       false);
 
-    publishServicePointUpdateEvent(servicePointFromDataTenant, servicePointFromCentralTenant);
     int initialOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(servicePointFromDataTenant, servicePointFromCentralTenant);
     waitUntilValueIsIncreased(initialOffset,
-      ServicePointSynchronizationVeticleTest::getOffsetForServicePointUpdateEvents);
+      ServicePointSynchronizationVerticleTest::getOffsetForServicePointUpdateEvents);
     getServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(asyncResult -> {
-        if (asyncResult.succeeded()) {
-          assertThat("reason failed " + asyncResult.result(),
-            asyncResult.result()
-              .getDiscoveryDisplayName()
-              .equals(eq(servicePointFromCentralTenant.getDiscoveryDisplayName())));
-        }
-      });
+      .onComplete(context.asyncAssertSuccess(collegeServicePoint ->
+        context.assertEquals(servicePointFromCentralTenant.getDiscoveryDisplayName(),
+          collegeServicePoint.getDiscoveryDisplayName())));
   }
 
   @Test
   public void shouldPropagateDeleteOfServicePointOnLendingTenant(TestContext context) {
     var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
-    var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID,
-      false);
+    var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID, false);
+
     getServicePointById(COLLEGE_TENANT_ID)
       .onComplete(context.asyncAssertSuccess(servicePoint ->
         context.assertEquals(servicePointFromCentralTenant.getId(),
           servicePointFromDataTenant.getId())));
 
-    publishServicePointDeleteEvent(servicePointFromDataTenant);
     int initialOffset = getOffsetForServicePointDeleteEvents();
+    publishServicePointDeleteEvent(servicePointFromDataTenant);
     waitUntilValueIsIncreased(initialOffset,
-      ServicePointSynchronizationVeticleTest::getOffsetForServicePointDeleteEvents);
+      ServicePointSynchronizationVerticleTest::getOffsetForServicePointDeleteEvents);
     getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
       .onComplete(context.asyncAssertSuccess(statusCode ->
         context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+  }
+
+  @SneakyThrows
+  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
+    return future.toCompletionStage()
+      .toCompletableFuture()
+      .get(timeoutSeconds, TimeUnit.SECONDS);
+  }
+
+  public static <T> T waitFor(Future<T> future) {
+    return waitFor(future, 10);
   }
 
   private Future<Servicepoint> getServicePointById(String tenantId) {

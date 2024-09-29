@@ -1,6 +1,7 @@
 package org.folio.services.servicepoint;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.impl.ServicePointApi.LOCATION_PREFIX;
 import static org.folio.rest.jaxrs.resource.ServicePoints.PostServicePointsResponse.headersFor201;
 import static org.folio.rest.jaxrs.resource.ServicePoints.PostServicePointsResponse.respond201WithApplicationJson;
 
@@ -52,7 +53,8 @@ public class ServicePointService {
     return servicePointRepository.save(servicePointId, servicePoint)
       .compose(notUsed ->
         servicePointDomainEventPublisher.publishCreated(servicePoint)
-          .map(resp -> respond201WithApplicationJson(servicePoint, headersFor201())));
+          .map(resp -> respond201WithApplicationJson(servicePoint, headersFor201()
+            .withLocation(LOCATION_PREFIX + servicePointId))));
   }
 
   public Future<Boolean> deleteServicePoint(String servicePointId) {
