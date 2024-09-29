@@ -176,7 +176,7 @@
         },{
           "methods": ["POST"],
           "pathPattern": "/instance-storage/instances/retrieve",
-          "permissionsRequired": ["inventory-storage.instances.collection.post"]
+          "permissionsRequired": ["inventory-storage.instances.retrieve.collection.post"]
         },
         {
           "methods": ["GET"],
@@ -1569,7 +1569,7 @@
       "description": "get instance collection from storage"
     },
     {
-      "permissionName": "inventory-storage.instances.collection.post",
+      "permissionName": "inventory-storage.instances.retrieve.collection.post",
       "displayName": "inventory storage - retrieve instance collection",
       "description": "retrieve instance collection from storage"
     },
@@ -2679,7 +2679,7 @@
         "inventory-storage.holdings.batch.post",
         "inventory-storage.holdings.batch-unsafe.post",
         "inventory-storage.instances.collection.get",
-        "inventory-storage.instances.collection.post",
+        "inventory-storage.instances.retrieve.collection.post",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
