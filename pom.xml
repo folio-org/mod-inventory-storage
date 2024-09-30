@@ -37,6 +37,7 @@
     <awaitility.version>4.2.2</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
     <localstack.version>1.20.1</localstack.version>
+    <system-stubs-junit4.version>2.1.7</system-stubs-junit4.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
@@ -266,6 +267,12 @@
     <dependency>  <!-- for testcontainers -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>  <!-- for mocking env variable -->
+      <groupId>uk.org.webcompere</groupId>
+      <artifactId>system-stubs-junit4</artifactId>
+      <version>${system-stubs-junit4.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

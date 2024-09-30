@@ -71,11 +71,11 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
           id = UUID.randomUUID().toString();
           entity.setId(id);
         }
-        String tenantId = getTenant(okapiHeaders);
-        PostgresClient pgClient = getPgClient(vertxContext, tenantId);
-        pgClient.save(SERVICE_POINT_TABLE, id, entity, saveReply -> {
-          if (saveReply.failed()) {
-            String message = logAndSaveError(saveReply.cause());
+        new ServicePointService(vertxContext, okapiHeaders)
+          .createServicePoint(id, entity)
+          .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+          .onFailure(throwable -> {
+            String message = logAndSaveError(throwable);
             if (isDuplicate(message)) {
               asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsResponse.respond422WithApplicationJson(
@@ -86,15 +86,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                 PostServicePointsResponse.respond500WithTextPlain(
                   getErrorResponse(message))));
             }
-          } else {
-            String ret = saveReply.result();
-            entity.setId(ret);
-            asyncResultHandler.handle(Future.succeededFuture(
-              PostServicePointsResponse
-                .respond201WithApplicationJson(entity,
-                  PostServicePointsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-          }
-        });
+          });
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -248,7 +240,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
       "duplicate key value violates unique constraint");
   }
 
-  private String validateServicePoint(Servicepoint svcpt) {
+  public static String validateServicePoint(Servicepoint svcpt) {
 
     HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
     boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
