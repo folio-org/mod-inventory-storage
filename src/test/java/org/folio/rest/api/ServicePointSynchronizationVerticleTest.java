@@ -73,7 +73,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   private static final String CONSORTIUM_ID = UUID.randomUUID().toString();
   private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants".formatted(
     CONSORTIUM_ID);
-  private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
+  private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE";
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
   @Rule

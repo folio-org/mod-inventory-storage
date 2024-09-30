@@ -21,7 +21,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
 
   private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationEventProcessor.class);
-  private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
+  private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE";
   protected final DomainEvent<Servicepoint> domainEvent;
   private final ServicePointEventType servicePointEventType;
 
