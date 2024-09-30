@@ -1,5 +1,7 @@
 package org.folio.services.consortium.processor;
 
+import static io.vertx.core.Future.failedFuture;
+
 import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +32,7 @@ public class ServicePointSynchronizationCreateEventProcessor
         .map(servicePointId);
     } catch (Exception e) {
       log.error("processEvent:: failed due to {}", e.getMessage(), e);
-      return Future.failedFuture(e);
+      return failedFuture(e);
     }
   }
 

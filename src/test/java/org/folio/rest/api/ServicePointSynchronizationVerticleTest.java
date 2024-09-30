@@ -81,8 +81,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
     new EnvironmentVariablesRule(ECS_TLR_FEATURE_ENABLED, "true");
 
   @BeforeClass
-  public static void setUpClass()
-    throws Exception {
+  public static void setUpClass() throws Exception {
     ModuleUtility.prepareTenant(CENTRAL_TENANT_ID, false);
     ModuleUtility.prepareTenant(COLLEGE_TENANT_ID, false);
 
@@ -102,13 +101,12 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   }
 
   @AfterClass
-  public static void tearDownClass()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  public static void tearDownClass() throws ExecutionException, InterruptedException,
+    TimeoutException {
+
     ModuleUtility.removeTenant(CENTRAL_TENANT_ID);
     ModuleUtility.removeTenant(COLLEGE_TENANT_ID);
-    waitFor(
-      producer.close()
-        .compose(v -> adminClient.close())
+    waitFor(producer.close().compose(v -> adminClient.close())
     );
   }
 
