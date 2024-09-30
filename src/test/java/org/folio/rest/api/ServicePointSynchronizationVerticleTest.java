@@ -56,8 +56,10 @@ import org.hamcrest.MatcherAssert;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
 
 @RunWith(VertxUnitRunner.class)
 public class ServicePointSynchronizationVerticleTest extends TestBaseWithInventoryUtil {
@@ -74,6 +76,9 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
+  @Rule
+  public EnvironmentVariablesRule environmentVariablesRule =
+    new EnvironmentVariablesRule(ECS_TLR_FEATURE_ENABLED, "true");
 
   @BeforeClass
   public static void setUpClass()
