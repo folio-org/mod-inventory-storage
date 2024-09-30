@@ -131,7 +131,8 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     runSql(query);
   }
 
-  private RowSet<Row> runSql(String sql) throws ExecutionException, InterruptedException, TimeoutException {
+  @SneakyThrows
+  private RowSet<Row> runSql(String sql) {
     return PostgresClient.getInstance(getVertx())
       .execute(sql)
       .toCompletionStage()
