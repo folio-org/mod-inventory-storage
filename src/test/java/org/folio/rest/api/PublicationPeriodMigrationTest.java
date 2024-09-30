@@ -12,7 +12,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -132,16 +131,11 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     runSql(query);
   }
 
-  private RowSet<Row> runSql(String sql) throws InterruptedException, ExecutionException, TimeoutException {
-    var postgresClient = PostgresClient.getInstance(getVertx());
-    CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
-
-    postgresClient.execute(sql, handler -> {
-      if (handler.failed()) {
-        future.completeExceptionally(handler.cause());
-      }
-      future.complete(handler.result());
-    });
-    return future.get(TIMEOUT, TimeUnit.SECONDS);
+  private RowSet<Row> runSql(String sql) throws ExecutionException, InterruptedException, TimeoutException {
+    return PostgresClient.getInstance(getVertx())
+      .execute(sql)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get(TIMEOUT, TimeUnit.SECONDS);
   }
 }
