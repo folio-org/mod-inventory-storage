@@ -14,7 +14,7 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO ${myuniversity}_${mymodule}.subject_source (id, jsonb)
 VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d43',
-        json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d43', 'name', 'National Agricultural Library subject authority file', 'code', 'nalnaf', 'source', 'folio'))
+        json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d43', 'name', 'National Agricultural Library subject authority file', 'source', 'folio'))
 ON CONFLICT DO NOTHING;
 
 INSERT INTO ${myuniversity}_${mymodule}.subject_source (id, jsonb)
