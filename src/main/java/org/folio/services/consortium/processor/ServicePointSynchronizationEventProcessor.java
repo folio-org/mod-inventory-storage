@@ -36,6 +36,9 @@ public abstract class ServicePointSynchronizationEventProcessor {
     if (!isCentralTenant(domainEvent.getTenant(), context.consortiaData())
       || !isEcsTlrFeatureEnabled()
       || servicePointEventType.getPayloadType() != domainEvent.getType()) {
+
+      log.info("process:: tenant: {}, event type: {}, ECS_TLR_FEATURE_ENABLED: {}",
+        domainEvent.getTenant(), domainEvent.getType(), isEcsTlrFeatureEnabled());
       return future;
     }
     if (!validateEventEntity()) {
