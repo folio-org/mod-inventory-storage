@@ -3,6 +3,7 @@ package org.folio.services.consortium.processor;
 import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.impl.ServicePointApi;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.DomainEvent;
@@ -39,6 +40,11 @@ public class ServicePointSynchronizationCreateEventProcessor
         .mapTo(Servicepoint.class);
       if (servicePoint == null) {
         log.warn("validateEventEntity:: failed to find new service point entity");
+        return false;
+      }
+      String validateSvcptResult = ServicePointApi.validateServicePoint(servicePoint);
+      if (validateSvcptResult != null) {
+        log.warn("validateEventEntity:: {}", validateSvcptResult);
         return false;
       }
       return true;

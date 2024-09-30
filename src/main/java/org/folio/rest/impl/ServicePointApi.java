@@ -240,7 +240,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
       "duplicate key value violates unique constraint");
   }
 
-  private String validateServicePoint(Servicepoint svcpt) {
+  public static String validateServicePoint(Servicepoint svcpt) {
 
     HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
     boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
