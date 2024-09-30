@@ -44,8 +44,8 @@ public abstract class ServicePointSynchronizationHandler
     var headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(
       kafkaConsumerRecord.headers()));
     return consortiumDataCache.getConsortiumData(headers)
-      .compose(consortiumData ->
-        processConsortiumData(kafkaConsumerRecord, consortiumData, headers));
+      .compose(consortiumData -> processConsortiumData(kafkaConsumerRecord, consortiumData,
+        headers));
   }
 
   private Future<String> processConsortiumData(
@@ -53,9 +53,8 @@ public abstract class ServicePointSynchronizationHandler
     Optional<ConsortiumData> consortiumData, CaseInsensitiveMap<String, String> headers) {
 
     log.info("processConsortiumData:: {}", consortiumData);
-    return consortiumData.map(
-        data -> processConsortiumDataByEvent(data, kafkaConsumerRecord, headers))
-      .orElseGet(() -> succeededFuture(kafkaConsumerRecord.key()));
+    return consortiumData.map(data -> processConsortiumDataByEvent(data, kafkaConsumerRecord,
+        headers)).orElseGet(() -> succeededFuture(kafkaConsumerRecord.key()));
   }
 
   private Future<String> processConsortiumDataByEvent(ConsortiumData data,

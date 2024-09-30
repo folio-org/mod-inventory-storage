@@ -21,11 +21,12 @@ public class ServicePointSynchronizationUpdateEventProcessor
   }
 
   @Override
-  protected Future<?> processEvent(ServicePointService servicePointService, String servicePointId) {
+  protected Future<String> processEvent(ServicePointService servicePointService, String servicePointId) {
     try {
       Servicepoint servicepoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
         .mapTo(Servicepoint.class);
-      return servicePointService.updateServicePoint(servicePointId, servicepoint);
+      return servicePointService.updateServicePoint(servicePointId, servicepoint)
+        .map(servicePointId);
     } catch (Exception e) {
       log.warn("processEvent:: failed due to {}", e.getMessage(), e);
       return Future.failedFuture(e);
@@ -49,9 +50,9 @@ public class ServicePointSynchronizationUpdateEventProcessor
         log.warn("validateEventEntity:: old/new service points are identical");
         return false;
       }
-      String validateSvcptResult = ServicePointApi.validateServicePoint(newServicePoint);
-      if (validateSvcptResult != null) {
-        log.warn("validateEventEntity:: {}", validateSvcptResult);
+      String validationMessage = ServicePointApi.validateServicePoint(newServicePoint);
+      if (validationMessage != null) {
+        log.warn("validateEventEntity:: {}", validationMessage);
         return false;
       }
       return true;

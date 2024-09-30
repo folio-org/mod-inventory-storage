@@ -49,8 +49,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
       future = future.eventually(() -> prepareHeaders(headers, memberTenant)
         .compose(lendingTenantHeader -> {
           var servicePointService = new ServicePointService(vertxContext, lendingTenantHeader);
-          return processEvent(servicePointService, eventKey)
-            .map(eventKey);
+          return processEvent(servicePointService, eventKey);
         })
         .onFailure(e ->
           log.warn("process:: tenant {} servicePointId {} failed", memberTenant, eventKey, e)));
@@ -58,7 +57,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
     return future;
   }
 
-  protected abstract Future<?> processEvent(ServicePointService servicePointService,
+  protected abstract Future<String> processEvent(ServicePointService servicePointService,
     String servicePointId);
 
   protected abstract boolean validateEventEntity();

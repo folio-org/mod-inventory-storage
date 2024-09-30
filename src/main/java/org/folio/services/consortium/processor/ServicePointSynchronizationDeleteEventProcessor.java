@@ -20,8 +20,8 @@ public class ServicePointSynchronizationDeleteEventProcessor
   }
 
   @Override
-  protected Future<?> processEvent(ServicePointService servicePointService, String servicePointId) {
-    return servicePointService.deleteServicePoint(servicePointId);
+  protected Future<String> processEvent(ServicePointService servicePointService, String servicePointId) {
+    return servicePointService.deleteServicePoint(servicePointId).map(servicePointId);
   }
 
   @Override
