@@ -12,9 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.Before;
@@ -120,8 +118,7 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     return instanceId;
   }
 
-  private void addPublicationPeriodToJsonb(String instanceId, String startDate, String endDate)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  private void addPublicationPeriodToJsonb(String instanceId, String startDate, String endDate) {
     String query;
     if (endDate != null) {
       query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID, startDate, endDate, instanceId);
