@@ -28,6 +28,7 @@
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
+* Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
 
 
 ### Bug fixes
