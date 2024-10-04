@@ -41,13 +41,13 @@ BEGIN
     -- STEP 0: Check if deletion is required
     SELECT EXISTS (
         SELECT 1
-        FROM ${myuniversity}_${mymodule}.instance shared_instance
-        WHERE shared_instance.jsonb ? 'source'
-          AND (shared_instance.jsonb ->> 'source') ILIKE 'CONSORTIUM-%%'
+        FROM ${myuniversity}_${mymodule}.instance member_instance
+        WHERE member_instance.jsonb ? 'source'
+          AND (member_instance.jsonb ->> 'source') ILIKE 'CONSORTIUM-%%'
           AND NOT EXISTS (
               SELECT 1
-              FROM ${central}_${mymodule}.instance local_instance
-              WHERE local_instance.id = shared_instance.id
+              FROM ${central}_${mymodule}.instance central_instance
+              WHERE central_instance.id = member_instance.id
               LIMIT 1
           )
           LIMIT 1
@@ -66,13 +66,13 @@ BEGIN
             RAISE INFO 'range: % - %', lower, cur;
             -- Delete scripts
             EXECUTE format($q$
-                DELETE FROM ${myuniversity}_${mymodule}.instance shared_instance
-                WHERE shared_instance.jsonb ? 'source'
-                  AND (shared_instance.jsonb ->> 'source') ILIKE 'CONSORTIUM-%%'
+                DELETE FROM ${myuniversity}_${mymodule}.instance member_instance
+                WHERE member_instance.jsonb ? 'source'
+                  AND (member_instance.jsonb ->> 'source') ILIKE 'CONSORTIUM-%%'
                   AND NOT EXISTS (
                       SELECT 1
-                      FROM  ${central}_${mymodule}.instance local_instance
-                      WHERE local_instance.id = shared_instance.id
+                      FROM  ${central}_${mymodule}.instance central_instance
+                      WHERE central_instance.id = member_instance.id
                       LIMIT 1
                   )
                   AND (id > %L AND id <= %L);
