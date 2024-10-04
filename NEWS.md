@@ -29,6 +29,7 @@
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 * Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
+* Create script to remove instance shadow copies without shared record in ecs sprint testing environment ([MODINVSTOR-1263](https://folio-org.atlassian.net/browse/MODINVSTOR-1263))
 
 
 ### Bug fixes
