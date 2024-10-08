@@ -7,7 +7,11 @@
       "type": "string"
     },
     "name": {
-      "description": "label for the subject source",
+      "description": "label for the subject source name",
+      "type": "string"
+    },
+    "code": {
+      "description": "label for the subject source code",
       "type": "string"
     },
     "source": {
