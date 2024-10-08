@@ -11,6 +11,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
@@ -26,15 +27,17 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
   private static final String MULTIPLE_DATE_TYPE_ID = "8fa6d067-41ff-4362-96a0-96b16ddce267";
   private static final String SINGLE_DATE_TYPE_ID = "24a506e8-2a92-4ecc-bd09-ff849321fd5a";
   private static final String SELECT_JSONB_BY_ID =
-    "SELECT jsonb FROM %s_mod_inventory_storage.instance WHERE id = '%s';";
-  private static final String UPDATE_JSONB_WITH_PUB_PERIOD =
-    "UPDATE %s_mod_inventory_storage.instance "
-      + "SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start','%s','end', '%s')) "
-      + "WHERE id = '%s';";
-  private static final String UPDATE_JSONB_WITH_PUB_PERIOD_START_DATE =
-    "UPDATE %s_mod_inventory_storage.instance "
-      + "SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start','%s')) "
-      + "WHERE id = '%s';";
+    "SELECT jsonb FROM %s_mod_inventory_storage.instance WHERE id = $1";
+  private static final String UPDATE_JSONB_WITH_PUB_PERIOD = """
+    UPDATE %s_mod_inventory_storage.instance
+    SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start', $1, 'end', $2))
+    WHERE id = $3
+    """;
+  private static final String UPDATE_JSONB_WITH_PUB_PERIOD_START_DATE = """
+    UPDATE %s_mod_inventory_storage.instance
+    SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start', $1))
+    WHERE id = $2
+    """;
 
   @SneakyThrows
   @Before
@@ -48,13 +51,13 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     var instanceId = createInstance();
 
     // add "publicationPeriod" object to jsonb
-    addPublicationPeriodToJsonb(instanceId, START_DATE, END_DATE);
+    addPublicationPeriodToJsonb(instanceId, END_DATE);
 
     //migrate "publicationPeriod" to Dates object
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
-    String query = String.format(SELECT_JSONB_BY_ID, TENANT_ID, instanceId);
-    RowSet<Row> result = runSql(query);
+    var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
+    RowSet<Row> result = runSql(query, Tuple.of(instanceId));
 
     assertEquals(1, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
@@ -70,13 +73,13 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     var instanceId = createInstance();
 
     // add "publicationPeriod" object to jsonb
-    addPublicationPeriodToJsonb(instanceId, START_DATE, null);
+    addPublicationPeriodToJsonb(instanceId, null);
 
     //migrate "publicationPeriod" to Dates object
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
-    String query = String.format(SELECT_JSONB_BY_ID, TENANT_ID, instanceId);
-    RowSet<Row> result = runSql(query);
+    var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
+    RowSet<Row> result = runSql(query, Tuple.of(instanceId));
 
     assertEquals(1, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
@@ -94,8 +97,8 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     //migrate "publicationPeriod" to Dates object
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
-    String query = String.format(SELECT_JSONB_BY_ID, TENANT_ID, instanceId);
-    RowSet<Row> result = runSql(query);
+    var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
+    RowSet<Row> result = runSql(query, Tuple.of(instanceId));
 
     assertEquals(1, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
@@ -118,20 +121,21 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     return instanceId;
   }
 
-  private void addPublicationPeriodToJsonb(String instanceId, String startDate, String endDate) {
-    String query;
+  private void addPublicationPeriodToJsonb(String instanceId, String endDate) {
+    var id = UUID.fromString(instanceId);
     if (endDate != null) {
-      query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID, startDate, endDate, instanceId);
+      var query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID);
+      runSql(query, Tuple.of(PublicationPeriodMigrationTest.START_DATE, endDate, id));
     } else {
-      query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD_START_DATE, TENANT_ID, startDate, instanceId);
+      var query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD_START_DATE, TENANT_ID);
+      runSql(query, Tuple.of(PublicationPeriodMigrationTest.START_DATE, id));
     }
-    runSql(query);
   }
 
   @SneakyThrows
-  private RowSet<Row> runSql(String sql) {
+  private RowSet<Row> runSql(String sql, Tuple tuple) {
     return PostgresClient.getInstance(getVertx())
-      .execute(sql)
+      .execute(sql, tuple)
       .toCompletionStage()
       .toCompletableFuture()
       .get(TIMEOUT, TimeUnit.SECONDS);
