@@ -25,7 +25,7 @@
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
 
     <okapi-testing.version>6.0.2</okapi-testing.version>
-    <junit.version>5.11.0</junit.version>
+    <junit.version>5.11.1</junit.version>
     <testcontainers.version>1.20.1</testcontainers.version>
     <joda-time.version>2.13.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
@@ -36,7 +36,7 @@
     <rest-assured.version>5.5.0</rest-assured.version>
     <awaitility.version>4.2.2</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
-    <localstack.version>1.20.1</localstack.version>
+    <localstack.version>1.20.2</localstack.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
