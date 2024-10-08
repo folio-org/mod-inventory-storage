@@ -36,7 +36,7 @@
     <rest-assured.version>5.5.0</rest-assured.version>
     <awaitility.version>4.2.2</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
-    <localstack.version>1.20.1</localstack.version>
+    <localstack.version>1.20.2</localstack.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
