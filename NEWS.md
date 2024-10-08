@@ -1,5 +1,15 @@
-## v27.2.0 In progress
+## v28.0.0 In progress
+### New APIs versions
+* Requires `holdings-storage 8.0`
+* Requires `instance-storage 11.0`
+* Requires `instance-storage-batch-sync 3.0`
+* Requires `bound-with-parts-storage 2.0`
+* Requires `async-migration 1.0`
 
+### Features
+* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
+
+## v27.2.0 2024-10-08
 ### Breaking changes
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
@@ -28,7 +38,6 @@
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
-* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
