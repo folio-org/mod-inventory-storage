@@ -1,5 +1,17 @@
-## v27.2.0 In progress
+## v28.0.0 In progress
+### Breaking changes
+* Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
 
+### New APIs versions
+* Provides `instance-storage 11.0`
+* Provides `instance-storage-batch 3.0`
+* Provides `instance-storage-batch-sync 3.0`
+* Provides `instance-storage-batch-sync-unsafe 3.0`
+* Provides `inventory-view 3.0`
+* Provides `inventory-view-instance-set 3.0`
+* Provides `instance-iteration 1.0`
+
+## v27.2.0 2024-09-24
 ### Breaking changes
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
@@ -29,7 +41,6 @@
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 * Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
-
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))

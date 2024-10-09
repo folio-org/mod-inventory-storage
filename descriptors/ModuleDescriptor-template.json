@@ -167,7 +167,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.3",
+      "version": "11.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -274,7 +274,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -285,7 +285,7 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -296,7 +296,7 @@
     },
     {
       "id": "instance-storage-batch-sync-unsafe",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1339,7 +1339,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1350,7 +1350,7 @@
     },
     {
       "id": "inventory-view-instance-set",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1387,7 +1387,7 @@
     },
     {
       "id": "instance-iteration",
-      "version": "0.1",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
