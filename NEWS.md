@@ -1,15 +1,23 @@
 ## v28.0.0 In progress
+### Breaking changes
+* Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
+
 ### New APIs versions
+* Provides `instance-storage 11.0`
+* Provides `instance-storage-batch 3.0`
+* Provides `instance-storage-batch-sync 3.0`
+* Provides `instance-storage-batch-sync-unsafe 3.0`
+* Provides `inventory-view 3.0`
+* Provides `inventory-view-instance-set 3.0`
+* Provides `instance-iteration 1.0`
 * Requires `holdings-storage 8.0`
-* Requires `instance-storage 11.0`
-* Requires `instance-storage-batch-sync 3.0`
 * Requires `bound-with-parts-storage 2.0`
 * Requires `async-migration 1.0`
 
 ### Features
 * Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
 
-## v27.2.0 2024-10-08
+## v27.2.0 2024-09-24
 ### Breaking changes
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
