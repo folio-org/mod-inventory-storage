@@ -1225,13 +1225,13 @@
     },
     {
       "run": "after",
-      "snippetPath": "publication-period/migratePublicationPeriod.sql",
-      "fromModuleVersion": "28.0.0"
+      "snippetPath": "subjectIdsReferenceCheckTrigger.sql",
+      "fromModuleVersion": "27.2.0"
     },
     {
       "run": "after",
-      "snippetPath": "subjectIdsReferenceCheckTrigger.sql",
-      "fromModuleVersion": "27.2.0"
+      "snippetPath": "publication-period/migratePublicationPeriod.sql",
+      "fromModuleVersion": "28.0.0"
     }
   ]
 }
