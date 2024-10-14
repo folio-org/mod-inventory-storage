@@ -79,7 +79,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @BeforeClass
   public static void setUpClass() {
-    localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:0.11.3"))
+    localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
       .withServices(S3);
 
     localStackContainer.start();
