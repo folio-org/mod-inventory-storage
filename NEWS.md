@@ -11,6 +11,9 @@
 * Provides `inventory-view-instance-set 3.0`
 * Provides `instance-iteration 1.0`
 
+### Tech Dept
+* Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
+
 ## v27.2.0 2024-09-24
 ### Breaking changes
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
