@@ -12,7 +12,7 @@
     <generate_routing_context>/instance-storage/instances,/instance-storage/instances/retrieve,/holdings-storage/holdings,/holdings-storage/holdings/retrieve,/item-storage/items,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
 
-    <raml-module-builder-version>35.2.2</raml-module-builder-version> <!-- also update vertx.version -->
+    <raml-module-builder-version>35.3.0</raml-module-builder-version> <!-- also update vertx.version -->
     <vertx.version>4.5.10</vertx.version>
     <marc4j.version>2.9.5</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
@@ -21,12 +21,12 @@
     <lombok.version>1.18.34</lombok.version>
     <snappy-java.version>1.1.10.7</snappy-java.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
-    <log4j.version>2.24.0</log4j.version>
+    <log4j.version>2.24.1</log4j.version>
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
 
     <okapi-testing.version>6.0.3</okapi-testing.version>
-    <junit.version>5.11.1</junit.version>
-    <testcontainers.version>1.20.1</testcontainers.version>
+    <junit.version>5.11.2</junit.version>
+    <testcontainers.version>1.20.2</testcontainers.version>
     <joda-time.version>2.13.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
@@ -45,10 +45,10 @@
     <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
-    <maven-surefire-plugin.version>3.5.0</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.5.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.18.1</checkstyle.version>
-    <maven-failsafe-plugin.version>3.5.0</maven-failsafe-plugin.version>
+    <checkstyle.version>10.18.2</checkstyle.version>
+    <maven-failsafe-plugin.version>3.5.1</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
   </properties>
 
