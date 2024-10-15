@@ -10,8 +10,12 @@ public final class ResponseUtil {
 
   public static final String SOURCE_CANNOT_BE_FOLIO =
     "Illegal operation: Source field cannot be set to folio";
-  public static final String SOURCE_CANNOT_BE_UPDATED =
-    "Illegal operation: Source field cannot be updated";
+  public static final String SOURCE_FOLIO_CANNOT_BE_UPDATED =
+    "Illegal operation: Source folio cannot be updated";
+  public static final String SOURCE_CANNOT_BE_UPDATED_AT_NON_ECS =
+    "Illegal operation: Source field cannot be updated at non-consortium tenant";
+  public static final String SOURCE_CONSORTIUM_CANNOT_BE_APPLIED =
+    "Illegal operation: Source consortium cannot be applied at non-consortium tenant";
 
   private ResponseUtil() { }
 

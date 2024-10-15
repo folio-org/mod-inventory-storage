@@ -81,7 +81,7 @@ public class SubjectTypeTest extends TestBase {
     assertEquals(422, response.getStatusCode());
     assertEquals(1, errors.size());
     assertEquals(
-      "Illegal operation: Source field cannot be updated",
+      "Illegal operation: Source folio cannot be updated",
       errors.getJsonObject(0).getString("message"));
   }
 
