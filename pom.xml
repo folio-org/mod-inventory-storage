@@ -24,7 +24,7 @@
     <log4j.version>2.24.0</log4j.version>
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
 
-    <okapi-testing.version>6.0.2</okapi-testing.version>
+    <okapi-testing.version>6.0.3</okapi-testing.version>
     <junit.version>5.11.1</junit.version>
     <testcontainers.version>1.20.1</testcontainers.version>
     <joda-time.version>2.13.0</joda-time.version>
@@ -36,7 +36,6 @@
     <rest-assured.version>5.5.0</rest-assured.version>
     <awaitility.version>4.2.2</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
-    <localstack.version>1.20.2</localstack.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
@@ -238,7 +237,6 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>localstack</artifactId>
-      <version>${localstack.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
