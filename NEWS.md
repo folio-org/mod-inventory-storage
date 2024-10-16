@@ -10,6 +10,12 @@
 * Provides `inventory-view 3.0`
 * Provides `inventory-view-instance-set 3.0`
 * Provides `instance-iteration 1.0`
+* Requires `holdings-storage 8.0`
+* Requires `bound-with-parts-storage 2.0`
+* Requires `async-migration 1.0`
+
+### Features
+* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
 
 ### Tech Dept
 * Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
