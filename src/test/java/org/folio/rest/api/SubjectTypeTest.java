@@ -41,7 +41,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
     prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
 
     mockUserTenantsForNonConsortiumMember();
-    mockUserTenantsForConsortiumMember();
+    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockConsortiumTenants();
   }
 

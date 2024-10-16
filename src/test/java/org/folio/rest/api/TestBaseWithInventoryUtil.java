@@ -115,14 +115,14 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
-  public static void mockUserTenantsForConsortiumMember() {
+  public static void mockUserTenantsForConsortiumMember(String tenantId) {
     JsonObject userTenantsCollection = new JsonObject()
       .put("userTenants", new JsonArray()
         .add(new JsonObject()
           .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
           .put("consortiumId", "mobius")));
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(CONSORTIUM_CENTRAL_TENANT))
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(tenantId))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
   }
 

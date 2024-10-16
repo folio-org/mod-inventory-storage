@@ -42,7 +42,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
     subjectSourceClient = ResourceClient.forSubjectSources(getClient());
 
     mockUserTenantsForNonConsortiumMember();
-    mockUserTenantsForConsortiumMember();
+    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockConsortiumTenants();
   }
 
