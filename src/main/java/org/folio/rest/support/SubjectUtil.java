@@ -19,6 +19,9 @@ import org.folio.services.consortium.ConsortiumService;
 public final class SubjectUtil {
   private static final String SOURCE = "source";
 
+  private SubjectUtil() {
+  }
+
   public static Future<Optional<Errors>> validateSubjectSourceCreate(String subjectSource,
                                                                      ConsortiumService consortiumService,
                                                                      Map<String, String> okapiHeaders) {
