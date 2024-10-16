@@ -6,6 +6,8 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
+import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -111,6 +113,30 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+  }
+
+  public static void mockUserTenantsForConsortiumMember() {
+    JsonObject userTenantsCollection = new JsonObject()
+      .put("userTenants", new JsonArray()
+        .add(new JsonObject()
+          .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
+          .put("consortiumId", "mobius")));
+    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(CONSORTIUM_CENTRAL_TENANT))
+      .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
+  }
+
+  public static void mockConsortiumTenants() {
+    JsonObject tenantsCollection = new JsonObject()
+      .put("tenants", new JsonArray()
+        .add(new JsonObject()
+          .put("id", CONSORTIUM_CENTRAL_TENANT)
+          .put("isCentral", true))
+        .add(new JsonObject()
+          .put("id", CONSORTIUM_MEMBER_TENANT)
+          .put("isCentral", false)));
+    WireMock.stubFor(WireMock.get("/consortia/mobius/tenants")
+      .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
   }
 
   protected static void setupMaterialTypes() {

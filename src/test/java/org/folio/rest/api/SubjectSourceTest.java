@@ -2,52 +2,66 @@ package org.folio.rest.api;
 
 import static org.folio.rest.support.http.InterfaceUrls.subjectSourcesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.prepareTenant;
+import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.folio.utility.RestUtility.send;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import junitparams.JUnitParamsRunner;
+import lombok.SneakyThrows;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class SubjectSourceTest extends TestBase {
-
+@RunWith(JUnitParamsRunner.class)
+public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   private static ResourceClient subjectSourceClient;
   private static final String SUBJECT_SOURCE_ID = "e894d0dc-621d-4b1d-98f6-6f7120eb0d40";
 
+  @SneakyThrows
   @BeforeClass
-  public static void beforeAll() {
-    TestBase.beforeAll();
+  public static void before() {
+    prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
     subjectSourceClient = ResourceClient.forSubjectSources(getClient());
+
+    mockUserTenantsForNonConsortiumMember();
+    mockUserTenantsForConsortiumMember();
+    mockConsortiumTenants();
+  }
+
+  @SneakyThrows
+  @AfterClass
+  public static void afterClass() {
+    removeTenant(CONSORTIUM_CENTRAL_TENANT);
   }
 
   @Test
-  public void cannotCreateSubjectSourceWithDuplicateName()
-    throws InterruptedException, TimeoutException,
-    ExecutionException {
+  public void cannotCreateSubjectSourceWithDuplicateName() {
 
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings2")
       .put("source", "local");
 
-    subjectSourceClient.create(subjectSource);
+    createSubjectSource(subjectSource);
 
-    CompletableFuture<Response> postCompleted = new CompletableFuture<>();
-    getClient().post(subjectSourcesUrl(""), subjectSource, TENANT_ID, ResponseHandler.json(postCompleted));
-
-    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response response = createSubjectSource(subjectSource);
     assertThat(response.getStatusCode(), is(422));
 
     JsonArray errors = response.getJson().getJsonArray("errors");
@@ -65,7 +79,7 @@ public class SubjectSourceTest extends TestBase {
       .put("code", "test")
       .put("source", "local");
 
-    subjectSourceClient.create(subjectSource);
+    createSubjectSource(subjectSource);
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     getClient().post(subjectSourcesUrl(""), subjectSource.put("name", "Test2"),
@@ -96,6 +110,45 @@ public class SubjectSourceTest extends TestBase {
   }
 
   @Test
+  public void cannotCreateSubjectSourceWithSourceConsortiumAtNonEcs() {
+    JsonObject subjectSource = new JsonObject()
+      .put("name", "Library of Congress Subject Headings2")
+      .put("source", "consortium");
+
+    Response resource = createSubjectSource(subjectSource);
+
+    JsonArray errors = resource.getJson().getJsonArray("errors");
+    assertEquals(422, resource.getStatusCode());
+    assertEquals(1, errors.size());
+    assertEquals(
+      "Illegal operation: Source consortium cannot be applied at non-consortium tenant",
+      errors.getJsonObject(0).getString("message"));
+  }
+
+  @Test
+  public void canCreateSubjectSourceWithSourceConsortiumAtEcs() {
+    JsonObject subjectSource = new JsonObject()
+      .put("name", "Library of Congress Subject Headings2")
+      .put("source", "consortium");
+
+    Response resource = createSubjectSource(subjectSource, CONSORTIUM_CENTRAL_TENANT);
+
+    assertEquals(201, resource.getStatusCode());
+  }
+
+  @Test
+  public void cannotUpdateNonExistingSubjectSource() {
+    JsonObject subjectSource = new JsonObject()
+      .put("name", "Library of Congress Subject Headings")
+      .put("source", "local");
+
+    Response response = updateSubjectSource(UUID.randomUUID().toString(), subjectSource);
+
+    assertEquals(404, response.getStatusCode());
+    assertEquals("SubjectSource was not found", response.getBody());
+  }
+
+  @Test
   public void cannotUpdateSubjectSourceWithSourceFolio() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings")
@@ -106,27 +159,98 @@ public class SubjectSourceTest extends TestBase {
     JsonArray errors = response.getJson().getJsonArray("errors");
     assertEquals(422, response.getStatusCode());
     assertEquals(1, errors.size());
-    assertEquals(
-      "Illegal operation: Source folio cannot be updated",
+    assertEquals("Illegal operation: Source folio cannot be updated",
       errors.getJsonObject(0).getString("message"));
   }
 
+  @Test
+  public void cannotUpdateSubjectSourceToFolio() {
+    String subjectSourceId = UUID.randomUUID().toString();
+
+    JsonObject subjectSource = new JsonObject()
+      .put("id", subjectSourceId)
+      .put("name", "Library Test" + subjectSourceId)
+      .put("source", "local");
+
+    Response existingSubjectSource = createSubjectSource(subjectSource);
+
+    Response response = updateSubjectSource(subjectSourceId, existingSubjectSource.getJson().put("source", "folio"));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertEquals(422, response.getStatusCode());
+    assertEquals(1, errors.size());
+    assertEquals("Illegal operation: Source field cannot be set to folio",
+      errors.getJsonObject(0).getString("message"));
+  }
+
+  @Test
+  public void cannotUpdateSubjectSourceToConsortiumAtNonEcs() {
+    String subjectSourceId = UUID.randomUUID().toString();
+
+    JsonObject subjectSource = new JsonObject()
+      .put("id", subjectSourceId)
+      .put("name", "Library Test" + subjectSourceId)
+      .put("source", "local");
+
+    Response existingSubjectSource = createSubjectSource(subjectSource);
+
+    Response response = updateSubjectSource(subjectSourceId,
+      existingSubjectSource.getJson().put("source", "consortium"));
+
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertEquals(422, response.getStatusCode());
+    assertEquals(1, errors.size());
+    assertEquals("Illegal operation: Source field cannot be updated at non-consortium tenant",
+      errors.getJsonObject(0).getString("message"));
+  }
+
+  @Test
+  public void canUpdateSubjectSourceToConsortiumAtEcs() {
+    String subjectSourceId = UUID.randomUUID().toString();
+
+    JsonObject subjectSource = new JsonObject()
+      .put("id", subjectSourceId)
+      .put("name", "Library Test" + subjectSourceId)
+      .put("source", "local");
+
+    Response existingSubjectSource = createSubjectSource(subjectSource, CONSORTIUM_CENTRAL_TENANT);
+
+    Response response = updateSubjectSource(subjectSourceId,
+      existingSubjectSource.getJson().put("source", "consortium"), CONSORTIUM_CENTRAL_TENANT);
+
+    assertEquals(204, response.getStatusCode());
+  }
+
+  @Test
+  public void canUpdateSubjectSourceToLocalAtEcs() {
+    String subjectSourceId = UUID.randomUUID().toString();
+
+    JsonObject subjectSource = new JsonObject()
+      .put("id", subjectSourceId)
+      .put("name", "Library Test" + subjectSourceId)
+      .put("source", "consortium");
+
+    Response existingSubjectSource = createSubjectSource(subjectSource, CONSORTIUM_CENTRAL_TENANT);
+
+    Response response = updateSubjectSource(subjectSourceId,
+      existingSubjectSource.getJson().put("source", "local"), CONSORTIUM_CENTRAL_TENANT);
+
+    assertEquals(204, response.getStatusCode());
+  }
+
   private Response createSubjectSource(JsonObject object) {
+    return createSubjectSource(object, TENANT_ID);
+  }
 
-    CompletableFuture<Response> createSubjectSource = new CompletableFuture<>();
-
-    send(subjectSourcesUrl("").toString(), HttpMethod.POST, object.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(createSubjectSource));
-
-    return get(createSubjectSource);
+  private Response createSubjectSource(JsonObject object, String tenantId) {
+    return subjectSourceClient.attemptToCreate("", object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
 
   private Response updateSubjectSource(String id, JsonObject object) {
-    CompletableFuture<Response> updateSubjectSource = new CompletableFuture<>();
+    return subjectSourceClient.attemptToReplace(id, object, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+  }
 
-    send(subjectSourcesUrl("/" + id).toString(), HttpMethod.PUT, object.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, ResponseHandler.json(updateSubjectSource));
-
-    return get(updateSubjectSource);
+  private Response updateSubjectSource(String id, JsonObject object, String tenantId) {
+    return subjectSourceClient.attemptToReplace(id, object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
 }
