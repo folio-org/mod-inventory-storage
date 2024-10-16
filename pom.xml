@@ -50,6 +50,7 @@
     <checkstyle.version>10.18.1</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.0</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
+    <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
   </properties>
 
   <dependencyManagement>
@@ -636,6 +637,19 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.folio</groupId>
+        <artifactId>folio-module-descriptor-validator</artifactId>
+        <version>${folio-module-descriptor-validator.version}</version>
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
