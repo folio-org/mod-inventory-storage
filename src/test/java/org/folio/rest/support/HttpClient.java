@@ -157,6 +157,21 @@ public class HttpClient {
       .onSuccess(responseHandler);
   }
 
+  public void put(
+    URL url,
+    Object body,
+    Map<String, String> headers,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
+
+    request(HttpMethod.PUT, url, body, headers, tenantId)
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
+  }
+
   public CompletableFuture<Response> put(URL url, Object body, String tenantId) {
     return asResponse(request(HttpMethod.PUT, url, body, tenantId));
   }

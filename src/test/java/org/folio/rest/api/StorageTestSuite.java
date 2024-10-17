@@ -92,7 +92,9 @@ import org.junit.runners.Suite;
   StatisticalCodeTest.class,
   UpcIsmnMigrationScriptTest.class,
   InstanceStorageInstancesBulkApiTest.class,
-  PublicationPeriodMigrationTest.class
+  PublicationPeriodMigrationTest.class,
+  SubjectSourceTest.class,
+  SubjectTypeTest.class
 
   // These fail.
   //ReferenceTablesTest.class,

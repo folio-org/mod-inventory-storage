@@ -1,20 +1,19 @@
 package org.folio.services.subjecttype;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.jaxrs.resource.SubjectTypes.PostSubjectTypesResponse.respond422WithApplicationJson;
 import static org.folio.rest.persist.PgUtil.deleteById;
 import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
-import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_FOLIO;
-import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_UPDATED;
-import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
+import static org.folio.rest.support.SubjectUtil.sourceValidationError;
+import static org.folio.rest.support.SubjectUtil.validateSubjectSourceCreate;
+import static org.folio.rest.support.SubjectUtil.validateSubjectSourceUpdate;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.SubjectTypeRepository;
+import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.SubjectType;
 import org.folio.rest.jaxrs.model.SubjectTypes;
 import org.folio.rest.jaxrs.resource.SubjectTypes.DeleteSubjectTypesBySubjectTypeIdResponse;
@@ -23,22 +22,27 @@ import org.folio.rest.jaxrs.resource.SubjectTypes.GetSubjectTypesResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.PostSubjectTypesResponse;
 import org.folio.rest.jaxrs.resource.SubjectTypes.PutSubjectTypesBySubjectTypeIdResponse;
 import org.folio.rest.persist.PgUtil;
+import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.consortium.ConsortiumService;
+import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.SubjectTypeDomainEventPublisher;
 
 public class SubjectTypeService {
-
   public static final String SUBJECT_TYPE = "subject_type";
 
   private final Context context;
   private final Map<String, String> okapiHeaders;
   private final SubjectTypeRepository repository;
   private final SubjectTypeDomainEventPublisher domainEventService;
+  private final ConsortiumService consortiumService;
 
   public SubjectTypeService(Context context, Map<String, String> okapiHeaders) {
     this.context = context;
     this.okapiHeaders = okapiHeaders;
     this.repository = new SubjectTypeRepository(context, okapiHeaders);
     this.domainEventService = new SubjectTypeDomainEventPublisher(context, okapiHeaders);
+    this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+      context.get(ConsortiumDataCache.class.getName()));
   }
 
   public Future<Response> getByQuery(String cql, int offset, int limit) {
@@ -52,21 +56,25 @@ public class SubjectTypeService {
   }
 
   public Future<Response> create(SubjectType subjectType) {
-    if (subjectType.getSource().equals(SubjectType.Source.FOLIO)) {
-      return sourceValidationError(subjectType.getSource().value(), SOURCE_CANNOT_BE_FOLIO);
-    }
-    return post(SUBJECT_TYPE, subjectType, okapiHeaders, context, PostSubjectTypesResponse.class)
-      .onSuccess(domainEventService.publishCreated());
+    return validateSubjectSourceCreate(subjectType.getSource().value(), consortiumService, okapiHeaders)
+      .compose(errorsOptional -> errorsOptional.isPresent() ? sourceValidationError(errorsOptional.get()) :
+        createSubjectType(subjectType));
   }
 
   public Future<Response> update(String id, SubjectType subjectType) {
+    if (subjectType.getId() == null) {
+      subjectType.setId(id);
+    }
+
     return repository.getById(id)
       .compose(oldSubjectType -> {
-        if (!oldSubjectType.getSource().equals(subjectType.getSource())) {
-          return sourceValidationError(subjectType.getSource().value(), SOURCE_CANNOT_BE_UPDATED);
+        if (oldSubjectType != null) {
+          return validateSubjectSourceUpdate(subjectType.getSource().value(), oldSubjectType.getSource().value(),
+            consortiumService, okapiHeaders)
+            .compose(errorsOptional -> errorsOptional.isPresent()
+              ? sourceValidationError(errorsOptional.get()) : updateSubjectType(id, subjectType));
         }
-        return put(SUBJECT_TYPE, subjectType, id, okapiHeaders, context, PutSubjectTypesBySubjectTypeIdResponse.class)
-          .onSuccess(domainEventService.publishUpdated(subjectType));
+        return Future.failedFuture(new NotFoundException("SubjectType was not found"));
       });
   }
 
@@ -78,10 +86,13 @@ public class SubjectTypeService {
       );
   }
 
-  private Future<Response> sourceValidationError(String field, String message) {
-    return succeededFuture(
-      respond422WithApplicationJson(
-        createValidationErrorMessage("source", field,
-          message)));
+  private Future<Response> createSubjectType(SubjectType subjectType) {
+    return post(SUBJECT_TYPE, subjectType, okapiHeaders, context, PostSubjectTypesResponse.class)
+      .onSuccess(domainEventService.publishCreated());
+  }
+
+  private Future<Response> updateSubjectType(String id, SubjectType subjectType) {
+    return put(SUBJECT_TYPE, subjectType, id, okapiHeaders, context, PutSubjectTypesBySubjectTypeIdResponse.class)
+      .onSuccess(domainEventService.publishUpdated(subjectType));
   }
 }
