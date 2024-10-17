@@ -65,7 +65,7 @@ public class InstallUpgradeIT {
 
   @ClassRule(order = 1)
   public static final PostgreSQLContainer<?> POSTGRES =
-    new PostgreSQLContainer<>("postgres:12-alpine")
+    new PostgreSQLContainer<>("postgres:16-alpine")
       .withClasspathResourceMapping("lotus-23.0.0.sql", "/lotus-23.0.0.sql", BindMode.READ_ONLY)
       .withNetwork(NETWORK)
       .withNetworkAliases("mypostgres")
