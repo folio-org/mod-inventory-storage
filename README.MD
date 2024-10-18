@@ -114,6 +114,20 @@ These properties can be changed by setting env variable.
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS` Default value - `16`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS` Default value - `1`
 
+There is also possibility for customizing through properties the Kafka Topic
+`message retention` (in milliseconds) and `maximum message size` (in bytes). The default values of these configurations
+for any topic are 604800000 milliseconds (or 1 week) and 1048576 bytes (or 1 MB) respectively
+
+These are the defined topic properties for `message retention` and `maximum message size` for `reindex-records` topic
+
+* `KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION` Default value - `86400000` (1 day)
+* `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE` Default value - `1048576` (1 MB)
+
+in case, any of these topic properties are changed for `reindex-records` the topic needs to be recreated and module needs to be reinstalled.
+
+Changing maximum message size for kafka producer:
+* `KAFKA_REINDEX_PRODUCER_MAX_REQUEST_SIZE_BYTES` Default value - `10485760` (10 MB)
+
 # Building
 
 run `mvn install` from the root directory.
@@ -142,6 +156,8 @@ These environment variables configure Kafka topic for specific business-related 
 * `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION`
+* `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE`
 
 mod-inventory-storage also supports all Raml Module Builder (RMB) environment variables,
 for details see [RMB](https://github.com/folio-org/raml-module-builder#environment-variables):

@@ -95,7 +95,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "7.0",
+      "version": "8.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -104,7 +104,7 @@
         },{
           "methods": ["POST"],
           "pathPattern": "/holdings-storage/holdings/retrieve",
-          "permissionsRequired": ["inventory-storage.holdings.collection.get"]
+          "permissionsRequired": ["inventory-storage.holdings.retrieve.collection.post"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/holdings-storage/holdings/{id}",
@@ -167,7 +167,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "10.3",
+      "version": "11.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -176,7 +176,7 @@
         },{
           "methods": ["POST"],
           "pathPattern": "/instance-storage/instances/retrieve",
-          "permissionsRequired": ["inventory-storage.instances.collection.get"]
+          "permissionsRequired": ["inventory-storage.instances.retrieve.collection.post"]
         },
         {
           "methods": ["GET"],
@@ -274,7 +274,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -285,18 +285,18 @@
     },
     {
       "id": "instance-storage-batch-sync",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
           "pathPattern": "/instance-storage/batch/synchronous",
-          "permissionsRequired": ["inventory-storage.instances.batch.post"]
+          "permissionsRequired": ["inventory-storage.instances.batch.synchronous.post"]
         }
       ]
     },
     {
       "id": "instance-storage-batch-sync-unsafe",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1240,7 +1240,7 @@
     },
     {
       "id": "bound-with-parts-storage",
-      "version": "1.1",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1266,9 +1266,7 @@
           "methods": ["PUT"],
           "pathPattern": "/inventory-storage/bound-withs",
           "permissionsRequired": [
-            "inventory-storage.bound-with-parts.collection.get",
-            "inventory-storage.bound-with-parts.item.post",
-            "inventory-storage.bound-with-parts.item.delete"
+            "inventory-storage.bound-withs.collection.put"
           ]
         }
       ]
@@ -1280,7 +1278,10 @@
       "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/_/tenant"
+          "pathPattern": "/_/tenant",
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }, {
           "methods": ["DELETE", "GET"],
           "pathPattern": "/_/tenant/{id}"
@@ -1336,7 +1337,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1347,7 +1348,7 @@
     },
     {
       "id": "inventory-view-instance-set",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1384,7 +1385,7 @@
     },
     {
       "id": "instance-iteration",
-      "version": "0.1",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1405,7 +1406,7 @@
     },
     {
       "id": "async-migration",
-      "version": "0.1",
+      "version": "1.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1425,7 +1426,7 @@
         {
           "methods": ["GET"],
           "pathPattern": "/inventory-storage/migrations/jobs",
-          "permissionsRequired": ["inventory-storage.migration.job.item.get"]
+          "permissionsRequired": ["inventory-storage.migration.job.collection.get"]
         },
         {
           "methods": ["DELETE"],
@@ -1523,6 +1524,11 @@
       "description": "get holdings collection from storage"
     },
     {
+      "permissionName": "inventory-storage.holdings.retrieve.collection.post",
+      "displayName": "inventory storage - retrieve holdings collection",
+      "description": "retrieve holdings collection from storage"
+    },
+    {
       "permissionName": "inventory-storage.holdings.collection.delete",
       "displayName": "inventory storage - delete entire holdings collection",
       "description": "delete entire holdings collection from storage"
@@ -1563,6 +1569,11 @@
       "description": "get instance collection from storage"
     },
     {
+      "permissionName": "inventory-storage.instances.retrieve.collection.post",
+      "displayName": "inventory storage - retrieve instance collection",
+      "description": "retrieve instance collection from storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.collection.delete",
       "displayName": "inventory storage - delete entire instance collection",
       "description": "delete entire instance collection from storage"
@@ -1596,6 +1607,11 @@
       "permissionName": "inventory-storage.instances.batch.post",
       "displayName": "inventory storage - create or update a number of instances",
       "description": "create or update a number of instances in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.batch.synchronous.post",
+      "displayName": "inventory storage - create or update a collection of instances in a single synchronous request",
+      "description": "create or update a collection of instances in a single synchronous request"
     },
     {
       "permissionName": "inventory-storage.instances.batch-unsafe.post",
@@ -2539,6 +2555,11 @@
       "description":    "add a holdings record to a bound-with by associating it with the bound-with item"
     },
     {
+      "permissionName": "inventory-storage.bound-withs.collection.put",
+      "displayName":    "inventory storage - modify a bound-withs",
+      "description":    "replace a holdings-records of a bound-withs or move it to a different bound-withs"
+    },
+    {
       "permissionName": "inventory-storage.bound-with-parts.item.put",
       "displayName":    "inventory storage - modify a bound-with part",
       "description":    "replace a holdings-record of a bound-with or move it to a different bound-with"
@@ -2604,6 +2625,11 @@
       "description": "get migration job by id"
     },
     {
+      "permissionName": "inventory-storage.migration.job.collection.get",
+      "displayName": "inventory storage - get migration jobs",
+      "description": "get migration jobs"
+    },
+    {
       "permissionName": "inventory-storage.migration.item.get",
       "displayName": "inventory storage - get list of available migrations",
       "description": "get list of available migrations"
@@ -2644,6 +2670,7 @@
         "inventory-storage.items.batch.post",
         "inventory-storage.items.batch-unsafe.post",
         "inventory-storage.holdings.collection.get",
+        "inventory-storage.holdings.retrieve.collection.post",
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
         "inventory-storage.holdings.item.put",
@@ -2652,6 +2679,7 @@
         "inventory-storage.holdings.batch.post",
         "inventory-storage.holdings.batch-unsafe.post",
         "inventory-storage.instances.collection.get",
+        "inventory-storage.instances.retrieve.collection.post",
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
@@ -2663,6 +2691,7 @@
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
         "inventory-storage.instances.batch.post",
+        "inventory-storage.instances.batch.synchronous.post",
         "inventory-storage.instances.batch-unsafe.post",
         "inventory-storage.instances.bulk.post",
         "inventory-storage.loan-types.collection.get",
@@ -2850,6 +2879,7 @@
         "inventory-storage.bound-with-parts.collection.get",
         "inventory-storage.bound-with-parts.item.get",
         "inventory-storage.bound-with-parts.item.post",
+        "inventory-storage.bound-withs.collection.put",
         "inventory-storage.bound-with-parts.item.put",
         "inventory-storage.bound-with-parts.item.delete",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
@@ -2867,6 +2897,7 @@
         "inventory-storage.migration.job.item.delete",
         "inventory-storage.migration.job.post",
         "inventory-storage.migration.job.item.get",
+        "inventory-storage.migration.job.collection.get",
         "inventory-storage.migration.item.get",
         "inventory-storage.reindex-records.publish.post",
         "inventory-storage.instance-date-types.collection.get",
@@ -2914,6 +2945,9 @@
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"},
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION", "value": "86400000"},
+      { "name": "KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE", "value": "1048576"},
+      { "name": "KAFKA_REINDEX_PRODUCER_MAX_REQUEST_SIZE_BYTES", "value": "10485760"},
       { "name": "S3_URL", "value": "http://127.0.0.1:9000/" },
       { "name": "S3_REGION", "value": "" },
       { "name": "S3_BUCKET", "value": "marc-migrations" },

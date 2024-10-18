@@ -1,5 +1,26 @@
-## v27.2.0 In progress
+## v28.0.0 In progress
+### Breaking changes
+* Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
 
+### New APIs versions
+* Provides `instance-storage 11.0`
+* Provides `instance-storage-batch 3.0`
+* Provides `instance-storage-batch-sync 3.0`
+* Provides `instance-storage-batch-sync-unsafe 3.0`
+* Provides `inventory-view 3.0`
+* Provides `inventory-view-instance-set 3.0`
+* Provides `instance-iteration 1.0`
+* Requires `holdings-storage 8.0`
+* Requires `bound-with-parts-storage 2.0`
+* Requires `async-migration 1.0`
+
+### Features
+* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
+
+### Tech Dept
+* Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
+
+## v27.2.0 2024-09-24
 ### Breaking changes
 * Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
@@ -29,7 +50,7 @@
 * Add new date type fields to Instance schema ([MODINVSTOR-1188](https://folio-org.atlassian.net/browse/MODINVSTOR-1188))
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
-
+* Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
@@ -37,6 +58,8 @@
 * Do not delete Kafka topics on postTenant if collection topics is enabled ([MODINVSTOR-1192](https://folio-org.atlassian.net/browse/MODINVSTOR-1192))
 * Identifier types: change Cancelled LCCN to Canceled LCCN ([MODINVSTOR-1212](https://folio-org.atlassian.net/browse/MODINVSTOR-1212))
 * Add user-tenants.collection.get to all ECS APIs ([MODINVSTOR-1253](https://folio-org.atlassian.net/browse/MODINVSTOR-1253))
+* Add user-tenants.collection.get to POST /\_/tenant API ([MODINVSTOR-1260](https://folio-org.atlassian.net/browse/MODINVSTOR-1260))
+* Update "BC" name in GET instance-date-type to "B.C." ([MODINVSTOR-1255](https://folio-org.atlassian.net/browse/MODINVSTOR-1255))
 
 ### Tech Dept
 * Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
@@ -47,6 +70,7 @@
 * Bump `holdings-storage` from `6.0` to `7.0`
 * Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
 * Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
+* Bump `folio-kafka-wrapper` from `3.1.1` to `3.2.0`
 * Add `folio-s3-client` `2.2.0`
 * Add `LIB_NAME` `2.7.4`
 * Remove `LIB_NAME`

@@ -36,6 +36,7 @@ public class SubjectSourcesIT extends BaseReferenceDataIntegrationTest<SubjectSo
     return new SubjectSource()
       .withId(UUID.randomUUID().toString())
       .withName("test_name")
+      .withCode("test_code")
       .withSource(SubjectSource.Source.LOCAL);
   }
 
@@ -46,7 +47,7 @@ public class SubjectSourcesIT extends BaseReferenceDataIntegrationTest<SubjectSo
 
   @Override
   protected List<Function<SubjectSource, Object>> recordFieldExtractors() {
-    return List.of(SubjectSource::getName, SubjectSource::getSource);
+    return List.of(SubjectSource::getName, SubjectSource::getCode, SubjectSource::getSource);
   }
 
   @Override
@@ -66,6 +67,6 @@ public class SubjectSourcesIT extends BaseReferenceDataIntegrationTest<SubjectSo
 
   @Override
   protected List<String> queries() {
-    return List.of("name==test_name");
+    return List.of("name==test_name", "code==test_code");
   }
 }
