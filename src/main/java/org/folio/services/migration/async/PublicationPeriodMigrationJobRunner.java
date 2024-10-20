@@ -2,6 +2,7 @@ package org.folio.services.migration.async;
 
 import static java.lang.String.format;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
+import static org.folio.services.migration.MigrationName.PUBLICATION_PERIOD_MIGRATION;
 
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -26,7 +27,7 @@ public class PublicationPeriodMigrationJobRunner extends AbstractAsyncMigrationJ
 
   @Override
   public String getMigrationName() {
-    return "publicationPeriodMigration";
+    return PUBLICATION_PERIOD_MIGRATION.getValue();
   }
 
   @Override

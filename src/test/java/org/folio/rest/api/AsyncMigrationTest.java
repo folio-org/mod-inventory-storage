@@ -10,6 +10,9 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
+import static org.folio.services.migration.MigrationName.PUBLICATION_PERIOD_MIGRATION;
+import static org.folio.services.migration.MigrationName.SUBJECT_SERIES_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -90,7 +93,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     return new AsyncMigrationJob()
       .withJobStatus(IN_PROGRESS)
       .withId(UUID.randomUUID().toString())
-      .withMigrations(Collections.singletonList("itemShelvingOrderMigration"))
+      .withMigrations(Collections.singletonList(ITEM_SHELVING_ORDER_MIGRATION.getValue()))
       .withSubmittedDate(new Date());
   }
 
@@ -106,7 +109,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
         .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of("itemShelvingOrderMigration")));
+      .withMigrations(List.of(ITEM_SHELVING_ORDER_MIGRATION.getValue())));
 
     await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
@@ -146,7 +149,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     await().atMost(5, SECONDS).until(() -> countDownLatch.getCount() == 0L);
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of("subjectSeriesMigration")));
+      .withMigrations(List.of(SUBJECT_SERIES_MIGRATION.getValue())));
 
     await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
@@ -187,7 +190,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     await().atMost(5, SECONDS).until(() -> countDownLatch.getCount() == 0L);
 
     var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of("publicationPeriodMigration")));
+      .withMigrations(List.of(PUBLICATION_PERIOD_MIGRATION.getValue())));
 
     await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
       .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
@@ -221,13 +224,14 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
     assertEquals(Integer.valueOf(3), migrations.getTotalRecords());
-    assertEquals("itemShelvingOrderMigration", migrations.getAsyncMigrations().get(0).getMigrations().get(0));
+    assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
+      migrations.getAsyncMigrations().get(0).getMigrations().get(0));
   }
 
   @Test
   public void canGetAllAvailableMigrationJobs() {
     asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of("itemShelvingOrderMigration")));
+      .withMigrations(List.of(ITEM_SHELVING_ORDER_MIGRATION.getValue())));
     AsyncMigrationJobCollection migrations = asyncMigration.getAllMigrationJobs();
     assertNotNull(migrations);
     assertFalse(migrations.getJobs().isEmpty());
@@ -245,7 +249,8 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     get(repository.save(migrationJob.getId(), migrationJob).toCompletionStage()
       .toCompletableFuture());
     var amc = new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClientFuturized);
-    jobRunner().startAsyncMigration(migrationJob, new AsyncMigrationContext(amc, "itemShelvingOrderMigration"));
+    jobRunner().startAsyncMigration(migrationJob,
+      new AsyncMigrationContext(amc, ITEM_SHELVING_ORDER_MIGRATION.getValue()));
 
     asyncMigration.cancelMigrationJob(migrationJob.getId());
 
