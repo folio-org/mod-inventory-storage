@@ -33,8 +33,8 @@ public final class InstanceUtils {
       BeanUtils.copyProperties(instance, instanceWithoutPubPeriod);
       return instance;
     } catch (Exception e) {
-      log.error("Failed to copy properties from InstanceWithoutPubPeriod to Instance object: {}", e.getMessage(), e);
-      throw new IllegalArgumentException(e.getMessage(), e);
+      throw new IllegalArgumentException(
+        String.format("Failed to copy properties from InstanceWithoutPubPeriod to Instance object: %s", e.getMessage()), e);
     }
   }
 }
