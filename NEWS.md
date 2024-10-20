@@ -3,8 +3,8 @@
 * Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
 
 ### New APIs versions
-* Provides `instance-storage 11.0`
-* Provides `instance-storage-batch 3.0`
+* Provides `instance-storage 11.1`
+* Provides `instance-storage-batch 3.1`
 * Provides `instance-storage-batch-sync 3.0`
 * Provides `instance-storage-batch-sync-unsafe 3.0`
 * Provides `inventory-view 3.0`
@@ -16,6 +16,7 @@
 
 ### Features
 * Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
+* Implement publication period migration on big dataset, create new InstanceWithoutPubPeriod schema only for input request ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
 
 ### Tech Dept
 * Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
