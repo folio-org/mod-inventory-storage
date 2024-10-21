@@ -34,7 +34,8 @@ public final class InstanceUtils {
       return instance;
     } catch (Exception e) {
       throw new IllegalArgumentException(
-        String.format("Failed to copy properties from InstanceWithoutPubPeriod to Instance object: %s", e.getMessage()), e);
+        String.format(
+          "Failed to copy properties from InstanceWithoutPubPeriod to Instance object: %s", e.getMessage()), e);
     }
   }
 }
