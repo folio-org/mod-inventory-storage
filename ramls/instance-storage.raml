@@ -9,6 +9,8 @@ documentation:
     content: <b>Storage for instances in the inventory</b>
 
 types:
+  instanceWithoutPubPeriod: !include instance-without-pub-period.json
+  instancesWithoutPubPeriod: !include instances-without-pub-period.json
   instance: !include instance.json
   instances: !include instances.json
   marcJson: !include marc.json
@@ -60,16 +62,26 @@ resourceTypes:
     displayName: Instances
     type:
       collection:
-        exampleCollection: !include  examples/instances_get.json
-        schemaCollection: instances
-        schemaItem: instance
-        exampleItem: !include  examples/instance_get.json
+        exampleCollection: !include  examples/instanceswithoutpubperiod_get.json
+        schemaCollection: instancesWithoutPubPeriod
+        schemaItem: instanceWithoutPubPeriod
+        exampleItem: !include  examples/instancewithoutpubperiod_get.json
     get:
       is: [pageable,
           searchable: {description: "by title (using CQL)",
                         example: "title=\"*uproot*\""},
           ]
+      responses:
+        200:
+          body:
+            application/json:
+              type: instances
     post:
+      responses:
+        200:
+          body:
+            application/json:
+              type: instance
     delete:
       is: [searchable: { description: "CQL to select instances to delete, use cql.allRecords=1 to delete all. Deletes connected marc source records.",
                          example: "hrid==\"in123-0*\"" } ]
@@ -89,8 +101,8 @@ resourceTypes:
     /{instanceId}:
       type:
         collection-item:
-          exampleItem: !include examples/instance_get.json
-          schema: instance
+          exampleItem: !include examples/instancewithoutpubperiod_get.json
+          schema: instanceWithoutPubPeriod
       get:
         responses:
           200:

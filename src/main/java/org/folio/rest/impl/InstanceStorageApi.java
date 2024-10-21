@@ -23,6 +23,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
+import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.RetrieveDto;
@@ -38,6 +39,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
+import org.folio.utils.InstanceUtils;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
@@ -209,13 +211,15 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void postInstanceStorageInstances(
 
-    Instance entity,
+    InstanceWithoutPubPeriod entity,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    var instance = InstanceUtils.copyPropertiesToInstance(entity);
+
     new InstanceService(vertxContext, okapiHeaders)
-      .createInstance(entity)
+      .createInstance(instance)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -267,13 +271,15 @@ public class InstanceStorageApi implements InstanceStorage {
   public void putInstanceStorageInstancesByInstanceId(
     String instanceId,
 
-    Instance entity,
+    InstanceWithoutPubPeriod entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    var instance = InstanceUtils.copyPropertiesToInstance(entity);
+
     new InstanceService(vertxContext, okapiHeaders)
-      .updateInstance(instanceId, entity)
+      .updateInstance(instanceId, instance)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }

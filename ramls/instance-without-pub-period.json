@@ -1,0 +1,508 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An instance record without publicationPeriod",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique ID of the instance record; a UUID",
+      "$ref": "uuid.json"
+    },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+    },
+    "matchKey": {
+      "type": "string",
+      "description" : "A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same Instance in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records"
+    },
+    "source": {
+      "type": "string",
+      "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory; MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings; CONSORTIUM-MARC or CONSORTIUM-FOLIO for sharing Instances)."
+    },
+    "title": {
+      "type": "string",
+      "description": "The primary title (or label) associated with the resource"
+    },
+    "indexTitle": {
+      "type": "string",
+      "description": "Title normalized for browsing and searching; based on the title with articles removed"
+    },
+    "alternativeTitles": {
+      "type": "array",
+      "description": "List of alternative titles for the resource (e.g. original language version title of a movie)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "alternativeTitleTypeId": {
+            "type": "string",
+            "description": "UUID for an alternative title qualifier",
+            "$ref": "uuid.json"
+          },
+          "alternativeTitle": {
+            "type": "string",
+            "description": "An alternative title for the resource"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an alternative title",
+            "$ref": "uuid.json"
+          }
+        }
+      },
+      "uniqueItems": true
+    },
+    "editions": {
+      "type": "array",
+      "description": "The edition statement, imprint and other publication source information",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "series": {
+      "type": "array",
+      "description": "List of series titles associated with the resource (e.g. Harry Potter)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Series title value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls an series title",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "identifiers": {
+      "type": "array",
+      "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Resource identifier value"
+          },
+          "identifierTypeId": {
+            "type": "string",
+            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
+            "$ref": "uuid.json"
+          },
+          "identifierTypeObject": {
+            "type": "object",
+            "description": "Information about identifier type, looked up from identifierTypeId",
+            "folio:$ref": "illpolicy.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "identifier-types",
+            "folio:linkFromField": "identifierTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "identifierTypes.0"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "identifierTypeId"
+        ]
+      }
+    },
+    "contributors": {
+      "type": "array",
+      "description": "List of contributors",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Personal name, corporate name, meeting name"
+          },
+          "contributorTypeId": {
+            "type": "string",
+            "description": "UUID for the contributor type term defined in controlled vocabulary",
+            "$ref": "uuid.json"
+          },
+          "contributorTypeText": {
+            "type": "string",
+            "description": "Free text element for adding contributor type terms other that defined by the MARC code list for relators"
+          },
+          "contributorNameTypeId": {
+            "type": "string",
+            "description": "UUID of contributor name type term defined by the MARC code list for relators",
+            "$ref": "uuid.json"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls the contributor",
+            "$ref": "uuid.json"
+          },
+          "contributorNameType": {
+            "type": "object",
+            "description": "Dereferenced contributor-name type",
+            "javaType": "org.folio.rest.jaxrs.model.contributorNameTypeVirtual",
+            "folio:$ref": "contributornametype.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "contributor-name-types",
+            "folio:linkFromField": "contributorNameTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "contributorNameTypes.0"
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "Whether this is the primary contributor"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "contributorNameTypeId"
+        ]
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "description": "List of subject headings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Subject heading value"
+          },
+          "authorityId": {
+            "type": "string",
+            "description": "UUID of authority record that controls a subject heading",
+            "$ref": "uuid.json"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "UUID of subject source",
+            "$ref": "uuid.json"
+          },
+          "typeId": {
+            "type": "string",
+            "description": "UUID of subject type",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "value"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "classifications": {
+      "type": "array",
+      "description": "List of classifications",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "classificationNumber": {
+            "type": "string",
+            "description": "Classification (e.g. classification scheme, classification schedule)"
+          },
+          "classificationTypeId": {
+            "type": "string",
+            "description": "UUID of classification schema (e.g. LC, Canadian Classification, NLM, National Agricultural Library, UDC, and Dewey)",
+            "$ref": "uuid.json"
+          },
+          "classificationType": {
+            "type": "object",
+            "description": "Dereferenced classification schema",
+            "javaType": "org.folio.rest.jaxrs.model.classificationTypeVirtual",
+            "folio:$ref": "classificationtype.json",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "classification-types",
+            "folio:linkFromField": "classificationTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "classificationTypes.0"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "classificationNumber",
+          "classificationTypeId"
+        ]
+      }
+    },
+    "publication": {
+      "type": "array",
+      "description": "List of publication items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "publisher": {
+            "type": "string",
+            "description": "Name of publisher, distributor, etc."
+          },
+          "place": {
+            "type": "string",
+            "description": "Place of publication, distribution, etc."
+          },
+          "dateOfPublication": {
+            "type": "string",
+            "description": "Date (year YYYY) of publication, distribution, etc."
+          },
+          "role": {
+            "type": "string",
+            "description": "The role of the publisher, distributor, etc."
+          }
+        }
+      }
+    },
+    "publicationFrequency": {
+      "type": "array",
+      "description": "List of intervals at which a serial appears (e.g. daily, weekly, monthly, quarterly, etc.)",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "publicationRange": {
+      "type": "array",
+      "description": "The range of sequential designation/chronology of publication, or date range",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "electronicAccess": {
+      "type": "array",
+      "description": "List of electronic access items",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+          },
+          "linkText": {
+            "type": "string",
+            "description": "The value of the MARC tag field 856 2nd indicator, where the values are: no information provided, resource, version of resource, related resource, no display constant generated"
+          },
+          "materialsSpecification": {
+            "type": "string",
+            "description": "Materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+          },
+          "publicNote": {
+            "type": "string",
+            "description": "URL public note to be displayed in the discovery"
+          },
+          "relationshipId": {
+            "type": "string",
+            "description": "UUID for the type of relationship between the electronic resource at the location identified and the item described in the record as a whole",
+            "$ref": "uuid.json"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "uri"
+        ]
+      }
+    },
+    "dates": {
+      "type": "object",
+      "description": "Instance Dates",
+      "properties": {
+        "dateTypeId": {
+          "type": "string",
+          "description": "Date type ID",
+          "$ref": "uuid.json"
+        },
+        "date1": {
+          "type": "string",
+          "description": "Date 1",
+          "maxLength": 4
+        },
+        "date2": {
+          "type": "string",
+          "description": "Date 2",
+          "maxLength": 4
+        }
+      },
+      "additionalProperties": false
+    },
+    "instanceTypeId": {
+      "type": "string",
+      "description": "UUID of the unique term for the resource type whether it's from the RDA content term list of locally defined",
+      "$ref": "uuid.json"
+    },
+    "instanceFormatIds": {
+      "type": "array",
+      "description": "UUIDs for the unique terms for the format whether it's from the RDA carrier term list of locally defined",
+      "items": {
+        "type": "string",
+        "$ref": "uuid.json"
+      }
+    },
+    "instanceFormats": {
+      "type": "array",
+      "description": "List of dereferenced instance formats",
+      "items": {
+        "type": "object",
+        "$ref": "instanceformat.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "instance-formats",
+      "folio:linkFromField": "instanceFormatIds",
+      "folio:linkToField": "id",
+      "folio:includedElement": "instanceFormats"
+    },
+    "physicalDescriptions": {
+      "type": "array",
+      "description": "Physical description of the described resource, including its extent, dimensions, and such other physical details as a description of any accompanying materials and unit type and size",
+      "items": {
+        "type": "string"
+      }
+    },
+    "languages": {
+      "type": "array",
+      "description": "The set of languages used by the resource",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Bibliographic notes (e.g. general notes, specialized notes)",
+      "items": {
+        "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.InstanceNote",
+        "additionalProperties": false,
+        "properties": {
+          "instanceNoteTypeId": {
+            "description": "ID of the type of note",
+            "$ref": "uuid.json"
+          },
+          "note": {
+            "type": "string",
+            "description": "Text content of the note"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "description": "If true, determines that the note should not be visible for others than staff",
+            "default": false
+          }
+        }
+      }
+    },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
+    "modeOfIssuanceId": {
+      "type": "string",
+      "description": "UUID of the RDA mode of issuance, a categorization reflecting whether a resource is issued in one or more parts, the way it is updated, and whether its termination is predetermined or not (e.g. monograph,  sequential monograph, serial; integrating Resource, other)",
+      "$ref": "uuid.json"
+    },
+    "catalogedDate": {
+      "type": "string",
+      "description": "Date or timestamp on an instance for when is was considered cataloged"
+    },
+    "previouslyHeld": {
+      "type": "boolean",
+      "description": "Records the fact that the resource was previously held by the library for things like Hathi access, etc.",
+      "default": false
+    },
+    "staffSuppress": {
+      "type": "boolean",
+      "description": "Records the fact that the record should not be displayed for others than catalogers"
+    },
+    "discoverySuppress": {
+      "type": "boolean",
+      "description": "Records the fact that the record should not be displayed in a discovery system",
+      "default": false
+    },
+    "statisticalCodeIds": {
+      "type": "array",
+      "description": "List of statistical code IDs",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "sourceRecordFormat": {
+      "type": "string",
+      "description": "Format of the instance source record, if a source record exists (e.g. FOLIO if it's a record created in Inventory,  MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings)",
+      "enum": ["MARC-JSON"],
+      "readonly": true
+    },
+    "statusId": {
+      "type": "string",
+      "description": "UUID for the Instance status term (e.g. cataloged, uncatalogued, batch loaded, temporary, other, not yet assigned)",
+      "$ref": "uuid.json"
+    },
+    "statusUpdatedDate": {
+      "type": "string",
+      "description": "Date [or timestamp] for when the instance status was updated"
+    },
+    "tags": {
+      "description": "arbitrary tags associated with this instance",
+      "id": "tags",
+      "type": "object",
+      "$ref": "raml-util/schemas/tags.schema"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    },
+    "holdingsRecords2": {
+      "type": "array",
+      "description": "List of holdings records",
+      "items": {
+        "type": "object",
+        "$ref": "holdings-storage/holdingsRecord.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "holdings-storage/holdings",
+      "folio:linkFromField": "id",
+      "folio:linkToField": "instanceId",
+      "folio:includedElement": "holdingsRecords"
+    },
+    "natureOfContentTermIds": {
+      "type": "array",
+      "description": "Array of UUID for the Instance nature of content (e.g. bibliography, biography, exhibition catalogue, festschrift, newspaper, proceedings, research report, thesis or website)",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "description": "Single UUID for the Instance nature of content",
+        "$ref": "uuid.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "title",
+    "instanceTypeId"
+  ]
+}
