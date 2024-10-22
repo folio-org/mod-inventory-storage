@@ -17,7 +17,7 @@
 
 ### Features
 * Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
-* Implement publication period migration on big dataset, create new InstanceWithoutPubPeriod schema only for input request ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
+* Implement publication period migration on big dataset, create new InstanceWithoutPubPeriod schema for request/response API ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
 
 ### Tech Dept
 * Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))

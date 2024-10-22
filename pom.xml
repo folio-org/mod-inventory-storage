@@ -142,7 +142,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>${google-code-gson.version}</version> <!-- Replace with the latest version -->
+      <version>${google-code-gson.version}</version>
     </dependency>
 
     <!-- Test Dependencies  -->
