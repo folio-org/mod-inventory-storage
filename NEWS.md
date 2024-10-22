@@ -1,6 +1,7 @@
 ## v28.0.0 In progress
 ### Breaking changes
 * Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
+* Drop CQL array support for `instance identifiers` field ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### New APIs versions
 * Provides `instance-storage 11.0`
@@ -19,6 +20,7 @@
 
 ### Tech Dept
 * Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
+* Delete 6 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ## v27.2.0 2024-09-24
 ### Breaking changes
