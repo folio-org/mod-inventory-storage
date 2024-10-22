@@ -823,7 +823,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject secondInstanceToCreate = nod(secondInstanceId);
 
-    IndividualResource ir = createInstance(secondInstanceToCreate);
+    IndividualResource ir = createInstanceWithDelay(secondInstanceToCreate);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -3034,6 +3034,34 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
+
+    assertThat(format("Create instance failed: %s", response.getBody()),
+      response.getStatusCode(), is(201));
+
+    return new IndividualResource(response);
+  }
+
+  private IndividualResource createInstanceWithDelay(JsonObject instanceToCreate)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    // delay before creating the instance
+    CompletableFuture<Void> delayFuture = CompletableFuture.runAsync(() -> {
+      try {
+        TimeUnit.SECONDS.sleep(1);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    });
+    // create the instance
+    CompletableFuture<Response> createCompleted = delayFuture.thenCompose(v -> {
+      CompletableFuture<Response> responseFuture = new CompletableFuture<>();
+
+      getClient().post(instancesStorageUrl(""), instanceToCreate,
+        TENANT_ID, json(responseFuture));
+
+      return responseFuture;
+    });
+    // get the response
+    Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
