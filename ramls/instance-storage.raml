@@ -71,17 +71,7 @@ resourceTypes:
           searchable: {description: "by title (using CQL)",
                         example: "title=\"*uproot*\""},
           ]
-      responses:
-        200:
-          body:
-            application/json:
-              type: instances
     post:
-      responses:
-        200:
-          body:
-            application/json:
-              type: instance
     delete:
       is: [searchable: { description: "CQL to select instances to delete, use cql.allRecords=1 to delete all. Deletes connected marc source records.",
                          example: "hrid==\"in123-0*\"" } ]
@@ -108,7 +98,7 @@ resourceTypes:
           200:
             body:
               application/json:
-                type: instance
+                type: instanceWithoutPubPeriod
         description: |
           Get Instance by InstanceId
           Instances are stored and accessed by a hash of key properties. The rules which govern

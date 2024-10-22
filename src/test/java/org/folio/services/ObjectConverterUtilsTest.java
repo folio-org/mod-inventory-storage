@@ -6,22 +6,27 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 import lombok.SneakyThrows;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
-import org.folio.utils.InstanceUtils;
+import org.folio.rest.jaxrs.model.Instances;
+import org.folio.rest.jaxrs.model.InstancesWithoutPubPeriod;
+import org.folio.utils.ObjectConverterUtils;
 import org.junit.jupiter.api.Test;
 
-class InstanceUtilsTest {
+class ObjectConverterUtilsTest {
 
   private static final String TITLE = "title";
   private static final String ID = "123456789";
 
   @Test
-  void shouldCopyPropertiesToInstances() {
+  void shouldConvertToInstances() {
     var instanceWithoutPubPeriod = new InstanceWithoutPubPeriod();
     instanceWithoutPubPeriod.setId(ID);
     instanceWithoutPubPeriod.setTitle(TITLE);
+    var instancesWithoutPubPeriod = new InstancesWithoutPubPeriod();
+    instancesWithoutPubPeriod.setInstances(List.of(instanceWithoutPubPeriod));
 
-    var result = InstanceUtils.copyPropertiesToInstances(List.of(instanceWithoutPubPeriod));
+    var result = ObjectConverterUtils.convertObject(instancesWithoutPubPeriod, Instances.class);
     var instances = result.getInstances();
 
     assertNotNull(instances);
@@ -31,12 +36,12 @@ class InstanceUtilsTest {
   }
 
   @Test
-  void shouldCopyPropertiesToInstance() {
+  void shouldConvertToInstance() {
     var instanceWithoutPubPeriod = new InstanceWithoutPubPeriod();
     instanceWithoutPubPeriod.setId(ID);
     instanceWithoutPubPeriod.setTitle(TITLE);
 
-    var result = InstanceUtils.copyPropertiesToInstance(instanceWithoutPubPeriod);
+    var result = ObjectConverterUtils.convertObject(instanceWithoutPubPeriod, Instance.class);
 
     assertNotNull(result);
     assertEquals(instanceWithoutPubPeriod.getId(), result.getId());
@@ -45,7 +50,7 @@ class InstanceUtilsTest {
 
   @Test
   @SneakyThrows
-  void shouldThrowIllegalArgumentExceptionWhenCannotCopyPropertiesToInstance() {
-    assertThrows(IllegalArgumentException.class, () -> InstanceUtils.copyPropertiesToInstance(null));
+  void shouldThrowIllegalArgumentExceptionWhenCannotConvertToInstance() {
+    assertThrows(IllegalArgumentException.class, () -> ObjectConverterUtils.convertObject(new Object(), String.class));
   }
 }

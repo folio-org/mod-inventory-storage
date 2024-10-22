@@ -9,8 +9,8 @@
     },
     "instanceRecord":{
       "type": "object",
-      "description" : "Parent instance record.",
-      "$ref": "instance.json"
+      "description" : "Parent instance record without the publicationPeriod.",
+      "$ref": "instance-without-pub-period.json"
     },
     "_version": {
       "type": "integer",

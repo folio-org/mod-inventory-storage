@@ -35,11 +35,13 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.EndpointFailureHandler;
+import org.folio.rest.support.EndpointHandler;
+import org.folio.rest.support.GetInstanceStorageInstanceResponse;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
-import org.folio.utils.InstanceUtils;
+import org.folio.utils.ObjectConverterUtils;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
@@ -216,7 +218,7 @@ public class InstanceStorageApi implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    var instance = InstanceUtils.copyPropertiesToInstance(entity);
+    var instance = ObjectConverterUtils.convertObject(entity, Instance.class);
 
     new InstanceService(vertxContext, okapiHeaders)
       .createInstance(instance)
@@ -276,7 +278,7 @@ public class InstanceStorageApi implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    var instance = InstanceUtils.copyPropertiesToInstance(entity);
+    var instance = ObjectConverterUtils.convertObject(entity, Instance.class);
 
     new InstanceService(vertxContext, okapiHeaders)
       .updateInstance(instanceId, instance)
@@ -340,7 +342,7 @@ public class InstanceStorageApi implements InstanceStorage {
         return;
       }
       if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
-          && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+        && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
         asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
             .respond404WithTextPlain(reply.cause().getMessage())));
@@ -401,7 +403,8 @@ public class InstanceStorageApi implements InstanceStorage {
         PreparedCql preparedCql = handleCql(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
           TITLE, query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+          okapiHeaders, vertxContext, GetInstanceStorageInstanceResponse.class,
+          EndpointHandler.handleInstances(asyncResultHandler));
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -409,9 +412,8 @@ public class InstanceStorageApi implements InstanceStorage {
       }
       return;
     }
-
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
-      "instances", routingContext, okapiHeaders, vertxContext);
+    new InstanceService(vertxContext, okapiHeaders)
+      .streamGetInstances(INSTANCE_TABLE, query, offset, limit, null, "instances", 0, routingContext);
   }
 
   PreparedCql handleCql(String query, int limit, int offset) throws FieldException {

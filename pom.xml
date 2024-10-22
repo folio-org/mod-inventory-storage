@@ -23,7 +23,7 @@
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.1</log4j.version>
     <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
-    <commons-beanutils.version>1.9.4</commons-beanutils.version>
+    <google-code-gson.version>2.11.0</google-code-gson.version>
 
     <okapi-testing.version>6.0.3</okapi-testing.version>
     <junit.version>5.11.2</junit.version>
@@ -140,9 +140,9 @@
       <version>${folio-s3-client.version}</version>
     </dependency>
     <dependency>
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <version>${commons-beanutils.version}</version>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${google-code-gson.version}</version> <!-- Replace with the latest version -->
     </dependency>
 
     <!-- Test Dependencies  -->

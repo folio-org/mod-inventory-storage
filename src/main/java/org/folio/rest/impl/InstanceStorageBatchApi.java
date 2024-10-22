@@ -22,6 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
+import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.InstancesWithoutPubPeriod;
 import org.folio.rest.jaxrs.resource.InstanceStorageBatchInstances;
@@ -30,7 +32,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
-import org.folio.utils.InstanceUtils;
+import org.folio.utils.ObjectConverterUtils;
 
 @SuppressWarnings("rawtypes")
 public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
@@ -50,7 +52,7 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
 
-    var instances = InstanceUtils.copyPropertiesToInstances(entity.getInstances());
+    var instances = ObjectConverterUtils.convertObject(entity, Instances.class);
 
     final String statusUpdatedDate = generateStatusUpdatedDate();
     for (Instance instance : instances.getInstances()) {
@@ -173,7 +175,7 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
       if (save.failed()) {
         response.getErrorMessages().add(save.cause().getMessage());
       } else {
-        response.getInstances().add(save.result());
+        response.getInstances().add(ObjectConverterUtils.convertObject(save.result(), InstanceWithoutPubPeriod.class));
       }
     });
 
