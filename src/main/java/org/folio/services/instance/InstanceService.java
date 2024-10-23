@@ -218,6 +218,8 @@ public class InstanceService {
       .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
   }
 
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   public void streamGetInstances(String table, String cql, int offset, int limit, List<String> facets,
                                  String element, int queryTimeout, RoutingContext routingContext) {
     instanceRepository.streamGet(
@@ -225,6 +227,8 @@ public class InstanceService {
       queryTimeout, routingContext, InstanceWithoutPubPeriod.class);
   }
 
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   public void streamGetInventoryViewInstances(String table, String cql, int offset, int limit, List<String> facets,
                                               String element, int queryTimeout, RoutingContext routingContext) {
     instanceRepository.streamGet(

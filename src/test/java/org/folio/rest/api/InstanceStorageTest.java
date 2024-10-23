@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -822,8 +823,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID secondInstanceId = UUID.randomUUID();
 
     JsonObject secondInstanceToCreate = nod(secondInstanceId);
+    // wait 2 seconds before creating the second instance to have a different "updatedDate" field
+    // than the first instance.
+    await().pollDelay(2, SECONDS).until(() -> true);
 
-    IndividualResource ir = createInstanceWithDelay(secondInstanceToCreate);
+    IndividualResource ir = createInstance(secondInstanceToCreate);
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -3034,34 +3038,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
-
-    assertThat(format("Create instance failed: %s", response.getBody()),
-      response.getStatusCode(), is(201));
-
-    return new IndividualResource(response);
-  }
-
-  private IndividualResource createInstanceWithDelay(JsonObject instanceToCreate)
-    throws InterruptedException, ExecutionException, TimeoutException {
-    // delay before creating the instance
-    CompletableFuture<Void> delayFuture = CompletableFuture.runAsync(() -> {
-      try {
-        TimeUnit.SECONDS.sleep(1);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    });
-    // create the instance
-    CompletableFuture<Response> createCompleted = delayFuture.thenCompose(v -> {
-      CompletableFuture<Response> responseFuture = new CompletableFuture<>();
-
-      getClient().post(instancesStorageUrl(""), instanceToCreate,
-        TENANT_ID, json(responseFuture));
-
-      return responseFuture;
-    });
-    // get the response
-    Response response = createCompleted.get(2, TimeUnit.SECONDS);
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(201));

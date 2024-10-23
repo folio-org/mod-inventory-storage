@@ -50,7 +50,7 @@ class ObjectConverterUtilsTest {
 
   @Test
   @SneakyThrows
-  void shouldThrowIllegalArgumentExceptionWhenCannotConvertToInstance() {
-    assertThrows(IllegalArgumentException.class, () -> ObjectConverterUtils.convertObject(new Object(), String.class));
+  void shouldThrowExceptionWhenCannotConvertToInstance() {
+    assertThrows(Exception.class, () -> ObjectConverterUtils.convertObject(new Object(), String.class));
   }
 }

@@ -96,7 +96,7 @@ public abstract class AbstractRepository<T> {
   public Future<RowSet<Row>> update(AsyncResult<SQLConnection> connection, String id, T entity) {
     final Promise<RowSet<Row>> promise = promise();
 
-    postgresClient.update(connection, tableName, entity, "jsonb",
+    postgresClient.update(connection, tableName, entity, JSON_COLUMN,
       format("WHERE id = '%s'", id), false, promise);
 
     return promise.future();
@@ -138,6 +138,8 @@ public abstract class AbstractRepository<T> {
     return postgresClientFuturized.deleteById(tableName, id);
   }
 
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   public <S, R> void streamGet(String table, Class<S> clazz,
                                String cql, int offset, int limit, List<String> facets,
                                String element, int queryTimeout, RoutingContext routingContext,
@@ -156,6 +158,8 @@ public abstract class AbstractRepository<T> {
     }
   }
 
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
   private <S, R> void streamGetInstances(String table, Class<S> clazz,
                                          CQLWrapper filter, List<FacetField> facetList,
                                          String element, int queryTimeout,
@@ -203,9 +207,9 @@ public abstract class AbstractRepository<T> {
   private void streamTrailer(HttpServerResponse response, ResultInfo resultInfo) {
     response.write("],\n");
     if (resultInfo.getTotalRecords() != null) {
-      response.write(String.format("  \"totalRecords\": %d,\n", resultInfo.getTotalRecords()));
+      response.write(String.format("  \"totalRecords\": %d,%n", resultInfo.getTotalRecords()));
     }
-    response.end(String.format("  \"resultInfo\": %s\n}", Json.encode(resultInfo)));
+    response.end(String.format("  \"resultInfo\": %s%n}", Json.encode(resultInfo)));
   }
 
   private <S> void handleException(PostgresClientStreamResult<S> result, HttpServerResponse response, Throwable res) {
