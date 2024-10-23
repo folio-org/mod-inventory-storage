@@ -60,7 +60,7 @@
     "holdingsInstance": {
       "description": "Instance of holding record. This is a virtual field, accessible only when using mod-graphql.",
       "type": "object",
-      "folio:$ref": "instance-without-pub-period.json",
+      "folio:$ref": "instance.json",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "inventory/instances",

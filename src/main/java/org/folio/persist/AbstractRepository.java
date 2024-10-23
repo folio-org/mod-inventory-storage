@@ -148,7 +148,7 @@ public abstract class AbstractRepository<T> {
     var response = routingContext.response();
     try {
       var facetList = FacetManager.convertFacetStrings2FacetFields(facets, JSON_COLUMN);
-      var wrapper = new CQLWrapper(new CQL2PgJSON(table + "." + JSON_COLUMN), cql, limit, offset);
+      var wrapper = new CQLWrapper(new CQL2PgJSON(String.format("%s.%s", table, JSON_COLUMN)), cql, limit, offset);
       streamGetInstances(table, clazz, wrapper, facetList, element, queryTimeout, routingContext, targetClazz);
     } catch (Exception e) {
       logger.error(e.getMessage(), e);

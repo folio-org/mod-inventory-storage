@@ -49,7 +49,7 @@ public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrati
 
     if (!idsForMigration.isEmpty()) {
       var ids = idsForMigration.stream()
-        .map(id -> "'" + id + "'")
+        .map(id -> String.format("'%s'", id))
         .collect(Collectors.joining(", "));
 
       whereCondition = String.format(WHERE_CONDITION, ids);
