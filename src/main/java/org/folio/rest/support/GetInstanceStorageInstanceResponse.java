@@ -13,10 +13,6 @@ public final class GetInstanceStorageInstanceResponse extends ResponseDelegate {
     super(response, entity);
   }
 
-  private GetInstanceStorageInstanceResponse(Response response) {
-    super(response);
-  }
-
   public static GetInstanceStorageInstanceResponse respond200WithApplicationJson(
     Instances entity) {
     Response.ResponseBuilder responseBuilder = Response.status(HttpStatus.HTTP_OK.toInt())
