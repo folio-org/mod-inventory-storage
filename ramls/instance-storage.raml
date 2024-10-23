@@ -62,10 +62,10 @@ resourceTypes:
     displayName: Instances
     type:
       collection:
-        exampleCollection: !include  examples/instanceswithoutpubperiod_get.json
+        exampleCollection: !include  examples/instances_get.json
         schemaCollection: instancesWithoutPubPeriod
         schemaItem: instanceWithoutPubPeriod
-        exampleItem: !include  examples/instancewithoutpubperiod_get.json
+        exampleItem: !include  examples/instance_get.json
     get:
       is: [pageable,
           searchable: {description: "by title (using CQL)",
@@ -91,7 +91,7 @@ resourceTypes:
     /{instanceId}:
       type:
         collection-item:
-          exampleItem: !include examples/instancewithoutpubperiod_get.json
+          exampleItem: !include examples/instance_get.json
           schema: instanceWithoutPubPeriod
       get:
         responses:

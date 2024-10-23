@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "An item record with related record data",
   "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.DereferencedItemWithoutPubPeriod",
   "properties": {
     "id": {
       "type": "string",
@@ -9,8 +10,8 @@
     },
     "instanceRecord":{
       "type": "object",
-      "description" : "Parent instance record.",
-      "$ref": "instance.json"
+      "description" : "Parent instance record without the publicationPeriod.",
+      "$ref": "instance-without-pub-period.json"
     },
     "_version": {
       "type": "integer",
