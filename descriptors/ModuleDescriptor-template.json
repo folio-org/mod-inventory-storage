@@ -562,11 +562,13 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/subject-types",
-          "permissionsRequired": ["inventory-storage.subject-types.item.post"]
+          "permissionsRequired": ["inventory-storage.subject-types.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/subject-types/{id}",
-          "permissionsRequired": ["inventory-storage.subject-types.item.put"]
+          "permissionsRequired": ["inventory-storage.subject-types.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/subject-types/{id}",
@@ -589,11 +591,13 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/subject-sources",
-          "permissionsRequired": ["inventory-storage.subject-sources.item.post"]
+          "permissionsRequired": ["inventory-storage.subject-sources.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/subject-sources/{id}",
-          "permissionsRequired": ["inventory-storage.subject-sources.item.put"]
+          "permissionsRequired": ["inventory-storage.subject-sources.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/subject-sources/{id}",
