@@ -7,6 +7,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -31,5 +33,18 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
+  }
+
+  public Future<List<Map<String, Object>>> getReindexHoldingsRecords(String fromId, String toId) {
+    var sql = "SELECT jsonb FROM " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+                 + " i WHERE id >= '" + fromId + "' AND id <= '" + toId + "'"
+                 + ";";
+    return postgresClient.select(sql).map(rows -> {
+      var resultList = new LinkedList<Map<String, Object>>();
+      for (var row : rows) {
+        resultList.add(row.getJsonObject(0).getMap());
+      }
+      return resultList;
+    });
   }
 }
