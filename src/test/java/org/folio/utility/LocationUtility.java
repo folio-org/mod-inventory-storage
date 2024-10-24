@@ -137,18 +137,10 @@ public final class LocationUtility {
     return get(createLocation);
   }
 
-  /**
-   * Helper to create a Location record the way old shelfLocations were created.
-   * Used mostly while migrating to new Locations
-   */
   public static UUID createLocation(UUID id, String name, String code) {
     return createLocation(id, name, code, TENANT_ID);
   }
 
-  /**
-   * Helper to create a Location record the way old shelfLocations were created.
-   * Used mostly while migrating to new Locations
-   */
   public static UUID createLocation(UUID id, String name, String code, String tenantId) {
     if (id == null) {
       id = UUID.randomUUID();

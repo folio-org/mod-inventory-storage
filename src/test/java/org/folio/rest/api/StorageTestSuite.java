@@ -48,7 +48,6 @@ import org.junit.runners.Suite;
   LoanTypeTest.class,
   MaterialTypeTest.class,
   ContributorTypesTest.class,
-  ShelfLocationsTest.class,
   LocationUnitTest.class,
   LocationsTest.class,
   ServicePointTest.class,
