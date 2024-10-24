@@ -5,11 +5,11 @@
   "properties": {
     "instances": {
       "id": "instancesList",
-      "description": "List of all successfully saved Instances",
+      "description": "List of all successfully saved Instances without the publicationPeriod",
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "instance.json"
+        "$ref": "instance-without-pub-period.json"
       }
     },
     "errorMessages": {

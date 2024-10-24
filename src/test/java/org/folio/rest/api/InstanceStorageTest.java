@@ -5,6 +5,7 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -822,6 +823,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID secondInstanceId = UUID.randomUUID();
 
     JsonObject secondInstanceToCreate = nod(secondInstanceId);
+    // wait 2 seconds before creating the second instance to have a different "updatedDate" field
+    // than the first instance.
+    await().pollDelay(2, SECONDS).until(() -> true);
 
     IndividualResource ir = createInstance(secondInstanceToCreate);
 

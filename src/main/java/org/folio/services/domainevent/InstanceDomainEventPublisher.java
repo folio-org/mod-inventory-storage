@@ -16,13 +16,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.PublishReindexRecords;
+import org.folio.utils.ObjectConverterUtils;
 
-public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
+public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, InstanceWithoutPubPeriod> {
 
   private static final String MAX_REQUEST_SIZE = "KAFKA_REINDEX_PRODUCER_MAX_REQUEST_SIZE_BYTES";
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
-  
+
   private final CommonDomainEventPublisher<Map<String, Object>> instanceReindexPublisher;
 
   public InstanceDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
@@ -41,7 +43,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
     return instanceReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
   }
 
-  public Future<Void> publishInstancesCreated(List<Instance> instances) {
+  public Future<Void> publishInstancesCreated(List<InstanceWithoutPubPeriod> instances) {
     if (instances.isEmpty()) {
       log.info("No instances were created, skipping event sending");
       return succeededFuture();
@@ -62,8 +64,8 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   }
 
   @Override
-  protected Instance convertDomainToEvent(String instanceId, Instance domain) {
-    return domain;
+  protected InstanceWithoutPubPeriod convertDomainToEvent(String instanceId, Instance domain) {
+    return ObjectConverterUtils.convertObject(domain, InstanceWithoutPubPeriod.class);
   }
 
   @Override

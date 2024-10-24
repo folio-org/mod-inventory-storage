@@ -23,6 +23,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
+import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.RetrieveDto;
@@ -34,10 +35,13 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.EndpointFailureHandler;
+import org.folio.rest.support.EndpointHandler;
+import org.folio.rest.support.GetInstanceStorageInstanceResponse;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
+import org.folio.utils.ObjectConverterUtils;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
@@ -209,13 +213,15 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void postInstanceStorageInstances(
 
-    Instance entity,
+    InstanceWithoutPubPeriod entity,
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    var instance = ObjectConverterUtils.convertObject(entity, Instance.class);
+
     new InstanceService(vertxContext, okapiHeaders)
-      .createInstance(entity)
+      .createInstance(instance)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -267,13 +273,15 @@ public class InstanceStorageApi implements InstanceStorage {
   public void putInstanceStorageInstancesByInstanceId(
     String instanceId,
 
-    Instance entity,
+    InstanceWithoutPubPeriod entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    var instance = ObjectConverterUtils.convertObject(entity, Instance.class);
+
     new InstanceService(vertxContext, okapiHeaders)
-      .updateInstance(instanceId, entity)
+      .updateInstance(instanceId, instance)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -334,7 +342,7 @@ public class InstanceStorageApi implements InstanceStorage {
         return;
       }
       if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
-          && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+        && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
         asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
             .respond404WithTextPlain(reply.cause().getMessage())));
@@ -395,7 +403,8 @@ public class InstanceStorageApi implements InstanceStorage {
         PreparedCql preparedCql = handleCql(query, limit, offset);
         PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
           TITLE, query, offset, limit,
-          okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
+          okapiHeaders, vertxContext, GetInstanceStorageInstanceResponse.class,
+          EndpointHandler.handleInstances(asyncResultHandler));
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -403,9 +412,8 @@ public class InstanceStorageApi implements InstanceStorage {
       }
       return;
     }
-
-    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
-      "instances", routingContext, okapiHeaders, vertxContext);
+    new InstanceService(vertxContext, okapiHeaders)
+      .streamGetInstances(INSTANCE_TABLE, query, offset, limit, null, "instances", 0, routingContext);
   }
 
   PreparedCql handleCql(String query, int limit, int offset) throws FieldException {

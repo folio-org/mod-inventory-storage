@@ -1,6 +1,7 @@
 package org.folio.services.migration.async;
 
 import static java.lang.String.format;
+import static org.folio.services.migration.MigrationName.SUBJECT_SERIES_MIGRATION;
 
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -18,7 +19,7 @@ public class SubjectSeriesMigrationJobRunner extends AbstractAsyncMigrationJobRu
 
   @Override
   public String getMigrationName() {
-    return "subjectSeriesMigration";
+    return SUBJECT_SERIES_MIGRATION.getValue();
   }
 
   @Override

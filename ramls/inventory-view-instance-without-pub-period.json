@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Instance with holdings and items",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "Instance id",
+      "$ref": "uuid.json"
+    },
+    "isBoundWith": {
+      "description": "Records the relationship between a part of a bound-with (a holdings-record) and the bound-with as a whole (the circulatable item)",
+      "type": "boolean"
+    },
+    "instance": {
+      "description": "Instance record without the publicationPeriod",
+      "$ref": "instance-without-pub-period.json"
+    },
+    "holdingsRecords": {
+      "type": "array",
+      "description": "Holdings records for the instance",
+      "items": {
+        "$ref": "holdings-storage/holdingsRecord.json"
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "Items for the instance",
+      "items": {
+        "$ref": "item.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["instanceId", "instance"]
+}

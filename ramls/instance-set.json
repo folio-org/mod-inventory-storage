@@ -8,8 +8,8 @@
       "$ref": "uuid.json"
     },
     "instance": {
-      "description": "Instance record",
-      "$ref": "instance.json"
+      "description": "Instance record without the publicationPeriod",
+      "$ref": "instance-without-pub-period.json"
     },
     "holdingsRecords": {
       "type": "array",
