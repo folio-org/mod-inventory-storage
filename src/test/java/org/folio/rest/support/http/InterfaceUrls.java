@@ -14,10 +14,6 @@ public class InterfaceUrls {
     return vertxUrl("/loan-types" + subPath);
   }
 
-  public static URL shelfLocationsStorageUrl(String subPath) {
-    return vertxUrl("/shelf-locations" + subPath);
-  }
-
   public static URL instanceTypesStorageUrl(String subPath) {
     return vertxUrl("/instance-types" + subPath);
   }
