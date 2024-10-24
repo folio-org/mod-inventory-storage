@@ -151,7 +151,7 @@ public abstract class AbstractRepository<T> {
       var wrapper = new CQLWrapper(new CQL2PgJSON(String.format("%s.%s", table, JSON_COLUMN)), cql, limit, offset);
       streamGetInstances(table, clazz, wrapper, facetList, element, queryTimeout, routingContext, targetClazz);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+      logger.error(String.format("streamGet:: Failed to retrieve data: %s", e.getMessage()), e);
       response.setStatusCode(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt());
       response.putHeader(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN);
       response.end(e.toString());
@@ -226,7 +226,7 @@ public abstract class AbstractRepository<T> {
       var targetObject = ObjectConverterUtils.convertObject(res, targetClazz);
       itemString = OBJECT_MAPPER.writeValueAsString(targetObject);
     } catch (JsonProcessingException ex) {
-      logger.error(ex.getMessage(), ex);
+      logger.error(String.format("handleResult:: Failed to handle streamGet result: %s", ex.getMessage()), ex);
       throw new IllegalArgumentException(ex.getCause());
     }
     if (first.get()) {

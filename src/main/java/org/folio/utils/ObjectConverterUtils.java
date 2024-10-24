@@ -21,9 +21,10 @@ public final class ObjectConverterUtils {
       var sourceJson = GSON.toJson(source);
       return GSON.fromJson(sourceJson, targetClass);
     } catch (Exception e) {
-      throw new IllegalArgumentException(
-        String.format("Failed to convert %s to %s: %s",
-          source.getClass().getSimpleName(), targetClass.getSimpleName(), e.getMessage()), e);
+      var errorMessage = String.format("convertObject:: Failed to convert %s to %s: %s",
+        source.getClass().getSimpleName(), targetClass.getSimpleName(), e.getMessage());
+      log.error(errorMessage, e);
+      throw new IllegalArgumentException(errorMessage, e);
     }
   }
 }
