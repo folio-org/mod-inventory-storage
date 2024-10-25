@@ -1,6 +1,7 @@
 ## v28.0.0 In progress
 ### Breaking changes
 * Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
+* Delete deprecated `shelf-locations` API ([MODINVSTOR-1183](https://folio-org.atlassian.net/browse/MODINVSTOR-1183))
 
 ### New APIs versions
 * Provides `instance-storage 11.1`
@@ -14,6 +15,9 @@
 * Requires `bound-with-parts-storage 2.0`
 * Requires `async-migration 1.0`
 * Requires `item-storage-dereferenced 1.1`
+
+### Removed APIs
+* `shelf-locations`
 
 ### Features
 * Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
@@ -66,15 +70,12 @@
 * Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
 * Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
 * Bump `holdings-storage` from `6.0` to `7.0`
 * Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
 * Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
 * Bump `folio-kafka-wrapper` from `3.1.1` to `3.2.0`
 * Add `folio-s3-client` `2.2.0`
-* Add `LIB_NAME` `2.7.4`
-* Remove `LIB_NAME`
 
 ## v27.1.0 2024-03-19
 ### New APIs versions
@@ -96,7 +97,6 @@
 * Prevent virtual fields populating for holdings records ([MODINVSTOR-1094](https://issues.folio.org/browse/MODINVSTOR-1094))
 * Create base for reference data APIs integration tests ([MODINVSTOR-1164](https://issues.folio.org/browse/MODINVSTOR-1164))
 * Make response message more informative for hrid exceptions ([MODINVSTOR-1100](https://issues.folio.org/browse/MODINVSTOR-1100))
-
 
 ### Dependencies
 * Bump `vertx` from `4.3.5` to `4.5.5`
