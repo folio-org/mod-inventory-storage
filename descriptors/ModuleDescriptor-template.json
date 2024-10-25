@@ -11,7 +11,7 @@
   "provides": [
     {
       "id": "item-storage-dereferenced",
-      "version": "1.1",
+      "version": "1.0",
       "handlers": [{
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
@@ -167,7 +167,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.1",
+      "version": "11.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -274,7 +274,7 @@
     },
     {
       "id": "instance-storage-batch",
-      "version": "3.1",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1314,7 +1314,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "3.1",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1325,7 +1325,7 @@
     },
     {
       "id": "inventory-view-instance-set",
-      "version": "3.1",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],

@@ -4,17 +4,16 @@
 * Delete deprecated `shelf-locations` API ([MODINVSTOR-1183](https://folio-org.atlassian.net/browse/MODINVSTOR-1183))
 
 ### New APIs versions
-* Provides `instance-storage 11.1`
-* Provides `instance-storage-batch 3.1`
+* Provides `instance-storage 11.0`
+* Provides `instance-storage-batch 3.0`
 * Provides `instance-storage-batch-sync 3.0`
 * Provides `instance-storage-batch-sync-unsafe 3.0`
-* Provides `inventory-view 3.1`
-* Provides `inventory-view-instance-set 3.1`
+* Provides `inventory-view 3.0`
+* Provides `inventory-view-instance-set 3.0`
 * Provides `instance-iteration 1.0`
 * Requires `holdings-storage 8.0`
 * Requires `bound-with-parts-storage 2.0`
 * Requires `async-migration 1.0`
-* Requires `item-storage-dereferenced 1.1`
 
 ### Removed APIs
 * `shelf-locations`
