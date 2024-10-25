@@ -1,0 +1,416 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An item record with related record data",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.DereferencedItemWithoutPubPeriod",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique ID of the item record"
+    },
+    "instanceRecord":{
+      "type": "object",
+      "description" : "Parent instance record without the publicationPeriod.",
+      "$ref": "instance-without-pub-period.json"
+    },
+    "_version": {
+      "type": "integer",
+      "description": "Record version for optimistic locking"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential alternate ID"
+    },
+    "holdingsRecord": {
+      "type": "object",
+      "description": "Holdings record the item is a member of.",
+      "$ref": "holdings-storage/holdingsRecord.json"
+    },
+    "formerIds": {
+      "type": "array",
+      "description": "Previous identifiers assigned to the item",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "discoverySuppress": {
+      "type": "boolean",
+      "description": "Records the fact that the record should not be displayed in a discovery system"
+    },
+    "accessionNumber": {
+      "type": "string",
+      "description": "Also called inventar number"
+    },
+    "barcode": {
+      "type": "string",
+      "description": "Unique inventory control number for physical resources, used largely for circulation purposes"
+    },
+    "effectiveShelvingOrder": {
+      "type": "string",
+      "description": "A system generated normalization of the call number that allows for call number sorting in reports and search results",
+      "readonly": true
+    },
+    "itemLevelCallNumber": {
+      "type": "string",
+      "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item. The call number is used to determine the items physical position in a shelving sequence, e.g. K1 .M44. The Item level call number, is the call number on item level."
+    },
+    "itemLevelCallNumberPrefix": {
+      "type": "string",
+      "description": "Prefix of the call number on the item level."
+    },
+    "itemLevelCallNumberSuffix": {
+      "type": "string",
+      "description": "Suffix of the call number on the item level."
+    },
+    "itemLevelCallNumberTypeId": {
+      "type": "string",
+      "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc."
+    },
+    "effectiveCallNumberComponents": {
+      "type": "object",
+      "description": "Elements of a full call number generated from the item or holding",
+      "properties": {
+        "callNumber": {
+          "type": "string",
+          "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "suffix": {
+          "type": "string",
+          "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item.",
+          "readonly": true
+        },
+        "typeId": {
+          "type": "string",
+          "description": "Effective Call Number Type Id is the call number type id of the item, if available, otherwise that of the holding.",
+          "$ref": "uuid.json",
+          "readonly": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "volume": {
+      "type": "string",
+      "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of George Bernard Shaw in three volumes)."
+    },
+    "enumeration": {
+      "type": "string",
+      "description": "Enumeration is the descriptive information for the numbering scheme of a serial."
+    },
+    "chronology": {
+      "type": "string",
+      "description": "Chronology is the descriptive information for the dating scheme of a serial."
+    },
+    "yearCaption": {
+      "type": "array",
+      "description": "In multipart monographs, a caption is a character(s) used to label a level of chronology, e.g., year 1985.",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "itemIdentifier": {
+      "type": "string",
+      "description": "Item identifier number, e.g. imported from the union catalogue (read only)."
+    },
+    "copyNumber": {
+      "type": "string",
+      "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; one copy of a multi-volume, (e.g. Copy 1, or C.7.)"
+    },
+    "numberOfPieces": {
+      "type": "string",
+      "description": "Number of pieces. Used when an item is checked out or returned to verify that all parts are present (e.g. 7 CDs in a set)."
+    },
+    "descriptionOfPieces": {
+      "description": "Description of item pieces.",
+      "type": "string"
+    },
+    "numberOfMissingPieces": {
+      "type": "string",
+      "description": "Number of missing pieces."
+    },
+    "missingPieces": {
+      "type": "string",
+      "description": "Description of the missing pieces. "
+    },
+    "missingPiecesDate": {
+      "type": "string",
+      "description": "Date when the piece(s) went missing."
+    },
+    "itemDamagedStatusId": {
+      "description": "Item dame status id identifier.",
+      "type": "string"
+    },
+    "itemDamagedStatusDate": {
+      "description": "Date and time when the item was damaged.",
+      "type": "string"
+    },
+    "administrativeNotes":{
+      "type": "array",
+      "description": "Administrative notes",
+      "minItems": 0,
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "Notes about action, copy, binding etc.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "itemNoteTypeId": {
+            "type": "string",
+            "description": "ID of the type of note"
+          },
+          "itemNoteType": {
+            "description": "Type of item's note",
+            "type": "object",
+            "folio:$ref": "itemnotetype.json",
+            "javaType": "org.folio.rest.jaxrs.model.itemNoteTypeVirtual",
+            "readonly": true,
+            "folio:isVirtual": true,
+            "folio:linkBase": "item-note-types",
+            "folio:linkFromField": "itemNoteTypeId",
+            "folio:linkToField": "id",
+            "folio:includedElement": "itemNoteTypes.0"
+          },
+          "note": {
+            "type": "string",
+            "description": "Text content of the note"
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "description": "If true, determines that the note should not be visible for others than staff",
+            "default": false
+          }
+        }
+      }
+    },
+    "circulationNotes": {
+      "type": "array",
+      "description": "Notes to be displayed in circulation processes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The id of the circulation note"
+          },
+          "noteType": {
+            "type": "string",
+            "description": "Type of circulation process that the note applies to",
+            "enum": ["Check in", "Check out"]
+          },
+          "note": {
+            "type": "string",
+            "description": "Text to display"
+          },
+          "source": {
+            "type": "object",
+            "description": "The user who added/updated the note. The property is generated by the server and needed to support sorting. Points to /users/{id} resource.",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The id of the user who added/updated the note. The user information is generated by the server and needed to support sorting. Points to /users/{id} resource."
+              },
+              "personal": {
+                "type": "object",
+                "description": "Personal information about the user",
+                "properties": {
+                  "lastName": {
+                    "description": "The user's last name",
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "description": "The user's first name",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "date": {
+            "type": "string",
+            "description": "Date and time the record is added/updated. The property is generated by the server and needed to support sorting."
+          },
+          "staffOnly": {
+            "type": "boolean",
+            "description": "Flag to restrict display of this note",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "status": {
+      "description": "The status of the item",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the status e.g. Available, Checked out, In transit",
+          "type": "string",
+          "enum": [
+            "Aged to lost",
+            "Available",
+            "Awaiting pickup",
+            "Awaiting delivery",
+            "Checked out",
+            "Claimed returned",
+            "Declared lost",
+            "In process",
+            "In process (non-requestable)",
+            "In transit",
+            "Intellectual item",
+            "Long missing",
+            "Lost and paid",
+            "Missing",
+            "On order",
+            "Paged",
+            "Restricted",
+            "Order closed",
+            "Unavailable",
+            "Unknown",
+            "Withdrawn"
+          ]
+        },
+        "date": {
+          "description": "Date and time when the status was last changed",
+          "type": "string",
+          "format": "date-time",
+          "readonly": true
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": false
+    },
+    "materialType": {
+      "description": "Item's material type",
+      "type": "object",
+      "$ref": "materialtype.json"
+    },
+    "permanentLoanType": {
+      "type": "object",
+      "description": "The permanent loan type, is the default loan type for a given item. Loan types are tenant-defined.",
+      "$ref":"loantype.json"
+    },
+    "temporaryLoanType": {
+      "type": "object",
+      "description": "Temporary loan type, is the temporary loan type for a given item.",
+      "$ref":"loantype.json"
+    },
+    "permanentLocation": {
+      "type": "object",
+      "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
+      "$ref": "locations/location.json"
+    },
+    "temporaryLocation": {
+      "type": "object",
+      "description": "Temporary item location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location.",
+      "$ref": "locations/location.json"
+    },
+    "effectiveLocation": {
+      "type": "object",
+      "description": "Read only current home location for the item.",
+      "$ref": "locations/location.json",
+      "readonly": true
+    },
+    "electronicAccess": {
+      "type": "array",
+      "description": "References for accessing the item by URL.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "uniform resource identifier (URI) is a string of characters designed for unambiguous identification of resources"
+          },
+          "linkText": {
+            "type": "string",
+            "description": "the value of the MARC tag field 856 2nd indicator, where the values are: no information provided, resource, version of resource, related resource, no display constant generated"
+          },
+          "materialsSpecification": {
+            "type": "string",
+            "description": "materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+          },
+          "publicNote": {
+            "type": "string",
+            "description": "URL public note to be displayed in the discovery"
+          },
+          "relationshipId": {
+            "type": "string",
+            "description": "relationship between the electronic resource at the location identified and the item described in the record as a whole"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "uri"
+        ]
+      }
+    },
+    "inTransitDestinationServicePointId": {
+      "description": "Service point an item is intended to be transited to (should only be present when in transit)",
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"
+    },
+    "statisticalCodeIds": {
+      "type": "array",
+      "description": "List of statistical code IDs",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "purchaseOrderLineIdentifier": {
+      "type": "string",
+      "description": "ID referencing a remote purchase order object related to this item"
+    },
+    "tags": {
+      "description": "arbitrary tags associated with this item",
+      "id": "tags",
+      "type": "object",
+      "$ref": "raml-util/schemas/tags.schema"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema",
+      "readonly": true
+    },
+    "lastCheckIn": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Information about when an item was last scanned in the Inventory app.",
+      "properties": {
+        "dateTime": {
+          "type": "string",
+          "description": "Date and time of the last check in of the item.",
+          "format": "date-time"
+        },
+        "servicePointId": {
+          "type": "string",
+          "description": "Service point ID being used by a staff member when item was scanned in Check in app.",
+          "$ref": "uuid.json"
+        },
+        "staffMemberId": {
+          "type": "string",
+          "description": "ID a staff member who scanned the item",
+          "$ref": "uuid.json"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "materialType",
+    "instanceRecord",
+    "permanentLoanType",
+    "holdingsRecord",
+    "status"
+  ]
+}

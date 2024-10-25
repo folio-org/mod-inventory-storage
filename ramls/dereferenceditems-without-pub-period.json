@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of dereferenced item records",
+  "type": "object",
+  "properties": {
+    "dereferencedItems": {
+      "description": "List of dereferenced item records",
+      "id": "items",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "dereferenceditem-without-pub-period.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "dereferencedItems",
+    "totalRecords"
+  ]
+}
