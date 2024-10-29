@@ -2,6 +2,7 @@
 ### Breaking changes
 * Migrate "publicationPeriod" data to the Dates object and remove it from the Instance schema ([MODINVSTOR-1232](https://folio-org.atlassian.net/browse/MODINVSTOR-1232))
 * Delete deprecated `shelf-locations` API ([MODINVSTOR-1183](https://folio-org.atlassian.net/browse/MODINVSTOR-1183))
+* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
 
 ### New APIs versions
 * Provides `instance-storage 11.0`
@@ -11,32 +12,17 @@
 * Provides `inventory-view 3.0`
 * Provides `inventory-view-instance-set 3.0`
 * Provides `instance-iteration 1.0`
-* Requires `holdings-storage 8.0`
-* Requires `bound-with-parts-storage 2.0`
-* Requires `async-migration 1.0`
-
-### Removed APIs
-* `shelf-locations`
-
-### Features
-* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
-* Implement publication period migration on big dataset, create new InstanceWithoutPubPeriod schema for request/response API ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
-
-### Tech Dept
-* Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
-
-## v27.2.0 2024-09-24
-### Breaking changes
-* Required sourceId field in holdings record ([MODINVSTOR-1161](https://folio-org.atlassian.net/browse/MODINVSTOR-1161))
-
-### New APIs versions
+* Provides `holdings-storage 8.0`
+* Provides `bound-with-parts-storage 2.0`
+* Provides `async-migration 1.0`
 * Provides `subject-source 1.0`
 * Provides `subject-types 1.0`
 * Provides `instance-storage-bulk 1.0`
 * Provides `instance-date-types 1.0`
 * Provides `locations 3.1`
-* Provides `instance-storage 10.3`
-* Requires `holdings-storage 6.1`
+
+### Removed APIs
+* `shelf-locations`
 
 ### Features
 * Add floating collection flag in location schema ([MODINVSTOR-1250](https://issues.folio.org/browse/MODINVSTOR-1250))
@@ -55,6 +41,7 @@
 * Implement endpoint for bulk instances upsert from external file ([MODINVSTOR-1225](https://folio-org.atlassian.net/browse/MODINVSTOR-1225))
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 * Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
+* Implement publication period migration, create new InstanceWithoutPubPeriod schema for request/response API ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))
@@ -66,15 +53,11 @@
 * Update "BC" name in GET instance-date-type to "B.C." ([MODINVSTOR-1255](https://folio-org.atlassian.net/browse/MODINVSTOR-1255))
 
 ### Tech Dept
+* Upgrade localstack from 0.11.3 to s3-latest (=3.8.0) ([MODINVSTOR-1272](https://folio-org.atlassian.net/browse/MODINVSTOR-1272))
+* Add module descriptor validator plugin and fix the permission names ([MODINVSTOR-1247](https://folio-org.atlassian.net/browse/MODINVSTOR-1247))
 * Kafka testcontainers: kafka.KafkaContainer, apache/kafka-native:3.8.0, KafkaTopicsExistsTest fix ([MODINVSTOR-1251](https://folio-org.atlassian.net/browse/MODINVSTOR-1251))
 
-### Dependencies
-* Bump `domain-models-runtime` from `35.2.0` to `35.2.2`
-* Bump `holdings-storage` from `6.0` to `7.0`
-* Bump `holdings-storage-batch-sync` from `1.1` to `2.0`
-* Bump `holdings-storage-batch-sync-unsafe` from `1.0` to `2.0`
-* Bump `folio-kafka-wrapper` from `3.1.1` to `3.2.0`
-* Add `folio-s3-client` `2.2.0`
+---
 
 ## v27.1.0 2024-03-19
 ### New APIs versions
