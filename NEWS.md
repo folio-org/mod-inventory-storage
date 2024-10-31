@@ -42,6 +42,7 @@
 * Add Subject source and Subject type to schema ([MODINVSTOR-1205](https://folio-org.atlassian.net/browse/MODINVSTOR-1205))
 * Add codes to Subject sources ([MODINVSTOR-1264](https://folio-org.atlassian.net/browse/MODINVSTOR-1264))
 * Implement publication period migration, create new InstanceWithoutPubPeriod schema for request/response API ([MODINVSTOR-1271](https://folio-org.atlassian.net/browse/MODINVSTOR-1271))
+* Change Kafka event publishing keys for creating/updating holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
 
 ### Bug fixes
 * Unintended update of instance records \_version (optimistic locking) whenever any of its holdings or items are created, updated or deleted. ([MODINVSTOR-1186](https://folio-org.atlassian.net/browse/MODINVSTOR-1186))

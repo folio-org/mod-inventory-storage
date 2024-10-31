@@ -76,7 +76,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items) {
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
-        .map(item -> pair(getInstanceId(holdings, item), item))
+        .map(item -> pair(item.getId(), item))
         .toList());
   }
 
@@ -96,9 +96,5 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return mapOldRecordsToNew(
       oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).toList(),
       newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).toList());
-  }
-
-  private String getInstanceId(Map<String, HoldingsRecord> holdings, Item item) {
-    return holdings.get(item.getHoldingsRecordId()).getInstanceId();
   }
 }
