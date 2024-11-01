@@ -8,8 +8,6 @@ import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -21,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
-import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -31,7 +28,6 @@ import org.folio.rest.support.CollectionUtil;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
-  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
 
   private final HoldingsRepository holdingsRepository;
   private final CommonDomainEventPublisher<Map<String, Object>> itemReindexPublisher;
@@ -73,19 +69,6 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     }
 
     return itemReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.ITEM, items);
-  }
-
-  @Override
-  public void publishRemoved(String instanceId, String itemRaw) {
-    var instanceIdAndItemRaw = "{\"instanceId\":\"" + instanceId + "\"," + itemRaw.substring(1);
-
-    try {
-      var itemId = OBJECT_MAPPER.readTree(itemRaw).get("id").textValue();
-      domainEventService.publishRecordRemoved(itemId, instanceIdAndItemRaw);
-    } catch (JsonProcessingException ex) {
-      log.error(String.format("publishRemoved:: Failed to parse json : %s", ex.getMessage()), ex);
-      throw new IllegalArgumentException(ex.getCause());
-    }
   }
 
   @Override
