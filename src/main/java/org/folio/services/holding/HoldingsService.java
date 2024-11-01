@@ -16,6 +16,8 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -29,6 +31,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -51,6 +54,8 @@ import org.folio.validator.NotesValidators;
 
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
+
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
@@ -146,8 +151,15 @@ public class HoldingsService {
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return holdingsRepository.delete(cql)
       .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
+        rowSet.iterator().forEachRemaining(row -> {
+            try {
+              var holdingId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
+              domainEventPublisher.publishRemoved(holdingId, row.getString(1));
+            } catch (JsonProcessingException ex) {
+              log.error(String.format("deleteHoldings:: Failed to parse json : %s", ex.getMessage()), ex);
+              throw new IllegalArgumentException(ex.getCause());
+            }
+          }
         )
       ))
       .map(Response.noContent().build());
