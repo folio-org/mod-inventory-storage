@@ -735,7 +735,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  @Ignore
   public void canDeleteHoldingsByCql() {
     UUID instanceId1 = UUID.randomUUID();
     UUID instanceId2 = UUID.randomUUID();
