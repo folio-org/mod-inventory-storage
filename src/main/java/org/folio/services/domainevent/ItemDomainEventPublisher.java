@@ -1,28 +1,37 @@
 package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
+import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.PublishReindexRecords;
+import org.folio.rest.support.CollectionUtil;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
 
   private final HoldingsRepository holdingsRepository;
   private final CommonDomainEventPublisher<Map<String, Object>> itemReindexPublisher;
@@ -42,7 +51,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, oldHoldings.getInstanceId());
     ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, newHoldings.getInstanceId());
 
-    return domainEventService.publishRecordUpdated(newHoldings.getInstanceId(), oldItemWithId, newItemWithId);
+    return domainEventService.publishRecordUpdated(newItem.getId(), oldItemWithId, newItemWithId);
   }
 
   public Future<Void> publishUpdated(HoldingsRecord oldHoldings, HoldingsRecord newHoldings, List<Item> oldItems) {
@@ -68,15 +77,37 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
   @Override
   public void publishRemoved(String instanceId, String itemRaw) {
-    String instanceIdAndItemRaw = "{\"instanceId\":\"" + instanceId + "\"," + itemRaw.substring(1);
-    domainEventService.publishRecordRemoved(instanceId, instanceIdAndItemRaw);
+    var instanceIdAndItemRaw = "{\"instanceId\":\"" + instanceId + "\"," + itemRaw.substring(1);
+
+    try {
+      var itemId = OBJECT_MAPPER.readTree(itemRaw).get("id").textValue();
+      domainEventService.publishRecordRemoved(itemId, instanceIdAndItemRaw);
+    } catch (JsonProcessingException ex) {
+      log.error(String.format("publishRemoved:: Failed to parse json : %s", ex.getMessage()), ex);
+      throw new IllegalArgumentException(ex.getCause());
+    }
+  }
+
+  @Override
+  public Handler<Response> publishRemoved(Item removedRecord) {
+    return response -> {
+      if (!isDeleteSuccessResponse(response)) {
+        log.warn("Item record removal failed, no event will be sent");
+        return;
+      }
+      getRecordIds(List.of(removedRecord))
+        .map(CollectionUtil::getFirst)
+        .map(Pair::getKey)
+        .compose(instanceId -> domainEventService.publishRecordRemoved(
+          removedRecord.getId(), convertDomainToEvent(instanceId, removedRecord)));
+    };
   }
 
   @Override
   protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items) {
     return holdingsRepository.getById(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
-        .map(item -> pair(item.getId(), item))
+        .map(item -> pair(getInstanceId(holdings, item), item))
         .toList());
   }
 
@@ -86,8 +117,30 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
+  protected List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldRecordsToNew(
+    List<Pair<String, Item>> oldRecords, List<Pair<String, Item>> newRecords) {
+
+    var idToOldRecordPairMap = oldRecords.stream().collect(toMap(pair -> getId(pair.getValue()), pair -> pair));
+
+    return newRecords.stream().map(newRecordPair -> {
+      var oldRecordPair = idToOldRecordPairMap.get(getId(newRecordPair.getValue()));
+      return triple(newRecordPair.getValue().getId(), convertDomainToEvent(
+          oldRecordPair.getKey(), oldRecordPair.getValue()),
+        convertDomainToEvent(newRecordPair.getKey(), newRecordPair.getValue()));
+    }).toList();
+  }
+
+  @Override
   protected String getId(Item item) {
     return item.getId();
+  }
+
+  @Override
+  protected Future<List<Pair<String, ItemWithInstanceId>>> convertDomainsToEvents(Collection<Item> domains) {
+    return getRecordIds(domains)
+      .map(pairs -> pairs.stream()
+        .map(pair -> pair(pair.getValue().getId(), convertDomainToEvent(pair.getKey(), pair.getValue())))
+        .toList());
   }
 
   private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldItemsToNew(
@@ -96,5 +149,9 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
     return mapOldRecordsToNew(
       oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).toList(),
       newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).toList());
+  }
+
+  private String getInstanceId(Map<String, HoldingsRecord> holdings, Item item) {
+    return holdings.get(item.getHoldingsRecordId()).getInstanceId();
   }
 }
