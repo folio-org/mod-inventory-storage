@@ -38,6 +38,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
+import org.folio.utils.LoggingUtil;
 
 public class InstanceStorageApi implements InstanceStorage {
   private static final Logger log = LogManager.getLogger();
@@ -202,6 +203,8 @@ public class InstanceStorageApi implements InstanceStorage {
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
 
+    LoggingUtil.populateLoggingContext(okapiHeaders);
+
     fetchInstances(query, limit, offset, routingContext, okapiHeaders, asyncResultHandler, vertxContext);
   }
 
@@ -213,6 +216,8 @@ public class InstanceStorageApi implements InstanceStorage {
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
+    LoggingUtil.populateLoggingContext(okapiHeaders);
 
     new InstanceService(vertxContext, okapiHeaders)
       .createInstance(entity)
