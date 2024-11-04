@@ -9,18 +9,23 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.item.ItemService;
+import org.folio.util.LoggingUtil;
 
 /**
  * CRUD for Item.
  */
 public class ItemStorageApi implements ItemStorage {
   public static final String ITEM_TABLE = "item";
+
+  private static final Logger log = LogManager.getLogger();
 
   @Validate
   @Override
@@ -40,6 +45,9 @@ public class ItemStorageApi implements ItemStorage {
     RoutingContext routingContext, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
+
+    LoggingUtil.populateLoggingContext(okapiHeaders);
+    LoggingUtil.logRequestArrival("POST /item-storage/items", okapiHeaders, log);
 
     new ItemService(vertxContext, okapiHeaders).createItem(entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))

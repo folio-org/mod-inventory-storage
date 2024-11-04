@@ -10,6 +10,8 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecordView;
@@ -17,10 +19,13 @@ import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.holding.HoldingsService;
+import org.folio.util.LoggingUtil;
 
 public class HoldingsStorageApi implements HoldingsStorage {
 
   public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
+  private static final Logger log = LogManager.getLogger();
+
 
   @Validate
   @Override
@@ -40,6 +45,9 @@ public class HoldingsStorageApi implements HoldingsStorage {
                                           RoutingContext routingContext, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
+
+    LoggingUtil.populateLoggingContext(okapiHeaders);
+    LoggingUtil.logRequestArrival("POST /holdings-storage/holdings", okapiHeaders, log);
 
     new HoldingsService(vertxContext, okapiHeaders)
       .createHolding(entity)
