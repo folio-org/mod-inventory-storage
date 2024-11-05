@@ -155,7 +155,7 @@ public class ItemService {
       .compose(NotesValidators::refuseItemLongNotes)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
       .compose(this::populateCirculationNoteId)
-      .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId))
+      .compose(result -> buildBatchOperationContext(upsert, items, itemRepository, Item::getId, true))
       .compose(batchOperation -> postSync(ITEM_TABLE, items, MAX_ENTITIES, upsert, optimisticLocking,
         okapiHeaders, vertxContext, PostItemStorageBatchSynchronousResponse.class)
         .onSuccess(domainEventService.publishCreatedOrUpdated(batchOperation)))

@@ -66,8 +66,10 @@ abstract class AbstractDomainEventPublisher<D, E> {
       log.info("Records created {}, records updated {}", batchOperation.getRecordsToBeCreated().size(),
         batchOperation.getExistingRecords().size());
 
-      publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
-        notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      if (batchOperation.isPublishEvents()) {
+        publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
+          notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      }
     };
   }
 
