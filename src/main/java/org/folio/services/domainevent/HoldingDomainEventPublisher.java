@@ -42,7 +42,7 @@ public class HoldingDomainEventPublisher
     Collection<HoldingsRecord> holdingsRecords) {
 
     return succeededFuture(holdingsRecords.stream()
-      .map(hr -> pair(hr.getInstanceId(), hr))
+      .map(hr -> pair(hr.getId(), hr))
       .toList());
   }
 
