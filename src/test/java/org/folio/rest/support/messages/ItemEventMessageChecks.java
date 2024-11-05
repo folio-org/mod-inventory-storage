@@ -47,7 +47,7 @@ public class ItemEventMessageChecks {
     final var itemId = getId(item);
     final var instanceId = getInstanceIdForItem(item);
 
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
       EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(
         addInstanceIdToItem(item, instanceId)));
   }
@@ -64,7 +64,7 @@ public class ItemEventMessageChecks {
     final var itemId = getId(newItem);
     final var newInstanceId = getInstanceIdForItem(newItem);
 
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(newInstanceId, itemId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
       EVENT_MESSAGE_MATCHERS.hasUpdateEventMessageFor(
         addInstanceIdToItem(oldItem, oldInstanceId),
         addInstanceIdToItem(newItem, newInstanceId)));
@@ -74,14 +74,14 @@ public class ItemEventMessageChecks {
     final var itemId = getId(item);
     final var instanceId = getInstanceIdForItem(item);
 
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(instanceId, itemId),
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
       EVENT_MESSAGE_MATCHERS.hasDeleteEventMessageFor(
         addInstanceIdToItem(item, instanceId)));
   }
 
   public void allItemsDeletedMessagePublished() {
     awaitAtMost()
-      .until(() -> kafkaConsumer.getMessagesForItem(NULL_ID, null),
+      .until(() -> kafkaConsumer.getMessagesForItemWithInstanceIdKey(NULL_ID, null),
         EVENT_MESSAGE_MATCHERS.hasDeleteAllEventMessage());
   }
 }

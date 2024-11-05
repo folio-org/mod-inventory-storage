@@ -5,6 +5,7 @@ import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -24,6 +25,8 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -42,6 +45,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -63,10 +68,16 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class ItemService {
+
+  private static final Logger log = getLogger(ItemService.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private static final Pattern KEY_ALREADY_EXISTS_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) already exists.$");
   private static final Pattern KEY_NOT_PRESENT_PATTERN = Pattern.compile(
     ": Key \\(([^=]+)\\)=\\((.*)\\) is not present in table \"(.*)\".$");
+  private static final String INSTANCE_ID_WITH_ITEM_JSON = """
+    {"instanceId": "%s",%s
+    """;
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -207,8 +218,18 @@ public class ItemService {
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return itemRepository.delete(cql)
       .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventService.publishRemoved(row.getString(0), row.getString(1))
+        rowSet.iterator().forEachRemaining(row -> {
+            try {
+              var instanceIdAndItemRaw = INSTANCE_ID_WITH_ITEM_JSON.formatted(
+                row.getString(0), row.getString(1).substring(1));
+              var itemId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
+
+              domainEventService.publishRemoved(itemId, instanceIdAndItemRaw);
+            } catch (JsonProcessingException ex) {
+              log.error(String.format("deleteItems:: Failed to parse json : %s", ex.getMessage()), ex);
+              throw new IllegalArgumentException(ex.getCause());
+            }
+          }
         )
       ))
       .map(Response.noContent().build());
