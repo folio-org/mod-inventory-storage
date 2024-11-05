@@ -24,7 +24,7 @@ public class InstanceBatchSyncUnsafeApi implements InstanceStorageBatchSynchrono
     var instances = ObjectConverterUtils.convertObject(entity, Instances.class);
 
     new InstanceService(vertxContext, okapiHeaders)
-      .createInstances(instances.getInstances(), true, false)
+      .createInstances(instances.getInstances(), true, false, true)
       .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
       .onComplete(asyncResultHandler);
   }
