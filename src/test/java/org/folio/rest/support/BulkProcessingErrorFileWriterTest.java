@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
+import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.BulkProcessingContext;
 import org.junit.After;
@@ -34,7 +35,8 @@ public class BulkProcessingErrorFileWriterTest {
 
   @Before
   public void setUp() {
-    bulkContext = new BulkProcessingContext(BULK_INSTANCES_FILE_PATH);
+    var request = new BulkUpsertRequest().withRecordsFileName(BULK_INSTANCES_FILE_PATH);
+    bulkContext = new BulkProcessingContext(request);
     writer = new BulkProcessingErrorFileWriter(vertx, bulkContext);
   }
 
