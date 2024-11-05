@@ -30,3 +30,9 @@ resourceTypes:
     description: Get instances by id with their holdings and items
     is: [pageable, searchable: {description: "using CQL",
                       example: "title=\"*uproot*\""}]
+    queryParameters:
+      withBoundedItems:
+        description: Add "items" records that bounded with holdings of the parent instance
+        type: boolean
+        required: false
+        default: false
