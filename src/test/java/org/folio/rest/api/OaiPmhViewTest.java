@@ -105,7 +105,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
   }
 
-  //@Test
+  @Test
   public void canRequestOaiPmhViewWhenEmptyDb() throws InterruptedException, ExecutionException, TimeoutException {
     // given
     deleteAll(itemsStorageUrl(""));
