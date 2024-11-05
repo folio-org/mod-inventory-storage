@@ -22,7 +22,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
@@ -77,6 +77,69 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
+  @Before
+  public void setUp() {
+    StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
+    clearData();
+    removeAllEvents();
+  }
+
+  @Test
+  public void shouldUpdateInstancesWithoutErrors()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    shouldUpdateInstances(true);
+  }
+
+  @Test
+  public void shouldUpdateInstancesWithoutErrorsAndDoNotPublishDomainEvents()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    shouldUpdateInstances(false);
+  }
+
+  @Test
+  public void shouldUpdateInstancesWithErrors()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    // given
+    String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
+    String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
+
+    List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_WITH_INVALID_TYPE_PATH);
+    FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_TYPE_PATH));
+    String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
+
+    final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
+
+    // when
+    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest()
+      .withRecordsFileName(bulkFilePath)
+    );
+
+    // then
+    assertThat(bulkResponse.getErrorsNumber(), is(1));
+    assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
+    assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
+
+    List<String> filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
+    assertThat(filesList.size(), is(3));
+    assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
+    List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
+    assertThat(errors.size(), is(1));
+
+    JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
+
+    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+    instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+  }
+
+  @Test
+  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecified()
+    throws ExecutionException, InterruptedException, TimeoutException {
+    CompletableFuture<Response> future = getClient().post(instancesBulk(), new BulkUpsertRequest(), TENANT_ID);
+    Response response = future.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
   @BeforeClass
   public static void setUpClass() {
     localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
@@ -104,21 +167,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     s3Client.createBucketIfNotExists();
   }
 
-  @Before
-  public void setUp() {
-    StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
-    clearData();
-    removeAllEvents();
-  }
-
   @AfterClass
   public static void tearDownClass() {
     localStackContainer.close();
   }
 
-  @Test
-  public void shouldUpdateInstancesWithoutErrors()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  private void shouldUpdateInstances(boolean publishEvents)
+    throws IOException, InterruptedException, ExecutionException, TimeoutException {
     // given
     List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_PATH);
     FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_PATH));
@@ -135,7 +190,10 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
 
     // when
-    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest().withRecordsFileName(bulkFilePath));
+    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest()
+      .withRecordsFileName(bulkFilePath)
+      .withPublishEvents(publishEvents)
+    );
 
     // then
     assertThat(bulkResponse.getErrorsNumber(), is(0));
@@ -154,49 +212,13 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
       assertThat(titleJson.getString("title"), notNullValue());
     });
 
-    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
-    instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
-  }
-
-  @Test
-  public void shouldUpdateInstancesWithErrors()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
-    // given
-    String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
-    String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
-
-    List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_WITH_INVALID_TYPE_PATH);
-    FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_TYPE_PATH));
-    String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
-
-    final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
-    final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
-
-    // when
-    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest().withRecordsFileName(bulkFilePath));
-
-    // then
-    assertThat(bulkResponse.getErrorsNumber(), is(1));
-    assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
-    assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
-
-    List<String> filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
-    assertThat(filesList.size(), is(3));
-    assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
-    List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
-    assertThat(errors.size(), is(1));
-
-    JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
-    instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
-    instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
-  }
-
-  @Test
-  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecified()
-    throws ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<Response> future = getClient().post(instancesBulk(), new BulkUpsertRequest(), TENANT_ID);
-    Response response = future.get(10, SECONDS);
-    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+    if (publishEvents) {
+      instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+      instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
+    } else {
+      instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
+      instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+    }
   }
 
   private List<String> extractInstancesIdsFromFile(String bulkInstancesFilePath) throws IOException {

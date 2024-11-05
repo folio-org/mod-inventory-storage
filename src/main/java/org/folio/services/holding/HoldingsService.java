@@ -168,7 +168,7 @@ public class HoldingsService {
       .compose(ar -> hridManager.populateHridForHoldings(holdings)
         .compose(NotesValidators::refuseHoldingLongNotes)
         .compose(result -> buildBatchOperationContext(upsert, holdings,
-          holdingsRepository, HoldingsRecord::getId))
+          holdingsRepository, HoldingsRecord::getId, true))
         .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, holdings, MAX_ENTITIES,
           upsert, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))))

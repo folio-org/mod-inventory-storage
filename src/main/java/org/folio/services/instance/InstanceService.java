@@ -116,14 +116,15 @@ public class InstanceService {
       .map(ResponseHandlerUtil::handleHridError);
   }
 
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                          boolean publishEvents) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
     return hridManager.populateHridForInstances(instances)
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
-        instanceRepository, Instance::getId))
+        instanceRepository, Instance::getId, publishEvents))
       .compose(batchOperation ->
         // Can use instances list here directly because the class is stateful
         postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
