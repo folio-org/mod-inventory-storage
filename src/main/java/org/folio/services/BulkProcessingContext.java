@@ -1,6 +1,7 @@
 package org.folio.services;
 
 import org.apache.commons.lang3.StringUtils;
+import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 
 /**
  * Encapsulates the context for bulk processing of entities from external file.
@@ -17,13 +18,15 @@ public class BulkProcessingContext {
   private final String errorsFilePath;
   private final String errorEntitiesFileLocalPath;
   private final String errorsFileLocalPath;
+  private final boolean publishEvents;
 
-  public BulkProcessingContext(String entitiesFilePath) {
-    this.initialFilePath = StringUtils.removeStart(entitiesFilePath, '/');
+  public BulkProcessingContext(BulkUpsertRequest request) {
+    this.initialFilePath = StringUtils.removeStart(request.getRecordsFileName(), '/');
     this.errorEntitiesFilePath = initialFilePath + FAILED_ENTITIES_FILE_SUFFIX;
     this.errorsFilePath = initialFilePath + ERRORS_FILE_SUFFIX;
     this.errorEntitiesFileLocalPath = ROOT_FOLDER + errorEntitiesFilePath;
     this.errorsFileLocalPath = ROOT_FOLDER + errorsFilePath;
+    this.publishEvents = request.getPublishEvents();
   }
 
   public String getErrorEntitiesFilePath() {
@@ -42,4 +45,7 @@ public class BulkProcessingContext {
     return errorsFileLocalPath;
   }
 
+  public boolean isPublishEvents() {
+    return publishEvents;
+  }
 }

@@ -99,10 +99,10 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   }
 
   @Override
-  protected Future<Void> upsert(List<InstanceWrapper> instanceWrappers) {
+  protected Future<Void> upsert(List<InstanceWrapper> instanceWrappers, boolean publishEvents) {
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
-    return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING)
+    return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents)
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",

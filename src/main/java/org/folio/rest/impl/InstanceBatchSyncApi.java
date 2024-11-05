@@ -25,7 +25,7 @@ public class InstanceBatchSyncApi implements InstanceStorageBatchSynchronous {
     var instances = ObjectConverterUtils.convertObject(entity, Instances.class);
 
     new InstanceService(vertxContext, okapiHeaders)
-      .createInstances(instances.getInstances(), upsert, true)
+      .createInstances(instances.getInstances(), upsert, true, true)
       .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
       .onComplete(asyncResultHandler);
   }

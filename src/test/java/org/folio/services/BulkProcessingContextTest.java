@@ -2,6 +2,7 @@ package org.folio.services;
 
 import static org.junit.Assert.assertEquals;
 
+import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -13,7 +14,8 @@ public class BulkProcessingContextTest {
 
   @Test
   public void shouldReturnFilesPaths() {
-    BulkProcessingContext context = new BulkProcessingContext(BULK_INSTANCES_FILE_PATH);
+    var request = new BulkUpsertRequest().withRecordsFileName(BULK_INSTANCES_FILE_PATH);
+    var context = new BulkProcessingContext(request);
 
     assertEquals("parent-folder/bulkInstances_failedEntities", context.getErrorEntitiesFilePath());
     assertEquals("parent-folder/bulkInstances_errors", context.getErrorsFilePath());
