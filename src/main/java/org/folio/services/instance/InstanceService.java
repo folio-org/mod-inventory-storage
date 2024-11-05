@@ -20,6 +20,7 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
@@ -28,6 +29,9 @@ import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
+import org.folio.rest.jaxrs.model.InventoryViewInstance;
+import org.folio.rest.jaxrs.model.InventoryViewInstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -39,6 +43,7 @@ import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.util.StringUtil;
+import org.folio.utils.ObjectConverterUtils;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -72,7 +77,8 @@ public class InstanceService {
         if (instance == null) {
           return GetInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain(null);
         }
-        return GetInstanceStorageInstancesByInstanceIdResponse.respond200WithApplicationJson(instance);
+        var instanceWithoutPubPeriod = ObjectConverterUtils.convertObject(instance, InstanceWithoutPubPeriod.class);
+        return GetInstanceStorageInstancesByInstanceIdResponse.respond200WithApplicationJson(instanceWithoutPubPeriod);
       });
   }
 
@@ -86,6 +92,10 @@ public class InstanceService {
     return instanceRepository.getInstanceSet(instance, holdingsRecords, items,
       precedingTitles, succeedingTitles, superInstanceRelationships, subInstanceRelationships,
       offset, limit, query);
+  }
+
+  public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {
+    return instanceRepository.getInventoryViewInstancesWithBoundedItems(offset, limit, query);
   }
 
   public Future<Response> createInstance(Instance entity) {
@@ -210,6 +220,24 @@ public class InstanceService {
         return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
       })
       .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
+  }
+
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
+  public void streamGetInstances(String table, String cql, int offset, int limit, List<String> facets,
+                                 String element, int queryTimeout, RoutingContext routingContext) {
+    instanceRepository.streamGet(
+      table, Instance.class, cql, offset, limit, facets, element,
+      queryTimeout, routingContext, InstanceWithoutPubPeriod.class);
+  }
+
+  @SuppressWarnings("java:S107")
+  // suppress "Methods should not have too many parameters"
+  public void streamGetInventoryViewInstances(String table, String cql, int offset, int limit, List<String> facets,
+                                              String element, int queryTimeout, RoutingContext routingContext) {
+    instanceRepository.streamGet(
+      table, InventoryViewInstance.class, cql, offset, limit, facets, element,
+      queryTimeout, routingContext, InventoryViewInstanceWithoutPubPeriod.class);
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {

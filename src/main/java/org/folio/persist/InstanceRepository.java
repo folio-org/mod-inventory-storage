@@ -5,19 +5,27 @@ import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -25,6 +33,8 @@ import org.folio.rest.persist.cql.CQLWrapper;
 public class InstanceRepository extends AbstractRepository<Instance> {
   public static final String INSTANCE_TABLE = "instance";
   private static final String INSTANCE_SET_VIEW = "instance_set";
+  private static final String INSTANCE_HOLDINGS_ITEM_VIEW = "instance_holdings_item_view";
+  private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
@@ -140,4 +150,107 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       return resultList;
     });
   }
+
+  public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {
+    try {
+      var sql = buildInventoryViewQueryWithBoundedItems(query, limit, offset);
+      return postgresClient.select(sql.toString())
+        .map(this::buildInventoryViewResponse);
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+  }
+
+  private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {
+    var sql = new StringBuilder("SELECT JSONB_BUILD_OBJECT(");
+    sql.append("'instanceId', inventory_view.jsonb->>'instanceId', ");
+    sql.append("'isBoundWith', inventory_view.jsonb->'isBoundWith', ");
+    sql.append("'instance', inventory_view.jsonb->'instance', ");
+    sql.append("'holdingsRecords', inventory_view.jsonb->'holdingsRecords', ");
+    sql.append("'items', ").append(selectItemsWithBoundedRecords()).append(") AS jsonb ");
+    sql.append("FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
+    sql.append(" AS inventory_view ");
+    sql.append(appendCqlQuery(query, limit, offset));
+    return sql;
+  }
+
+  private Response buildInventoryViewResponse(RowSet<Row> rowSet) {
+    try {
+      var jsonResponse = createInventoryViewJsonResponse(rowSet);
+      return Response.ok(jsonResponse.encode(), MediaType.APPLICATION_JSON_TYPE).build();
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private JsonObject createInventoryViewJsonResponse(RowSet<Row> rowSet) throws JsonProcessingException {
+    var instances = new JsonArray();
+    rowSet.forEach(row -> {
+      var rowJsonValue = row.getJsonObject(0);
+      instances.add(filterNullFields(rowJsonValue));
+    });
+    var totalRecords = rowSet.size();
+    var resultInfoString = ObjectMapperTool.getMapper().writeValueAsString(
+      new ResultInfo().withTotalRecords(totalRecords));
+    return new JsonObject()
+      .put("instances", instances)
+      .put("totalRecords", totalRecords)
+      .put("resultInfo", new JsonObject(resultInfoString));
+  }
+
+  private StringBuilder selectItemsWithBoundedRecords() {
+    var sql = new StringBuilder("(SELECT jsonb_agg(combined_items.jsonb) FROM (");
+    sql.append(selectItemsByInstance());
+    sql.append(" UNION ");
+    sql.append(selectBoundedItems());
+    sql.append(") AS combined_items)");
+    return sql;
+  }
+
+  private String appendCqlQuery(String query, int limit, int offset) {
+    try {
+      var field = new CQL2PgJSON(INVENTORY_VIEW_JSONB_FIELD);
+      var cqlWrapper = new CQLWrapper(field, query, limit, offset);
+      return cqlWrapper.toString();
+    } catch (FieldException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private StringBuilder selectItemsByInstance() {
+    var sql = new StringBuilder("SELECT item.jsonb FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(" AS hr JOIN ");
+    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
+    sql.append(" ON item.holdingsRecordId = hr.id AND hr.instanceId = inventory_view.id ");
+    return sql;
+  }
+
+  private StringBuilder selectBoundedItems() {
+    var sql = new StringBuilder("SELECT item.jsonb FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
+    sql.append(" JOIN ");
+    sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
+    sql.append(" AS bwp ON item.id = bwp.itemid ");
+    sql.append("JOIN ");
+    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(" AS hr ON hr.id = bwp.holdingsrecordid AND hr.instanceId = inventory_view.id");
+    return sql;
+  }
+
+  private JsonObject filterNullFields(JsonObject rowJsonValue) {
+    return rowJsonValue
+      .stream()
+      .filter(field -> field.getValue() != null)
+      .collect(
+        Collectors.collectingAndThen(
+          Collectors.toMap(Entry::getKey, Entry::getValue),
+          JsonObject::new
+        )
+      );
+  }
+
 }

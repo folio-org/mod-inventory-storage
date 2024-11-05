@@ -10,6 +10,7 @@ documentation:
 
 types:
   inventoryViewInstance: !include inventory-view-instance.json
+  inventoryViewInstanceWithoutPubPeriod: !include inventory-view-instance-without-pub-period.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -23,9 +24,15 @@ resourceTypes:
 /inventory-view/instances:
   type:
     collection-stream:
-     schemaCollection: inventoryViewInstance
+     schemaCollection: inventoryViewInstanceWithoutPubPeriod
      exampleCollection: !include examples/inventory-view-instances.json
   get:
     description: Get instances by id with their holdings and items
     is: [pageable, searchable: {description: "using CQL",
                       example: "title=\"*uproot*\""}]
+    queryParameters:
+      withBoundedItems:
+        description: Add "items" records that bounded with holdings of the parent instance
+        type: boolean
+        required: false
+        default: false
