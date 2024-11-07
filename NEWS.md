@@ -27,6 +27,10 @@
 ### Features
 * Add floating collection flag in location schema ([MODINVSTOR-1250](https://issues.folio.org/browse/MODINVSTOR-1250))
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
+* Merge custom ECS TLR feature branch into master ([MODINVSTOR-1262](https://folio-org.atlassian.net/browse/MODINVSTOR-1262))
+* Service points synchronization: implement processors ([MODINVSTOR-1246](https://folio-org.atlassian.net/browse/MODINVSTOR-1246))
+* Service points synchronization: create a verticle ([MODINVSTOR-1245](https://folio-org.atlassian.net/browse/MODINVSTOR-1245))
+* Do not return routing service points by default ([MODINVSTOR-1219](https://folio-org.atlassian.net/browse/MODINVSTOR-1219))
 * Add a new boolean field ecsRequestRouting to the service point schema ([MODINVSTOR-1179](https://issues.folio.org/browse/MODINVSTOR-1179))
 * Implement domain event production for library create/update/delete ([MODINVSTOR-1216](https://issues.folio.org/browse/MODINVSTOR-1216))
 * Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
