@@ -48,7 +48,6 @@ import org.junit.runners.Suite;
   LoanTypeTest.class,
   MaterialTypeTest.class,
   ContributorTypesTest.class,
-  ShelfLocationsTest.class,
   LocationUnitTest.class,
   LocationsTest.class,
   ServicePointTest.class,
@@ -92,7 +91,9 @@ import org.junit.runners.Suite;
   StatisticalCodeTest.class,
   UpcIsmnMigrationScriptTest.class,
   InstanceStorageInstancesBulkApiTest.class,
-  PublicationPeriodMigrationTest.class
+  PublicationPeriodMigrationTest.class,
+  SubjectSourceTest.class,
+  SubjectTypeTest.class
 
   // These fail.
   //ReferenceTablesTest.class,

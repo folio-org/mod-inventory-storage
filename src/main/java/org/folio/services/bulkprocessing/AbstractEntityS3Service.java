@@ -77,9 +77,9 @@ public abstract class AbstractEntityS3Service<T, R> {
   }
 
   private Future<BulkUpsertResponse> upsertEntities(List<T> entities, BulkUpsertRequest bulkRequest) {
-    BulkProcessingContext bulkProcessingContext = new BulkProcessingContext(bulkRequest.getRecordsFileName());
+    BulkProcessingContext bulkProcessingContext = new BulkProcessingContext(bulkRequest);
 
-    return upsert(entities)
+    return upsert(entities, bulkProcessingContext.isPublishEvents())
       .map(v -> new BulkUpsertResponse().withErrorsNumber(0))
       .recover(e -> processSequentially(entities, bulkProcessingContext));
   }
@@ -89,7 +89,7 @@ public abstract class AbstractEntityS3Service<T, R> {
     BulkProcessingErrorFileWriter errorsWriter = new BulkProcessingErrorFileWriter(vertx, bulkContext);
 
     return errorsWriter.initialize()
-      .compose(v -> processInBatches(entities, entity -> upsert(List.of(entity))
+      .compose(v -> processInBatches(entities, entity -> upsert(List.of(entity), bulkContext.isPublishEvents())
         .recover(e -> handleUpsertFailure(errorsCounter, errorsWriter, entity, e))))
       .eventually(errorsWriter::close)
       .eventually(() -> uploadErrorsFiles(bulkContext))
@@ -166,10 +166,11 @@ public abstract class AbstractEntityS3Service<T, R> {
    * Performs an upsert operation on specified list of {@code entities}.
    * The implementation of the upsert operation depends on the specifics of the {@code <T>} type of entity.
    *
-   * @param entities - a list of entities to be updated or created
+   * @param entities      - a list of entities to be updated or created
+   * @param publishEvents - a flag that indicates whether domain events should be published
    * @return Future of Void, succeeded if the upsert operation is successful, otherwise failed
    */
-  protected abstract Future<Void> upsert(List<T> entities);
+  protected abstract Future<Void> upsert(List<T> entities, boolean publishEvents);
 
   /**
    * Provides a representation of the given {@code entity} to be written to error file containing entities

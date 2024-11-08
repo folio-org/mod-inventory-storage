@@ -1,15 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "A collection of instance records",
+  "description": "A collection of instance records without the publicationPeriod",
   "type": "object",
   "properties": {
     "instances": {
-      "description": "List of instance records",
+      "description": "List of instance records without the publicationPeriod",
       "id": "instances",
       "type": "array",
       "items": {
-        "type": "object",
-        "$ref": "instance.json"
+        "$ref": "instance-without-pub-period.json",
+        "type" : "object"
       }
     }
   },

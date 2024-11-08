@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -112,8 +113,8 @@ public final class ResourceClient {
   }
 
   public static ResourceClient forLocations(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::shelfLocationsStorageUrl,
-      "locations", "shelflocations");
+    return new ResourceClient(client, InterfaceUrls::locationsStorageUrl,
+      "locations", "locations");
   }
 
   public static ResourceClient forInstanceTypes(HttpClient client) {
@@ -255,10 +256,13 @@ public final class ResourceClient {
   }
 
   public Response attemptToReplace(String id, JsonObject request) {
+    return attemptToReplace(id, request, TENANT_ID, new HashMap<>());
+  }
+
+  public Response attemptToReplace(String id, JsonObject request, String tenantId, Map<String, String> headers) {
     CompletableFuture<Response> putCompleted = new CompletableFuture<>();
 
-    client.put(urlMakerWithId(id), request,
-      TENANT_ID, ResponseHandler.any(putCompleted));
+    client.put(urlMakerWithId(id), request, headers, tenantId, ResponseHandler.any(putCompleted));
 
     return TestBase.get(putCompleted);
   }

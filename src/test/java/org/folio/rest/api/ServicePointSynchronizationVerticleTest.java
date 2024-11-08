@@ -297,7 +297,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
   }
 
-  private static void mockConsortiumTenants() {
+  public static void mockConsortiumTenants() {
     JsonObject tenantsCollection = new JsonObject()
       .put("tenants", new JsonArray()
         .add(new JsonObject()

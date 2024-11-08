@@ -161,7 +161,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     WireMock.reset();
     mockUserTenantsForNonConsortiumMember();
-    mockUserTenantsForConsortiumMember();
+    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
     mockUserTenantsForTenantWithoutPermissions();
   }
 
@@ -2534,8 +2534,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     // Make sure a create event published vs update event
     holdingsMessageChecks.createdMessagePublished(holdingsFromGet);
-    holdingsMessageChecks.noHoldingsUpdatedMessagePublished(
-      instanceId.toString(), holdingsId.toString());
+    holdingsMessageChecks.noHoldingsUpdatedMessagePublished(holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }
@@ -3233,8 +3232,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         .put("id", sourceId)
         .put("name", "holding source name for " + sourceId));
       holdingsSourceClient.create(new JsonObject()
-        .put("id", sourceId)
-        .put("name", "holding source name for " + sourceId),
+          .put("id", sourceId)
+          .put("name", "holding source name for " + sourceId),
         CONSORTIUM_MEMBER_TENANT);
     }
   }
@@ -3414,17 +3413,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(obj -> (String) obj)
       .toList();
-  }
-
-  private void mockUserTenantsForConsortiumMember() {
-    JsonObject userTenantsCollection = new JsonObject()
-      .put("userTenants", new JsonArray()
-        .add(new JsonObject()
-          .put("centralTenantId", "CENTRAL_TENANT_ID")
-          .put("consortiumId", "mobius")));
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(X_OKAPI_TENANT, equalToIgnoreCase(CONSORTIUM_MEMBER_TENANT))
-      .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
   }
 
   private void mockUserTenantsForTenantWithoutPermissions() {
