@@ -2,7 +2,6 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
@@ -67,8 +66,10 @@ abstract class AbstractDomainEventPublisher<D, E> {
       log.info("Records created {}, records updated {}", batchOperation.getRecordsToBeCreated().size(),
         batchOperation.getExistingRecords().size());
 
-      publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
-        notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      if (batchOperation.isPublishEvents()) {
+        publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
+          notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      }
     };
   }
 
@@ -131,20 +132,20 @@ abstract class AbstractDomainEventPublisher<D, E> {
       var oldRecordPair = idToOldRecordPairMap.get(getId(newRecordPair.getValue()));
       return triple(newRecordPair.getKey(), convertDomainToEvent(oldRecordPair.getKey(), oldRecordPair.getValue()),
         convertDomainToEvent(newRecordPair.getKey(), newRecordPair.getValue()));
-    }).collect(toList());
+    }).toList();
   }
 
   private Future<Void> publishRecordsCreated(Collection<D> records) {
     return convertDomainsToEvents(records).compose(domainEventService::publishRecordsCreated);
   }
 
-  private Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains) {
+  protected Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains) {
     return getRecordIds(domains).map(pairs -> pairs.stream()
       .map(pair -> pair(pair.getKey(), convertDomainToEvent(pair.getKey(), pair.getValue())))
-      .collect(toList()));
+      .toList());
   }
 
-  private Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
+  protected Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
                                                                     Collection<D> oldRecords) {
 
     return getRecordIds(oldRecords).compose(oldRecordsInstanceIds -> getRecordIds(newRecords).map(
