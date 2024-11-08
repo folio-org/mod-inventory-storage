@@ -1,25 +1,8 @@
-## v28.1.0 YYYY-mm-DD
-### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
-
-### New APIs versions
-* Provides `API_NAME vX.Y`
-* Requires `API_NAME vX.Y`
-
+## v28.0.1 2024-11-08
 ### Features
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
 * Change Kafka event publishing keys for holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
-
-### Bug fixes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
-
-### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
-
-### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
-* Add `LIB_NAME VERSION`
-* Remove `LIB_NAME`
+* Append bounded items to invetory-view instances response ([MODINVSTOR-1266](https://folio-org.atlassian.net/browse/MODINVSTOR-1266))
 
 ---
 
