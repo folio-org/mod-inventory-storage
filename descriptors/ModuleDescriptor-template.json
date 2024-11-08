@@ -1120,7 +1120,7 @@
     },
     {
       "id": "service-points",
-      "version": "3.5",
+      "version": "3.4",
       "handlers": [
         {
           "methods": ["GET"],
