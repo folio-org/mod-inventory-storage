@@ -159,6 +159,26 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
         context.assertEquals(HTTP_NOT_FOUND, statusCode)));
   }
 
+  @Test
+  public void shouldHandleUpdateEventForNonExistingServicePoint(TestContext context) {
+    Servicepoint nonExistingServicePoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    publishServicePointUpdateEvent(nonExistingServicePoint, nonExistingServicePoint);
+
+    getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
+      .onComplete(context.asyncAssertSuccess(statusCode ->
+        context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+  }
+
+  @Test
+  public void shouldHandleDeleteEventForNonExistingServicePoint(TestContext context) {
+    Servicepoint nonExistingServicePoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    publishServicePointDeleteEvent(nonExistingServicePoint);
+
+    getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
+      .onComplete(context.asyncAssertSuccess(statusCode ->
+        context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+  }
+
   @SneakyThrows
   public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
     return future.toCompletionStage()
