@@ -72,12 +72,15 @@ public class ServicePointSynchronizationEventProcessorTest {
   }
 
   @Test
-  void shouldReturnTrueForCreateIfNewServicePointIsValid() {
+  void shouldReturnTrueForCreateAndDeleteIfNewServicePointIsValid() {
     var servicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
       createEvent(servicepoint, TENANT));
+    var deleteEventProcessor = new ServicePointSynchronizationDeleteEventProcessor(
+      deleteEvent(servicepoint, TENANT));
 
     assertTrue(createEventProcessor.validateEventEntity());
+    assertTrue(deleteEventProcessor.validateEventEntity());
   }
 
   @Test
