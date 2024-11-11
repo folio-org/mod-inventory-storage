@@ -53,7 +53,7 @@ public class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldReturnFalseIfServicePointsAreIdentical() {
-    Servicepoint servicepoint = new Servicepoint();
+    var servicepoint = new Servicepoint();
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(servicepoint, servicepoint, TENANT));
 
@@ -61,14 +61,23 @@ public class ServicePointSynchronizationEventProcessorTest {
   }
 
   @Test
-  void shouldReturnTrueIfNewServicePointIsValid() {
-    Servicepoint oldServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
-    Servicepoint newServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
+  void shouldReturnTrueForUpdateIfNewServicePointIsValid() {
+    var oldServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    var newServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(oldServicepoint, newServicepoint, TENANT));
 
     assertTrue(updateEventProcessor.validateEventEntity());
+  }
+
+  @Test
+  void shouldReturnTrueForCreateIfNewServicePointIsValid() {
+    var servicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
+      createEvent(servicepoint, TENANT));
+
+    assertTrue(createEventProcessor.validateEventEntity());
   }
 
   @Test
@@ -79,8 +88,11 @@ public class ServicePointSynchronizationEventProcessorTest {
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(oldServicepoint, newServicepoint, TENANT));
+    var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
+      createEvent(newServicepoint, TENANT));
 
     assertFalse(updateEventProcessor.validateEventEntity());
+    assertFalse(createEventProcessor.validateEventEntity());
   }
 
   private void processEventToThrowException(ServicePointSynchronizationEventProcessor processor,
