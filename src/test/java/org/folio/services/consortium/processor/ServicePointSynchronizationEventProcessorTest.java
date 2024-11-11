@@ -9,10 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 public class ServicePointSynchronizationEventProcessorTest {
@@ -32,12 +36,21 @@ public class ServicePointSynchronizationEventProcessorTest {
     processEventToThrowException(createEventProcessor, testContext);
   }
 
-  @Test
-  void shouldReturnFalseIfBothServicePointsAreNull() {
+  @ParameterizedTest
+  @MethodSource("servicePointProvider")
+  void shouldReturnFalseIfServicePointsAreNull(Servicepoint oldServicepoint, Servicepoint newServicepoint) {
+    String tenant = "tenant";
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(null, null, TENANT));
+      updateEvent(oldServicepoint, newServicepoint, tenant));
 
     assertFalse(updateEventProcessor.validateEventEntity());
+  }
+
+  static Stream<Arguments> servicePointProvider() {
+    return Stream.of(
+      Arguments.of(null, null),
+      Arguments.of(null, new Servicepoint()),
+      Arguments.of(new Servicepoint(), null));
   }
 
   @Test
@@ -72,7 +85,7 @@ public class ServicePointSynchronizationEventProcessorTest {
   }
 
   @Test
-  void shouldReturnTrueForCreateAndDeleteIfNewServicePointIsValid() {
+  void shouldReturnTrueForCreateAndDeleteIfServicePointIsValid() {
     var servicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
       createEvent(servicepoint, TENANT));
