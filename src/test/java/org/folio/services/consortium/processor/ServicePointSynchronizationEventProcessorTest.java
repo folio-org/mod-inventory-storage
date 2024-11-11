@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
-public class ServicePointSynchronizationEventProcessorTest {
+class ServicePointSynchronizationEventProcessorTest {
   private static final String TENANT = "tenant";
 
   @Test
