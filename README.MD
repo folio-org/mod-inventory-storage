@@ -186,6 +186,7 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_ACCESS_KEY_ID`
 * `S3_SECRET_ACCESS_KEY`
 * `S3_IS_AWS` (default value - `false`)
+* `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
 # Local Deployment using Docker
 

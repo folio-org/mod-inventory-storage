@@ -21,4 +21,8 @@ public class ServicePointDomainEventPublisher extends CommonDomainEventPublisher
   public Future<Void> publishDeleted(Servicepoint servicePoint) {
     return publishRecordRemoved(servicePoint.getId(), servicePoint);
   }
+
+  public Future<Void> publishCreated(Servicepoint servicePoint) {
+    return publishRecordCreated(servicePoint.getId(), servicePoint);
+  }
 }
