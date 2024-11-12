@@ -1,14 +1,19 @@
 package org.folio.rest.api;
 
+import static java.util.Collections.emptyList;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUsersUrl;
 import static org.folio.utility.LocationUtility.createServicePoint;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.RestUtility.send;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
@@ -23,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
@@ -33,7 +40,9 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.messages.ServicePointEventMessageChecks;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class ServicePointTest extends TestBase {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private final ServicePointEventMessageChecks servicePointEventMessageChecks =
@@ -74,6 +83,7 @@ public class ServicePointTest extends TestBase {
     assertThat(response.getJson().getString("id"), notNullValue());
     assertThat(response.getJson().getString("code"), is("cd1"));
     assertThat(response.getJson().getString("name"), is("Circ Desk 1"));
+    assertThat(response.getJson().getBoolean("ecsRequestRouting"), is(false));
   }
 
   @Test
@@ -711,6 +721,44 @@ public class ServicePointTest extends TestBase {
   }
 
   @Test
+  @Parameters({
+    "false, ", // no query parameters
+    "false, ?query=cql.allRecords=1%20sortby%20name&limit=1000",
+    "false, ?includeRoutingServicePoints=false",
+    "true,  ?includeRoutingServicePoints=true",
+    "false, ?includeRoutingServicePoints=false&query=cql.allRecords=1%20sortby%20name&limit=1000",
+    "true,  ?includeRoutingServicePoints=true&query=cql.allRecords=1%20sortby%20name&limit=1000"
+  })
+  public void ecsRequestRoutingServicePointsAreReturnedOnlyWhenExplicitlyRequested(
+    boolean shouldReturnRoutingServicePoints, String queryParameters) throws Exception {
+
+    UUID regularServicePointId1 = UUID.randomUUID();
+    UUID regularServicePointId2 = UUID.randomUUID();
+    UUID routingServicePointId = UUID.randomUUID();
+
+    createServicePoint(regularServicePointId1, "Circ Desk 1", "cd1", "Circulation Desk 1",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), null, TENANT_ID);
+    createServicePoint(regularServicePointId2, "Circ Desk 2", "cd2", "Circulation Desk 2",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), false, TENANT_ID);
+    createServicePoint(routingServicePointId, "Circ Desk 3", "cd3", "Circulation Desk 3",
+      null, 20, true, createHoldShelfExpiryPeriod(), emptyList(), true, TENANT_ID);
+
+    List<String> servicePointIds = get(queryParameters)
+      .stream()
+      .map(json -> json.getString("id"))
+      .toList();
+
+    assertThat(servicePointIds,
+      hasItems(regularServicePointId1.toString(), regularServicePointId2.toString()));
+    if (shouldReturnRoutingServicePoints) {
+      assertThat(servicePointIds, hasItem(routingServicePointId.toString()));
+      assertThat(servicePointIds, hasSize(3));
+    } else {
+      assertThat(servicePointIds, hasSize(2));
+    }
+  }
+
+  @Test
   public void canUpdateServicePointWithStaffSlips() throws InterruptedException,
     ExecutionException, TimeoutException, MalformedURLException {
 
@@ -765,9 +813,15 @@ public class ServicePointTest extends TestBase {
   private List<JsonObject> getMany(String cql, Object... args) throws InterruptedException,
     ExecutionException, TimeoutException {
 
+    return get("?query=" + String.format(cql, args));
+  }
+
+  private List<JsonObject> get(String queryParams) throws InterruptedException,
+    ExecutionException, TimeoutException {
+
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
-    send(servicePointsUrl("?query=" + String.format(cql, args)),
+    send(servicePointsUrl(queryParams),
       HttpMethod.GET, null, SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.json(getCompleted));
 
@@ -780,8 +834,7 @@ public class ServicePointTest extends TestBase {
   private Response getById(UUID id)
     throws InterruptedException,
     ExecutionException,
-    TimeoutException,
-    MalformedURLException {
+    TimeoutException {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 

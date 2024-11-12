@@ -35,6 +35,7 @@
 ### Features
 * Add floating collection flag in location schema ([MODINVSTOR-1250](https://issues.folio.org/browse/MODINVSTOR-1250))
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
+* Add a new boolean field ecsRequestRouting to the service point schema ([MODINVSTOR-1179](https://issues.folio.org/browse/MODINVSTOR-1179))
 * Implement domain event production for library create/update/delete ([MODINVSTOR-1216](https://issues.folio.org/browse/MODINVSTOR-1216))
 * Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
 * Implement domain event production for institution create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))

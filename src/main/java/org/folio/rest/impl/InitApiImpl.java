@@ -6,11 +6,13 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.ThreadingModel;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.consortium.ServicePointSynchronizationVerticle;
 import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
 import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
@@ -25,6 +27,7 @@ public class InitApiImpl implements InitAPI {
     initAsyncMigrationVerticle(vertx)
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .compose(v -> initSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
+      .compose(v -> initServicePointSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .map(true)
       .onComplete(handler);
   }
@@ -73,6 +76,22 @@ public class InitApiImpl implements InitAPI {
                                + "SynchronizationVerticle verticle was successfully started"))
       .onFailure(e -> log.error("initSynchronizationVerticle:: "
                                 + "SynchronizationVerticle verticle was not successfully started", e))
+      .mapEmpty();
+  }
+
+  private Future<Object> initServicePointSynchronizationVerticle(Vertx vertx,
+    ConsortiumDataCache consortiumDataCache) {
+
+    DeploymentOptions options = new DeploymentOptions()
+      .setThreadingModel(ThreadingModel.WORKER)
+      .setInstances(1);
+
+    return vertx.deployVerticle(() -> new ServicePointSynchronizationVerticle(consortiumDataCache),
+        options)
+      .onSuccess(v -> log.info("initServicePointSynchronizationVerticle:: "
+        + "ServicePointSynchronizationVerticle verticle was successfully started"))
+      .onFailure(e -> log.error("initServicePointSynchronizationVerticle:: "
+        + "ServicePointSynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 

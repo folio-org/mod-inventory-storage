@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.Boolean.TRUE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
@@ -31,15 +32,18 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     "Hold shelf expiry period must be specified when service point can be used for pickup.";
   public static final String SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC =
     "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
+  private static final String ECS_ROUTING_QUERY_FILTER = "cql.allRecords=1 NOT ecsRequestRouting=true";
   private static final Logger logger = LogManager.getLogger();
 
   @Validate
   @Override
-  public void getServicePoints(String query, String totalRecords, int offset, int limit,
+  public void getServicePoints(boolean includeRoutingServicePoints, String query,
+                               String totalRecords, int offset, int limit,
                                Map<String, String> okapiHeaders,
                                Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
 
+    query = updateGetServicePointsQuery(query, includeRoutingServicePoints);
     PgUtil.get(SERVICE_POINT_TABLE, Servicepoint.class, Servicepoints.class,
       query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
   }
@@ -67,11 +71,11 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
           id = UUID.randomUUID().toString();
           entity.setId(id);
         }
-        String tenantId = getTenant(okapiHeaders);
-        PostgresClient pgClient = getPgClient(vertxContext, tenantId);
-        pgClient.save(SERVICE_POINT_TABLE, id, entity, saveReply -> {
-          if (saveReply.failed()) {
-            String message = logAndSaveError(saveReply.cause());
+        new ServicePointService(vertxContext, okapiHeaders)
+          .createServicePoint(id, entity)
+          .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+          .onFailure(throwable -> {
+            String message = logAndSaveError(throwable);
             if (isDuplicate(message)) {
               asyncResultHandler.handle(Future.succeededFuture(
                 PostServicePointsResponse.respond422WithApplicationJson(
@@ -82,15 +86,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                 PostServicePointsResponse.respond500WithTextPlain(
                   getErrorResponse(message))));
             }
-          } else {
-            String ret = saveReply.result();
-            entity.setId(ret);
-            asyncResultHandler.handle(Future.succeededFuture(
-              PostServicePointsResponse
-                .respond201WithApplicationJson(entity,
-                  PostServicePointsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-          }
-        });
+          });
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -244,7 +240,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
       "duplicate key value violates unique constraint");
   }
 
-  private String validateServicePoint(Servicepoint svcpt) {
+  public static String validateServicePoint(Servicepoint svcpt) {
 
     HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
     boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
@@ -259,6 +255,21 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
   private Future<Boolean> checkServicePointInUse() {
     return Future.succeededFuture(false);
+  }
+
+  private static String updateGetServicePointsQuery(String query, boolean includeRoutingServicePoints) {
+    if (includeRoutingServicePoints) {
+      return query;
+    }
+
+    logger.debug("updateGetServicePointsQuery:: original query: {}", query);
+    String newQuery = ECS_ROUTING_QUERY_FILTER;
+    if (isNotBlank(query)) {
+      newQuery += " and " + query;
+    }
+    logger.debug("updateGetServicePointsQuery:: updated query: {}", newQuery);
+
+    return newQuery;
   }
 
 }
