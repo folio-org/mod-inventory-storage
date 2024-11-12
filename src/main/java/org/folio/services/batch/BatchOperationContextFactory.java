@@ -12,11 +12,13 @@ import org.folio.persist.AbstractRepository;
 public final class BatchOperationContextFactory {
   private BatchOperationContextFactory() { }
 
-  public static <T> Future<BatchOperationContext<T>> buildBatchOperationContext(
-    boolean upsert, List<T> all, AbstractRepository<T> repository, Function<T, String> idGetter) {
+  public static <T> Future<BatchOperationContext<T>> buildBatchOperationContext(boolean upsert, List<T> all,
+                                                                                AbstractRepository<T> repository,
+                                                                                Function<T, String> idGetter,
+                                                                                boolean publishEvents) {
 
     if (!upsert) {
-      return succeededFuture(new BatchOperationContext<>(all, emptyList()));
+      return succeededFuture(new BatchOperationContext<>(all, emptyList(), publishEvents));
     }
 
     return repository.getById(all, idGetter).map(found -> {
@@ -24,7 +26,7 @@ public final class BatchOperationContextFactory {
         .filter(entity -> !found.containsKey(idGetter.apply(entity)))
         .collect(toList());
 
-      return new BatchOperationContext<>(toBeCreated, found.values());
+      return new BatchOperationContext<>(toBeCreated, found.values(), publishEvents);
     });
   }
 }
