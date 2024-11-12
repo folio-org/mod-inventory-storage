@@ -1125,23 +1125,28 @@
         {
           "methods": ["GET"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.collection.get"]
+          "permissionsRequired": ["inventory-storage.service-points.collection.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.get"]
+          "permissionsRequired": ["inventory-storage.service-points.item.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.item.post"]
+          "permissionsRequired": ["inventory-storage.service-points.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.put"]
+          "permissionsRequired": ["inventory-storage.service-points.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.delete"]
+          "permissionsRequired": ["inventory-storage.service-points.item.delete"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }
       ]
     },

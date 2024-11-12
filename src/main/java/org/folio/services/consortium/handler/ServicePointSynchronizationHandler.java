@@ -40,7 +40,7 @@ public abstract class ServicePointSynchronizationHandler
 
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaConsumerRecord) {
-    log.info("handle:: Processing event {}", kafkaConsumerRecord.topic());
+    log.info("handle:: Processing event {}", kafkaConsumerRecord::topic);
     var headers = new CaseInsensitiveMap<>(KafkaHeaderUtils.kafkaHeadersToMap(
       kafkaConsumerRecord.headers()));
     return consortiumDataCache.getConsortiumData(headers)
