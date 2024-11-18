@@ -88,10 +88,13 @@ public class ConsortiumDataCache {
     return getResponse(request)
       .compose(responseBody -> {
         if (responseBody.isEmpty()) {
+          LOG.info("loadConsortiumData:: loaded empty cache, tenantId: {}, headers: {}", tenantId, headers);
           return succeededFuture(Optional.<ConsortiumData>empty());
         }
         JsonArray userTenants = responseBody.get().getJsonArray(USER_TENANTS_FIELD);
+        LOG.info("loadConsortiumData:: loaded ConsortiumData cache, tenantId: {}, headers: {}, userTenants: {}", tenantId, headers, userTenants.encodePrettily());
         if (userTenants.isEmpty()) {
+          LOG.info("loadConsortiumData:: userTenants.isEmpty() tenantId: {}, headers: {}", tenantId, headers);
           return succeededFuture(Optional.<ConsortiumData>empty());
         }
 
@@ -117,7 +120,10 @@ public class ConsortiumDataCache {
         .map(ConsortiumTenant::id)
         .toList()).orElse(Collections.emptyList())
       )
-      .recover(throwable -> succeededFuture(Collections.emptyList()));
+      .recover(throwable -> {
+        LOG.warn("loadConsortiumTenants:: ERROR", throwable);
+        return succeededFuture(Collections.emptyList());
+      });
   }
 
   private HttpRequest<Buffer> getHttpRequest(Map<String, String> headers, String path) {
@@ -138,6 +144,7 @@ public class ConsortiumDataCache {
         return failedFuture(msg);
       }
       var responseBody = response.bodyAsJsonObject();
+      LOG.info("getResponse:: Result for method='{}' uri='{}', responseBody: {}", request.method().name(), request.uri(), response.bodyAsString());
       return succeededFuture(Optional.of(responseBody));
     });
   }

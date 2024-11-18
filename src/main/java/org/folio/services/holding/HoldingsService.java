@@ -264,9 +264,11 @@ public class HoldingsService {
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
+    log.info("createShadowInstanceIfNeeded:: start process createShadowInstanceIfNeeded, instanceId: {}", instanceId);
     return instanceRepository.getById(instanceId)
       .compose(instance -> {
         if (instance != null) {
+          log.info("createShadowInstanceIfNeeded:: found instance: {}", instanceId);
           return Future.succeededFuture();
         }
         log.info("createShadowInstanceIfNeeded:: instance with id: {} is not found in local tenant."
