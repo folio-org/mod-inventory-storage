@@ -1,3 +1,7 @@
+## v28.0.3 YYYY-mm-DD
+### Bug fixes
+* Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
+
 ## v28.0.2 2024-12-01
 ### Features
 * Add `ecsRequestRouting` field to service point schema ([MODINVSTOR-1179](https://folio-org.atlassian.net/browse/MODINVSTOR-1179))
