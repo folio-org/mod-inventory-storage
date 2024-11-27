@@ -40,20 +40,20 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
 
-  public Future<Boolean> doesInstanceExistBySubjectSourceId(String sourceId) {
+  public Future<Boolean> doesInstanceExistBySubjectField(String field, String sourceId) {
     var sql = new StringBuilder("SELECT exists ( ");
     sql.append("SELECT 1 FROM ");
     sql.append(INSTANCE_TABLE);
-    sql.append(String.format(" WHERE jsonb @> '{\"subjects\": [{\"sourceId\": \"%s\"}] }' ", sourceId));
+    sql.append(String.format(" WHERE jsonb @> '{\"subjects\": [{\"%s\": \"%s\"}] }' ", field, sourceId));
     sql.append(") as record_exists");
 
     return postgresClient.execute(sql.toString())
       .map(rowSet -> {
         if (rowSet != null && rowSet.iterator().hasNext()) {
           Row row = rowSet.iterator().next();
-          return row.getBoolean("record_exists"); // Extracts the boolean from the result
+          return row.getBoolean("record_exists");
         }
-        return false; // Default to false if no results
+        return Boolean.FALSE;
       });
   }
 

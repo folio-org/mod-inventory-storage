@@ -109,7 +109,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String DATES_KEY = "dates";
-  private static final String SUBJECTS_KEY = "subjects";
+  public static final String SUBJECTS_KEY = "subjects";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();

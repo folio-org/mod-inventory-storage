@@ -1,5 +1,9 @@
 package org.folio.rest.api;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.rest.api.InstanceStorageTest.SUBJECTS_KEY;
+import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE;
 import static org.folio.rest.support.http.InterfaceUrls.subjectSourcesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -17,13 +21,12 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
-import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -83,9 +86,9 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     getClient().post(subjectSourcesUrl(""), subjectSource.put("name", "Test2"),
-      TENANT_ID, ResponseHandler.json(postCompleted));
+      TENANT_ID, json(postCompleted));
 
-    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response response = postCompleted.get(TIMEOUT, SECONDS);
     assertThat(response.getStatusCode(), is(422));
 
     JsonArray errors = response.getJson().getJsonArray("errors");
@@ -238,6 +241,34 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
     assertEquals(204, response.getStatusCode());
   }
 
+  @Test
+  public void cannotDeleteSubjectSourceLinkedToInstance() {
+    var instanceId = UUID.randomUUID();
+
+    JsonObject subjectSource = new JsonObject()
+      .put("name", "Library Test " + UUID_INSTANCE_SUBJECT_SOURCE_ID)
+      .put("source", "local");
+
+    var subjectSourceId = createSubjectSource(subjectSource).getJson().getString("id");
+
+    var instance = instance(instanceId);
+    var subject = new Subject()
+      .withSourceId(subjectSourceId)
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instance.put(SUBJECTS_KEY, subjects);
+
+    createInstanceRecord(instance);
+
+    Response response = deleteSubjectSource(UUID.fromString(subjectSourceId));
+
+    assertEquals(422, response.getStatusCode());
+    JsonArray errors = response.getJson().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+    assertTrue(errors.getJsonObject(0).getString("message").contains(SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE));
+  }
+
   private Response createSubjectSource(JsonObject object) {
     return createSubjectSource(object, TENANT_ID);
   }
@@ -253,4 +284,9 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   private Response updateSubjectSource(String id, JsonObject object, String tenantId) {
     return subjectSourceClient.attemptToReplace(id, object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
+
+  private Response deleteSubjectSource(UUID id) {
+    return subjectSourceClient.attemptToDelete(id);
+  }
+
 }

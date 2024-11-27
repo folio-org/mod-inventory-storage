@@ -3,10 +3,11 @@ package org.folio.rest.support;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.SubjectSources.PostSubjectSourcesResponse.respond422WithApplicationJson;
 import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_FOLIO;
-import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_UPDATED_AT_NON_ECS;
 import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE;
+import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_UPDATED_AT_NON_ECS;
 import static org.folio.rest.support.ResponseUtil.SOURCE_CONSORTIUM_CANNOT_BE_APPLIED;
 import static org.folio.rest.support.ResponseUtil.SOURCE_FOLIO_CANNOT_BE_UPDATED;
+import static org.folio.rest.support.ResponseUtil.TYPE_CANNOT_BE_DELETED_USED_BY_INSTANCE;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.Future;
@@ -65,15 +66,25 @@ public final class SubjectUtil {
     return Future.succeededFuture(Optional.empty());
   }
 
-  public static Future<Optional<Errors>> validateSubjectSourceDelete(String sourceId,
+  private static Future<Optional<Errors>> validateSubjectFieldDelete(String field, String value, String errorMsg,
                                                                      InstanceRepository instanceRepository) {
-    return instanceRepository.doesInstanceExistBySubjectSourceId(sourceId)
+    return instanceRepository.doesInstanceExistBySubjectField(field, value)
       .compose(exists -> {
         if (exists) {
-           return Future.succeededFuture(getValidationErrorMessage(sourceId, SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE));
+          return Future.succeededFuture(getValidationErrorMessage(value, errorMsg));
         }
         return Future.succeededFuture(Optional.empty());
       });
+  }
+
+  public static Future<Optional<Errors>> validateSubjectSourceDelete(String sourceId,
+                                                                     InstanceRepository instanceRepository) {
+    return validateSubjectFieldDelete("sourceId", sourceId, SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE, instanceRepository);
+  }
+
+  public static Future<Optional<Errors>> validateSubjectTypeDelete(String typeId,
+                                                                   InstanceRepository instanceRepository) {
+    return validateSubjectFieldDelete("typeId", typeId, TYPE_CANNOT_BE_DELETED_USED_BY_INSTANCE, instanceRepository);
   }
 
   public static Future<Response> sourceValidationError(Errors errors) {
