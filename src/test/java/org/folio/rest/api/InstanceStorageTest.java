@@ -105,11 +105,11 @@ import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
+  public static final String SUBJECTS_KEY = "subjects";
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String DATES_KEY = "dates";
-  public static final String SUBJECTS_KEY = "subjects";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();
