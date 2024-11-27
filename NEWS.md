@@ -14,6 +14,7 @@
 * Service points synchronization: implement processors ([MODINVSTOR-1246](https://folio-org.atlassian.net/browse/MODINVSTOR-1246))
 * Service points synchronization: create a verticle ([MODINVSTOR-1245](https://folio-org.atlassian.net/browse/MODINVSTOR-1245))
 * Do not return routing service points by default ([MODINVSTOR-1219](https://folio-org.atlassian.net/browse/MODINVSTOR-1219))
+* Implement Kafka Event Publishing for Call-Number Type CRUD Operations ([MODINVSTOR-1275](https://folio-org.atlassian.net/browse/MODINVSTOR-1275))
 
 ### Bug fixes
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
