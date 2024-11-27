@@ -7,6 +7,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
+* User can delete local Subject types/sources when it linked to Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
 * Change Kafka event publishing keys for holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
 * Merge custom ECS TLR feature branch into master ([MODINVSTOR-1262](https://folio-org.atlassian.net/browse/MODINVSTOR-1262))

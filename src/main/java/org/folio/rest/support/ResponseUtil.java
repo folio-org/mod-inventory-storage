@@ -16,6 +16,8 @@ public final class ResponseUtil {
     "Illegal operation: Source field cannot be updated at non-consortium tenant";
   public static final String SOURCE_CONSORTIUM_CANNOT_BE_APPLIED =
     "Illegal operation: Source consortium cannot be applied at non-consortium tenant";
+  public static final String SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE =
+    "Illegal operation: Source cannot be deleted, already exists on at least one instance record";
 
   private ResponseUtil() { }
 

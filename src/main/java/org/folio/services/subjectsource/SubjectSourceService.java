@@ -9,12 +9,14 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.SubjectUtil.sourceValidationError;
 import static org.folio.rest.support.SubjectUtil.validateSubjectSourceCreate;
+import static org.folio.rest.support.SubjectUtil.validateSubjectSourceDelete;
 import static org.folio.rest.support.SubjectUtil.validateSubjectSourceUpdate;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.folio.persist.InstanceRepository;
 import org.folio.persist.SubjectSourceRepository;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.SubjectSource;
@@ -36,10 +38,12 @@ public class SubjectSourceService {
   private final SubjectSourceRepository repository;
   private final SubjectSourceDomainEventPublisher domainEventService;
   private final ConsortiumService consortiumService;
+  private final InstanceRepository instanceRepository;
 
   public SubjectSourceService(Context context, Map<String, String> okapiHeaders) {
     this.context = context;
     this.okapiHeaders = okapiHeaders;
+    this.instanceRepository = new InstanceRepository(context, okapiHeaders);
     this.repository = new SubjectSourceRepository(context, okapiHeaders);
     this.domainEventService = new SubjectSourceDomainEventPublisher(context, okapiHeaders);
     this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
@@ -81,10 +85,17 @@ public class SubjectSourceService {
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldSubjectSource -> deleteById(SUBJECT_SOURCE, id, okapiHeaders, context,
-        DeleteSubjectSourcesBySubjectSourceIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldSubjectSource))
-      );
+      .compose(subjectSource -> {
+        if (subjectSource != null) {
+          return validateSubjectSourceDelete(subjectSource.getId(), instanceRepository)
+            .compose(errors -> errors.isPresent()
+              ? sourceValidationError(errors.get()) :
+              deleteById(SUBJECT_SOURCE, id, okapiHeaders, context, DeleteSubjectSourcesBySubjectSourceIdResponse.class)
+                .onSuccess(domainEventService.publishRemoved(subjectSource))
+          );
+        }
+        return Future.failedFuture(new NotFoundException("SubjectSource was not found"));
+      });
   }
 
   private Future<Response> createSubjectSource(SubjectSource subjectSource) {
