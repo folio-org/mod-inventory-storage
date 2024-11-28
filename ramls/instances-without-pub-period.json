@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance records without publicationPeriod",
+  "type": "object",
+  "properties": {
+    "instances": {
+      "description": "List of instance records without publication period",
+      "id": "instances",
+      "type": "array",
+      "items": {
+        "$ref": "instance-without-pub-period.json",
+        "type" : "object"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    },
+    "resultInfo": {
+      "$ref": "raml-util/schemas/resultInfo.schema",
+      "readonly": true
+    }
+
+  },
+  "required": [
+    "instances",
+    "totalRecords"
+  ]
+}

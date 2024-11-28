@@ -3,7 +3,7 @@
 
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>28.0.0-SNAPSHOT</version>
+  <version>28.1.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -16,26 +16,28 @@
     <vertx.version>4.5.10</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
-    <folio-kafka-wrapper.version>3.2.0-SNAPSHOT</folio-kafka-wrapper.version>
+    <folio-kafka-wrapper.version>3.3.0-SNAPSHOT</folio-kafka-wrapper.version>
     <caffeine.version>3.1.8</caffeine.version>
     <lombok.version>1.18.34</lombok.version>
     <snappy-java.version>1.1.10.7</snappy-java.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.1</log4j.version>
-    <folio-s3-client.version>2.2.0-SNAPSHOT</folio-s3-client.version>
+    <folio-s3-client.version>2.3.0-SNAPSHOT</folio-s3-client.version>
+    <google-code-gson.version>2.11.0</google-code-gson.version>
 
-    <okapi-testing.version>6.0.3</okapi-testing.version>
-    <junit.version>5.11.2</junit.version>
-    <testcontainers.version>1.20.2</testcontainers.version>
+    <okapi-testing.version>6.1.0</okapi-testing.version>
+    <junit.version>5.11.3</junit.version>
+    <testcontainers.version>1.20.3</testcontainers.version>
     <joda-time.version>2.13.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
-    <wiremock.version>3.9.1</wiremock.version>
+    <wiremock.version>3.9.2</wiremock.version>
     <rest-assured.version>5.5.0</rest-assured.version>
     <awaitility.version>4.2.2</awaitility.version>
     <assertj.version>3.26.3</assertj.version>
+    <system-stubs-junit4.version>2.1.7</system-stubs-junit4.version>
 
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
@@ -46,8 +48,8 @@
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
-    <maven-checkstyle-plugin.version>3.5.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.18.2</checkstyle.version>
+    <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+    <checkstyle.version>10.19.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.1</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.17.1</versions-maven-plugin.version>
     <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
@@ -137,6 +139,11 @@
       <groupId>org.folio</groupId>
       <artifactId>folio-s3-client</artifactId>
       <version>${folio-s3-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>${google-code-gson.version}</version>
     </dependency>
 
     <!-- Test Dependencies  -->
@@ -265,6 +272,12 @@
     <dependency>  <!-- for testcontainers -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>  <!-- for mocking env variable -->
+      <groupId>uk.org.webcompere</groupId>
+      <artifactId>system-stubs-junit4</artifactId>
+      <version>${system-stubs-junit4.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

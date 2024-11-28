@@ -1,6 +1,7 @@
 package org.folio.services.migration.async;
 
 import static java.lang.String.format;
+import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
 
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -18,7 +19,7 @@ public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRu
 
   @Override
   public String getMigrationName() {
-    return "itemShelvingOrderMigration";
+    return ITEM_SHELVING_ORDER_MIGRATION.getValue();
   }
 
   @Override

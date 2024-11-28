@@ -371,33 +371,6 @@
       ]
     },
     {
-      "id": "shelf-locations",
-      "version": "1.1",
-      "handlers": [
-        {
-          "methods": ["GET"],
-          "pathPattern": "/shelf-locations",
-          "permissionsRequired": ["inventory-storage.shelf-locations.collection.get"]
-        }, {
-          "methods": ["GET"],
-          "pathPattern": "/shelf-locations/{id}",
-          "permissionsRequired": ["inventory-storage.shelf-locations.item.get"]
-        }, {
-          "methods": ["POST"],
-          "pathPattern": "/shelf-locations",
-          "permissionsRequired": ["inventory-storage.shelf-locations.item.post"]
-        }, {
-          "methods": ["PUT"],
-          "pathPattern": "/shelf-locations/{id}",
-          "permissionsRequired": ["inventory-storage.shelf-locations.item.put"]
-        }, {
-          "methods": ["DELETE"],
-          "pathPattern": "/shelf-locations/{id}",
-          "permissionsRequired": ["inventory-storage.shelf-locations.item.delete"]
-        }
-      ]
-    },
-    {
       "id": "location-units",
       "version": "2.0",
       "handlers": [
@@ -562,11 +535,13 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/subject-types",
-          "permissionsRequired": ["inventory-storage.subject-types.item.post"]
+          "permissionsRequired": ["inventory-storage.subject-types.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/subject-types/{id}",
-          "permissionsRequired": ["inventory-storage.subject-types.item.put"]
+          "permissionsRequired": ["inventory-storage.subject-types.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/subject-types/{id}",
@@ -589,11 +564,13 @@
         }, {
           "methods": ["POST"],
           "pathPattern": "/subject-sources",
-          "permissionsRequired": ["inventory-storage.subject-sources.item.post"]
+          "permissionsRequired": ["inventory-storage.subject-sources.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/subject-sources/{id}",
-          "permissionsRequired": ["inventory-storage.subject-sources.item.put"]
+          "permissionsRequired": ["inventory-storage.subject-sources.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/subject-sources/{id}",
@@ -1143,28 +1120,33 @@
     },
     {
       "id": "service-points",
-      "version": "3.3",
+      "version": "3.4",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.collection.get"]
+          "permissionsRequired": ["inventory-storage.service-points.collection.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.get"]
+          "permissionsRequired": ["inventory-storage.service-points.item.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.item.post"]
+          "permissionsRequired": ["inventory-storage.service-points.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.put"]
+          "permissionsRequired": ["inventory-storage.service-points.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.delete"]
+          "permissionsRequired": ["inventory-storage.service-points.item.delete"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }
       ]
     },
@@ -1687,31 +1669,6 @@
       "permissionName": "inventory-storage.material-types.item.delete",
       "displayName": "inventory storage - delete individual material-type",
       "description": "delete individual material-type from storage"
-    },
-    {
-      "permissionName": "inventory-storage.shelf-locations.collection.get",
-      "displayName": "inventory storage - get shelf location collection",
-      "description": "get shelf location collection from storage"
-    },
-    {
-      "permissionName": "inventory-storage.shelf-locations.item.get",
-      "displayName": "inventory storage - get individual shelf location",
-      "description": "get individual shelf location from storage"
-    },
-    {
-      "permissionName": "inventory-storage.shelf-locations.item.post",
-      "displayName": "inventory storage - create individual shelf location",
-      "description": "create individual shelf location in storage"
-    },
-    {
-      "permissionName": "inventory-storage.shelf-locations.item.put",
-      "displayName": "inventory storage - modify shelf location",
-      "description": "modify shelf location in storage"
-    },
-    {
-      "permissionName": "inventory-storage.shelf-locations.item.delete",
-      "displayName": "inventory storage - delete individual shelf location",
-      "description": "delete individual shelf location from storage"
     },
     {
       "permissionName": "inventory-storage.location-units.institutions.collection.get",
@@ -2704,11 +2661,6 @@
         "inventory-storage.material-types.item.post",
         "inventory-storage.material-types.item.put",
         "inventory-storage.material-types.item.delete",
-        "inventory-storage.shelf-locations.collection.get",
-        "inventory-storage.shelf-locations.item.get",
-        "inventory-storage.shelf-locations.item.post",
-        "inventory-storage.shelf-locations.item.put",
-        "inventory-storage.shelf-locations.item.delete",
         "inventory-storage.location-units.institutions.collection.get",
         "inventory-storage.location-units.institutions.item.get",
         "inventory-storage.location-units.institutions.item.post",
@@ -2938,6 +2890,7 @@
       { "name": "REPLICATION_FACTOR", "value": "1" },
       { "name": "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "value": "50"},
       { "name": "KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
@@ -2953,7 +2906,8 @@
       { "name": "S3_BUCKET", "value": "marc-migrations" },
       { "name": "S3_ACCESS_KEY_ID", "value": "" },
       { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
-      { "name": "S3_IS_AWS", "value": "true" }
+      { "name": "S3_IS_AWS", "value": "true" },
+      { "name": "ECS_TLR_FEATURE_ENABLED", "value": "false"}
     ]
   }
 }

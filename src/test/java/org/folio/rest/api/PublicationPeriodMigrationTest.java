@@ -18,11 +18,8 @@ import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.jupiter.api.Disabled;
 
-@Disabled
 public class PublicationPeriodMigrationTest extends MigrationTestBase {
-  private static final String MIGRATION_SCRIPT = loadScript("publication-period/migratePublicationPeriod.sql");
   private static final String TAG_VALUE = "test-tag";
   private static final String START_DATE = "1877";
   private static final String END_DATE = "1880";
@@ -40,6 +37,11 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
     SET jsonb = jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start', $1))
     WHERE id = $2
     """;
+  private static final String UPDATE_JSONB_WITH_PUB_PERIOD_MIGRATION= """
+      UPDATE %s_mod_inventory_storage.instance
+      SET jsonb = %s_mod_inventory_storage.migrate_publication_period(jsonb)
+      WHERE id = $1 AND jsonb -> 'publicationPeriod' IS NOT NULL
+      """;
 
   @SneakyThrows
   @Before
@@ -49,14 +51,15 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
   }
 
   @Test
-  public void canMigratePublicationPeriodToMultipleDates() throws Exception {
+  public void canMigratePublicationPeriodToMultipleDates() {
     var instanceId = createInstance();
 
     // add "publicationPeriod" object to jsonb
     addPublicationPeriodToJsonb(instanceId, END_DATE);
 
     //migrate "publicationPeriod" to Dates object
-    executeMultipleSqlStatements(MIGRATION_SCRIPT);
+    var updateQuery = String.format(UPDATE_JSONB_WITH_PUB_PERIOD_MIGRATION, TENANT_ID, TENANT_ID);
+    runSql(updateQuery, Tuple.of(instanceId));
 
     var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
     RowSet<Row> result = runSql(query, Tuple.of(instanceId));
@@ -71,14 +74,15 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
   }
 
   @Test
-  public void canMigratePublicationPeriodToSingleDates() throws Exception {
+  public void canMigratePublicationPeriodToSingleDates() {
     var instanceId = createInstance();
 
     // add "publicationPeriod" object to jsonb
     addPublicationPeriodToJsonb(instanceId, null);
 
     //migrate "publicationPeriod" to Dates object
-    executeMultipleSqlStatements(MIGRATION_SCRIPT);
+    var updateQuery = String.format(UPDATE_JSONB_WITH_PUB_PERIOD_MIGRATION, TENANT_ID, TENANT_ID);
+    runSql(updateQuery, Tuple.of(instanceId));
 
     var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
     RowSet<Row> result = runSql(query, Tuple.of(instanceId));
@@ -93,11 +97,11 @@ public class PublicationPeriodMigrationTest extends MigrationTestBase {
   }
 
   @Test
-  public void canNotMigrateWhenPublicationPeriodIsNull() throws Exception {
+  public void canNotMigrateWhenPublicationPeriodIsNull() {
     var instanceId = createInstance();
 
-    //migrate "publicationPeriod" to Dates object
-    executeMultipleSqlStatements(MIGRATION_SCRIPT);
+    var updateQuery = String.format(UPDATE_JSONB_WITH_PUB_PERIOD_MIGRATION, TENANT_ID, TENANT_ID);
+    runSql(updateQuery, Tuple.of(instanceId));
 
     var query = String.format(SELECT_JSONB_BY_ID, TENANT_ID);
     RowSet<Row> result = runSql(query, Tuple.of(instanceId));

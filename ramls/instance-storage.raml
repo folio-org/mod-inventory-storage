@@ -9,6 +9,8 @@ documentation:
     content: <b>Storage for instances in the inventory</b>
 
 types:
+  instanceWithoutPubPeriod: !include instance-without-pub-period.json
+  instancesWithoutPubPeriod: !include instances-without-pub-period.json
   instance: !include instance.json
   instances: !include instances.json
   marcJson: !include marc.json
@@ -61,8 +63,8 @@ resourceTypes:
     type:
       collection:
         exampleCollection: !include  examples/instances_get.json
-        schemaCollection: instances
-        schemaItem: instance
+        schemaCollection: instancesWithoutPubPeriod
+        schemaItem: instanceWithoutPubPeriod
         exampleItem: !include  examples/instance_get.json
     get:
       is: [pageable,
@@ -90,13 +92,13 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/instance_get.json
-          schema: instance
+          schema: instanceWithoutPubPeriod
       get:
         responses:
           200:
             body:
               application/json:
-                type: instance
+                type: instanceWithoutPubPeriod
         description: |
           Get Instance by InstanceId
           Instances are stored and accessed by a hash of key properties. The rules which govern

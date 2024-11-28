@@ -2534,8 +2534,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     // Make sure a create event published vs update event
     holdingsMessageChecks.createdMessagePublished(holdingsFromGet);
-    holdingsMessageChecks.noHoldingsUpdatedMessagePublished(
-      instanceId.toString(), holdingsId.toString());
+    holdingsMessageChecks.noHoldingsUpdatedMessagePublished(holdingsId.toString());
 
     log.info("Finished canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
   }

@@ -12,6 +12,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   BOUND_WITH("bound-with"),
   CAMPUS("campus"),
   CLASSIFICATION_TYPE("classification-type"),
+  CALL_NUMBER_TYPE("call-number-type"),
   HOLDINGS_RECORD("holdings-record"),
   INSTANCE("instance"),
   INSTANCE_CONTRIBUTION("instance-contribution"),
@@ -34,6 +35,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
    */
   private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_PARTITION_MAP = Map.of(
     CLASSIFICATION_TYPE, Pair.of("KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "1"),
+    CALL_NUMBER_TYPE, Pair.of("KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", "1"),
     LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"),
     LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "1"),
     CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "1"),

@@ -1,5 +1,7 @@
 package org.folio.services.migration.item;
 
+import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
+
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -51,7 +53,7 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
 
   @Override
   public String getMigrationName() {
-    return "itemShelvingOrderMigration";
+    return ITEM_SHELVING_ORDER_MIGRATION.getValue();
   }
 
   protected String selectSql() {

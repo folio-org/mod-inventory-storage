@@ -90,11 +90,19 @@ public final class FakeKafkaConsumer {
       .toList();
   }
 
-  public Collection<EventMessage> getMessagesForHoldings(String instanceId, String holdingsId) {
+  public Collection<EventMessage> getMessagesForHoldings(String holdingsId) {
+    return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(holdingsId, holdingsId));
+  }
+
+  public Collection<EventMessage> getMessagesForDeleteAllHoldings(String instanceId, String holdingsId) {
     return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(instanceId, holdingsId));
   }
 
-  public Collection<EventMessage> getMessagesForItem(String instanceId, String itemId) {
+  public Collection<EventMessage> getMessagesForItem(String itemId) {
+    return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(itemId, itemId));
+  }
+
+  public Collection<EventMessage> getMessagesForItemWithInstanceIdKey(String instanceId, String itemId) {
     return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(instanceId, itemId));
   }
 
