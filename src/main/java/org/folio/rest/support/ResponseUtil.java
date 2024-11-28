@@ -19,7 +19,7 @@ public final class ResponseUtil {
   public static final String SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE =
     "Illegal operation: Source cannot be deleted, already exists on at least one instance record";
   public static final String TYPE_CANNOT_BE_DELETED_USED_BY_INSTANCE =
-    "Illegal operation: Source cannot be deleted, already exists on at least one instance record";
+    "Illegal operation: Type cannot be deleted, already exists on at least one instance record";
 
   private ResponseUtil() { }
 
