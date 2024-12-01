@@ -1,3 +1,10 @@
+## v28.0.2 2024-12-01
+### Features
+* Add `ecsRequestRouting` field to service point schema ([MODINVSTOR-1179](https://folio-org.atlassian.net/browse/MODINVSTOR-1179))
+* Do not return routing service points by default ([MODINVSTOR-1219](https://folio-org.atlassian.net/browse/MODINVSTOR-1219))
+* Implement synchronization operation for service point events ([MODINVSTOR-1245](https://folio-org.atlassian.net/browse/MODINVSTOR-1245))
+* Add missing permission, improve test coverage ([MODINVSTOR-1262](https://folio-org.atlassian.net/browse/MODINVSTOR-1262))
+
 ## v28.0.1 2024-11-08
 ### Features
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
@@ -35,6 +42,7 @@
 ### Features
 * Add floating collection flag in location schema ([MODINVSTOR-1250](https://issues.folio.org/browse/MODINVSTOR-1250))
 * Implement domain event production for location create/update/delete ([MODINVSTOR-1181](https://issues.folio.org/browse/MODINVSTOR-1181))
+* Add a new boolean field ecsRequestRouting to the service point schema ([MODINVSTOR-1179](https://issues.folio.org/browse/MODINVSTOR-1179))
 * Implement domain event production for library create/update/delete ([MODINVSTOR-1216](https://issues.folio.org/browse/MODINVSTOR-1216))
 * Implement domain event production for campus create/update/delete ([MODINVSTOR-1217](https://issues.folio.org/browse/MODINVSTOR-1217))
 * Implement domain event production for institution create/update/delete ([MODINVSTOR-1218](https://issues.folio.org/browse/MODINVSTOR-1218))

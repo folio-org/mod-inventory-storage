@@ -1120,28 +1120,33 @@
     },
     {
       "id": "service-points",
-      "version": "3.3",
+      "version": "3.4",
       "handlers": [
         {
           "methods": ["GET"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.collection.get"]
+          "permissionsRequired": ["inventory-storage.service-points.collection.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["GET"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.get"]
+          "permissionsRequired": ["inventory-storage.service-points.item.get"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/service-points",
-          "permissionsRequired": ["inventory-storage.service-points.item.post"]
+          "permissionsRequired": ["inventory-storage.service-points.item.post"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["PUT"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.put"]
+          "permissionsRequired": ["inventory-storage.service-points.item.put"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }, {
           "methods": ["DELETE"],
           "pathPattern": "/service-points/{id}",
-          "permissionsRequired": ["inventory-storage.service-points.item.delete"]
+          "permissionsRequired": ["inventory-storage.service-points.item.delete"],
+          "modulePermissions": ["user-tenants.collection.get"]
         }
       ]
     },
@@ -2900,7 +2905,8 @@
       { "name": "S3_BUCKET", "value": "marc-migrations" },
       { "name": "S3_ACCESS_KEY_ID", "value": "" },
       { "name": "S3_SECRET_ACCESS_KEY", "value": "" },
-      { "name": "S3_IS_AWS", "value": "true" }
+      { "name": "S3_IS_AWS", "value": "true" },
+      { "name": "ECS_TLR_FEATURE_ENABLED", "value": "false"}
     ]
   }
 }

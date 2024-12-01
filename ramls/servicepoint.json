@@ -72,6 +72,11 @@
         ]
       }
     },
+    "ecsRequestRouting": {
+      "type": "boolean",
+      "description": "Indicates a service point used for the ECS functionality",
+      "default" : false
+    },
     "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema",
