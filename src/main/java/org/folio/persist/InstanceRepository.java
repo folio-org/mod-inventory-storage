@@ -84,8 +84,9 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getTypeId()));
       }
       var sqlString = sql.toString();
-      if (!isBlank(sqlString))
+      if (!isBlank(sqlString)) {
         postgresClient.execute(sql.toString());
+      }
     });
   }
 
