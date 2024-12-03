@@ -115,6 +115,13 @@ public class InstanceService {
           // api client invoking this endpoint. The response is returned
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
+          .compose(response -> {
+            if (response.getEntity() instanceof Instance instanceResponse) {
+              instanceRepository.linkInstanceWithSubjectSourceAndType(instanceResponse);
+            }
+            return Future.succeededFuture(response);
+            }
+          )
           .onSuccess(domainEventPublisher.publishCreated());
       })
       .map(ResponseHandlerUtil::handleHridError);

@@ -1232,6 +1232,16 @@
       "run": "after",
       "snippetPath": "publication-period/migratePublicationPeriod.sql",
       "fromModuleVersion": "28.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSubjectSourceTable.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSubjectTypeTable.sql",
+      "fromModuleVersion": "28.1.0"
     }
   ]
 }

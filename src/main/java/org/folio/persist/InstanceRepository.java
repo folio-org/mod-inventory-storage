@@ -1,5 +1,6 @@
 package org.folio.persist;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -35,16 +36,24 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private static final String INSTANCE_SET_VIEW = "instance_set";
   private static final String INSTANCE_HOLDINGS_ITEM_VIEW = "instance_holdings_item_view";
   private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
+  private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
+  private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
+
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
 
-  public Future<Boolean> doesInstanceExistBySubjectField(String field, String sourceId) {
+  public Future<Boolean> doesInstanceExistBySubjectField(String field, String value) {
     var sql = new StringBuilder("SELECT exists ( ");
     sql.append("SELECT 1 FROM ");
-    sql.append(INSTANCE_TABLE);
-    sql.append(String.format(" WHERE jsonb @> '{\"subjects\": [{\"%s\": \"%s\"}] }' ", field, sourceId));
+    if (field.equals("sourceId")) {
+      sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
+      sql.append(String.format(" WHERE source_id = '%s' ", value));
+    } else {
+      sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
+      sql.append(String.format(" WHERE type_id = '%s' ", value));
+    }
     sql.append(") as record_exists");
 
     return postgresClient.execute(sql.toString())
@@ -55,6 +64,29 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         }
         return Boolean.FALSE;
       });
+  }
+
+  public void linkInstanceWithSubjectSourceAndType(Instance instance) {
+    instance.getSubjects().forEach(subject -> {
+      var sql = new StringBuilder();
+      if (subject.getSourceId() != null) {
+        sql.append(" INSERT INTO ");
+        sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
+        sql.append(" (instance_id, source_id) ");
+        sql.append(" VALUES ");
+        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getSourceId()));
+      }
+      if (subject.getTypeId() != null) {
+        sql.append(" INSERT INTO ");
+        sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
+        sql.append(" (instance_id, type_id) ");
+        sql.append(" VALUES ");
+        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getTypeId()));
+      }
+      var sqlString = sql.toString();
+      if (!isBlank(sqlString))
+        postgresClient.execute(sql.toString());
+    });
   }
 
 
