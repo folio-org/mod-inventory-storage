@@ -1236,7 +1236,7 @@
     {
       "run": "after",
       "snippetPath": "createIndexBarcodePattern.sql",
-      "fromModuleVersion": "28.0.2"
+      "fromModuleVersion": "28.0.3"
     }
   ]
 }
