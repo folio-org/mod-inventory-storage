@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.AsyncResult;
@@ -67,15 +68,20 @@ public class CallNumberTypeApiTest extends TestBase {
   @Test
   public void shouldHandleException_whenPut() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
-    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
-    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
-      mockedTenantTool.when(() -> TenantTool.tenantId(any())).thenThrow(new RuntimeException("Test"));
+    var errorHandler = Mockito.<Handler<AsyncResult<Response>>>mock();
+    var pgClient = mock(PostgresClient.class);
+    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
+         MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class)) {
+      mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(pgClient);
+      when(pgClient.getById(anyString(), any(), any(Class.class)))
+        .thenReturn(Future.succeededFuture(new CallNumberType().withSource("system")));
 
       callNumberTypesApi.putCallNumberTypesById(null,
         null,
         null,
         errorHandler,
-        null);
+        mock(Context.class));
 
       Mockito.verify(errorHandler).handle(any());
     }
@@ -84,14 +90,19 @@ public class CallNumberTypeApiTest extends TestBase {
   @Test
   public void shouldHandleException_whenDelete() {
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
-    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
-    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class)) {
-      mockedTenantTool.when(() -> TenantTool.tenantId(any())).thenThrow(new RuntimeException("Test"));
+    var errorHandler = Mockito.<Handler<AsyncResult<Response>>>mock();
+    var pgClient = mock(PostgresClient.class);
+    try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
+         MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class)) {
+      mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(pgClient);
+      when(pgClient.getById(anyString(), any(), any(Class.class)))
+        .thenReturn(Future.succeededFuture(new CallNumberType().withSource("system")));
 
       callNumberTypesApi.deleteCallNumberTypesById(null,
         null,
         errorHandler,
-        null);
+        mock(Context.class));
 
       Mockito.verify(errorHandler).handle(any());
     }
@@ -102,19 +113,19 @@ public class CallNumberTypeApiTest extends TestBase {
     //Given
     var callNumberTypesApi = Mockito.spy(CallNumberTypeApi.class);
     var entity = new CallNumberType();
-    String id = "id";
+    var id = "id";
     Map<String, String> okapiHeaders = Collections.emptyMap();
 
-    Handler<AsyncResult<Response>> errorHandler = Mockito.mock(Handler.class);
-    Context vertex = Mockito.mock(Context.class);
-    var mockedPgClient = Mockito.mock(PostgresClient.class);
+    Handler<AsyncResult<Response>> errorHandler = mock(Handler.class);
+    Context vertex = mock(Context.class);
+    var mockedPgClient = mock(PostgresClient.class);
     when(mockedPgClient.getById(any(), any(), eq(CallNumberType.class))).thenReturn(Future.succeededFuture(entity));
 
     try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
          MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class);
          MockedStatic<PostgresClient> mockedPgClientStat = Mockito.mockStatic(PostgresClient.class)) {
       mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
-      mockedPgClientStat.when(() -> PostgresClient.getInstance(any(), any())).thenReturn(mockedPgClient);
+      mockedPgClientStat.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(mockedPgClient);
       mockedPgUtil.when(() -> PgUtil.put(
         anyString(),
         any(),
@@ -145,8 +156,7 @@ public class CallNumberTypeApiTest extends TestBase {
   private UUID create(String name, String source) {
     var requestBody = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, source);
     var createResponse = callNumberTypesClient.create(requestBody);
-    var callNumberTypeId = createResponse.getId();
-    return callNumberTypeId;
+    return createResponse.getId();
   }
 
   private void assertCallNumberType(UUID callNumberTypeId, String name, String source) {
