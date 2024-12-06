@@ -1237,6 +1237,16 @@
       "run": "after",
       "snippetPath": "createIndexBarcodePattern.sql",
       "fromModuleVersion": "28.0.3"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSubjectSourceTable.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSubjectTypeTable.sql",
+      "fromModuleVersion": "28.1.0"
     }
   ]
 }

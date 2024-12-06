@@ -268,6 +268,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
 
+  public static UUID createInstanceRecord(JsonObject instanceJson) {
+    return instancesClient.create(instanceJson).getId();
+  }
+
   protected static JsonObject instance(UUID id) {
     return createInstanceRequest(
       id,

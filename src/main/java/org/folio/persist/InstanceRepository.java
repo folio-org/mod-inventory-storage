@@ -1,5 +1,6 @@
 package org.folio.persist;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -35,10 +36,59 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private static final String INSTANCE_SET_VIEW = "instance_set";
   private static final String INSTANCE_HOLDINGS_ITEM_VIEW = "instance_holdings_item_view";
   private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
+  private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
+  private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
+
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
+
+  public void linkInstanceWithSubjectSourceAndType(Instance instance) {
+    instance.getSubjects().forEach(subject -> {
+      var sql = new StringBuilder();
+      if (subject.getSourceId() != null) {
+        sql.append(" INSERT INTO ");
+        sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
+        sql.append(" (instance_id, source_id) ");
+        sql.append(" VALUES ");
+        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getSourceId()));
+      }
+      if (subject.getTypeId() != null) {
+        sql.append(" INSERT INTO ");
+        sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
+        sql.append(" (instance_id, type_id) ");
+        sql.append(" VALUES ");
+        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getTypeId()));
+      }
+      var sqlString = sql.toString();
+      if (!isBlank(sqlString)) {
+        postgresClient.execute(sql.toString());
+      }
+    });
+  }
+
+  public void unlinkInstanceFromSubjectSource(String instanceId) {
+    var sql = unlinkInstanceFromSubject(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId);
+    if (!isBlank(sql)) {
+      postgresClient.execute(sql);
+    }
+  }
+
+  public void unlinkInstanceFromSubjectType(String instanceId) {
+    var sql = unlinkInstanceFromSubject(INSTANCE_SUBJECT_TYPE_TABLE, instanceId);
+    if (!isBlank(sql)) {
+      postgresClient.execute(sql);
+    }
+  }
+
+  private String unlinkInstanceFromSubject(String table, String id) {
+    var sql = new StringBuilder("DELETE FROM ");
+    sql.append(table);
+    sql.append(String.format(" WHERE instance_id = '$s'; ", id));
+    return sql.toString();
+  }
+
 
   public Future<RowStream<Row>> getAllIds(SQLConnection connection) {
     return postgresClientFuturized.selectStream(connection,
