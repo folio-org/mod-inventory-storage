@@ -161,6 +161,21 @@ public class InstanceService {
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
 
         return putResult.future()
+          .compose(response -> {
+              if (response.getEntity() instanceof Instance instanceResponse) {
+                var instanceId = instanceResponse.getId();
+                newInstance.getSubjects().forEach(subject -> {
+                  if (subject.getSourceId() == null) {
+                    instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
+                  } else if (subject.getTypeId() == null) {
+                    instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+                  }
+                });
+                instanceRepository.linkInstanceWithSubjectSourceAndType(instanceResponse);
+              }
+              return Future.succeededFuture(response);
+            }
+          )
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }

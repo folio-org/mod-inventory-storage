@@ -68,6 +68,27 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     });
   }
 
+  public void unlinkInstanceFromSubjectSource(String instanceId) {
+    var sql = unlinkInstanceFromSubject(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId);
+    if (!isBlank(sql)) {
+      postgresClient.execute(sql);
+    }
+  }
+
+  public void unlinkInstanceFromSubjectType(String instanceId) {
+    var sql = unlinkInstanceFromSubject(INSTANCE_SUBJECT_TYPE_TABLE, instanceId);
+    if (!isBlank(sql)) {
+      postgresClient.execute(sql);
+    }
+  }
+
+  private String unlinkInstanceFromSubject(String table, String id) {
+    var sql = new StringBuilder("DELETE FROM ");
+    sql.append(table);
+    sql.append(String.format(" WHERE instance_id = '$s'; ", id));
+    return sql.toString();
+  }
+
 
   public Future<RowStream<Row>> getAllIds(SQLConnection connection) {
     return postgresClientFuturized.selectStream(connection,
