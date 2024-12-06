@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static org.folio.rest.api.InstanceStorageTest.SUBJECTS_KEY;
-import static org.folio.rest.support.ResponseUtil.TYPE_CANNOT_BE_DELETED_USED_BY_INSTANCE;
 import static org.folio.rest.support.http.InterfaceUrls.subjectTypesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -243,10 +242,8 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
 
     Response response = deleteSubjectType(UUID.fromString(subjectTypeId));
 
-    assertEquals(422, response.getStatusCode());
-    JsonArray errors = response.getJson().getJsonArray("errors");
-    assertThat(errors.size(), is(1));
-    assertTrue(errors.getJsonObject(0).getString("message").contains(TYPE_CANNOT_BE_DELETED_USED_BY_INSTANCE));
+    assertEquals(400, response.getStatusCode());
+    assertTrue(response.getBody().contains("id is still referenced from table instance_subject_type"));
   }
 
   private Response createSubjectType(JsonObject object) {

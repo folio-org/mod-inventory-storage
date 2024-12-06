@@ -7,13 +7,11 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.SubjectUtil.sourceValidationError;
 import static org.folio.rest.support.SubjectUtil.validateSubjectSourceCreate;
 import static org.folio.rest.support.SubjectUtil.validateSubjectSourceUpdate;
-import static org.folio.rest.support.SubjectUtil.validateSubjectTypeDelete;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.persist.InstanceRepository;
 import org.folio.persist.SubjectTypeRepository;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.SubjectType;
@@ -37,12 +35,10 @@ public class SubjectTypeService {
   private final SubjectTypeRepository repository;
   private final SubjectTypeDomainEventPublisher domainEventService;
   private final ConsortiumService consortiumService;
-  private final InstanceRepository instanceRepository;
 
   public SubjectTypeService(Context context, Map<String, String> okapiHeaders) {
     this.context = context;
     this.okapiHeaders = okapiHeaders;
-    this.instanceRepository = new InstanceRepository(context, okapiHeaders);
     this.repository = new SubjectTypeRepository(context, okapiHeaders);
     this.domainEventService = new SubjectTypeDomainEventPublisher(context, okapiHeaders);
     this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
@@ -86,13 +82,9 @@ public class SubjectTypeService {
     return repository.getById(id)
       .compose(oldSubjectType -> {
         if (oldSubjectType != null) {
-          return validateSubjectTypeDelete(oldSubjectType.getId(), instanceRepository)
-            .compose(errors -> errors.isPresent()
-              ? sourceValidationError(errors.get()) :
-              deleteById(SUBJECT_TYPE, id, okapiHeaders, context,
-                DeleteSubjectTypesBySubjectTypeIdResponse.class)
-                .onSuccess(domainEventService.publishRemoved(oldSubjectType))
-            );
+          return deleteById(SUBJECT_TYPE, id, okapiHeaders, context,
+            DeleteSubjectTypesBySubjectTypeIdResponse.class)
+            .onSuccess(domainEventService.publishRemoved(oldSubjectType));
         }
         return Future.failedFuture(new NotFoundException("SubjectSource was not found"));
       });

@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.InstanceStorageTest.SUBJECTS_KEY;
 import static org.folio.rest.support.ResponseHandler.json;
-import static org.folio.rest.support.ResponseUtil.SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE;
 import static org.folio.rest.support.http.InterfaceUrls.subjectSourcesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -263,10 +262,8 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
 
     Response response = deleteSubjectSource(UUID.fromString(subjectSourceId));
 
-    assertEquals(422, response.getStatusCode());
-    JsonArray errors = response.getJson().getJsonArray("errors");
-    assertThat(errors.size(), is(1));
-    assertTrue(errors.getJsonObject(0).getString("message").contains(SOURCE_CANNOT_BE_DELETED_USED_BY_INSTANCE));
+    assertEquals(400, response.getStatusCode());
+    assertTrue(response.getBody().contains("id is still referenced from table instance_subject_source"));
   }
 
   private Response createSubjectSource(JsonObject object) {

@@ -44,28 +44,6 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
 
-  public Future<Boolean> doesInstanceExistBySubjectField(String field, String value) {
-    var sql = new StringBuilder("SELECT exists ( ");
-    sql.append("SELECT 1 FROM ");
-    if (field.equals("sourceId")) {
-      sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
-      sql.append(String.format(" WHERE source_id = '%s' ", value));
-    } else {
-      sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
-      sql.append(String.format(" WHERE type_id = '%s' ", value));
-    }
-    sql.append(") as record_exists");
-
-    return postgresClient.execute(sql.toString())
-      .map(rowSet -> {
-        if (rowSet != null && rowSet.iterator().hasNext()) {
-          Row row = rowSet.iterator().next();
-          return row.getBoolean("record_exists");
-        }
-        return Boolean.FALSE;
-      });
-  }
-
   public void linkInstanceWithSubjectSourceAndType(Instance instance) {
     instance.getSubjects().forEach(subject -> {
       var sql = new StringBuilder();
