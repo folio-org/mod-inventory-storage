@@ -52,14 +52,14 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
         sql.append(" (instance_id, source_id) ");
         sql.append(" VALUES ");
-        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getSourceId()));
+        sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getSourceId()));
       }
       if (subject.getTypeId() != null) {
         sql.append(" INSERT INTO ");
         sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
         sql.append(" (instance_id, type_id) ");
         sql.append(" VALUES ");
-        sql.append(String.format("( '%s' , '%s' ); ", instance.getId(), subject.getTypeId()));
+        sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getTypeId()));
       }
       var sqlString = sql.toString();
       if (!isBlank(sqlString)) {
@@ -85,7 +85,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private String unlinkInstanceFromSubject(String table, String id) {
     var sql = new StringBuilder("DELETE FROM ");
     sql.append(table);
-    sql.append(String.format(" WHERE instance_id = '$s'; ", id));
+    sql.append(String.format(" WHERE instance_id = '%s'; ", id));
     return sql.toString();
   }
 

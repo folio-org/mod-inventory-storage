@@ -246,6 +246,30 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
     assertTrue(response.getBody().contains("id is still referenced from table instance_subject_type"));
   }
 
+  @Test
+  public void clearLinksBetweenSubjectSourceAndInstance() {
+    var instanceId = UUID.randomUUID();
+
+    JsonObject subjectType = new JsonObject()
+      .put("name", "Library Test " + UUID_INSTANCE_SUBJECT_TYPE_ID)
+      .put("source", "local");
+
+    var subjectTypeId = createSubjectType(subjectType).getJson().getString("id");
+
+    var instance = instance(instanceId);
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(subjectTypeId)
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instance.put(SUBJECTS_KEY, subjects);
+
+    createInstanceRecord(instance);
+
+    var response = deleteInstanceRecord(instanceId);
+    assertEquals(204, response.getStatusCode());
+  }
+
   private Response createSubjectType(JsonObject object) {
     return createSubjectType(object, TENANT_ID);
   }

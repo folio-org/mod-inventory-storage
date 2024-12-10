@@ -272,6 +272,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return instancesClient.create(instanceJson).getId();
   }
 
+  public Response deleteInstanceRecord(UUID id) {
+    return instancesClient.attemptToDelete(id);
+  }
+
   protected static JsonObject instance(UUID id) {
     return createInstanceRequest(
       id,

@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -404,6 +405,32 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canUpdateAnInstanceUnlinkSubjectSourceAndType() {
+
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    instanceFromGet.put(SUBJECTS_KEY, null);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
   @Test

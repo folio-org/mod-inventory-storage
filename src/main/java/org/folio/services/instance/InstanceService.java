@@ -157,27 +157,33 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
+        linkOrUnlinkSubjects(newInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
-
         return putResult.future()
-          .compose(response -> {
-              if (response.getEntity() instanceof Instance instanceResponse) {
-                var instanceId = instanceResponse.getId();
-                newInstance.getSubjects().forEach(subject -> {
-                  if (subject.getSourceId() == null) {
-                    instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
-                  } else if (subject.getTypeId() == null) {
-                    instanceRepository.unlinkInstanceFromSubjectType(instanceId);
-                  }
-                });
-                instanceRepository.linkInstanceWithSubjectSourceAndType(instanceResponse);
-              }
-              return Future.succeededFuture(response);
-            }
-          )
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
+  }
+
+  private void linkOrUnlinkSubjects(Instance instance) {
+    var instanceId = instance.getId();
+    if (instance.getSubjects().isEmpty()) {
+      instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
+      instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+    }
+    else {
+      instance.getSubjects().forEach(subject -> {
+        if (subject.getSourceId() == null) {
+          instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
+        }
+        else if (subject.getTypeId() == null) {
+          instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+        }
+        else {
+          instanceRepository.linkInstanceWithSubjectSourceAndType(instance);
+        }
+      });
+    }
   }
 
   /**
