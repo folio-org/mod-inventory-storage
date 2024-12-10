@@ -55,7 +55,8 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   private String unlinkInstanceFromSubjectSql(String table, String id) {
-    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ", postgresClientFuturized.getFullTableName(table), id);
+    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
+      postgresClientFuturized.getFullTableName(table), id);
   }
 
   public void batchLinkSubjectSource(List<Pair<String, String>> sourcePairs) {
