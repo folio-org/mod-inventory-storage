@@ -21,8 +21,10 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.persist.InstanceMarcRepository;
@@ -32,6 +34,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.jaxrs.model.InventoryViewInstanceWithoutPubPeriod;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -174,19 +177,36 @@ public class InstanceService {
       return;
     }
 
-    for (var subject : newInstance.getSubjects()) {
-      if (subject.getSourceId() == null) {
-        instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
-      } else if (subject.getTypeId() == null) {
-        instanceRepository.unlinkInstanceFromSubjectType(instanceId);
-      } else {
+    // Identify the differences between old and new subjects
+    Set<Subject> newSubjects = newInstance.getSubjects();
+    Set<Subject> oldSubjects = oldInstance.getSubjects() != null ? oldInstance.getSubjects() : Collections.emptySet();
+
+    // Subjects to remove
+    var subjectsToRemove = oldSubjects.stream()
+      .filter(subject -> !newSubjects.contains(subject))
+      .toList();
+
+    // Subjects to add
+    var subjectsToAdd = newSubjects.stream()
+      .filter(subject -> !oldSubjects.contains(subject))
+      .toList();
+
+    // Unlink removed subjects
+    subjectsToRemove.forEach(subject -> {
+      if (subject.getSourceId() != null) {
+        instanceRepository.unlinkSubjectSource(instanceId, subject.getSourceId());
+      }
+      if (subject.getTypeId() != null) {
+        instanceRepository.unlinkSubjectType(instanceId, subject.getTypeId());
+      }
+    });
+
+    // Link new subjects
+    subjectsToAdd.forEach(subject -> {
+      if (subject.getSourceId() != null || subject.getTypeId() != null) {
         instanceRepository.linkInstanceWithSubjectSourceAndType(newInstance);
       }
-    }
-
-    if (oldInstance.getSubjects() != null && !oldInstance.getSubjects().equals(newInstance.getSubjects())) {
-      instanceRepository.linkInstanceWithSubjectSourceAndType(newInstance);
-    }
+    });
   }
 
 

@@ -49,14 +49,14 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       var sql = new StringBuilder();
       if (subject.getSourceId() != null) {
         sql.append(" INSERT INTO ");
-        sql.append(INSTANCE_SUBJECT_SOURCE_TABLE);
+        sql.append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE));
         sql.append(" (instance_id, source_id) ");
         sql.append(" VALUES ");
         sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getSourceId()));
       }
       if (subject.getTypeId() != null) {
         sql.append(" INSERT INTO ");
-        sql.append(INSTANCE_SUBJECT_TYPE_TABLE);
+        sql.append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE));
         sql.append(" (instance_id, type_id) ");
         sql.append(" VALUES ");
         sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getTypeId()));
@@ -79,10 +79,23 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   private String unlinkInstanceFromSubjectSql(String table, String id) {
-    var sql = new StringBuilder("DELETE FROM ");
-    sql.append(table);
-    sql.append(String.format(" WHERE instance_id = '%s'; ", id));
-    return sql.toString();
+    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ", postgresClientFuturized.getFullTableName(table), id);
+  }
+
+  public void unlinkSubjectSource(String instanceId, String sourceId) {
+    var sql = "DELETE FROM " +
+      postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE) +
+      String.format(" WHERE instance_id = '%s' AND source_id = '%s';",
+        instanceId, sourceId);
+    postgresClient.execute(sql);
+  }
+
+  public void unlinkSubjectType(String instanceId, String typeId) {
+    var sql = "DELETE FROM " +
+      postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE) +
+      String.format(" WHERE instance_id = '%s' AND type_id = '%s';", instanceId,
+        typeId);
+    postgresClient.execute(sql);
   }
 
 
