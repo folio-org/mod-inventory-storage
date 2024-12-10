@@ -1,6 +1,5 @@
 package org.folio.persist;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -21,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.dbschema.ObjectMapperTool;
@@ -44,30 +44,6 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
 
-  public void linkInstanceWithSubjectSourceAndType(Instance instance) {
-    instance.getSubjects().forEach(subject -> {
-      var sql = new StringBuilder();
-      if (subject.getSourceId() != null) {
-        sql.append(" INSERT INTO ");
-        sql.append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE));
-        sql.append(" (instance_id, source_id) ");
-        sql.append(" VALUES ");
-        sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getSourceId()));
-      }
-      if (subject.getTypeId() != null) {
-        sql.append(" INSERT INTO ");
-        sql.append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE));
-        sql.append(" (instance_id, type_id) ");
-        sql.append(" VALUES ");
-        sql.append(String.format("( '%s' , '%s' ) ON CONFLICT DO NOTHING; ", instance.getId(), subject.getTypeId()));
-      }
-      var sqlString = sql.toString();
-      if (!isBlank(sqlString)) {
-        postgresClient.execute(sql.toString());
-      }
-    });
-  }
-
   public void unlinkInstanceFromSubjectSource(String instanceId) {
     var sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId);
     postgresClient.execute(sql);
@@ -82,22 +58,53 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     return String.format("DELETE FROM %s WHERE instance_id = '%s'; ", postgresClientFuturized.getFullTableName(table), id);
   }
 
-  public void unlinkSubjectSource(String instanceId, String sourceId) {
-    var sql = "DELETE FROM " +
-      postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE) +
-      String.format(" WHERE instance_id = '%s' AND source_id = '%s';",
-        instanceId, sourceId);
-    postgresClient.execute(sql);
+  public void batchLinkSubjectSource(List<Pair<String, String>> sourcePairs) {
+    var sql = new StringBuilder("INSERT INTO ")
+      .append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE))
+      .append(" (instance_id, source_id) VALUES ");
+
+    sql.append(sourcePairs.stream()
+      .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
+      .collect(Collectors.joining(", ")));
+
+    sql.append(" ON CONFLICT DO NOTHING;");
+    postgresClient.execute(sql.toString());
   }
 
-  public void unlinkSubjectType(String instanceId, String typeId) {
-    var sql = "DELETE FROM " +
-      postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE) +
-      String.format(" WHERE instance_id = '%s' AND type_id = '%s';", instanceId,
-        typeId);
-    postgresClient.execute(sql);
+  public void batchLinkSubjectType(List<Pair<String, String>> typePairs) {
+    var sql = new StringBuilder("INSERT INTO ")
+      .append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE))
+      .append(" (instance_id, type_id) VALUES ");
+
+    sql.append(typePairs.stream()
+      .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
+      .collect(Collectors.joining(", ")));
+
+    sql.append(" ON CONFLICT DO NOTHING;");
+    postgresClient.execute(sql.toString());
   }
 
+  public void batchUnlinkSubjectSource(String instanceId, List<String> sourceIds) {
+    var sql = new StringBuilder("DELETE FROM ")
+      .append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE))
+      .append(" WHERE instance_id = '")
+      .append(instanceId)
+      .append("' AND source_id IN (")
+      .append(sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", ")))
+      .append(");");
+    postgresClient.execute(sql.toString());
+  }
+
+  public void batchUnlinkSubjectType(String instanceId, List<String> typeIds) {
+    var sql = new StringBuilder("DELETE FROM ")
+      .append(postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE))
+      .append(" WHERE instance_id = '")
+      .append(instanceId)
+      .append("' AND type_id IN (")
+      .append(typeIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", ")))
+      .append(");");
+    postgresClient.execute(sql.toString());
+  }
 
   public Future<RowStream<Row>> getAllIds(SQLConnection connection) {
     return postgresClientFuturized.selectStream(connection,

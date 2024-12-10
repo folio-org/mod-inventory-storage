@@ -24,9 +24,12 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
@@ -120,7 +123,7 @@ public class InstanceService {
           // while the domain event publish is satisfied.
           .compose(response -> {
             if (response.getEntity() instanceof Instance instanceResponse) {
-              instanceRepository.linkInstanceWithSubjectSourceAndType(instanceResponse);
+              batchLinkSubjects(instanceResponse.getId(), instanceResponse.getSubjects());
             }
             return Future.succeededFuture(response);
             }
@@ -184,30 +187,59 @@ public class InstanceService {
     // Subjects to remove
     var subjectsToRemove = oldSubjects.stream()
       .filter(subject -> !newSubjects.contains(subject))
-      .toList();
+      .collect(Collectors.toSet());
 
     // Subjects to add
     var subjectsToAdd = newSubjects.stream()
       .filter(subject -> !oldSubjects.contains(subject))
+      .collect(Collectors.toSet());
+
+    // Batch unlink removed subjects
+    batchUnlinkSubjects(instanceId, subjectsToRemove);
+
+    // Batch link new subjects
+    batchLinkSubjects(instanceId, subjectsToAdd);
+  }
+
+  private void batchUnlinkSubjects(String instanceId, Set<Subject> subjectsToRemove) {
+    var sourceIds = subjectsToRemove.stream()
+      .map(Subject::getSourceId)
+      .filter(Objects::nonNull)
       .toList();
 
-    // Unlink removed subjects
-    subjectsToRemove.forEach(subject -> {
-      if (subject.getSourceId() != null) {
-        instanceRepository.unlinkSubjectSource(instanceId, subject.getSourceId());
-      }
-      if (subject.getTypeId() != null) {
-        instanceRepository.unlinkSubjectType(instanceId, subject.getTypeId());
-      }
-    });
+    var typeIds = subjectsToRemove.stream()
+      .map(Subject::getTypeId)
+      .filter(Objects::nonNull)
+      .toList();
 
-    // Link new subjects
-    subjectsToAdd.forEach(subject -> {
-      if (subject.getSourceId() != null || subject.getTypeId() != null) {
-        instanceRepository.linkInstanceWithSubjectSourceAndType(newInstance);
-      }
-    });
+    if (!sourceIds.isEmpty()) {
+      instanceRepository.batchUnlinkSubjectSource(instanceId, sourceIds);
+    }
+
+    if (!typeIds.isEmpty()) {
+      instanceRepository.batchUnlinkSubjectType(instanceId, typeIds);
+    }
   }
+
+  private void batchLinkSubjects(String instanceId, Set<Subject> subjectsToAdd) {
+    var sourcePairs = subjectsToAdd.stream()
+      .map(subject -> Pair.of(instanceId, subject.getSourceId()))
+      .toList();
+
+    var typePairs = subjectsToAdd.stream()
+      .map(subject -> Pair.of(instanceId, subject.getTypeId()))
+      .toList();
+
+    if (!sourcePairs.isEmpty()) {
+      instanceRepository.batchLinkSubjectSource(sourcePairs);
+    }
+
+    if (!typePairs.isEmpty()) {
+      instanceRepository.batchLinkSubjectType(typePairs);
+    }
+  }
+
+
 
 
   /**
