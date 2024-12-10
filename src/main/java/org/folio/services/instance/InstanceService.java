@@ -157,7 +157,7 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
-        linkOrUnlinkSubjects(newInstance);
+        linkOrUnlinkSubjects(newInstance, oldInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
         return putResult.future()
@@ -165,26 +165,30 @@ public class InstanceService {
       });
   }
 
-  private void linkOrUnlinkSubjects(Instance instance) {
-    var instanceId = instance.getId();
-    if (instance.getSubjects().isEmpty()) {
+  private void linkOrUnlinkSubjects(Instance newInstance, Instance oldInstance) {
+    var instanceId = newInstance.getId();
+
+    if (newInstance.getSubjects().isEmpty()) {
       instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
       instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+      return;
     }
-    else {
-      instance.getSubjects().forEach(subject -> {
-        if (subject.getSourceId() == null) {
-          instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
-        }
-        else if (subject.getTypeId() == null) {
-          instanceRepository.unlinkInstanceFromSubjectType(instanceId);
-        }
-        else {
-          instanceRepository.linkInstanceWithSubjectSourceAndType(instance);
-        }
-      });
+
+    for (var subject : newInstance.getSubjects()) {
+      if (subject.getSourceId() == null) {
+        instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
+      } else if (subject.getTypeId() == null) {
+        instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+      } else {
+        instanceRepository.linkInstanceWithSubjectSourceAndType(newInstance);
+      }
+    }
+
+    if (oldInstance.getSubjects() != null && !oldInstance.getSubjects().equals(newInstance.getSubjects())) {
+      instanceRepository.linkInstanceWithSubjectSourceAndType(newInstance);
     }
   }
+
 
   /**
    * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",
