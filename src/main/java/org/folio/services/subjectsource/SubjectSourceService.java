@@ -81,10 +81,14 @@ public class SubjectSourceService {
 
   public Future<Response> delete(String id) {
     return repository.getById(id)
-      .compose(oldSubjectSource -> deleteById(SUBJECT_SOURCE, id, okapiHeaders, context,
-        DeleteSubjectSourcesBySubjectSourceIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldSubjectSource))
-      );
+      .compose(oldSubjectSource -> {
+        if (oldSubjectSource != null) {
+          return deleteById(SUBJECT_SOURCE, id, okapiHeaders, context,
+            DeleteSubjectSourcesBySubjectSourceIdResponse.class)
+            .onSuccess(domainEventService.publishRemoved(oldSubjectSource));
+        }
+        return Future.failedFuture(new NotFoundException("SubjectSource was not found"));
+      });
   }
 
   private Future<Response> createSubjectSource(SubjectSource subjectSource) {

@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -105,11 +106,11 @@ import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
+  public static final String SUBJECTS_KEY = "subjects";
   private static final String INSTANCES_KEY = "instances";
   private static final String TOTAL_RECORDS_KEY = "totalRecords";
   private static final String METADATA_KEY = "metadata";
   private static final String DATES_KEY = "dates";
-  private static final String SUBJECTS_KEY = "subjects";
   private static final String TAG_VALUE = "test-tag";
   private static final String STATUS_UPDATED_DATE_PROPERTY = "statusUpdatedDate";
   private static final Logger log = LogManager.getLogger();
@@ -404,6 +405,63 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canUpdateAnInstanceUnlinkSubjectSourceAndType() {
+
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    instanceFromGet.put(SUBJECTS_KEY, null);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void canUpdateAnInstanceLinkAndUnlinkSubjectSourceAndType() {
+
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    var updatedSubject = new Subject()
+      .withSourceId("e894d0dc-621d-4b1d-98f6-6f7120eb0d41")
+      .withTypeId("d6488f88-1e74-40ce-81b5-b19a928ff5b2")
+      .withValue("subject upd");
+    var updatedSubjects = new JsonArray().add(updatedSubject);
+    instanceFromGet.put(SUBJECTS_KEY, updatedSubjects);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
   @Test

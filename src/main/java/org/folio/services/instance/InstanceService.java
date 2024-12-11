@@ -21,10 +21,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
@@ -32,6 +38,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.jaxrs.model.InventoryViewInstanceWithoutPubPeriod;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -115,6 +122,13 @@ public class InstanceService {
           // api client invoking this endpoint. The response is returned
           // a little earlier so the api client can continue its processing
           // while the domain event publish is satisfied.
+          .compose(response -> {
+            if (response.getEntity() instanceof Instance instanceResponse) {
+              batchLinkSubjects(instanceResponse.getId(), instanceResponse.getSubjects());
+            }
+            return Future.succeededFuture(response);
+            }
+          )
           .onSuccess(domainEventPublisher.publishCreated());
       })
       .map(ResponseHandlerUtil::handleHridError);
@@ -133,6 +147,10 @@ public class InstanceService {
         // Can use instances list here directly because the class is stateful
         postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
+          .compose(response -> {
+            batchLinkSubjects(batchOperation.getRecordsToBeCreated());
+            return Future.succeededFuture(response);
+          })
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))
       )
       .map(ResponseHandlerUtil::handleHridError);
@@ -150,13 +168,88 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
+        linkOrUnlinkSubjects(newInstance, oldInstance);
         put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
           InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
-
         return putResult.future()
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }
+
+  private void linkOrUnlinkSubjects(Instance newInstance, Instance oldInstance) {
+    var instanceId = newInstance.getId();
+
+    if (newInstance.getSubjects().isEmpty()) {
+      instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
+      instanceRepository.unlinkInstanceFromSubjectType(instanceId);
+      return;
+    }
+
+    // Identify the differences between old and new subjects
+    Set<Subject> newSubjects = newInstance.getSubjects();
+    Set<Subject> oldSubjects = oldInstance.getSubjects() != null ? oldInstance.getSubjects() : Collections.emptySet();
+
+    // Subjects to remove
+    var subjectsToRemove = oldSubjects.stream()
+      .filter(subject -> !newSubjects.contains(subject))
+      .collect(Collectors.toSet());
+
+    // Subjects to add
+    var subjectsToAdd = newSubjects.stream()
+      .filter(subject -> !oldSubjects.contains(subject))
+      .collect(Collectors.toSet());
+
+    // Batch unlink removed subjects
+    batchUnlinkSubjects(instanceId, subjectsToRemove);
+
+    // Batch link new subjects
+    batchLinkSubjects(instanceId, subjectsToAdd);
+  }
+
+  private void batchUnlinkSubjects(String instanceId, Set<Subject> subjectsToRemove) {
+    var sourceIds = subjectsToRemove.stream()
+      .map(Subject::getSourceId)
+      .filter(Objects::nonNull)
+      .toList();
+
+    var typeIds = subjectsToRemove.stream()
+      .map(Subject::getTypeId)
+      .filter(Objects::nonNull)
+      .toList();
+
+    if (!sourceIds.isEmpty()) {
+      instanceRepository.batchUnlinkSubjectSource(instanceId, sourceIds);
+    }
+
+    if (!typeIds.isEmpty()) {
+      instanceRepository.batchUnlinkSubjectType(instanceId, typeIds);
+    }
+  }
+
+  private void batchLinkSubjects(String instanceId, Set<Subject> subjectsToAdd) {
+    var sourcePairs = subjectsToAdd.stream()
+      .map(subject -> Pair.of(instanceId, subject.getSourceId()))
+      .toList();
+
+    var typePairs = subjectsToAdd.stream()
+      .map(subject -> Pair.of(instanceId, subject.getTypeId()))
+      .toList();
+
+    if (!sourcePairs.isEmpty()) {
+      instanceRepository.batchLinkSubjectSource(sourcePairs);
+    }
+
+    if (!typePairs.isEmpty()) {
+      instanceRepository.batchLinkSubjectType(typePairs);
+    }
+  }
+
+  private void batchLinkSubjects(Collection<Instance> batchInstance) {
+    batchInstance.forEach(instance -> batchLinkSubjects(instance.getId(), instance.getSubjects()));
+  }
+
+
+
 
   /**
    * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",
