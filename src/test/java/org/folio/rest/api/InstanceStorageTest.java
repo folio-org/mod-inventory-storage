@@ -434,6 +434,37 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void canUpdateAnInstanceLinkAndUnlinkSubjectSourceAndType() {
+
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    var updatedSubject = new Subject()
+      .withSourceId("e894d0dc-621d-4b1d-98f6-6f7120eb0d41")
+      .withTypeId("d6488f88-1e74-40ce-81b5-b19a928ff5b2")
+      .withValue("subject upd");
+    var updatedSubjects = new JsonArray().add(updatedSubject);
+    instanceFromGet.put(SUBJECTS_KEY, updatedSubjects);
+
+    var updatedResponse = update(instanceFromGet);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+  }
+
+  @Test
   public void cannotPutAnInstanceAtNonexistingLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
 

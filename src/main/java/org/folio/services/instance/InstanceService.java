@@ -21,6 +21,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -146,6 +147,10 @@ public class InstanceService {
         // Can use instances list here directly because the class is stateful
         postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
           vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
+          .compose(response -> {
+            batchLinkSubjects(batchOperation.getRecordsToBeCreated());
+            return Future.succeededFuture(response);
+          })
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))
       )
       .map(ResponseHandlerUtil::handleHridError);
@@ -237,6 +242,10 @@ public class InstanceService {
     if (!typePairs.isEmpty()) {
       instanceRepository.batchLinkSubjectType(typePairs);
     }
+  }
+
+  private void batchLinkSubjects(Collection<Instance> batchInstance) {
+    batchInstance.forEach(instance -> batchLinkSubjects(instance.getId(), instance.getSubjects()));
   }
 
 
