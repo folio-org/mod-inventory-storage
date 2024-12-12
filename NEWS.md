@@ -16,7 +16,7 @@
 * Implement Kafka Event Publishing for Call-Number Type CRUD Operations ([MODINVSTOR-1275](https://folio-org.atlassian.net/browse/MODINVSTOR-1275))
 
 ### Bug fixes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
 
 ### Tech Dept
 * Delete 6 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
