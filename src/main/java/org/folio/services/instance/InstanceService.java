@@ -160,13 +160,12 @@ public class InstanceService {
           if (transactionResult.succeeded()) {
             postResponse.complete(transactionResult.result());
           } else {
-             postResponse.fail(transactionResult.cause());
+            postResponse.fail(transactionResult.cause());
           }
         });
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-        }
-      )
+      })
       .map(ResponseHandlerUtil::handleHridError);
   }
 
