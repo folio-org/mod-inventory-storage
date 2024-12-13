@@ -34,12 +34,15 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
+import org.folio.rest.exceptions.ValidationException;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.jaxrs.model.InventoryViewInstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
@@ -58,6 +61,7 @@ public class InstanceService {
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
+  private final PostgresClient postgresClient;
   private final InstanceDomainEventPublisher domainEventPublisher;
   private final InstanceRepository instanceRepository;
   private final InstanceMarcRepository marcRepository;
@@ -68,7 +72,7 @@ public class InstanceService {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
-    final PostgresClient postgresClient = postgresClient(vertxContext, okapiHeaders);
+    postgresClient = postgresClient(vertxContext, okapiHeaders);
     hridManager = new HridManager(postgresClient);
     domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
     instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
@@ -110,26 +114,25 @@ public class InstanceService {
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
-        final Promise<Response> postResponse = promise();
+        final Promise<Response> postResponse = promise(); // promise for the entire process
 
-        post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
-          InstanceStorage.PostInstanceStorageInstancesResponse.class, postResponse);
+        // execute post and linking logic within same transaction
+        return postgresClient.withTrans(conn -> {
 
-        return postResponse.future()
-          // Return the response without waiting for a domain event publish
-          // to complete. Units of work performed by this service is the same
-          // but the ordering of the units of work provides a benefit to the
-          // api client invoking this endpoint. The response is returned
-          // a little earlier so the api client can continue its processing
-          // while the domain event publish is satisfied.
-          .compose(response -> {
-            if (response.getEntity() instanceof Instance instanceResponse) {
-              batchLinkSubjects(instanceResponse.getId(), instanceResponse.getSubjects());
-            }
-            return Future.succeededFuture(response);
-            }
-          )
-          .onSuccess(domainEventPublisher.publishCreated());
+          Promise<Response> postPromise = postInstance(instance);
+
+          // Chain the batchLinkSubjects operation after postPromise completes
+          return postPromise.future()
+            .compose(response -> batchLinkSubjects(conn, instance.getId(), instance.getSubjects())
+              .map(v -> response)
+            );
+        }).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            postResponse.complete(transactionResult.result());
+          } else {
+            postResponse.fail(transactionResult.cause());
+          }
+        }).onSuccess(domainEventPublisher.publishCreated());
       })
       .map(ResponseHandlerUtil::handleHridError);
   }
@@ -143,15 +146,26 @@ public class InstanceService {
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId, publishEvents))
-      .compose(batchOperation ->
-        // Can use instances list here directly because the class is stateful
-        postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
-          vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-          .compose(response -> {
-            batchLinkSubjects(batchOperation.getRecordsToBeCreated());
-            return Future.succeededFuture(response);
-          })
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation))
+      .compose(batchOperation -> {
+        final Promise<Response> postResponse = promise();
+
+        postgresClient.withTrans(conn -> {
+
+          Promise<Response> postPromise = postSyncInstance(instances, upsert, optimisticLocking);
+
+          return postPromise.future()
+            .compose(response -> batchLinkSubjects(conn, batchOperation.getRecordsToBeCreated())
+              .map(v -> response));
+        }).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            postResponse.complete(transactionResult.result());
+          } else {
+             postResponse.fail(transactionResult.cause());
+          }
+        });
+        return postResponse.future()
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
+        }
       )
       .map(ResponseHandlerUtil::handleHridError);
   }
@@ -168,45 +182,103 @@ public class InstanceService {
       })
       .compose(oldInstance -> {
         final Promise<Response> putResult = promise();
-        linkOrUnlinkSubjects(newInstance, oldInstance);
-        put(INSTANCE_TABLE, newInstance, id, okapiHeaders, vertxContext,
-          InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, putResult);
-        return putResult.future()
+
+        return postgresClient.withTrans(conn -> {
+          Promise<Response> putPromise = putInstance(newInstance, id);
+          return putPromise.future()
+            .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+              .map(v -> response));
+        }).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            putResult.complete(transactionResult.result());
+          } else {
+            putResult.fail(transactionResult.cause());
+          }
+        })
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }
 
-  private void linkOrUnlinkSubjects(Instance newInstance, Instance oldInstance) {
+  /**
+   * creates instance with separate promise, to use withing single transaction
+   * alongside with linking subject sources/types.
+   * */
+  private Promise<Response> postInstance(Instance instance) {
+    Promise<Response> promise = Promise.promise(); // Promise for the `post` operation
+    post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
+      InstanceStorage.PostInstanceStorageInstancesResponse.class,
+      reply -> {
+        if (reply.succeeded()) {
+          promise.complete(reply.result()); // Mark `postPromise` as successful
+        } else {
+          promise.fail(reply.cause()); // Mark `postPromise` as failed
+        }
+      });
+    return promise;
+  }
+
+  private Promise<Response> postSyncInstance(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+    Promise<Response> promise = Promise.promise();
+    postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
+      vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
+      .onComplete(response -> {
+        if (response.succeeded()) {
+          var result = response.result();
+          if (result.getEntity() instanceof Errors errors) {
+            promise.fail(new ValidationException(errors));
+          } else {
+            promise.complete(result);
+          }
+        } else {
+          promise.fail(response.cause());
+        }
+      });
+    return promise;
+  }
+
+  private Promise<Response> putInstance(Instance newInstance, String instanceId) {
+    Promise<Response> promise = Promise.promise();
+    put(INSTANCE_TABLE, newInstance, instanceId, okapiHeaders, vertxContext,
+      InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
+        if (reply.succeeded()) {
+          promise.complete(reply.result());
+        } else {
+          promise.fail(reply.cause());
+        }
+      });
+    return promise;
+  }
+
+  private Future<Void> linkOrUnlinkSubjects(Conn conn, Instance newInstance, Instance oldInstance) {
     var instanceId = newInstance.getId();
 
     if (newInstance.getSubjects().isEmpty()) {
-      instanceRepository.unlinkInstanceFromSubjectSource(instanceId);
-      instanceRepository.unlinkInstanceFromSubjectType(instanceId);
-      return;
+      return Future.all(
+        instanceRepository.unlinkInstanceFromSubjectSource(conn, instanceId),
+        instanceRepository.unlinkInstanceFromSubjectType(conn, instanceId)
+      ).mapEmpty();
     }
-
     // Identify the differences between old and new subjects
     Set<Subject> newSubjects = newInstance.getSubjects();
     Set<Subject> oldSubjects = oldInstance.getSubjects() != null ? oldInstance.getSubjects() : Collections.emptySet();
 
-    // Subjects to remove
     var subjectsToRemove = oldSubjects.stream()
       .filter(subject -> !newSubjects.contains(subject))
       .collect(Collectors.toSet());
 
-    // Subjects to add
     var subjectsToAdd = newSubjects.stream()
       .filter(subject -> !oldSubjects.contains(subject))
       .collect(Collectors.toSet());
 
-    // Batch unlink removed subjects
-    batchUnlinkSubjects(instanceId, subjectsToRemove);
-
-    // Batch link new subjects
-    batchLinkSubjects(instanceId, subjectsToAdd);
+    return batchUnlinkSubjects(conn, instanceId, subjectsToRemove)
+      .compose(v -> batchLinkSubjects(conn, instanceId, subjectsToAdd));
   }
 
-  private void batchUnlinkSubjects(String instanceId, Set<Subject> subjectsToRemove) {
+  private Future<Void> batchUnlinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToRemove) {
+    if (subjectsToRemove.isEmpty()) {
+      return Future.succeededFuture();
+    }
+
     var sourceIds = subjectsToRemove.stream()
       .map(Subject::getSourceId)
       .filter(Objects::nonNull)
@@ -217,39 +289,47 @@ public class InstanceService {
       .filter(Objects::nonNull)
       .toList();
 
-    if (!sourceIds.isEmpty()) {
-      instanceRepository.batchUnlinkSubjectSource(instanceId, sourceIds);
-    }
-
-    if (!typeIds.isEmpty()) {
-      instanceRepository.batchUnlinkSubjectType(instanceId, typeIds);
-    }
+    return Future.all(
+      sourceIds.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchUnlinkSubjectSource(conn, instanceId, sourceIds),
+      typeIds.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchUnlinkSubjectType(conn, instanceId, typeIds)
+    ).mapEmpty();
   }
 
-  private void batchLinkSubjects(String instanceId, Set<Subject> subjectsToAdd) {
+
+  private Future<Void> batchLinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToAdd) {
     var sourcePairs = subjectsToAdd.stream()
+      .filter(subject -> subject.getSourceId() != null)
       .map(subject -> Pair.of(instanceId, subject.getSourceId()))
       .toList();
 
     var typePairs = subjectsToAdd.stream()
+      .filter(subject -> subject.getTypeId() != null)
       .map(subject -> Pair.of(instanceId, subject.getTypeId()))
       .toList();
 
-    if (!sourcePairs.isEmpty()) {
-      instanceRepository.batchLinkSubjectSource(sourcePairs);
+    if (sourcePairs.isEmpty() && typePairs.isEmpty()) {
+      return Future.succeededFuture(); // No subjects to link, return success immediately
     }
 
-    if (!typePairs.isEmpty()) {
-      instanceRepository.batchLinkSubjectType(typePairs);
-    }
+    // Combine both operations into a single future
+    return Future.all(
+        sourcePairs.isEmpty() ? Future.succeededFuture() :
+          instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
+        typePairs.isEmpty() ? Future.succeededFuture() :
+          instanceRepository.batchLinkSubjectType(conn, typePairs)
+    ).mapEmpty();
   }
 
-  private void batchLinkSubjects(Collection<Instance> batchInstance) {
-    batchInstance.forEach(instance -> batchLinkSubjects(instance.getId(), instance.getSubjects()));
+  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstance) {
+    return Future.all(
+      batchInstance.stream()
+        .map(instance -> batchLinkSubjects(conn, instance.getId(),
+          instance.getSubjects()))
+        .toList()
+    ).mapEmpty();
   }
-
-
-
 
   /**
    * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",

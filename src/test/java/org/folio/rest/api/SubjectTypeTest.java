@@ -247,11 +247,11 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void clearLinksBetweenSubjectSourceAndInstance() {
+  public void clearLinksBetweenSubjectTypeAndInstance() {
     var instanceId = UUID.randomUUID();
 
     JsonObject subjectType = new JsonObject()
-      .put("name", "Library Test " + UUID_INSTANCE_SUBJECT_TYPE_ID)
+      .put("name", "Library Test2 " + UUID_INSTANCE_SUBJECT_TYPE_ID)
       .put("source", "local");
 
     var subjectTypeId = createSubjectType(subjectType).getJson().getString("id");

@@ -1,6 +1,6 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronousUnsafe.PostInstanceStorageBatchSynchronousUnsafeResponse.respond500WithTextPlain;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -25,7 +25,7 @@ public class InstanceBatchSyncUnsafeApi implements InstanceStorageBatchSynchrono
 
     new InstanceService(vertxContext, okapiHeaders)
       .createInstances(instances.getInstances(), true, false, true)
-      .otherwise(cause -> respond500WithTextPlain(cause.getMessage()))
+      .onFailure(handleFailure(asyncResultHandler))
       .onComplete(asyncResultHandler);
   }
 }
