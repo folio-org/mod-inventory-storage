@@ -136,7 +136,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
         .put("source", "MARC")
-        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2")));
 
     var countDownLatch = new CountDownLatch(1);
 
@@ -172,7 +172,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
         .put("source", "MARC")
-        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2")));
 
     var countDownLatch = new CountDownLatch(1);
     var query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID);
