@@ -1,4 +1,4 @@
-## v28.0.3 YYYY-mm-DD
+## v28.0.3 2024-12-17
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
 
