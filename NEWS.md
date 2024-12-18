@@ -11,6 +11,7 @@
 
 ## v28.0.1 2024-11-08
 ### Features
+* Unable to delete local Subject types/sources when they are linked to an Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
 * Change Kafka event publishing keys for holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
 * Append bounded items to invetory-view instances response ([MODINVSTOR-1266](https://folio-org.atlassian.net/browse/MODINVSTOR-1266))

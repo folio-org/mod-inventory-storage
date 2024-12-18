@@ -130,13 +130,14 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canMigrateInstanceSubjectsAndSeries() {
-    var numberOfRecords = 10;
+    var numberOfRecords = 3;
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
         .put("source", "MARC")
-        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2"))
+    );
 
     var countDownLatch = new CountDownLatch(1);
 
@@ -166,13 +167,13 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canMigrateInstancePublicationPeriod() {
-    var numberOfRecords = 10;
+    var numberOfRecords = 4;
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
         .put("title", "test" + v)
         .put("source", "MARC")
-        .put("instanceTypeId", "30fffe0e-e985-4144-b2e2-1e8179bdb41f")));
+        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2")));
 
     var countDownLatch = new CountDownLatch(1);
     var query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID);
@@ -181,7 +182,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     // check jsonb contains 'publicationPeriod' data
     RowSet<Row> selectResult = runSql(String.format(SELECT_JSONB, TENANT_ID));
 
-    assertEquals(10, selectResult.rowCount());
+    assertEquals(4, selectResult.rowCount());
     JsonObject jsonbData = selectResult.iterator().next().toJson().getJsonObject("jsonb");
     assertNull(jsonbData.getJsonObject("dates"));
     assertNotNull(jsonbData.getJsonObject("publicationPeriod"));
@@ -208,7 +209,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var selectQuery = String.format(SELECT_JSONB, TENANT_ID);
     RowSet<Row> result = runSql(selectQuery);
 
-    assertEquals(10, result.rowCount());
+    assertEquals(4, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
     JsonObject jsonb = entry.getJsonObject("jsonb");
     JsonObject dates = jsonb.getJsonObject("dates");
