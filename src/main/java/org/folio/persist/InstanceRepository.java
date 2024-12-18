@@ -10,6 +10,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
@@ -20,12 +21,14 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.tuple.Pair;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ResultInfo;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -35,9 +38,107 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private static final String INSTANCE_SET_VIEW = "instance_set";
   private static final String INSTANCE_HOLDINGS_ITEM_VIEW = "instance_holdings_item_view";
   private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
+  private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
+  private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
+
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
+  }
+
+  public Future<RowSet<Row>> unlinkInstanceFromSubjectSource(Conn conn, String instanceId) {
+    try {
+      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId);
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+  }
+
+  public Future<RowSet<Row>> unlinkInstanceFromSubjectType(Conn conn, String instanceId) {
+    try {
+      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_TYPE_TABLE, instanceId);
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+  }
+
+  private String unlinkInstanceFromSubjectSql(String table, String id) {
+    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
+      postgresClientFuturized.getFullTableName(table), id);
+  }
+
+  public Future<RowSet<Row>> batchLinkSubjectSource(Conn conn, List<Pair<String, String>> sourcePairs) {
+    try {
+      String sql = """
+        INSERT INTO %s (instance_id, source_id)
+        VALUES %s
+        ON CONFLICT DO NOTHING;
+        """
+        .formatted(
+          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+          sourcePairs.stream()
+            .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
+            .collect(Collectors.joining(", "))
+        );
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+  }
+
+  public Future<RowSet<Row>> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs) {
+    try {
+      String sql = """
+        INSERT INTO %s (instance_id, type_id)
+        VALUES %s
+        ON CONFLICT DO NOTHING;
+        """
+        .formatted(
+          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          typePairs.stream()
+            .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
+            .collect(Collectors.joining(", "))
+        );
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+
+  }
+
+  public Future<RowSet<Row>> batchUnlinkSubjectSource(Conn conn, String instanceId, List<String> sourceIds) {
+    try {
+      String sql = """
+      DELETE FROM %s WHERE instance_id = '%s' AND source_id IN ( %s );
+      """
+        .formatted(
+          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+          instanceId,
+          sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", "))
+        );
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+  }
+
+  public Future<RowSet<Row>> batchUnlinkSubjectType(Conn conn, String instanceId, List<String> typeIds) {
+    try {
+      String sql = """
+        DELETE FROM %s WHERE instance_id = '%s' AND type_id IN ( %s );
+        """
+        .formatted(
+          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          instanceId,
+          typeIds.stream().map(id -> "'" + id + "'")
+            .collect(Collectors.joining(", "))
+        );
+      return conn.execute(sql);
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
   }
 
   public Future<RowStream<Row>> getAllIds(SQLConnection connection) {
