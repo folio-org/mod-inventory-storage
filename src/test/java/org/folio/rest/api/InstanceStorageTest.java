@@ -2226,7 +2226,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody().contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
+    assertTrue(response.getBody()
+      .contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2341,7 +2342,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody().contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001000) already exists."));
+    assertTrue(response.getBody()
+      .contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001000) already exists."));
   }
 
   @Test
@@ -2706,7 +2708,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody().contains("Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
+    assertTrue(response.getBody()
+      .contains("Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }
