@@ -387,7 +387,7 @@
       "ginIndex": [
         {
           "fieldName": "identifiers",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         }
@@ -401,13 +401,13 @@
         },
         {
           "fieldName": "indexTitle",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
           "fieldName": "title",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -419,13 +419,13 @@
         },
         {
           "fieldName": "contributors",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
           "fieldName": "publication",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -451,6 +451,7 @@
       "fullTextIndex": [
         {
           "fieldName": "identifiers",
+          "tOps": "DELETE",
           "arraySubfield": "value",
           "arrayModifiers": [
             "identifierTypeId"
@@ -927,11 +928,6 @@
       "run": "after",
       "snippetPath": "setPreviouslyHeldDefault.sql",
       "fromModuleVersion": "20.2.0"
-    },
-    {
-      "run": "before",
-      "snippetPath": "populateRmbInternalIndex.sql",
-      "fromModuleVersion": "19.1.1"
     },
     {
       "run": "before",
