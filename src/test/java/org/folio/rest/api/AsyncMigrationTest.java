@@ -130,7 +130,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canMigrateInstanceSubjectsAndSeries() {
-    var numberOfRecords = 3;
+    var numberOfRecords = 10;
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
@@ -167,7 +167,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canMigrateInstancePublicationPeriod() {
-    var numberOfRecords = 4;
+    var numberOfRecords = 10;
 
     IntStream.range(0, numberOfRecords).parallel().forEach(v ->
       instancesClient.create(new JsonObject()
@@ -182,7 +182,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     // check jsonb contains 'publicationPeriod' data
     RowSet<Row> selectResult = runSql(String.format(SELECT_JSONB, TENANT_ID));
 
-    assertEquals(4, selectResult.rowCount());
+    assertEquals(10, selectResult.rowCount());
     JsonObject jsonbData = selectResult.iterator().next().toJson().getJsonObject("jsonb");
     assertNull(jsonbData.getJsonObject("dates"));
     assertNotNull(jsonbData.getJsonObject("publicationPeriod"));
@@ -209,7 +209,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var selectQuery = String.format(SELECT_JSONB, TENANT_ID);
     RowSet<Row> result = runSql(selectQuery);
 
-    assertEquals(4, result.rowCount());
+    assertEquals(10, result.rowCount());
     JsonObject entry = result.iterator().next().toJson();
     JsonObject jsonb = entry.getJsonObject("jsonb");
     JsonObject dates = jsonb.getJsonObject("dates");

@@ -1,14 +1,16 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Promise.promise;
+import static javax.ws.rs.core.Response.noContent;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond201WithApplicationJson;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
-import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
@@ -114,25 +116,24 @@ public class InstanceService {
     return hridManager.populateHrid(entity)
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
-        final Promise<Response> postResponse = promise(); // promise for the entire process
+        final Promise<Response> postResponse = promise();
 
-        // execute post and linking logic within same transaction
-        return postgresClient.withTrans(conn -> {
+        postgresClient.withTrans(conn ->
+          instanceRepository.createInstance(conn, instance)
+            .onFailure(postResponse::fail)
+            .compose(instanceId -> batchLinkSubjects(conn, instanceId, instance.getSubjects())
+              .map(v -> instanceId))
+            .map(instanceId -> respond201WithApplicationJson(instance.withId(instanceId), headersFor201()))
+        ).onSuccess(postResponse::complete);
 
-          Promise<Response> postPromise = postInstance(instance);
-
-          // Chain the batchLinkSubjects operation after postPromise completes
-          return postPromise.future()
-            .compose(response -> batchLinkSubjects(conn, instance.getId(), instance.getSubjects())
-              .map(v -> response)
-            );
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            postResponse.complete(transactionResult.result());
-          } else {
-            postResponse.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishCreated());
+        return postResponse.future()
+            // Return the response without waiting for a domain event publish
+            // to complete. Units of work performed by this service is the same
+            // but the ordering of the units of work provides a benefit to the
+            // api client invoking this endpoint. The response is returned
+            // a little earlier so the api client can continue its processing
+            // while the domain event publish is satisfied.
+            .onSuccess(domainEventPublisher.publishCreated());
       })
       .map(ResponseHandlerUtil::handleHridError);
   }
@@ -196,24 +197,6 @@ public class InstanceService {
         })
           .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
-  }
-
-  /**
-   * creates instance with separate promise, to use withing single transaction
-   * alongside with linking subject sources/types.
-   * */
-  private Promise<Response> postInstance(Instance instance) {
-    Promise<Response> promise = Promise.promise(); // Promise for the `post` operation
-    post(INSTANCE_TABLE, instance, okapiHeaders, vertxContext,
-      InstanceStorage.PostInstanceStorageInstancesResponse.class,
-      reply -> {
-        if (reply.succeeded()) {
-          promise.complete(reply.result()); // Mark `postPromise` as successful
-        } else {
-          promise.fail(reply.cause()); // Mark `postPromise` as failed
-        }
-      });
-    return promise;
   }
 
   private Promise<Response> postSyncInstance(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
@@ -339,7 +322,7 @@ public class InstanceService {
       .compose(notUsed -> relationshipRepository.deleteAll())
       .compose(notUsed -> instanceRepository.deleteAll())
       .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
-      .map(Response.noContent().build());
+      .map(noContent().build());
   }
 
   /**
@@ -356,7 +339,7 @@ public class InstanceService {
         rowSet.iterator().forEachRemaining(row ->
           domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
         );
-        return Response.noContent().build();
+        return noContent().build();
       });
   }
 
@@ -380,7 +363,7 @@ public class InstanceService {
           domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
         )
       ))
-      .map(Response.noContent().build());
+      .map(noContent().build());
   }
 
   public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
