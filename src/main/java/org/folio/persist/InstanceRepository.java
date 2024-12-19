@@ -88,6 +88,10 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     }
   }
 
+  public Future<String> createInstance(Conn conn, Instance instance) {
+    return conn.save(INSTANCE_TABLE, instance.getId(), instance);
+  }
+
   public Future<RowSet<Row>> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs) {
     try {
       String sql = """
