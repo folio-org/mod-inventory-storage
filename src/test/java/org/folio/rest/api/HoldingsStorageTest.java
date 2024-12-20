@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import kotlin.jvm.functions.Function4;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -86,6 +87,7 @@ import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.consortium.entities.SharingStatus;
+import org.folio.util.PercentCodec;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -700,6 +702,42 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @SneakyThrows
+  public void canGetByInstanceId() {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(nod(instanceId));
+    Function4<UUID, String, String, String, String> createHolding =
+        (location, prefix, callNumber, suffix) -> createHolding(new HoldingRequestBuilder()
+            .forInstance(instanceId)
+            .withSource(getPreparedHoldingSourceId())
+            .withPermanentLocation(location)
+            .withCallNumberPrefix(prefix)
+            .withCallNumber(callNumber)
+            .withCallNumberSuffix(suffix))
+          .getId().toString();
+    final var h7 = createHolding.invoke(SECOND_FLOOR_LOCATION_ID, "b", "k", "p");
+    final var h6 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "c", "j", "q");
+    final var h5 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "b", "k", "q");
+    final var h4 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "l", "r");
+    final var h3 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "k", "o");
+    final var h2 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "q");
+    final var h1 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "p");
+    final var h0 = createHolding.invoke(ANNEX_LIBRARY_LOCATION_ID, "b", "k", "q");
+
+    var query = "instanceId==" + instanceId
+        + " sortBy effectiveLocation.name callNumberPrefix callNumber callNumberSuffix";
+    query = "?query=" + PercentCodec.encode(query);
+    var all = holdingsClient.getByQuery(query);
+    var ids = all.stream().map(holding -> holding.getString("id")).toList();
+    assertThat(ids, is(List.of(h0, h1, h2, h3, h4, h5, h6, h7)));
+
+    var response = get(holdingsStorageUrl(query + "&offset=2&limit=4"));
+    var jsonArray = response.getJson().getJsonArray("holdingsRecords");
+    ids = jsonArray.stream().map(holding -> ((JsonObject) holding).getString("id")).toList();
+    assertThat(ids, is(List.of(h2, h3, h4, h5)));
+  }
+
+  @Test
   public void canDeleteAllHoldings() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
@@ -1059,7 +1097,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingId = UUID.randomUUID();
 
-    final JsonObject holding = holdingsClient.create(new HoldingRequestBuilder()
+    final JsonObject holding = createHolding(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
@@ -3360,6 +3398,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertHridRange(Response response, String minHrid, String maxHrid) {
     assertThat(response.getJson().getString("hrid"),
       is(both(greaterThanOrEqualTo(minHrid)).and(lessThanOrEqualTo(maxHrid))));
+  }
+
+  private IndividualResource createHolding(HoldingRequestBuilder holding) {
+    return holdingsClient.create(holding.create(),
+        TENANT_ID,
+        Map.of(X_OKAPI_URL, mockServer.baseUrl()));
   }
 
   private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {

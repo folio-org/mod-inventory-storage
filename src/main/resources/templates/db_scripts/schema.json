@@ -624,6 +624,7 @@
         {
           "fieldName": "effectiveLocationId",
           "targetTable": "location",
+          "targetTableAlias": "effectiveLocation",
           "tOps": "ADD"
         },
         {
