@@ -19,6 +19,7 @@
 
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
+* Sort holdings by location name in instanceId query ([MODINVSTOR-1343](https://folio-org.atlassian.net/browse/MODINVSTOR-1343))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))

@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +57,14 @@ import org.folio.validator.NotesValidators;
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
   private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
+  private static final Pattern INSTANCEID_PATTERN = Pattern.compile(
+      "^ *instanceId *== *\"?("
+      // UUID
+      + "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+      + ")\"?"
+      + " +sortBy"
+      // allow any sub-set of the fields and allow the fields in any order
+      + "(( +(effectiveLocation\\.name|callNumberPrefix|callNumber|callNumberSuffix))+) *$");
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -80,6 +90,35 @@ public class HoldingsService {
     instanceRepository = new InstanceRepository(context, okapiHeaders);
     consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
       context.get(ConsortiumDataCache.class.getName()));
+  }
+
+  /**
+   * Returns Response if the query is supported by instanceId query, null otherwise.
+   *
+   * <p>
+   */
+  public Future<Response> getByInstanceId(int offset, int limit, String query) {
+    if (query == null) {
+      return Future.succeededFuture();
+    }
+    var matcher = INSTANCEID_PATTERN.matcher(query);
+    if (!matcher.find()) {
+      return Future.succeededFuture();
+    }
+    var instanceId = matcher.group(1);
+    var sortBy = matcher.group(2).split(" +");
+    return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit)
+        .map(row -> {
+          var json = "{ \"holdingsRecords\": " + row.getString(0) + ",\n"
+              + "  \"totalRecords\": " + row.getLong(1) + ",\n"
+              + "  \"resultInfo\": { \n"
+              + "    \"totalRecords\": " + row.getLong(1) + ",\n"
+              + "    \"totalRecordsEstimated\": false\n"
+              + "  }\n"
+              + "}";
+          return Response.ok(json, MediaType.APPLICATION_JSON).build();
+        })
+        .onFailure(e -> log.error("getByInstanceId:: {}", e.getMessage(), e));
   }
 
   /**
