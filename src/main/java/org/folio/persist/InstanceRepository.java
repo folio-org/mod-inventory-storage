@@ -3,6 +3,8 @@ package org.folio.persist;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond201WithApplicationJson;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,6 +87,15 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       return conn.execute(sql);
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
+    }
+  }
+
+  public Future<Response> createInstance(Conn conn, Instance instance) {
+    try {
+      return conn.save(INSTANCE_TABLE, instance.getId(), instance)
+        .map(id -> respond201WithApplicationJson(instance.withId(id), headersFor201()));
+    } catch (PgException e) {
+      return Future.failedFuture(new BadRequestException(e.getDetail()));
     }
   }
 
