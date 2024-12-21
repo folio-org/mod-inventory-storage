@@ -2342,8 +2342,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody()
-      .contains("HRID value already exists in table instance: in00000001000"));
+    assertThat(response.getBody(), is(
+      "HRID value already exists in table instance: in00000001000"));
   }
 
   @Test
