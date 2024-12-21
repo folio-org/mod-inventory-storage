@@ -41,6 +41,13 @@ public final class ResponseHandlerUtil {
     }
   }
 
+  private static Response createResponse(Response response, String errorMessage) {
+    var transformedMessage = transformHridErrorMessage(errorMessage);
+    return Response.fromResponse(response)
+      .entity(transformedMessage)
+      .build();
+  }
+
   public static Response failedValidationResponse(Response response) {
     var entity = (Errors) response.getEntity();
     var errors = entity.getErrors();
@@ -64,13 +71,6 @@ public final class ResponseHandlerUtil {
       return createResponse(response, errorMessage);
     }
     return response;
-  }
-
-  private static Response createResponse(Response response, String errorMessage) {
-    var transformedMessage = transformHridErrorMessage(errorMessage);
-    return Response.fromResponse(response)
-      .entity(transformedMessage)
-      .build();
   }
 
   private static String transformHridErrorMessage(String errorMessage) {
