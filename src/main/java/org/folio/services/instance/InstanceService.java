@@ -8,8 +8,7 @@ import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.headersFor201;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond201WithApplicationJson;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -23,6 +22,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.pgclient.PgException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -120,11 +120,23 @@ public class InstanceService {
 
         postgresClient.withTrans(conn ->
           instanceRepository.createInstance(conn, instance)
-            .onFailure(postResponse::fail)
-            .compose(instanceId -> batchLinkSubjects(conn, instanceId, instance.getSubjects())
-              .map(v -> instanceId))
-            .map(instanceId -> respond201WithApplicationJson(instance.withId(instanceId), headersFor201()))
-        ).onSuccess(postResponse::complete);
+            .compose(response -> {
+              if (response.getEntity() instanceof Instance instanceResp) {
+                return batchLinkSubjects(conn, instanceResp.getId(), instance.getSubjects())
+                  .map(v -> response);
+              } else {
+                return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
+              }
+            })
+            .onSuccess(postResponse::complete)
+            .onFailure(throwable -> {
+              if (throwable instanceof PgException pgException) {
+                postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
+              } else {
+                postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
+              }
+            })
+        );
 
         return postResponse.future()
             // Return the response without waiting for a domain event publish
@@ -135,7 +147,7 @@ public class InstanceService {
             // while the domain event publish is satisfied.
             .onSuccess(domainEventPublisher.publishCreated());
       })
-      .map(ResponseHandlerUtil::handleHridError);
+      .map(ResponseHandlerUtil::handleHridErrorInInstance);
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
@@ -150,6 +162,7 @@ public class InstanceService {
       .compose(batchOperation -> {
         final Promise<Response> postResponse = promise();
 
+        // todo: use the connection for creating batches and linking subjects
         postgresClient.withTrans(conn -> {
 
           Promise<Response> postPromise = postSyncInstance(instances, upsert, optimisticLocking);

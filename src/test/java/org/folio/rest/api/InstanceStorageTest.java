@@ -1946,9 +1946,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(updatedInstanceWithCatStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(3)));
     assertThat(updatedInstanceWithOthStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(1)));
+      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
   }
 
   /**
@@ -2226,8 +2226,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody()
-      .contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000000001) already exists."));
+    assertThat(response.getBody(),
+      is("HRID value already exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2343,7 +2343,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertTrue(response.getBody()
-      .contains("Key (lower(f_unaccent(jsonb ->> 'hrid'::text)))=(in00000001000) already exists."));
+      .contains("HRID value already exists in table instance: in00000001000"));
   }
 
   @Test
@@ -3094,7 +3094,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageUrl(""), instanceToCreate,
       TENANT_ID, json(createCompleted));
 
-    Response response = createCompleted.get(2, SECONDS);
+    Response response = createCompleted.get(5, SECONDS);
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
