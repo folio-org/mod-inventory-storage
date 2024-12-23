@@ -91,12 +91,8 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   public Future<Response> createInstance(Conn conn, Instance instance) {
-    try {
-      return conn.save(INSTANCE_TABLE, instance.getId(), instance)
-        .map(id -> respond201WithApplicationJson(instance.withId(id), headersFor201()));
-    } catch (PgException e) {
-      return Future.failedFuture(new BadRequestException(e.getDetail()));
-    }
+    return conn.save(INSTANCE_TABLE, instance.getId(), instance)
+      .map(id -> respond201WithApplicationJson(instance.withId(id), headersFor201()));
   }
 
   public Future<RowSet<Row>> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs) {
