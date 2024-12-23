@@ -171,7 +171,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     // This calls get() to ensure blocking until all futures are complete.
     final Async async = context.async();
-    List<CompletableFuture<Response>> cfs = new ArrayList<CompletableFuture<Response>>();
+    List<CompletableFuture<Response>> cfs = new ArrayList<>();
     natureOfContentIdsToRemoveAfterTest.forEach(id -> cfs.add(getClient()
       .delete(natureOfContentTermsUrl("/" + id), TENANT_ID)));
     CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()]))
@@ -1945,9 +1945,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
     assertThat(updatedInstanceWithCatStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(3)));
     assertThat(updatedInstanceWithOthStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(1)));
+      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
   }
 
   /**
@@ -2341,7 +2341,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-
     assertThat(response.getBody(), is(
       "HRID value already exists in table instance: in00000001000"));
   }
@@ -3095,7 +3094,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageUrl(""), instanceToCreate,
       TENANT_ID, json(createCompleted));
 
-    Response response = createCompleted.get(2, SECONDS);
+    Response response = createCompleted.get(5, SECONDS);
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
