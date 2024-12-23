@@ -79,7 +79,8 @@ public final class ResponseHandlerUtil {
   private static Response createMatchKeyResponse(Response response) {
     var entity = response.getEntity().toString();
     var matchKeyValue = extractValue(entity);
-    var remappedMessage = String.format("%s value already exists in table instance: %s", MATCH_KEY_ERROR_MESSAGE, matchKeyValue);
+    var remappedMessage = String.format("%s value already exists in table instance: %s",
+      MATCH_KEY_ERROR_MESSAGE, matchKeyValue);
     return Response.fromResponse(response)
       .entity(remappedMessage)
       .build();

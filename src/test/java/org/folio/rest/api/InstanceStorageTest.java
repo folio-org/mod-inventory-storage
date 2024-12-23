@@ -2708,8 +2708,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(),
-      is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already " +
-        "exists in table instance: match_key"));
+      is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already "
+        + "exists in table instance: match_key"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }
