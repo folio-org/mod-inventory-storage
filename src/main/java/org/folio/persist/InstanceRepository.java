@@ -3,6 +3,8 @@ package org.folio.persist;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.headersFor201;
+import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond201WithApplicationJson;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,6 +88,11 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
+  }
+
+  public Future<Response> createInstance(Conn conn, Instance instance) {
+    return conn.save(INSTANCE_TABLE, instance.getId(), instance)
+      .map(id -> respond201WithApplicationJson(instance.withId(id), headersFor201()));
   }
 
   public Future<RowSet<Row>> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs) {
