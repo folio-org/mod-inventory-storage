@@ -47,7 +47,6 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
 import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -2708,8 +2707,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertTrue(response.getBody()
-      .contains("Key (lower(f_unaccent(jsonb ->> 'matchKey'::text)))=(match_key) already exists."));
+    assertThat(response.getBody(),
+      is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already " +
+        "exists in table instance: match_key"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }

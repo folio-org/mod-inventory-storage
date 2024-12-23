@@ -5,6 +5,7 @@ import org.folio.rest.jaxrs.model.Errors;
 
 public final class ResponseHandlerUtil {
   private static final String HRID_ERROR_MESSAGE = "lower(f_unaccent(jsonb ->> 'hrid'::text))";
+  private static final String MATCH_KEY_ERROR_MESSAGE = "lower(f_unaccent(jsonb ->> 'matchKey'::text))";
   private static final String HRID = "HRID";
   private static final String TABLE_NAME = "instance";
 
@@ -69,18 +70,29 @@ public final class ResponseHandlerUtil {
     var errorMessage = getErrorMessage(response.getEntity());
     if (errorMessage.contains(HRID_ERROR_MESSAGE)) {
       return createResponse(response, errorMessage);
+    } else if (errorMessage.contains(MATCH_KEY_ERROR_MESSAGE)) {
+      return createMatchKeyResponse(response);
     }
     return response;
   }
 
+  private static Response createMatchKeyResponse(Response response) {
+    var entity = response.getEntity().toString();
+    var matchKeyValue = extractValue(entity);
+    var remappedMessage = String.format("%s value already exists in table instance: %s", MATCH_KEY_ERROR_MESSAGE, matchKeyValue);
+    return Response.fromResponse(response)
+      .entity(remappedMessage)
+      .build();
+  }
+
   private static String transformHridErrorMessage(String errorMessage) {
-    var hridValue = extractHridValue(errorMessage);
+    var hridValue = extractValue(errorMessage);
     return hridValue != null
       ? String.format("%s value already exists in table %s: %s", HRID, TABLE_NAME, hridValue)
       : errorMessage;
   }
 
-  private static String extractHridValue(String errorMessage) {
+  private static String extractValue(String errorMessage) {
     var startIndex = errorMessage.indexOf("=(") + 2;
     var endIndex = errorMessage.indexOf(")", startIndex);
     return (startIndex > 1 && endIndex > startIndex) ? errorMessage.substring(startIndex, endIndex) : null;
