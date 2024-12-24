@@ -1,3 +1,8 @@
+## v28.0.4 2024-12-24
+### Bug fixes
+* Update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
+* Disallow to delete local Subject types/sources when they are linked to an Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
+
 ## v28.0.3 2024-12-17
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
@@ -11,8 +16,6 @@
 
 ## v28.0.1 2024-11-08
 ### Features
-* update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
-* Unable to delete local Subject types/sources when they are linked to an Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
 * Change Kafka event publishing keys for holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
 * Append bounded items to invetory-view instances response ([MODINVSTOR-1266](https://folio-org.atlassian.net/browse/MODINVSTOR-1266))
