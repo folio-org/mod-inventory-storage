@@ -36,8 +36,13 @@ resourceTypes:
         exampleItem: !include examples/holdings-storage/holdingsRecord_get.json
     get:
       is: [pageable,
-           searchable: {description: "by instance ID (using CQL)",
-                        example: "instanceId=\"2b94c631-fca9-4892-a730-03ee529ffe2a\""},
+           searchable: {
+             description:
+               "Sorting by a foreign table field is not supported; the only exception is a query of this form:
+                'instanceId==\"<UUID>\" sortBy [callNumberPrefix|callNumber|callNumberSuffix|effectiveLocation.name]+'
+                quoting the UUID is optional.",
+             example: "instanceId==\"2b94c631-fca9-4892-a730-03ee529ffe2a\""
+           },
           ]
     post:
       is: [validate]
