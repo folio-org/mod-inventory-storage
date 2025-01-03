@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.api.InstanceStorageTest.SUBJECTS_KEY;
 import static org.folio.rest.support.http.InterfaceUrls.subjectTypesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -8,6 +9,7 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonArray;
@@ -21,6 +23,7 @@ import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
@@ -217,6 +220,56 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
     assertEquals(204, response.getStatusCode());
   }
 
+  @Test
+  public void cannotDeleteSubjectTypeLinkedToInstance() {
+    var instanceId = UUID.randomUUID();
+
+    JsonObject subjectType = new JsonObject()
+      .put("name", "Library Test " + UUID_INSTANCE_SUBJECT_TYPE_ID)
+      .put("source", "local");
+
+    var subjectTypeId = createSubjectType(subjectType).getJson().getString("id");
+
+    var instance = instance(instanceId);
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(subjectTypeId)
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instance.put(SUBJECTS_KEY, subjects);
+
+    createInstanceRecord(instance);
+
+    Response response = deleteSubjectType(UUID.fromString(subjectTypeId));
+
+    assertEquals(400, response.getStatusCode());
+    assertTrue(response.getBody().contains("id is still referenced from table instance_subject_type"));
+  }
+
+  @Test
+  public void clearLinksBetweenSubjectTypeAndInstance() {
+    var instanceId = UUID.randomUUID();
+
+    JsonObject subjectType = new JsonObject()
+      .put("name", "Library Test2 " + UUID_INSTANCE_SUBJECT_TYPE_ID)
+      .put("source", "local");
+
+    var subjectTypeId = createSubjectType(subjectType).getJson().getString("id");
+
+    var instance = instance(instanceId);
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(subjectTypeId)
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    instance.put(SUBJECTS_KEY, subjects);
+
+    createInstanceRecord(instance);
+
+    var response = deleteInstanceRecord(instanceId);
+    assertEquals(204, response.getStatusCode());
+  }
+
   private Response createSubjectType(JsonObject object) {
     return createSubjectType(object, TENANT_ID);
   }
@@ -231,5 +284,9 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
 
   private Response updateSubjectType(String id, JsonObject object, String tenantId) {
     return subjectTypeClient.attemptToReplace(id, object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+  }
+
+  private Response deleteSubjectType(UUID id) {
+    return subjectTypeClient.attemptToDelete(id);
   }
 }
