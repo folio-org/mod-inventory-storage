@@ -46,7 +46,7 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
       }
       orderBy.append(s);
     }
-    var sql = "WITH data AS ("
+    var sql = "WITH data AS NOT MATERIALIZED ("
         + " SELECT h.jsonb AS jsonb, l.jsonb->>'name' AS name"
         + " FROM " + HOLDINGS_RECORD_TABLE + " h"
         + " LEFT JOIN " + LOCATION_TABLE + " l"
