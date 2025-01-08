@@ -22,8 +22,9 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   }
 
   /**
-   * Row where the first value is an array with all holdings records; the second value is
-   * the exact totalRecords count.
+   * Produce a single row where the {@code holdings} column is a text field
+   * containing a JSON array with all holdings records; the
+   * {@code total_records} column is the exact totalRecords count.
    */
   public Future<Row> getByInstanceId(String instanceId, String[] sortBys, int offset, int limit) {
     var orderBy = new StringBuilder();
@@ -59,8 +60,8 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
         + "   ORDER BY " + orderBy
         + "   OFFSET $2"
         + "   LIMIT $3"
-        + " )::text, ("
-        + "   SELECT COUNT(*)"
+        + " )::text AS holdings, ("
+        + "   SELECT COUNT(*) AS total_records"
         + "   FROM " + HOLDINGS_RECORD_TABLE
         + "   WHERE instanceId=$1"
         + ")";

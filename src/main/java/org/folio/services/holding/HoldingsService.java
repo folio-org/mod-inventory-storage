@@ -109,10 +109,10 @@ public class HoldingsService {
     var sortBy = matcher.group(2).split(" +");
     return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit)
         .map(row -> {
-          var json = "{ \"holdingsRecords\": " + row.getString(0) + ",\n"
-              + "  \"totalRecords\": " + row.getLong(1) + ",\n"
+          var json = "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
+              + "  \"totalRecords\": " + row.getLong("total_records") + ",\n"
               + "  \"resultInfo\": { \n"
-              + "    \"totalRecords\": " + row.getLong(1) + ",\n"
+              + "    \"totalRecords\": " + row.getLong("total_records") + ",\n"
               + "    \"totalRecordsEstimated\": false\n"
               + "  }\n"
               + "}";
