@@ -10,10 +10,14 @@ import static org.folio.services.domainevent.DomainEventType.UPDATE;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.UUID;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DomainEvent<T> {
+
+  private UUID eventId;
+  private Long eventTs;
   @JsonProperty("old")
   private T oldEntity;
   @JsonProperty("new")
@@ -24,6 +28,8 @@ public class DomainEvent<T> {
   @JsonCreator
   public DomainEvent(@JsonProperty("old") T oldEntity, @JsonProperty("new") T newEntity,
                      @JsonProperty("type") DomainEventType type, @JsonProperty("tenant") String tenant) {
+    this.eventId = UUID.randomUUID();
+    this.eventTs = System.currentTimeMillis();
     this.oldEntity = oldEntity;
     this.newEntity = newEntity;
     this.type = type;
@@ -50,12 +56,24 @@ public class DomainEvent<T> {
     return new DomainEvent<>(null, null, REINDEX, tenant);
   }
 
-  public static <T> DomainEvent<T> reindexEvent(String tenant, T newEntity) {
-    return new DomainEvent<>(null, newEntity, REINDEX, tenant);
-  }
-
   public static <T> DomainEvent<T> asyncMigrationEvent(T job, String tenant) {
     return new DomainEvent<>(null, job, MIGRATION, tenant);
+  }
+
+  public UUID getEventId() {
+    return eventId;
+  }
+
+  public void setEventId(UUID eventId) {
+    this.eventId = eventId;
+  }
+
+  public Long getEventTs() {
+    return eventTs;
+  }
+
+  public void setEventTs(Long eventTs) {
+    this.eventTs = eventTs;
   }
 
   public T getOldEntity() {
@@ -93,6 +111,8 @@ public class DomainEvent<T> {
   @Override
   public String toString() {
     return new ToStringBuilder(this)
+      .append("eventId", eventId)
+      .append("eventTs", eventTs)
       .append("oldEntity", oldEntity)
       .append("newEntity", newEntity)
       .append("type", type)
