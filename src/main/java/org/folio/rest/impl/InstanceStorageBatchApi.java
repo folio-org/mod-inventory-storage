@@ -22,17 +22,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.InstanceWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.InstancesBatchResponse;
-import org.folio.rest.jaxrs.model.InstancesWithoutPubPeriod;
 import org.folio.rest.jaxrs.resource.InstanceStorageBatchInstances;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
-import org.folio.utils.ObjectConverterUtils;
 
 @SuppressWarnings("rawtypes")
 public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
@@ -47,15 +44,13 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
 
   @Validate
   @Override
-  public void postInstanceStorageBatchInstances(InstancesWithoutPubPeriod entity,
+  public void postInstanceStorageBatchInstances(Instances entity,
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
 
-    var instances = ObjectConverterUtils.convertObject(entity, Instances.class);
-
     final String statusUpdatedDate = generateStatusUpdatedDate();
-    for (Instance instance : instances.getInstances()) {
+    for (Instance instance : entity.getInstances()) {
       instance.setStatusUpdatedDate(statusUpdatedDate);
     }
 
@@ -65,9 +60,9 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
         final InstanceDomainEventPublisher instanceDomainEventPublisher =
           new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
 
-        MetadataUtil.populateMetadata(instances.getInstances(), okapiHeaders);
-        executeInBatch(instances.getInstances(),
-          instanceList -> saveInstances(instanceList, postgresClient))
+        MetadataUtil.populateMetadata(entity.getInstances(), okapiHeaders);
+        executeInBatch(entity.getInstances(),
+          instances -> saveInstances(instances, postgresClient))
           .onComplete(ar -> {
 
             InstancesBatchResponse response = constructResponse(ar.result());
@@ -175,7 +170,7 @@ public class InstanceStorageBatchApi implements InstanceStorageBatchInstances {
       if (save.failed()) {
         response.getErrorMessages().add(save.cause().getMessage());
       } else {
-        response.getInstances().add(ObjectConverterUtils.convertObject(save.result(), InstanceWithoutPubPeriod.class));
+        response.getInstances().add(save.result());
       }
     });
 

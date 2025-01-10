@@ -11,7 +11,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
-import static org.folio.services.migration.MigrationName.PUBLICATION_PERIOD_MIGRATION;
 import static org.folio.services.migration.MigrationName.SUBJECT_SERIES_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -22,7 +21,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -62,14 +60,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
-
-  private static final String UPDATE_JSONB_WITH_PUB_PERIOD = """
-    UPDATE %s_mod_inventory_storage.instance
-    SET jsonb = jsonb || jsonb_set(jsonb, '{publicationPeriod}', jsonb_build_object('start', '1999', 'end', '2001'))
-    RETURNING id::text;
-    """;
-  private static final String SELECT_JSONB =
-    "SELECT jsonb FROM %s_mod_inventory_storage.instance";
 
   private final AsyncMigrationJobRepository repository = getRepository();
 
@@ -166,65 +156,10 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMigrateInstancePublicationPeriod() {
-    var numberOfRecords = 10;
-
-    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-      instancesClient.create(new JsonObject()
-        .put("title", "test" + v)
-        .put("source", "MARC")
-        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2")));
-
-    var countDownLatch = new CountDownLatch(1);
-    var query = String.format(UPDATE_JSONB_WITH_PUB_PERIOD, TENANT_ID);
-    postgresClient(getContext(), okapiHeaders()).execute(query)
-      .onSuccess(event -> countDownLatch.countDown());
-    // check jsonb contains 'publicationPeriod' data
-    RowSet<Row> selectResult = runSql(String.format(SELECT_JSONB, TENANT_ID));
-
-    assertEquals(10, selectResult.rowCount());
-    JsonObject jsonbData = selectResult.iterator().next().toJson().getJsonObject("jsonb");
-    assertNull(jsonbData.getJsonObject("dates"));
-    assertNotNull(jsonbData.getJsonObject("publicationPeriod"));
-
-
-    await().atMost(5, SECONDS).until(() -> countDownLatch.getCount() == 0L);
-
-    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of(PUBLICATION_PERIOD_MIGRATION.getValue())));
-
-    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
-
-    var job = asyncMigration.getMigrationJob(migrationJob.getId());
-
-    assertThat(job.getPublished().stream().map(Published::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getProcessed().stream().map(Processed::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-
-    // check that the 'publicationPeriod' data has been migrated to the 'dates' data
-    var selectQuery = String.format(SELECT_JSONB, TENANT_ID);
-    RowSet<Row> result = runSql(selectQuery);
-
-    assertEquals(10, result.rowCount());
-    JsonObject entry = result.iterator().next().toJson();
-    JsonObject jsonb = entry.getJsonObject("jsonb");
-    JsonObject dates = jsonb.getJsonObject("dates");
-    assertNotNull(dates);
-    assertNull(jsonb.getString("publicationPeriod"));
-    assertEquals("1999", dates.getString("date1"));
-    assertEquals("2001", dates.getString("date2"));
-    assertEquals("8fa6d067-41ff-4362-96a0-96b16ddce267", dates.getString("dateTypeId"));
-  }
-
-  @Test
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(3), migrations.getTotalRecords());
+    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
     assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
       migrations.getAsyncMigrations().get(0).getMigrations().get(0));
   }
