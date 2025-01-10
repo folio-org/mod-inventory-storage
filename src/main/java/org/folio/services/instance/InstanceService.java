@@ -241,7 +241,7 @@ public class InstanceService {
   private Future<Void> linkOrUnlinkSubjects(Conn conn, Instance newInstance, Instance oldInstance) {
     var instanceId = newInstance.getId();
 
-    if (newInstance.getSubjects().isEmpty()) {
+    if (newInstance.getSubjects() == null || newInstance.getSubjects().isEmpty()) {
       return Future.all(
         instanceRepository.unlinkInstanceFromSubjectSource(conn, instanceId),
         instanceRepository.unlinkInstanceFromSubjectType(conn, instanceId)
