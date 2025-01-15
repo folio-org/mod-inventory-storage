@@ -41,6 +41,7 @@ public class TenantRefApi extends TenantAPI {
   private static final String ITEMS = "item-storage/items";
   private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
   private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
+  private static final String SERVICE_POINTS = "service-points";
   private static final String SERVICE_POINTS_USERS = "service-points-users";
 
   private static final Logger log = LogManager.getLogger();
@@ -113,7 +114,7 @@ public class TenantRefApi extends TenantAPI {
       List<JsonObject> servicePoints = new LinkedList<>();
       try {
         List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-          REFERENCE_LEAD + "/service-points");
+          REFERENCE_LEAD + "/" + SERVICE_POINTS);
         for (URL url : urls) {
           InputStream stream = url.openStream();
           String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
@@ -168,6 +169,14 @@ public class TenantRefApi extends TenantAPI {
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
+//    if (isNew(attributes, "28.1.0")) {
+//      TenantLoading tl = new TenantLoading();
+//      tl.withKey(REFERENCE_KEY).withLead(SERVICE_POINTS);
+//      tl.withIdContent();
+//      tl.add("service-points/28.1", SERVICE_POINTS);
+//      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+//    }
+
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
       .map(result));
   }
@@ -197,12 +206,12 @@ public class TenantRefApi extends TenantAPI {
     JsonObject jsonInput = new JsonObject(service);
     JsonObject jsonOutput = new JsonObject();
     jsonOutput.put("userId", jsonInput.getString("id"));
-    JsonArray ar = new JsonArray();
+    JsonArray servicePointIds = new JsonArray();
     for (JsonObject pt : servicePoints) {
-      ar.add(pt.getString("id"));
+      servicePointIds.add(pt.getString("id"));
     }
-    jsonOutput.put("servicePointsIds", ar);
-    jsonOutput.put("defaultServicePointId", ar.getString(0));
+    jsonOutput.put("servicePointsIds", servicePointIds);
+    jsonOutput.put("defaultServicePointId", servicePointIds.getString(0));
     String res = jsonOutput.encodePrettily();
     log.info("servicePointUser result : {}", res);
     return res;

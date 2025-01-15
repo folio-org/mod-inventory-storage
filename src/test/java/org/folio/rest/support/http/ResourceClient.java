@@ -177,6 +177,11 @@ public final class ResourceClient {
       "Instance reindex", "reindex");
   }
 
+  public static ResourceClient forServicePoints(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::servicePointsUrl,
+      "Service points", "servicepoints");
+  }
+
   public IndividualResource create(Builder builder) {
 
     return create(builder.create());
