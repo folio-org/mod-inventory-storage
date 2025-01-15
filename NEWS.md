@@ -1,3 +1,7 @@
+## v28.0.5 2025-01-15
+### Bug fixes
+* Populate discoverySuppress if not set. ([MODINVSTOR-1348](https://folio-org.atlassian.net/browse/MODINVSTOR-1348))
+
 ## v28.0.4 2024-12-24
 ### Bug fixes
 * Update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
