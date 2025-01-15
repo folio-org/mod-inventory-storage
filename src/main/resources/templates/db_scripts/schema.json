@@ -1241,17 +1241,17 @@
     {
       "run": "after",
       "snippetPath": "createInstanceSubjectSourceTable.sql",
-      "fromModuleVersion": "28.1.0"
+      "fromModuleVersion": "28.0.4"
     },
     {
       "run": "after",
       "snippetPath": "createInstanceSubjectTypeTable.sql",
-      "fromModuleVersion": "28.1.0"
+      "fromModuleVersion": "28.0.4"
     },
     {
       "run": "after",
       "snippetPath": "populateDiscoverySuppressIfNotSet.sql",
-      "fromModuleVersion": "28.1.0"
+      "fromModuleVersion": "28.0.5"
     }
   ]
 }
