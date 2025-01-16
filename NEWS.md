@@ -1,8 +1,14 @@
+## v27.1.5 2025-01-16
+### Bug fixes
+* Move populateDiscoverySuppressIfNotSet.sql script into Q release [MODINVSTOR-1347](https://folio-org.atlassian.net/browse/MODINVSTOR-1347)
+
+---
+
 ## v27.1.4 2024-06-19
 ### Bug fixes
 * Add manual holdings migration script to module migrations [MODINVSTOR-1189](https://folio-org.atlassian.net/browse/MODINVSTOR-1189)
 
-* ## v27.1.3 2024-04-19
+## v27.1.3 2024-04-19
 ### Bug fixes
 * Create missing index for instance.complete_updated_date (MODINVSTOR-1190)[https://folio-org.atlassian.net/browse/MODINVSTOR-1190]
 
