@@ -173,7 +173,7 @@ public class TenantRefApi extends TenantAPI {
       TenantLoading tl = new TenantLoading();
       tl.withKey(REFERENCE_KEY).withLead(SERVICE_POINTS);
       tl.withIdContent();
-      tl.add("service-points/28.1", SERVICE_POINTS);
+      tl.add("service-points/service-points-28.1", SERVICE_POINTS);
       future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
     }
 
