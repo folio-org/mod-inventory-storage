@@ -41,7 +41,6 @@ public class TenantRefApi extends TenantAPI {
   private static final String ITEMS = "item-storage/items";
   private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
   private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
-  private static final String SERVICE_POINTS = "service-points";
   private static final String SERVICE_POINTS_USERS = "service-points-users";
 
   private static final Logger log = LogManager.getLogger();
@@ -114,7 +113,7 @@ public class TenantRefApi extends TenantAPI {
       List<JsonObject> servicePoints = new LinkedList<>();
       try {
         List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-          REFERENCE_LEAD + "/" + SERVICE_POINTS);
+          REFERENCE_LEAD + "/service-points");
         for (URL url : urls) {
           InputStream stream = url.openStream();
           String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
@@ -198,12 +197,12 @@ public class TenantRefApi extends TenantAPI {
     JsonObject jsonInput = new JsonObject(service);
     JsonObject jsonOutput = new JsonObject();
     jsonOutput.put("userId", jsonInput.getString("id"));
-    JsonArray servicePointIds = new JsonArray();
+    JsonArray ar = new JsonArray();
     for (JsonObject pt : servicePoints) {
-      servicePointIds.add(pt.getString("id"));
+      ar.add(pt.getString("id"));
     }
-    jsonOutput.put("servicePointsIds", servicePointIds);
-    jsonOutput.put("defaultServicePointId", servicePointIds.getString(0));
+    jsonOutput.put("servicePointsIds", ar);
+    jsonOutput.put("defaultServicePointId", ar.getString(0));
     String res = jsonOutput.encodePrettily();
     log.info("servicePointUser result : {}", res);
     return res;
