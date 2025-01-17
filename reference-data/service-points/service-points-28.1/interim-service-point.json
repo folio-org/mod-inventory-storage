@@ -1,0 +1,11 @@
+{
+  "id": "36180bc6-53bb-47e7-81d0-6ec340fa03ba",
+  "name": "Interim service point",
+  "code": "isp",
+  "discoveryDisplayName": "Interim service point",
+  "pickupLocation": true,
+  "holdShelfExpiryPeriod": {
+    "duration": 3,
+    "intervalId": "Weeks"
+  }
+}
