@@ -1,6 +1,6 @@
 ## v28.1.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Drop CQL array support for `instance identifiers` field ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
@@ -22,7 +22,7 @@
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Delete 6 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
