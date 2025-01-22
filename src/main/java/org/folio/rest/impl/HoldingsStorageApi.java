@@ -29,9 +29,17 @@ public class HoldingsStorageApi implements HoldingsStorage {
                                          RoutingContext routingContext, Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {
-
-    PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecordView.class, query, offset,
-      limit, null, "holdingsRecords", routingContext, okapiHeaders, vertxContext);
+    new HoldingsService(vertxContext, okapiHeaders)
+      .getByInstanceId(offset, limit, query)
+      .onSuccess(response -> {
+        if (response != null) {
+          asyncResultHandler.handle(succeededFuture(response));
+          return;
+        }
+        PgUtil.streamGet(HOLDINGS_RECORD_TABLE, HoldingsRecordView.class, query, offset,
+            limit, null, "holdingsRecords", routingContext, okapiHeaders, vertxContext);
+      })
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
