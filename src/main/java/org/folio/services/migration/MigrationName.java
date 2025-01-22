@@ -1,7 +1,6 @@
 package org.folio.services.migration;
 
 public enum MigrationName {
-  PUBLICATION_PERIOD_MIGRATION("publicationPeriodMigration"),
   SUBJECT_SERIES_MIGRATION("subjectSeriesMigration"),
   ITEM_SHELVING_ORDER_MIGRATION("itemShelvingOrderMigration");
 

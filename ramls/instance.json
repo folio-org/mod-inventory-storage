@@ -286,21 +286,6 @@
       },
       "uniqueItems": true
     },
-    "publicationPeriod": {
-      "type": "object",
-      "description": "Publication period",
-      "properties": {
-        "start": {
-          "type": "integer",
-          "description": "Publication start year"
-        },
-        "end": {
-          "type": "integer",
-          "description": "Publication end year"
-        }
-      },
-      "additionalProperties": false
-    },
     "electronicAccess": {
       "type": "array",
       "description": "List of electronic access items",
