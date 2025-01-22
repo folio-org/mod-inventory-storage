@@ -40,6 +40,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.ContributorNameType;
@@ -63,10 +64,14 @@ import org.folio.rest.api.entities.StatisticalCode;
 import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.utility.ModuleUtility;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.runner.RunWith;
 
-
+@RunWith(JUnitParamsRunner.class)
 public class ReferenceTablesTest extends TestBase {
 
   @SneakyThrows
@@ -583,6 +588,17 @@ public class ReferenceTablesTest extends TestBase {
     final Response searchResponse = getReferenceRecords(holdingsSourceUrl(""));
 
     validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 399);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1.0.0, 28.1.0"})
+  @SneakyThrows
+  public void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
+    ModuleUtility.prepareTenant(TENANT_ID, moduleFrom, moduleTo, false);
+    int statusCode = servicePointsClient.getById(
+        UUID.fromString("32c6f0c7-26e4-4350-8c29-1e11c2e3efc4"))
+      .getStatusCode();
+    assertThat(statusCode, is(HttpURLConnection.HTTP_OK));
   }
 
   private Response getReferenceRecords(URL baseUrl)
