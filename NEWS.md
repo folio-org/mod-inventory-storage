@@ -1,3 +1,7 @@
+## v28.0.6 2025-01-22
+### Features
+* Add authorized staff service point to reference data ([MODINVSTOR-1346](https://folio-org.atlassian.net/browse/MODINVSTOR-1346))
+
 ## v28.0.5 2025-01-15
 ### Bug fixes
 * Populate discoverySuppress if not set. ([MODINVSTOR-1348](https://folio-org.atlassian.net/browse/MODINVSTOR-1348))
