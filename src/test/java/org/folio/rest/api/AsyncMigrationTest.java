@@ -28,15 +28,12 @@ import static org.mockito.Mockito.spy;
 
 import io.vertx.core.Context;
 import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
@@ -49,7 +46,6 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
@@ -210,14 +206,5 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   private AsyncMigrationJobRepository getRepository() {
     return new AsyncMigrationJobRepository(getContext(), okapiHeaders());
-  }
-
-  @SneakyThrows
-  private RowSet<Row> runSql(String sql) {
-    return PostgresClient.getInstance(getVertx())
-      .execute(sql)
-      .toCompletionStage()
-      .toCompletableFuture()
-      .get(TIMEOUT, TimeUnit.SECONDS);
   }
 }
