@@ -624,6 +624,7 @@
         {
           "fieldName": "effectiveLocationId",
           "targetTable": "location",
+          "targetTableAlias": "effectiveLocation",
           "tOps": "ADD"
         },
         {
@@ -1230,11 +1231,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "publication-period/migratePublicationPeriod.sql",
-      "fromModuleVersion": "28.0.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "createIndexBarcodePattern.sql",
       "fromModuleVersion": "28.0.3"
     },
@@ -1251,6 +1247,11 @@
     {
       "run": "after",
       "snippetPath": "populateDiscoverySuppressIfNotSet.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "publication-period/drop-pub-period-migration-function.sql",
       "fromModuleVersion": "28.1.0"
     }
   ]

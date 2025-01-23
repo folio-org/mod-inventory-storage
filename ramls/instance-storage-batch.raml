@@ -11,7 +11,6 @@ documentation:
 types:
   errors: !include raml-util/schemas/errors.schema
   instances: !include instances.json
-  instancesWithoutPubPeriod: !include instances-without-pub-period.json
   instancesBatchResponse: !include instances-batch-response.json
 
 /instance-storage/batch/instances:
@@ -20,7 +19,7 @@ types:
     description: "Create collection of instances in one request - deprecated, use /instance-storage/sync instead"
     body:
       application/json:
-        type: instancesWithoutPubPeriod
+        type: instances
     responses:
       201:
         description: "At least one Instance from the list was created"

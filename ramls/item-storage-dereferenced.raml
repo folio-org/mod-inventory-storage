@@ -11,9 +11,6 @@ documentation:
 types:
   dereferencedItem: !include dereferenceditem.json
   dereferencedItems: !include dereferenceditems.json
-  dereferencedItemWithoutPubPeriod: !include dereferenceditem-without-pub-period.json
-  dereferencedItemsWithoutPubPeriod: !include dereferenceditems-without-pub-period.json
-
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -30,7 +27,7 @@ resourceTypes:
     type:
       collection:
         exampleCollection: !include examples/items_dereferenced_get.json
-        schemaCollection: dereferencedItemsWithoutPubPeriod
+        schemaCollection: dereferencedItems
     get:
       is: [pageable,
          searchable: {description: "using CQL (indexes for item and material type)",
@@ -40,5 +37,5 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/item_dereferenced_get.json
-          schema: dereferencedItemWithoutPubPeriod
+          schema: dereferencedItem
       get:

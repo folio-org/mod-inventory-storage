@@ -17,15 +17,12 @@ import javax.ws.rs.core.Response;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.DereferencedItem;
-import org.folio.rest.jaxrs.model.DereferencedItemWithoutPubPeriod;
 import org.folio.rest.jaxrs.model.DereferencedItems;
-import org.folio.rest.jaxrs.model.DereferencedItemsWithoutPubPeriod;
 import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.util.UuidUtil;
-import org.folio.utils.ObjectConverterUtils;
 
 /**
  * CRUD for Dereferenced Items.
@@ -112,11 +109,8 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
       itemCollection.setDereferencedItems(mappedResults);
       itemCollection.setTotalRecords(mappedResults.size());
 
-      var dereferencedItemsWithoutPubPeriod = ObjectConverterUtils.convertObject(
-        itemCollection, DereferencedItemsWithoutPubPeriod.class);
       asyncResultHandler.handle(Future.succeededFuture(
-        GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(
-          dereferencedItemsWithoutPubPeriod)));
+        GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
     });
   }
 
@@ -144,12 +138,8 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
       Row row = asyncResult.result().iterator().next();
 
       DereferencedItem item = mapToDereferencedItem(row);
-      var dereferencedItemWithoutPubPeriod = ObjectConverterUtils.convertObject(
-        item, DereferencedItemWithoutPubPeriod.class);
-
       asyncResultHandler.handle(Future.succeededFuture(
-        GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(
-          dereferencedItemWithoutPubPeriod)));
+        GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(item)));
     });
   }
 
