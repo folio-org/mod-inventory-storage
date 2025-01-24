@@ -303,15 +303,10 @@ public class HoldingsService {
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
-    return instanceRepository.getById(instanceId)
-      .compose(instance -> {
-        if (instance != null) {
-          return Future.succeededFuture();
-        }
-        log.info("createShadowInstanceIfNeeded:: instance with id: {} is not found in local tenant."
-          + " Trying to create a shadow instance", instanceId);
-        return consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders);
-      });
+    return instanceRepository.exists(instanceId)
+      .compose(exists -> exists? Future.succeededFuture():
+        consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
+      );
   }
 
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {

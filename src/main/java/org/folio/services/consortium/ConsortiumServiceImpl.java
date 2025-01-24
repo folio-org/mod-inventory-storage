@@ -40,7 +40,9 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> createShadowInstance(String instanceId, ConsortiumData consortiumData,
                                                       Map<String, String> headers) {
-    SharingInstance sharingInstance = new SharingInstance();
+    LOGGER.info("createShadowInstance:: instance with id: {} is not found in local tenant."
+          + " Trying to create a shadow instance", instanceId);
+  SharingInstance sharingInstance = new SharingInstance();
     String centralTenantId = consortiumData.centralTenantId();
     sharingInstance.setSourceTenantId(centralTenantId);
     sharingInstance.setInstanceIdentifier(UUID.fromString(instanceId));

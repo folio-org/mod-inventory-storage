@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import io.vertx.sqlclient.Tuple;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -68,6 +70,13 @@ public abstract class AbstractRepository<T> {
       .collect(Collectors.toSet());
 
     return getById(ids);
+  }
+
+  public Future<Boolean> exists(String id) {
+    return postgresClient.execute(
+        "select 1 from " + postgresClient.getSchemaName() + "." + tableName + " where id = $1 limit 1",
+        Tuple.of(id))
+      .map(ar -> ar != null && ar.rowCount() == 1);
   }
 
   public Future<RowSet<Row>> update(AsyncResult<SQLConnection> connection, String id, T entity) {
