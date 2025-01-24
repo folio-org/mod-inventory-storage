@@ -42,7 +42,7 @@ public class ConsortiumServiceImpl implements ConsortiumService {
                                                       Map<String, String> headers) {
     LOGGER.info("createShadowInstance:: instance with id: {} is not found in local tenant."
           + " Trying to create a shadow instance", instanceId);
-  SharingInstance sharingInstance = new SharingInstance();
+    SharingInstance sharingInstance = new SharingInstance();
     String centralTenantId = consortiumData.centralTenantId();
     sharingInstance.setSourceTenantId(centralTenantId);
     sharingInstance.setInstanceIdentifier(UUID.fromString(instanceId));

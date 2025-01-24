@@ -304,7 +304,7 @@ public class HoldingsService {
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
     return instanceRepository.exists(instanceId)
-      .compose(exists -> exists? Future.succeededFuture():
+      .compose(exists -> exists ? Future.succeededFuture() :
         consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
       );
   }
