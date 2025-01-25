@@ -9,6 +9,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,13 @@ public abstract class AbstractRepository<T> {
       .collect(Collectors.toSet());
 
     return getById(ids);
+  }
+
+  public Future<Boolean> exists(String id) {
+    return postgresClient.execute(
+        "select 1 from " + postgresClient.getSchemaName() + "." + tableName + " where id = $1 limit 1",
+        Tuple.of(id))
+      .map(ar -> ar != null && ar.rowCount() == 1);
   }
 
   public Future<RowSet<Row>> update(AsyncResult<SQLConnection> connection, String id, T entity) {
