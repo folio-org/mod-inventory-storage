@@ -1,3 +1,6 @@
+## v28.0.7 2025-01-27
+* Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
+
 ## v28.0.6 2025-01-22
 ### Features
 * Add authorized staff service point to reference data ([MODINVSTOR-1346](https://folio-org.atlassian.net/browse/MODINVSTOR-1346))
