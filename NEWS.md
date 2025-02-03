@@ -1,3 +1,6 @@
+## v28.0.8 2025-02-03
+* Update discoverySuppress query to use index ([MODINVSTOR-1357](https://folio-org.atlassian.net/browse/MODINVSTOR-1357))
+
 ## v28.0.7 2025-01-27
 * Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
 
