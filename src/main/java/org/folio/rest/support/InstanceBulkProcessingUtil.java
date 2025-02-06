@@ -42,6 +42,7 @@ public final class InstanceBulkProcessingUtil {
   public static void copyNonMarcControlledFields(Instance targetInstance, Instance sourceInstance) {
     targetInstance.setStaffSuppress(sourceInstance.getStaffSuppress());
     targetInstance.setDiscoverySuppress(sourceInstance.getDiscoverySuppress());
+    targetInstance.setDeleted(sourceInstance.getDeleted());
     targetInstance.setCatalogedDate(sourceInstance.getCatalogedDate());
     targetInstance.setStatusId(sourceInstance.getStatusId());
     targetInstance.setStatusUpdatedDate(sourceInstance.getStatusUpdatedDate());
