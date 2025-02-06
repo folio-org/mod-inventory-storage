@@ -1,6 +1,6 @@
 ## v28.1.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
