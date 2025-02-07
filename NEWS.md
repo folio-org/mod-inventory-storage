@@ -1,6 +1,6 @@
 ## v28.1.0 YYYY-mm-DD
 ### Breaking changes
-* Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
+* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
 * Provides `API_NAME vX.Y`
@@ -19,6 +19,7 @@
 * Extend domain events with eventId and eventTs ([MODINVSTOR-1322](https://folio-org.atlassian.net/browse/MODINVSTOR-1322))
 * Revert the publication period migration changes ([MODINVSTOR-1280](https://folio-org.atlassian.net/browse/MODINVSTOR-1280))
 * Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
+* Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
 
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
