@@ -3,11 +3,11 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
+* Provides `instance-storage v11.1`
 * Requires `API_NAME vX.Y`
 
 ### Features
-* update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
+* Update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
 * Unable to delete local Subject types/sources when they are linked to an Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
 * Change Kafka event publishing keys for holdings and items ([MODINVSTOR-1281](https://folio-org.atlassian.net/browse/MODINVSTOR-1281))
@@ -19,6 +19,7 @@
 * Extend domain events with eventId and eventTs ([MODINVSTOR-1322](https://folio-org.atlassian.net/browse/MODINVSTOR-1322))
 * Revert the publication period migration changes ([MODINVSTOR-1280](https://folio-org.atlassian.net/browse/MODINVSTOR-1280))
 * Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
+* Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
 
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))

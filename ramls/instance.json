@@ -439,6 +439,11 @@
       "description": "Records the fact that the record should not be displayed in a discovery system",
       "default": false
     },
+    "deleted": {
+      "type": "boolean",
+      "description": "Indicates whether the record was marked for deletion",
+      "default": false
+    },
     "statisticalCodeIds": {
       "type": "array",
       "description": "List of statistical code IDs",
