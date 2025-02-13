@@ -3,10 +3,12 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
+* Provides `inventory-hierarchy 0.6`
 * Provides `instance-storage v11.1`
 * Requires `API_NAME vX.Y`
 
 ### Features
+* Add new location property locationName that points to location name. ([MODINVSTOR-1362](https://folio-org.atlassian.net/browse/MODINVSTOR-1362))
 * Update rollback mechanism for instances when linking/unlinking with subjects is failed. ([MODINVSTOR-1299](https://folio-org.atlassian.net/browse/MODINVSTOR-1299))
 * Unable to delete local Subject types/sources when they are linked to an Instance ([MODINVSTOR-1284](https://folio-org.atlassian.net/browse/MODINVSTOR-1284))
 * Modify endpoint for bulk instances upsert with publish events flag ([MODINVSTOR-1283](https://folio-org.atlassian.net/browse/MODINVSTOR-1283))
