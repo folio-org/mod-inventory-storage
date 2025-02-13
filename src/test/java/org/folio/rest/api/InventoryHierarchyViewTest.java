@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.util.Optional.ofNullable;
 import static org.folio.rest.api.StorageTestSuite.deleteAll;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -457,6 +458,30 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       assertTrue(items.stream()
         .map(Object::toString)
         .anyMatch(s -> s.contains("bound-with")));
+    });
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldHaveLocationNameInItemsAndHoldingsLocations() {
+    var instanceId = UUID.fromString(predefinedInstance.getString("id"));
+
+    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[]{instanceId}, false, response -> {
+      assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      var items = response.getJson().getJsonArray("items");
+      var holdings = response.getJson().getJsonArray("holdings");
+      items.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
+        .forEach(location -> {
+          assertTrue(ofNullable(location.getJsonObject("location")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+          assertTrue(ofNullable(location.getJsonObject("permanentLocation")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+          assertTrue(ofNullable(location.getJsonObject("temporaryLocation")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        });
+      holdings.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
+        .forEach(location -> {
+          assertTrue(ofNullable(location.getJsonObject("effectiveLocation")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+          assertTrue(ofNullable(location.getJsonObject("permanentLocation")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+          assertTrue(ofNullable(location.getJsonObject("temporaryLocation")).map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        });
     });
   }
 
