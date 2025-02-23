@@ -16,7 +16,6 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
-import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -71,7 +70,8 @@ public class HttpClient {
       HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
       request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
       addDefaultHeaders(request, url, tenantId);
-      headers.forEach(request::putHeader);
+      headers.entrySet().stream().forEach(header -> request.putHeader(header.getKey(),
+        header.getValue()));
 
       if (body == null) {
         return request.send();
@@ -183,7 +183,7 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = URI.create(url).toURL();
+      finalUrl = new URL(url);
     } catch (Exception e) {
       LOG.error("URL error: {}: {}", e.getMessage(), url, e);
     }
@@ -237,7 +237,7 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = URI.create(url).toURL();
+      finalUrl = new URL(url);
     } catch (Exception e) {
       LOG.info("URL error: {}: {}", e.getMessage(), url, e);
     }

@@ -13,12 +13,18 @@ import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.Map;
 import lombok.NonNull;
+import lombok.Value;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.messages.EventMessage;
 import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
 
-public record EventMessageMatchers(@NonNull String expectedTenantId, @NonNull URL expectedUrl) {
+@Value
+public class EventMessageMatchers {
+  @NonNull
+  String expectedTenantId;
+  @NonNull
+  URL expectedUrl;
 
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {

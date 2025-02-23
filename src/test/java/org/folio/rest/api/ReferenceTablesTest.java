@@ -65,8 +65,8 @@ import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.utility.ModuleUtility;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.runner.RunWith;
@@ -75,25 +75,14 @@ import org.junit.runner.RunWith;
 public class ReferenceTablesTest extends TestBase {
 
   @SneakyThrows
-  @BeforeEach
-  void beforeEach() {
+  @Before
+  public void beforeEach() {
     clearData();
     removeAllEvents();
   }
 
-  @ParameterizedTest
-  @CsvSource({"1.0.0, 28.1.0"})
-  @SneakyThrows
-  void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
-    ModuleUtility.prepareTenant(TENANT_ID, moduleFrom, moduleTo, false);
-    int statusCode = servicePointsClient.getById(
-        UUID.fromString("32c6f0c7-26e4-4350-8c29-1e11c2e3efc4"))
-      .getStatusCode();
-    assertThat(statusCode, is(HttpURLConnection.HTTP_OK));
-  }
-
   @Test
-  void alternativeTitleTypesLoaded()
+  public void alternativeTitleTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = alternativeTitleTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -101,7 +90,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void alternativeTitleTypesBasicCrud()
+  public void alternativeTitleTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/alternative-title-types";
 
@@ -121,7 +110,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void callNumberTypesLoaded()
+  public void callNumberTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = callNumberTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -129,7 +118,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void classificationTypesLoaded()
+  public void classificationTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = classificationTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -137,7 +126,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void contributorNameTypesLoaded()
+  public void contributorNameTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = contributorNameTypesUrl("");
 
@@ -146,7 +135,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void contributorNameTypesBasicCrud()
+  public void contributorNameTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/contributor-name-types";
     ContributorNameType entity = new ContributorNameType("Test contributor name type", "100");
@@ -161,7 +150,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void contributorTypesLoaded()
+  public void contributorTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = contributorTypesUrl("");
 
@@ -170,7 +159,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void contributorTypesBasicCrud()
+  public void contributorTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/contributor-types";
     ContributorType entity = new ContributorType("Test contributor type", "Test Code", "Test Source");
@@ -185,7 +174,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void electronicAccessRelationshipsLoaded()
+  public void electronicAccessRelationshipsLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = electronicAccessRelationshipsUrl("");
 
@@ -194,7 +183,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void electronicAccessRelationshipsBasicCrud()
+  public void electronicAccessRelationshipsBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/electronic-access-relationships";
     ElectronicAccessRelationship entity = new ElectronicAccessRelationship("Test electronic access relationship type");
@@ -209,7 +198,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void canCreateAndGetElectronicAccessRelationshipWithSourceFieldPopulated()
+  public void canCreateAndGetElectronicAccessRelationshipWithSourceFieldPopulated()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityName = "Electronic access relationship with 'source' field";
     String entitySource = "Consortium";
@@ -239,7 +228,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void holdingsNoteTypesLoaded()
+  public void holdingsNoteTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = holdingsNoteTypesUrl("");
 
@@ -248,7 +237,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void holdingsNoteTypesBasicCrud()
+  public void holdingsNoteTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/holdings-note-types";
     HoldingsNoteType entity = new HoldingsNoteType("Test holdings note type", "test source");
@@ -263,7 +252,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void holdingsTypesLoaded()
+  public void holdingsTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = holdingsTypesUrl("");
 
@@ -272,7 +261,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void holdingsTypesBasicCrud()
+  public void holdingsTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/holdings-types";
     HoldingsType entity = new HoldingsType("Test holdings note type", "test source");
@@ -288,7 +277,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void identifierTypesLoaded()
+  public void identifierTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = identifierTypesUrl("");
 
@@ -297,7 +286,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void identifierTypesBasicCrud()
+  public void identifierTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/identifier-types";
     IdentifierType entity = new IdentifierType("Test identifier type");
@@ -313,7 +302,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void illPoliciesLoaded()
+  public void illPoliciesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = illPoliciesUrl("");
 
@@ -322,7 +311,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void illPoliciesBasicCrud()
+  public void illPoliciesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/ill-policies";
     IllPolicy entity = new IllPolicy("Test ILL policy", "Test source");
@@ -337,7 +326,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceFormatsLoaded()
+  public void instanceFormatsLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = instanceFormatsUrl("");
 
@@ -346,7 +335,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceFormatsBasicCrud()
+  public void instanceFormatsBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/instance-formats";
     InstanceFormat entity = new InstanceFormat("Test instance format", "Test Code", "Test Source");
@@ -362,7 +351,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void natureOfContentTermsLoaded()
+  public void natureOfContentTermsLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = natureOfContentTermsUrl("");
 
@@ -371,7 +360,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void natureOfContentTermsBasicCrud()
+  public void natureOfContentTermsBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/nature-of-content-terms";
     NatureOfContentTerm entity = new NatureOfContentTerm("Test Term", "Test Source");
@@ -387,7 +376,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceStatusesLoaded()
+  public void instanceStatusesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = instanceStatusesUrl("");
 
@@ -396,7 +385,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceStatusesBasicCrud()
+  public void instanceStatusesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/instance-statuses";
     InstanceStatus entity = new InstanceStatus("Test instance status", "Test Code", "Test Source");
@@ -411,7 +400,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceTypesLoaded()
+  public void instanceTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = instanceTypesUrl("");
 
@@ -420,7 +409,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceTypesBasicCrud()
+  public void instanceTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/instance-types";
     InstanceType entity = new InstanceType("Test instance type", "Test Code", "Test Source");
@@ -435,7 +424,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void cannotDeleteInstanceTypeAssociatedToAnInstance()
+  public void cannotDeleteInstanceTypeAssociatedToAnInstance()
     throws InterruptedException, ExecutionException, TimeoutException {
     InstanceType instanceType = new InstanceType("new type", "nt", "rdacontent");
     Response instanceTypeResponse = createReferenceRecord("/instance-types", instanceType);
@@ -453,7 +442,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void itemNoteTypesLoaded()
+  public void itemNoteTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = itemNoteTypesUrl("");
 
@@ -462,7 +451,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void itemNoteTypesBasicCrud()
+  public void itemNoteTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/item-note-types";
     ItemNoteType entity = new ItemNoteType("Test item note type", "Test source");
@@ -477,7 +466,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceNoteTypesLoaded()
+  public void instanceNoteTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = instanceNoteTypesUrl("");
 
@@ -486,7 +475,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceNoteTypesBasicCrud()
+  public void instanceNoteTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/instance-note-types";
     InstanceNoteType entity = new InstanceNoteType("Test instance note type", "Test source");
@@ -501,7 +490,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void modesOfIssuanceLoaded()
+  public void modesOfIssuanceLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = modesOfIssuanceUrl("");
 
@@ -510,7 +499,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void modesOfIssuanceBasicCrud()
+  public void modesOfIssuanceBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/modes-of-issuance";
     ModeOfIssuance entity = new ModeOfIssuance("Test mode of issuance");
@@ -525,7 +514,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void statisticalCodeTypesLoaded()
+  public void statisticalCodeTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL statisticalCodeTypesUrl = statisticalCodeTypesUrl("");
 
@@ -534,7 +523,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void statisticalCodesLoaded()
+  public void statisticalCodesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL statisticalCodesUrl = statisticalCodesUrl("");
 
@@ -543,7 +532,7 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void statisticalCodesAndCodeTypesBasicCrud()
+  public void statisticalCodesAndCodeTypesBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String statisticalCodeTypesPath = "/statistical-code-types";
     String statisticalCodesPath = "/statistical-codes";
@@ -573,14 +562,14 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void instanceRelationshipTypesLoaded() throws Exception {
+  public void instanceRelationshipTypesLoaded() throws Exception {
     Response searchResponse = getReferenceRecords(instanceRelationshipTypesUrl(""));
     validateNumberOfReferenceRecords("instance-relationship types",
       searchResponse, 3, 200);
   }
 
   @Test
-  void instanceRelationshipTypesCrud() throws Exception {
+  public void instanceRelationshipTypesCrud() throws Exception {
     final String entityPath = "/instance-relationship-types";
     final String instanceRelationshipId = UUID.randomUUID().toString();
 
@@ -595,10 +584,21 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  void holdingsSourcesLoaded() throws Exception {
+  public void holdingsSourcesLoaded() throws Exception {
     final Response searchResponse = getReferenceRecords(holdingsSourceUrl(""));
 
     validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 399);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1.0.0, 28.1.0"})
+  @SneakyThrows
+  public void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
+    ModuleUtility.prepareTenant(TENANT_ID, moduleFrom, moduleTo, false);
+    int statusCode = servicePointsClient.getById(
+        UUID.fromString("32c6f0c7-26e4-4350-8c29-1e11c2e3efc4"))
+      .getStatusCode();
+    assertThat(statusCode, is(HttpURLConnection.HTTP_OK));
   }
 
   private Response getReferenceRecords(URL baseUrl)

@@ -43,14 +43,15 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   void executeMultipleSqlStatements(String allStatements) {
     final CompletableFuture<Void> result = new CompletableFuture<>();
 
-    getPostgresClient().runSqlFile(allStatements)
-      .onComplete(handler -> {
-        if (handler.failed()) {
-          result.completeExceptionally(handler.cause());
-        } else {
-          result.complete(null);
-        }
-      });
+    getPostgresClient().runSQLFile(allStatements, true, handler -> {
+      if (handler.failed()) {
+        result.completeExceptionally(handler.cause());
+      } else if (!handler.result().isEmpty()) {
+        result.completeExceptionally(new RuntimeException("Failing SQL: " + handler.result().toString()));
+      } else {
+        result.complete(null);
+      }
+    });
 
     get(result);
   }
@@ -66,7 +67,6 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
         result.complete(updateResult.result());
       }
     });
-
     return get(result);
   }
 
@@ -82,7 +82,6 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
   }
 
   RowSet<Row> unsetJsonbProperty(String tableName, UUID id, String propertyName) {
-
     return executeSql(String.format(
       "UPDATE %s.%s as tbl SET jsonb = tbl.jsonb - '%s' WHERE id::text = '%s'",
       getSchemaName(), tableName, propertyName, id.toString()));
