@@ -156,13 +156,11 @@ public class InstanceService {
       .compose(batchOperation -> {
         final Promise<Response> postResponse = promise();
 
-        // todo: use the connection for creating batches and linking subjects
         postgresClient.withTrans(conn -> {
-
           Promise<Response> postPromise = postSyncInstance(instances, upsert, optimisticLocking);
 
           return postPromise.future()
-            .compose(response -> batchLinkSubjects(conn, batchOperation.getRecordsToBeCreated())
+            .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
               .map(v -> response));
         }).onComplete(transactionResult -> {
           if (transactionResult.succeeded()) {

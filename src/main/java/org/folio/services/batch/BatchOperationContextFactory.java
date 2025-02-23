@@ -2,7 +2,6 @@ package org.folio.services.batch;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import io.vertx.core.Future;
 import java.util.List;
@@ -24,7 +23,7 @@ public final class BatchOperationContextFactory {
     return repository.getById(all, idGetter).map(found -> {
       final var toBeCreated = all.stream()
         .filter(entity -> !found.containsKey(idGetter.apply(entity)))
-        .collect(toList());
+        .toList();
 
       return new BatchOperationContext<>(toBeCreated, found.values(), publishEvents);
     });

@@ -14,14 +14,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.HttpStatus;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
@@ -48,12 +47,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void canCreateMaterialType() throws InterruptedException, ExecutionException, TimeoutException {
     Response response = createMaterialType("Journal");
 
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
@@ -64,42 +58,28 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateMaterialTypeWithSameName()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void cannotCreateMaterialTypeWithSameName() throws InterruptedException, ExecutionException, TimeoutException {
     createMaterialType("Journal");
 
     Response response = createMaterialType("Journal");
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
-  public void cannotCreateMaterialTypeWithSameId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void cannotCreateMaterialTypeWithSameId() throws InterruptedException, ExecutionException, TimeoutException {
     UUID id = UUID.randomUUID();
 
     createMaterialType(id, "Journal");
 
     Response response = createMaterialType(id, "Book");
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
   public void cannotProvideAdditionalPropertiesInMaterialType()
-    throws InterruptedException,
-    MalformedURLException,
-    TimeoutException,
-    ExecutionException {
-
+    throws InterruptedException, TimeoutException, ExecutionException {
     CompletableFuture<JsonErrorResponse> createMaterialType = new CompletableFuture<>();
 
     JsonObject requestWithAdditionalProperty = new JsonObject()
@@ -112,17 +92,12 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
     JsonErrorResponse response = createMaterialType.get(TIMEOUT, TimeUnit.SECONDS);
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
   @Test
-  public void canGetMaterialTypeById()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void canGetMaterialTypeById() throws InterruptedException, ExecutionException, TimeoutException {
     UUID id = UUID.randomUUID();
 
     createMaterialType(id, "Journal");
@@ -138,12 +113,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void canUpdateMaterialType() throws InterruptedException, ExecutionException, TimeoutException {
     UUID id = UUID.randomUUID();
 
     createMaterialType(id, "Journal");
@@ -176,11 +146,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotUpdateMaterialTypeThatDoesNotExist()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     UUID id = UUID.randomUUID();
 
     JsonObject updateRequest = new JsonObject()
@@ -200,11 +166,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotGetMaterialTypeThatDoesNotExist()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     send(materialTypesStorageUrl("/" + UUID.randomUUID()).toString(), HttpMethod.GET,
@@ -216,12 +178,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetAllMaterialTypes()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void canGetAllMaterialTypes() throws InterruptedException, ExecutionException, TimeoutException {
     createMaterialType(UUID.randomUUID(), "Journal");
     createMaterialType(UUID.randomUUID(), "Book");
 
@@ -237,12 +194,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAnUnusedMaterialType()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  public void canDeleteAnUnusedMaterialType() throws InterruptedException, ExecutionException, TimeoutException {
     UUID id = UUID.randomUUID();
 
     createMaterialType(id, "Journal");
@@ -259,11 +211,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotDeleteMaterialTypeAssociatedToAnItem()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     UUID materialTypeId = UUID.randomUUID();
 
     createMaterialType(materialTypeId, "Book");
@@ -294,11 +242,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotDeleteMaterialTypeThatCannotBeFound()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
     send(materialTypesStorageUrl("/" + UUID.randomUUID()).toString(),
@@ -323,11 +267,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     return item;
   }
 
-  private Response createMaterialType(String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  private Response createMaterialType(String name) throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createMaterialType = new CompletableFuture<>();
     String createMtUrl = materialTypesStorageUrl("").toString();
@@ -339,10 +279,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private Response createMaterialType(UUID id, String name)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createMaterialType = new CompletableFuture<>();
 
@@ -356,12 +293,7 @@ public class MaterialTypeTest extends TestBaseWithInventoryUtil {
     return createMaterialType.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
-  private Response getById(UUID id)
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException,
-    MalformedURLException {
-
+  private Response getById(UUID id) throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     send(materialTypesStorageUrl("/" + id.toString()).toString(), HttpMethod.GET,

@@ -207,7 +207,6 @@ public class ServicePointsUserTest extends TestBase {
     UUID spuId = UUID.randomUUID();
     createServicePointUser(null, UUID.randomUUID(), spList1, spId1);
     createServicePointUser(spuId, UUID.randomUUID(), spList2, spId2);
-    //Response response = getServicePointUsers(null);
     Response response = getServicePointUsers(String.format("servicePointsIds=%s", spId3));
     System.out.println(response.toString());
     assertThat(response.getJson().getInteger("totalRecords"), is(1));

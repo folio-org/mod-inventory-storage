@@ -33,8 +33,8 @@ public class ConsortiumDataCache {
   private static final Logger LOG = LogManager.getLogger(ConsortiumDataCache.class);
   private static final String EXPIRATION_TIME_PARAM = "cache.consortium-data.expiration.time.seconds";
   private static final String DEFAULT_EXPIRATION_TIME_SECONDS = "300";
-  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1"; //NOSONAR
-  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants"; //NOSONAR
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants";
   private static final String USER_TENANTS_FIELD = "userTenants";
   private static final String CONSORTIUM_TENANTS_FIELD = "tenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
@@ -129,11 +129,13 @@ public class ConsortiumDataCache {
   }
 
   private Future<Optional<JsonObject>> getResponse(HttpRequest<Buffer> request) {
-    LOG.info("getResponse:: Try to request method='{}' uri='{}'", request.method().name(), request.uri());
+    var methodName = request.method().name();
+    var requestUri = request.uri();
+    LOG.info("getResponse:: Try to request method='{}' uri='{}'", methodName, requestUri);
     return request.send().compose(response -> {
       if (response.statusCode() != HTTP_OK) {
         String msg = String.format("Failed to request method='%s' uri='%s', status='%s', body='%s'",
-          request.method().name(), request.uri(), response.statusCode(), response.bodyAsString());
+          methodName, requestUri, response.statusCode(), response.bodyAsString());
         LOG.warn("getResponse:: {}", msg);
         return failedFuture(msg);
       }

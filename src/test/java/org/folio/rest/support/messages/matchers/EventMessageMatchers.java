@@ -13,38 +13,12 @@ import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.Map;
 import lombok.NonNull;
-import lombok.Value;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.messages.EventMessage;
 import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
 
-@Value
-public class EventMessageMatchers {
-  @NonNull
-  String expectedTenantId;
-  @NonNull
-  URL expectedUrl;
-
-  @NotNull
-  private static Matcher<EventMessage> hasType(String type) {
-    return hasProperty("type", is(type));
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("oldRepresentation", matcher);
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("newRepresentation", matcher);
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
-    return hasProperty("body", matcher);
-  }
+public record EventMessageMatchers(@NonNull String expectedTenantId, @NonNull URL expectedUrl) {
 
   @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
@@ -164,6 +138,26 @@ public class EventMessageMatchers {
   public Matcher<EventMessage> hasNewRepresentation(
     JsonObject expectedRepresentation) {
     return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasType(String type) {
+    return hasProperty("type", is(type));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("oldRepresentation", matcher);
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("newRepresentation", matcher);
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
+    return hasProperty("body", matcher);
   }
 
   @NotNull

@@ -8,7 +8,7 @@ import org.hamcrest.TypeSafeMatcher;
 
 public class JsonObjectMatchers {
   public static Matcher<JsonObject> identifierMatches(String identifierTypeId, String value) {
-    return new TypeSafeMatcher<JsonObject>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(String.format(
@@ -18,13 +18,13 @@ public class JsonObjectMatchers {
       @Override
       protected boolean matchesSafely(JsonObject entry) {
         return entry.getString("identifierTypeId").equals(identifierTypeId)
-          && entry.getString("value").equals(value);
+               && entry.getString("value").equals(value);
       }
     };
   }
 
   public static Matcher<JsonObject> validationErrorMatches(String message, String property) {
-    return new TypeSafeMatcher<JsonObject>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(String.format(
@@ -37,13 +37,13 @@ public class JsonObjectMatchers {
           entry.getJsonArray("parameters"));
 
         return entry.getString("message").equals(message)
-          && parameters.stream().anyMatch(p -> p.getString("key").equals(property));
+               && parameters.stream().anyMatch(p -> p.getString("key").equals(property));
       }
     };
   }
 
   public static Matcher<List<JsonObject>> hasSoleMessageContaining(String message) {
-    return new TypeSafeMatcher<List<JsonObject>>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(String.format(
@@ -53,7 +53,7 @@ public class JsonObjectMatchers {
       @Override
       protected boolean matchesSafely(List<JsonObject> errors) {
         if (errors.size() == 1) {
-          return errors.get(0).getString("message").contains(message);
+          return errors.getFirst().getString("message").contains(message);
         } else {
           return false;
         }

@@ -39,7 +39,7 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
+  public void start(Promise<Void> startPromise) {
     var topicName = ASYNC_MIGRATION.fullTopicName(TENANT_FOR_MIGRATION);
 
     KafkaConsumer<String, JsonObject> consumer = KafkaConsumer

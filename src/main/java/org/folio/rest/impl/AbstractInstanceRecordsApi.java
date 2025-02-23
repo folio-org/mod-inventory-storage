@@ -4,7 +4,6 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.OaiPmhView.GetOaiPmhViewInstancesResponse.respond500WithTextPlain;
 
-import com.google.common.collect.Iterables;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -33,51 +32,12 @@ public abstract class AbstractInstanceRecordsApi {
 
   protected static final Logger log = LogManager.getLogger();
 
-  /**
-   * Return a 500 response about Throwable t via the handler,
-   * but if dataResponse's head has already been written
-   * close the dataResponse TCP connection to signal the error and return null via the handler.
-   */
-  private static void respondWithError(HttpServerResponse dataResponse, Throwable t,
-                                       Handler<AsyncResult<Response>> asyncResultHandler) {
-    log.error(t);
-    if (dataResponse.headWritten()) {
-      log.error("HTTP head has already been written, closing TCP connection to signal error");
-      dataResponse.close();
-      asyncResultHandler.handle(succeededFuture());
-      return;
-    }
-    asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(t.getMessage())));
-  }
-
-  private static String createJsonFromRow(Row row) {
-    if (row == null) {
-      return "";
-    }
-    JsonObject json = new JsonObject();
-    for (int i = 0; i < row.size(); i++) {
-      json.put(row.getColumnName(i), convertRowValue(row.getValue(i)));
-    }
-    return json.toString();
-  }
-
-  private static Object convertRowValue(Object value) {
-    if (value == null) {
-      return "";
-    }
-    return value instanceof JsonObject
-             || value instanceof JsonArray ? value : value.toString();
-  }
-
   protected void fetchRecordsByQuery(String sql, Supplier<Tuple> paramsSupplier, RoutingContext routingContext,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     final HttpServerResponse response = getResponse(routingContext);
     try {
-      if (log.isDebugEnabled()) {
-        log.debug("request params: {}", Iterables.toString(routingContext.request().params()));
-      }
       Tuple params = paramsSupplier.get();
       log.debug("postgres params: {}", params);
 
@@ -163,6 +123,42 @@ public abstract class AbstractInstanceRecordsApi {
     }
 
     return tuple;
+  }
+
+  /**
+   * Return a 500 response about Throwable t via the handler,
+   * but if dataResponse's head has already been written
+   * close the dataResponse TCP connection to signal the error and return null via the handler.
+   */
+  private static void respondWithError(HttpServerResponse dataResponse, Throwable t,
+                                       Handler<AsyncResult<Response>> asyncResultHandler) {
+    log.error(t);
+    if (dataResponse.headWritten()) {
+      log.error("HTTP head has already been written, closing TCP connection to signal error");
+      dataResponse.reset();
+      asyncResultHandler.handle(succeededFuture());
+      return;
+    }
+    asyncResultHandler.handle(succeededFuture(respond500WithTextPlain(t.getMessage())));
+  }
+
+  private static String createJsonFromRow(Row row) {
+    if (row == null) {
+      return "";
+    }
+    JsonObject json = new JsonObject();
+    for (int i = 0; i < row.size(); i++) {
+      json.put(row.getColumnName(i), convertRowValue(row.getValue(i)));
+    }
+    return json.toString();
+  }
+
+  private static Object convertRowValue(Object value) {
+    if (value == null) {
+      return "";
+    }
+    return value instanceof JsonObject
+           || value instanceof JsonArray ? value : value.toString();
   }
 
   private HttpServerResponse getResponse(RoutingContext routingContext) {

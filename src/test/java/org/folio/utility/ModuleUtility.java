@@ -9,6 +9,8 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -164,8 +166,8 @@ public final class ModuleUtility {
 
   public static URL vertxUrl(String path) {
     try {
-      return new URL("http", "localhost", getPort(), path);
-    } catch (MalformedURLException e) {
+      return new URI("http://localhost:%d%s".formatted(getPort(), path)).toURL();
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new RuntimeException(e);
     }
   }

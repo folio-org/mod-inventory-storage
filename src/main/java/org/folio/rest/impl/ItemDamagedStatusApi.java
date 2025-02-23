@@ -39,7 +39,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final String LOCATION_PREFIX = "/item-damaged-statuses/";
   private final Messages messages = Messages.getInstance();
-  private PostgresClientFactory pgClientFactory = new PostgresClientFactory();
+  private final PostgresClientFactory pgClientFactory = new PostgresClientFactory();
 
   @Validate
   @Override
@@ -127,9 +127,8 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     vertxContext.runOnContext(v -> {
       try {
         deleteItemDamagedStatus(id, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleDeleteItemDamagedStatusResult(updatedCount))
-          .otherwise(ex -> handleDeleteDamagedStatusException(ex))
-          .map(Response.class::cast)
+          .map(this::handleDeleteItemDamagedStatusResult)
+          .otherwise(this::handleDeleteDamagedStatusException)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
@@ -150,9 +149,8 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     vertxContext.runOnContext(v -> {
       try {
         updateItemDamagedStatus(id, entity, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleUpdateItemDamagedStatusResult(updatedCount))
-          .otherwise(ex -> handleUpdateItemDamagedStatusesException(ex))
-          .map(Response.class::cast)
+          .map(this::handleUpdateItemDamagedStatusResult)
+          .otherwise(this::handleUpdateItemDamagedStatusesException)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);

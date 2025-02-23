@@ -24,7 +24,7 @@ import java.net.HttpURLConnection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import lombok.SneakyThrows;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.HttpStatus;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.Before;
@@ -74,7 +74,7 @@ public class LocationUnitTest extends TestBase {
 
     createInstitution(null, "Institute of MetaPhysics", "MPI");
     Response response = createInstitution(null, "Institute of MetaPhysics", "MPI");
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     createInstitution(id, "Institute of MetaPhysics", "MPI");
     Response response = createInstitution(id, "The Other Institute", "MPI");
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -92,7 +92,7 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     Response response = createInstitution(id, "Institute of MetaPhysics", null);
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -247,7 +247,7 @@ public class LocationUnitTest extends TestBase {
 
     createCampus(null, "Riverside Campus", "RS", instId);
     Response response = createCampus(null, "Riverside Campus", "RS", instId);
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -259,14 +259,14 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     createCampus(id, "Riverside Campus", "RS", instId);
     Response response = createCampus(id, "Campus on the other Side of the River", "OS", instId);
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
   public void cannotCreateCampWithoutInst() {
 
     Response response = createCampus(null, "Campus on the other Side of the River", "OS", null);
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -278,7 +278,7 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     Response response = createCampus(id, "Campus on the other Side of the River", null, instId);
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -440,7 +440,7 @@ public class LocationUnitTest extends TestBase {
 
     createLibrary(null, "Main Library", "RS", campId);
     Response response = createLibrary(null, "Main Library", "RS", campId);
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -454,7 +454,7 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     createLibrary(id, "Main Library", "RS", campId);
     Response response = createLibrary(id, "Library on the other Side of the River", "OS", campId);
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -468,7 +468,7 @@ public class LocationUnitTest extends TestBase {
     UUID id = UUID.randomUUID();
     Response response = createLibrary(id, "Main Library", null, campId);
 
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test

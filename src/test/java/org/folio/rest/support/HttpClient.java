@@ -16,6 +16,7 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -70,14 +71,13 @@ public class HttpClient {
       HttpRequest<Buffer> request = client.requestAbs(method, url.toString());
       request.putHeader(CONTENT_TYPE, APPLICATION_JSON);
       addDefaultHeaders(request, url, tenantId);
-      headers.entrySet().stream().forEach(header -> request.putHeader(header.getKey(),
-        header.getValue()));
+      headers.forEach(request::putHeader);
 
       if (body == null) {
         return request.send();
       }
       String encodedBody = Json.encodePrettily(body);
-      LOG.info(format("%s %s, Request: %s", method.name(), url, encodedBody));
+      LOG.info("{} {}, Request: {}", method.name(), url, encodedBody);
       return request.sendBuffer(Buffer.buffer(encodedBody));
     } catch (Exception e) {
       LOG.error(e.getMessage(), e);
@@ -183,9 +183,9 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = new URL(url);
+      finalUrl = URI.create(url).toURL();
     } catch (Exception e) {
-      LOG.error(format("URL error: %s: %s", e.getMessage(), url), e);
+      LOG.error("URL error: {}: {}", e.getMessage(), url, e);
     }
     get(finalUrl, tenantId, responseHandler);
   }
@@ -237,9 +237,9 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = new URL(url);
+      finalUrl = URI.create(url).toURL();
     } catch (Exception e) {
-      LOG.info(format("URL error: %s: %s", e.getMessage(), url), e);
+      LOG.info("URL error: {}: {}", e.getMessage(), url, e);
     }
     delete(finalUrl, tenantId, responseHandler);
   }
@@ -248,18 +248,12 @@ public class HttpClient {
     return asResponse(request(HttpMethod.DELETE, url, tenantId));
   }
 
-  public CompletableFuture<Response> patch(URL url, Object body, String tenantId) {
-    return asResponse(request(HttpMethod.PATCH, url, body, tenantId));
-  }
-
   private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
     if (isNotBlank(tenantId)) {
       request.putHeader(TENANT_HEADER, tenantId);
       request.putHeader(TOKEN_HEADER, TEST_TOKEN);
     }
     if (url != null) {
-      // FIXME: Several institutions have a Okapi URL with path, for example https://folio-demo.gbv.de/okapi
-      // see https://github.com/folio-org/folio-ansible/blob/master/doc/index.md#replace-port-9130
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
       request.putHeader(X_OKAPI_URL, baseUrl);
       request.putHeader(X_OKAPI_URL_TO, baseUrl);

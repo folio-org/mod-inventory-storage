@@ -77,7 +77,7 @@ public class BaseIntegrationTest {
   private static int port;
 
   @BeforeEach
-  public void removeAllEvents() {
+  void removeAllEvents() {
     KAFKA_CONSUMER.discardAllMessages();
   }
 
