@@ -122,6 +122,10 @@ public class ConsortiumDataCache {
 
   private HttpRequest<Buffer> getHttpRequest(Map<String, String> headers, String path) {
     String okapiUrl = headers.get(URL);
+    if (okapiUrl == null) {
+      LOG.error("getHttpRequest:: Okapi URL is not specified in headers");
+      throw new IllegalArgumentException("Okapi URL is not specified in headers");
+    }
     WebClient client = WebClient.wrap(httpClient);
     HttpRequest<Buffer> request = client.requestAbs(GET, okapiUrl + path);
     headers.forEach(request::putHeader);

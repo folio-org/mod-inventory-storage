@@ -21,25 +21,23 @@ public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements
     "select * from get_updated_instance_ids_view($1,$2,$3,$4,$5,$6);";
   private static final String SQL_INSTANCES = "select * from get_items_and_holdings_view($1,$2);";
   private static final String SUPPRESSED_TRUE_FILTER = "(instance.jsonb ->> 'discoverySuppress')::bool = false";
-  private static final String SQL_INITIAL_LOAD = """
-    SELECT id as "instanceId",
-           instance.jsonb ->> 'source' AS source,
-           strToTimestamp(instance.jsonb -> 'metadata' ->> 'updatedDate') AS "updatedDate",
-           (instance.jsonb ->> 'discoverySuppress')::bool AS "suppressFromDiscovery",
-           false AS deleted
-    FROM instance
-    WHERE (CAST($1 as varchar) IS NULL OR (instance.jsonb ->> 'source')::varchar = $1)
-    """;
-  private static final String SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART = """
-    UNION ALL
-    (SELECT (jsonb #>> '{record,id}')::uuid            AS "instanceId",
-           jsonb #>> '{record,source}'                 AS source,
-           strToTimestamp(jsonb ->> 'createdDate')     AS "updatedDate",
-           false                                       AS "suppressFromDiscovery",
-           true                                        AS deleted
-    FROM audit_instance
-    WHERE (CAST($1 as varchar) IS NULL OR (jsonb ->> 'source')::varchar = $1))
-    """;
+  private static final String SQL_INITIAL_LOAD =
+    "SELECT id as \"instanceId\",\n"
+    + "       instance.jsonb ->> 'source' AS source,\n"
+    + "       strToTimestamp(instance.jsonb -> 'metadata' ->> 'updatedDate') AS \"updatedDate\",\n"
+    + "       (instance.jsonb ->> 'discoverySuppress')::bool AS \"suppressFromDiscovery\",\n"
+    + "       false AS deleted\n"
+    + "FROM instance\n"
+    + "WHERE (CAST($1 as varchar) IS NULL OR (instance.jsonb ->> 'source')::varchar = $1)";
+  private static final String SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART =
+    " UNION ALL\n"
+    + "\t(SELECT (jsonb #>> '{record,id}')::uuid            AS \"instanceId\",\n"
+    + "        jsonb #>> '{record,source}'                 AS source,\n"
+    + "        strToTimestamp(jsonb ->> 'createdDate')     AS \"updatedDate\",\n"
+    + "        false                                       AS \"suppressFromDiscovery\",\n"
+    + "        true                                        AS deleted\n"
+    + "\tFROM audit_instance"
+    + "\tWHERE (CAST($1 as varchar) IS NULL OR (jsonb ->> 'source')::varchar = $1))";
 
   @Validate
   @Override

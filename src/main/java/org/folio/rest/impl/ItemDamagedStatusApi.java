@@ -39,7 +39,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final String LOCATION_PREFIX = "/item-damaged-statuses/";
   private final Messages messages = Messages.getInstance();
-  private final PostgresClientFactory pgClientFactory = new PostgresClientFactory();
+  private PostgresClientFactory pgClientFactory = new PostgresClientFactory();
 
   @Validate
   @Override
