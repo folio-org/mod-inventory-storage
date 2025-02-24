@@ -26,9 +26,35 @@ public final class ResponseHandlerUtil {
     return response;
   }
 
+  public static Response failedValidationResponse(Response response) {
+    var entity = (Errors) response.getEntity();
+    var errors = entity.getErrors();
+    errors.getFirst().setMessage(errors.getFirst().getMessage().replace(HRID_ERROR_MESSAGE, HRID));
+    entity.setErrors(errors);
+    return Response.fromResponse(response)
+      .entity(entity)
+      .build();
+  }
+
+  public static Response handleHridErrorInInstance(Response response) {
+    var statusCode = response.getStatus();
+
+    if (statusCode == 201) {
+      return response;
+    }
+
+    var errorMessage = getErrorMessage(response.getEntity());
+    if (errorMessage.contains(HRID_ERROR_MESSAGE)) {
+      return createResponse(response, errorMessage);
+    } else if (errorMessage.contains(MATCH_KEY_ERROR_MESSAGE)) {
+      return createMatchKeyResponse(response);
+    }
+    return response;
+  }
+
   private static String getErrorMessage(Object responseEntity) {
     if (responseEntity instanceof Errors errors) {
-      return errors.getErrors().get(0).getMessage();
+      return errors.getErrors().getFirst().getMessage();
     }
     return responseEntity.toString();
   }
@@ -49,33 +75,6 @@ public final class ResponseHandlerUtil {
       .build();
   }
 
-  public static Response failedValidationResponse(Response response) {
-    var entity = (Errors) response.getEntity();
-    var errors = entity.getErrors();
-    errors.get(0).setMessage(errors.get(0).getMessage().replace(HRID_ERROR_MESSAGE, HRID));
-    entity.setErrors(errors);
-    return Response.fromResponse(response)
-      .entity(entity)
-      .build();
-  }
-
-  // todo: use helper methods from PgUtil class when they become public
-  public static Response handleHridErrorInInstance(Response response) {
-    var statusCode = response.getStatus();
-
-    if (statusCode == 201) {
-      return response;
-    }
-
-    var errorMessage = getErrorMessage(response.getEntity());
-    if (errorMessage.contains(HRID_ERROR_MESSAGE)) {
-      return createResponse(response, errorMessage);
-    } else if (errorMessage.contains(MATCH_KEY_ERROR_MESSAGE)) {
-      return createMatchKeyResponse(response);
-    }
-    return response;
-  }
-
   private static Response createMatchKeyResponse(Response response) {
     var entity = response.getEntity().toString();
     var matchKeyValue = extractValue(entity);
@@ -89,8 +88,8 @@ public final class ResponseHandlerUtil {
   private static String transformHridErrorMessage(String errorMessage) {
     var hridValue = extractValue(errorMessage);
     return hridValue != null
-      ? String.format("%s value already exists in table %s: %s", HRID, TABLE_NAME, hridValue)
-      : errorMessage;
+           ? String.format("%s value already exists in table %s: %s", HRID, TABLE_NAME, hridValue)
+           : errorMessage;
   }
 
   private static String extractValue(String errorMessage) {

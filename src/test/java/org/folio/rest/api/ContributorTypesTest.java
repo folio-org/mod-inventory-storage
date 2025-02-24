@@ -7,8 +7,6 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -22,15 +20,13 @@ public class ContributorTypesTest extends TestBase {
   @Test
   public void canSearchForMoreThanOneContributorTypes()
     throws InterruptedException,
-    MalformedURLException,
     TimeoutException,
-    ExecutionException,
-    UnsupportedEncodingException {
+    ExecutionException {
 
-    CompletableFuture<Response> searchCompleted = new CompletableFuture<Response>();
+    CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
 
     String url = contributorTypesUrl("") + "?limit=400&query="
-      + urlEncode("cql.allRecords=1");
+                 + urlEncode("cql.allRecords=1");
 
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     Response searchResponse = searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);

@@ -5,11 +5,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.junit.AfterClass;
@@ -39,7 +36,7 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void canMigrateModeOfIssuance() throws Exception {
+  public void canMigrateModeOfIssuance() {
     final IndividualResource integratingResource = createModeOfIssuance("4fc0f4fe-06fd-490a-a078-c4da1754e03a",
       "Integrating Resource", "rdamodeissue");
     final IndividualResource singleUnitResource = createModeOfIssuance("9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
@@ -69,8 +66,7 @@ public class ModesOfIssuanceMigrationScriptTest extends MigrationTestBase {
     assertThat(modeOfIssuance.getString("source"), is(source));
   }
 
-  private IndividualResource createModeOfIssuance(String id, String name, String source)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  private IndividualResource createModeOfIssuance(String id, String name, String source) {
     return modesOfIssuanceClient.create(new JsonObject()
       .put("id", id)
       .put("name", name)

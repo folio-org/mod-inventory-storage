@@ -27,7 +27,6 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.rest.unit.ItemDamagedStatusApiUnitTest;
 import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -56,7 +55,6 @@ import org.junit.runners.Suite;
   InstanceRelationshipsTest.class,
   ReferenceTablesTest.class,
   ItemDamagedStatusApiTest.class,
-  ItemDamagedStatusApiUnitTest.class,
   ItemEffectiveLocationTest.class,
   HridSettingsStorageTest.class,
   HridSettingsStorageParameterizedTest.class,

@@ -15,7 +15,7 @@ public class LegacyItemEffectiveLocationMigrationScriptTest extends MigrationTes
     loadScript("dropLegacyItemEffectiveLocationFunctions.sql");
 
   @Test
-  public void canDropLegacyEffectiveItemLocationFunctions() throws Exception {
+  public void canDropLegacyEffectiveItemLocationFunctions() {
     executeMultipleSqlStatements(CREATE_FUNCTIONS_SCRIPT);
 
     assertThat(doesFunctionExist("update_effective_location_on_item_update"), is(true));

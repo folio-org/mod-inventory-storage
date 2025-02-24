@@ -27,26 +27,6 @@ public class EventMessageMatchers {
   URL expectedUrl;
 
   @NotNull
-  private static Matcher<EventMessage> hasType(String type) {
-    return hasProperty("type", is(type));
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("oldRepresentation", matcher);
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
-    return hasProperty("newRepresentation", matcher);
-  }
-
-  @NotNull
-  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
-    return hasProperty("body", matcher);
-  }
-
-  @NotNull
   public Matcher<Iterable<? super EventMessage>> hasCreateEventMessageFor(JsonObject representation) {
     return hasCreateEventMessageFor(representation, expectedTenantId, expectedUrl.toString());
   }
@@ -164,6 +144,26 @@ public class EventMessageMatchers {
   public Matcher<EventMessage> hasNewRepresentation(
     JsonObject expectedRepresentation) {
     return hasNewRepresentationThat(equalsIgnoringMetadata(expectedRepresentation));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasType(String type) {
+    return hasProperty("type", is(type));
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasOldRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("oldRepresentation", matcher);
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasNewRepresentationThat(Matcher<?> matcher) {
+    return hasProperty("newRepresentation", matcher);
+  }
+
+  @NotNull
+  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
+    return hasProperty("body", matcher);
   }
 
   @NotNull

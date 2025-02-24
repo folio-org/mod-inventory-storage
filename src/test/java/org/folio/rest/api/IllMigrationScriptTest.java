@@ -15,8 +15,8 @@ public class IllMigrationScriptTest extends MigrationTestBase {
   private static final String WILL_NOT_LEND_UPDATED_NAME = "Will not lend";
 
   @Test
-  public void canMigrateIllPolicies() throws Exception {
-    Map<String, JsonObject> initialIllPolicies = new HashMap<String, JsonObject>();
+  public void canMigrateIllPolicies() {
+    Map<String, JsonObject> initialIllPolicies = new HashMap<>();
     illPoliciesClient.getAll().forEach(policy -> initialIllPolicies.put(policy.getString("id"), policy));
 
     executeMultipleSqlStatements(MIGRATION_SCRIPT);

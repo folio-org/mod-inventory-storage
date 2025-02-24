@@ -28,6 +28,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -74,7 +75,7 @@ public class CallNumberTypeApiTest extends TestBase {
          MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class)) {
       mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
       mockedPgUtil.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(pgClient);
-      when(pgClient.getById(anyString(), any(), any(Class.class)))
+      when(pgClient.getById(anyString(), any(), ArgumentMatchers.<Class<Object>>any()))
         .thenReturn(Future.succeededFuture(new CallNumberType().withSource("system")));
 
       callNumberTypesApi.putCallNumberTypesById(null,
@@ -96,7 +97,7 @@ public class CallNumberTypeApiTest extends TestBase {
          MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class)) {
       mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
       mockedPgUtil.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(pgClient);
-      when(pgClient.getById(anyString(), any(), any(Class.class)))
+      when(pgClient.getById(anyString(), any(), ArgumentMatchers.<Class<Object>>any()))
         .thenReturn(Future.succeededFuture(new CallNumberType().withSource("system")));
 
       callNumberTypesApi.deleteCallNumberTypesById(null,
@@ -116,7 +117,7 @@ public class CallNumberTypeApiTest extends TestBase {
     var id = "id";
     Map<String, String> okapiHeaders = Collections.emptyMap();
 
-    Handler<AsyncResult<Response>> errorHandler = mock(Handler.class);
+    Handler<AsyncResult<Response>> errorHandler = Mockito.mock();
     Context vertex = mock(Context.class);
     var mockedPgClient = mock(PostgresClient.class);
     when(mockedPgClient.getById(any(), any(), eq(CallNumberType.class))).thenReturn(Future.succeededFuture(entity));

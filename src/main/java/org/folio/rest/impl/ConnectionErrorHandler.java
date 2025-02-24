@@ -25,7 +25,7 @@ public class ConnectionErrorHandler {
     log.error(t);
     if (dataResponse.headWritten()) {
       log.error("HTTP head has already been written, closing TCP connection to signal error");
-      dataResponse.close();
+      dataResponse.reset();
       asyncResultHandler.handle(succeededFuture());
       return;
     }

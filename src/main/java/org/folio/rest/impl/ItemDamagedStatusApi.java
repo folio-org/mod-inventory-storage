@@ -127,9 +127,8 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     vertxContext.runOnContext(v -> {
       try {
         deleteItemDamagedStatus(id, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleDeleteItemDamagedStatusResult(updatedCount))
-          .otherwise(ex -> handleDeleteDamagedStatusException(ex))
-          .map(Response.class::cast)
+          .map(this::handleDeleteItemDamagedStatusResult)
+          .otherwise(this::handleDeleteDamagedStatusException)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);
@@ -150,9 +149,8 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     vertxContext.runOnContext(v -> {
       try {
         updateItemDamagedStatus(id, entity, okapiHeaders, vertxContext)
-          .map(updatedCount -> handleUpdateItemDamagedStatusResult(updatedCount))
-          .otherwise(ex -> handleUpdateItemDamagedStatusesException(ex))
-          .map(Response.class::cast)
+          .map(this::handleUpdateItemDamagedStatusResult)
+          .otherwise(this::handleUpdateItemDamagedStatusesException)
           .onComplete(asyncResultHandler);
       } catch (Exception ex) {
         LOGGER.error(ex.getMessage(), ex);

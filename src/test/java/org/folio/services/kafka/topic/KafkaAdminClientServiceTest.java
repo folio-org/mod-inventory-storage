@@ -119,7 +119,7 @@ public class KafkaAdminClientServiceTest {
   }
 
   private List<String> getTopicNames(ArgumentCaptor<List<NewTopic>> createTopicsCaptor) {
-    return createTopicsCaptor.getAllValues().get(0).stream()
+    return createTopicsCaptor.getAllValues().getFirst().stream()
       .map(NewTopic::getName)
       .toList();
   }

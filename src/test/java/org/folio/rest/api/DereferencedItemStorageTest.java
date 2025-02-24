@@ -121,7 +121,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(items.getTotalRecords(), is(1));
 
-    DereferencedItem item = items.getDereferencedItems().get(0);
+    DereferencedItem item = items.getDereferencedItems().getFirst();
 
     testSmallAngryPlanet(item);
 
@@ -129,7 +129,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(items.getTotalRecords(), is(1));
 
-    item = items.getDereferencedItems().get(0);
+    item = items.getDereferencedItems().getFirst();
 
     testUprooted(item);
   }

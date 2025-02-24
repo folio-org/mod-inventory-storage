@@ -5,12 +5,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.PostgresClient;
@@ -22,7 +19,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String MIGRATION_SCRIPT
     = "SET ROLE " + PostgresClient.getInstance(null).getConnectionConfig().getString("username") + ";\n"
-        + loadScript("populateDiscoverySuppressIfNotSet.sql");
+      + loadScript("populateDiscoverySuppressIfNotSet.sql");
 
   @SneakyThrows
   @Before
@@ -35,7 +32,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
   }
 
   @Test
-  public void canSetDiscoverySuppressIfNotPresent() throws Exception {
+  public void canSetDiscoverySuppressIfNotPresent() {
     List<IndividualResource> allInstances = createInstances(3);
 
     for (IndividualResource instance : allInstances) {
@@ -49,7 +46,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
   }
 
   @Test
-  public void discoverySuppressedInstancesAreNotUpdated() throws Exception {
+  public void discoverySuppressedInstancesAreNotUpdated() {
     List<IndividualResource> notSuppressedInstances = createInstances(2);
     List<IndividualResource> suppressedInstances = new ArrayList<>(2);
 
@@ -69,7 +66,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
     verifySuppressed(suppressedInstances);
   }
 
-  private List<IndividualResource> createInstances(int count) throws Exception {
+  private List<IndividualResource> createInstances(int count) {
     final List<IndividualResource> allInstances = new ArrayList<>();
 
     for (int i = 0; i < count; i++) {
@@ -89,9 +86,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
       .put(DISCOVERY_SUPPRESS, true);
   }
 
-  private void verifyNotSuppressed(List<IndividualResource> instances)
-    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-
+  private void verifyNotSuppressed(List<IndividualResource> instances) {
     for (IndividualResource instance : instances) {
       Instance instanceInStorage = instancesClient.getById(instance.getId()).getJson()
         .mapTo(Instance.class);
@@ -99,9 +94,7 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
     }
   }
 
-  private void verifySuppressed(List<IndividualResource> instances)
-    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-
+  private void verifySuppressed(List<IndividualResource> instances) {
     for (IndividualResource instance : instances) {
       Instance instanceInStorage = instancesClient.getById(instance.getId()).getJson()
         .mapTo(Instance.class);

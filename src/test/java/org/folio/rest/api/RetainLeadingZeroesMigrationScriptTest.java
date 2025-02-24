@@ -29,7 +29,7 @@ public class RetainLeadingZeroesMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void populateCommonRetainLeadingZeroes() throws Exception {
+  public void populateCommonRetainLeadingZeroes() {
     RowSet<Row> result = executeSql(String.format(SQL_GET_HRID_SETTINGS, getSchemaName()));
     Assert.assertNotNull(result);
     JsonObject withoutLeadingZeroes = (JsonObject) result.iterator().next().getJson(0);

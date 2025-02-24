@@ -6,7 +6,7 @@ public class ErrorConstants {
   public static final String UNIQUE_VIOLATION_ERROR_CODE = "23505";
   public static final String CHECK_VIOLATION_ERROR_CODE = "23514";
   public static final String EXCLUSION_VIOLATION_ERROR_CODE = "23P01";
-  public static final String INTEGRITY_VIOLATION__ERROR_CODE = "23506";
+  public static final String INTEGRITY_VIOLATION_ERROR_CODE = "23506";
   public static final String INVALID_TEXT_REPRESENTATION_ERROR_CODE = "22P02";
   public static final String DATATYPE_MISMATCH_ERROR_CODE = "42804";
   public static final String DATA_LENGTH_MISMATCH_ERROR_CODE = "22001";

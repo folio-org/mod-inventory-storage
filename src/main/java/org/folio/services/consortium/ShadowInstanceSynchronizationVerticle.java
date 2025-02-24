@@ -27,7 +27,7 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
+  public void start(Promise<Void> startPromise) {
     HttpClient httpClient = vertx.createHttpClient();
     ShadowInstanceSynchronizationHandler handler =
       new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);

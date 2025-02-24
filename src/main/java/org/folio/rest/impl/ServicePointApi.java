@@ -107,7 +107,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
         PostgresClient pgClient = getPgClient(vertxContext, tenantId);
         final String deleteAllQuery = String.format("DELETE FROM %s_%s.%s",
           tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);
-        logger.info(String.format("Deleting all service points with query %s", deleteAllQuery));
+        logger.info("Deleting all service points with query {}", deleteAllQuery);
         pgClient.execute(deleteAllQuery, mutateReply -> {
           if (mutateReply.failed()) {
             String message = logAndSaveError(mutateReply.cause());

@@ -25,7 +25,7 @@ public class ServicePointEventMessageChecks {
       eventMessageMatchers.hasUpdateEventMessageFor(oldServicePoint, newServicePoint));
   }
 
-  public void updatedMessageWasNotPublished(JsonObject oldServicePoint, JsonObject newServicePoint) {
+  public void updatedMessageWasNotPublished(JsonObject oldServicePoint) {
     final var servicePointId = oldServicePoint.getString("id");
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForServicePoint(servicePointId),

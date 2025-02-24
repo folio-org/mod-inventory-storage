@@ -70,15 +70,13 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
 
     AtomicReference<InstanceDateType> atomicReference = new AtomicReference<>();
 
-    vertx.setPeriodic(1000, 1000, event -> {
-      postgresMemberClient
-        .getById(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), InstanceDateType.class)
-        .onComplete(e -> {
-          if (e.succeeded()) {
-            atomicReference.set(e.result());
-          }
-        });
-    });
+    vertx.setPeriodic(1000, 1000, event -> postgresMemberClient
+      .getById(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), InstanceDateType.class)
+      .onComplete(e -> {
+        if (e.succeeded()) {
+          atomicReference.set(e.result());
+        }
+      }));
 
     await().atMost(1, TimeUnit.MINUTES).untilAsserted(() -> {
       assertThat(atomicReference.get()).isNotNull()

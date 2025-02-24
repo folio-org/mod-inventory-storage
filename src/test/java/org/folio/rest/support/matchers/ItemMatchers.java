@@ -17,7 +17,7 @@ public final class ItemMatchers {
   public static Matcher<JsonObject> effectiveCallNumberComponents(
     Matcher<EffectiveCallNumberComponents> matcher) {
 
-    return new TypeSafeMatcher<JsonObject>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText("Has effective call number components matches ")
@@ -45,24 +45,6 @@ public final class ItemMatchers {
     };
   }
 
-  private static <T> Matcher<EffectiveCallNumberComponents> hasEffectiveCallNumberElement(
-    Function<EffectiveCallNumberComponents, T> property, T expectedValue) {
-
-    return new TypeSafeMatcher<EffectiveCallNumberComponents>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Has effective call number component value ")
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(EffectiveCallNumberComponents components) {
-        final T actualValue = property.apply(components);
-        return Objects.equals(actualValue, expectedValue);
-      }
-    };
-  }
-
   public static Matcher<EffectiveCallNumberComponents> hasCallNumber(String callNumber) {
     return hasEffectiveCallNumberElement(EffectiveCallNumberComponents::getCallNumber,
       callNumber);
@@ -81,6 +63,24 @@ public final class ItemMatchers {
   public static Matcher<EffectiveCallNumberComponents> hasTypeId(String typeId) {
     return hasEffectiveCallNumberElement(EffectiveCallNumberComponents::getTypeId,
       typeId);
+  }
+
+  private static <T> Matcher<EffectiveCallNumberComponents> hasEffectiveCallNumberElement(
+    Function<EffectiveCallNumberComponents, T> property, T expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Has effective call number component value ")
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(EffectiveCallNumberComponents components) {
+        final T actualValue = property.apply(components);
+        return Objects.equals(actualValue, expectedValue);
+      }
+    };
   }
 }
 

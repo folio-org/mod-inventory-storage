@@ -73,8 +73,8 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
     return metadataExtractor().apply(createdRecord);
   }
 
-  protected String getRecordId(T record) {
-    return idExtractor().apply(record);
+  protected String getRecordId(T recordObj) {
+    return idExtractor().apply(recordObj);
   }
 
   protected String getRecordId(TestResponse response) {
@@ -128,7 +128,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
                 .extracting(collectionRecordsExtractor()).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
                 .hasSize(1);
 
-              var collectionRecord = collectionRecordsExtractor().apply(collection).get(0);
+              var collectionRecord = collectionRecordsExtractor().apply(collection).getFirst();
 
               verifyRecordFields(collectionRecord, newRecord, recordFieldExtractors(),
                 String.format("verify collection's record for query: %s", query));

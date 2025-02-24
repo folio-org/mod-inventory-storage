@@ -49,7 +49,6 @@ import org.folio.InventoryKafkaTopic;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceType;
-import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
@@ -82,22 +81,23 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
   private static final String INSTANCE_IDENTIFIER_FIELD = "instanceIdentifier";
   private static final String INSTANCE_TYPE_ID = "bbe13900-61c6-4643-8d73-2e60d38c8e55";
 
-  private static InstanceType instanceType = new InstanceType()
+  private static final InstanceType INSTANCE_TYPE = new InstanceType()
     .withId(INSTANCE_TYPE_ID)
     .withCode("DIT")
     .withName("Default Instance Type")
     .withSource("local");
 
+  private final Vertx vertx = Vertx.vertx();
+
   @Mock
   private ConsortiumDataCache consortiaDataCache;
-  private Vertx vertx = Vertx.vertx();
   private ShadowInstanceSynchronizationHandler synchronizationHandler;
 
   @BeforeClass
   public static void setUpClass() throws ExecutionException, InterruptedException, TimeoutException {
     ModuleUtility.prepareTenant(CENTRAL_TENANT_ID, false);
-    createInstanceType(instanceType, CENTRAL_TENANT_ID);
-    createInstanceType(instanceType, TENANT_ID);
+    createInstanceType(INSTANCE_TYPE, CENTRAL_TENANT_ID);
+    createInstanceType(INSTANCE_TYPE, TENANT_ID);
   }
 
   @Before
@@ -187,7 +187,7 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
       .onComplete(context.asyncAssertFailure(v -> verify(1, getRequestedFor(urlMatching(SHARING_JOBS_PATH + ".+")))));
   }
 
-  private static IndividualResource createInstanceType(InstanceType instanceType, String tenantId)
+  private static void createInstanceType(InstanceType instanceType, String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -196,11 +196,9 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
 
     assertThat(format("Create instance type failed: %s", response.getBody()),
       response.getStatusCode(), is(HTTP_CREATED));
-
-    return new IndividualResource(response);
   }
 
-  private Instance createInstance(Instance instanceToCreate, String tenantId)
+  private void createInstance(Instance instanceToCreate, String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -209,13 +207,11 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(HTTP_CREATED));
-
-    return response.getJson().mapTo(Instance.class);
   }
 
   private Future<Instance> getInstanceById(String instanceId, String tenantId) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    getClient().get(instancesStorageUrl(format("/" + instanceId)), tenantId, promise::complete);
+    getClient().get(instancesStorageUrl("/" + instanceId), tenantId, promise::complete);
 
     return promise.future().map(resp -> {
       assertThat(format("Create instance failed: %s", resp.bodyAsString()), resp.statusCode(), is(HTTP_OK));

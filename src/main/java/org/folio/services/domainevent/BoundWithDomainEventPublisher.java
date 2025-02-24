@@ -1,6 +1,5 @@
 package org.folio.services.domainevent;
 
-import static java.util.stream.Collectors.toList;
 import static org.folio.InventoryKafkaTopic.BOUND_WITH;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
@@ -31,7 +30,7 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
     return holdingsRepository.getById(boundWithParts, BoundWithPart::getHoldingsRecordId)
       .map(holdings -> boundWithParts.stream()
         .map(bound -> pair(getInstanceId(holdings, bound), bound))
-        .collect(toList()));
+        .toList());
   }
 
   @Override

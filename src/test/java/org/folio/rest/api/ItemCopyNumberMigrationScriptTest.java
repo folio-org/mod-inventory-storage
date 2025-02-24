@@ -37,7 +37,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void canMigrateCopyNumbersToSingleValue() throws Exception {
+  public void canMigrateCopyNumbersToSingleValue() {
     List<IndividualResource> threeItems = createItems(3);
     UUID[] ids = threeItems.stream().map(IndividualResource::getId).toArray(UUID[]::new);
 
@@ -51,7 +51,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void emptyCopyNumbersArrayIsRemoved() throws Exception {
+  public void emptyCopyNumbersArrayIsRemoved() {
     List<IndividualResource> fourItems = createItems(4);
     UUID[] itemIdsWithoutCopyNumbers = {fourItems.get(0).getId(), fourItems.get(2).getId()};
     UUID[] itemIdsWithCopyNumbers = {fourItems.get(1).getId(), fourItems.get(3).getId()};
@@ -89,7 +89,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
   }
 
   @Test
-  public void shouldTakeFirstElementFromCopyNumbersArray() throws Exception {
+  public void shouldTakeFirstElementFromCopyNumbersArray() {
     List<IndividualResource> sixItems = createItems(6);
 
     final UUID[] itemIdsWithoutCopyNumbers = {sixItems.get(0).getId(), sixItems.get(5).getId()};
@@ -115,7 +115,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     assertNoCopyNumber(itemIdsWithoutCopyNumbers[1]);
   }
 
-  private IndividualResource createItem() throws Exception {
+  private IndividualResource createItem() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject itemToCreate = new JsonObject()
@@ -129,7 +129,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     return itemsClient.create(itemToCreate);
   }
 
-  private List<IndividualResource> createItems(int count) throws Exception {
+  private List<IndividualResource> createItems(int count) {
     final List<IndividualResource> allItems = new ArrayList<>();
 
     for (int i = 0; i < count; i++) {
@@ -138,7 +138,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     return allItems;
   }
 
-  private void setCopyNumbersArray(UUID... ids) throws Exception {
+  private void setCopyNumbersArray(UUID... ids) {
     for (int currentIdIndex = 0; currentIdIndex < ids.length; currentIdIndex++) {
       final UUID id = ids[currentIdIndex];
       final String copyNumber = "cp" + currentIdIndex;
@@ -149,7 +149,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     }
   }
 
-  private void setEmptyCopyNumbersArray(UUID id) throws Exception {
+  private void setEmptyCopyNumbersArray(UUID id) {
     updateJsonbProperty("item", id, "copyNumbers",
       "ARRAY[]::TEXT[]"
     );
@@ -172,7 +172,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     result.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
-  private void setCopyNumbersArrayWithTwoValues(UUID id, String copyNumber) throws Exception {
+  private void setCopyNumbersArrayWithTwoValues(UUID id, String copyNumber) {
     final String copyNumberToSet = String.format("'%1$s', '%1$sCopy2'", copyNumber);
 
     updateJsonbProperty("item", id, "copyNumbers",
@@ -180,7 +180,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     );
   }
 
-  private void assertCopyNumber(UUID itemId, String expectedCopyNumber) throws Exception {
+  private void assertCopyNumber(UUID itemId, String expectedCopyNumber) {
     JsonObject item = itemsClient.getById(itemId).getJson();
 
     assertThat(expectedCopyNumber, notNullValue());
@@ -188,7 +188,7 @@ public class ItemCopyNumberMigrationScriptTest extends MigrationTestBase {
     assertFalse(item.containsKey("copyNumbers"));
   }
 
-  private void assertNoCopyNumber(UUID itemId) throws Exception {
+  private void assertNoCopyNumber(UUID itemId) {
     JsonObject item = itemsClient.getById(itemId).getJson();
 
     assertThat(item, notNullValue());

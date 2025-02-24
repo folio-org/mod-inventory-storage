@@ -102,30 +102,6 @@ public class ItemService {
     holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
   }
 
-  private static Response putFailure(Throwable e) {
-    String msg = PgExceptionUtil.badRequestMessage(e);
-    if (msg == null) {
-      msg = e.getMessage();
-    }
-    if (PgExceptionUtil.isVersionConflict(e)) {
-      return PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(msg);
-    }
-    Matcher matcher = KEY_NOT_PRESENT_PATTERN.matcher(msg);
-    if (matcher.find()) {
-      String field = matcher.group(1);
-      String value = matcher.group(2);
-      String refTable = matcher.group(3);
-      msg = "Cannot set item " + field + " = " + value
-        + " because it does not exist in " + refTable + ".id.";
-    } else {
-      matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
-      if (matcher.find()) {
-        msg = matcher.group(1) + " value already exists in table item: " + matcher.group(2);
-      }
-    }
-    return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
-  }
-
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
 
@@ -187,7 +163,7 @@ public class ItemService {
       })
       .onSuccess(finalItem ->
         domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-      .<Response>map(x -> PutItemStorageItemsByItemIdResponse.respond204())
+      .map(x -> PutItemStorageItemsByItemIdResponse.respond204())
       ;
   }
 
@@ -226,7 +202,7 @@ public class ItemService {
 
               domainEventService.publishRemoved(itemId, instanceIdAndItemRaw);
             } catch (JsonProcessingException ex) {
-              log.error(String.format("deleteItems:: Failed to parse json : %s", ex.getMessage()), ex);
+              log.error("deleteItems:: Failed to parse json : {}", ex.getMessage(), ex);
               throw new IllegalArgumentException(ex.getCause());
             }
           }
@@ -264,15 +240,39 @@ public class ItemService {
       .compose(items -> domainEventService.publishReindexItems(rangeId, items));
   }
 
+  private static Response putFailure(Throwable e) {
+    String msg = PgExceptionUtil.badRequestMessage(e);
+    if (msg == null) {
+      msg = e.getMessage();
+    }
+    if (PgExceptionUtil.isVersionConflict(e)) {
+      return PutItemStorageItemsByItemIdResponse.respond409WithTextPlain(msg);
+    }
+    Matcher matcher = KEY_NOT_PRESENT_PATTERN.matcher(msg);
+    if (matcher.find()) {
+      String field = matcher.group(1);
+      String value = matcher.group(2);
+      String refTable = matcher.group(3);
+      msg = "Cannot set item " + field + " = " + value
+            + " because it does not exist in " + refTable + ".id.";
+    } else {
+      matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
+      if (matcher.find()) {
+        msg = matcher.group(1) + " value already exists in table item: " + matcher.group(2);
+      }
+    }
+    return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
+  }
+
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
     return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
-      || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
-      || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
-      || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
-      || isNull(item.getPermanentLocationId())
-          && isNull(item.getTemporaryLocationId())
-          && (!isNull(holdingsRecord.getTemporaryLocationId())
-          || !isNull(holdingsRecord.getPermanentLocationId()));
+           || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
+           || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
+           || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
+           || isNull(item.getPermanentLocationId())
+              && isNull(item.getTemporaryLocationId())
+              && (!isNull(holdingsRecord.getTemporaryLocationId())
+                  || !isNull(holdingsRecord.getPermanentLocationId()));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
@@ -306,10 +306,10 @@ public class ItemService {
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
-      + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
-      + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
-      + "  ON holdings_record.id = $2 "
-      + "WHERE item.id = $1";
+                 + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
+                 + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+                 + "  ON holdings_record.id = $2 "
+                 + "WHERE item.id = $1";
     return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
       .compose(rowSet -> {
         if (rowSet.size() == 0) {

@@ -178,7 +178,7 @@ public final class AsyncMigrationJobService {
     var availableMigrations = getAvailableMigrations().getAsyncMigrations()
       .stream().flatMap(v -> Stream.of(v.getMigrations())).toList()
       .stream().flatMap(List::stream).toList();
-    return availableMigrations.containsAll(jobRequest.getMigrations());
+    return new HashSet<>(availableMigrations).containsAll(jobRequest.getMigrations());
   }
 
   private AsyncMigrationJob buildInitialJob(AsyncMigrationJobRequest request) {

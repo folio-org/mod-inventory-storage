@@ -29,7 +29,7 @@ public class AsyncMigrationJobRepository extends AbstractRepository<AsyncMigrati
 
     Future.succeededFuture()
       .compose(notUsed -> {
-        postgresClient.startTx(txPromise); //NOSONAR
+        postgresClient.startTx(txPromise);
         return txPromise.future();
       }).compose(notUsed -> {
         Promise<Row> selectResult = Promise.promise();
@@ -41,12 +41,12 @@ public class AsyncMigrationJobRepository extends AbstractRepository<AsyncMigrati
         .map(response))
       .compose(asyncMigrationJob -> {
         Promise<Void> endTxFuture = Promise.promise();
-        postgresClient.endTx(txPromise.future(), endTxFuture); //NOSONAR
+        postgresClient.endTx(txPromise.future(), endTxFuture);
         return endTxFuture.future().map(asyncMigrationJob);
       })
       .onSuccess(result::complete)
       .onFailure(throwable ->
-        postgresClient.rollbackTx(txPromise.future(), rollback -> result.fail(throwable))); //NOSONAR
+        postgresClient.rollbackTx(txPromise.future(), rollback -> result.fail(throwable)));
     return result.future();
   }
 }

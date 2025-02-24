@@ -42,7 +42,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
   }
 
   @Override
-  public void start(Promise<Void> startPromise) throws Exception {
+  public void start(Promise<Void> startPromise) {
     var httpClient = vertx.createHttpClient();
     var handler = new SynchronizationAsyncRecordHandler(consortiumDataCache, httpClient, vertx);
 

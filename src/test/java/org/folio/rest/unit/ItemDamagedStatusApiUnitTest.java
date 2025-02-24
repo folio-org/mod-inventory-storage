@@ -35,6 +35,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -45,7 +46,6 @@ public class ItemDamagedStatusApiUnitTest {
   private static final String DEFAULT_QUERY = "";
   private static final int DEFAULT_OFFSET = 0;
   private static final int DEFAULT_LIMIT = 10;
-  private static final String DEFAULT_LANGUAGE = "en";
   private static final HashMap<String, String> DEFAULT_HEADERS = new HashMap<>();
   private static final String INTERNAL_SERVER_ERROR_MSG = "Oops! Some error was happened on the server side.";
   @Rule
@@ -60,7 +60,8 @@ public class ItemDamagedStatusApiUnitTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    when(pgClientFactory.getInstance(any(Context.class), any(Map.class))).thenReturn(postgresClient);
+    when(pgClientFactory.getInstance(any(Context.class), ArgumentMatchers.<Map<String, String>>any()))
+      .thenReturn(postgresClient);
   }
 
   @Test

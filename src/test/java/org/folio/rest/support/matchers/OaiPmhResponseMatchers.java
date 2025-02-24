@@ -16,51 +16,9 @@ public final class OaiPmhResponseMatchers {
   private OaiPmhResponseMatchers() {
   }
 
-  private static <T> Matcher<JsonObject> hasElement(JsonPointer jsonPointer, String[] expectedValue) {
+  public static Matcher<JsonObject> isDeleted() {
 
-    return new TypeSafeMatcher<JsonObject>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Expected: ")
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
-        if (items == null) {
-          return false;
-        }
-        final List<Object> actualValues = items.stream()
-          .map(jsonPointer::queryJson)
-          .toList();
-
-        return Arrays.asList(expectedValue)
-          .containsAll(actualValues);
-      }
-    };
-  }
-
-  private static <T> Matcher<JsonObject> hasItemsCount(int expectedValue) {
-
-    return new TypeSafeMatcher<JsonObject>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Has number of items ")
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
-        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
-      }
-    };
-  }
-
-  public static <T> Matcher<JsonObject> isDeleted() {
-
-    return new TypeSafeMatcher<JsonObject>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText("Is deleted ")
@@ -91,6 +49,49 @@ public final class OaiPmhResponseMatchers {
 
   public static Matcher<JsonObject> hasEffectiveLocationInstitutionName(String... institutionNames) {
     return hasElement(JsonPointer.from("/location/location/institutionName"), institutionNames);
+  }
+
+  private static Matcher<JsonObject> hasElement(JsonPointer jsonPointer, String[] expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Expected: ")
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
+        if (items == null) {
+          return false;
+        }
+        final List<String> actualValues = items.stream()
+          .map(jsonPointer::queryJson)
+          .map(String.class::cast)
+          .toList();
+
+        return Arrays.asList(expectedValue)
+          .containsAll(actualValues);
+      }
+    };
+  }
+
+  private static Matcher<JsonObject> hasItemsCount(int expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Has number of items ")
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        final JsonArray items = (JsonArray) itemFieldsPointer.queryJson(jsonObject);
+        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
+      }
+    };
   }
 
 }

@@ -12,13 +12,10 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceRelationshipType;
 import org.folio.rest.jaxrs.model.InstanceRelationshipTypes;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -236,8 +233,7 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
   }
 
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(INSTANCE_RELATIONSHIP_TYPE_TABLE + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+    return StorageHelper.getCql(query, limit, offset, INSTANCE_RELATIONSHIP_TYPE_TABLE);
   }
 
   private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {

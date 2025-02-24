@@ -8,7 +8,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +31,7 @@ public class HoldingsTypeTest extends TestBase {
 
   @Test
   public void cannotCreateHoldingsTypeWithDuplicateName()
-    throws InterruptedException, MalformedURLException, TimeoutException, ExecutionException {
-
+    throws InterruptedException, TimeoutException, ExecutionException {
     JsonObject holdingsType = new JsonObject()
       .put("name", "Custom")
       .put("source", "folio");

@@ -193,8 +193,8 @@ public class CommonDomainEventPublisher<T> {
 
     return producer.send(producerRecord)
       .<Void>mapEmpty()
-      .eventually(x -> producer.flush())
-      .eventually(x -> producer.close())
+      .eventually(() -> producer.flush())
+      .eventually(() -> producer.close())
       .onFailure(cause -> {
         log.error("Unable to send domain event [{}], payload - [{}]",
           key, value, cause);

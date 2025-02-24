@@ -182,8 +182,6 @@ public class TenantRefApi extends TenantAPI {
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
-      .peek(migration -> log.info(
-        "Following migration is to be executed [migration={}]", migration))
       .map(BaseMigrationService::runMigration)
       .toList();
 

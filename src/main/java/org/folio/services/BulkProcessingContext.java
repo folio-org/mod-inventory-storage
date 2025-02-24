@@ -13,7 +13,6 @@ public class BulkProcessingContext {
   private static final String FAILED_ENTITIES_FILE_SUFFIX = "_failedEntities";
   private static final String ERRORS_FILE_SUFFIX = "_errors";
 
-  private final String initialFilePath;
   private final String errorEntitiesFilePath;
   private final String errorsFilePath;
   private final String errorEntitiesFileLocalPath;
@@ -21,7 +20,8 @@ public class BulkProcessingContext {
   private final boolean publishEvents;
 
   public BulkProcessingContext(BulkUpsertRequest request) {
-    this.initialFilePath = StringUtils.removeStart(request.getRecordsFileName(), '/');
+    var initialFilePath =
+      StringUtils.removeStart(request.getRecordsFileName(), '/');
     this.errorEntitiesFilePath = initialFilePath + FAILED_ENTITIES_FILE_SUFFIX;
     this.errorsFilePath = initialFilePath + ERRORS_FILE_SUFFIX;
     this.errorEntitiesFileLocalPath = ROOT_FOLDER + errorEntitiesFilePath;

@@ -6,11 +6,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.api.entities.InstanceRelationship;
 import org.folio.rest.support.IndividualResource;
@@ -66,8 +63,7 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   }
 
   @Test
-  public void canMigratePrecedingSucceedingTitles() throws Exception {
-
+  public void canMigratePrecedingSucceedingTitles() {
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
     List<JsonObject> precedingSucceedingTitles = precedingSucceedingTitleClient.getAll();
@@ -79,8 +75,7 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
   }
 
   @Test
-  public void canRemoveOldPrecedingSucceedingTitles() throws Exception {
-
+  public void canRemoveOldPrecedingSucceedingTitles() {
     executeMultipleSqlStatements(REMOVE_OLD_PRECEDING_SUCCEEDING_TITLES_SCRIPT);
 
     Response response = instanceRelationshipTypesClient
@@ -92,17 +87,14 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
     assertThat(instanceRelationships.size(), is(0));
   }
 
-  private void createInstanceRelationType(String id, String name) throws Exception {
+  private void createInstanceRelationType(String id, String name) {
     instanceRelationshipTypesClient.create(new JsonObject()
       .put("id", id)
       .put("name", name));
   }
 
   private IndividualResource createInstanceRelationship(UUID instance1Id, UUID instance2Id,
-                                                        String instanceRelationTypeId)
-    throws MalformedURLException, InterruptedException,
-    ExecutionException, TimeoutException {
-
+                                                        String instanceRelationTypeId) {
     JsonObject instanceRelationshipRequestObject = new InstanceRelationship(
       instance1Id.toString(), instance2Id.toString(), instanceRelationTypeId).getJson();
 

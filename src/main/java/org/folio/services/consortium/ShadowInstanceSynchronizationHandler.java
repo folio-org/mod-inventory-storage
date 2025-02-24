@@ -43,7 +43,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private static final String EVENT_HANDLING_ERROR_MSG =
     "handle:: Failed to handle event for shadow instances synchronization, centralTenantId: '{}', instanceId: '{}'";
   private static final String SHARING_INSTANCES_PATH =
-    "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s"; //NOSONAR
+    "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s";
   private static final String INSTANCES_PARALLEL_UPDATES_COUNT_PARAM =
     "instance-synchronization.parallel.updates.count";
   private static final String DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT = "10";
@@ -147,7 +147,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
 
       Future<CompositeFuture> future = Future.succeededFuture();
       for (List<String> tenantsChunk : tenantsChunks) {
-        future = future.eventually(v -> updateShadowInstances(tenantsChunk, instance, headers));
+        future = future.eventually(() -> updateShadowInstances(tenantsChunk, instance, headers));
       }
       return future.mapEmpty();
     } catch (Exception e) {

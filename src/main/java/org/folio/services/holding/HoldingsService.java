@@ -195,7 +195,7 @@ public class HoldingsService {
               var holdingId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
               domainEventPublisher.publishRemoved(holdingId, row.getString(1));
             } catch (JsonProcessingException ex) {
-              log.error(String.format("deleteHoldings:: Failed to parse json : %s", ex.getMessage()), ex);
+              log.error("deleteHoldings:: Failed to parse json : {}", ex.getMessage(), ex);
               throw new IllegalArgumentException(ex.getCause());
             }
           }
@@ -304,7 +304,7 @@ public class HoldingsService {
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
     return instanceRepository.exists(instanceId)
-      .compose(exists -> exists ? Future.succeededFuture() :
+      .compose(exists -> Boolean.TRUE.equals(exists) ? Future.succeededFuture() :
         consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
       );
   }

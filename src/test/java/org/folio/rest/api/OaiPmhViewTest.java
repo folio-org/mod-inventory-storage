@@ -23,7 +23,6 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
-import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -93,14 +92,14 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     // when
     final List<JsonObject> data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // The same call using newly added API
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getOiaPmhViewInstances(params);
     // then
-    assertThat(instancesData.get(0),
+    assertThat(instancesData.getFirst(),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
   }
@@ -133,13 +132,13 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     params.put("deletedRecordSupport", "true");
     List<JsonObject> data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), isDeleted());
+    assertThat(data.getFirst(), isDeleted());
 
     // The same call using newly added API (just need to retrieve "updated instances" - only the have "deleted" field)
     params.put("deletedRecordSupport", "true");
     data = requestOaiPmhViewUpdatedInstanceIds(params);
     // then
-    assertThat(data.get(0), isDeleted());
+    assertThat(data.getFirst(), isDeleted());
 
     // when
     params.put("deletedRecordSupport", "false");
@@ -165,13 +164,13 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .toString());
     List<JsonObject> data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // The same call using newly added API
     List<JsonObject> instancesData = getOiaPmhViewInstances(params);
     // then
-    assertThat(instancesData.get(0),
+    assertThat(instancesData.getFirst(),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
@@ -181,13 +180,13 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .toString());
     data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // The same call using newly added API
     instancesData = getOiaPmhViewInstances(params);
     // then
-    assertThat(instancesData.get(0),
+    assertThat(instancesData.getFirst(),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
@@ -226,13 +225,13 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .toString());
     data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // The same call using newly added API
     instancesData = getOiaPmhViewInstances(params);
     // then
-    assertThat(instancesData.get(0),
+    assertThat(instancesData.getFirst(),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
@@ -267,14 +266,14 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     List<JsonObject> data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     data = requestOaiPmhView(params);
     // then
-    assertThat(data.get(0),
+    assertThat(data.getFirst(),
       allOf(
         hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
         hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -283,14 +282,14 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     data = getOiaPmhViewInstances(params);
     // then
-    assertThat(data.get(0), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
+    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     data = getOiaPmhViewInstances(params);
     // then
-    assertThat(data.get(0),
+    assertThat(data.getFirst(),
       allOf(
         hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
         hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName("Primary Institution")));
@@ -374,8 +373,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     return instancesWithItemsAndHoldings;
   }
 
-  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
     super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
   }
 
@@ -410,7 +408,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh view:", response);
+    log.info("response from oai pmh view: {}", response);
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body)) {
@@ -436,7 +434,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(TIMEOUT, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh instance ids view:", response);
+    log.info("response from oai pmh instance ids view: {}", response);
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body)) {
@@ -469,7 +467,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     final Response response = future.get(6000, TimeUnit.SECONDS);
     responseMatcher.handle(response);
-    log.info("response from oai pmh updated instances view:", response);
+    log.info("response from oai pmh updated instances view: {}", response);
 
     final String body = response.getBody();
     if (StringUtils.isNotEmpty(body)) {

@@ -8,7 +8,7 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 public class HttpResponseMatchers {
   public static Matcher<Response> statusCodeIs(int statusCode) {
-    return new TypeSafeDiagnosingMatcher<Response>() {
+    return new TypeSafeDiagnosingMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText(
@@ -40,7 +40,7 @@ public class HttpResponseMatchers {
    * @return the matcher
    */
   public static Matcher<Response> errorMessageContains(String substring) {
-    return new TypeSafeDiagnosingMatcher<Response>() {
+    return new TypeSafeDiagnosingMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description
@@ -82,7 +82,7 @@ public class HttpResponseMatchers {
    * @return the matcher
    */
   public static Matcher<Response> errorParametersValueIs(String value) {
-    return new TypeSafeDiagnosingMatcher<Response>() {
+    return new TypeSafeDiagnosingMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description
@@ -109,7 +109,7 @@ public class HttpResponseMatchers {
             .getString("value");
         } catch (Exception e) {
           description.appendText("Response where JSON body does not have errors[0].parameters[0].value ("
-            + e.getMessage() + "): " + jsonObject.encodePrettily());
+                                 + e.getMessage() + "): " + jsonObject.encodePrettily());
           return false;
         }
         if (value.equals(actualValue)) {

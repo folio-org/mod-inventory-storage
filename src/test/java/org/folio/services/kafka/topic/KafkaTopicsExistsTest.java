@@ -13,7 +13,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
@@ -81,17 +80,17 @@ public class KafkaTopicsExistsTest {
 
   private <T> Future<Void> assertTopics(int retries, List<String> expectedTopics) {
     return kafkaAdminClient.listTopics()
-        .compose(topics -> {
-          if (topics.containsAll(expectedTopics)) {
-            return Future.succeededFuture();
-          }
-          if (retries <= 0) {
-            var expected = expectedTopics.stream().collect(Collectors.joining(", "));
-            var actual = topics.stream().collect(Collectors.joining(", "));
-            return Future.failedFuture("listTopics() missing expected topics. "
-                + "Expected: " + expected + ". Actual: " + actual);
-          }
-          return assertTopics(retries - 1, expectedTopics);
-        });
+      .compose(topics -> {
+        if (topics.containsAll(expectedTopics)) {
+          return Future.succeededFuture();
+        }
+        if (retries <= 0) {
+          var expected = String.join(", ", expectedTopics);
+          var actual = String.join(", ", topics);
+          return Future.failedFuture("listTopics() missing expected topics. "
+                                     + "Expected: " + expected + ". Actual: " + actual);
+        }
+        return assertTopics(retries - 1, expectedTopics);
+      });
   }
 }
