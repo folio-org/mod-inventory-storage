@@ -14,7 +14,8 @@ public final class KafkaUtility {
   private static final DockerImageName IMAGE_NAME
     = DockerImageName.parse("apache/kafka-native:3.8.0");
 
-  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(IMAGE_NAME);
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(IMAGE_NAME)
+      .withStartupAttempts(3);
 
   private KafkaUtility() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
