@@ -270,7 +270,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     JsonObject initialSample = createBoundWithCompositeJson(item.getId(),
       Collections.singletonList(holdingsRecord2.getId()));
     Response responseOnInitial = putCompositeBoundWith(initialSample);
-    logger.info(String.format("Response, initial sample: %s", responseOnInitial.getBody()));
+    logger.info("Response, initial sample: {}", responseOnInitial.getBody());
     assertThat(
       "Expected 204 - no content on initial request",
       responseOnInitial.getStatusCode(), is(204));
@@ -285,8 +285,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       Collections.singletonList(holdingsRecord1.getId()));
     Response responseOnOnlyMainHoldingsInListOfContents
       = putCompositeBoundWith(onlyMainHoldingsRecordInListOfContents);
-    logger.info(String.format("Response on request with only the main holdings ID in: %s",
-      responseOnOnlyMainHoldingsInListOfContents.getBody()));
+    logger.info("Response on request with only the main holdings in: {}",
+      responseOnOnlyMainHoldingsInListOfContents.getBody());
     assertThat(
       "Expected 204 - no content on request with only the main holdings ID in",
       responseOnOnlyMainHoldingsInListOfContents.getStatusCode(), is(204));
@@ -309,8 +309,8 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       Collections.singletonList(holdingsRecord1.getId()));
     Response responseOnOnlyMainHoldingsInListOfContents
       = putCompositeBoundWith(onlyMainHoldingsRecordInListOfContents);
-    logger.info(String.format("Response on request with only the main holdings ID in: %s",
-      responseOnOnlyMainHoldingsInListOfContents.getBody()));
+    logger.info("Response on request with only the main holdings ID in: {}",
+      responseOnOnlyMainHoldingsInListOfContents.getBody());
     assertThat(
       "Expected 204 - no content on request with only the main holdings ID in",
       responseOnOnlyMainHoldingsInListOfContents.getStatusCode(), is(204));
@@ -334,8 +334,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       List.of());
     Response responseOnEmptyListOfContents
       = putCompositeBoundWith(emptyListOfContents);
-    logger.info(String.format("Response on request with empty list of part: %s",
-      responseOnEmptyListOfContents.getBody()));
+    logger.info("Response on request with empty list of part: {}", responseOnEmptyListOfContents.getBody());
     assertThat(
       "Expected 204 - no content on request on empty list of parts",
       responseOnEmptyListOfContents.getStatusCode(), is(204));

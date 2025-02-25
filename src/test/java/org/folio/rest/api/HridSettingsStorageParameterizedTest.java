@@ -101,14 +101,16 @@ public class HridSettingsStorageParameterizedTest extends TestBase {
   private void verifyValidationError(Response response, String expectedKey, String expectedValue) {
     assertThat(response.getStatusCode(), is(422));
 
-    final Errors errors = response.getJson().mapTo(Errors.class);
+    final var errors = response.getJson().mapTo(Errors.class);
 
     assertThat(errors.getErrors(), is(notNullValue()));
-    assertThat(errors.getErrors().get(0), is(notNullValue()));
-    assertThat(errors.getErrors().get(0).getMessage(), is(notNullValue()));
-    assertThat(errors.getErrors().get(0).getParameters(), is(notNullValue()));
-    assertThat(errors.getErrors().get(0).getParameters().get(0), is(notNullValue()));
-    assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(), is(expectedKey));
-    assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(), is(expectedValue));
+    var error = errors.getErrors().getFirst();
+    assertThat(error, is(notNullValue()));
+    assertThat(error.getMessage(), is(notNullValue()));
+    assertThat(error.getParameters(), is(notNullValue()));
+    var parameter = error.getParameters().getFirst();
+    assertThat(parameter, is(notNullValue()));
+    assertThat(parameter.getKey(), is(expectedKey));
+    assertThat(parameter.getValue(), is(expectedValue));
   }
 }

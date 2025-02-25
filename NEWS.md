@@ -1,6 +1,6 @@
-## v28.1.0 YYYY-mm-DD
+## v29.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
 
 ### New APIs versions
 * Provides `inventory-hierarchy 0.6`

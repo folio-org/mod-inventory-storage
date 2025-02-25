@@ -36,7 +36,7 @@ public class InitApiImpl implements InitAPI {
     Promise<Void> promise = Promise.promise();
     long startTime = System.currentTimeMillis();
     DeploymentOptions options = new DeploymentOptions();
-    options.setWorker(true);
+    options.setThreadingModel(ThreadingModel.WORKER);
     options.setInstances(1);
 
     vertx.deployVerticle(AsyncMigrationConsumerVerticle.class, options, result -> {
@@ -55,7 +55,7 @@ public class InitApiImpl implements InitAPI {
 
   private Future<Void> initShadowInstanceSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
     DeploymentOptions options = new DeploymentOptions()
-      .setWorker(true)
+      .setThreadingModel(ThreadingModel.WORKER)
       .setInstances(1);
 
     return vertx.deployVerticle(() -> new ShadowInstanceSynchronizationVerticle(consortiumDataCache), options)
@@ -68,7 +68,7 @@ public class InitApiImpl implements InitAPI {
 
   private Future<Object> initSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
     DeploymentOptions options = new DeploymentOptions()
-      .setWorker(true)
+      .setThreadingModel(ThreadingModel.WORKER)
       .setInstances(1);
 
     return vertx.deployVerticle(() -> new SynchronizationVerticle(consortiumDataCache), options)

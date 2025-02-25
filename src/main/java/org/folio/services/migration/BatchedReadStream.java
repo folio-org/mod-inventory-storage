@@ -104,7 +104,7 @@ public class BatchedReadStream<T> implements ReadStream<List<T>> {
         exceptionHandler.handle(ex);
         return false;
       } else {
-        throw new RuntimeException(ex);
+        throw new IllegalStateException(ex);
       }
     }
   }

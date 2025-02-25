@@ -605,7 +605,7 @@ public class ReferenceTablesTest extends TestBase {
     throws InterruptedException, TimeoutException, ExecutionException {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
     String url = baseUrl.toString() + "?limit=400&query="
-      + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8);
+                 + URLEncoder.encode("cql.allRecords=1", StandardCharsets.UTF_8);
     getClient().get(url, TENANT_ID, ResponseHandler.json(searchCompleted));
     return searchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }

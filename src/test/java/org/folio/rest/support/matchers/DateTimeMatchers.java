@@ -20,7 +20,7 @@ public final class DateTimeMatchers {
     Seconds seconds, DateTime beforeDateTime,
     Function<T, DateTime> jsonToDateTimeConverter) {
 
-    return new TypeSafeMatcher<T>() {
+    return new TypeSafeMatcher<>() {
 
       @Override
       public void describeTo(Description description) {
@@ -34,7 +34,7 @@ public final class DateTimeMatchers {
         DateTime actualDateTime = jsonToDateTimeConverter.apply(actualValue);
 
         return actualDateTime.isBefore(beforeDateTime)
-          && Seconds.secondsBetween(beforeDateTime, actualDateTime).isLessThan(seconds);
+               && Seconds.secondsBetween(beforeDateTime, actualDateTime).isLessThan(seconds);
       }
     };
   }
@@ -53,7 +53,7 @@ public final class DateTimeMatchers {
   public static Matcher<String> hasIsoFormat() {
     String acceptableFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
 
-    return new TypeSafeMatcher<String>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description

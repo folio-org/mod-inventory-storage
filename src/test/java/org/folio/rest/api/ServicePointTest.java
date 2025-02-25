@@ -31,10 +31,10 @@ import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import lombok.SneakyThrows;
+import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.StaffSlip;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.messages.ServicePointEventMessageChecks;
@@ -95,7 +95,7 @@ public class ServicePointTest extends TestBase {
     Response response = createServicePoint(null, null, "cd1",
       "Circulation Desk -- Hallway", null,
       20, true, createHoldShelfExpiryPeriod());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -107,7 +107,7 @@ public class ServicePointTest extends TestBase {
     Response response = createServicePoint(null, "Circ Desk 103", null,
       "Circulation Desk -- Hallway", null,
       20, true, createHoldShelfExpiryPeriod());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -118,7 +118,7 @@ public class ServicePointTest extends TestBase {
     MalformedURLException {
     Response response = createServicePoint(null, "Circ Desk 1", "cd1",
       null, null, 20, true, createHoldShelfExpiryPeriod());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -131,7 +131,7 @@ public class ServicePointTest extends TestBase {
       "Circulation Desk -- Hallway", null, 20, true, createHoldShelfExpiryPeriod());
     Response response = createServicePoint(null, "Circ Desk 1", "cd2",
       "Circulation Desk -- Bathroom", null, 20, true, createHoldShelfExpiryPeriod());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -517,7 +517,7 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
-    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint);
   }
 
   @Test
@@ -545,7 +545,7 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
-    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint);
   }
 
   @Test
@@ -576,7 +576,7 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
-    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint);
   }
 
   @Test
@@ -607,7 +607,7 @@ public class ServicePointTest extends TestBase {
     assertThat(errorsArray.size(), is(1));
     JsonObject errorObject = errorsArray.getJsonObject(0);
     assertThat(errorObject.getString("message"), is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
-    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint, responseJson);
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(createdServicePoint);
   }
 
   @Test
@@ -806,7 +806,7 @@ public class ServicePointTest extends TestBase {
     final List<JsonObject> servicePoints = getMany("pickupLocation==true");
 
     assertThat(servicePoints.size(), is(1));
-    assertThat(servicePoints.get(0).getString("id"),
+    assertThat(servicePoints.getFirst().getString("id"),
       is(pickupLocationServicePointId.toString()));
   }
 
@@ -827,7 +827,7 @@ public class ServicePointTest extends TestBase {
 
     return getCompleted.get(TIMEOUT, TimeUnit.SECONDS).getJson()
       .getJsonArray("servicepoints").stream()
-      .map(obj -> (JsonObject) obj)
+      .map(JsonObject.class::cast)
       .toList();
   }
 
