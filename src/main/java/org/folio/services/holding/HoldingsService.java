@@ -19,7 +19,6 @@ import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -145,10 +144,7 @@ public class HoldingsService {
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
 
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .compose(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> createShadowInstanceIfNeeded(entity.getInstanceId(), consortiumData).mapEmpty())
-        .orElse(Future.succeededFuture()))
+    return createShadowInstancesIfNeeded(List.of(entity))
       .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
@@ -209,13 +205,7 @@ public class HoldingsService {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
     }
 
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .compose(consortiumDataOptional -> {
-        if (consortiumDataOptional.isPresent()) {
-          return createShadowInstancesIfNeeded(holdings, consortiumDataOptional.get());
-        }
-        return Future.succeededFuture();
-      })
+    return createShadowInstancesIfNeeded(holdings)
       .compose(ar -> hridManager.populateHridForHoldings(holdings)
         .compose(NotesValidators::refuseHoldingLongNotes)
         .compose(result -> buildBatchOperationContext(upsert, holdings,
@@ -291,7 +281,17 @@ public class HoldingsService {
     };
   }
 
-  private CompositeFuture createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
+  private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords) {
+    return consortiumService.getConsortiumData(okapiHeaders)
+        .compose(consortiumDataOptional -> {
+          if (consortiumDataOptional.isPresent()) {
+            return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get());
+          }
+          return Future.succeededFuture();
+        });
+  }
+
+  private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
                                                         ConsortiumData consortiumData) {
     Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
 
@@ -299,7 +299,8 @@ public class HoldingsService {
       String instanceId = holdingRecord.getInstanceId();
       instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
     }
-    return Future.all(new ArrayList<>(instanceFuturesMap.values()));
+    return Future.all(new ArrayList<>(instanceFuturesMap.values()))
+        .mapEmpty();
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
