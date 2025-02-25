@@ -36,7 +36,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
   }
 
   @Test
-  public void shouldStopProcessingWhenCannotConvertItem() throws Exception {
+  public void shouldStopProcessingWhenCannotConvertItem() {
     var item = createItem(300);
     removeShelvingOrder(List.of(item));
     executeSql(
@@ -58,7 +58,7 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
         new Parameter().withKey("loadReference").withValue("false"))));
   }
 
-  private void removeShelvingOrder(List<IndividualResource> items) throws Exception {
+  private void removeShelvingOrder(List<IndividualResource> items) {
     for (IndividualResource item : items) {
       unsetJsonbProperty("item", item.getId(), EFFECTIVE_SHELVING_ORDER);
       assertThat(itemsClient.getById(item.getId()).getJson()

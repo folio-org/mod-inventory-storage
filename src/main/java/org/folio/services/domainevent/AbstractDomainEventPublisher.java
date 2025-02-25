@@ -63,12 +63,12 @@ abstract class AbstractDomainEventPublisher<D, E> {
         return;
       }
 
-      log.info("Records created {}, records updated {}", batchOperation.getRecordsToBeCreated().size(),
-        batchOperation.getExistingRecords().size());
+      log.info("Records created {}, records updated {}", batchOperation.recordsToBeCreated().size(),
+        batchOperation.existingRecords().size());
 
-      if (batchOperation.isPublishEvents()) {
-        publishRecordsCreated(batchOperation.getRecordsToBeCreated()).compose(
-          notUsed -> publishUpdated(batchOperation.getExistingRecords()));
+      if (batchOperation.publishEvents()) {
+        publishRecordsCreated(batchOperation.recordsToBeCreated()).compose(
+          notUsed -> publishUpdated(batchOperation.existingRecords()));
       }
     };
   }

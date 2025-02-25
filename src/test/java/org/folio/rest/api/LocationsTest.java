@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import lombok.SneakyThrows;
-import org.folio.rest.support.AdditionalHttpStatusCodes;
+import org.folio.HttpStatus;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -33,9 +33,6 @@ import org.folio.rest.support.client.LoanTypesClient;
 import org.junit.Before;
 import org.junit.Test;
 
-/* TODO: Missing tests
-   - Bad inst/camp/lib in PUT
- */
 public class LocationsTest extends TestBaseWithInventoryUtil {
   private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
@@ -67,14 +64,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   public void cannotCreateLocationWithoutUnits() {
     Response response = createLocation(null, "Main Library", null, null, null,
       "PI/CC/ML/X", getServicePointIds());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
   public void cannotCreateLocationWithoutCode() {
     Response response = createLocation(null, "Main Library", getInstitutionId(),
       getCampusId(), getLibraryId(), null, getServicePointIds());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -82,7 +79,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     createLocation(null, "Main Library", "PI/CC/ML/X");
     Response response = createLocation(null, "Main Library", getInstitutionId(),
       getCampusId(), getLibraryId(), "AA/BB", getServicePointIds());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -91,7 +88,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     Response response = createLocation(null, "Some Other Library", getInstitutionId(),
       getCampusId(), getLibraryId(), "PI/CC/ML/X",
       getServicePointIds());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -100,7 +97,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     createLocation(id, "Main Library", "PI/CC/ML/X");
     Response response = createLocation(id, "Some Other Library", getInstitutionId(),
       getCampusId(), getLibraryId(), "AA/BB", getServicePointIds());
-    assertThat(response.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -144,7 +141,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       .put("libraryId", getLibraryId().toString())
       .put("isActive", true)
       .put("code", "AA/BB")
-      .put("primaryServicePoint", getServicePointIds().get(0).toString())
+      .put("primaryServicePoint", getServicePointIds().getFirst().toString())
       .put("servicePointIds", new JsonArray(getServicePointIds()));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id), HttpMethod.PUT,
@@ -171,14 +168,14 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
       .put("campusId", getCampusId().toString())
       .put("libraryId", getLibraryId().toString())
       .put("isActive", true)
-      .put("code", "AA/BB").put("primaryServicePoint", getServicePointIds().get(0).toString())
+      .put("code", "AA/BB").put("primaryServicePoint", getServicePointIds().getFirst().toString())
       .put("servicePointIds", new JsonArray(getServicePointIds()));
     CompletableFuture<Response> updated = new CompletableFuture<>();
     send(locationsStorageUrl("/" + id), HttpMethod.PUT,
       updateRequest.toString(), SUPPORTED_CONTENT_TYPE_JSON_DEF,
       ResponseHandler.any(updated));
     Response updateResponse = get(updated);
-    assertThat(updateResponse.getStatusCode(), is(AdditionalHttpStatusCodes.UNPROCESSABLE_ENTITY));
+    assertThat(updateResponse.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -213,7 +210,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByPrimaryServicePoint() throws Exception {
+  public void canSearchByPrimaryServicePoint() {
     final UUID firstServicePointId = UUID.randomUUID();
     final UUID secondServicePointId = UUID.randomUUID();
     final UUID expectedLocationId = UUID.randomUUID();
@@ -226,7 +223,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
     final List<JsonObject> locations = getMany("primaryServicePoint==\"%s\"", firstServicePointId);
 
     assertThat(locations.size(), is(1));
-    assertThat(locations.get(0).getString("id"), is(expectedLocationId.toString()));
+    assertThat(locations.getFirst().getString("id"), is(expectedLocationId.toString()));
   }
 
   private List<JsonObject> getMany(String cql, Object... args) {
@@ -239,7 +236,7 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
 
     return get(getCompleted).getJson()
       .getJsonArray("locations").stream()
-      .map(obj -> (JsonObject) obj)
+      .map(JsonObject.class::cast)
       .toList();
   }
 

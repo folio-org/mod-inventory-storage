@@ -34,6 +34,7 @@ import org.folio.rest.impl.AbstractInstanceRecordsApi;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
+import org.mockito.ArgumentMatchers;
 
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsApiTest extends TestBase {
@@ -58,7 +59,7 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
     new MyAbstractInstanceRecordsApi().fetchRecordsByQuery("SELECT 1",
       routingContext, null, testContext.asyncAssertSuccess(response -> {
         assertThat(response, is(nullValue()));
-        verify(httpServerResponse).close();
+        verify(httpServerResponse).reset();
       }));
   }
 
@@ -84,7 +85,7 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
 
-    doAnswer(AdditionalAnswers.answerVoid((Handler handler) -> drainHandler[0] = handler))
+    doAnswer(AdditionalAnswers.answerVoid((Handler<?> handler) -> drainHandler[0] = handler))
       .when(httpServerResponse).drainHandler(any());
 
     doAnswer(
@@ -109,7 +110,7 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
     HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
     doAnswer(AdditionalAnswers.answerVoid(
       (Handler<AsyncResult<Void>> handler) -> handler.handle(Future.succeededFuture())))
-      .when(httpServerResponse).end(any(Handler.class));
+      .when(httpServerResponse).end(ArgumentMatchers.<Handler<AsyncResult<Void>>>any());
     return httpServerResponse;
   }
 

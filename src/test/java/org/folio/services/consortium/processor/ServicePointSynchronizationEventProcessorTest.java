@@ -4,6 +4,7 @@ import static org.folio.services.domainevent.DomainEvent.createEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.junit5.VertxExtension;
@@ -112,12 +113,12 @@ class ServicePointSynchronizationEventProcessorTest {
   }
 
   private void processEventToThrowException(ServicePointSynchronizationEventProcessor processor,
-    VertxTestContext testContext) {
+                                            VertxTestContext testContext) {
 
     processor.processEvent(null, "")
       .onComplete(ar ->
         testContext.verify(() -> {
-          assertTrue(ar.cause() instanceof RuntimeException);
+          assertInstanceOf(RuntimeException.class, ar.cause());
           testContext.completeNow();
         }));
   }
