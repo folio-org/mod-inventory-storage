@@ -8,7 +8,7 @@ import static org.folio.rest.support.db.ErrorConstants.ERROR_TYPE;
 import static org.folio.rest.support.db.ErrorConstants.EXCLUSION_VIOLATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.FATAL_TYPE;
 import static org.folio.rest.support.db.ErrorConstants.FOREIGN_KEY_VIOLATION_ERROR_CODE;
-import static org.folio.rest.support.db.ErrorConstants.INTEGRITY_VIOLATION__ERROR_CODE;
+import static org.folio.rest.support.db.ErrorConstants.INTEGRITY_VIOLATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.INVALID_PASSWORD_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.INVALID_TEXT_REPRESENTATION_ERROR_CODE;
 import static org.folio.rest.support.db.ErrorConstants.NOT_NULL_VIOLATION_ERROR_CODE;
@@ -118,7 +118,7 @@ public final class ErrorFactory {
       .setLine("2055")
       .setFile("execMain.c")
       .setFieldName("positive_value")
-      .setSqlState(INTEGRITY_VIOLATION__ERROR_CODE)
+      .setSqlState(INTEGRITY_VIOLATION_ERROR_CODE)
       .setRoutine("ExecConstraints")
       .setErrorType(ERROR_TYPE)
       .setSeverity(ERROR_TYPE).build();

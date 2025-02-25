@@ -14,7 +14,7 @@ public class ResponseMatcher {
 
   public static Matcher<Response> hasValidationError(String expectedValue) {
 
-    return new TypeSafeMatcher<Response>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description
@@ -32,11 +32,11 @@ public class ResponseMatcher {
           if (errors.getErrors().size() != 1) {
             return false;
           }
-          final Error error = errors.getErrors().get(0);
+          final Error error = errors.getErrors().getFirst();
           if (error.getParameters() == null || error.getParameters().size() != 1) {
             return false;
           }
-          final Parameter parameter = error.getParameters().get(0);
+          final Parameter parameter = error.getParameters().getFirst();
           return Objects.equals(expectedValue, parameter.getValue());
         } catch (DecodeException ex) {
           return false;
@@ -48,7 +48,7 @@ public class ResponseMatcher {
   public static Matcher<Response> hasValidationError(
     String expectedMessage, String expectedKey, String expectedValue) {
 
-    return new TypeSafeMatcher<Response>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description
@@ -66,14 +66,14 @@ public class ResponseMatcher {
         try {
           Errors errors = response.getJson().mapTo(Errors.class);
           if (errors.getErrors().size() == 1) {
-            final Error error = errors.getErrors().get(0);
+            final Error error = errors.getErrors().getFirst();
 
             if (error.getParameters() != null && error.getParameters().size() == 1) {
-              final Parameter parameter = error.getParameters().get(0);
+              final Parameter parameter = error.getParameters().getFirst();
 
               return Objects.equals(expectedMessage, error.getMessage())
-                && Objects.equals(expectedKey, parameter.getKey())
-                && Objects.equals(expectedValue, parameter.getValue());
+                     && Objects.equals(expectedKey, parameter.getKey())
+                     && Objects.equals(expectedValue, parameter.getValue());
             }
           }
 

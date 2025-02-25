@@ -18,14 +18,11 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationship;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationships;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -264,8 +261,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
   }
 
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(RESOURCE_TABLE + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+    return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
   }
 
 }

@@ -64,7 +64,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withBarcode("766043059304")
       .create());
-    final JsonObject recordJsonObject = itemsClient.getAll().get(0);
+    final JsonObject recordJsonObject = itemsClient.getAll().getFirst();
     final String itemId = recordJsonObject.getString("id");
     //when
     recordJsonObject.remove("yearCaption");
@@ -84,7 +84,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     ExecutionException {
 
     //given
-    final JsonObject recordJsonObject = instancesClient.getAll().get(0);
+    final JsonObject recordJsonObject = instancesClient.getAll().getFirst();
     UUID instanceId = UUID.fromString(recordJsonObject.getString("id"));
     //when
     recordJsonObject.remove("notes");
@@ -106,7 +106,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     ExecutionException {
 
     //given
-    final JsonObject recordJsonObject = holdingsClient.getAll().get(0);
+    final JsonObject recordJsonObject = holdingsClient.getAll().getFirst();
     //when
     recordJsonObject.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     recordJsonObject.put("sourceId", getPreparedHoldingSourceId().toString());

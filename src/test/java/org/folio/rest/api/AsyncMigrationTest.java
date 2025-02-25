@@ -157,7 +157,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertNotNull(migrations);
     assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
     assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
-      migrations.getAsyncMigrations().get(0).getMigrations().get(0));
+      migrations.getAsyncMigrations().getFirst().getMigrations().getFirst());
   }
 
   @Test
@@ -192,7 +192,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
-    assertThat(job.getPublished().get(0).getCount(), greaterThanOrEqualTo(1000));
+    assertThat(job.getPublished().getFirst().getCount(), greaterThanOrEqualTo(1000));
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {

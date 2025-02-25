@@ -1,7 +1,6 @@
 package org.folio.rest.api;
 
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
 import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -80,7 +79,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var firstInstance = getInstanceById(instances, instanceOne.getId());
     var secondInstance = getInstanceById(instances, instanceTwo.getId());
 
-    assertThat(firstInstance.getHoldingsRecords().get(0).getId(), is(holdingForOne.toString()));
+    assertThat(firstInstance.getHoldingsRecords().getFirst().getId(), is(holdingForOne.toString()));
     assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
 
     isNonNullEmpty(firstInstance.getItems());
@@ -106,7 +105,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       isNonNullEmpty(returnedInstance.getItems());
 
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
-        || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
+                 || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
   }
 
@@ -127,11 +126,11 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var holdingsForTwo = List.of(
       createHolding(instanceTwo.getId(), MAIN_LIBRARY_LOCATION_ID, null));
     final var itemsForTwo = List.of(
-      createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
+      createItem(nodWithNoBarcode(holdingsForTwo.getFirst())).getString("id"),
       itemsForOne.get(1));
 
     boundWithClient.create(
-      createBoundWithPartJson(holdingsForTwo.get(0).toString(), itemsForOne.get(1)));
+      createBoundWithPartJson(holdingsForTwo.getFirst().toString(), itemsForOne.get(1)));
 
     //when
     String query = getQueryWithBoundedItems(instanceOne, instanceTwo, "id==(%s or %s)");
@@ -178,7 +177,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var firstInstance = getInstanceById(instances, instanceOne.getId());
     var secondInstance = getInstanceById(instances, instanceTwo.getId());
 
-    assertThat(firstInstance.getHoldingsRecords().get(0).getId(), is(holdingForOne.toString()));
+    assertThat(firstInstance.getHoldingsRecords().getFirst().getId(), is(holdingForOne.toString()));
     assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
 
     isNonNullEmpty(firstInstance.getItems());
@@ -210,7 +209,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       isNonNullEmpty(returnedInstance.getItems());
 
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
-        || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
+                 || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
   }
 
@@ -240,7 +239,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       isNonNullEmpty(returnedInstance.getItems());
 
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
-        || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
+                 || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
   }
 
@@ -248,13 +247,13 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     return instance.getHoldingsRecords().stream()
       .map(HoldingsRecord::getId)
       .map(UUID::fromString)
-      .collect(toList());
+      .toList();
   }
 
   private List<String> getItemIds(InventoryViewInstance instance) {
     return instance.getItems().stream()
       .map(Item::getId)
-      .collect(toList());
+      .toList();
   }
 
   private <T> Matcher<Iterable<? extends T>> matchesInAnyOrder(List<T> records) {
@@ -288,12 +287,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   private String getQueryWithBoundedItems(IndividualResource instanceOne,
-    IndividualResource instanceTwo, String cqlParams) {
+                                          IndividualResource instanceTwo, String cqlParams) {
     var encodedCqlParams = StringUtil.urlEncode(
       String.format(cqlParams, instanceTwo.getId(), instanceOne.getId()));
-    var query = String.format("?withBoundedItems=true&query=%s",
-      encodedCqlParams);
-    return query;
+    return String.format("?withBoundedItems=true&query=%s", encodedCqlParams);
   }
 
 }

@@ -7,8 +7,6 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.function.UnaryOperator;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.ResourceUtil;
@@ -42,9 +40,7 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
    *
    * @param allStatements - Statements to execute (separated by a line separator).
    */
-  void executeMultipleSqlStatements(String allStatements)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  void executeMultipleSqlStatements(String allStatements) {
     final CompletableFuture<Void> result = new CompletableFuture<>();
 
     getPostgresClient().runSQLFile(allStatements, true, handler -> {
@@ -71,12 +67,10 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
         result.complete(updateResult.result());
       }
     });
-
     return get(result);
   }
 
   void updateJsonbProperty(String tableName, UUID id, String postgresPropertyPath, String postgresPropertyValue) {
-
     executeSql(String.format(
       "UPDATE %s.%s as tbl SET jsonb = jsonb_set(tbl.jsonb, '{%s}', to_jsonb(%s)) WHERE id::text = '%s'",
       getSchemaName(),
@@ -87,16 +81,13 @@ abstract class MigrationTestBase extends TestBaseWithInventoryUtil {
     ));
   }
 
-  RowSet<Row> unsetJsonbProperty(String tableName, UUID id, String propertyName)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  RowSet<Row> unsetJsonbProperty(String tableName, UUID id, String propertyName) {
     return executeSql(String.format(
       "UPDATE %s.%s as tbl SET jsonb = tbl.jsonb - '%s' WHERE id::text = '%s'",
       getSchemaName(), tableName, propertyName, id.toString()));
   }
 
-  RowSet<Row> executeSelect(String selectQuery, Object... args)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  RowSet<Row> executeSelect(String selectQuery, Object... args) {
 
     final CompletableFuture<RowSet<Row>> result = new CompletableFuture<>();
     getPostgresClient().select(String.format(replaceSchema(selectQuery), args),

@@ -17,7 +17,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
@@ -27,8 +26,6 @@ import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -61,7 +58,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
           CQLWrapper cql = createCqlWrapper(query, limit, offset, INSTANCE_RELATIONSHIP_TABLE);
 
-          log.info(String.format("SQL generated from CQL: %s", cql.toString()));
+          log.info("SQL generated from CQL: {}", cql);
 
           postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, cql,
             true, false, reply -> {
@@ -333,7 +330,7 @@ public class InstanceStorageApi implements InstanceStorage {
         return;
       }
       if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
-        && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+          && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
         asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
             .respond404WithTextPlain(reply.cause().getMessage())));
@@ -391,8 +388,7 @@ public class InstanceStorageApi implements InstanceStorage {
                               Context vertxContext) {
     if (PgUtil.checkOptimizedCQL(query, TITLE) != null) {
       try {
-        PreparedCql preparedCql = handleCql(query, limit, offset);
-        PgUtil.getWithOptimizedSql(preparedCql.getTableName(), Instance.class, Instances.class,
+        PgUtil.getWithOptimizedSql(INSTANCE_TABLE, Instance.class, Instances.class,
           TITLE, query, offset, limit,
           okapiHeaders, vertxContext, GetInstanceStorageInstancesResponse.class, asyncResultHandler);
       } catch (Exception e) {
@@ -407,39 +403,9 @@ public class InstanceStorageApi implements InstanceStorage {
 
   }
 
-  PreparedCql handleCql(String query, int limit, int offset) throws FieldException {
-    return new PreparedCql(INSTANCE_TABLE, query, limit, offset);
+  private static CQLWrapper createCqlWrapper(String query, int limit, int offset, String tableName)
+    throws FieldException {
+    return StorageHelper.getCql(query, limit, offset, tableName);
   }
 
-  private static CQLWrapper createCqlWrapper(
-    String query,
-    int limit,
-    int offset,
-    String tableName) throws FieldException {
-
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");
-
-    return new CQLWrapper(cql2pgJson, query)
-      .setLimit(new Limit(limit))
-      .setOffset(new Offset(offset));
-  }
-
-  static class PreparedCql {
-    private final String tableName;
-    private final CQLWrapper cqlWrapper;
-
-    PreparedCql(String tableName, String query, int limit, int offset)
-      throws FieldException {
-      this.tableName = tableName;
-      this.cqlWrapper = createCqlWrapper(query, limit, offset, tableName);
-    }
-
-    public String getTableName() {
-      return tableName;
-    }
-
-    public CQLWrapper getCqlWrapper() {
-      return cqlWrapper;
-    }
-  }
 }

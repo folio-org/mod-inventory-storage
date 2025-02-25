@@ -18,92 +18,9 @@ public final class InventoryHierarchyResponseMatchers {
   private InventoryHierarchyResponseMatchers() {
   }
 
-  private static <T> Matcher<JsonObject> hasRootElement(JsonPointer jsonPointer, String[] expectedValue) {
+  public static Matcher<JsonObject> isDeleted() {
 
-    return new TypeSafeMatcher<JsonObject>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Expected: ")
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        final Object actualValue = jsonPointer.queryJson(jsonObject);
-
-        return Arrays.asList(expectedValue)
-          .contains(actualValue);
-      }
-    };
-  }
-
-  private static <T> Matcher<JsonObject> hasElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer,
-                                                    String[] expectedValue) {
-
-    return new TypeSafeMatcher<JsonObject>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText("Expected: ")
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        // Items matching
-        final JsonArray items = (JsonArray) rootJsonPointer.queryJson(jsonObject);
-        if (items == null) {
-          return false;
-        }
-        final List<Object> actualValues = items.stream()
-          .map(jsonPointer::queryJson)
-          .toList();
-
-        return Arrays.asList(expectedValue)
-          .containsAll(actualValues);
-      }
-    };
-  }
-
-  private static <T> Matcher<JsonObject> hasElementCount(JsonPointer jsonPointer, int expectedValue) {
-
-    return new TypeSafeMatcher<JsonObject>() {
-      @Override
-      public void describeTo(Description description) {
-        description.appendText(String.format("Has number of '%s' elements ", jsonPointer.toString()))
-          .appendValue(expectedValue);
-      }
-
-      @Override
-      protected boolean matchesSafely(JsonObject jsonObject) {
-        final JsonArray items = (JsonArray) jsonPointer.queryJson(jsonObject);
-        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
-      }
-    };
-  }
-
-  private static <T> Matcher<JsonObject> hasInstanceElement(JsonPointer jsonPointer, String[] expectedValue) {
-    return hasRootElement(jsonPointer, expectedValue);
-  }
-
-  private static <T> Matcher<JsonObject> hasHoldingsElement(JsonPointer jsonPointer, String[] expectedValue) {
-    return hasElement(holdingsFieldsPointer, jsonPointer, expectedValue);
-  }
-
-  private static <T> Matcher<JsonObject> hasItemsElement(JsonPointer jsonPointer, String[] expectedValue) {
-    return hasElement(itemsFieldsPointer, jsonPointer, expectedValue);
-  }
-
-  private static <T> Matcher<JsonObject> hasItemsCount(int expectedValue) {
-    return hasElementCount(itemsFieldsPointer, expectedValue);
-  }
-
-  private static <T> Matcher<JsonObject> hasHoldingsCount(int expectedValue) {
-    return hasElementCount(holdingsFieldsPointer, expectedValue);
-  }
-
-  public static <T> Matcher<JsonObject> isDeleted() {
-
-    return new TypeSafeMatcher<JsonObject>() {
+    return new TypeSafeMatcher<>() {
       @Override
       public void describeTo(Description description) {
         description.appendText("Is deleted ")
@@ -213,8 +130,88 @@ public final class InventoryHierarchyResponseMatchers {
     return hasItemsElement(JsonPointer.from("/callNumber/callNumber"), callNumbers);
   }
 
-  public static Matcher<JsonObject> hasIdForItems(String... callNumbers) {
-    return hasItemsElement(JsonPointer.from("/id"), callNumbers);
+  private static Matcher<JsonObject> hasRootElement(JsonPointer jsonPointer, String[] expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Expected: ")
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        final Object actualValue = jsonPointer.queryJson(jsonObject);
+
+        return Arrays.asList(expectedValue)
+          .contains(actualValue.toString());
+      }
+    };
+  }
+
+  private static Matcher<JsonObject> hasElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer,
+                                                String[] expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("Expected: ")
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        // Items matching
+        final JsonArray items = (JsonArray) rootJsonPointer.queryJson(jsonObject);
+        if (items == null) {
+          return false;
+        }
+        final List<String> actualValues = items.stream()
+          .map(jsonPointer::queryJson)
+          .map(String.class::cast)
+          .toList();
+
+        return Arrays.asList(expectedValue)
+          .containsAll(actualValues);
+      }
+    };
+  }
+
+  private static Matcher<JsonObject> hasElementCount(JsonPointer jsonPointer, int expectedValue) {
+
+    return new TypeSafeMatcher<>() {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText(String.format("Has number of '%s' elements ", jsonPointer.toString()))
+          .appendValue(expectedValue);
+      }
+
+      @Override
+      protected boolean matchesSafely(JsonObject jsonObject) {
+        final JsonArray items = (JsonArray) jsonPointer.queryJson(jsonObject);
+        return jsonObject.isEmpty() || items == null || items.size() == expectedValue;
+      }
+    };
+  }
+
+  private static Matcher<JsonObject> hasInstanceElement(JsonPointer jsonPointer, String[] expectedValue) {
+    return hasRootElement(jsonPointer, expectedValue);
+  }
+
+  private static Matcher<JsonObject> hasHoldingsElement(JsonPointer jsonPointer, String[] expectedValue) {
+    return hasElement(holdingsFieldsPointer, jsonPointer, expectedValue);
+  }
+
+  private static Matcher<JsonObject> hasItemsElement(JsonPointer jsonPointer, String[] expectedValue) {
+    return hasElement(itemsFieldsPointer, jsonPointer, expectedValue);
+  }
+
+  private static Matcher<JsonObject> hasItemsCount(int expectedValue) {
+    return hasElementCount(itemsFieldsPointer, expectedValue);
+  }
+
+  private static Matcher<JsonObject> hasHoldingsCount(int expectedValue) {
+    return hasElementCount(holdingsFieldsPointer, expectedValue);
   }
 
 }

@@ -196,7 +196,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
       "?query=succeedingInstanceId=" + instance2Id);
 
     assertThat(badParameterResponse.size(), is(1));
-    assertPrecedingSucceedingTitle(badParameterResponse.get(0), response.getId().toString(),
+    assertPrecedingSucceedingTitle(badParameterResponse.getFirst(), response.getId().toString(),
       instance1Id, instance2Id, TITLE, HRID, identifiers);
   }
 
@@ -361,7 +361,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
 
   private void assertErrors(Response response, String message) {
     Errors errors = response.getJson().mapTo(Errors.class);
-    assertThat(errors.getErrors().get(0).getMessage(), is(message));
+    assertThat(errors.getErrors().getFirst().getMessage(), is(message));
   }
 
   private void assertPrecedingSucceedingTitle(IndividualResource response,
