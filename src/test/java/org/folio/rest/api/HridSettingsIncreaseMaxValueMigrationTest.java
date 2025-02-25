@@ -20,14 +20,6 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
   private static final String HOLDINGS_SEQ = "hrid_holdings_seq";
   private static final String ITEMS_SEQ = "hrid_items_seq";
 
-  private static String loadCreateSequenceSqlFile() {
-    return "SET ROLE " + getSchemaName() + ";"
-        + loadScript("hridSettings.sql",
-            MigrationTestBase::replaceSchema,
-            resource -> resource.replace("${table.tableName}", "hrid_settings"))
-        + loadScript("hridSettingsView.sql");
-  }
-
   @SneakyThrows
   @Before
   public void beforeEach() {
@@ -55,19 +47,24 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
     assertThat(incrementSequence(ITEMS_SEQ), is(1_000_000_00L));
   }
 
-  private void reCreateSequences() throws Exception {
+  private static String loadCreateSequenceSqlFile() {
+    return "SET ROLE " + getSchemaName() + ";"
+           + loadScript("hridSettings.sql",
+      MigrationTestBase::replaceSchema, resource -> resource.replace("${table.tableName}", "hrid_settings"))
+           + loadScript("hridSettingsView.sql");
+  }
+
+  private void reCreateSequences() {
     executeSql(String.format("DROP VIEW %s.hrid_settings_view", getSchemaName()));
     executeSql(String.format("DROP SEQUENCE %s.%s, %s.%s, %s.%s",
-        getSchemaName(), INSTANCES_SEQ,
-        getSchemaName(), HOLDINGS_SEQ,
-        getSchemaName(), ITEMS_SEQ));
+      getSchemaName(), INSTANCES_SEQ,
+      getSchemaName(), HOLDINGS_SEQ,
+      getSchemaName(), ITEMS_SEQ));
 
     executeMultipleSqlStatements(CREATE_SEQUENCE_SQL);
   }
 
-  private void alterSequences() throws InterruptedException, ExecutionException,
-    TimeoutException {
-
+  private void alterSequences() {
     executeMultipleSqlStatements(ALTER_SEQUENCE_SQL);
   }
 
@@ -106,9 +103,7 @@ public class HridSettingsIncreaseMaxValueMigrationTest extends MigrationTestBase
     return last;
   }
 
-  private void setValue(String sequenceName, Long value)
-    throws InterruptedException, ExecutionException, TimeoutException {
-
+  private void setValue(String sequenceName, Long value) {
     executeSql(String.format(
       "SELECT setVal('%s.%s', %d, FALSE)", getSchemaName(), sequenceName, value
     ));

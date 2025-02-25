@@ -38,7 +38,8 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
 
   @Override
   public Future<String> handle(KafkaConsumerRecord<String, String> kafkaRecord) {
-    LOG.info("handle:: Processing event={}", kafkaRecord.topic());
+    var topic = kafkaRecord.topic();
+    LOG.info("handle:: Processing event={}", topic);
     var kafkaTopic = getKafkaTopic(kafkaRecord);
 
     var processor = Optional.ofNullable(PROCESSORS.get(kafkaTopic))

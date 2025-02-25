@@ -290,7 +290,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       var jsonResponse = createInventoryViewJsonResponse(rowSet);
       return Response.ok(jsonResponse.encode(), MediaType.APPLICATION_JSON_TYPE).build();
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      throw new IllegalArgumentException(e);
     }
   }
 
@@ -324,7 +324,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       var cqlWrapper = new CQLWrapper(field, query, limit, offset);
       return cqlWrapper.toString();
     } catch (FieldException e) {
-      throw new RuntimeException(e);
+      throw new IllegalArgumentException(e);
     }
   }
 

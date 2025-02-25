@@ -18,13 +18,10 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsNoteType;
 import org.folio.rest.jaxrs.model.HoldingsNoteTypes;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -111,7 +108,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
+                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -119,11 +116,11 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPost(e, DEFAULT_LANGUAGE, asyncResultHandler);
+              internalServerErrorDuringPost(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPost(e, DEFAULT_LANGUAGE, asyncResultHandler);
+        internalServerErrorDuringPost(e, asyncResultHandler);
       }
     });
   }
@@ -150,7 +147,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               if (reply.failed()) {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
+                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -169,11 +166,11 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               asyncResultHandler.handle(Future.succeededFuture(DeleteHoldingsNoteTypesByIdResponse
                 .respond204()));
             } catch (Exception e) {
-              internalServerErrorDuringDelete(e, DEFAULT_LANGUAGE, asyncResultHandler);
+              internalServerErrorDuringDelete(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringDelete(e, DEFAULT_LANGUAGE, asyncResultHandler);
+        internalServerErrorDuringDelete(e, asyncResultHandler);
       }
     });
   }
@@ -203,7 +200,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
               } else {
                 String msg = PgExceptionUtil.badRequestMessage(reply.cause());
                 if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), DEFAULT_LANGUAGE, asyncResultHandler);
+                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
                   return;
                 }
                 log.info(msg);
@@ -211,36 +208,35 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                   .respond400WithTextPlain(msg)));
               }
             } catch (Exception e) {
-              internalServerErrorDuringPut(e, DEFAULT_LANGUAGE, asyncResultHandler);
+              internalServerErrorDuringPut(e, asyncResultHandler);
             }
           });
       } catch (Exception e) {
-        internalServerErrorDuringPut(e, DEFAULT_LANGUAGE, asyncResultHandler);
+        internalServerErrorDuringPut(e, asyncResultHandler);
       }
     });
   }
 
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(REFERENCE_TABLE + ".jsonb");
-    return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
+    return StorageHelper.getCql(query, limit, offset, REFERENCE_TABLE);
   }
 
-  private void internalServerErrorDuringPost(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PostHoldingsNoteTypesResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(Messages.DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(DeleteHoldingsNoteTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(Messages.DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
-  private void internalServerErrorDuringPut(Throwable e, String lang, Handler<AsyncResult<Response>> handler) {
+  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
     log.error(e.getMessage(), e);
     handler.handle(Future.succeededFuture(PutHoldingsNoteTypesByIdResponse
-      .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+      .respond500WithTextPlain(messages.getMessage(Messages.DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
 
 }

@@ -206,7 +206,6 @@ public class InterfaceUrls {
     return vertxUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
 
-  // TODO: These entries will be removed soon
   public static URL oaiPmhView(String subPath) {
     return vertxUrl("/oai-pmh-view/instances" + subPath);
   }

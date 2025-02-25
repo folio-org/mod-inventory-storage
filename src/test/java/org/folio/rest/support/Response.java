@@ -29,7 +29,7 @@ public class Response {
   }
 
   public boolean hasBody() {
-    return getBody() != null && getBody().trim() != "";
+    return getBody() != null && !getBody().trim().isEmpty();
   }
 
   public int getStatusCode() {

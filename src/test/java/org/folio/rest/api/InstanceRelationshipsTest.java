@@ -11,7 +11,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -39,11 +38,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateInstanceRelationships()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  public void canCreateInstanceRelationships() throws InterruptedException, ExecutionException, TimeoutException {
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
     JsonObject instance2Response = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
@@ -81,11 +76,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateRelationshipWithNonExistingInstance()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     final String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
@@ -109,8 +100,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateRelationshipOfNonExistingRelationshipType()
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     final String nonExistingRelationshipTypeId = "28b65645-2e49-4a85-8dc1-43d444710570";
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
@@ -133,7 +123,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   private JsonObject createInstance(String title, String instanceTypeId)
-    throws MalformedURLException, InterruptedException, ExecutionException, TimeoutException {
+    throws InterruptedException, ExecutionException, TimeoutException {
     Instance requestObject = new Instance(title, "TEST", instanceTypeId);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(
