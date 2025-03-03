@@ -1,6 +1,7 @@
 ## v29.0.0 YYYY-mm-DD
 ### Breaking changes
 * Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
+* Drop CQL array support for `instance identifiers` field ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### New APIs versions
 * Provides `inventory-hierarchy 0.6`
@@ -28,7 +29,7 @@
 * Sort holdings by location name in instanceId query ([MODINVSTOR-1343](https://folio-org.atlassian.net/browse/MODINVSTOR-1343))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Delete 4 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
