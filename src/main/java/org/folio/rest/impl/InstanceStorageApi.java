@@ -22,7 +22,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
-import org.folio.rest.jaxrs.model.Instances;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
@@ -197,7 +196,6 @@ public class InstanceStorageApi implements InstanceStorage {
                                           RoutingContext routingContext, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler,
                                           Context vertxContext) {
-
     fetchInstances(query, limit, offset, routingContext, okapiHeaders, vertxContext);
   }
 
@@ -384,8 +382,8 @@ public class InstanceStorageApi implements InstanceStorage {
                               RoutingContext routingContext,
                               Map<String, String> okapiHeaders,
                               Context vertxContext) {
-    new InstanceService(vertxContext, okapiHeaders)
-      .streamGetInstances(INSTANCE_TABLE, query, offset, limit, null, "instances", 0, routingContext);
+    PgUtil.streamGet(INSTANCE_TABLE, Instance.class, query, offset, limit, null,
+      "instances", routingContext, okapiHeaders, vertxContext);
   }
 
   private static CQLWrapper createCqlWrapper(String query, int limit, int offset, String tableName)

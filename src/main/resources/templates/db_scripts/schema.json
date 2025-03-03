@@ -401,13 +401,13 @@
         },
         {
           "fieldName": "indexTitle",
-          "tOps": "DELETE",
+          "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
           "fieldName": "title",
-          "tOps": "DELETE",
+          "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": true
         },
