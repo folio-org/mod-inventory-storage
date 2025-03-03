@@ -286,21 +286,6 @@
       },
       "uniqueItems": true
     },
-    "publicationPeriod": {
-      "type": "object",
-      "description": "Publication period",
-      "properties": {
-        "start": {
-          "type": "integer",
-          "description": "Publication start year"
-        },
-        "end": {
-          "type": "integer",
-          "description": "Publication end year"
-        }
-      },
-      "additionalProperties": false
-    },
     "electronicAccess": {
       "type": "array",
       "description": "List of electronic access items",
@@ -452,6 +437,11 @@
     "discoverySuppress": {
       "type": "boolean",
       "description": "Records the fact that the record should not be displayed in a discovery system",
+      "default": false
+    },
+    "deleted": {
+      "type": "boolean",
+      "description": "Indicates whether the record was marked for deletion",
       "default": false
     },
     "statisticalCodeIds": {

@@ -73,6 +73,7 @@ public abstract class TestBase {
   static ResourceClient statisticalCodeClient;
   static ResourceClient boundWithClient;
   static ResourceClient holdingsSourceClient;
+  static ResourceClient servicePointsClient;
   static StatisticalCodeFixture statisticalCodeFixture;
   static InstanceReindexFixture instanceReindex;
   static AsyncMigrationFixture asyncMigration;
@@ -102,6 +103,7 @@ public abstract class TestBase {
       .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
+    servicePointsClient = ResourceClient.forServicePoints(getClient());
     statisticalCodeFixture = new StatisticalCodeFixture(getClient());
     instanceReindex = new InstanceReindexFixture(getClient());
     asyncMigration = new AsyncMigrationFixture(getClient());

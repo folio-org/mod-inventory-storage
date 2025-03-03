@@ -17,7 +17,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,31 +37,6 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
-  private static JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    UUID instanceTypeId,
-    JsonArray tags,
-    String hrid,
-    JsonArray languages) {
-
-    JsonObject instanceToCreate = createInstanceRequest(
-      id, source, title, identifiers, contributors, instanceTypeId, tags);
-
-    if (hrid != null) {
-      instanceToCreate.put("hrid", hrid);
-    }
-
-    if (languages != null) {
-      instanceToCreate.put("languages", languages);
-    }
-
-    return instanceToCreate;
-  }
-
   @SneakyThrows
   @Before
   public void beforeEach() {
@@ -80,14 +54,8 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkUsingDefaults()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canGetInstanceBulkUsingDefaults() throws InterruptedException, ExecutionException, TimeoutException {
     int totalMoons = 2;
-    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons);
     createManyMoons(moons);
 
@@ -97,18 +65,12 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
-    validateMoonsResponseWithTotal(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, totalMoons, moons);
   }
 
   @Test
-  public void canGetInstanceBulkOfId()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canGetInstanceBulkOfId() throws InterruptedException, ExecutionException, TimeoutException {
     int totalMoons = 2;
-    int expectedMatches = totalMoons;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       RecordBulkIdsGetField.ID);
     createManyMoons(moons);
@@ -119,16 +81,12 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     getClient().get(getInstanceUrl, TENANT_ID, json(getCompleted));
 
     Response response = getCompleted.get(10, SECONDS);
-    validateMoonsResponseWithTotal(response, expectedMatches, moons);
+    validateMoonsResponseWithTotal(response, totalMoons, moons);
   }
 
   @Test
   public void canGetInstanceBulkOfIdWithLimitAndOffset()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+    throws InterruptedException, ExecutionException, TimeoutException {
     int totalMoons = 20;
     int expectedMatches = 5;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -153,9 +111,8 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     createItem(buildItem(holdingId, null, null));
 
     var secondInstanceId = UUID.randomUUID();
-    var secondLocationId = ANNEX_LIBRARY_LOCATION_ID;
     instancesClient.create(instance(secondInstanceId));
-    var secondHoldingId = createHolding(expectedInstanceId, secondLocationId, null);
+    var secondHoldingId = createHolding(expectedInstanceId, ANNEX_LIBRARY_LOCATION_ID, null);
     createItem(buildItem(secondHoldingId, null, null));
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
@@ -174,12 +131,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfIdWithQueryExact()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void canGetInstanceBulkOfIdWithQueryExact() throws InterruptedException, ExecutionException, TimeoutException {
     int totalMoons = 10;
     int expectedMatches = 1;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -197,12 +149,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotGetInstanceBulkOfNonExistentId()
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  public void cannotGetInstanceBulkOfNonExistentId() throws InterruptedException, ExecutionException, TimeoutException {
     int totalMoons = 2;
     int expectedMatches = 0;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -249,6 +196,31 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
     Response response = getCompleted.get(10, SECONDS);
     validateHoldingsResponse(response, holdingIds, 5);
+  }
+
+  private static JsonObject createInstanceRequest(
+    UUID id,
+    String source,
+    String title,
+    JsonArray identifiers,
+    JsonArray contributors,
+    UUID instanceTypeId,
+    JsonArray tags,
+    String hrid,
+    JsonArray languages) {
+
+    JsonObject instanceToCreate = createInstanceRequest(
+      id, source, title, identifiers, contributors, instanceTypeId, tags);
+
+    if (hrid != null) {
+      instanceToCreate.put("hrid", hrid);
+    }
+
+    if (languages != null) {
+      instanceToCreate.put("languages", languages);
+    }
+
+    return instanceToCreate;
   }
 
   private void validateMoonsResponseWithTotal(Response response, int expectedMatches,
@@ -308,12 +280,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private void createManyMoons(Map<String, JsonObject> instancesToCreate)
-    throws MalformedURLException,
-    InterruptedException,
-    ExecutionException,
-    TimeoutException {
-
+  private void createManyMoons(Map<String, JsonObject> instancesToCreate) {
     for (String id : instancesToCreate.keySet()) {
       instancesClient.create(instancesToCreate.get(id));
     }
@@ -325,7 +292,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   private Map<String, JsonObject> manyMoons(int total,
                                             RecordBulkIdsGetField field) {
-    Map<String, JsonObject> moons = new HashMap<String, JsonObject>();
+    Map<String, JsonObject> moons = new HashMap<>();
 
     for (int i = 0; i < total; i++) {
       UUID uuid = UUID.randomUUID();

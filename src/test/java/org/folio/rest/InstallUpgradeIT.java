@@ -172,8 +172,8 @@ public class InstallUpgradeIT {
     setTenant("logtenant");
 
     given()
-      .header("X-Okapi-Request-Id", "987654321")
-      .header("X-Okapi-User-Id", "itsme")
+      .header(XOkapiHeaders.REQUEST_ID, "987654321")
+      .header(XOkapiHeaders.USER_ID, "itsme")
       .when()
       .get("/location-units/libraries")
       .then()

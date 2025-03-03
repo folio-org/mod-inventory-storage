@@ -1,6 +1,5 @@
 package org.folio.services.consortium;
 
-import static io.vertx.core.http.HttpMethod.POST;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
@@ -28,7 +27,8 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   private static final Logger LOGGER = LogManager.getLogger(ConsortiumServiceImpl.class);
   private static final String SHARE_INSTANCE_ENDPOINT = "/consortia/%s/sharing/instances";
   private static final String SHARING_INSTANCE_ERROR = "Error during sharing Instance for sourceTenantId:"
-    + " %s, targetTenantId: %s, instanceIdentifier: %s, status code: %s, response message: %s";
+                                                       + " %s, targetTenantId: %s, instanceIdentifier: %s, "
+                                                       + "status code: %s, response message: %s";
   private final HttpClient httpClient;
   private final ConsortiumDataCache consortiumDataCache;
 
@@ -40,6 +40,8 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> createShadowInstance(String instanceId, ConsortiumData consortiumData,
                                                       Map<String, String> headers) {
+    LOGGER.info("createShadowInstance:: instance with id: {} is not found in local tenant."
+                + " Trying to create a shadow instance", instanceId);
     SharingInstance sharingInstance = new SharingInstance();
     String centralTenantId = consortiumData.centralTenantId();
     sharingInstance.setSourceTenantId(centralTenantId);
@@ -61,11 +63,11 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> shareInstance(String consortiumId, SharingInstance sharingInstance,
                                                Map<String, String> headers) {
-    return buildHttpRequest(String.format(SHARE_INSTANCE_ENDPOINT, consortiumId), POST, headers)
+    return buildPostHttpRequest(String.format(SHARE_INSTANCE_ENDPOINT, consortiumId), headers)
       .sendJson(sharingInstance)
       .compose(httpResponse -> {
         if (httpResponse.statusCode() == HTTP_CREATED
-          && !SharingStatus.ERROR.toString().equals(httpResponse.bodyAsJsonObject().getString("status"))) {
+            && !SharingStatus.ERROR.toString().equals(httpResponse.bodyAsJsonObject().getString("status"))) {
           SharingInstance response = Json.decodeValue(httpResponse.body(), SharingInstance.class);
           LOGGER.debug("shareInstance:: Successfully sharedInstance with id: {}, sharedInstance: {}",
             response.getInstanceIdentifier(), httpResponse.bodyAsString());
@@ -74,16 +76,16 @@ public class ConsortiumServiceImpl implements ConsortiumService {
           String message = String.format(SHARING_INSTANCE_ERROR, sharingInstance.getSourceTenantId(),
             sharingInstance.getTargetTenantId(), sharingInstance.getInstanceIdentifier(),
             httpResponse.statusCode(), httpResponse.bodyAsString());
-          LOGGER.warn(String.format("shareInstance:: %s", message));
+          LOGGER.warn("shareInstance:: {}", message);
           return Future.failedFuture(new ConsortiumException(message));
         }
       });
   }
 
-  private HttpRequest<Buffer> buildHttpRequest(String path, HttpMethod httpMethod, Map<String, String> headers) {
+  private HttpRequest<Buffer> buildPostHttpRequest(String path, Map<String, String> headers) {
     String okapiUrl = headers.get(URL);
     WebClient client = WebClient.wrap(httpClient);
-    HttpRequest<Buffer> request = client.requestAbs(httpMethod, okapiUrl + path);
+    HttpRequest<Buffer> request = client.requestAbs(HttpMethod.POST, okapiUrl + path);
     headers.forEach(request::putHeader);
 
     return request;
