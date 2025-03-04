@@ -1221,6 +1221,21 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void arrayModifierfsIdentifiers1() {
+    canSort("identifiers = /@value 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers2() {
+    canSort("identifiers = /@identifierTypeId = " + UUID_ISBN + " 9781447294146", "Uprooted");
+  }
+
+  @Test
+  public void arrayModifierfsIdentifiers3() {
+    canSort("identifiers = /@identifierTypeId " + UUID_ASIN, "Nod");
+  }
+
+  @Test
   public void canSearchWithoutSqlInjection() {
     create5instances();
 
