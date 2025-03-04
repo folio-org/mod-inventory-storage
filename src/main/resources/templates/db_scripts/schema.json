@@ -451,7 +451,6 @@
       "fullTextIndex": [
         {
           "fieldName": "identifiers",
-          "tOps": "DELETE",
           "arraySubfield": "value",
           "arrayModifiers": [
             "identifierTypeId"
