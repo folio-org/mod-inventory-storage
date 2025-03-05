@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +43,7 @@ import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.services.ResponseHandlerUtil;
@@ -144,8 +146,12 @@ public class InstanceService {
       .map(ResponseHandlerUtil::handleHridErrorInInstance);
   }
 
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
-                                          boolean publishEvents) {
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents) {
+    return createInstances(instances, upsert, optimisticLocking, publishEvents, conn -> Future.succeededFuture());
+  }
+
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents,
+                                           Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -156,19 +162,17 @@ public class InstanceService {
       .compose(batchOperation -> {
         final Promise<Response> postResponse = promise();
 
-        postgresClient.withTrans(conn -> {
-          Promise<Response> postPromise = postSyncInstance(instances, upsert, optimisticLocking);
-
-          return postPromise.future()
-            .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
-              .map(v -> response));
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            postResponse.complete(transactionResult.result());
-          } else {
-            postResponse.fail(transactionResult.cause());
-          }
-        });
+        postgresClient.withTrans(conn ->
+            postSyncInstance(conn, instances, upsert, optimisticLocking)
+              .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
+                .compose(v -> additionalOperations.apply(conn)).map(response)))
+          .onComplete(transactionResult -> {
+            if (transactionResult.succeeded()) {
+              postResponse.complete(transactionResult.result());
+            } else {
+              postResponse.fail(transactionResult.cause());
+            }
+          });
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
       })
@@ -204,10 +208,10 @@ public class InstanceService {
       });
   }
 
-  private Promise<Response> postSyncInstance(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
     Promise<Response> promise = Promise.promise();
-    postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
-      vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
+    postSync(Future.succeededFuture((SQLConnection) conn.getPgConnection()), INSTANCE_TABLE, instances,
+      MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders, vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
       .onComplete(response -> {
         if (response.succeeded()) {
           var result = response.result();
@@ -220,7 +224,7 @@ public class InstanceService {
           promise.fail(response.cause());
         }
       });
-    return promise;
+    return promise.future();
   }
 
   private Promise<Response> putInstance(Instance newInstance, String instanceId) {
@@ -284,7 +288,6 @@ public class InstanceService {
     ).mapEmpty();
   }
 
-
   private Future<Void> batchLinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToAdd) {
     var sourcePairs = subjectsToAdd.stream()
       .filter(subject -> subject.getSourceId() != null)
@@ -296,25 +299,36 @@ public class InstanceService {
       .map(subject -> Pair.of(instanceId, subject.getTypeId()))
       .toList();
 
+    return batchLinkSubjects(conn, sourcePairs, typePairs);
+  }
+
+  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstances) {
+    var sourcePairs = batchInstances.stream()
+      .flatMap(instance -> instance.getSubjects().stream()
+        .filter(subject -> subject.getSourceId() != null)
+        .map(subject -> Pair.of(instance.getId(), subject.getSourceId())))
+      .toList();
+
+    var typePairs = batchInstances.stream()
+      .flatMap(instance -> instance.getSubjects().stream()
+        .filter(subject -> subject.getTypeId() != null)
+        .map(subject -> Pair.of(instance.getId(), subject.getTypeId())))
+      .toList();
+
+    return batchLinkSubjects(conn, sourcePairs, typePairs);
+  }
+
+  private Future<Void> batchLinkSubjects(Conn conn, List<Pair<String, String>> sourcePairs, List<Pair<String, String>> typePairs) {
     if (sourcePairs.isEmpty() && typePairs.isEmpty()) {
-      return Future.succeededFuture(); // No subjects to link, return success immediately
+      return Future.succeededFuture();
     }
 
     // Combine both operations into a single future
     return Future.all(
-        sourcePairs.isEmpty() ? Future.succeededFuture() :
-          instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
-        typePairs.isEmpty() ? Future.succeededFuture() :
-          instanceRepository.batchLinkSubjectType(conn, typePairs)
-    ).mapEmpty();
-  }
-
-  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstance) {
-    return Future.all(
-      batchInstance.stream()
-        .map(instance -> batchLinkSubjects(conn, instance.getId(),
-          instance.getSubjects()))
-        .toList()
+      sourcePairs.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
+      typePairs.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchLinkSubjectType(conn, typePairs)
     ).mapEmpty();
   }
 
