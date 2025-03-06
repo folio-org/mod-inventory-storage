@@ -128,8 +128,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
   private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldItemsToNew(
     HoldingsRecord oldHoldings, HoldingsRecord newHoldings, Collection<Item> oldItems, Collection<Item> newItems) {
-    log.info("mapOldItemsToNew: newHoldings: {}", newHoldings);
-    log.info("mapOldItemsToNew: newItems: {}", newItems);
+
     return mapOldRecordsToNew(
       oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).toList(),
       newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).toList());

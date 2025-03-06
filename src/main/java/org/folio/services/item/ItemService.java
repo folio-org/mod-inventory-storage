@@ -226,7 +226,7 @@ public class ItemService {
    */
   public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
                                                         HoldingsRecord holdingsRecord) {
-    log.info("updateItemsOnHoldingChanged:: holdingsRecord {}", holdingsRecord);
+    log.info("updateItemsOnHoldingChanged:: getUpdatedByUserId {}", holdingsRecord.getMetadata().getUpdatedByUserId());
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
       .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
         // have to make deep clone of the items because the items are stateful
