@@ -119,7 +119,11 @@ public class CommonDomainEventPublisher<T> {
   }
 
   Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
+    log.info("publishRecordUpdated:: newRecord {}", newRecord);
     final DomainEvent<T> domainEvent = updateEvent(oldRecord, newRecord, tenantId(okapiHeaders));
+    log.info("publishRecordUpdated:: domainEvent {}", domainEvent);
+    log.info("publishRecordUpdated:: okapiHeaders {}", okapiHeaders);
+
 
     return publish(instanceId, domainEvent);
   }

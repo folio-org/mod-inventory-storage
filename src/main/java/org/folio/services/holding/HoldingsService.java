@@ -227,12 +227,12 @@ public class HoldingsService {
     if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
       newHoldings.setVersion(null);  // enforce optimistic locking
     }
-
+    log.info("updateHolding:: okapiHeaders {}", okapiHeaders);
     return refuseWhenHridChanged(oldHoldings, newHoldings)
       .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
-
+        log.info("updateHolding:: newHoldings {}", newHoldings);
         postgresClient.startTx(
           connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
             .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))

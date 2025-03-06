@@ -147,7 +147,7 @@ abstract class AbstractDomainEventPublisher<D, E> {
 
   protected Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
                                                                     Collection<D> oldRecords) {
-
+    log.info("convertDomainsToEvents:: newRecords {}", newRecords);
     return getRecordIds(oldRecords).compose(oldRecordsInstanceIds -> getRecordIds(newRecords).map(
       newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
   }
