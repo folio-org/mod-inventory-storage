@@ -107,7 +107,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
     return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents,
-        conn -> updatePrecedingSucceedingTitles(conn, instanceWrappers))
+        sqlConnection -> updatePrecedingSucceedingTitles(sqlConnection, instanceWrappers))
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
@@ -118,7 +118,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
       });
   }
 
-  private Future<Void> updatePrecedingSucceedingTitles(Conn conn, List<InstanceWrapper> instances) {
+  private Future<Void> updatePrecedingSucceedingTitles(AsyncResult<SQLConnection> sqlConnection, List<InstanceWrapper> instances) {
     List<PrecedingSucceedingTitle> precedingSucceedingTitles = instances.stream()
       .map(InstanceWrapper::precedingSucceedingTitles)
       .flatMap(Collection::stream)
@@ -128,7 +128,6 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
       return Future.succeededFuture();
     }
     Promise<Void> promise = Promise.promise();
-    AsyncResult<SQLConnection> sqlConnection = Future.succeededFuture((SQLConnection) conn.getPgConnection());
 
     CQLWrapper cqlQuery = buildPrecedingSucceedingTitlesCql(instances);
     postgresClient.delete(sqlConnection, PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, delete -> {

@@ -18,6 +18,7 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -151,7 +152,7 @@ public class InstanceService {
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents,
-                                           Function<Conn, Future<?>> additionalOperations) {
+                                          Function<AsyncResult<SQLConnection>, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -159,23 +160,14 @@ public class InstanceService {
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId, publishEvents))
-      .compose(batchOperation -> {
-        final Promise<Response> postResponse = promise();
-
-        postgresClient.withTrans(conn ->
-            postSyncInstance(conn, instances, upsert, optimisticLocking)
+      .compose(batchOperation ->
+        postgresClient.withTrans(conn -> {
+            AsyncResult<SQLConnection> sqlConnection = Future.succeededFuture(new SQLConnection(conn.getPgConnection(), null, null));
+            return postSyncInstance(sqlConnection, instances, upsert, optimisticLocking)
               .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
-                .compose(v -> additionalOperations.apply(conn)).map(response)))
-          .onComplete(transactionResult -> {
-            if (transactionResult.succeeded()) {
-              postResponse.complete(transactionResult.result());
-            } else {
-              postResponse.fail(transactionResult.cause());
-            }
-          });
-        return postResponse.future()
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      })
+                .compose(v -> additionalOperations.apply(sqlConnection)).map(response));
+          })
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)))
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -208,9 +200,9 @@ public class InstanceService {
       });
   }
 
-  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+  private Future<Response> postSyncInstance(AsyncResult<SQLConnection> sqlConnection, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
     Promise<Response> promise = Promise.promise();
-    postSync(Future.succeededFuture((SQLConnection) conn.getPgConnection()), INSTANCE_TABLE, instances,
+    postSync(sqlConnection, INSTANCE_TABLE, instances,
       MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders, vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
       .onComplete(response -> {
         if (response.succeeded()) {
