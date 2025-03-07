@@ -56,7 +56,6 @@ public class BoundWithEventMessageChecks {
     JsonObject oldBoundWith, JsonObject newBoundWith, String oldInstanceId,
     String newInstanceId) {
 
-    // JsonObject oldRepresentation = addInstanceIdToBoundWith(oldBoundWith, oldInstanceId);
     JsonObject newRepresentation = addInstanceIdToBoundWith(newBoundWith, newInstanceId);
 
     return CoreMatchers.hasItem(allOf(
@@ -64,10 +63,6 @@ public class BoundWithEventMessageChecks {
       eventMessageMatchers.isForTenant(),
       eventMessageMatchers.hasHeaders(),
       eventMessageMatchers.hasNewRepresentation(newRepresentation)));
-
-    // There is a potential bug with the old representation in these message
-    // until this is investigated further, this check is removed
-    // eventMessageMatchers.hasOldRepresentation(oldRepresentation)));
   }
 
   private JsonObject addInstanceIdToBoundWith(JsonObject boundWith, String instanceId) {

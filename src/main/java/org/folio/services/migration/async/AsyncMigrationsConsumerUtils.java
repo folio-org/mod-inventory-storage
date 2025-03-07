@@ -2,8 +2,8 @@ package org.folio.services.migration.async;
 
 import static org.folio.services.migration.async.AbstractAsyncMigrationJobRunner.ASYNC_MIGRATION_JOB_NAME;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
@@ -42,16 +42,15 @@ public final class AsyncMigrationsConsumerUtils {
 
         var availableMigrations = Set.of(
           new ShelvingOrderAsyncMigrationService(vertxContext, headers),
-          new SubjectSeriesMigrationService(vertxContext, headers),
-          new PublicationPeriodMigrationService(vertxContext, headers));
+          new SubjectSeriesMigrationService(vertxContext, headers));
         var jobService = new AsyncMigrationJobService(vertxContext, headers);
 
         var migrationEvents = buildIdsForMigrations(v.getValue());
         var migrations = migrationEvents.entrySet().stream()
           .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
           .map(entry -> {
-            var migrationJob = entry.getKey().getJob();
-            var migrationName = entry.getKey().getMigrationName();
+            var migrationJob = entry.getKey().job();
+            var migrationName = entry.getKey().migrationName();
             var ids = entry.getValue();
             var startedMigrations = availableMigrations.stream()
               .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
@@ -59,10 +58,10 @@ public final class AsyncMigrationsConsumerUtils {
                 .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
                 .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
               .toList();
-            return CompositeFuture.all(new ArrayList<>(startedMigrations));
+            return Future.all(new ArrayList<>(startedMigrations));
           }).toList();
 
-        CompositeFuture.all(new ArrayList<>(migrations))
+        Future.all(new ArrayList<>(migrations))
           .onSuccess(composite -> consumer.commit())
           .onFailure(any -> log.error("Error persisting and committing messages", any));
       });
@@ -73,8 +72,8 @@ public final class AsyncMigrationsConsumerUtils {
                                                 AsyncMigrationJob migrationJob,
                                                 String migrationName) {
     return migrationName.equals(javaMigration.getMigrationName())
-      && (migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IN_PROGRESS)
-      || migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IDS_PUBLISHED));
+           && (migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IN_PROGRESS)
+               || migrationJob.getJobStatus().equals(AsyncMigrationJob.JobStatus.IDS_PUBLISHED));
   }
 
   private static Map<MigrationContext, Set<String>> buildIdsForMigrations(
@@ -137,28 +136,7 @@ public final class AsyncMigrationsConsumerUtils {
     return oldOrNew != null ? oldOrNew.mapTo(AsyncMigrationJob.class) : null;
   }
 
-  private static class MigrationContext {
-    private final String migrationName;
-    private final AsyncMigrationJob job;
-
-    MigrationContext(String migrationName, AsyncMigrationJob job) {
-      this.migrationName = migrationName;
-      this.job = job;
-    }
-
-    public String getMigrationName() {
-      return migrationName;
-    }
-
-    public AsyncMigrationJob getJob() {
-      return job;
-    }
-
-    @Override
-    public int hashCode() {
-      return new HashCodeBuilder(17, 37)
-        .append(getMigrationName()).append(getJob()).toHashCode();
-    }
+  private record MigrationContext(String migrationName, AsyncMigrationJob job) {
 
     @Override
     public boolean equals(Object o) {
@@ -169,11 +147,15 @@ public final class AsyncMigrationsConsumerUtils {
       if (!(o instanceof MigrationContext)) {
         return false;
       }
-
       MigrationContext that = (MigrationContext) o;
+      return new EqualsBuilder().append(migrationName, that.migrationName)
+        .append(job, that.job).isEquals();
+    }
 
-      return new EqualsBuilder().append(getMigrationName(), that.getMigrationName())
-        .append(getJob(), that.getJob()).isEquals();
+    @Override
+    public int hashCode() {
+      return new HashCodeBuilder(17, 37)
+        .append(migrationName()).append(job()).toHashCode();
     }
   }
 }

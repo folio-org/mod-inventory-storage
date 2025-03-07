@@ -3,7 +3,7 @@ version: "3.9"
 services:
   postgres:
     container_name: postgres_mod-inventory-storage
-    image: postgres:12-alpine
+    image: postgres:16-alpine
     ports:
       - "5432:5432"
     volumes:
@@ -18,7 +18,7 @@ services:
 
   pgadmin:
     container_name: pgadmin_mod-inventory-storage
-    image: dpage/pgadmin4:6.7
+    image: dpage/pgadmin4:8.13
     ports:
       - ${PGADMIN_PORT}:80
     volumes:
@@ -30,50 +30,42 @@ services:
     networks:
       - mod-inventory-storage-local
 
-  zookeeper:
-    container_name: zookeeper_mod-inventory-storage
-    image: wurstmeister/zookeeper:3.4.6
-    ports:
-      - "2181:2181"
+  kafka:
+    container_name: kafka_mod-search
+    image: apache/kafka-native
     networks:
       - mod-inventory-storage-local
-
-  kafka:
-    container_name: kafka_mod-inventory-storage
-    image: wurstmeister/kafka:2.13-2.8.1
     ports:
       - "9092:9092"
-      - "29092:29092"
+      - "9093:9093"
     environment:
-      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://:9092,LOCAL://localhost:29092"
-      KAFKA_BROKER_ID: "1"
-      KAFKA_LOG_RETENTION_HOURS: "-1"
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENERS: "INTERNAL://:9092,LOCAL://:29092"
-      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
-      KAFKA_LOG_RETENTION_BYTES: "-1"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "LOCAL:PLAINTEXT,INTERNAL:PLAINTEXT"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-    depends_on:
-      - zookeeper
-    networks:
-      - mod-inventory-storage-local
+      # Configure listeners for both docker and host communication
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:9092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+      # Settings required for KRaft mode
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+      # Listener to use for broker-to-broker communication
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      # Required for a single node cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   kafka-ui:
-    container_name: kafka-ui_mod-inventory-storage
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8080:8080"
-    depends_on:
-      - zookeeper
-      - kafka
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-      KAFKA_CLUSTERS_0_JMXPORT: 9997
+    container_name: kafka-ui_mod-search
+    image: ghcr.io/kafbat/kafka-ui:latest
     networks:
       - mod-inventory-storage-local
+    ports:
+      - "8080:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9093
+    depends_on:
+      - kafka
 
   mod-inventory-storage:
     container_name: mod-inventory-storage

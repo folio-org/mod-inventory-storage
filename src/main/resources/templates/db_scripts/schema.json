@@ -387,7 +387,7 @@
       "ginIndex": [
         {
           "fieldName": "identifiers",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         }
@@ -419,13 +419,13 @@
         },
         {
           "fieldName": "contributors",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
         {
           "fieldName": "publication",
-          "tOps": "ADD",
+          "tOps": "DELETE",
           "caseSensitive": false,
           "removeAccents": true
         },
@@ -624,6 +624,7 @@
         {
           "fieldName": "effectiveLocationId",
           "targetTable": "location",
+          "targetTableAlias": "effectiveLocation",
           "tOps": "ADD"
         },
         {
@@ -930,11 +931,6 @@
     },
     {
       "run": "before",
-      "snippetPath": "populateRmbInternalIndex.sql",
-      "fromModuleVersion": "19.1.1"
-    },
-    {
-      "run": "before",
       "snippetPath": "createIsbnFunctions.sql",
       "fromModuleVersion": "19.2.0"
     },
@@ -1230,13 +1226,33 @@
     },
     {
       "run": "after",
-      "snippetPath": "publication-period/migratePublicationPeriod.sql",
-      "fromModuleVersion": "28.0.0"
+      "snippetPath": "createIndexBarcodePattern.sql",
+      "fromModuleVersion": "28.0.3"
     },
     {
       "run": "after",
-      "snippetPath": "createIndexBarcodePattern.sql",
-      "fromModuleVersion": "28.0.3"
+      "snippetPath": "createInstanceSubjectSourceTable.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createInstanceSubjectTypeTable.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateDiscoverySuppressIfNotSet.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "publication-period/drop-pub-period-migration-function.sql",
+      "fromModuleVersion": "28.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportLocationNameSeparately.sql",
+      "fromModuleVersion": "28.1.0"
     }
   ]
 }

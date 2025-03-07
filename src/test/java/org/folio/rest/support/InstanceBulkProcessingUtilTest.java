@@ -37,6 +37,7 @@ public class InstanceBulkProcessingUtilTest {
     Instance sourceInstance = new Instance()
       .withDiscoverySuppress(Boolean.TRUE)
       .withStaffSuppress(Boolean.TRUE)
+      .withDeleted(Boolean.TRUE)
       .withPreviouslyHeld(Boolean.TRUE)
       .withCatalogedDate("1970-01-01")
       .withStatusId(UUID.randomUUID().toString())
@@ -49,6 +50,7 @@ public class InstanceBulkProcessingUtilTest {
 
     assertEquals(sourceInstance.getDiscoverySuppress(), targetInstance.getDiscoverySuppress());
     assertEquals(sourceInstance.getStaffSuppress(), targetInstance.getStaffSuppress());
+    assertEquals(sourceInstance.getDeleted(), targetInstance.getDeleted());
     assertEquals(sourceInstance.getPreviouslyHeld(), targetInstance.getPreviouslyHeld());
     assertEquals(sourceInstance.getCatalogedDate(), targetInstance.getCatalogedDate());
     assertEquals(sourceInstance.getStatusId(), targetInstance.getStatusId());

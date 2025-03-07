@@ -167,7 +167,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.0",
+      "version": "11.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1293,7 +1293,7 @@
     },
     {
       "id": "inventory-hierarchy",
-      "version": "0.5",
+      "version": "0.6",
       "handlers": [
         {
           "methods": ["GET"],
