@@ -1753,9 +1753,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   }
 
-  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
-  // and an invalid ISBNs: 1-2-3-4-5
-
   /**
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
