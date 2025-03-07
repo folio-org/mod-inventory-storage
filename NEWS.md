@@ -19,7 +19,7 @@
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Remove deprecated batch API `/instance-storage/batch/instances`  ([MODINVSTOR-1182](https://folio-org.atlassian.net/browse/MODINVSTOR-1182))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
