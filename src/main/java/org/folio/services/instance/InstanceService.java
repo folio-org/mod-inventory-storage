@@ -9,6 +9,7 @@ import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorag
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond201;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
 import static org.folio.rest.persist.PgUtil.postgresClient;
@@ -24,6 +25,7 @@ import io.vertx.core.Promise;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -40,10 +42,14 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
+import org.folio.rest.exceptions.ValidationException;
+import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
@@ -65,6 +71,7 @@ public class InstanceService {
     "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
+  private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -228,11 +235,20 @@ public class InstanceService {
 
         MetadataUtil.populateMetadata(instances, okapiHeaders);
       }
-
       Future<RowSet<Row>> result = upsert
         ? conn.upsertBatch(INSTANCE_TABLE, instances)
         : conn.saveBatch(INSTANCE_TABLE, instances);
-      return result.map(respond201());
+
+      return result
+        .map((Response) respond201())
+        .recover(throwable ->
+          respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
+            .compose(response -> {
+              if (response.getEntity() instanceof Errors errors) {
+                return Future.failedFuture(new ValidationException(errors));
+              }
+              return Future.failedFuture(throwable);
+            }));
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
       return Future.failedFuture(e.getMessage());
@@ -414,4 +430,14 @@ public class InstanceService {
     return tenantId.equals(consortiumData.centralTenantId());
   }
 
+  private Future<Response> respondFailure(String table, Throwable throwable,
+                                          Class<? extends ResponseDelegate> responseClass) {
+    try {
+      Method respond500 = responseClass.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+      return PgUtil.response(table, "", throwable, responseClass, respond500, respond500);
+    } catch (Exception e) {
+      logger.debug("respondFailure:: Error during respond", e);
+      return Future.failedFuture(e.getMessage());
+    }
+  }
 }
