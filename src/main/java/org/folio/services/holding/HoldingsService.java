@@ -134,10 +134,11 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          log.info("update updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata().getUpdatedByUserId());
+          log.info("update updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata());
+          log.info("update existingHoldingsRecord:: holdingsRecord {}", existingHoldingsRecord.getMetadata());
           return updateHolding(existingHoldingsRecord, holdingsRecord);
         } else {
-          log.info("create updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata().getUpdatedByUserId());
+          log.info("create updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata());
           return createHolding(holdingsRecord);
         }
       });
@@ -234,7 +235,7 @@ public class HoldingsService {
       .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
-        log.info("updateHolding:: newHoldings {}", newHoldings.getMetadata().getUpdatedByUserId());
+        log.info("updateHolding:: newHoldings {}", newHoldings.getMetadata());
         postgresClient.startTx(
           connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
             .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
