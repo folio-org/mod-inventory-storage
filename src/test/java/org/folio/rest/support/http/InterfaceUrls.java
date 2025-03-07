@@ -58,10 +58,6 @@ public class InterfaceUrls {
     return vertxUrl("/instance-storage/instances" + subPath);
   }
 
-  public static URL instancesStorageBatchInstancesUrl(String subPath) {
-    return vertxUrl("/instance-storage/batch/instances" + subPath);
-  }
-
   public static URL instancesStorageSyncUrl(String subPath) {
     return vertxUrl("/instance-storage/batch/synchronous" + subPath);
   }
