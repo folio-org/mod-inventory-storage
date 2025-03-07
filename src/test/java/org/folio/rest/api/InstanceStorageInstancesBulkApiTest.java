@@ -23,6 +23,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
@@ -64,6 +66,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String BULK_INSTANCES_PATH = "src/test/resources/instances/bulk/bulkInstances.ndjson";
   private static final String BULK_INSTANCES_WITH_INVALID_TYPE_PATH =
     "src/test/resources/instances/bulk/bulkInstancesWithInvalidInstanceType.ndjson";
+  private static final String BULK_INSTANCES_WITH_INVALID_PRECEDING_TITLE_PATH =
+    "src/test/resources/instances/bulk/bulkInstancesWithInvalidPrecedingTitle.ndjson";
   private static final String MINIO_BUCKET = "test-bucket";
   private static final String BULK_FILE_TO_UPLOAD = "parentLocation/filePath/bulkInstances";
   private static final String INSTANCE_TITLE_1 = "Long Way to a Small Angry Planet";
@@ -161,6 +165,54 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
 
     instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+    instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+  }
+
+  @Test
+  public void shouldUpdateInstancesInTransaction()
+    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+    // given
+    String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
+    String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
+
+    List<String> instancesIds = extractInstancesIdsFromFile(BULK_INSTANCES_WITH_INVALID_PRECEDING_TITLE_PATH);
+    FileInputStream inputStream = FileUtils.openInputStream(new File(BULK_INSTANCES_WITH_INVALID_PRECEDING_TITLE_PATH));
+    String bulkFilePath = s3Client.write(BULK_FILE_TO_UPLOAD, inputStream);
+
+    final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
+    final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
+
+    // when
+    BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest()
+      .withRecordsFileName(bulkFilePath)
+    );
+
+    // then
+    assertThat(bulkResponse.getErrorsNumber(), is(2));
+    assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
+    assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
+
+    List<String> filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
+    assertThat(filesList.size(), is(3));
+    assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
+    List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
+    assertThat(errors.size(), is(2));
+    errors.forEach(error -> {
+      assertFalse(error.contains("optimistic locking"));
+      assertTrue(error.contains("violates foreign key constraint \"precedinginstanceid_instance_fkey\""));
+    });
+
+    JsonObject instance1 = getInstanceById(existingInstance1.getId().toString());
+    JsonObject instance2 = getInstanceById(existingInstance2.getId().toString());
+    assertEquals(1, instance1.getInteger("_version").intValue());
+    assertEquals(1, instance2.getInteger("_version").intValue());
+
+    List<JsonObject> titles1 = getPrecedingSucceedingTitlesByInstanceId(existingInstance1.getId());
+    List<JsonObject> titles2 = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
+    assertEquals(0, titles1.size());
+    assertEquals(0, titles2.size());
+
+    instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
   }
 

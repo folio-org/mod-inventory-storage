@@ -10,7 +10,8 @@ import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorag
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
-import static org.folio.rest.persist.PgUtil.postSync;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond201;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
@@ -22,16 +23,22 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.pgclient.PgException;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
@@ -40,10 +47,14 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
+import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.rest.tools.utils.MetadataUtil;
+import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
@@ -55,6 +66,12 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
+  private static final Logger logger = LogManager.getLogger(InstanceService.class);
+  private static final String DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING =
+    "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
+  private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
+    "Expected a maximum of %s records to prevent out of memory but got %s";
+  private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -146,6 +163,11 @@ public class InstanceService {
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
                                           boolean publishEvents) {
+    return createInstances(instances, upsert, optimisticLocking, publishEvents, conn -> Future.succeededFuture());
+  }
+
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                          boolean publishEvents, Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -153,25 +175,12 @@ public class InstanceService {
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId, publishEvents))
-      .compose(batchOperation -> {
-        final Promise<Response> postResponse = promise();
-
-        postgresClient.withTrans(conn -> {
-          Promise<Response> postPromise = postSyncInstance(instances, upsert, optimisticLocking);
-
-          return postPromise.future()
-            .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
-              .map(v -> response));
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            postResponse.complete(transactionResult.result());
-          } else {
-            postResponse.fail(transactionResult.cause());
-          }
-        });
-        return postResponse.future()
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation));
-      })
+      .compose(batchOperation ->
+        postgresClient.withTrans(conn ->
+            postSyncInstance(conn, instances, upsert, optimisticLocking)
+              .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
+                .compose(v -> additionalOperations.apply(conn)).map(response)))
+          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)))
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -204,23 +213,46 @@ public class InstanceService {
       });
   }
 
-  private Promise<Response> postSyncInstance(List<Instance> instances, boolean upsert, boolean optimisticLocking) {
-    Promise<Response> promise = Promise.promise();
-    postSync(INSTANCE_TABLE, instances, MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders,
-      vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-      .onComplete(response -> {
-        if (response.succeeded()) {
-          var result = response.result();
-          if (result.getEntity() instanceof Errors errors) {
-            promise.fail(new ValidationException(errors));
-          } else {
-            promise.complete(result);
-          }
-        } else {
-          promise.fail(response.cause());
+  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
+                                            boolean optimisticLocking) {
+    try {
+      if (instances != null && instances.size() > MAX_ENTITIES) {
+        String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
+        logger.warn("postSyncInstance:: {}", message);
+        return Future.succeededFuture(respond413WithTextPlain(message));
+      }
+
+      if (optimisticLocking) {
+        logger.debug("postSyncInstance:: Unsetting version to -1 for instances");
+        OptimisticLockingUtil.unsetVersionIfMinusOne(instances);
+      } else {
+        if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
+          logger.warn("postSyncInstance:: {}", DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING);
+          return Future.succeededFuture(respond413WithTextPlain(DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING));
         }
-      });
-    return promise;
+        logger.debug("postSyncInstance:: Setting version to -1 for instances");
+        OptimisticLockingUtil.setVersionToMinusOne(instances);
+
+        MetadataUtil.populateMetadata(instances, okapiHeaders);
+      }
+      Future<RowSet<Row>> result = upsert
+        ? conn.upsertBatch(INSTANCE_TABLE, instances)
+        : conn.saveBatch(INSTANCE_TABLE, instances);
+
+      return result
+        .map((Response) respond201())
+        .recover(throwable ->
+          respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
+            .compose(response -> {
+              if (response.getEntity() instanceof Errors errors) {
+                return Future.failedFuture(new ValidationException(errors));
+              }
+              return Future.failedFuture(throwable);
+            }));
+    } catch (Exception e) {
+      logger.warn("postSyncInstance:: Error during batch instance", e);
+      return Future.failedFuture(e.getMessage());
+    }
   }
 
   private Promise<Response> putInstance(Instance newInstance, String instanceId) {
@@ -284,7 +316,6 @@ public class InstanceService {
     ).mapEmpty();
   }
 
-
   private Future<Void> batchLinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToAdd) {
     var sourcePairs = subjectsToAdd.stream()
       .filter(subject -> subject.getSourceId() != null)
@@ -296,25 +327,37 @@ public class InstanceService {
       .map(subject -> Pair.of(instanceId, subject.getTypeId()))
       .toList();
 
+    return batchLinkSubjects(conn, sourcePairs, typePairs);
+  }
+
+  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstances) {
+    var sourcePairs = batchInstances.stream()
+      .flatMap(instance -> instance.getSubjects().stream()
+        .filter(subject -> subject.getSourceId() != null)
+        .map(subject -> Pair.of(instance.getId(), subject.getSourceId())))
+      .toList();
+
+    var typePairs = batchInstances.stream()
+      .flatMap(instance -> instance.getSubjects().stream()
+        .filter(subject -> subject.getTypeId() != null)
+        .map(subject -> Pair.of(instance.getId(), subject.getTypeId())))
+      .toList();
+
+    return batchLinkSubjects(conn, sourcePairs, typePairs);
+  }
+
+  private Future<Void> batchLinkSubjects(Conn conn, List<Pair<String, String>> sourcePairs,
+                                         List<Pair<String, String>> typePairs) {
     if (sourcePairs.isEmpty() && typePairs.isEmpty()) {
-      return Future.succeededFuture(); // No subjects to link, return success immediately
+      return Future.succeededFuture();
     }
 
     // Combine both operations into a single future
     return Future.all(
-        sourcePairs.isEmpty() ? Future.succeededFuture() :
-          instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
-        typePairs.isEmpty() ? Future.succeededFuture() :
-          instanceRepository.batchLinkSubjectType(conn, typePairs)
-    ).mapEmpty();
-  }
-
-  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstance) {
-    return Future.all(
-      batchInstance.stream()
-        .map(instance -> batchLinkSubjects(conn, instance.getId(),
-          instance.getSubjects()))
-        .toList()
+      sourcePairs.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
+      typePairs.isEmpty() ? Future.succeededFuture() :
+        instanceRepository.batchLinkSubjectType(conn, typePairs)
     ).mapEmpty();
   }
 
@@ -387,4 +430,14 @@ public class InstanceService {
     return tenantId.equals(consortiumData.centralTenantId());
   }
 
+  private Future<Response> respondFailure(String table, Throwable throwable,
+                                          Class<? extends ResponseDelegate> responseClass) {
+    try {
+      Method respond500 = responseClass.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+      return PgUtil.response(table, "", throwable, responseClass, respond500, respond500);
+    } catch (Exception e) {
+      logger.debug("respondFailure:: Error during respond", e);
+      return Future.failedFuture(e.getMessage());
+    }
+  }
 }
