@@ -9,8 +9,8 @@ import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorag
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
 import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond201;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
@@ -22,7 +22,8 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.pgclient.PgException;
-
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +33,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
-
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -63,6 +61,10 @@ import org.folio.validator.NotesValidators;
 
 public class InstanceService {
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
+  private static final String DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING =
+    "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
+  private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
+    "Expected a maximum of %s records to prevent out of memory but got %s";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -72,9 +74,6 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
-
-  public static final String DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING = "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
-  public static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY = "Expected a maximum of %s records to prevent out of memory but got %s";
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -155,12 +154,13 @@ public class InstanceService {
       .map(ResponseHandlerUtil::handleHridErrorInInstance);
   }
 
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents) {
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                          boolean publishEvents) {
     return createInstances(instances, upsert, optimisticLocking, publishEvents, conn -> Future.succeededFuture());
   }
 
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents,
-                                          Function<Conn, Future<?>> additionalOperations) {
+  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                          boolean publishEvents, Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -206,7 +206,8 @@ public class InstanceService {
       });
   }
 
-  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
+                                            boolean optimisticLocking) {
     try {
       if (instances != null && instances.size() > MAX_ENTITIES) {
         String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
@@ -228,9 +229,9 @@ public class InstanceService {
         MetadataUtil.populateMetadata(instances, okapiHeaders);
       }
 
-      Future<RowSet<Row>> result = upsert ?
-        conn.upsertBatch(INSTANCE_TABLE, instances) :
-        conn.saveBatch(INSTANCE_TABLE, instances);
+      Future<RowSet<Row>> result = upsert
+        ? conn.upsertBatch(INSTANCE_TABLE, instances)
+        : conn.saveBatch(INSTANCE_TABLE, instances);
       return result.map(respond201());
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
@@ -329,7 +330,8 @@ public class InstanceService {
     return batchLinkSubjects(conn, sourcePairs, typePairs);
   }
 
-  private Future<Void> batchLinkSubjects(Conn conn, List<Pair<String, String>> sourcePairs, List<Pair<String, String>> typePairs) {
+  private Future<Void> batchLinkSubjects(Conn conn, List<Pair<String, String>> sourcePairs,
+                                         List<Pair<String, String>> typePairs) {
     if (sourcePairs.isEmpty() && typePairs.isEmpty()) {
       return Future.succeededFuture();
     }
