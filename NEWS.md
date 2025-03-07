@@ -1,6 +1,7 @@
 ## v29.0.0 YYYY-mm-DD
 ### Breaking changes
 * Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
+* Remove deprecated batch API `/instance-storage/batch/instances`  ([MODINVSTOR-1182](https://folio-org.atlassian.net/browse/MODINVSTOR-1182))
 
 ### New APIs versions
 * Provides `inventory-hierarchy 0.6`
@@ -29,7 +30,6 @@
 
 ### Tech Dept
 * Delete 3 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
-* Remove deprecated batch API `/instance-storage/batch/instances`  ([MODINVSTOR-1182](https://folio-org.atlassian.net/browse/MODINVSTOR-1182))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
