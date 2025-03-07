@@ -142,7 +142,11 @@ public class CommonDomainEventPublisher<T> {
     if (updatedRecords.isEmpty()) {
       return succeededFuture();
     }
-
+    try {
+      log.info("publishRecordsUpdated:: updatedRecords {}", OBJECT_MAPPER.writeValueAsString(updatedRecords));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     return all(updatedRecords.stream()
       .map(triple -> publishRecordUpdated(triple.getLeft(), triple.getMiddle(), triple.getRight()))
       .toList())

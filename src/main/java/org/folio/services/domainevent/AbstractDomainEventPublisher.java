@@ -8,6 +8,8 @@ import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.Collection;
@@ -18,12 +20,14 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.AbstractRepository;
 import org.folio.rest.support.CollectionUtil;
 import org.folio.services.batch.BatchOperationContext;
 
 abstract class AbstractDomainEventPublisher<D, E> {
   private static final Logger log = getLogger(AbstractDomainEventPublisher.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
 
   protected final AbstractRepository<D> repository;
   protected final CommonDomainEventPublisher<E> domainEventService;
@@ -147,7 +151,12 @@ abstract class AbstractDomainEventPublisher<D, E> {
 
   protected Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
                                                                     Collection<D> oldRecords) {
-    log.info("convertDomainsToEvents:: newRecords {}", newRecords);
+    try {
+      log.info("convertDomainsToEvents:: newRecords {}",   OBJECT_MAPPER.writeValueAsString(newRecords));
+      log.info("convertDomainsToEvents:: oldRecords {}",   OBJECT_MAPPER.writeValueAsString(oldRecords));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     return getRecordIds(oldRecords).compose(oldRecordsInstanceIds -> getRecordIds(newRecords).map(
       newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
   }
