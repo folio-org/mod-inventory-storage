@@ -273,17 +273,6 @@
       ]
     },
     {
-      "id": "instance-storage-batch",
-      "version": "3.0",
-      "handlers": [
-        {
-          "methods": ["POST"],
-          "pathPattern": "/instance-storage/batch/instances",
-          "permissionsRequired": ["inventory-storage.instances.batch.post"]
-        }
-      ]
-    },
-    {
       "id": "instance-storage-batch-sync",
       "version": "3.0",
       "handlers": [
@@ -1586,11 +1575,6 @@
       "description": "update preceding/succeeding titles related to instance from storage"
     },
     {
-      "permissionName": "inventory-storage.instances.batch.post",
-      "displayName": "inventory storage - create or update a number of instances",
-      "description": "create or update a number of instances in storage"
-    },
-    {
       "permissionName": "inventory-storage.instances.batch.synchronous.post",
       "displayName": "inventory storage - create or update a collection of instances in a single synchronous request",
       "description": "create or update a collection of instances in a single synchronous request"
@@ -2647,7 +2631,6 @@
         "inventory-storage.instances.source-record.marc-json.put",
         "inventory-storage.instances.source-record.marc-json.delete",
         "inventory-storage.instances.collection.delete",
-        "inventory-storage.instances.batch.post",
         "inventory-storage.instances.batch.synchronous.post",
         "inventory-storage.instances.batch-unsafe.post",
         "inventory-storage.instances.bulk.post",

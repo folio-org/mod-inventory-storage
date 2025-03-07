@@ -34,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class LocationsTest extends TestBaseWithInventoryUtil {
-  private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
   @SneakyThrows
   @Before

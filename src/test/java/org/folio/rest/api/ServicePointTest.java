@@ -44,7 +44,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class ServicePointTest extends TestBase {
-  private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   private final ServicePointEventMessageChecks servicePointEventMessageChecks =
     new ServicePointEventMessageChecks(KAFKA_CONSUMER);
 

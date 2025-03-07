@@ -15,7 +15,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.impl.InstanceStorageBatchApi;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
 import org.folio.rest.jaxrs.model.HridSettings;
@@ -37,16 +36,6 @@ public class HridManager {
 
   public HridManager(PostgresClient postgresClient) {
     this.postgresClient = Objects.requireNonNull(postgresClient, "PostgresClient cannot be null");
-  }
-
-  /**
-   * Deprecated.
-   *
-   * @deprecated Remove after deprecated {@link InstanceStorageBatchApi} has been removed
-   */
-  @Deprecated
-  public Future<String> getNextInstanceHrid() {
-    return populateHrid(new Instance()).map(Instance::getHrid);
   }
 
   public Future<Item> populateHrid(Item item) {

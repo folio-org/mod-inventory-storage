@@ -146,11 +146,6 @@ public final class ResourceClient {
       "Items batch sync", "items");
   }
 
-  public static ResourceClient forInstancesStorageBatchInstances(HttpClient client) {
-    return new ResourceClient(client, InterfaceUrls::instancesStorageBatchInstancesUrl,
-      "Instances batch (Deprecated)", "instances");
-  }
-
   public static ResourceClient forIllPolicies(HttpClient client) {
     return new ResourceClient(client, InterfaceUrls::illPoliciesUrl,
       "Ill Policies", "illPolicies");
