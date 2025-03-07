@@ -9,8 +9,8 @@ import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorag
 import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
 import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
-import static org.folio.rest.persist.PgUtil.postSync;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
+import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond201;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
@@ -18,11 +18,11 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.pgclient.PgException;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,21 +32,25 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
+
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
-import org.folio.rest.exceptions.ValidationException;
-import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.rest.tools.utils.MetadataUtil;
+import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
@@ -58,6 +62,7 @@ import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
 public class InstanceService {
+  private static final Logger logger = LogManager.getLogger(InstanceService.class);
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -67,6 +72,9 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
+
+  public static final String DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING = "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
+  public static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY = "Expected a maximum of %s records to prevent out of memory but got %s";
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -152,7 +160,7 @@ public class InstanceService {
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking, boolean publishEvents,
-                                          Function<AsyncResult<SQLConnection>, Future<?>> additionalOperations) {
+                                          Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
 
@@ -161,12 +169,10 @@ public class InstanceService {
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
         instanceRepository, Instance::getId, publishEvents))
       .compose(batchOperation ->
-        postgresClient.withTrans(conn -> {
-            AsyncResult<SQLConnection> sqlConnection = Future.succeededFuture(new SQLConnection(conn.getPgConnection(), null, null));
-            return postSyncInstance(sqlConnection, instances, upsert, optimisticLocking)
+        postgresClient.withTrans(conn ->
+            postSyncInstance(conn, instances, upsert, optimisticLocking)
               .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
-                .compose(v -> additionalOperations.apply(sqlConnection)).map(response));
-          })
+                .compose(v -> additionalOperations.apply(conn)).map(response)))
           .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)))
       .map(ResponseHandlerUtil::handleHridError);
   }
@@ -200,23 +206,36 @@ public class InstanceService {
       });
   }
 
-  private Future<Response> postSyncInstance(AsyncResult<SQLConnection> sqlConnection, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
-    Promise<Response> promise = Promise.promise();
-    postSync(sqlConnection, INSTANCE_TABLE, instances,
-      MAX_ENTITIES, upsert, optimisticLocking, okapiHeaders, vertxContext, PostInstanceStorageBatchSynchronousResponse.class)
-      .onComplete(response -> {
-        if (response.succeeded()) {
-          var result = response.result();
-          if (result.getEntity() instanceof Errors errors) {
-            promise.fail(new ValidationException(errors));
-          } else {
-            promise.complete(result);
-          }
-        } else {
-          promise.fail(response.cause());
+  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert, boolean optimisticLocking) {
+    try {
+      if (instances != null && instances.size() > MAX_ENTITIES) {
+        String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
+        logger.warn("postSyncInstance:: {}", message);
+        return Future.succeededFuture(respond413WithTextPlain(message));
+      }
+
+      if (optimisticLocking) {
+        logger.debug("postSyncInstance:: Unsetting version to -1 for instances");
+        OptimisticLockingUtil.unsetVersionIfMinusOne(instances);
+      } else {
+        if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
+          logger.warn("postSyncInstance:: {}", DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING);
+          return Future.succeededFuture(respond413WithTextPlain(DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING));
         }
-      });
-    return promise.future();
+        logger.debug("postSyncInstance:: Setting version to -1 for instances");
+        OptimisticLockingUtil.setVersionToMinusOne(instances);
+
+        MetadataUtil.populateMetadata(instances, okapiHeaders);
+      }
+
+      Future<RowSet<Row>> result = upsert ?
+        conn.upsertBatch(INSTANCE_TABLE, instances) :
+        conn.saveBatch(INSTANCE_TABLE, instances);
+      return result.map(respond201());
+    } catch (Exception e) {
+      logger.warn("postSyncInstance:: Error during batch instance", e);
+      return Future.failedFuture(e.getMessage());
+    }
   }
 
   private Promise<Response> putInstance(Instance newInstance, String instanceId) {

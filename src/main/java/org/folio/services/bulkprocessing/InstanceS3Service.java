@@ -4,9 +4,7 @@ import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static org.folio.rest.support.InstanceBulkProcessingUtil.mapBulkInstanceRecordToInstance;
 import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -28,7 +26,6 @@ import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
@@ -107,7 +104,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
     return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents,
-        sqlConnection -> updatePrecedingSucceedingTitles(sqlConnection, instanceWrappers))
+        conn -> updatePrecedingSucceedingTitles(conn, instanceWrappers))
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
@@ -118,7 +115,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
       });
   }
 
-  private Future<Void> updatePrecedingSucceedingTitles(AsyncResult<SQLConnection> sqlConnection, List<InstanceWrapper> instances) {
+  private Future<Void> updatePrecedingSucceedingTitles(Conn conn, List<InstanceWrapper> instances) {
     List<PrecedingSucceedingTitle> precedingSucceedingTitles = instances.stream()
       .map(InstanceWrapper::precedingSucceedingTitles)
       .flatMap(Collection::stream)
@@ -127,25 +124,11 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     if (precedingSucceedingTitles.isEmpty()) {
       return Future.succeededFuture();
     }
-    Promise<Void> promise = Promise.promise();
 
     CQLWrapper cqlQuery = buildPrecedingSucceedingTitlesCql(instances);
-    postgresClient.delete(sqlConnection, PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, delete -> {
-      if (delete.failed()) {
-        promise.fail(delete.cause());
-        log.warn("updatePrecedingSucceedingTitles:: Error during deleting preceding succeeding titles", delete.cause());
-      } else {
-        postgresClient.saveBatch(sqlConnection, PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitles, save -> {
-          if (save.failed()) {
-            log.warn("updatePrecedingSucceedingTitles:: Error during saving preceding succeeding titles", save.cause());
-            promise.fail(save.cause());
-          } else {
-            promise.complete();
-          }
-        });
-      }});
-
-    return promise.future();
+    return conn.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery)
+      .compose(v -> conn.saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitles))
+      .mapEmpty();
   }
 
   private CQLWrapper buildPrecedingSucceedingTitlesCql(List<InstanceWrapper> instances) {
