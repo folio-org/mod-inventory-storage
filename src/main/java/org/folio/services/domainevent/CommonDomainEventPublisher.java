@@ -10,6 +10,8 @@ import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
 import static org.folio.services.domainevent.DomainEvent.deleteEvent;
 import static org.folio.services.domainevent.DomainEvent.updateEvent;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -24,6 +26,7 @@ import java.util.function.LongFunction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
@@ -35,6 +38,7 @@ import org.folio.rest.tools.utils.TenantTool;
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
 
   private final Map<String, String> okapiHeaders;
   private final KafkaProducerManager producerManager;
@@ -119,12 +123,18 @@ public class CommonDomainEventPublisher<T> {
   }
 
   Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
-    log.info("publishRecordUpdated:: newRecord {}", newRecord);
+    try {
+      log.info("publishRecordUpdated:: newRecord {}", OBJECT_MAPPER.writeValueAsString(newRecord));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     final DomainEvent<T> domainEvent = updateEvent(oldRecord, newRecord, tenantId(okapiHeaders));
-    log.info("publishRecordUpdated:: domainEvent {}", domainEvent);
-    log.info("publishRecordUpdated:: okapiHeaders {}", okapiHeaders);
-
-
+    try {
+      log.info("publishRecordUpdated:: domainEvent {}", OBJECT_MAPPER.writeValueAsString(domainEvent));
+      log.info("publishRecordUpdated:: okapiHeaders {}", okapiHeaders);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     return publish(instanceId, domainEvent);
   }
 
@@ -184,7 +194,7 @@ public class CommonDomainEventPublisher<T> {
   }
 
   private Future<Void> publish(String topic, String key, Object value) {
-    log.debug("Sending domain event [{}], payload [{}]", key, value);
+    log.info("Sending domain event [{}], payload [{}]", key, value);
 
     var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
       .key(key)

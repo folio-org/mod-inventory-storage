@@ -8,6 +8,8 @@ import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -19,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -28,6 +31,7 @@ import org.folio.rest.support.CollectionUtil;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
+  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
 
   private final HoldingsRepository holdingsRepository;
   private final CommonDomainEventPublisher<Map<String, Object>> itemReindexPublisher;
@@ -128,7 +132,13 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
   private List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldItemsToNew(
     HoldingsRecord oldHoldings, HoldingsRecord newHoldings, Collection<Item> oldItems, Collection<Item> newItems) {
-
+    try {
+      log.info("mapOldItemsToNew:: newHoldings {}", OBJECT_MAPPER.writeValueAsString(newHoldings));
+      log.info("mapOldItemsToNew:: oldHoldings {}", OBJECT_MAPPER.writeValueAsString(oldHoldings));
+      log.info("mapOldItemsToNew:: newItems {}", OBJECT_MAPPER.writeValueAsString(newItems));
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     return mapOldRecordsToNew(
       oldItems.stream().map(item -> pair(oldHoldings.getInstanceId(), item)).toList(),
       newItems.stream().map(item -> pair(newHoldings.getInstanceId(), item)).toList());

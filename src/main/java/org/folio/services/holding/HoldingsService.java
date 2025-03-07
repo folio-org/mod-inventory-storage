@@ -134,11 +134,18 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          log.info("update updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata());
-          log.info("update existingHoldingsRecord:: holdingsRecord {}", existingHoldingsRecord.getMetadata());
+          try {
+            log.info("update updateHoldingRecord:: holdingsRecord {}",
+              OBJECT_MAPPER.writeValueAsString(holdingsRecord));
+            log.info("update existingHoldingsRecord:: holdingsRecord {}",
+              OBJECT_MAPPER.writeValueAsString(existingHoldingsRecord));
+          } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+          }
+
           return updateHolding(existingHoldingsRecord, holdingsRecord);
         } else {
-          log.info("create updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata());
+          log.info("create updateHoldingRecord:: holdingsRecord {}", holdingsRecord.getMetadata().getUpdatedByUserId());
           return createHolding(holdingsRecord);
         }
       });
@@ -235,7 +242,11 @@ public class HoldingsService {
       .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
       .compose(notUsed -> {
         final Promise<List<Item>> overallResult = promise();
-        log.info("updateHolding:: newHoldings {}", newHoldings.getMetadata());
+        try {
+          log.info("updateHolding:: newHoldings {}", OBJECT_MAPPER.writeValueAsString(newHoldings));
+        } catch (JsonProcessingException e) {
+          throw new RuntimeException(e);
+        }
         postgresClient.startTx(
           connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
             .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
