@@ -66,7 +66,6 @@ public abstract class TestBase {
   static ResourceClient instanceRelationshipTypesClient;
   static ResourceClient instancesStorageSyncClient;
   static ResourceClient itemsStorageSyncClient;
-  static ResourceClient instancesStorageBatchInstancesClient;
   static ResourceClient instanceTypesClient;
   static ResourceClient illPoliciesClient;
   static ResourceClient inventoryViewClient;
@@ -99,8 +98,6 @@ public abstract class TestBase {
     statisticalCodeClient = ResourceClient.forStatisticalCodes(getClient());
     boundWithClient = ResourceClient.forBoundWithParts(getClient());
     holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
-    instancesStorageBatchInstancesClient = ResourceClient
-      .forInstancesStorageBatchInstances(getClient());
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     servicePointsClient = ResourceClient.forServicePoints(getClient());

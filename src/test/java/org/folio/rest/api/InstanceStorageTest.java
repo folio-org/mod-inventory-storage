@@ -17,7 +17,6 @@ import static org.folio.rest.support.JsonObjectMatchers.identifierMatches;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instancesStorageBatchInstancesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
@@ -25,7 +24,6 @@ import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
-import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isUniqueViolation;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -39,7 +37,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.either;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -74,7 +71,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -82,7 +78,6 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Dates;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.InstancesBatchResponse;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.Note;
@@ -1758,124 +1753,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   }
 
-  @Test
-  public void canCreateCollectionOfInstances()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    JsonArray instancesArray = new JsonArray();
-    int numberOfInstances = 1000;
-
-    for (int i = 0; i < numberOfInstances; i++) {
-      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
-    }
-
-    JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances);
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    Response response = createCompleted.get(30, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject instancesResponse = response.getJson();
-
-    assertThat(instancesResponse.getInteger(TOTAL_RECORDS_KEY), is(numberOfInstances));
-
-    JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
-    assertThat(instances.size(), is(numberOfInstances));
-    assertThat(instances.getJsonObject(1).getJsonObject(METADATA_KEY), notNullValue());
-    assertThat(instances.getJsonObject(1).getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-
-    assertNotSuppressedFromDiscovery(instances);
-
-    instanceMessageChecks.createdMessagesPublished(toList(instances));
-  }
-
-  // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
-  // and an invalid ISBNs: 1-2-3-4-5
-
-  @Test
-  public void canCreateInstancesEvenIfSomeFailed()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    JsonObject firstCorrectInstance = smallAngryPlanet(UUID.randomUUID());
-    JsonObject secondCorrectInstance = smallAngryPlanet(UUID.randomUUID());
-    JsonObject firstErrorInstance = smallAngryPlanet(UUID.randomUUID())
-      .put("modeOfIssuanceId", UUID.randomUUID().toString());
-    JsonObject secondErrorInstance = firstErrorInstance.copy()
-      .put("id", UUID.randomUUID().toString());
-
-    JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, new JsonArray().add(firstCorrectInstance).add(firstErrorInstance)
-        .add(secondCorrectInstance).add(secondErrorInstance))
-      .put(TOTAL_RECORDS_KEY, 4);
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    Response response = createCompleted.get(10, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject instancesResponse = response.getJson();
-
-    assertThat(instancesResponse.getInteger(TOTAL_RECORDS_KEY), is(2));
-
-    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
-    assertThat(errorMessages.size(), is(2));
-    assertThat(errorMessages.getString(0), notNullValue());
-    assertThat(errorMessages.getString(1), notNullValue());
-
-    JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
-    assertThat(instances.size(), is(2));
-
-    assertNotSuppressedFromDiscovery(instances);
-
-    instanceMessageChecks.createdMessagesPublished(toList(instances));
-    instanceMessageChecks.noMessagesPublished(firstErrorInstance.getString("id"));
-    instanceMessageChecks.noMessagesPublished(secondErrorInstance.getString("id"));
-  }
-
-  @Test
-  public void shouldReturnErrorResponseIfAllInstancesFailed()
-    throws InterruptedException, ExecutionException, TimeoutException {
-
-    JsonObject errorInstance = smallAngryPlanet(null).put("modeOfIssuanceId", UUID.randomUUID().toString());
-
-    JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, new JsonArray().add(errorInstance).add(errorInstance).add(errorInstance))
-      .put(TOTAL_RECORDS_KEY, 3);
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    Response response = createCompleted.get(10, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_INTERNAL_ERROR));
-
-    JsonObject instancesResponse = response.getJson();
-
-    assertThat(instancesResponse.getInteger(TOTAL_RECORDS_KEY), is(0));
-
-    JsonArray errorMessages = instancesResponse.getJsonArray("errorMessages");
-    assertThat(errorMessages.size(), is(3));
-    assertThat(errorMessages.getString(0), notNullValue());
-    assertThat(errorMessages.getString(1), notNullValue());
-    assertThat(errorMessages.getString(2), notNullValue());
-
-    JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
-    assertThat(instances.size(), is(0));
-  }
-
   /**
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
@@ -2499,176 +2376,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateCollectionOfInstancesWithGeneratedHrids()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    log.info("Starting canCreateACollectionOfInstancesWithGeneratedHRIDs");
-
-    final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 1000;
-
-    for (int i = 0; i < numberOfInstances; i++) {
-      final JsonObject sap = smallAngryPlanet(UUID.randomUUID());
-      sap.remove("hrid");
-      instancesArray.add(sap);
-    }
-
-    final JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances);
-
-    setInstanceSequence(1);
-
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    final Response response = createCompleted.get(30, SECONDS);
-
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    final JsonObject instancesResponse = response.getJson();
-
-    assertThat(instancesResponse.getInteger(TOTAL_RECORDS_KEY), is(numberOfInstances));
-
-    final JsonArray instances = instancesResponse.getJsonArray(INSTANCES_KEY);
-
-    assertThat(instances.size(), is(numberOfInstances));
-
-    for (int i = 0; i < numberOfInstances; i++) {
-      final JsonObject instance = instancesArray.getJsonObject(i);
-      final Response instanceResponse = getById(instance.getString("id"));
-      assertThat(instanceResponse, statusCodeIs(HttpStatus.HTTP_OK));
-      assertThat(instanceResponse.getJson().getString("hrid"),
-        is(both(greaterThanOrEqualTo("in00000000001"))
-          .and(lessThanOrEqualTo("in00000001000"))));
-    }
-
-    log.info("Finished canCreateACollectionOfInstancesWithGeneratedHRIDs");
-  }
-
-  @Test
-  public void canCreateCollectionOfInstancesWithExistingAndGeneratedHrids() throws Exception {
-    log.info("Starting canCreateACollectionOfInstancesWithExistingAndGeneratedHRIDs");
-
-    final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 5;
-
-    instancesArray.add(uprooted(UUID.randomUUID()));
-    instancesArray.add(temeraire(UUID.randomUUID()));
-
-    for (int i = 2; i < numberOfInstances; i++) {
-      final JsonObject sap = smallAngryPlanet(UUID.randomUUID());
-      sap.put("hrid", "sap" + i);
-      instancesArray.add(sap);
-    }
-
-    final JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances);
-
-    setInstanceSequence(1);
-
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
-
-    JsonObject instance = instancesArray.getJsonObject(0);
-    Response response = getById(instance.getString("id"));
-
-    assertThat(response.getJson().getString("hrid"),
-      either(is("in00000000001")).or(is("in00000000002")));
-
-    for (int i = 2; i < numberOfInstances; i++) {
-      instance = instancesArray.getJsonObject(i);
-      response = getById(instance.getString("id"));
-
-      assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-      assertThat(response.getJson().getString("hrid"), is("sap" + i));
-    }
-
-    instance = instancesArray.getJsonObject(1);
-    response = getById(instance.getString("id"));
-
-    assertThat(response.getJson().getString("hrid"),
-      either(is("in00000000001")).or(is("in00000000002")));
-
-    log.info("Finisted canCreateACollectionOfInstancesWithExistingAndGeneratedHRIDs");
-  }
-
-  @Test
-  public void cannotCreateCollectionOfInstancesWithDuplicatedHrids() throws Exception {
-    log.info("Starting cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
-
-    final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 2;
-
-    instancesArray.add(uprooted(UUID.randomUUID()));
-
-    final JsonObject t = temeraire(UUID.randomUUID());
-    t.put("hrid", "in00000000001");
-    instancesArray.add(t);
-
-    final JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances);
-
-    setInstanceSequence(1);
-
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    final Response response = createCompleted.get(10, SECONDS);
-
-    assertThat(response.getStatusCode(), is(201));
-
-    final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
-
-    assertThat(ibr.getErrorMessages(), hasSize(1));
-    assertThat(ibr.getErrorMessages().getFirst(), isUniqueViolation("instance_hrid_idx_unique"));
-
-    log.info("Finished cannotCreateACollectionOfInstancesWithDuplicatedHRIDs");
-  }
-
-  @Test
-  public void cannotCreateCollectionOfInstancesWithHridFailure() throws Exception {
-    log.info("Starting cannotCreateACollectionOfInstancesWithHRIDFailure");
-
-    final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 2;
-
-    instancesArray.add(uprooted(UUID.randomUUID()));
-
-    final JsonObject t = temeraire(UUID.randomUUID());
-    t.put("hrid", "");
-    instancesArray.add(t);
-
-    final JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, numberOfInstances);
-
-    setInstanceSequence(99_999_999_999L);
-
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(instancesStorageBatchInstancesUrl(StringUtils.EMPTY), instanceCollection, TENANT_ID,
-      json(createCompleted));
-
-    final Response response = createCompleted.get(10, SECONDS);
-
-    assertThat(response.getStatusCode(), is(201));
-
-    final InstancesBatchResponse ibr = response.getJson().mapTo(InstancesBatchResponse.class);
-
-    assertThat(ibr.getErrorMessages(), notNullValue());
-    assertThat(ibr.getErrorMessages().getFirst(), isMaximumSequenceValueError("hrid_instances_seq"));
-
-    log.info("Finished cannotCreateACollectionOfInstancesWithHRIDFailure");
-  }
-
-  @Test
   public void cannotCreateInstanceWithDuplicateMatchKey() throws Exception {
     log.info("Starting cannotCreateInstanceWithDuplicateMatchKey");
 
@@ -2719,26 +2426,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .attemptToCreate(instanceCollection);
 
     assertThat(createResponse.getStatusCode(), is(201));
-
-    assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
-    assertNotSuppressedFromDiscovery(uprootedId.toString());
-  }
-
-  @Test
-  public void canPostInstanceStorageBatchWithDiscoverySuppressedInstances() {
-    final JsonArray instancesArray = new JsonArray();
-    final UUID smallAngryPlanetId = UUID.randomUUID();
-    final UUID uprootedId = UUID.randomUUID();
-
-    instancesArray.add(uprooted(uprootedId));
-    instancesArray.add(smallAngryPlanet(smallAngryPlanetId)
-      .put(DISCOVERY_SUPPRESS, true));
-
-    final JsonObject instanceCollection = new JsonObject()
-      .put(INSTANCES_KEY, instancesArray)
-      .put(TOTAL_RECORDS_KEY, 2);
-
-    instancesStorageBatchInstancesClient.create(instanceCollection);
 
     assertSuppressedFromDiscovery(smallAngryPlanetId.toString());
     assertNotSuppressedFromDiscovery(uprootedId.toString());

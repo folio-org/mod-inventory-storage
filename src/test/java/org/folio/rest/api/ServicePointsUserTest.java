@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ServicePointsUserTest extends TestBase {
-  private static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
 
   public static Response createServicePointUser(UUID id, UUID userId,
                                                 List<UUID> servicePointsIds, UUID defaultServicePointId)
