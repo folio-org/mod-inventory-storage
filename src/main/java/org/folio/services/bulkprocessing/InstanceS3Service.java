@@ -24,8 +24,6 @@ import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
@@ -51,14 +49,12 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   private static final boolean APPLY_OPTIMISTIC_LOCKING = true;
 
   private final InstanceService instanceService;
-  private final PostgresClient postgresClient;
   private final InstanceRepository instanceRepository;
 
   public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
     super(folioS3ClientFactory, vertx);
     this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
     this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
-    this.postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
   }
 
   @Override
