@@ -33,7 +33,7 @@
 * Delete 3 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `folio-kafka-wrapper` from `3.3.0` to `3.4.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 
