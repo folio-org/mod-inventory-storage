@@ -15,6 +15,7 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
@@ -186,8 +187,17 @@ public class InstanceService {
         return Future.succeededFuture(oldInstance);
       })
       .compose(oldInstance -> {
-        final Promise<Response> putResult = promise();
+        try {
+          var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
+          if (noChanges) {
+            return Future.succeededFuture()
+              .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
 
+        final Promise<Response> putResult = promise();
         return postgresClient.withTrans(conn -> {
           Promise<Response> putPromise = putInstance(newInstance, id);
           return putPromise.future()
@@ -199,8 +209,7 @@ public class InstanceService {
           } else {
             putResult.fail(transactionResult.cause());
           }
-        })
-          .onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
       });
   }
 

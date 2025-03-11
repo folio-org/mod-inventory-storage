@@ -22,6 +22,7 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
@@ -159,12 +160,20 @@ public class ItemService {
       .compose(oldHoldings -> {
         putData.oldHoldings = oldHoldings;
         effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        return doUpdateItem(newItem);
+        try {
+          var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
+          if (noChanges) {
+            return Future.succeededFuture();
+          } else {
+            return doUpdateItem(newItem)
+              .onSuccess(finalItem -> domainEventService.publishUpdated(
+                finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings));
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
       })
-      .onSuccess(finalItem ->
-        domainEventService.publishUpdated(finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-      .map(x -> PutItemStorageItemsByItemIdResponse.respond204())
-      ;
+      .map(x -> PutItemStorageItemsByItemIdResponse.respond204());
   }
 
   public Future<Response> deleteItem(String itemId) {

@@ -553,6 +553,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @SneakyThrows
+  public void shouldNotUpdateInstanceIfNoChanges() {
+    var id = UUID.randomUUID();
+    createInstance(nod(id));
+    var instance = getById(id).getJson();
+
+    assertThat(update(instance).getStatusCode(), is(204));
+
+    var updatedInstance = getById(id).getJson();
+    //assert that there was no update in database
+    assertThat(updatedInstance.getString("_version"), is("1"));
+    var kafkaEvents = KAFKA_CONSUMER.getMessagesForInstance(id.toString());
+    //assert that there's only CREATE kafka message, no updates
+    assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
   public void cannotProvideAdditionalPropertiesInInstance()
     throws InterruptedException, TimeoutException, ExecutionException {
 
