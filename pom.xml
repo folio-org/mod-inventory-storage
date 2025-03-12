@@ -22,11 +22,11 @@
     <snappy-java.version>1.1.10.7</snappy-java.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.3</log4j.version>
-    <folio-s3-client.version>2.3.0-SNAPSHOT</folio-s3-client.version>
+    <folio-s3-client.version>2.3.0</folio-s3-client.version>
 
     <okapi-testing.version>6.2.0</okapi-testing.version>
     <junit.version>5.12.0</junit.version>
-    <testcontainers.version>1.20.5</testcontainers.version>
+    <testcontainers.version>1.20.6</testcontainers.version>
     <joda-time.version>2.13.1</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
@@ -48,7 +48,7 @@
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.21.3</checkstyle.version>
+    <checkstyle.version>10.21.4</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.18.0</versions-maven-plugin.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
