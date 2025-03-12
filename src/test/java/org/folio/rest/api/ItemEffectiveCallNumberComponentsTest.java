@@ -244,6 +244,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     holdingsClient.replace(holdings.getId(),
       getHoldingsById(holdings.getJson())
+        .put("discoverySuppress", false) //ensure holdings has some updated field so update is not skipped
         .put(holdingsPropertyName, holdingsTargetValue)
     );
 
@@ -278,6 +279,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       .forInstance(instance.getId())
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withDiscoverySuppress(true)
       .create()
       .put(propertyName, propertyValue);
     IndividualResource holdings =
