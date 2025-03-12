@@ -2,6 +2,7 @@
 ### Breaking changes
 * Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
 * Remove deprecated batch API `/instance-storage/batch/instances`  ([MODINVSTOR-1182](https://folio-org.atlassian.net/browse/MODINVSTOR-1182))
+* Perform bulk in transaction to prevent Optimistic Locking ([MODINVSTOR-1369](https://folio-org.atlassian.net/browse/MODINVSTOR-1369))
 
 ### New APIs versions
 * Provides `inventory-hierarchy 0.6`
