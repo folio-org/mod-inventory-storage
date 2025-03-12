@@ -16,7 +16,7 @@
     <vertx.version>4.5.13</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
-    <folio-kafka-wrapper.version>3.3.0-SNAPSHOT</folio-kafka-wrapper.version>
+    <folio-kafka-wrapper.version>3.3.1</folio-kafka-wrapper.version>
     <caffeine.version>3.2.0</caffeine.version>
     <lombok.version>1.18.36</lombok.version>
     <snappy-java.version>1.1.10.7</snappy-java.version>

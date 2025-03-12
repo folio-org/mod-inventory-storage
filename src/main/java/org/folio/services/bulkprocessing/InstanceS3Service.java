@@ -23,8 +23,7 @@ import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
@@ -50,14 +49,12 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   private static final boolean APPLY_OPTIMISTIC_LOCKING = true;
 
   private final InstanceService instanceService;
-  private final PostgresClient postgresClient;
   private final InstanceRepository instanceRepository;
 
   public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
     super(folioS3ClientFactory, vertx);
     this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
     this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
-    this.postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(), okapiHeaders);
   }
 
   @Override
@@ -102,7 +99,8 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   protected Future<Void> upsert(List<InstanceWrapper> instanceWrappers, boolean publishEvents) {
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
-    return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents)
+    return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents,
+        conn -> updatePrecedingSucceedingTitles(conn, instanceWrappers))
       .compose(response -> {
         if (!isCreateSuccessResponse(response)) {
           String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
@@ -110,11 +108,10 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
           return Future.failedFuture(msg);
         }
         return Future.succeededFuture();
-      })
-      .compose(v -> updatePrecedingSucceedingTitles(instanceWrappers));
+      });
   }
 
-  private Future<Void> updatePrecedingSucceedingTitles(List<InstanceWrapper> instances) {
+  private Future<Void> updatePrecedingSucceedingTitles(Conn conn, List<InstanceWrapper> instances) {
     List<PrecedingSucceedingTitle> precedingSucceedingTitles = instances.stream()
       .map(InstanceWrapper::precedingSucceedingTitles)
       .flatMap(Collection::stream)
@@ -125,8 +122,8 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     }
 
     CQLWrapper cqlQuery = buildPrecedingSucceedingTitlesCql(instances);
-    return postgresClient.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery)
-      .compose(v -> postgresClient.saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitles))
+    return conn.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery)
+      .compose(v -> conn.saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitles))
       .mapEmpty();
   }
 
@@ -156,5 +153,4 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   }
 
   record InstanceWrapper(Instance instance, List<PrecedingSucceedingTitle> precedingSucceedingTitles) {}
-
 }
