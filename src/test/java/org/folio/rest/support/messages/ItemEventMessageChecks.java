@@ -57,7 +57,7 @@ public class ItemEventMessageChecks {
 
   public void createdMessagePublished(String itemId) {
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      hasItem(hasProperty("type", is(("CREATE")))));
+      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void updatedMessagePublished(JsonObject oldItem, JsonObject newItem) {

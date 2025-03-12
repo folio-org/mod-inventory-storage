@@ -47,7 +47,7 @@ public class InstanceEventMessageChecks {
 
   public void createdMessagePublished(String instanceId) {
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-      hasItem(hasProperty("type", is(("CREATE")))));
+      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void createdMessagesPublished(List<JsonObject> instances) {

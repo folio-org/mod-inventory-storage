@@ -44,7 +44,7 @@ public class HoldingsEventMessageChecks {
 
   public void createdMessagePublished(String holdingsId) {
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
-      hasItem(hasProperty("type", is(("CREATE")))));
+      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void updatedMessagePublished(JsonObject oldHoldings,
