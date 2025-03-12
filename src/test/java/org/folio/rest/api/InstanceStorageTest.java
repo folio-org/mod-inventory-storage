@@ -8,6 +8,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -1769,6 +1770,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instanceTags.get(tagListKey), hasItem(tagValue));
     assertThat(instancesJsonResponse.getInteger(TOTAL_RECORDS_KEY), is(1));
 
+  }
+
+  @Test
+  public void cannotPostSyncInstancesWhenNumberOfInstancesExceedsMaxEntitiesProperty()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    JsonArray instancesArray = new JsonArray();
+    int numberOfInstances = MAX_ENTITIES + 1;
+
+    for (int i = 0; i < numberOfInstances; i++) {
+      instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("hrid", "hrid" + i));
+    }
+
+    JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID,
+      ResponseHandler.empty(createCompleted));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpURLConnection.HTTP_ENTITY_TOO_LARGE));
   }
 
   /**
