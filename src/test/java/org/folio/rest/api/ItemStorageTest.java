@@ -523,6 +523,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var itemId = UUID.randomUUID();
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var item = createItem(nod(itemId, holdingId));
+    itemMessageChecks.createdMessagePublished(itemId.toString());
 
     assertThat(update(item).getStatusCode(), is(204));
 

@@ -558,6 +558,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var id = UUID.randomUUID();
     createInstance(nod(id));
     var instance = getById(id).getJson();
+    instanceMessageChecks.createdMessagePublished(id.toString());
 
     assertThat(update(instance).getStatusCode(), is(204));
 

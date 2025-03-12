@@ -931,6 +931,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void shouldNotUpdateHoldingsIfNoChanges() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
     var holding = getById(holdingId).getJson();
+    holdingsMessageChecks.createdMessagePublished(holdingId);
 
     assertThat(update(holding).getStatusCode(), is(204));
 
