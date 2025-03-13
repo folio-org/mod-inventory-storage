@@ -1,13 +1,12 @@
-## v29.0.0 YYYY-mm-DD
+## v29.0.0 2025-03-13
 ### Breaking changes
 * Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
 * Remove deprecated batch API `/instance-storage/batch/instances`  ([MODINVSTOR-1182](https://folio-org.atlassian.net/browse/MODINVSTOR-1182))
-* Perform bulk in transaction to prevent Optimistic Locking ([MODINVSTOR-1369](https://folio-org.atlassian.net/browse/MODINVSTOR-1369))
 
 ### New APIs versions
 * Provides `inventory-hierarchy 0.6`
 * Provides `instance-storage v11.1`
-* Requires `API_NAME vX.Y`
+* Disables `instance-storage-batch`
 
 ### Features
 * Add new location property locationName that points to location name. ([MODINVSTOR-1362](https://folio-org.atlassian.net/browse/MODINVSTOR-1362))
@@ -24,6 +23,7 @@
 * Revert the publication period migration changes ([MODINVSTOR-1280](https://folio-org.atlassian.net/browse/MODINVSTOR-1280))
 * Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
 * Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
+* Perform bulk in transaction to prevent Optimistic Locking ([MODINVSTOR-1369](https://folio-org.atlassian.net/browse/MODINVSTOR-1369))
 * Prevent update of instance/item/holdings in case there are no changes ([MODINVSTOR-1363](https://folio-org.atlassian.net/browse/MODINVSTOR-1363))
 
 ### Bug fixes
@@ -34,9 +34,14 @@
 * Delete 3 unused instance database indexes ([MODINVSTOR-1277](https://folio-org.atlassian.net/browse/MODINVSTOR-1277))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
-* Add `LIB_NAME VERSION`
-* Remove `LIB_NAME`
+* Bump `raml-module-builder` from `35.3.0` to `35.4.0`
+* Bump `folio-kafka-wrapper` from `3.2.0` to `3.3.1`
+* Bump `folio-s3-client` from `2.2.0` to `2.3.0`
+* Bump `vertx` from `4.5.10` to `4.5.13`
+* Bump `caffeine` from `3.1.8` to `3.2.0`
+* Bump `lombok` from `1.18.34` to `1.18.36`
+* Bump `log4j` from `2.24.1` to `2.24.3`
+* Remove `google-code-gson`
 
 ---
 
