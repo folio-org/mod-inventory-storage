@@ -1,13 +1,22 @@
 package org.folio.utils;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 class ComparisonUtilsTest {
+
+  @Test
+  void testPrivateConstructor() throws NoSuchMethodException {
+    var constructor = ComparisonUtils.class.getDeclaredConstructor();
+    constructor.setAccessible(true);
+    assertThrows(InvocationTargetException.class, constructor::newInstance);
+  }
 
   @Test
   void testEqualsIgnoringMetadata_true() throws JsonProcessingException {
