@@ -709,7 +709,7 @@
     <url>https://github.com/folio-org/mod-inventory-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>release/v29.0</tag>
   </scm>
 
 </project>
