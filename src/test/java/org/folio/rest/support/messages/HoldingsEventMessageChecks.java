@@ -6,6 +6,9 @@ import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasProperty;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
@@ -37,6 +40,11 @@ public class HoldingsEventMessageChecks {
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
       eventMessageMatchers.hasCreateEventMessageFor(holdings, tenantIdExpected, okapiUrlExpected));
+  }
+
+  public void createdMessagePublished(String holdingsId) {
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
+      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void updatedMessagePublished(JsonObject oldHoldings,

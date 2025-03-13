@@ -24,6 +24,7 @@
 * Revert the publication period migration changes ([MODINVSTOR-1280](https://folio-org.atlassian.net/browse/MODINVSTOR-1280))
 * Optimize check for existing shadow Instance before creating it ([MODINVSTOR-1354](https://folio-org.atlassian.net/browse/MODINVSTOR-1354))
 * Add "deleted" field to Instance schema ([MODINVSTOR-1342](https://folio-org.atlassian.net/browse/MODINVSTOR-1342))
+* Prevent update of instance/item/holdings in case there are no changes ([MODINVSTOR-1363](https://folio-org.atlassian.net/browse/MODINVSTOR-1363))
 
 ### Bug fixes
 * Add item barcode right truncation search index ([MODINVSTOR-1292](https://folio-org.atlassian.net/browse/MODINVSTOR-1292))

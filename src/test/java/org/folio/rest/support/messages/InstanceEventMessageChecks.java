@@ -7,9 +7,11 @@ import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 
 import io.vertx.core.json.JsonObject;
@@ -41,6 +43,11 @@ public class InstanceEventMessageChecks {
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
       EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(instance));
+  }
+
+  public void createdMessagePublished(String instanceId) {
+    awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
+      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void createdMessagesPublished(List<JsonObject> instances) {

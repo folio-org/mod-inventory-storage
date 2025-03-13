@@ -14,6 +14,7 @@ import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -223,6 +224,15 @@ public class HoldingsService {
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
+    try {
+      var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
+      if (noChanges) {
+        return Future.succeededFuture()
+          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+      }
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
 
     if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
       newHoldings.setVersion(null);  // enforce optimistic locking

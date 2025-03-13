@@ -519,6 +519,23 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void shouldNotUpdateItemIfNoChanges() {
+    var itemId = UUID.randomUUID();
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var item = createItem(nod(itemId, holdingId));
+    itemMessageChecks.createdMessagePublished(itemId.toString());
+
+    assertThat(update(item).getStatusCode(), is(204));
+
+    var updatedItem = getById(itemId).getJson();
+    //assert that there was no update in database
+    assertThat(updatedItem.getString("_version"), is("1"));
+    var kafkaEvents = KAFKA_CONSUMER.getMessagesForItem(itemId.toString());
+    //assert that there's only CREATE kafka message, no updates
+    assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
   public void canCreateAnItemWithoutProvidingId() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 

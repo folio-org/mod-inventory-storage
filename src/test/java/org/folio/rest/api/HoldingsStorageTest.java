@@ -928,6 +928,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void shouldNotUpdateHoldingsIfNoChanges() {
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+    var holding = getById(holdingId).getJson();
+    holdingsMessageChecks.createdMessagePublished(holdingId);
+
+    assertThat(update(holding).getStatusCode(), is(204));
+
+    var updatedHolding = getById(holdingId).getJson();
+    //assert that there was no update in database
+    assertThat(updatedHolding.getString("_version"), is("1"));
+    var kafkaEvents = KAFKA_CONSUMER.getMessagesForHoldings(holdingId);
+    //assert that there's only CREATE kafka message, no updates
+    assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
   public void updatingHoldingsWithSourceIdShouldUpdate()
     throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
