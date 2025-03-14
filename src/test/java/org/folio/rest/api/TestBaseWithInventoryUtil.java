@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
@@ -212,6 +213,17 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static UUID createHolding(UUID instanceId,
                                       UUID holdingsPermanentLocationId,
                                       UUID holdingsTemporaryLocationId) {
+    return createHolding(instanceId, holdingsPermanentLocationId, holdingsTemporaryLocationId, null);
+  }
+
+  protected static UUID createHolding(UUID instanceId,
+                                      UUID holdingsPermanentLocationId,
+                                      UUID holdingsTemporaryLocationId,
+                                      List<String> electronicAccessUrls) {
+    var electronicAccessArray = electronicAccessUrls == null ? null
+      : electronicAccessUrls.stream()
+      .map(url -> new JsonObject().put("uri", url))
+      .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
     return holdingsClient.create(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
@@ -219,6 +231,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withTemporaryLocation(holdingsTemporaryLocationId)
+        .withElectronicAccess(electronicAccessArray)
         .create(),
       TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
   }
