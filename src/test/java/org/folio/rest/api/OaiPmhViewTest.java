@@ -17,9 +17,11 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
@@ -293,6 +295,31 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       allOf(
         hasCallNumber("item effective call number 1", "item effective call number 2", "item effective call number 3"),
         hasAggregatedNumberOfItems(3), hasEffectiveLocationInstitutionName("Primary Institution")));
+  }
+
+  @Test
+  public void canRequestOaiPmhViewWithOrderedElectronicAccess()
+    throws InterruptedException, TimeoutException, ExecutionException {
+    var instanceId = UUID.fromString(instancesClient.getAll().getFirst().getString("id"));
+    var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
+      "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");
+    var holdingsId = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null, electronicAccessUrls);
+    super.createItem(new ItemRequestBuilder().forHolding(holdingsId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withTemporaryLocation(THIRD_FLOOR_LOCATION_ID)
+      .withBarcode("item barcode 3")
+      .withMaterialType(bookMaterialTypeId));
+
+    // when
+    var instancesData = requestOaiPmhView(params).getFirst();
+    var electronicAccessJson = ((JsonArray) instancesData.getJsonObject("itemsandholdingsfields")
+      .getValue("items")).getJsonObject(2).getJsonArray("electronicAccess");
+    var expected = JsonArray.of(JsonObject.of("uri", "http://electronicAccess-c-entered-first", "name", null),
+      JsonObject.of("uri", "http://electronicAccess-z-entered-second", "name", null),
+      JsonObject.of("uri", "http://electronicAccess-a-entered-third", "name", null));
+
+    // then
+    assertEquals(expected, electronicAccessJson);
   }
 
   /**
