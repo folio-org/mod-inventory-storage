@@ -23,6 +23,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final JsonArray holdingsStatements;
   private final JsonArray holdingsStatementsForIndexes;
   private final JsonArray holdingsStatementsForSupplements;
+  private final JsonArray electronicAccess;
   private final List<UUID> statisticalCodeIds;
   private final List<String> administrativeNotes;
 
@@ -31,6 +32,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       null,
       null,
       UUID.randomUUID(),
+      null,
       null,
       null,
       null,
@@ -62,6 +64,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     JsonArray holdingsStatements,
     JsonArray holdingsStatementsForIndexes,
     JsonArray holdingsStatementsForSupplements,
+    JsonArray electronicAccess,
     List<UUID> statsticalCodeIds,
     UUID sourceId,
     List<String> administrativeNotes) {
@@ -80,6 +83,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.holdingsStatements = holdingsStatements;
     this.holdingsStatementsForIndexes = holdingsStatementsForIndexes;
     this.holdingsStatementsForSupplements = holdingsStatementsForSupplements;
+    this.electronicAccess = electronicAccess;
     this.statisticalCodeIds = statsticalCodeIds;
     this.sourceId = sourceId;
     this.administrativeNotes = administrativeNotes;
@@ -103,6 +107,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "holdingsStatements", holdingsStatements);
     put(request, "holdingsStatementsForIndexes", holdingsStatementsForIndexes);
     put(request, "holdingsStatementsForSupplements", holdingsStatementsForSupplements);
+    put(request, "electronicAccess", electronicAccess);
     put(request, "statisticalCodeIds", new JsonArray(statisticalCodeIds));
     put(request, "sourceId", sourceId);
     put(request, "administrativeNotes", new JsonArray(administrativeNotes));
@@ -126,6 +131,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -147,6 +153,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -168,6 +175,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -189,6 +197,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -210,6 +219,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -231,6 +241,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -252,6 +263,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -273,6 +285,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -294,6 +307,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -315,6 +329,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -336,6 +351,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -357,6 +373,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -378,6 +395,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -399,6 +417,29 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       holdingsStatementsForSupplements,
+      this.electronicAccess,
+      this.statisticalCodeIds,
+      this.sourceId,
+      this.administrativeNotes);
+  }
+
+  public HoldingRequestBuilder withElectronicAccess(JsonArray electronicAccess) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix,
+      this.callNumberTypeId,
+      this.hrid,
+      this.discoverySuppress,
+      this.holdingsStatements,
+      this.holdingsStatementsForIndexes,
+      this.holdingsStatementsForSupplements,
+      electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -420,6 +461,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
@@ -441,6 +483,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       holdingsRecordsSourceId,
       this.administrativeNotes);
@@ -462,6 +505,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
+      this.electronicAccess,
       this.statisticalCodeIds,
       this.sourceId,
       administrativeNotes);
