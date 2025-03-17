@@ -1,6 +1,14 @@
+## v29.0.2 2025-04-01
+### Bug fixes
+* Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
+
+---
+
 ## v29.0.1 2025-03-19
 ### Bug fixes
 * Update aspectj-maven-plugin release to 21
+
+---
 
 ## v29.0.0 2025-03-13
 ### Breaking changes

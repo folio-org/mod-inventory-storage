@@ -549,6 +549,26 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     assertEquals(2, items.getList().size());
   }
 
+  @Test
+  public void shouldRetrieveHierarchyWithOrderedElectronicAccess()
+    throws InterruptedException, TimeoutException, ExecutionException {
+    var instanceId = UUID.fromString(predefinedInstance.getString("id"));
+    var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
+      "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");
+    createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null, electronicAccessUrls);
+
+    // when
+    var instancesData = getInventoryHierarchyInstances(params).getFirst();
+    var electronicAccessJson = ((JsonArray) instancesData.getValue("holdings")).getJsonObject(0)
+      .getJsonArray("electronicAccess");
+    var expected = JsonArray.of(JsonObject.of("uri", "http://electronicAccess-c-entered-first"),
+      JsonObject.of("uri", "http://electronicAccess-z-entered-second"),
+      JsonObject.of("uri", "http://electronicAccess-a-entered-third"));
+
+    // then
+    assertEquals(expected, electronicAccessJson);
+  }
+
   void clearAuditTables() {
     CompletableFuture<Row> future = new CompletableFuture<>();
     final String sql = Stream.of("audit_instance", "audit_holdings_record", "audit_item")
