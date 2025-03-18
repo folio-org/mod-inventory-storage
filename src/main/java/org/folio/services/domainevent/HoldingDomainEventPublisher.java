@@ -4,6 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.HOLDINGS_RECORD;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -26,7 +27,7 @@ public class HoldingDomainEventPublisher
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         HOLDINGS_RECORD.fullTopicName(tenantId(okapiHeaders))));
     holdingsReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)), getKafkaProducerMaxRequestSize());
   }
 
   public Future<Void> publishReindexHoldings(String key, List<Map<String, Object>> holdings) {

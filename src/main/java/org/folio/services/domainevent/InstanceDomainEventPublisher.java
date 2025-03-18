@@ -5,6 +5,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -20,7 +21,6 @@ import org.folio.rest.jaxrs.model.PublishReindexRecords;
 
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
 
-  private static final String MAX_REQUEST_SIZE = "KAFKA_REINDEX_PRODUCER_MAX_REQUEST_SIZE_BYTES";
   private static final Logger log = getLogger(InstanceDomainEventPublisher.class);
 
   private final CommonDomainEventPublisher<Map<String, Object>> instanceReindexPublisher;
@@ -30,7 +30,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
       new CommonDomainEventPublisher<>(context, okapiHeaders,
         INSTANCE.fullTopicName(tenantId(okapiHeaders))));
     instanceReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)), getProducerMaxRequestSize());
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)), getKafkaProducerMaxRequestSize());
   }
 
   public Future<Void> publishReindexInstances(String key, List<Map<String, Object>> instances) {
@@ -69,12 +69,5 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
   @Override
   protected String getId(Instance instance) {
     return instance.getId();
-  }
-
-  private int getProducerMaxRequestSize() {
-    return Integer.parseInt(StringUtils.firstNonBlank(
-      System.getenv(MAX_REQUEST_SIZE),
-      System.getProperty(MAX_REQUEST_SIZE),
-      "10485760")); // 10MB
   }
 }
