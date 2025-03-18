@@ -37,6 +37,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -2700,20 +2701,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .withStatisticalCodeIds(List.of(nonExistentStatisticalCodeId))
       .create();
 
-    final String itemId = itemToCreate.getString("id");
-
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
     String expectedMessage = String.format(
-      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
-      nonExistentStatisticalCodeId,
-      itemId
+      "Cannot set item.statistical_code_id = %s because it does not exist in statistical_code.id.",
+      nonExistentStatisticalCodeId
     );
 
     assertThat(createdItem, hasValidationError(
       expectedMessage,
-      "item",
-      itemId
+      "item.statistical_code_id",
+      nonExistentStatisticalCodeId.toString()
     ));
   }
 
@@ -2784,20 +2782,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       ))
       .create();
 
-    final String itemId = itemToCreate.getString("id");
-
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
     String expectedMessage = String.format(
-      "statistical code doesn't exist: %s foreign key violation in statisticalCodeIds array of item with id=%s",
-      nonExistentStatisticalCodeId,
-      itemId
+      "Cannot set item.statistical_code_id = %s because it does not exist in statistical_code.id.",
+      nonExistentStatisticalCodeId
     );
 
     assertThat(createdItem, hasValidationError(
       expectedMessage,
-      "item",
-      itemId
+      "item.statistical_code_id",
+      nonExistentStatisticalCodeId.toString()
     ));
   }
 
@@ -2859,12 +2854,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.text(completed));
     Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
 
+    String expectedMessage = String.format(
+      "Cannot set item statistical_code_id = %s because it does not exist in statistical_code.id.",
+      nonExistentStatisticalCodeId
+    );
+
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    assertThat(response.getBody(), allOf(
-      containsString("statistical code doesn't exist:"),
-      containsString(nonExistentStatisticalCodeId.toString()),
-      containsString("foreign key violation in statisticalCodeIds array of item"),
-      containsString(itemId)));
+    assertThat(response.getBody(), equalTo(expectedMessage));
   }
 
   static JsonObject nod(UUID itemId, UUID holdingsRecordId) {

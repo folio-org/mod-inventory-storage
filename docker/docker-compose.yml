@@ -31,7 +31,7 @@ services:
       - mod-inventory-storage-local
 
   kafka:
-    container_name: kafka_mod-search
+    container_name: kafka_mod-inventory-storage
     image: apache/kafka-native
     networks:
       - mod-inventory-storage-local
@@ -54,7 +54,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   kafka-ui:
-    container_name: kafka-ui_mod-search
+    container_name: kafka-ui_mod-inventory-storage
     image: ghcr.io/kafbat/kafka-ui:latest
     networks:
       - mod-inventory-storage-local
