@@ -121,7 +121,7 @@ for any topic are 604800000 milliseconds (or 1 week) and 1048576 bytes (or 1 MB)
 These are the defined topic properties for `message retention` and `maximum message size` for `reindex-records` topic
 
 * `KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION` Default value - `86400000` (1 day)
-* `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE` Default value - `1048576` (1 MB)
+* `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE` Default value - `10485760` (10 MB)
 
 in case, any of these topic properties are changed for `reindex-records` the topic needs to be recreated and module needs to be reinstalled.
 
