@@ -1,3 +1,7 @@
+## v28.0.9 2025-03-28
+### Features
+* Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
+
 ## v28.0.8 2025-02-03
 * Update discoverySuppress query to use index ([MODINVSTOR-1357](https://folio-org.atlassian.net/browse/MODINVSTOR-1357))
 
