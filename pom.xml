@@ -3,7 +3,7 @@
 
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>29.0.1</version>
+  <version>29.0.2-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -709,7 +709,7 @@
     <url>https://github.com/folio-org/mod-inventory-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
-    <tag>v29.0.1</tag>
+    <tag>release/v29.0</tag>
   </scm>
 
 </project>
