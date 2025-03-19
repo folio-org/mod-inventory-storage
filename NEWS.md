@@ -1,3 +1,7 @@
+## v29.0.1 2025-03-19
+### Bug fixes
+* Update aspectj-maven-plugin release to 21
+
 ## v29.0.0 2025-03-13
 ### Breaking changes
 * Upgrade to Java 21 ([MODINVSTOR-1364](https://folio-org.atlassian.net/browse/MODINVSTOR-1364))
