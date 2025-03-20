@@ -21,14 +21,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.XOkapiHeaders;
 
 public class HttpClient {
   private static final Logger LOG = LogManager.getLogger();
 
-  private static final String TENANT_HEADER = "X-Okapi-Tenant";
-  private static final String X_OKAPI_URL = "X-Okapi-Url";
-  private static final String X_OKAPI_URL_TO = "X-Okapi-Url-to";
-  private static final String TOKEN_HEADER = "X-Okapi-Token";
   private static final String TEST_TOKEN = "test-token";
 
   private final WebClient client;
@@ -250,13 +247,13 @@ public class HttpClient {
 
   private void addDefaultHeaders(HttpRequest<Buffer> request, URL url, String tenantId) {
     if (isNotBlank(tenantId)) {
-      request.putHeader(TENANT_HEADER, tenantId);
-      request.putHeader(TOKEN_HEADER, TEST_TOKEN);
+      request.putHeader(XOkapiHeaders.TENANT, tenantId);
+      request.putHeader(XOkapiHeaders.TOKEN, TEST_TOKEN);
     }
     if (url != null) {
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-      request.putHeader(X_OKAPI_URL, baseUrl);
-      request.putHeader(X_OKAPI_URL_TO, baseUrl);
+      request.putHeader(XOkapiHeaders.URL, baseUrl);
+      request.putHeader(XOkapiHeaders.URL_TO, baseUrl);
     }
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);
   }

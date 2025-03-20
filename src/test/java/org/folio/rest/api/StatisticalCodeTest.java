@@ -14,10 +14,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -26,7 +29,9 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
@@ -102,8 +107,10 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
-        + "is still referenced from table \"instance\"."));
+      is("update or delete on table \"statistical_code\" violates foreign key constraint "
+         + "\"fk_statistical_code_id\" on table \"instance_statistical_code\": "
+         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced from "
+         + "table \"instance_statistical_code\"."));
   }
 
   @Test
@@ -129,9 +136,10 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withStatisticalCodeIds(codes);
+      .withStatisticalCodeIds(codes)
+      .create();
 
-    holdingsClient.create(holdingToCreate);
+    holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -142,8 +150,10 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
-        + "is still referenced from table \"holdings record\"."));
+      is("update or delete on table \"statistical_code\" violates foreign key constraint "
+         + "\"fk_statistical_code_id\" on table \"holdings_record_statistical_code\": "
+         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
+         + "is still referenced from table \"holdings_record_statistical_code\"."));
   }
 
   @Test
@@ -165,9 +175,10 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
 
-    holdingsClient.create(holdingToCreate);
+    holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     UUID itemId = UUID.randomUUID();
 
@@ -192,8 +203,10 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("foreign_key_violation: Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
-        + "is still referenced from table \"item\"."));
+      is("update or delete on table \"statistical_code\" violates foreign key constraint "
+         + "\"fk_statistical_code_id\" on table \"item_statistical_code\": "
+         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced "
+         + "from table \"item_statistical_code\"."));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {
