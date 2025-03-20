@@ -51,7 +51,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   );
 
   private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_MESSAGE_MAX_SIZE_MAP = Map.of(
-    REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE", "1048576") // 1 MB
+    REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE", "10485760") // 10 MB
   );
 
   private final String topic;

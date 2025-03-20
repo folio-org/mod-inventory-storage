@@ -7,7 +7,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
