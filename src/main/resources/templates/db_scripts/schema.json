@@ -1258,6 +1258,11 @@
       "run": "after",
       "snippetPath": "statistical-code/create-populate-triggers.sql",
       "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/createDiscoverySuppressSourceIndex.sql",
+      "fromModuleVersion": "29.1.0"
     }
   ]
 }
