@@ -15,7 +15,7 @@
     <raml-module-builder-version>35.4.0</raml-module-builder-version> <!-- also update vertx.version -->
     <vertx.version>4.5.13</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
-    <aspectj.version>1.9.22.1</aspectj.version>
+    <aspectj.version>1.9.23</aspectj.version>
     <folio-kafka-wrapper.version>3.4.0-SNAPSHOT</folio-kafka-wrapper.version>
     <caffeine.version>3.2.0</caffeine.version>
     <lombok.version>1.18.36</lombok.version>
@@ -25,7 +25,7 @@
     <folio-s3-client.version>2.4.0-SNAPSHOT</folio-s3-client.version>
 
     <okapi-testing.version>6.2.1</okapi-testing.version>
-    <junit.version>5.12.0</junit.version>
+    <junit.version>5.12.1</junit.version>
     <testcontainers.version>1.20.6</testcontainers.version>
     <joda-time.version>2.13.1</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
