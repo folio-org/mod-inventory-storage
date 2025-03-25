@@ -7,6 +7,7 @@ import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -39,7 +40,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
     holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     itemReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)));
+      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)), getKafkaProducerMaxRequestSize());
   }
 
   public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings,
