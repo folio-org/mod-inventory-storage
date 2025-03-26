@@ -1887,7 +1887,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canFetchItemsViaPostAPI() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canFetchItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     List<String> itemIdz = new ArrayList<>();
