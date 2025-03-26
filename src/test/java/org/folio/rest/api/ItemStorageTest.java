@@ -53,6 +53,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -70,6 +71,7 @@ import java.util.stream.Stream;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -78,6 +80,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -1881,6 +1884,38 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(secondPageItems.size(), is(2));
     assertThat(secondPage.getInteger("totalRecords"), is(5));
+  }
+
+  @Test
+  public void canFetchItemsViaPostAPI() throws InterruptedException, ExecutionException, TimeoutException {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    List<String> itemIdz = new ArrayList<>();
+    int numOfItemsToCreate = 200;
+    for (int i = 1; i <= numOfItemsToCreate; i++) {
+      JsonObject itemCreateRequest = createItemRequest(UUID.randomUUID(), holdingsRecordId,
+              RandomStringUtils.insecure().next(10));
+      String itemId = createItem(itemCreateRequest).getString("id");
+      itemIdz.add(itemId);
+    }
+
+    String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIdz) + ")";
+    RetrieveDto retrieveDto = new RetrieveDto();
+    retrieveDto.setQuery(idzWithOrDelimiter);
+    retrieveDto.setLimit(2000);
+
+    CompletableFuture<Response> responseHandler = new CompletableFuture<>();
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(responseHandler));
+
+    Response response = responseHandler.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    JsonObject responseJson = response.getJson();
+    JsonArray responseItems = responseJson.getJsonArray("items");
+
+    assertThat(responseItems.size(), is(numOfItemsToCreate));
+    assertThat(responseJson.getInteger("totalRecords"), is(numOfItemsToCreate));
   }
 
   @Test
