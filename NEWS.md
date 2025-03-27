@@ -3,12 +3,12 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
-* Requires `API_NAME vX.Y`
+* Provides `item-storage 10.2`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
 * Create index for discoverySuppress and source fields to improve performance of queries which include mentioned fields ([MODINVSTOR-1377](https://folio-org.atlassian.net/browse/MODINVSTOR-1377))
+* Introduce new post retrieve api to fetch inventory item ([MODINVSTOR-1381](https://folio-org.atlassian.net/browse/MODINVSTOR-1381))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

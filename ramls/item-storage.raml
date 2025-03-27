@@ -12,6 +12,7 @@ types:
   item: !include item.json
   items: !include items.json
   errors: !include raml-util/schemas/errors.schema
+  retrieveDto: !include retrieveEntitiesDto.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -59,3 +60,14 @@ resourceTypes:
           exampleItem: !include examples/item_get.json
           schema: item
       get:
+    /retrieve:
+      post:
+        is: [validate]
+        body:
+          application/json:
+            type: retrieveDto
+            example:
+              strict: false
+              value: !include examples/retrieveEntitiesDto.json
+        description: |
+          Fetch inventory items collection by POST request
