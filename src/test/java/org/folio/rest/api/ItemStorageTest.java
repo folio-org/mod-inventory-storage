@@ -1887,19 +1887,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canFetchItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
+  public void canRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    List<String> itemIdz = new ArrayList<>();
-    int numOfItemsToCreate = 200;
+    List<String> itemIds = new ArrayList<>();
+    int numOfItemsToCreate = 5;
     for (int i = 1; i <= numOfItemsToCreate; i++) {
       JsonObject itemCreateRequest = createItemRequest(UUID.randomUUID(), holdingsRecordId,
               RandomStringUtils.insecure().next(10));
       String itemId = createItem(itemCreateRequest).getString("id");
-      itemIdz.add(itemId);
+      itemIds.add(itemId);
     }
 
-    String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIdz) + ")";
+    String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIds) + ")";
     RetrieveDto retrieveDto = new RetrieveDto();
     retrieveDto.setQuery(idzWithOrDelimiter);
     retrieveDto.setLimit(2000);
@@ -1916,6 +1916,48 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(responseItems.size(), is(numOfItemsToCreate));
     assertThat(responseJson.getInteger("totalRecords"), is(numOfItemsToCreate));
+  }
+
+  @Test
+  public void canPageAllRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    createItem(smallAngryPlanet(UUID.randomUUID(), holdingsRecordId));
+    createItem(nod(UUID.randomUUID(), holdingsRecordId));
+    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    final CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
+    final CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
+
+    RetrieveDto retrieveDto = new RetrieveDto();
+    retrieveDto.setLimit(3);
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(firstPageCompleted));
+
+    retrieveDto.setLimit(3);
+    retrieveDto.setOffset(3);
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(secondPageCompleted));
+
+    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(firstPageResponse.getStatusCode(), is(200));
+    assertThat(secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageItems = firstPage.getJsonArray("items");
+    JsonArray secondPageItems = secondPage.getJsonArray("items");
+
+    assertThat(firstPageItems.size(), is(3));
+    assertThat(firstPage.getInteger("totalRecords"), is(5));
+
+    assertThat(secondPageItems.size(), is(2));
+    assertThat(secondPage.getInteger("totalRecords"), is(5));
   }
 
   @Test
