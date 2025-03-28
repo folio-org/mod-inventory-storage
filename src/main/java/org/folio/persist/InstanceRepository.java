@@ -236,15 +236,19 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
   public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,
                                                                boolean notConsortiumRecords) {
-    var sql = new StringBuilder("SELECT i.jsonb || jsonb_build_object('isBoundWith', EXISTS(SELECT 1 FROM ");
+    var sql = new StringBuilder("WITH bound_instances AS (");
+    sql.append("SELECT DISTINCT hr.instanceId FROM ");
     sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
     sql.append(" as bw JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
-    sql.append(" as it ON it.id = bw.itemid JOIN ");
     sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
-    sql.append(" as hr ON hr.id = bw.holdingsrecordid WHERE hr.instanceId = i.id LIMIT 1)) FROM ");
+    sql.append(" as hr ON hr.id = bw.holdingsrecordid");
+    sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
+    sql.append(") ");
+    sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
     sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
-    sql.append(" i WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
+    sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
+    sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
+
     if (notConsortiumRecords) {
       sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
     }
