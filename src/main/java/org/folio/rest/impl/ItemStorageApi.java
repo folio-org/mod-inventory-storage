@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
@@ -31,6 +32,20 @@ public class ItemStorageApi implements ItemStorage {
 
     PgUtil.streamGet(ITEM_TABLE, Item.class, query, offset, limit, null, "items",
       routingContext, okapiHeaders, vertxContext);
+
+  }
+
+  @Validate
+  @Override
+  public void postItemStorageItemsRetrieve(RetrieveDto entity, RoutingContext routingContext,
+                                           Map<String, String> okapiHeaders,
+                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    String query = entity.getQuery();
+    Integer offset = entity.getOffset();
+    Integer limit = entity.getLimit();
+
+    PgUtil.streamGet(ITEM_TABLE, Item.class, query, offset, limit, null, "items",
+            routingContext, okapiHeaders, vertxContext);
 
   }
 

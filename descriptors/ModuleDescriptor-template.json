@@ -24,7 +24,7 @@
     },
     {
       "id": "item-storage",
-      "version": "10.1",
+      "version": "10.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -34,6 +34,10 @@
           "methods": ["GET"],
           "pathPattern": "/item-storage/items/{id}",
           "permissionsRequired": ["inventory-storage.items.item.get"]
+        }, {
+          "methods": ["POST"],
+          "pathPattern": "/item-storage/items/retrieve",
+          "permissionsRequired": ["inventory-storage.items.retrieve.collection.post"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/item-storage/items",
@@ -1456,6 +1460,11 @@
       "description": "get item collection from storage"
     },
     {
+      "permissionName": "inventory-storage.items.retrieve.collection.post",
+      "displayName": "inventory storage - retrieve item collection via post method",
+      "description": "retrieve item collection from storage"
+    },
+    {
       "permissionName": "inventory-storage.items.collection.delete",
       "displayName": "inventory storage - delete entire item collection",
       "description": "delete entire item collection from storage"
@@ -2619,6 +2628,7 @@
         "inventory-storage-dereferenced.items.item.get",
         "inventory-storage-dereferenced.items.collection.get",
         "inventory-storage.items.collection.get",
+        "inventory-storage.items.retrieve.collection.post",
         "inventory-storage.items.item.get",
         "inventory-storage.items.item.post",
         "inventory-storage.items.item.put",

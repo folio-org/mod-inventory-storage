@@ -54,6 +54,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -71,6 +72,7 @@ import java.util.stream.Stream;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -79,6 +81,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
 import org.folio.rest.jaxrs.model.LastCheckIn;
 import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.AdditionalHttpStatusCodes;
 import org.folio.rest.support.IndividualResource;
@@ -1990,6 +1993,80 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     getClient().get(itemsStorageUrl("") + "?limit=3&offset=3", TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
+
+    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(firstPageResponse.getStatusCode(), is(200));
+    assertThat(secondPageResponse.getStatusCode(), is(200));
+
+    JsonObject firstPage = firstPageResponse.getJson();
+    JsonObject secondPage = secondPageResponse.getJson();
+
+    JsonArray firstPageItems = firstPage.getJsonArray("items");
+    JsonArray secondPageItems = secondPage.getJsonArray("items");
+
+    assertThat(firstPageItems.size(), is(3));
+    assertThat(firstPage.getInteger("totalRecords"), is(5));
+
+    assertThat(secondPageItems.size(), is(2));
+    assertThat(secondPage.getInteger("totalRecords"), is(5));
+  }
+
+  @Test
+  public void canRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    List<String> itemIds = new ArrayList<>();
+    int numOfItemsToCreate = 5;
+    for (int i = 1; i <= numOfItemsToCreate; i++) {
+      JsonObject itemCreateRequest = createItemRequest(UUID.randomUUID(), holdingsRecordId,
+              RandomStringUtils.insecure().next(10));
+      String itemId = createItem(itemCreateRequest).getString("id");
+      itemIds.add(itemId);
+    }
+
+    String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIds) + ")";
+    RetrieveDto retrieveDto = new RetrieveDto();
+    retrieveDto.setQuery(idzWithOrDelimiter);
+    retrieveDto.setLimit(2000);
+
+    CompletableFuture<Response> responseHandler = new CompletableFuture<>();
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(responseHandler));
+
+    Response response = responseHandler.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    JsonObject responseJson = response.getJson();
+    JsonArray responseItems = responseJson.getJsonArray("items");
+
+    assertThat(responseItems.size(), is(numOfItemsToCreate));
+    assertThat(responseJson.getInteger("totalRecords"), is(numOfItemsToCreate));
+  }
+
+  @Test
+  public void canPageAllRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    createItem(smallAngryPlanet(UUID.randomUUID(), holdingsRecordId));
+    createItem(nod(UUID.randomUUID(), holdingsRecordId));
+    createItem(uprooted(UUID.randomUUID(), holdingsRecordId));
+    createItem(temeraire(UUID.randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(UUID.randomUUID(), holdingsRecordId));
+
+    final CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
+    final CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
+
+    RetrieveDto retrieveDto = new RetrieveDto();
+    retrieveDto.setLimit(3);
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(firstPageCompleted));
+
+    retrieveDto.setLimit(3);
+    retrieveDto.setOffset(3);
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
+            ResponseHandler.json(secondPageCompleted));
 
     Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
