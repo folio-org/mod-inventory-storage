@@ -5,6 +5,7 @@ import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.persist.PostgresClient;
@@ -16,6 +17,24 @@ public class MaterializedViewManager {
   private final String refreshLockTimeout;
   private final String metadataTableName;
 
+  // Cache-related fields
+  private static class CacheEntry {
+    final boolean shouldUseView;
+    final OffsetDateTime timestamp;
+
+    CacheEntry(boolean shouldUseView) {
+      this.shouldUseView = shouldUseView;
+      this.timestamp = OffsetDateTime.now();
+    }
+
+    boolean isValid(Duration ttl) {
+      return timestamp.plus(ttl).isAfter(OffsetDateTime.now());
+    }
+  }
+
+  private final AtomicReference<CacheEntry> cache = new AtomicReference<>(null);
+  private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+
   public MaterializedViewManager(String matViewName, long refreshIntervalMs) {
     this.matViewName = matViewName;
     this.refreshIntervalMs = refreshIntervalMs;
@@ -25,8 +44,16 @@ public class MaterializedViewManager {
 
   /**
    * Non-blocking check if the materialized view should be used.
+   * Uses cache if available and valid.
    */
   public Future<Boolean> shouldUseView(PostgresClient postgresClient) {
+    // Check if cache is valid
+    CacheEntry currentCache = cache.get();
+    if (currentCache != null && currentCache.isValid(CACHE_TTL)) {
+      return Future.succeededFuture(currentCache.shouldUseView);
+    }
+
+    // Cache is invalid, query the database
     return postgresClient.selectSingle(
         "SELECT last_refresh, is_refreshing FROM "
           + postgresClient.getSchemaName() + "."
@@ -35,30 +62,44 @@ public class MaterializedViewManager {
         Tuple.of(matViewName)
       )
       .map(row -> {
+        boolean result;
+
         if (row == null) {
           // If no metadata, don't use mat view
-          return false;
+          result = false;
+        } else {
+          OffsetDateTime lastRefresh = row.getOffsetDateTime("last_refresh");
+          boolean isRefreshing = row.getBoolean("is_refreshing");
+
+          // If it's refreshing or needs a refresh, don't use it
+          boolean needsRefresh = lastRefresh == null
+            || lastRefresh.isBefore(OffsetDateTime.now().minus(Duration.ofMillis(refreshIntervalMs)));
+
+          if (needsRefresh && !isRefreshing) {
+            // Trigger refresh asynchronously
+            triggerRefreshIfNeeded(postgresClient);
+          }
+
+          // Use view only if it's fresh and not currently refreshing
+          result = !isRefreshing && !needsRefresh;
         }
 
-        OffsetDateTime lastRefresh = row.getOffsetDateTime("last_refresh");
-        boolean isRefreshing = row.getBoolean("is_refreshing");
+        // Update cache with new result
+        cache.set(new CacheEntry(result));
 
-        // If it's refreshing or needs a refresh, don't use it
-        boolean needsRefresh = lastRefresh == null
-          || lastRefresh.isBefore(OffsetDateTime.now().minus(Duration.ofMillis(refreshIntervalMs)));
-
-        if (needsRefresh && !isRefreshing) {
-          // Trigger refresh asynchronously
-          triggerRefreshIfNeeded(postgresClient);
-        }
-
-        // Use view only if it's fresh and not currently refreshing
-        return !isRefreshing && !needsRefresh;
+        return result;
       })
       .recover(err -> {
         logger.error("Error checking materialized view status: " + err.getMessage(), err);
-        return Future.succeededFuture(false); // On error, don't use view
+        return Future.succeededFuture(false); // On error, don't use view and don't cache
       });
+  }
+
+  /**
+   * Invalidates the current cache.
+   */
+  public void invalidateCache() {
+    cache.set(null);
   }
 
   /**
@@ -105,7 +146,10 @@ public class MaterializedViewManager {
               + "    refresh_instance_id = NULL "
               + "WHERE view_name = $1 AND refresh_instance_id = $2",
             Tuple.of(matViewName, instanceId)
-          );
+          ).onSuccess(v -> {
+            // Invalidate cache when refresh completes successfully
+            invalidateCache();
+          });
         } else {
           logger.error("Failed to refresh materialized view: " + ar.cause().getMessage(), ar.cause());
           postgresClient.execute(
