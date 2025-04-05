@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -42,6 +43,9 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
   private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
   private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
+  private static final String BOUND_INSTANCES_MAT_VIEW = "bound_instances_mv";
+  private static final MaterializedViewManager BOUND_INSTANCES_MAT_VIEW_MGR =
+    new MaterializedViewManager(BOUND_INSTANCES_MAT_VIEW, TimeUnit.MINUTES.toMillis(15));
 
 
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
@@ -236,31 +240,38 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
   public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,
                                                                boolean notConsortiumRecords) {
-    var sql = new StringBuilder("WITH bound_instances AS (");
-    sql.append("SELECT DISTINCT hr.instanceId FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
-    sql.append(" as bw JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
-    sql.append(" as hr ON hr.id = bw.holdingsrecordid");
-    sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
-    sql.append(") ");
-    sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
-    sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
-    sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
+    return BOUND_INSTANCES_MAT_VIEW_MGR.shouldUseView(postgresClient)
+      .compose(useView -> {
+        var sql = new StringBuilder("WITH bound_instances AS (");
 
-    if (notConsortiumRecords) {
-      sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
-    }
-    sql.append(";");
+        if (useView) {
+          sql.append("SELECT instanceId FROM " + postgresClientFuturized.getFullTableName(BOUND_INSTANCES_MAT_VIEW));
+        } else {
+          sql.append("SELECT DISTINCT hr.instanceId FROM ");
+          sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
+          sql.append(" as bw JOIN ");
+          sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+          sql.append(" as hr ON hr.id = bw.holdingsrecordid");
+          sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
+        }
 
-    return postgresClient.select(sql.toString()).map(rows -> {
-      var resultList = new LinkedList<Map<String, Object>>();
-      for (var row : rows) {
-        resultList.add(row.getJsonObject(0).getMap());
-      }
-      return resultList;
-    });
+        sql.append(") ");
+        sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
+        sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
+        sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
+        sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
+        if (notConsortiumRecords) {
+          sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
+        }
+        sql.append(";");
+        return postgresClient.select(sql.toString()).map(rows -> {
+          var resultList = new LinkedList<Map<String, Object>>();
+          for (var row : rows) {
+            resultList.add(row.getJsonObject(0).getMap());
+          }
+          return resultList;
+        });
+      });
   }
 
   public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {

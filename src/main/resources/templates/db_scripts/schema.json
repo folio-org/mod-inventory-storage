@@ -1252,6 +1252,11 @@
       "run": "after",
       "snippetPath": "populateDiscoverySuppressIfNotSet.sql",
       "fromModuleVersion": "28.0.5"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createMatViewManager.sql",
+      "fromModuleVersion": "28.0.8"
     }
   ]
 }
