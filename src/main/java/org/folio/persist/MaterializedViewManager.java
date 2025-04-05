@@ -12,28 +12,14 @@ import org.folio.rest.persist.PostgresClient;
 
 public class MaterializedViewManager {
   private static final Logger logger = LogManager.getLogger();
+  private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+
   private final String matViewName;
   private final long refreshIntervalMs;
   private final String refreshLockTimeout;
   private final String metadataTableName;
 
-  // Cache-related fields
-  private static class CacheEntry {
-    final boolean shouldUseView;
-    final OffsetDateTime timestamp;
-
-    CacheEntry(boolean shouldUseView) {
-      this.shouldUseView = shouldUseView;
-      this.timestamp = OffsetDateTime.now();
-    }
-
-    boolean isValid(Duration ttl) {
-      return timestamp.plus(ttl).isAfter(OffsetDateTime.now());
-    }
-  }
-
   private final AtomicReference<CacheEntry> cache = new AtomicReference<>(null);
-  private static final Duration CACHE_TTL = Duration.ofMinutes(5);
 
   public MaterializedViewManager(String matViewName, long refreshIntervalMs) {
     this.matViewName = matViewName;
@@ -161,5 +147,20 @@ public class MaterializedViewManager {
         }
       })
       .mapEmpty();
+  }
+
+  // Cache-related fields
+  private static class CacheEntry {
+    final boolean shouldUseView;
+    final OffsetDateTime timestamp;
+
+    CacheEntry(boolean shouldUseView) {
+      this.shouldUseView = shouldUseView;
+      this.timestamp = OffsetDateTime.now();
+    }
+
+    boolean isValid(Duration ttl) {
+      return timestamp.plus(ttl).isAfter(OffsetDateTime.now());
+    }
   }
 }
