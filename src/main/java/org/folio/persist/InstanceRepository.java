@@ -246,16 +246,15 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
         if (useView) {
           sql.append("SELECT instanceId FROM " + postgresClientFuturized.getFullTableName(BOUND_INSTANCES_MAT_VIEW));
-          sql.append(" as hr ");
         } else {
           sql.append("SELECT DISTINCT hr.instanceId FROM ");
           sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
           sql.append(" as bw JOIN ");
           sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
           sql.append(" as hr ON hr.id = bw.holdingsrecordid");
+          sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
         }
 
-        sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
         sql.append(") ");
         sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
         sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));

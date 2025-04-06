@@ -7,8 +7,6 @@ CREATE TABLE IF NOT EXISTS ${myuniversity}_${mymodule}.mat_view_metadata
   refresh_instance_id TEXT
 );
 
-grant all privileges on ${myuniversity}_${mymodule}.mat_view_metadata to ${myuniversity}_${mymodule};
-
 CREATE MATERIALIZED VIEW ${myuniversity}_${mymodule}.bound_instances_mv AS
 SELECT DISTINCT hr.instanceId
 FROM ${myuniversity}_${mymodule}.bound_with_part bw
