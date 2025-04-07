@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.BulkUpsertResponse;
 import org.folio.rest.support.BulkProcessingErrorFileWriter;
@@ -122,10 +123,12 @@ public abstract class AbstractEntityS3Service<T, R> {
                                            T entity, Throwable e) {
     R entityToWrite = provideEntityRepresentationForWritingErrors(entity);
     String entityId = extractEntityId(entityToWrite);
-    log.warn("handleUpsertFailure:: Failed to process single entity upsert operation, entityId: '{}'",
-      entityId, e);
+    var errorDetails = (e instanceof ValidationException validationException) ? validationException.getErrors().getErrors().getFirst().getMessage() :
+      e.getMessage();
+    log.warn("handleUpsertFailure:: Failed to process single entity upsert operation, entityId: '{}', error: {}",
+      entityId, errorDetails);
     errorsCounter.incrementAndGet();
-    return errorsWriter.write(entityToWrite, this::extractEntityId, e);
+    return errorsWriter.write(entityToWrite, this::extractEntityId, errorDetails);
   }
 
   private Future<Void> uploadErrorsFiles(BulkProcessingContext bulkContext) {

@@ -16,7 +16,7 @@ import org.folio.services.BulkProcessingContext;
  * The class is responsible for writing entities and their associated processing errors to separate files
  * during a bulk processing operation. The failed entities and processing errors are written to separate files,
  * which are specified through the {@link BulkProcessingContext}.
- * Before using the {@link #write(Object, Function, Throwable)} method, the writer must be initialized
+ * Before using the {@link #write(Object, Function, String)} method, the writer must be initialized
  * by calling {@link #initialize()}.
  * When writing operations are completed, the {@link #close()} method should be called
  * to flush and close files properly.
@@ -82,12 +82,12 @@ public class BulkProcessingErrorFileWriter {
    * @param <T>               - the type of the entity to be written
    * @param entity            - the entity to be written to the failed entities file
    * @param entityIdExtractor - {@link Function} that extracts the ID from the specified {@code entity}
-   * @param throwable         - the {@link Throwable} containing the error information to be written to the errors file
+   * @param errorMsg         - the {@link String} containing the error information to be written to the errors file
    * @return {@link Future} representing the completion of write operations to file with failed entities
    *   and to file containing their associated errors information
    * @throws IllegalStateException if the writer is not initialized
    */
-  public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, Throwable throwable) {
+  public <T> Future<Void> write(T entity, Function<T, String> entityIdExtractor, String errorMsg) {
     if (!isInitialized()) {
       throw new IllegalStateException(WRITER_IS_NOT_INITIALIZED_MSG);
     }
@@ -95,7 +95,7 @@ public class BulkProcessingErrorFileWriter {
     Future<Void> entitiesWriteFuture = errorEntitiesAsyncFile.write(
       Buffer.buffer(Json.encode(entity) + System.lineSeparator()));
     Future<Void> errorsWriteFuture = errorsAsyncFile.write(
-      Buffer.buffer(entityIdExtractor.apply(entity) + ", " + throwable.getMessage() + System.lineSeparator()));
+      Buffer.buffer(entityIdExtractor.apply(entity) + ", " + errorMsg + System.lineSeparator()));
 
     return Future.join(entitiesWriteFuture, errorsWriteFuture)
       .onFailure(e -> log.warn("write:: Failed to write bulk processing errors to the files: '{}' and '{}'",
