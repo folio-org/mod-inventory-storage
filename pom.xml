@@ -27,7 +27,7 @@
     <okapi-testing.version>6.2.1</okapi-testing.version>
     <junit.version>5.12.1</junit.version>
     <testcontainers.version>1.20.6</testcontainers.version>
-    <joda-time.version>2.13.1</joda-time.version>
+    <joda-time.version>2.14.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
     <mockito.version>5.2.0</mockito.version>
@@ -36,7 +36,7 @@
     <rest-assured.version>5.5.1</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <assertj.version>3.27.3</assertj.version>
-    <system-stubs-junit4.version>2.1.7</system-stubs-junit4.version>
+    <system-stubs-junit4.version>2.1.8</system-stubs-junit4.version>
 
     <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
