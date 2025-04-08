@@ -1,9 +1,7 @@
 package org.folio.rest.exceptions;
 
-import lombok.Getter;
 import org.folio.rest.jaxrs.model.Errors;
 
-@Getter
 public final class ValidationException extends InventoryProcessingException {
   private final transient Errors errors;
 
@@ -12,4 +10,7 @@ public final class ValidationException extends InventoryProcessingException {
     this.errors = errors;
   }
 
+  public Errors getErrors() {
+    return errors;
+  }
 }

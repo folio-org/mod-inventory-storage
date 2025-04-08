@@ -123,7 +123,8 @@ public abstract class AbstractEntityS3Service<T, R> {
                                            T entity, Throwable e) {
     R entityToWrite = provideEntityRepresentationForWritingErrors(entity);
     String entityId = extractEntityId(entityToWrite);
-    var errorDetails = (e instanceof ValidationException validationException) ? validationException.getErrors().getErrors().getFirst().getMessage() :
+    var errorDetails = (e instanceof ValidationException validationException)
+      ? validationException.getErrors().getErrors().getFirst().getMessage() :
       e.getMessage();
     log.warn("handleUpsertFailure:: Failed to process single entity upsert operation, entityId: '{}', error: {}",
       entityId, errorDetails);
