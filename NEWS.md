@@ -1,3 +1,8 @@
+## v29.0.4 2025-04-09
+* Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
+
+---
+
 ## v29.0.3 2025-04-07
 * Introduce new post retrieve api to fetch inventory item ([MODINVSTOR-1385](https://folio-org.atlassian.net/browse/MODINVSTOR-1385))
 

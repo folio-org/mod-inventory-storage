@@ -1257,7 +1257,7 @@
     {
       "run": "after",
       "snippetPath": "inventory-hierarchy/fixElectronicAccessOrder.sql",
-      "fromModuleVersion": "29.0.1"
+      "fromModuleVersion": "29.0.4"
     }
   ]
 }
