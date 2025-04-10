@@ -56,7 +56,7 @@ public class BulkProcessingErrorFileWriterTest {
 
     // when
     Future<Void> future = writer.initialize()
-      .compose(v -> writer.write(instance, Instance::getId, errorMessage))
+      .compose(v -> writer.write(instance, Instance::getId, new RuntimeException(errorMessage)))
       .compose(v -> writer.close());
 
     // then
@@ -68,7 +68,7 @@ public class BulkProcessingErrorFileWriterTest {
   @Test(expected = IllegalStateException.class)
   public void shouldThrowExceptionOnWriteIfWriterIsNotInitialized() {
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
-    writer.write(instance, Instance::getId, "Test error");
+    writer.write(instance, Instance::getId, new RuntimeException("Test error"));
   }
 
   private void assertFileContentEquals(String filePath, String expectedContent) throws IOException {
