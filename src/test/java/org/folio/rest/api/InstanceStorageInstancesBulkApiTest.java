@@ -23,6 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
@@ -71,6 +72,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String ID_FIELD = "id";
   private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
+  private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "does not exist in instance_type.id.";
 
   private static LocalStackContainer localStackContainer;
   private static FolioS3Client s3Client;
@@ -157,6 +159,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
     List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
     assertThat(errors.size(), is(1));
+    assertTrue(errors.get(0).contains(INVALID_INSTANCE_TYPE_ID_ERROR_MSG));
 
     JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
 
