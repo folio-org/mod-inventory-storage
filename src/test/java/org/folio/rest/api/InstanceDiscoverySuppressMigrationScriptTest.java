@@ -33,8 +33,9 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
 
   @Test
   public void canSetDiscoverySuppressIfNotPresent() {
+    logger.info("Start canSetDiscoverySuppressIfNotPresent");
     List<IndividualResource> allInstances = createInstances(3);
-
+    logger.info("allInstances: {}", allInstances);
     for (IndividualResource instance : allInstances) {
       assertThat(unsetJsonbProperty("instance", instance.getId(),
         DISCOVERY_SUPPRESS).rowCount(), is(1));
@@ -47,7 +48,9 @@ public class InstanceDiscoverySuppressMigrationScriptTest extends MigrationTestB
 
   @Test
   public void discoverySuppressedInstancesAreNotUpdated() {
+    logger.info("Start discoverySuppressedInstancesAreNotUpdated");
     List<IndividualResource> notSuppressedInstances = createInstances(2);
+    logger.info("notSuppressedInstances: {}", notSuppressedInstances);
     List<IndividualResource> suppressedInstances = new ArrayList<>(2);
 
     suppressedInstances.add(
