@@ -83,6 +83,7 @@ public class ConsortiumDataCache {
   }
 
   private CompletableFuture<Optional<ConsortiumData>> loadConsortiumData(String tenantId, Map<String, String> headers) {
+    LOG.info("loadConsortiumData:: consortium data, tenantId: {}, headers: {}", tenantId, headers);
     var request = getHttpRequest(headers, USER_TENANTS_PATH);
 
     return getResponse(request)

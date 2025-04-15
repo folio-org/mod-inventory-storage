@@ -295,8 +295,10 @@ public class HoldingsService {
     return consortiumService.getConsortiumData(okapiHeaders)
         .compose(consortiumDataOptional -> {
           if (consortiumDataOptional.isPresent()) {
+            log.info("consortiumDataOptional:: {}", consortiumDataOptional.get());
             return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get());
           }
+          log.info("consortiumDataOptional is empty");
           return Future.succeededFuture();
         });
   }
