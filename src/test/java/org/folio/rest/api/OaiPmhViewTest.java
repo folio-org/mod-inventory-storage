@@ -80,9 +80,11 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     holdingsRecordId1 = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    createItem(MAIN_LIBRARY_LOCATION_ID, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
-    createItem(THIRD_FLOOR_LOCATION_ID, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
-
+    var item1 = createItem(
+      MAIN_LIBRARY_LOCATION_ID, "item barcode 1", "item effective call number 1", journalMaterialTypeId);
+    var item2 = createItem(
+      THIRD_FLOOR_LOCATION_ID, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+    log.info("item1: {}, item2: {}", item1.encodePrettily(), item2.encodePrettily());
     removeAllEvents();
   }
 
@@ -304,16 +306,18 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
       "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");
     var holdingsId = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null, electronicAccessUrls);
-    super.createItem(new ItemRequestBuilder().forHolding(holdingsId)
+    var item3 = super.createItem(new ItemRequestBuilder().forHolding(holdingsId)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withTemporaryLocation(THIRD_FLOOR_LOCATION_ID)
       .withBarcode("item barcode 3")
       .withMaterialType(bookMaterialTypeId));
+    log.info("item3: {}", item3.getJson().encodePrettily());
 
     // when
     var instancesData = requestOaiPmhView(params).getFirst();
-    var electronicAccessJson = ((JsonArray) instancesData.getJsonObject("itemsandholdingsfields")
-      .getValue("items")).getJsonObject(2).getJsonArray("electronicAccess");
+    var items = (JsonArray) instancesData.getJsonObject("itemsandholdingsfields").getValue("items");
+    log.info("itemsandholdingsfields items: {}", items.encodePrettily());
+    var electronicAccessJson = items.getJsonObject(2).getJsonArray("electronicAccess");
     var expected = JsonArray.of(JsonObject.of("uri", "http://electronicAccess-c-entered-first", "name", null),
       JsonObject.of("uri", "http://electronicAccess-z-entered-second", "name", null),
       JsonObject.of("uri", "http://electronicAccess-a-entered-third", "name", null));
@@ -400,8 +404,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     return instancesWithItemsAndHoldings;
   }
 
-  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
-    super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
+  private JsonObject createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
+    return super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
   }
 
   private ItemRequestBuilder createItemRequest(UUID locationId, String barcode, String callNumber,
