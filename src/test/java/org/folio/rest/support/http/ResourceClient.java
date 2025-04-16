@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -24,6 +26,7 @@ import org.folio.util.StringUtil;
 
 public final class ResourceClient {
 
+  private static final Logger log = LogManager.getLogger();
   private final HttpClient client;
   private final UrlMaker urlMaker;
   private final String resourceName;
@@ -197,7 +200,7 @@ public final class ResourceClient {
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
+    log.info("Created resourceName {}: body {}", resourceName, response.getBody());
     return new IndividualResource(response);
   }
 
