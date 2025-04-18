@@ -1,5 +1,8 @@
-## v29.0.5 2025-04-09
+## v29.0.5 2025-04-18
+### Bug fixes
 * Fix error serialization when writing to files uploaded to S3 ([MODINVSTOR-1389](https://folio-org.atlassian.net/browse/MODINVSTOR-1389))
+
+---
 
 ## v29.0.4 2025-04-09
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
