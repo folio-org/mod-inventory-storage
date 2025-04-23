@@ -388,7 +388,8 @@ public class InstanceService {
         var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
         return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
       })
-      .compose(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances));
+      .onSuccess(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances))
+      .map(notUsed -> null);
   }
 
   @SuppressWarnings("java:S107")

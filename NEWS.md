@@ -1,5 +1,6 @@
 ## v28.0.10 2025-04-07
 * Introduce new post retrieve api to fetch inventory item ([MODINVSTOR-1381](https://folio-org.atlassian.net/browse/MODINVSTOR-1381))
+* Optimize reindex instances database fetch query ([MODINVSTOR-1395](https://folio-org.atlassian.net/browse/MODINVSTOR-1395))
 
 ## v28.0.9 2025-03-28
 ### Features
