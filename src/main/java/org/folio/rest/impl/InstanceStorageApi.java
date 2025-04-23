@@ -328,10 +328,10 @@ public class InstanceStorageApi implements InstanceStorage {
       }
       if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
         && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
-        log.error("error message in putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId",
+        log.error("error message in putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId {}",
           reply.cause().getMessage());
         log.error("error cause in putInstanceStorageInstancesSourceRecordMarcJsonByInstanceId", reply.cause());
-                asyncResultHandler.handle(Future.succeededFuture(
+        asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
             .respond404WithTextPlain(reply.cause().getMessage())));
         return;
