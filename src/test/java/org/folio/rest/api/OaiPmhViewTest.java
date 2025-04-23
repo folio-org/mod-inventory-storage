@@ -116,12 +116,15 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     deleteAll(instancesStorageUrl(""));
     clearAuditTables();
     // when
+    log.info("canRequestOaiPmhViewWhenEmptyDb:: params: {}", params);
     final List<JsonObject> data = requestOaiPmhView(params);
+    log.info("canRequestOaiPmhViewWhenEmptyDb:: data: {}", data);
     // then
     assertThat(data.size(), is(0));
 
     // The same call using newly added API
     final List<JsonObject> instancesData = getOiaPmhViewInstances(params);
+    log.info("canRequestOaiPmhViewWhenEmptyDb:: instancesData: {}", instancesData);
     // then
     assertThat(instancesData.size(), is(0));
   }
