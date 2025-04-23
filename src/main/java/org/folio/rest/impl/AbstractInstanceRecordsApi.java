@@ -39,7 +39,7 @@ public abstract class AbstractInstanceRecordsApi {
     final HttpServerResponse response = getResponse(routingContext);
     try {
       Tuple params = paramsSupplier.get();
-      log.debug("postgres params: {}", params);
+      log.info("postgres params: {}", params.deepToString());
 
       PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
       ConnectionErrorHandler handleError = new ConnectionErrorHandler(postgresClient);
@@ -150,6 +150,7 @@ public abstract class AbstractInstanceRecordsApi {
     for (int i = 0; i < row.size(); i++) {
       json.put(row.getColumnName(i), convertRowValue(row.getValue(i)));
     }
+    log.info("fetchRecordsByQuery:: json : {}", json.encodePrettily());
     return json.toString();
   }
 

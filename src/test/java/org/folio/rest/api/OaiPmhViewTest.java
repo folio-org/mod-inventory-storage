@@ -313,6 +313,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       .withMaterialType(bookMaterialTypeId));
     log.info("item3: {}", item3.getJson().encodePrettily());
 
+    log.info("canRequestOaiPmhViewWithOrderedElectronicAccess:: params: {}", params);
     // when
     var instancesData = requestOaiPmhView(params).getFirst();
     var items = (JsonArray) instancesData.getJsonObject("itemsandholdingsfields").getValue("items");
