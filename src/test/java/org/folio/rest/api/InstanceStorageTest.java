@@ -1193,7 +1193,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
-
+    log.info("start canDeleteSourceRecordWhenDeletingInstance test for id {} and marcJson {}", id, marcJson);
     put(id, marcJson);
 
     // delete instance
@@ -2576,6 +2576,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().put(instancesStorageUrl("/" + id + "/source-record/marc-json"), marcJson,
       TENANT_ID, ResponseHandler.empty(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
+    log.info("put /source-record/marc-json response: {}", response);
     assertThat(response.getStatusCode(), is(expectedStatus.toInt()));
   }
 
@@ -2811,7 +2812,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(format("Create instance failed: %s", response.getBody()),
       response.getStatusCode(), is(201));
-
+    log.info("Create instance response: {}", response);
     return new IndividualResource(response);
   }
 
