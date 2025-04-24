@@ -1,5 +1,6 @@
 package org.folio.rest.support.http;
 
+import static org.folio.rest.api.TestBaseWithInventoryUtil.mockServer;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -196,6 +198,17 @@ public final class ResourceClient {
   public IndividualResource create(JsonObject request, String tenantId, Map<String, String> headers) {
 
     Response response = attemptToCreate("", request, tenantId, headers);
+
+    assertThat(
+      String.format("Failed to create %s: %s", resourceName, response.getBody()),
+      response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    log.info("Created resourceName {}: body {}", resourceName, response.getBody());
+    return new IndividualResource(response);
+  }
+
+  public IndividualResource createDefault(JsonObject request) {
+
+    Response response = attemptToCreate("", request, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     assertThat(
       String.format("Failed to create %s: %s", resourceName, response.getBody()),
