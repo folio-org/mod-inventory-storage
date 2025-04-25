@@ -1,3 +1,8 @@
+## v29.0.6 2025-04-28
+* Optimize reindex instances database fetch query ([MODINVSTOR-1400](https://folio-org.atlassian.net/browse/MODINVSTOR-1400))
+
+---
+
 ## v29.0.5 2025-04-18
 ### Bug fixes
 * Fix error serialization when writing to files uploaded to S3 ([MODINVSTOR-1389](https://folio-org.atlassian.net/browse/MODINVSTOR-1389))
