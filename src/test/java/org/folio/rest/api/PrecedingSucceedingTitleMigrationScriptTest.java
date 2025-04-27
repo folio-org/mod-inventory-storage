@@ -67,7 +67,7 @@ public class PrecedingSucceedingTitleMigrationScriptTest extends MigrationTestBa
     executeMultipleSqlStatements(MIGRATION_SCRIPT);
 
     List<JsonObject> precedingSucceedingTitles = precedingSucceedingTitleClient.getAll();
-
+    logger.info("Preceding Succeeding Titles: {}", precedingSucceedingTitles);
     assertThat(precedingSucceedingTitles.size(), is(2));
 
     assertPrecedingSucceedingTitle(precedingSucceedingTitles.get(0), instanceRelationship1);
