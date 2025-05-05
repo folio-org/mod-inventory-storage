@@ -73,7 +73,8 @@ public class BaseIntegrationTest {
     .withPassword("admin_password");
 
   @Container
-  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName());
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName())
+    .withStartupAttempts(3);
   private static int port;
 
   @BeforeEach
