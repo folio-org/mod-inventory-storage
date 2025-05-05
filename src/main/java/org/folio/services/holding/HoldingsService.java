@@ -224,36 +224,43 @@ public class HoldingsService {
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
-    try {
-      var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
-      if (noChanges) {
-        return Future.succeededFuture()
-          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
-      }
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
 
-    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-      newHoldings.setVersion(null);  // enforce optimistic locking
-    }
+    return createShadowInstancesIfNeeded(List.of(newHoldings))
+      .compose(v -> {
+        try {
+          var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
+          if (noChanges) {
+            return Future.succeededFuture()
+              .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
 
-    return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-      .compose(notUsed -> {
-        final Promise<List<Item>> overallResult = promise();
+        if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
+          newHoldings.setVersion(null);  // enforce optimistic locking
+        }
 
-        postgresClient.startTx(
-          connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
-            .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
-            .onComplete(handleTransaction(connection, overallResult)));
+        return refuseWhenHridChanged(oldHoldings, newHoldings)
+          .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+          .compose(notUsed -> {
+            final Promise<List<Item>> overallResult = promise();
 
-        return overallResult.future()
-          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
-          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-          .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+            postgresClient.startTx(
+              connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+                .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
+                .onComplete(handleTransaction(connection, overallResult))
+            );
+
+            return overallResult.future()
+              .compose(itemsBeforeUpdate -> itemEventService
+                .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+              .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+              .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+          });
       });
   }
+
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
     String permanentLocationId = holdingsRecord.getPermanentLocationId();
