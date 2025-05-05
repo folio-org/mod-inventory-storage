@@ -54,7 +54,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 
 @EnableTenant
-@Testcontainers(parallel = true)
+@Testcontainers
 @ExtendWith(VertxExtension.class)
 public class BaseIntegrationTest {
 
