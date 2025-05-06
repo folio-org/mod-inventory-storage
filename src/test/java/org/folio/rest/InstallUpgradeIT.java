@@ -61,7 +61,8 @@ public class InstallUpgradeIT {
   public static final KafkaContainer KAFKA =
     new KafkaContainer(KafkaUtility.getImageName())
       .withNetwork(NETWORK)
-      .withNetworkAliases("mykafka");
+      .withNetworkAliases("mykafka")
+      .withStartupAttempts(3);
 
   @ClassRule(order = 1)
   public static final PostgreSQLContainer<?> POSTGRES =
