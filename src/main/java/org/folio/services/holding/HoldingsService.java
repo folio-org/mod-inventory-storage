@@ -195,24 +195,34 @@ public class HoldingsService {
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
-    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-      newHoldings.setVersion(null);  // enforce optimistic locking
-    }
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .compose(consortiumDataOptional -> {
+        if (consortiumDataOptional.isPresent()) {
+          return createShadowInstancesIfNeeded(List.of(newHoldings), consortiumDataOptional.get());
+        }
+        return Future.succeededFuture();
+      })
+      .compose(v -> {
+        if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
+          newHoldings.setVersion(null);  // enforce optimistic locking
+        }
 
-    return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-      .compose(notUsed -> {
-        final Promise<List<Item>> overallResult = promise();
+        return refuseWhenHridChanged(oldHoldings, newHoldings)
+          .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+          .compose(notUsed -> {
+            final Promise<List<Item>> overallResult = promise();
 
-        postgresClient.startTx(
-          connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
-            .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
-            .onComplete(handleTransaction(connection, overallResult)));
+            postgresClient.startTx(
+              connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+                .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
+                .onComplete(handleTransaction(connection, overallResult)));
 
-        return overallResult.future()
-          .compose(itemsBeforeUpdate -> itemEventService.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
-          .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-          .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+            return overallResult.future()
+              .compose(itemsBeforeUpdate -> itemEventService
+                .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+              .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+              .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+          });
       });
   }
 
