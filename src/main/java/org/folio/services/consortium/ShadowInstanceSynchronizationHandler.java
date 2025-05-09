@@ -174,15 +174,17 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     HashMap<String, String> headers = new HashMap<>(okapiHeaders);
     headers.put(TENANT, tenantId);
     InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), headers);
+    Instance instanceToUpdate = JsonObject.mapFrom(instance).mapTo(Instance.class);
 
     return instanceRepository.getById(instance.getId())
       .map(Instance::getVersion)
-      .compose(currentVersion -> instanceRepository.update(instance.getId(), instance.withVersion(currentVersion)))
+      .compose(currentVersion ->
+        instanceRepository.update(instanceToUpdate.getId(), instanceToUpdate.withVersion(currentVersion)))
       .onFailure(e -> LOG.warn(
         "updateShadowInstance:: Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId(), e))
       .onSuccess(v -> LOG.info(
-        "updateShadowInstance:: Shadow instance has been updated, tenantId: '{}', instanceId: '{}'",
+        "updateShadowInstance:: Shadow instance has been updated, tenantId: '{}', instanceId: '{}' OK!!!",
         tenantId, instance.getId()))
       .mapEmpty();
   }
