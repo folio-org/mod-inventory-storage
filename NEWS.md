@@ -1,3 +1,6 @@
+## v28.0.12 2025-05-12
+* Fix holdings movement to another instance if the instance does not already have an associated holdings with active affiliation ([MODINVSTOR-1404](https://folio-org.atlassian.net/browse/MODINVSTOR-1404))
+
 ## v28.0.11 2025-04-24
 * Optimize reindex instances database fetch query ([MODINVSTOR-1395](https://folio-org.atlassian.net/browse/MODINVSTOR-1395))
 
