@@ -1,4 +1,4 @@
-## v28.0.13 2025-05-12
+## v28.0.13 2025-05-14
 * Fix error serialization when writing to files uploaded to S3 ([MODINVSTOR-1389](https://folio-org.atlassian.net/browse/MODINVSTOR-1389))
 
 ## v28.0.12 2025-05-12
