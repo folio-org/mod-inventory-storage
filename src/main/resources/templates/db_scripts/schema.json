@@ -1246,6 +1246,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "oaipmh/createDeletedIndex.sql",
+      "fromModuleVersion": "29.0.8"
+    },
+    {
+      "run": "after",
       "snippetPath": "statistical-code/delete-deprecated-triggers.sql",
       "fromModuleVersion": "29.1.0"
     },
