@@ -1,3 +1,9 @@
+## v29.0.8 2025-05-15
+### Bug fixes
+* Create index for "deleted" flag to improve performance of mod-oai-pmh harvesting ([MODINVSTOR-1421](https://folio-org.atlassian.net/browse/MODINVSTOR-1421))
+
+---
+
 ## v29.0.7 2025-05-08
 ### Bug fixes
 * Fix holdings movement to another instance if the instance does not already have an associated holdings with active affiliation ([MODINVSTOR-1414](https://folio-org.atlassian.net/browse/MODINVSTOR-1414))
