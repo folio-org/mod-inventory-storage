@@ -10,6 +10,7 @@
 * Create index for discoverySuppress and source fields to improve performance of queries which include mentioned fields ([MODINVSTOR-1377](https://folio-org.atlassian.net/browse/MODINVSTOR-1377))
 * Introduce new post retrieve api to fetch inventory item ([MODINVSTOR-1381](https://folio-org.atlassian.net/browse/MODINVSTOR-1381))
 * Optimize reindex instances database fetch query ([MODINVSTOR-1395](https://folio-org.atlassian.net/browse/MODINVSTOR-1395))
+* Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
