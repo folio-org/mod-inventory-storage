@@ -1,3 +1,6 @@
+## v29.0.9 2025-05-15
+* Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
+
 ## v29.0.8 2025-05-15
 ### Bug fixes
 * Create index for "deleted" flag to improve performance of mod-oai-pmh harvesting ([MODINVSTOR-1421](https://folio-org.atlassian.net/browse/MODINVSTOR-1421))
