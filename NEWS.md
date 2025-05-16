@@ -1,5 +1,8 @@
-## v29.0.9 2025-05-15
+## v29.0.9 2025-05-16
+### Bug fixes
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
+
+---
 
 ## v29.0.8 2025-05-15
 ### Bug fixes
