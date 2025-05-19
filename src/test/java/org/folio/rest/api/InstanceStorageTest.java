@@ -45,6 +45,8 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import io.vertx.core.json.JsonArray;
@@ -1933,6 +1935,18 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void instancesCreatedInBatchSynchShouldHaveMetadata() throws Exception {
+    JsonObject instanceCollection = createRequestForMultipleInstances(2);
+    toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(instance ->
+      assertFalse(instance.containsKey(METADATA_KEY)));
+
+    final var createCompleted = createInstancesBatchSync(instanceCollection);
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+
+    toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(this::assertMetadataExists);
+  }
+
+  @Test
   public void instancesCreatedInBatchShouldHaveStatusDate() throws Exception {
     JsonObject instanceCollection = createRequestForMultipleInstances(3);
 
@@ -2972,5 +2986,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private void assertSuppressedFromDiscovery(String id) {
     assertThat(getById(id).getJson().getBoolean(DISCOVERY_SUPPRESS), is(true));
+  }
+
+  private void assertMetadataExists(JsonObject instance) {
+    var metadata = getById(instance.getString("id")).getJson().getJsonObject(METADATA_KEY);
+    assertNotNull(metadata);
+    assertNotNull(metadata.getString("createdDate"));
+    assertNotNull(metadata.getString("updatedDate"));
   }
 }
