@@ -1,3 +1,9 @@
+## v29.0.10 2025-05-19
+### Bug fixes
+* Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
+
+---
+
 ## v29.0.9 2025-05-16
 ### Bug fixes
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
