@@ -1263,6 +1263,11 @@
       "run": "after",
       "snippetPath": "oaipmh/createDeletedIndex.sql",
       "fromModuleVersion": "29.0.8"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/addMigrationToUpdateDeleted.sql",
+      "fromModuleVersion": "29.0.10"
     }
   ]
 }
