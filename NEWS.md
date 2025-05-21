@@ -1,3 +1,6 @@
+## v28.0.14
+* Sysop SQL script to show how many holdings records need sourceId migration ((MODINVSTOR-1423)[https://folio-org.atlassian.net/browse/MODINVSTOR-1423])
+
 ## v28.0.13 2025-05-14
 * Fix error serialization when writing to files uploaded to S3 ([MODINVSTOR-1389](https://folio-org.atlassian.net/browse/MODINVSTOR-1389))
 
