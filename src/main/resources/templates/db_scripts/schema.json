@@ -412,6 +412,10 @@
           "removeAccents": true
         },
         {
+          "fieldName": "sourceUri",
+          "tOps": "ADD"
+        },
+        {
           "fieldName": "statisticalCodeIds",
           "tOps": "ADD",
           "caseSensitive": false,

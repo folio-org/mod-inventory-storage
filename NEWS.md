@@ -4,14 +4,17 @@
 
 ### New APIs versions
 * Provides `item-storage 10.2`
+* Provides `instance-storage 11.2`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
 * Create index for discoverySuppress and source fields to improve performance of queries which include mentioned fields ([MODINVSTOR-1377](https://folio-org.atlassian.net/browse/MODINVSTOR-1377))
 * Introduce new post retrieve api to fetch inventory item ([MODINVSTOR-1381](https://folio-org.atlassian.net/browse/MODINVSTOR-1381))
 * Optimize reindex instances database fetch query ([MODINVSTOR-1395](https://folio-org.atlassian.net/browse/MODINVSTOR-1395))
+* Add instance property `sourceUri` ([MODINVNSTOR-1390](https://folio-org.atlassian.net/browse/MODINVSTOR-1390))
 * Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
+
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
