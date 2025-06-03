@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 
 public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -20,6 +21,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final String callNumberPrefix;
   private final String callNumberSuffix;
   private final String callNumberTypeId;
+  private final List<EffectiveCallNumberComponents> additionalCallNumbers;
   private final JsonArray holdingsStatements;
   private final JsonArray holdingsStatementsForIndexes;
   private final JsonArray holdingsStatementsForSupplements;
@@ -40,6 +42,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       null,
       null,
       null,
+      new ArrayList<>(),
       null,
       null,
       null,
@@ -61,6 +64,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     String callNumberTypeId,
     String hrid,
     Boolean discoverySuppress,
+    List<EffectiveCallNumberComponents> additionalCallNumbers,
     JsonArray holdingsStatements,
     JsonArray holdingsStatementsForIndexes,
     JsonArray holdingsStatementsForSupplements,
@@ -80,6 +84,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.callNumberTypeId = callNumberTypeId;
     this.hrid = hrid;
     this.discoverySuppress = discoverySuppress;
+    this.additionalCallNumbers = additionalCallNumbers;
     this.holdingsStatements = holdingsStatements;
     this.holdingsStatementsForIndexes = holdingsStatementsForIndexes;
     this.holdingsStatementsForSupplements = holdingsStatementsForSupplements;
@@ -102,6 +107,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     put(request, "callNumberPrefix", callNumberPrefix);
     put(request, "callNumberSuffix", callNumberSuffix);
     put(request, "callNumberTypeId", callNumberTypeId);
+    put(request, "additionalCallNumbers", new JsonArray(additionalCallNumbers));
     put(request, "hrid", hrid);
     put(request, "discoverySuppress", discoverySuppress);
     put(request, "holdingsStatements", holdingsStatements);
@@ -128,6 +134,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -150,6 +157,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -172,6 +180,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -194,6 +203,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -216,6 +226,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -238,6 +249,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -260,6 +272,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -282,6 +295,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -304,6 +318,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -326,6 +341,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -348,6 +364,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -355,6 +372,30 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
+  }
+
+  public HoldingRequestBuilder withAdditionalCallNumbers(List<EffectiveCallNumberComponents> additionalCallNumbers) {
+    return new HoldingRequestBuilder(
+      this.id,
+      this.instanceId,
+      this.permanentLocationId,
+      this.temporaryLocationId,
+      this.tags,
+      this.callNumber,
+      this.callNumberPrefix,
+      this.callNumberSuffix,
+      this.callNumberTypeId,
+      this.hrid,
+      this.discoverySuppress,
+      additionalCallNumbers,
+      this.holdingsStatements,
+      this.holdingsStatementsForIndexes,
+      this.holdingsStatementsForSupplements,
+      this.electronicAccess,
+      this.statisticalCodeIds,
+      this.sourceId,
+      this.administrativeNotes
+    );
   }
 
   public HoldingRequestBuilder withHoldingsStatements(JsonArray holdingsStatements) {
@@ -370,6 +411,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -392,6 +434,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -414,6 +457,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       holdingsStatementsForSupplements,
@@ -436,6 +480,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -458,6 +503,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -480,6 +526,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,
@@ -502,6 +549,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.callNumberTypeId,
       this.hrid,
       this.discoverySuppress,
+      this.additionalCallNumbers,
       this.holdingsStatements,
       this.holdingsStatementsForIndexes,
       this.holdingsStatementsForSupplements,

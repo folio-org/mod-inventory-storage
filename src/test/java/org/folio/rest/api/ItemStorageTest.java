@@ -75,6 +75,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -2218,6 +2219,254 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       "QueryValidationException: cql.serverChoice requested, but no serverChoiceIndexes defined."));
   }
 
+  @Test
+  public void canCreateItemWithMinimalAdditionalCallNumberObject() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    String callNumber = "This is the only mandatory field";
+    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber));
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+  }
+
+  @Test
+  public void cannotCreateItemWithoutAdditionalCallNumberCallNumber() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withPrefix("prefix")
+      .withSuffix("suffix")
+      .withTypeId(LC_CN_TYPE_ID));
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+
+  }
+
+  @Test
+  public void canCreateAndUpdateItemWithAdditionalCallNumbers() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    final String callNumber = "Test";
+    final String prefix = "A";
+    final String suffix = "Z";
+    final String typeId = LC_CN_TYPE_ID;
+    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
+      .withSuffix(suffix).withTypeId(typeId));
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    JsonObject itemFromPost = postResponse.getJson();
+    JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("itemLevelAdditionalCallNumbers")
+      .getJsonObject(0);
+    final String itemLevelAdditionalCallNumber = postResponseAdditionalCallNumbers.getString("callNumber");
+    final String itemLevelAdditionalPrefix = postResponseAdditionalCallNumbers.getString("prefix");
+    final String itemLevelAdditionalSuffix = postResponseAdditionalCallNumbers.getString("suffix");
+    final String itemLevelTypeId = postResponseAdditionalCallNumbers.getString("typeId");
+    assertThat(itemLevelAdditionalCallNumber, is(callNumber));
+    assertThat(itemLevelAdditionalPrefix, is(prefix));
+    assertThat(itemLevelAdditionalSuffix, is(suffix));
+    assertThat(itemLevelTypeId, is(typeId));
+
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbersUpdated = new ArrayList<>();
+    final String newCallNumber = "newCallNumber";
+    itemLevelAdditionalCallNumbersUpdated
+      .add(new EffectiveCallNumberComponents().withCallNumber(newCallNumber).withPrefix(prefix)
+        .withSuffix(suffix).withTypeId(typeId));
+    itemLevelAdditionalCallNumbersUpdated.add(new EffectiveCallNumberComponents().withCallNumber("some")
+      .withPrefix("prefix").withSuffix("suffix").withTypeId(typeId));
+    itemToCreate.put("itemLevelAdditionalCallNumbers", itemLevelAdditionalCallNumbersUpdated);
+    itemToCreate.put("_version", 1);
+
+    setItemSequence(2);
+    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + id), itemToCreate,
+      TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
+
+    JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + id), TENANT_ID, ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    JsonArray updatedAdditionalCallNumbers = getResponse.getJson().getJsonArray("itemLevelAdditionalCallNumbers");
+
+    assertThat(updatedAdditionalCallNumbers.size(), is(2));
+  }
+
+  @Test
+  public void canDeleteAdditionalCallNumbersFromItem() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    JsonArray additionalCallNumbers = new JsonArray();
+    additionalCallNumbers.add(new JsonObject()
+      .put("callNumber", "Test")
+      .put("prefix", "A")
+      .put("suffix", "Z")
+      .put("typeId", LC_CN_TYPE_ID));
+
+    UUID id = UUID.randomUUID();
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", additionalCallNumbers)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    JsonObject itemUpdate = itemToCreate.copy();
+    itemUpdate.remove("itemLevelAdditionalCallNumbers");
+    itemUpdate.put("_version", 1);
+    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + id.toString()), itemUpdate, TENANT_ID,
+      ResponseHandler.jsonErrors(updateCompleted));
+    Response putResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + id.toString()), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    JsonObject updatedItem = getResponse.getJson();
+
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(updatedItem.containsKey("itemLevelAdditionalCallNumbers"), is(true));
+    assertThat(updatedItem.getJsonArray("itemLevelAdditionalCallNumbers").size(), is(0));
+  }
+
+  @Test
+  public void canCreateItemWithEmptyAdditionalCallNumbers() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+  }
+
+
+  @Test
+  public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    String callNumber = "Test";
+    String prefix = "A";
+    String suffix = "Z";
+    String typeId = "non-uuid";
+    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
+      .withSuffix(suffix).withTypeId(typeId));
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    setItemSequence(1);
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(422));
+  }
+  
   @Test
   public void canDeleteAllItems() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);

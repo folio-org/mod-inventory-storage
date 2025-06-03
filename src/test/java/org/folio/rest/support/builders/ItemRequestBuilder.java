@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 
 public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -23,12 +24,13 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
   private final String itemLevelCallNumber;
   private final String itemLevelCallNumberSuffix;
   private final String itemLevelCallNumberTypeId;
+  private final List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers;
   private final boolean discoverySuppress;
   private final List<UUID> statisticalCodeIds;
 
   public ItemRequestBuilder() {
     this(UUID.randomUUID(), null, null, AVAILABLE_STATUS,
-      null, null, null, null, null, null, null, null, false, new ArrayList<>());
+      null, null, null, null, null, null, null, null, new ArrayList<>(), false, new ArrayList<>());
   }
 
   private ItemRequestBuilder(
@@ -44,6 +46,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     String itemLevelCallNumber,
     String itemLevelCallNumberSuffix,
     String itemLevelCallNumberTypeId,
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers,
     boolean discoverySuppress,
     List<UUID> statisticalCodeIds) {
 
@@ -59,6 +62,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     this.itemLevelCallNumber = itemLevelCallNumber;
     this.itemLevelCallNumberSuffix = itemLevelCallNumberSuffix;
     this.itemLevelCallNumberTypeId = itemLevelCallNumberTypeId;
+    this.itemLevelAdditionalCallNumbers = itemLevelAdditionalCallNumbers;
     this.discoverySuppress = discoverySuppress;
     this.statisticalCodeIds = statisticalCodeIds;
   }
@@ -83,6 +87,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     put(itemRequest, "itemLevelCallNumber", itemLevelCallNumber);
     put(itemRequest, "itemLevelCallNumberSuffix", itemLevelCallNumberSuffix);
     put(itemRequest, "itemLevelCallNumberTypeId", itemLevelCallNumberTypeId);
+    put(itemRequest, "itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers));
     put(itemRequest, "discoverySuppress", discoverySuppress);
     put(itemRequest, "statisticalCodeIds", new JsonArray(statisticalCodeIds));
 
@@ -111,6 +116,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -129,6 +135,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       false,
       this.statisticalCodeIds);
   }
@@ -147,6 +154,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -173,6 +181,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -191,6 +200,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -209,6 +219,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -227,6 +238,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -245,6 +257,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -263,6 +276,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -281,6 +295,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -299,6 +314,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -317,6 +333,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       callNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -335,8 +352,30 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       suffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
+  }
+
+  public ItemRequestBuilder withItemLevelAdditionalCallNumbers(
+    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId,
+      itemLevelAdditionalCallNumbers,
+      this.discoverySuppress,
+      this.statisticalCodeIds);
+
   }
 
   public ItemRequestBuilder withDiscoverySuppress(boolean discoverySuppress) {
@@ -353,6 +392,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       discoverySuppress,
       this.statisticalCodeIds);
   }
@@ -371,6 +411,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,
       this.itemLevelCallNumberTypeId,
+      this.itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       statisticalCodeIds);
   }
