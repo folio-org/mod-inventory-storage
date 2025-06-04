@@ -181,7 +181,6 @@ public class InstanceStorageApi implements InstanceStorage {
                 Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
                   .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
             }
-
           });
       } catch (Exception e) {
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceStorageInstanceRelationshipsByRelationshipIdResponse
@@ -390,5 +389,4 @@ public class InstanceStorageApi implements InstanceStorage {
     throws FieldException {
     return StorageHelper.getCql(query, limit, offset, tableName);
   }
-
 }

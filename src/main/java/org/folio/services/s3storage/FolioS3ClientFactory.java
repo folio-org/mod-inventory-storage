@@ -39,5 +39,4 @@ public class FolioS3ClientFactory {
   private String getValue(String key, String defaultValue) {
     return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
   }
-
 }

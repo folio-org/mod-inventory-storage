@@ -325,7 +325,6 @@ public final class ResourceClient {
         assertThat(String.format(
             "Failed to delete %s: %s", resourceName, deleteResponse.getBody()),
           deleteResponse.getStatusCode(), is(204));
-
       } catch (Throwable e) {
         assertThat(String.format("Exception whilst deleting %s individually: %s",
             resourceName, e),

@@ -66,5 +66,4 @@ public class ClassificationTypeApi implements org.folio.rest.jaxrs.resource.Clas
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
-
 }

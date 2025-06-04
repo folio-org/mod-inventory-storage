@@ -220,7 +220,6 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
     assertThat(
       "Expected two parts after second update.",
       partsAfterSecondUpdate.size(), is(2));
-
   }
 
   @Test
@@ -438,5 +437,4 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
         .withMaterialType(bookMaterialTypeId)
         .withPermanentLoanType(canCirculateLoanTypeId));
   }
-
 }

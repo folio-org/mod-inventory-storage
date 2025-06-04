@@ -337,5 +337,4 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
       .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(COLLEGE_TENANT_ID))
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
-
 }

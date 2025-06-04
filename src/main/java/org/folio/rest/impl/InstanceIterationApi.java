@@ -90,5 +90,4 @@ public class InstanceIterationApi implements InstanceStorageInstancesIteration {
   private IterationService getService(Map<String, String> okapiHeaders, Context vertxContext) {
     return new IterationService(vertxContext, okapiHeaders);
   }
-
 }

@@ -232,5 +232,4 @@ public class InstallUpgradeIT {
       .statusCode(200)
       .body("holdings.currentNumber", is(6));
   }
-
 }

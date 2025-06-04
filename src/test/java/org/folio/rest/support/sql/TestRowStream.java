@@ -106,5 +106,4 @@ public class TestRowStream implements RowStream<Row> {
     }
     completionHandler.handle(succeededFuture());
   }
-
 }

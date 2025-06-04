@@ -106,5 +106,4 @@ public enum InventoryKafkaTopic implements KafkaTopic {
       System.getProperty(propertyName),
       System.getProperty(propertyName.toLowerCase().replace('_', '-')), defaultNumPartitions));
   }
-
 }

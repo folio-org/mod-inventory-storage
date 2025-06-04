@@ -43,7 +43,6 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
   private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
 
-
   public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
   }
@@ -64,11 +63,6 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
-  }
-
-  private String unlinkInstanceFromSubjectSql(String table, String id) {
-    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
-      postgresClientFuturized.getFullTableName(table), id);
   }
 
   public Future<RowSet<Row>> batchLinkSubjectSource(Conn conn, List<Pair<String, String>> sourcePairs) {
@@ -112,19 +106,17 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
-
   }
 
   public Future<RowSet<Row>> batchUnlinkSubjectSource(Conn conn, String instanceId, List<String> sourceIds) {
     try {
       String sql = """
-      DELETE FROM %s WHERE instance_id = '%s' AND source_id IN ( %s );
-      """
-        .formatted(
-          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
-          instanceId,
-          sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", "))
-        );
+        DELETE FROM %s WHERE instance_id = '%s' AND source_id IN ( %s );
+        """.formatted(
+        postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+        instanceId,
+        sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", "))
+      );
       return conn.execute(sql);
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
@@ -164,8 +156,8 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
       String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
-        + " " + cqlWrapper.getWhereClause()
-        + " RETURNING id::text, jsonb::text";
+                   + " " + cqlWrapper.getWhereClause()
+                   + " RETURNING id::text, jsonb::text";
       return postgresClient.execute(sql);
     } catch (Exception e) {
       return Future.failedFuture(e);
@@ -275,6 +267,11 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     }
   }
 
+  private String unlinkInstanceFromSubjectSql(String table, String id) {
+    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
+      postgresClientFuturized.getFullTableName(table), id);
+  }
+
   private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {
     var sql = new StringBuilder("SELECT JSONB_BUILD_OBJECT(");
     sql.append("'instanceId', inventory_view.jsonb->>'instanceId', ");
@@ -364,5 +361,4 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         )
       );
   }
-
 }

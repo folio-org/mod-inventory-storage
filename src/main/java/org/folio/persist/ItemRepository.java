@@ -62,5 +62,4 @@ public class ItemRepository extends AbstractRepository<Item> {
       return resultList;
     });
   }
-
 }

@@ -71,5 +71,4 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
-
 }

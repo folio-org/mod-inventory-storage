@@ -48,7 +48,8 @@
     <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
     <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <checkstyle.version>10.23.0</checkstyle.version>
+    <folio-java-checkstyle.version>1.1.0</folio-java-checkstyle.version>
+    <checkstyle.version>10.25.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.18.0</versions-maven-plugin.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
@@ -597,6 +598,12 @@
             <artifactId>checkstyle</artifactId>
             <version>${checkstyle.version}</version>
           </dependency>
+
+          <dependency>
+            <groupId>org.folio</groupId>
+            <artifactId>folio-java-checkstyle</artifactId>
+            <version>${folio-java-checkstyle.version}</version>
+          </dependency>
         </dependencies>
         <executions>
           <execution>
@@ -613,10 +620,12 @@
             <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
           </sourceDirectories>
           <failsOnError>true</failsOnError>
+          <outputEncoding>UTF-8</outputEncoding>
+          <inputEncoding>UTF-8</inputEncoding>
           <violationSeverity>warning</violationSeverity>
           <failOnViolation>true</failOnViolation>
           <logViolationsToConsole>true</logViolationsToConsole>
-          <configLocation>checkstyle/checkstyle.xml</configLocation>
+          <configLocation>folio-checkstyle/checkstyle.xml</configLocation>
           <cacheFile>${basedir}/target/cachefile</cacheFile>
         </configuration>
       </plugin>

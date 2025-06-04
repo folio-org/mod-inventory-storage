@@ -221,5 +221,4 @@ public class LocationUnitApi implements LocationUnits {
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
-
 }

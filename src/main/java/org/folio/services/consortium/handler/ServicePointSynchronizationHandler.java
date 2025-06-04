@@ -69,5 +69,4 @@ public abstract class ServicePointSynchronizationHandler
 
   protected abstract ServicePointSynchronizationEventProcessor getServicePointSynchronizationProcessor(
     DomainEvent<Servicepoint> domainEvent);
-
 }

@@ -644,5 +644,4 @@ public class LocationUnitTest extends TestBase {
 
     return get(getCompleted);
   }
-
 }

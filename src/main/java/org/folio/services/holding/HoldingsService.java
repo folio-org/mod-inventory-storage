@@ -261,7 +261,6 @@ public class HoldingsService {
       });
   }
 
-
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
     String permanentLocationId = holdingsRecord.getPermanentLocationId();
     String temporaryLocationId = holdingsRecord.getTemporaryLocationId();
@@ -330,5 +329,4 @@ public class HoldingsService {
   private boolean holdingsRecordFound(HoldingsRecord holdingsRecord) {
     return holdingsRecord != null;
   }
-
 }

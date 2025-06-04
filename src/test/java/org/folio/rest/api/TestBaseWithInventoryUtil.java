@@ -39,7 +39,6 @@ import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
-
 public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   @ClassRule

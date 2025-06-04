@@ -106,7 +106,6 @@ public class ReferenceTablesTest extends TestBase {
     String updateProperty = AlternativeTitleType.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-
   }
 
   @Test
@@ -273,7 +272,6 @@ public class ReferenceTablesTest extends TestBase {
     String updateProperty = HoldingsType.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-
   }
 
   @Test
@@ -558,7 +556,6 @@ public class ReferenceTablesTest extends TestBase {
     String updatePropertyCodeType = StatisticalCodeType.NAME_KEY;
 
     testGetPutDeletePost(statisticalCodeTypesPath, entityUuidCodeType, statisticalCodeType, updatePropertyCodeType);
-
   }
 
   @Test

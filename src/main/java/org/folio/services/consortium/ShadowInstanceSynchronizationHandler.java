@@ -54,7 +54,6 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private static final String TARGET_TENANT_ID_FIELD = "targetTenantId";
   private static final String SOURCE_TENANT_ID_FIELD = "sourceTenantId";
 
-
   private final ConsortiumDataCache consortiaDataCache;
   private final Vertx vertx;
   private final HttpClient httpClient;
@@ -189,5 +188,4 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
         tenantId, instance.getId()))
       .mapEmpty();
   }
-
 }

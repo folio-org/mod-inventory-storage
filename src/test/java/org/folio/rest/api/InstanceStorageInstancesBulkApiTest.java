@@ -334,5 +334,4 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
       return bufferedReader.lines().toList();
     }
   }
-
 }

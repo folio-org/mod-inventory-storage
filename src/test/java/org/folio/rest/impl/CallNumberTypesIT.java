@@ -65,5 +65,4 @@ class CallNumberTypesIT extends BaseReferenceDataIntegrationTest<CallNumberType,
   protected List<String> queries() {
     return List.of("name==test-type", "source=test-source");
   }
-
 }
