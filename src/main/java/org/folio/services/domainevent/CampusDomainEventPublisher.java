@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.CampusRepository;
 import org.folio.rest.jaxrs.model.Loccamp;
 
-
 public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<Loccamp, Loccamp> {
 
   public CampusDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
@@ -37,5 +36,4 @@ public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<Loc
   protected String getId(Loccamp campus) {
     return campus.getId();
   }
-
 }

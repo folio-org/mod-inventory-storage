@@ -67,5 +67,4 @@ public class ClassificationTypeService {
         .onSuccess(domainEventService.publishRemoved(oldType))
       );
   }
-
 }

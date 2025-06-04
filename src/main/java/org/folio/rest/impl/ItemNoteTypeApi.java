@@ -231,5 +231,4 @@ public class ItemNoteTypeApi implements org.folio.rest.jaxrs.resource.ItemNoteTy
     handler.handle(Future.succeededFuture(PutItemNoteTypesByIdResponse
       .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
-
 }

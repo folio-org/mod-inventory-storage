@@ -842,5 +842,4 @@ public class ServicePointTest extends TestBase {
 
     return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
-
 }

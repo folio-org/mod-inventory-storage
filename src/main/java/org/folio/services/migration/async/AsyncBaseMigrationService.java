@@ -21,5 +21,4 @@ public abstract class AsyncBaseMigrationService extends BaseMigrationService {
   protected Set<String> getIdsForMigration() {
     return idsForMigration;
   }
-
 }

@@ -98,5 +98,4 @@ public class SynchronizationVerticle extends AbstractVerticle {
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build();
   }
-
 }

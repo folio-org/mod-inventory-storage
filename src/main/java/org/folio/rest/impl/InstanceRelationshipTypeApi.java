@@ -253,5 +253,4 @@ public class InstanceRelationshipTypeApi implements org.folio.rest.jaxrs.resourc
     handler.handle(Future.succeededFuture(PutInstanceRelationshipTypesByRelationshipTypeIdResponse
       .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
-
 }

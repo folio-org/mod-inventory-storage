@@ -134,7 +134,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     prepareThreeHoldingSource();
   }
 
-
   @SneakyThrows
   @AfterClass
   public static void afterClass() {
@@ -426,7 +425,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   public void canMoveHoldingsToNewInstance() throws ExecutionException, InterruptedException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
     UUID newInstanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
     instancesClient.create(smallAngryPlanet(newInstanceId));
@@ -968,7 +966,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response updatedHolding = holdingsClient.getById(holdingId);
     assertThat(updatedHolding.getJson().getString("callNumber"), is("updatedTestCallNumber"));
     assertThat(updateResponse.getStatusCode(), is(204));
-
   }
 
   @Test
@@ -1118,7 +1115,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String suffix
   ) throws InterruptedException, ExecutionException, TimeoutException {
     UUID instanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -1733,7 +1729,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     InterruptedException, TimeoutException {
 
     UUID instanceId = UUID.randomUUID();
-
 
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2649,7 +2644,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         assertHridRange(response, "ho00000000001", "ho00000000003");
         JsonObject body = response.getJson();
         assertEquals(body.getString("effectiveLocationId"), body.getString("permanentLocationId"));
-
       });
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");

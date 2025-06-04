@@ -57,5 +57,4 @@ public class OaiPmhViewInstancesApi extends AbstractInstanceRecordsApi implement
       routingContext, okapiHeaders, asyncResultHandler, vertxContext
     );
   }
-
 }

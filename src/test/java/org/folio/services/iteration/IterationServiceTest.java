@@ -94,5 +94,4 @@ public class IterationServiceTest {
 
     assertThat(job.isPresent(), is(false));
   }
-
 }

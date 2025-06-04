@@ -12,5 +12,4 @@ public class CallNumberTypeRepository extends AbstractRepository<CallNumberType>
   public CallNumberTypeRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), CALL_NUMBER_TYPE_TABLE, CallNumberType.class);
   }
-
 }

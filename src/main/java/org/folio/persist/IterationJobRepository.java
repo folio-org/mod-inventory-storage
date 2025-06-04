@@ -22,5 +22,4 @@ public class IterationJobRepository extends AbstractRepository<IterationJob> {
       .compose(response -> update(id, response)
         .map(response));
   }
-
 }

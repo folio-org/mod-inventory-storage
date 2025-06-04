@@ -77,5 +77,4 @@ public class BulkProcessingErrorFileWriterTest {
     String actualFileContent = Files.readString(path);
     assertEquals(expectedContent, actualFileContent);
   }
-
 }

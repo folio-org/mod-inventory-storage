@@ -12,7 +12,6 @@ public class ReindexRecordEvent<T> {
   private final RecordType recordType;
   private final String tenant;
 
-
   public ReindexRecordEvent(@JsonProperty("records") List<T> records,
                             @JsonProperty("recordType") RecordType recordType,
                             @JsonProperty("tenant") String tenant) {

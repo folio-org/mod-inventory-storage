@@ -76,5 +76,4 @@ public abstract class ServicePointSynchronizationEventProcessor {
     map.put(TENANT, memberTenant);
     return succeededFuture(map);
   }
-
 }

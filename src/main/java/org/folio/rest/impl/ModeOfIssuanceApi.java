@@ -268,5 +268,4 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
     return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
   }
-
 }

@@ -24,5 +24,4 @@ public class InstanceStorageInstancesBulkApi implements InstanceStorageInstances
       .otherwise(EndpointFailureHandler::failureResponse)
       .onComplete(asyncResultHandler);
   }
-
 }

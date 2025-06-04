@@ -285,5 +285,4 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   private Response deleteSubjectSource(UUID id) {
     return subjectSourceClient.attemptToDelete(id);
   }
-
 }

@@ -260,5 +260,4 @@ public class LocationsTest extends TestBaseWithInventoryUtil {
 
     return get(getCompleted);
   }
-
 }

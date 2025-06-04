@@ -30,5 +30,4 @@ public class CqlQueryTest {
   public void doesntMatchAllItems(String cql) {
     assertThat(new CqlQuery(cql).isMatchingAll(), is(false));
   }
-
 }

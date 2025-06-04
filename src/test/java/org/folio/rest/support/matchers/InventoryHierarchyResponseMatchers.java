@@ -213,5 +213,4 @@ public final class InventoryHierarchyResponseMatchers {
   private static Matcher<JsonObject> hasHoldingsCount(int expectedValue) {
     return hasElementCount(holdingsFieldsPointer, expectedValue);
   }
-
 }

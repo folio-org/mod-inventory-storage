@@ -22,5 +22,4 @@ public class ServicePointSynchronizationUpdateHandler extends ServicePointSynchr
 
     return new ServicePointSynchronizationUpdateEventProcessor(domainEvent);
   }
-
 }

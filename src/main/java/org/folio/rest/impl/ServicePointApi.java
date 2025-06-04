@@ -271,5 +271,4 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
 
     return newQuery;
   }
-
 }

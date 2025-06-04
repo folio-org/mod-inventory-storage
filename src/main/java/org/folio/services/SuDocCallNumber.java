@@ -21,7 +21,6 @@ public class SuDocCallNumber extends AbstractCallNumber {
   protected String suffix;
   protected String shelfKey;
 
-
   public SuDocCallNumber(String callNumber) {
     this.parse(callNumber);
   }

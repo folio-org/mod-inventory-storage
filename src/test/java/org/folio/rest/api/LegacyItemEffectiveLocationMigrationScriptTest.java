@@ -25,7 +25,6 @@ public class LegacyItemEffectiveLocationMigrationScriptTest extends MigrationTes
 
     assertThat(doesFunctionExist("update_effective_location_on_item_update"), is(false));
     assertThat(doesFunctionExist("update_effective_location_on_holding_update"), is(false));
-
   }
 
   @SneakyThrows

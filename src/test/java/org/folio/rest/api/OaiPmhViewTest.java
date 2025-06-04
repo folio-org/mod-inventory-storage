@@ -503,5 +503,4 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
 
     return results;
   }
-
 }

@@ -252,5 +252,4 @@ public class InterfaceUrls {
   public static URL instancesBulk() {
     return vertxUrl("/instance-storage/instances/bulk");
   }
-
 }

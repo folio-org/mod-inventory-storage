@@ -244,5 +244,4 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
           ctx.completeNow();
         }))));
   }
-
 }
