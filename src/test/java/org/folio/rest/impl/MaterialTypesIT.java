@@ -91,7 +91,6 @@ class MaterialTypesIT extends BaseReferenceDataIntegrationTest<Mtype, Mtypes> {
       .compose(response -> doPost(client, resourceUrl(), materialType))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
-
   }
 
   @Test
@@ -157,5 +156,4 @@ class MaterialTypesIT extends BaseReferenceDataIntegrationTest<Mtype, Mtypes> {
       .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
-
 }
