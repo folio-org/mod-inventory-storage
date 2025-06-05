@@ -140,7 +140,8 @@ public class InstanceService {
                 return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
               }
             })
-        ).onSuccess(postResponse::complete)
+        )
+        .onSuccess(postResponse::complete)
         .onFailure(throwable -> {
           if (throwable instanceof PgException pgException) {
             postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
