@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_INTERNAL_ERROR;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -17,6 +18,9 @@ import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.locationsStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
@@ -2940,6 +2944,159 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getBody(), equalTo(expectedMessage));
   }
 
+  @Test
+  @SneakyThrows
+  public void cannotCreateItemWithPermanentLoanTypeThatDoesNotExist() {
+    var nonexistentLoanId = UUID.randomUUID().toString();
+
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""), createItemRequestForLoan(holdingsRecordId, nonexistentLoanId, null),
+      TENANT_ID, ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotCreateItemWithTemporaryLoanTypeThatDoesNotExist() {
+    var nonexistentLoanId = UUID.randomUUID().toString();
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForLoan(holdingsRecordId, canCirculateLoanTypeID, nonexistentLoanId), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updateItemWithNonexistingPermanentLoanTypeId() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForLoan(holdingsRecordId, canCirculateLoanTypeID, canCirculateLoanTypeID), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var responseJson = response.getJson();
+    var nonExistentLoanId = UUID.randomUUID().toString();
+    var putRequest = responseJson.copy().put("permanentLoanTypeId", nonExistentLoanId);
+    var itemId = responseJson.getString("id");
+
+    var completedPut = new CompletableFuture<Response>();
+    getClient().put(itemsStorageUrl("/" + itemId), putRequest, TENANT_ID,
+      ResponseHandler.empty(completedPut));
+    var responsePut = completedPut.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(responsePut.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updateItemWithNonexistingTemporaryLoanTypeId() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForLoan(holdingsRecordId, canCirculateLoanTypeID, canCirculateLoanTypeID), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var responseJson = response.getJson();
+    var nonExistentLoanId = UUID.randomUUID().toString();
+    var putRequest = responseJson.copy().put("temporaryLoanTypeId", nonExistentLoanId);
+    var itemId = responseJson.getString("id");
+
+    var completedPut = new CompletableFuture<Response>();
+    getClient().put(itemsStorageUrl("/" + itemId), putRequest, TENANT_ID,
+      ResponseHandler.empty(completedPut));
+    var responsePut = completedPut.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(responsePut.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotDeleteLoanTypePermanentlyAssociatedToAnItem() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForLoan(holdingsRecordId, canCirculateLoanTypeID, null), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var deleteCompleted = new CompletableFuture<Response>();
+    getClient().delete(loanTypesStorageUrl("/" + canCirculateLoanTypeID), TENANT_ID,
+      ResponseHandler.any(deleteCompleted));
+    var deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotDeleteLoanTypeTemporarilyAssociatedToAnItem() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForLoan(holdingsRecordId, nonCirculatingLoanTypeID, canCirculateLoanTypeID), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var deleteCompleted = new CompletableFuture<Response>();
+    getClient().delete(loanTypesStorageUrl("/" + canCirculateLoanTypeID), TENANT_ID,
+      ResponseHandler.any(deleteCompleted));
+    var deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotDeleteMaterialTypeAssociatedToAnItem() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""),
+      createItemRequestForMaterial(holdingsRecordId, journalMaterialTypeID), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var deleteCompleted = new CompletableFuture<Response>();
+    getClient().delete(materialTypesStorageUrl("/" + journalMaterialTypeID), TENANT_ID,
+      ResponseHandler.any(deleteCompleted));
+    var deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  @SneakyThrows
+  public void cannotDeleteLocationAssociatedToAnItem() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+
+    var completed = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""), nod(UUID.fromString(holdingsRecordId)), TENANT_ID,
+      ResponseHandler.json(completed));
+    var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
+
+    var deleteCompleted = new CompletableFuture<Response>();
+    getClient().delete(locationsStorageUrl("/" + ANNEX_LIBRARY_LOCATION_ID), TENANT_ID,
+      ResponseHandler.any(deleteCompleted));
+    var deleteResponse = deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
   static JsonObject nod(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "565578437802");
   }
@@ -3171,5 +3328,36 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(IndividualResource::getId)
       .toList();
+  }
+
+  private static JsonObject createItemRequestForLoan(String holdingsRecordId, String permanentLoanTypeId,
+                                                    String temporaryLoanTypeId) {
+    var item = new JsonObject();
+
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId);
+    item.put("barcode", "12345");
+    item.put("materialTypeId", journalMaterialTypeId);
+
+    if (permanentLoanTypeId != null) {
+      item.put("permanentLoanTypeId", permanentLoanTypeId);
+    }
+    if (temporaryLoanTypeId != null) {
+      item.put("temporaryLoanTypeId", temporaryLoanTypeId);
+    }
+
+    return item;
+  }
+
+  private JsonObject createItemRequestForMaterial(String holdingsRecordId, String materialTypeId) {
+    var item = new JsonObject();
+
+    item.put("barcode", "12345");
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId);
+    item.put("materialTypeId", materialTypeId);
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+
+    return item;
   }
 }

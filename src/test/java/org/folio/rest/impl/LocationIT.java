@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.location.LocationService.LOCATION_TABLE;
@@ -9,7 +10,6 @@ import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
@@ -37,6 +37,7 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
   private String institutionId;
   private String campusId;
   private String libraryId;
+  private UUID primaryServicePointId;
 
   @Override
   protected String referenceTable() {
@@ -60,15 +61,14 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
 
   @Override
   protected Location sampleRecord() {
-    var primaryServicePoint = UUID.randomUUID();
     return new Location()
       .withName("test-location")
       .withCode("code")
       .withCampusId(campusId)
       .withLibraryId(libraryId)
       .withInstitutionId(institutionId)
-      .withPrimaryServicePoint(primaryServicePoint)
-      .withServicePointIds(List.of(primaryServicePoint));
+      .withPrimaryServicePoint(primaryServicePointId)
+      .withServicePointIds(List.of(primaryServicePointId));
   }
 
   @Override
@@ -98,12 +98,14 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
 
   @Override
   protected List<String> queries() {
-    return List.of("name==test-location", "code=code", "campusId==" + campusId, "libraryId==" + libraryId);
+    return List.of("name==test-location", "code=code", "campusId==" + campusId, "libraryId==" + libraryId,
+      "primaryServicePoint==" + primaryServicePointId);
   }
 
   @BeforeEach
   void beforeEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+    primaryServicePointId = UUID.randomUUID();
     var institution = new Locinst().withName("institution").withCode("ic");
     var campus = new Loccamp().withName("campus").withCode("cc");
     var library = new Loclib().withName("library").withCode("lc");
@@ -136,7 +138,7 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
 
   @Test
   void put_shouldReturn422_whenServicePointsNotSet(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
+    var client = vertx.createHttpClient();
     var invalidRecord = sampleRecord().withServicePointIds(null).withId(UUID.randomUUID().toString());
 
     doPut(client, resourceUrlById(invalidRecord.getId()), pojo2JsonObject(invalidRecord))
@@ -148,6 +150,122 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
           .extracting(Error::getMessage)
           .containsExactlyInAnyOrder("A location must have at least one Service Point assigned.",
             "A Location's Primary Service point must be included as a Service Point.");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void put_shouldReturn422_whenIdChanged(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var sampleRecord = sampleRecord();
+
+    doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .compose(response -> doPut(client, resourceUrlById(response.jsonBody().getString("id")),
+        pojo2JsonObject(sampleRecord.withId(UUID.randomUUID().toString()))))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsExactlyInAnyOrder("Illegal operation: id cannot be changed");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenUnitsNotSet(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var invalidRecord = sampleRecord().withId(UUID.randomUUID().toString())
+      .withInstitutionId(null).withCampusId(null).withLibraryId(null);
+
+    doPost(client, resourceUrl(), pojo2JsonObject(invalidRecord))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(3)
+          .extracting(Error::getMessage)
+          .containsOnly("must not be null");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenCodeNotSet(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var invalidRecord = sampleRecord().withId(UUID.randomUUID().toString())
+      .withCode(null);
+
+    doPost(client, resourceUrl(), pojo2JsonObject(invalidRecord))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsOnly("must not be null");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenSameName(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var sampleRecord = sampleRecord();
+
+    doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .compose(response -> doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord)))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsOnly(
+            "lower(f_unaccent(jsonb ->> 'name'::text)) value already exists in table location: test-location");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenSameCode(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var sampleRecord = sampleRecord();
+
+    doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .compose(response ->
+        doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord.withName("another-name"))))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsOnly("lower(f_unaccent(jsonb ->> 'code'::text)) value already exists in table location: code");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenSameId(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var sampleRecord = sampleRecord();
+
+    doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .compose(response ->
+        doPost(client, resourceUrl(), pojo2JsonObject(sampleRecord.withId(response.jsonBody().getString("id")))))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsOnly("id value already exists in table location: " + sampleRecord.getId());
         ctx.completeNow();
       })));
   }
