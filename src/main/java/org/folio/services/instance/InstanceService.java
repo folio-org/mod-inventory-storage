@@ -140,15 +140,14 @@ public class InstanceService {
                 return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
               }
             })
-            .onSuccess(postResponse::complete)
-            .onFailure(throwable -> {
-              if (throwable instanceof PgException pgException) {
-                postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
-              } else {
-                postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
-              }
-            })
-        );
+        ).onSuccess(postResponse::complete)
+        .onFailure(throwable -> {
+          if (throwable instanceof PgException pgException) {
+            postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
+          } else {
+            postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
+          }
+        });
 
         return postResponse.future()
             // Return the response without waiting for a domain event publish
