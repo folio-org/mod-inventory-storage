@@ -188,7 +188,6 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
         asyncResultHandler.handle(Future.succeededFuture(PutInstanceNoteTypesByIdResponse.respond500WithTextPlain(
           messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
       }
-
     });
   }
 

@@ -265,5 +265,4 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
     return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
   }
-
 }

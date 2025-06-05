@@ -103,5 +103,4 @@ public class InitApiImpl implements InitAPI {
   private ConsortiumDataCache getConsortiumDataCache(Context context) {
     return context.get(ConsortiumDataCache.class.getName());
   }
-
 }

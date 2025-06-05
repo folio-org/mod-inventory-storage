@@ -292,5 +292,4 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       String.format(cqlParams, instanceTwo.getId(), instanceOne.getId()));
     return String.format("?withBoundedItems=true&query=%s", encodedCqlParams);
   }
-
 }

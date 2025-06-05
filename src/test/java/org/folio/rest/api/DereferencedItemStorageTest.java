@@ -255,5 +255,4 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     return getCompleted.get(10, SECONDS).getJson()
       .mapTo(DereferencedItems.class);
   }
-
 }

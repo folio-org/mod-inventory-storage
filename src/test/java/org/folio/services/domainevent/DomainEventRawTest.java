@@ -12,5 +12,4 @@ public class DomainEventRawTest {
     assertThat(DomainEventRaw.deleteEvent("myold", "mytenant").toString(),
       endsWith("[oldEntity=myold,newEntity=<null>,type=DELETE,tenant=mytenant]"));
   }
-
 }

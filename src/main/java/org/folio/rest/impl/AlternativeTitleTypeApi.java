@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
@@ -194,5 +188,4 @@ public class AlternativeTitleTypeApi implements org.folio.rest.jaxrs.resource.Al
     handler.handle(Future.succeededFuture(PutAlternativeTitleTypesByIdResponse
       .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
-
 }

@@ -71,7 +71,6 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     );
     Response relationshipPostResponse2 = createRelationshipCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
   }
 
   @Test
@@ -95,7 +94,6 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
   }
 
   @Test
@@ -119,7 +117,6 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     );
     Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
   }
 
   private JsonObject createInstance(String title, String instanceTypeId)
@@ -136,5 +133,4 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     return postResponse.getJson();
   }
-
 }

@@ -164,5 +164,4 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private ReindexJobRepository getRepository() {
     return new ReindexJobRepository(getContext(), okapiHeaders());
   }
-
 }

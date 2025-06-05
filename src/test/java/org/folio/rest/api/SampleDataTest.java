@@ -170,6 +170,4 @@ public class SampleDataTest extends TestBase {
     assertThat(array.size(), is(expectedCount));
     assertThat(body.getInteger("totalRecords"), is(expectedCount));
   }
-
-
 }

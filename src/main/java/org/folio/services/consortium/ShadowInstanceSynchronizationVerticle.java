@@ -66,5 +66,4 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
       .kafkaPort(KafkaEnvironmentProperties.port())
       .build();
   }
-
 }

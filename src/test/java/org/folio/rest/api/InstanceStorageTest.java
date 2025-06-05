@@ -1425,7 +1425,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     canSort(format("holdingsRecords.permanentLocationId=\"%s\" sortBy title/sort.descending", MAIN_LIBRARY_LOCATION_ID),
       "Nod", "Long Way to a Small Angry Planet");
     System.out.println("canSearchByBarcodeAndPermanentLocation");
-
   }
 
   // This is intended to demonstrate that instances without holdings or items
@@ -1771,7 +1770,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(1));
     assertThat(instanceTags.get(tagListKey), hasItem(tagValue));
     assertThat(instancesJsonResponse.getInteger(TOTAL_RECORDS_KEY), is(1));
-
   }
 
   @Test

@@ -20,6 +20,10 @@
       "type": "string",
       "description" : "A unique instance identifier matching a client-side bibliographic record identification scheme, in particular for a scenario where multiple separate catalogs with no shared record identifiers contribute to the same Instance in Inventory. A match key is typically generated from select, normalized pieces of metadata in bibliographic records"
     },
+    "sourceUri": {
+      "type": "string",
+      "description": "A remote URI uniquely identifying the source of the instance"
+    },
     "source": {
       "type": "string",
       "description": "The metadata source and its format of the underlying record to the instance record. (e.g. FOLIO if it's a record created in Inventory; MARC if it's a MARC record created in MARCcat or EPKB if it's a record coming from eHoldings; CONSORTIUM-MARC or CONSORTIUM-FOLIO for sharing Instances)."

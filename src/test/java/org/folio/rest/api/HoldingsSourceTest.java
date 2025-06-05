@@ -208,7 +208,6 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
 
     Response deleteResponse = holdingsSourceClient.getById(deleteableHoldingsSourceId);
     assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
   }
 
   @Test

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
@@ -263,5 +257,4 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
     return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
   }
-
 }

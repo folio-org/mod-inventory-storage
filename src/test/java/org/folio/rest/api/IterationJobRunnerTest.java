@@ -141,5 +141,4 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
   }
-
 }

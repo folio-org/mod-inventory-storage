@@ -43,5 +43,4 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
       .collect(Collectors.joining(", "));
     return String.format(SELECT_SQL, postgresClient.getFullTableName("item"), ids);
   }
-
 }

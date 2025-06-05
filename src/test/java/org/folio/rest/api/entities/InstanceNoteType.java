@@ -14,5 +14,4 @@ public class InstanceNoteType extends JsonEntity {
     setProperty(propertyKey, value);
     return this;
   }
-
 }

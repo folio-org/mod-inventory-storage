@@ -138,7 +138,6 @@ public class LocationService {
     }
 
     return Optional.empty();
-
   }
 
   private Optional<LocationCheckException> checkAtLeastOneServicePoint(Location entity) {
@@ -148,7 +147,6 @@ public class LocationService {
     }
 
     return Optional.empty();
-
   }
 
   private Optional<LocationCheckException> checkPrimaryServicePointRelationship(Location entity) {
@@ -158,7 +156,6 @@ public class LocationService {
     }
 
     return Optional.empty();
-
   }
 
   private Optional<LocationCheckException> checkForDuplicateServicePoints(Location entity) {
@@ -168,11 +165,9 @@ public class LocationService {
     }
 
     return Optional.empty();
-
   }
 
   private static class LocationCheckException extends Exception {
-
     private final String field;
 
     LocationCheckException(String field, String message) {
@@ -195,5 +190,4 @@ public class LocationService {
       return error;
     }
   }
-
 }

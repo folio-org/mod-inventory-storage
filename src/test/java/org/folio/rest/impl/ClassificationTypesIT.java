@@ -65,5 +65,4 @@ class ClassificationTypesIT extends BaseReferenceDataIntegrationTest<Classificat
   protected List<String> queries() {
     return List.of("name==test-type", "source=test-source");
   }
-
 }
