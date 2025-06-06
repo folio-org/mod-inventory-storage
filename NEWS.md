@@ -1,3 +1,8 @@
+## v29.0.11 2025-05-19
+* Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
+
+---
+
 ## v29.0.10 2025-05-19
 ### Bug fixes
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
