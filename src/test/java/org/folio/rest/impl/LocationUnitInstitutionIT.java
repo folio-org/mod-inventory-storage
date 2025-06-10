@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_INTERNAL_SERVER_ERROR;
+import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
@@ -280,5 +281,35 @@ class LocationUnitInstitutionIT
         doDelete(client, resourceUrl()).onComplete(verifyStatus(ctx, HTTP_INTERNAL_SERVER_ERROR))
           .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)))
       );
+  }
+
+  @Test
+  void delete_shouldReturn400_whenInstitutionHasFks(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+    var institution = new Locinst().withName("institution").withCode("ic");
+    var campus = new Loccamp().withName("campus").withCode("cc");
+
+    postgresClient.save(INSTITUTION_TABLE, institution)
+      .compose(institutionId -> postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(institutionId))
+        .compose(campusId -> doDelete(client, resourceUrl() + "/" + institutionId)))
+      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  @Test
+  void get_shouldReturn400_whenBadQuery(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    doGet(client, resourceUrl() + "?query=invalidCQL")
+      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
+  }
+
+  @Test
+  void get_shouldReturn404_whenInvalidId(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    doGet(client, resourceUrl() + "/" + UUID.randomUUID())
+      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
+      .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 }
