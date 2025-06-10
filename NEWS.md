@@ -21,6 +21,7 @@
 * Fix error serialization when writing to files uploaded to S3 ([MODINVSTOR-1389](https://folio-org.atlassian.net/browse/MODINVSTOR-1389))
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
+* Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
