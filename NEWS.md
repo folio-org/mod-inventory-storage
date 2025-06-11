@@ -1,5 +1,6 @@
-## v29.0.11 2025-05-19
-* Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
+## v29.0.11 2025-06-11
+### Bug fixes
+* Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1429](https://folio-org.atlassian.net/browse/MODINVSTOR-1429))
 
 ---
 
