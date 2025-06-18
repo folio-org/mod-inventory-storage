@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
@@ -304,22 +305,29 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
       "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");
     var holdingsId = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null, electronicAccessUrls);
+    var barcode = "item barcode 3";
     super.createItem(new ItemRequestBuilder().forHolding(holdingsId)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withTemporaryLocation(THIRD_FLOOR_LOCATION_ID)
-      .withBarcode("item barcode 3")
+      .withBarcode(barcode)
       .withMaterialType(bookMaterialTypeId));
 
     // when
     var instancesData = requestOaiPmhView(params).getFirst();
-    var electronicAccessJson = ((JsonArray) instancesData.getJsonObject("itemsandholdingsfields")
-      .getValue("items")).getJsonObject(2).getJsonArray("electronicAccess");
+
     var expected = JsonArray.of(JsonObject.of("uri", "http://electronicAccess-c-entered-first", "name", null),
       JsonObject.of("uri", "http://electronicAccess-z-entered-second", "name", null),
       JsonObject.of("uri", "http://electronicAccess-a-entered-third", "name", null));
 
     // then
-    assertEquals(expected, electronicAccessJson);
+    var itemsArray = (JsonArray) instancesData.getJsonObject("itemsandholdingsfields").getValue("items");
+    itemsArray.stream()
+      .filter(JsonObject.class::isInstance)
+      .map(JsonObject.class::cast)
+      .filter(itemJson -> itemJson.getString("barcode").equals(barcode))
+      .findFirst()
+      .ifPresentOrElse(itemJson -> assertEquals(expected, itemJson.getJsonArray("electronicAccess")),
+        () -> fail("Item with barcode " + barcode + " not found"));
   }
 
   /**
