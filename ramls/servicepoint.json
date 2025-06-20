@@ -49,6 +49,15 @@
       ],
       "default" : "Keep_the_current_due_date"
     },
+    "defaultCheckInActionForUseAtLocation": {
+      "type": "string",
+      "description": "enum for defining the default action when checking in an item that is for use in the library (i.e. in reading room)",
+      "enum" : [
+        "Keep_on_hold_shelf",
+        "Close_loan_and_return_item",
+        "Ask_for_action"
+      ]
+    },
     "staffSlips": {
       "type": "array",
       "description": "List of staff slips for this service point",
