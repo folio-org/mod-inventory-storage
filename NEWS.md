@@ -24,7 +24,7 @@
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
