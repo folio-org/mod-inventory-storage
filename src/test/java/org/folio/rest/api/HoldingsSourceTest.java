@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import junitparams.JUnitParamsRunner;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -24,12 +25,14 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.http.ResourceClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
   private static ResourceClient holdingsSourceClient;
 
   @BeforeClass
-  public static void beforeAll() {
+  public static void beforeClass() {
     TestBase.beforeAll();
 
     holdingsSourceClient = ResourceClient.forHoldingsSource(getClient());
@@ -246,7 +249,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
         .put("name", "associated source")
     ).getJson();
 
-    holdingsClient.create(new HoldingRequestBuilder()
+    holdingsClient.createWithDefaultHeader(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
@@ -278,7 +281,7 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
         .put("name", "associatable source")
     ).getJson();
 
-    IndividualResource holdingsResponse = holdingsClient.create(new HoldingRequestBuilder()
+    IndividualResource holdingsResponse = holdingsClient.createWithDefaultHeader(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)

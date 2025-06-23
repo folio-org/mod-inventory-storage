@@ -17,6 +17,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -24,7 +25,9 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.util.PercentCodec;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID INSTANCE_ID_1 = UUID.fromString("10000000-0000-4000-8000-000000000000");
   private static final UUID INSTANCE_ID_2 = UUID.fromString("20000000-0000-4000-8000-000000000000");
@@ -42,7 +45,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID ITEM_ID_621 = UUID.fromString("62100000-0000-4000-8000-000000000000");
 
   @BeforeClass
-  public static void beforeAll() {
+  public static void beforeClass() {
     TestBase.beforeAll();
 
     createInstance(INSTANCE_ID_1);
@@ -70,7 +73,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   private static void createHolding(UUID instanceId, UUID holdingId) {
-    holdingsClient.create(
+    holdingsClient.createWithDefaultHeader(
       new HoldingRequestBuilder()
         .withId(holdingId)
         .withSource(getPreparedHoldingSourceId())

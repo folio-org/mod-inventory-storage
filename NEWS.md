@@ -25,6 +25,7 @@
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
+* Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
