@@ -5,6 +5,7 @@
 ### New APIs versions
 * Provides `item-storage 10.2`
 * Provides `instance-storage 11.2`
+* Provides `service-points 3.5`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
@@ -14,7 +15,7 @@
 * Add instance property `sourceUri` ([MODINVNSTOR-1390](https://folio-org.atlassian.net/browse/MODINVSTOR-1390))
 * Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
-
+* New enum property `defaultCheckInActionForUseAtLocation` for reading room circulation ([MODINVSTOR-1376](https://folio-org.atlassian.net/browse/MODINVSTOR-1376))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
