@@ -22,12 +22,10 @@ import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.impl.StorageHelperTest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.services.CallNumberUtilsTest;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -36,61 +34,55 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-  AsyncMigrationTest.class,
-  CallNumberUtilsTest.class,
-  InstanceStorageTest.class,
-  RecordBulkTest.class,
-  HoldingsStorageTest.class,
-  ItemStorageTest.class,
-  DereferencedItemStorageTest.class,
-  HoldingsTypeTest.class,
-  ContributorTypesTest.class,
-  ServicePointTest.class,
-  ServicePointsUserTest.class,
-  StorageHelperTest.class,
-  InstanceRelationshipsTest.class,
-  ReferenceTablesTest.class,
-  ItemDamagedStatusApiTest.class,
-  ItemEffectiveLocationTest.class,
-  HridSettingsStorageTest.class,
-  HridSettingsStorageParameterizedTest.class,
-  ItemCopyNumberMigrationScriptTest.class,
-  ItemEffectiveCallNumberComponentsTest.class,
-  ItemEffectiveCallNumberDataUpgradeTest.class,
-  ModesOfIssuanceMigrationScriptTest.class,
-  PrecedingSucceedingTitleTest.class,
   AbstractInstanceRecordsApiTest.class,
-  OaiPmhViewTest.class,
-  InventoryHierarchyViewTest.class,
-  HoldingsSourceTest.class,
-  InstanceDomainEventTest.class,
-  InventoryViewTest.class,
-  InstanceSetTest.class,
-  BoundWithStorageTest.class,
-  ReindexJobRunnerTest.class,
-  EffectiveLocationMigrationTest.class,
-  PreviouslyHeldDataUpgradeTest.class,
-  ItemShelvingOrderMigrationServiceApiTest.class,
-  NotificationSendingErrorRepositoryTest.class,
-  LegacyItemEffectiveLocationMigrationScriptTest.class,
-  IterationJobRunnerTest.class,
-  SampleDataTest.class,
+  AsyncMigrationTest.class,
   AuditDeleteTest.class,
+  BoundWithStorageTest.class,
+  ContributorTypesTest.class,
+  DereferencedItemStorageTest.class,
+  EffectiveLocationMigrationTest.class,
+  HoldingsSourceTest.class,
+  HoldingsStorageTest.class,
+  HoldingsTypeTest.class,
   HridSettingsIncreaseMaxValueMigrationTest.class,
+  HridSettingsStorageParameterizedTest.class,
+  HridSettingsStorageTest.class,
   IllMigrationScriptTest.class,
   InstanceDiscoverySuppressMigrationScriptTest.class,
+  InstanceDomainEventTest.class,
   InstanceFormatUpgradeTest.class,
-  PrecedingSucceedingTitleMigrationScriptTest.class,
-  RetainLeadingZeroesMigrationScriptTest.class,
-  StatisticalCodeTest.class,
-  UpcIsmnMigrationScriptTest.class,
+  InstanceRelationshipsTest.class,
+  InstanceSetTest.class,
   InstanceStorageInstancesBulkApiTest.class,
+  InstanceStorageTest.class,
+  InventoryHierarchyViewTest.class,
+  InventoryViewTest.class,
+  ItemCopyNumberMigrationScriptTest.class,
+  ItemDamagedStatusApiTest.class,
+  ItemEffectiveCallNumberComponentsTest.class,
+  ItemEffectiveCallNumberDataUpgradeTest.class,
+  ItemEffectiveLocationTest.class,
+  ItemShelvingOrderMigrationServiceApiTest.class,
+  ItemStorageTest.class,
+  IterationJobRunnerTest.class,
+  LegacyItemEffectiveLocationMigrationScriptTest.class,
+  ModesOfIssuanceMigrationScriptTest.class,
+  NotificationSendingErrorRepositoryTest.class,
+  OaiPmhViewTest.class,
+  PrecedingSucceedingTitleMigrationScriptTest.class,
+  PrecedingSucceedingTitleTest.class,
+  PreviouslyHeldDataUpgradeTest.class,
+  RecordBulkTest.class,
+  ReferenceTablesTest.class,
+  ReindexJobRunnerTest.class,
+  RetainLeadingZeroesMigrationScriptTest.class,
+  SampleDataTest.class,
+  ServicePointsUserTest.class,
+  ServicePointTest.class,
+  StatisticalCodeTest.class,
   SubjectSourceTest.class,
-  SubjectTypeTest.class
-
-  // These fail.
-  //ReferenceTablesTest.class,
-  //UpdateItemStatusDateFunctionMigrationTest.class,
+  SubjectTypeTest.class,
+  UpcIsmnMigrationScriptTest.class
 })
 public final class StorageTestSuite {
   private static final Logger logger = LogManager.getLogger();
