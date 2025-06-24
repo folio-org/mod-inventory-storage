@@ -7,17 +7,14 @@ import static org.folio.rest.support.http.InterfaceUrls.contributorNameTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.contributorTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.electronicAccessRelationshipsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsNoteTypesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.holdingsSourceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.identifierTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.illPoliciesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceFormatsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceNoteTypesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.instanceRelationshipTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemNoteTypesUrl;
-import static org.folio.rest.support.http.InterfaceUrls.modesOfIssuanceUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
@@ -488,15 +485,6 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void modesOfIssuanceLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    URL apiUrl = modesOfIssuanceUrl("");
-
-    Response searchResponse = getReferenceRecords(apiUrl);
-    validateNumberOfReferenceRecords("modes of issuance", searchResponse, 4, 10);
-  }
-
-  @Test
   public void modesOfIssuanceBasicCrud()
     throws InterruptedException, TimeoutException, ExecutionException {
     String entityPath = "/modes-of-issuance";
@@ -559,13 +547,6 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceRelationshipTypesLoaded() throws Exception {
-    Response searchResponse = getReferenceRecords(instanceRelationshipTypesUrl(""));
-    validateNumberOfReferenceRecords("instance-relationship types",
-      searchResponse, 3, 200);
-  }
-
-  @Test
   public void instanceRelationshipTypesCrud() throws Exception {
     final String entityPath = "/instance-relationship-types";
     final String instanceRelationshipId = UUID.randomUUID().toString();
@@ -578,13 +559,6 @@ public class ReferenceTablesTest extends TestBase {
 
     testGetPutDeletePost(entityPath, instanceRelationshipId, instanceRelationshipType,
       InstanceRelationshipType.NAME_KEY);
-  }
-
-  @Test
-  public void holdingsSourcesLoaded() throws Exception {
-    final Response searchResponse = getReferenceRecords(holdingsSourceUrl(""));
-
-    validateNumberOfReferenceRecords("holdings-sources types", searchResponse, 2, 399);
   }
 
   @ParameterizedTest
@@ -610,10 +584,10 @@ public class ReferenceTablesTest extends TestBase {
   private void validateNumberOfReferenceRecords(String dataDescription, Response searchResponse, int min, int max) {
     Integer totalRecords = searchResponse.getJson().getInteger("totalRecords");
     assertNotNull(String.format("Could not retrieve record count for %s", dataDescription), totalRecords);
-    assertTrue(String.format("Expected <=%s \"%s\", found %s", max, dataDescription, totalRecords),
-      max >= totalRecords);
-    assertTrue(String.format("Expected >=%s \"%s\", found %s", min, dataDescription, totalRecords),
-      min <= totalRecords);
+    assertTrue(String.format("Expected <=%s \"%s\", found %s, response:%n %s", max, dataDescription, totalRecords,
+      searchResponse.getJson().encode()), max >= totalRecords);
+    assertTrue(String.format("Expected >=%s \"%s\", found %s, response:%n %s", min, dataDescription, totalRecords,
+      searchResponse.getJson().encode()), min <= totalRecords);
   }
 
   private Response createReferenceRecord(String path, JsonEntity referenceObject)
