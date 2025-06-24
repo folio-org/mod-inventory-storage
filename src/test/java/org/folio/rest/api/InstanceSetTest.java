@@ -73,12 +73,12 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   private static void createHolding(UUID instanceId, UUID holdingId) {
-    holdingsClient.createWithDefaultHeader(
+    createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(holdingId)
         .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
+        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
   }
 
   private static void createItem(UUID holdingId, UUID itemId) {

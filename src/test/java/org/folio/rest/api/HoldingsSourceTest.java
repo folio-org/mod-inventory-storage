@@ -249,11 +249,11 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
         .put("name", "associated source")
     ).getJson();
 
-    holdingsClient.createWithDefaultHeader(new HoldingRequestBuilder()
+    createHoldingRecord(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withSource(sourceId));
+      .withSource(sourceId).create());
 
     Response sourceDeleteResponse = holdingsSourceClient.attemptToDelete(sourceId);
 
@@ -281,11 +281,11 @@ public class HoldingsSourceTest extends TestBaseWithInventoryUtil {
         .put("name", "associatable source")
     ).getJson();
 
-    IndividualResource holdingsResponse = holdingsClient.createWithDefaultHeader(new HoldingRequestBuilder()
+    IndividualResource holdingsResponse = createHoldingRecord(new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withSource(sourceId));
+      .withSource(sourceId).create());
 
     assertThat(holdingsResponse.getJson().getString("sourceId"), is(sourceId.toString()));
   }

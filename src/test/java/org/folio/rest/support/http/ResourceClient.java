@@ -1,6 +1,5 @@
 package org.folio.rest.support.http;
 
-import static org.folio.rest.api.TestBaseWithInventoryUtil.mockServer;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.IndividualResource;
@@ -203,14 +201,6 @@ public final class ResourceClient {
     return new IndividualResource(response);
   }
 
-  public IndividualResource createWithDefaultHeader(Builder builder) {
-    return create(builder.create(), TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
-  }
-
-  public IndividualResource createWithDefaultHeader(JsonObject request) {
-    return create(request, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
-  }
-
   public void createNoResponse(JsonObject request) {
 
     Response response = attemptToCreate(request);
@@ -268,19 +258,6 @@ public final class ResourceClient {
     client.put(urlMakerWithId(id), request, headers, tenantId, ResponseHandler.any(putCompleted));
 
     return TestBase.get(putCompleted);
-  }
-
-  public void replaceWithDefaultHeader(UUID id, Builder builder) {
-
-    Response putResponse = attemptToReplaceWithDefaultHeader(id != null ? id.toString() : null, builder.create());
-
-    assertThat(
-      String.format("Failed to update %s %s: %s", resourceName, id, putResponse.getBody()),
-      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-  }
-
-  public Response attemptToReplaceWithDefaultHeader(String id, JsonObject request) {
-    return attemptToReplace(id, request, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
 
   public Response getById(UUID id) {
