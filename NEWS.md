@@ -26,6 +26,7 @@
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
+* Remove `subjectSeriesMigration` async migration as non-actual ([MODINVSTOR-1408](https://folio-org.atlassian.net/browse/MODINVSTOR-1408))
 * Stabilize `canMigratePrecedingSucceedingTitles` test by searching title in the result list first ([MODINVSTOR-1407](https://folio-org.atlassian.net/browse/MODINVSTOR-1407))
 
 ### Dependencies
