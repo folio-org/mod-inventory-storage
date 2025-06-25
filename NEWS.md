@@ -29,6 +29,7 @@
 * Remove `subjectSeriesMigration` async migration as non-actual ([MODINVSTOR-1408](https://folio-org.atlassian.net/browse/MODINVSTOR-1408))
 * Stabilize `canMigratePrecedingSucceedingTitles` test by searching title in the result list first ([MODINVSTOR-1407](https://folio-org.atlassian.net/browse/MODINVSTOR-1407))
 * Stabilize tests by waiting for subscription/unsubscription finished in test Kafka consumer ([MODINVSTOR-1410](https://folio-org.atlassian.net/browse/MODINVSTOR-1410))
+* Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

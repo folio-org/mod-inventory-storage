@@ -28,13 +28,6 @@ public class HoldingsEventMessageChecks {
     return holdings.getString("id");
   }
 
-  public void createdMessagePublished(JsonObject holdings) {
-    final var holdingsId = getId(holdings);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
-      eventMessageMatchers.hasCreateEventMessageFor(holdings));
-  }
-
   public void createdMessagePublished(JsonObject holdings, String tenantIdExpected, String okapiUrlExpected) {
     final var holdingsId = getId(holdings);
 
