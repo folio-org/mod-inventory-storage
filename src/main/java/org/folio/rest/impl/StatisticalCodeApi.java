@@ -74,7 +74,6 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
           .respond500WithTextPlain(message)));
       }
     });
-
   }
 
   @Validate
@@ -237,5 +236,4 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
     handler.handle(Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
       .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
-
 }

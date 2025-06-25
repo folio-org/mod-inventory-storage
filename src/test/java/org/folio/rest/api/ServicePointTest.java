@@ -677,6 +677,37 @@ public class ServicePointTest extends TestBase {
   }
 
   @Test
+  public void canUpdateServicePointWithDefaultCheckInActionForUseAtLocation()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID id = UUID.randomUUID();
+    final JsonObject createdServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", null, 20,
+      false, null).getJson();
+    JsonObject request = new JsonObject()
+      .put("id", id.toString())
+      .put("name", "Circ Desk 2")
+      .put("code", "cd2")
+      .put("discoveryDisplayName", "Circulation Desk -- Basement")
+      .put("defaultCheckInActionForUseAtLocation",
+        Servicepoint.DefaultCheckInActionForUseAtLocation.KEEP_ON_HOLD_SHELF.value());
+    CompletableFuture<Response> updated = new CompletableFuture<>();
+    send(servicePointsUrl("/" + id), HttpMethod.PUT, request.encode(),
+      ResponseHandler.any(updated));
+
+    Response updateResponse = updated.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    Response getResponse = getById(id);
+    JsonObject responseJson = getResponse.getJson();
+    assertThat(responseJson.getString("id"), is(id.toString()));
+    assertThat(responseJson.getString("code"), is("cd2"));
+    assertThat(responseJson.getString("name"), is("Circ Desk 2")); //should fail
+    assertThat(responseJson.getString("defaultCheckInActionForUseAtLocation"),
+      is(Servicepoint.DefaultCheckInActionForUseAtLocation.KEEP_ON_HOLD_SHELF.value()));
+
+    servicePointEventMessageChecks.updatedMessagePublished(createdServicePoint, getResponse.getJson());
+  }
+
+  @Test
   public void canCreateServicePointWithStaffSlips()
     throws InterruptedException,
     ExecutionException,
@@ -842,5 +873,4 @@ public class ServicePointTest extends TestBase {
 
     return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
-
 }

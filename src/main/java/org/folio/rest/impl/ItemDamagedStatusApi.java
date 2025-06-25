@@ -115,7 +115,6 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
         asyncResultHandler.handle(succeededFuture(response));
       }
     });
-
   }
 
   @Validate
@@ -159,7 +158,6 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
         asyncResultHandler.handle(succeededFuture(response));
       }
     });
-
   }
 
   // protected is needed for unit test

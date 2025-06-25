@@ -132,5 +132,4 @@ public class ItemEffectiveLocationTestDataProvider {
       return LOCATION_ID_TO_NAME_MAP.get(perm) + ", " + LOCATION_ID_TO_NAME_MAP.get(temp);
     }
   }
-
 }

@@ -12,5 +12,4 @@ public class LocationRepository extends AbstractRepository<Location> {
   public LocationRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), LOCATION_TABLE, Location.class);
   }
-
 }

@@ -65,5 +65,4 @@ class AlternativeTitleTypesIT extends BaseReferenceDataIntegrationTest<Alternati
   protected List<String> queries() {
     return List.of("name==test-type", "source=test-source");
   }
-
 }

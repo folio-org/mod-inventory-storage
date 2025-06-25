@@ -12,5 +12,4 @@ public class CampusRepository extends AbstractRepository<Loccamp> {
   public CampusRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), CAMPUS_TABLE, Loccamp.class);
   }
-
 }

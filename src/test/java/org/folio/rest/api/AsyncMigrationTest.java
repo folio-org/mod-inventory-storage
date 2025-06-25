@@ -11,7 +11,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
-import static org.folio.services.migration.MigrationName.SUBJECT_SERIES_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,13 +26,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import io.vertx.core.Context;
-import io.vertx.core.json.JsonObject;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
@@ -67,22 +64,6 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
-  private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
-  }
-
-  private static AsyncMigrationJob migrationJob() {
-    return new AsyncMigrationJob()
-      .withJobStatus(IN_PROGRESS)
-      .withId(UUID.randomUUID().toString())
-      .withMigrations(Collections.singletonList(ITEM_SHELVING_ORDER_MIGRATION.getValue()))
-      .withSubmittedDate(new Date());
-  }
-
   @Test
   public void canMigrateItems() {
     var numberOfRecords = 101;
@@ -98,7 +79,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       .withMigrations(List.of(ITEM_SHELVING_ORDER_MIGRATION.getValue())));
 
     await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
+                                              .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
@@ -115,47 +96,10 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMigrateInstanceSubjectsAndSeries() {
-    var numberOfRecords = 10;
-
-    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-      instancesClient.create(new JsonObject()
-        .put("title", "test" + v)
-        .put("source", "MARC")
-        .put("instanceTypeId", "535e3160-763a-42f9-b0c0-d8ed7df6e2a2"))
-    );
-
-    var countDownLatch = new CountDownLatch(1);
-
-    postgresClient(getContext(), okapiHeaders()).execute(
-        "UPDATE " + getPostgresClientFuturized().getFullTableName("instance")
-          + " SET jsonb = jsonb || '{\"series\":[\"Harry Potter V.1\", \"Harry Potter V.1\"], "
-          + "\"subjects\": [\"fantasy\", \"magic\"]}' RETURNING id::text;")
-      .onSuccess(event -> countDownLatch.countDown());
-
-    await().atMost(5, SECONDS).until(() -> countDownLatch.getCount() == 0L);
-
-    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of(SUBJECT_SERIES_MIGRATION.getValue())));
-
-    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
-
-    var job = asyncMigration.getMigrationJob(migrationJob.getId());
-
-    assertThat(job.getPublished().stream().map(Published::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getProcessed().stream().map(Processed::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-  }
-
-  @Test
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
+    assertEquals(Integer.valueOf(1), migrations.getTotalRecords());
     assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
       migrations.getAsyncMigrations().getFirst().getMigrations().getFirst());
   }
@@ -187,12 +131,28 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     asyncMigration.cancelMigrationJob(migrationJob.getId());
 
     await().until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-      .getJobStatus() == CANCELLED);
+                          .getJobStatus() == CANCELLED);
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getPublished().getFirst().getCount(), greaterThanOrEqualTo(1000));
+  }
+
+  private static Map<String, String> okapiHeaders() {
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+  }
+
+  private static Context getContext() {
+    return getVertx().getOrCreateContext();
+  }
+
+  private static AsyncMigrationJob migrationJob() {
+    return new AsyncMigrationJob()
+      .withJobStatus(IN_PROGRESS)
+      .withId(UUID.randomUUID().toString())
+      .withMigrations(Collections.singletonList(ITEM_SHELVING_ORDER_MIGRATION.getValue()))
+      .withSubmittedDate(new Date());
   }
 
   private PostgresClientFuturized getPostgresClientFuturized() {

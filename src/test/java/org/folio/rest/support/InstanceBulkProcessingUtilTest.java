@@ -59,5 +59,4 @@ public class InstanceBulkProcessingUtilTest {
     assertEquals(sourceInstance.getAdministrativeNotes(), targetInstance.getAdministrativeNotes());
     assertEquals(sourceInstance.getNatureOfContentTermIds(), targetInstance.getNatureOfContentTermIds());
   }
-
 }

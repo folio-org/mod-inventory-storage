@@ -22,5 +22,4 @@ public class BulkProcessingContextTest {
     assertEquals("temp/parent-folder/bulkInstances_failedEntities", context.getErrorEntitiesFileLocalPath());
     assertEquals("temp/parent-folder/bulkInstances_errors", context.getErrorsFileLocalPath());
   }
-
 }

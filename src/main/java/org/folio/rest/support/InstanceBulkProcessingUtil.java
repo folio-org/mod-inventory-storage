@@ -55,5 +55,4 @@ public final class InstanceBulkProcessingUtil {
 
   @JsonIgnoreProperties({"precedingTitles", "succeedingTitles", "isBoundWith", "parentInstances", "childInstances"})
   private interface InstanceMixIn {}
-
 }

@@ -12,5 +12,4 @@ public class ClassificationTypeRepository extends AbstractRepository<Classificat
   public ClassificationTypeRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), CLASSIFICATION_TYPE_TABLE, ClassificationType.class);
   }
-
 }

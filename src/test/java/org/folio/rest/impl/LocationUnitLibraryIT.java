@@ -149,22 +149,29 @@ class LocationUnitLibraryIT
   }
 
   @Test
-  void put_shouldReturn422_whenIdIsNotMatchWithPayload(Vertx vertx,
-                                                       VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-    var invalidId = UUID.randomUUID().toString();
-    var library = sampleRecord().withId(UUID.randomUUID().toString());
-
-    doPut(client, resourceUrlById(invalidId), pojo2JsonObject(library))
-      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
-      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
-        var actual = response.bodyAsClass(Errors.class);
-        assertThat(actual.getErrors())
-          .hasSize(1)
-          .extracting(Error::getMessage)
-          .containsExactly("Illegal operation: Library ID cannot be changed");
-        ctx.completeNow();
+  void post_shouldReturn422_whenNameIsDuplicate(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var library = sampleRecord();
+    doPost(client, resourceUrl(), pojo2JsonObject(library))
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .onComplete(ctx.succeeding(response1 -> ctx.verify(() -> {
+        doPost(client, resourceUrl(), pojo2JsonObject(library))
+          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+          .onComplete(ctx.succeeding(response2 -> ctx.verify(() -> {
+            var actual = response2.bodyAsClass(Errors.class);
+            assertThat(actual.getErrors()).isNotEmpty();
+            ctx.completeNow();
+          })));
       })));
+  }
+
+  @Test
+  void post_shouldReturn422_whenCodeIsNull(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var library = sampleRecord().withCode(null);
+    doPost(client, resourceUrl(), pojo2JsonObject(library))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+      .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 
   @Test
@@ -184,6 +191,33 @@ class LocationUnitLibraryIT
           .extracting(Error::getMessage)
           .containsExactly("Cannot set loclibrary.campusid = "
             + invalidCampusId + " because it does not exist in loccampus.id.");
+        ctx.completeNow();
+      })));
+  }
+
+  @Test
+  void get_shouldReturn404_whenInvalidId(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    doGet(client, resourceUrl() + "/" + UUID.randomUUID())
+      .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
+      .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
+  }
+
+  @Test
+  void put_shouldReturn422_whenIdIsNotMatchWithPayload(Vertx vertx,
+                                                       VertxTestContext ctx) {
+    HttpClient client = vertx.createHttpClient();
+    var invalidId = UUID.randomUUID().toString();
+    var library = sampleRecord().withId(UUID.randomUUID().toString());
+
+    doPut(client, resourceUrlById(invalidId), pojo2JsonObject(library))
+      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
+        var actual = response.bodyAsClass(Errors.class);
+        assertThat(actual.getErrors())
+          .hasSize(1)
+          .extracting(Error::getMessage)
+          .containsExactly("Illegal operation: Library ID cannot be changed");
         ctx.completeNow();
       })));
   }

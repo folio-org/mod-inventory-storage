@@ -89,5 +89,4 @@ public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements
       routingContext, okapiHeaders, asyncResultHandler, vertxContext
     );
   }
-
 }

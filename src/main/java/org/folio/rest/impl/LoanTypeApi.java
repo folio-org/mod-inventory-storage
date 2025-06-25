@@ -107,14 +107,12 @@ public class LoanTypeApi implements org.folio.rest.jaxrs.resource.LoanTypes {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteLoanTypesResponse.respond500WithTextPlain(e.getMessage())));
     }
-
   }
 
   @Validate
   @Override
   public void postLoanTypes(Loantype entity, Map<String, String> okapiHeaders,
                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
     vertxContext.runOnContext(v -> {
       try {
         String id = entity.getId();

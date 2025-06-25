@@ -228,5 +228,4 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     consumerRecord.headers().add(new RecordHeader(TOKEN.toLowerCase(), "test-token".getBytes()));
     return new KafkaConsumerRecordImpl<>(consumerRecord);
   }
-
 }

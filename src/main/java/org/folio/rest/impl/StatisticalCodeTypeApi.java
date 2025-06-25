@@ -266,5 +266,4 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
   private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
     return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
   }
-
 }

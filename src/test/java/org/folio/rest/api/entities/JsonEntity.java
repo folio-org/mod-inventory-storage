@@ -1,13 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.folio.rest.api.entities;
 
 import io.vertx.core.json.JsonObject;
-
 
 public abstract class JsonEntity {
 
@@ -36,5 +29,4 @@ public abstract class JsonEntity {
   protected void setProperty(String propertyKey, Object value) {
     json.put(propertyKey, value);
   }
-
 }

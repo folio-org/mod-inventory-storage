@@ -103,7 +103,6 @@ public abstract class AbstractInstanceRecordsApi {
       tuple.addBoolean(skipSuppressedFromDiscoveryRecords);
       // Apply extra parameters
       applyExtraParams.accept(tuple);
-
     } catch (Exception e) {
       throw new IllegalArgumentException(e);
     }
@@ -117,7 +116,6 @@ public abstract class AbstractInstanceRecordsApi {
     try {
       tuple.addArrayOfUUID(Optional.ofNullable(instancesIds).orElse(new UUID[0]));
       tuple.addBoolean(skipSuppressedFromDiscoveryRecords);
-
     } catch (Exception e) {
       throw new IllegalArgumentException(e);
     }
@@ -167,5 +165,4 @@ public abstract class AbstractInstanceRecordsApi {
     response.putHeader("Content-Type", "application/json");
     return response;
   }
-
 }

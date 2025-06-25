@@ -22,5 +22,4 @@ public class ServicePointSynchronizationDeleteHandler extends ServicePointSynchr
 
     return new ServicePointSynchronizationDeleteEventProcessor(domainEvent);
   }
-
 }

@@ -84,5 +84,4 @@ public class CallNumberTypeService {
   private boolean isSystemSource(CallNumberType callNumberType) {
     return SYSTEM_CALL_NUMBER_TYPE_SOURCE.equals(callNumberType.getSource());
   }
-
 }

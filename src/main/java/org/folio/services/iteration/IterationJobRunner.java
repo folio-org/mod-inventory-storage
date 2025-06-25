@@ -200,7 +200,5 @@ public class IterationJobRunner {
     private String getEventType() {
       return job.getJobParams().getEventType();
     }
-
   }
-
 }

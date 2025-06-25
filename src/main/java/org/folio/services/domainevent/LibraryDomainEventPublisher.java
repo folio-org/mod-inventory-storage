@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.LibraryRepository;
 import org.folio.rest.jaxrs.model.Loclib;
 
-
 public class LibraryDomainEventPublisher extends AbstractDomainEventPublisher<Loclib, Loclib> {
 
   public LibraryDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {

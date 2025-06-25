@@ -121,5 +121,4 @@ public class BulkProcessingErrorFileWriter {
       .onFailure(e -> log.warn("close:: Failed to flush data to the file '{}'", errorsFilePath))
       .eventually(() -> errorsAsyncFile.close());
   }
-
 }

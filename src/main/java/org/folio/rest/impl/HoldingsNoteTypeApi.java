@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.folio.rest.impl;
 
 import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
@@ -238,5 +232,4 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
     handler.handle(Future.succeededFuture(PutHoldingsNoteTypesByIdResponse
       .respond500WithTextPlain(messages.getMessage(Messages.DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
   }
-
 }

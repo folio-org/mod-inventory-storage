@@ -20,5 +20,4 @@ class HoldingsRepositoryTest {
     assertThat(future.cause(), is(instanceOf(IllegalArgumentException.class)));
     assertThat(future.cause().getMessage(), is("sortBy: foo"));
   }
-
 }

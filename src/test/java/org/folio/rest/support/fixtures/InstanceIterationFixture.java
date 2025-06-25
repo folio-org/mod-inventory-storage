@@ -32,5 +32,4 @@ public final class InstanceIterationFixture {
       .thenApply(Response::getJson)
       .thenApply(json -> json.mapTo(IterationJob.class)));
   }
-
 }

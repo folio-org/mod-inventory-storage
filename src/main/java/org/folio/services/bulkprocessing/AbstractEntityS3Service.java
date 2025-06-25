@@ -190,5 +190,4 @@ public abstract class AbstractEntityS3Service<T, R> {
    * @return ID of the specified entity
    */
   protected abstract String extractEntityId(R entity);
-
 }

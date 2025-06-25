@@ -9,6 +9,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.URL;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -115,6 +116,21 @@ public final class ModuleUtility {
     prepareTenant(tenantId, null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
+  public static void prepareTenant(String tenantId, String moduleFrom, String moduleTo, boolean loadSample,
+                                   Map<String, String> headers)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    var job = new JsonObject()
+      .put("parameters", new JsonArray()
+        .add(new JsonObject().put("key", "loadReference").put("value", "true"))
+        .add(new JsonObject().put("key", "loadSample").put("value", Boolean.toString(loadSample))))
+      .put("module_to", moduleTo);
+    if (moduleFrom != null) {
+      job.put("module_from", moduleFrom);
+    }
+    tenantOp(tenantId, job, headers);
+  }
+
   public static void removeTenant(String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -155,6 +171,34 @@ public final class ModuleUtility {
         throw new IllegalStateException(response.getJson().getString("error"));
       }
 
+      assertThat(failureMessage, response.getStatusCode(), is(200));
+    } else {
+      assertThat(failureMessage, response.getStatusCode(), is(204));
+    }
+  }
+
+  public static void tenantOp(String tenantId, JsonObject job, Map<String, String> headers)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    CompletableFuture<Response> tenantPrepared = new CompletableFuture<>();
+    var client = new HttpClient(vertx);
+    client.post(vertxUrl("/_/tenant"), job, headers, tenantId, ResponseHandler.any(tenantPrepared));
+    var response = tenantPrepared.get(60, TimeUnit.SECONDS);
+    var failureMessage = String.format("Tenant post failed: %s: %s", response.getStatusCode(), response.getBody());
+
+    // wait if not complete ...
+    if (response.getStatusCode() == 201) {
+      var id = response.getJson().getString("id");
+      tenantPrepared = new CompletableFuture<>();
+      client.get(vertxUrl("/_/tenant/" + id + "?wait=60000"), tenantId, ResponseHandler.any(tenantPrepared));
+      // The extra 1 in 61 is intentionally added to rule out potential
+      // real-time timing issues with the 60 second wait above.
+      response = tenantPrepared.get(61, TimeUnit.SECONDS);
+      failureMessage = String.format("Tenant get failed: %s: %s", response.getStatusCode(), response.getBody());
+
+      if (response.getStatusCode() == 200 && response.getJson().containsKey("error")) {
+        throw new IllegalStateException(response.getJson().getString("error"));
+      }
       assertThat(failureMessage, response.getStatusCode(), is(200));
     } else {
       assertThat(failureMessage, response.getStatusCode(), is(204));

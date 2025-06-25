@@ -43,5 +43,4 @@ public class RetainLeadingZeroesMigrationScriptTest extends MigrationTestBase {
     JsonObject withLeadingZeroes = (JsonObject) result.iterator().next().getJson(0);
     Assert.assertTrue(withLeadingZeroes.containsKey(LEADING_ZEROES_PROPERTY));
   }
-
 }

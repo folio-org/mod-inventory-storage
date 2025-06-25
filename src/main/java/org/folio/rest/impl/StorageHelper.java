@@ -45,5 +45,4 @@ public final class StorageHelper {
       .setLimit(new Limit(limit))
       .setOffset(new Offset(offset));
   }
-
 }
