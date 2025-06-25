@@ -3,6 +3,8 @@ package org.folio.rest.api;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
+import static org.folio.rest.api.TestBase.KAFKA_CONSUMER;
+import static org.folio.rest.api.TestBase.get;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
@@ -37,7 +39,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
+public class IterationJobRunnerTest {
 
   // use usual instance topic for testing purposes, because it doesn't matter
   // what the topic is for testing. this also prevents from adding changes to
@@ -58,24 +60,6 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     instanceIteration = new InstanceIterationFixture(getClient());
   }
 
-  private static IterationJob iterationJob() {
-    return new IterationJob()
-      .withId(UUID.randomUUID().toString())
-      .withJobStatus(IN_PROGRESS)
-      .withSubmittedDate(new Date())
-      .withJobParams(
-        new IterationJobParams().withTopicName(TEST_TOPIC)
-      );
-  }
-
-  private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
-  }
-
   @SneakyThrows
   @Before
   public void beforeEach() {
@@ -86,7 +70,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
       jobRepository, instanceRepository, getContext(), okapiHeaders());
 
-    removeAllEvents();
+    KAFKA_CONSUMER.discardAllMessages();
   }
 
   @Test
@@ -103,7 +87,7 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner.startIteration(iterationJob);
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
-      .getJobStatus() == COMPLETED);
+                          .getJobStatus() == COMPLETED);
 
     var job = instanceIteration.getIterationJob(iterationJob.getId());
 
@@ -129,16 +113,34 @@ public class IterationJobRunnerTest extends TestBaseWithInventoryUtil {
     jobRunner.startIteration(iterationJob);
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
-      .getMessagesPublished() >= 1000);
+                          .getMessagesPublished() >= 1000);
 
     instanceIteration.cancelIterationJob(iterationJob.getId());
 
     await().until(() -> instanceIteration.getIterationJob(iterationJob.getId())
-      .getJobStatus() == CANCELLED);
+                          .getJobStatus() == CANCELLED);
 
     var job = instanceIteration.getIterationJob(iterationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
+  }
+
+  private static IterationJob iterationJob() {
+    return new IterationJob()
+      .withId(UUID.randomUUID().toString())
+      .withJobStatus(IN_PROGRESS)
+      .withSubmittedDate(new Date())
+      .withJobParams(
+        new IterationJobParams().withTopicName(TEST_TOPIC)
+      );
+  }
+
+  private static Map<String, String> okapiHeaders() {
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+  }
+
+  private static Context getContext() {
+    return getVertx().getOrCreateContext();
   }
 }
