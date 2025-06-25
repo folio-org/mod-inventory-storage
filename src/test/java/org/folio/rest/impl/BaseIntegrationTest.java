@@ -7,7 +7,6 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.folio.postgres.testing.PostgresTesterContainer.getImageName;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +35,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.api.TestBase;
 import org.folio.rest.support.extension.EnableTenant;
@@ -56,7 +56,7 @@ import org.testcontainers.kafka.KafkaContainer;
 @EnableTenant
 @Testcontainers(parallel = true)
 @ExtendWith(VertxExtension.class)
-public class BaseIntegrationTest {
+public abstract class BaseIntegrationTest {
 
   public static final String USER_ID = UUID.randomUUID().toString();
   @RegisterExtension
@@ -67,13 +67,16 @@ public class BaseIntegrationTest {
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @Container
-  private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>(getImageName())
-    .withDatabaseName("okapi_modules")
-    .withUsername("admin_user")
-    .withPassword("admin_password");
+  private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
+    new PostgreSQLContainer<>(PostgresTesterContainer.getImageName())
+      .withDatabaseName("folio")
+      .withUsername("admin_user")
+      .withPassword("admin_password");
 
   @Container
-  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName());
+  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName())
+    .withStartupAttempts(3);
+
   private static int port;
 
   @BeforeEach
