@@ -1,3 +1,9 @@
+## v29.2.0 YYYY-mm-DD
+
+### Features
+
+- Adds an array to hold additional call numbers on the holding and item level
+
 ## v29.1.0 YYYY-mm-DD
 ### Breaking changes
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
