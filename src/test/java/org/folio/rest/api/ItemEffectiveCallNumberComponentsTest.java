@@ -6,7 +6,6 @@ import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasSuffix;
 import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,7 +40,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   public static final String ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(KAFKA_CONSUMER);
+    = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   @BeforeClass
   public static void createCallNumberTypes() {
@@ -242,7 +241,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     assertThat(effectiveCallNumberComponents.getString(effectivePropertyName),
       is(initEffectiveValue));
 
-    holdingsClient.replace(holdings.getId(),
+    updateHoldingRecord(holdings.getId(),
       getHoldingsById(holdings.getJson())
         .put("discoverySuppress", false) //ensure holdings has some updated field so update is not skipped
         .put(holdingsPropertyName, holdingsTargetValue)
@@ -254,7 +253,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
-        .put(itemPropertyName, itemTargetValue));
+        .put(itemPropertyName, itemTargetValue), Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
       itemMessageChecks.updatedMessagePublished(itemAfterHoldingsUpdate,
         itemsClient.getById(createdItem.getId()).getJson());
@@ -282,8 +281,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       .withDiscoverySuppress(true)
       .create()
       .put(propertyName, propertyValue);
-    IndividualResource holdings =
-      holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    IndividualResource holdings = createHoldingRecord(holdingToCreate);
     assertThat(holdings.getJson().getString(propertyName), is(propertyValue));
 
     return holdings;

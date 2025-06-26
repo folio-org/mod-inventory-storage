@@ -177,12 +177,10 @@ public final class ResourceClient {
   }
 
   public IndividualResource create(Builder builder) {
-
     return create(builder.create());
   }
 
   public IndividualResource create(JsonObject request) {
-
     return create(request, TENANT_ID);
   }
 
@@ -191,7 +189,6 @@ public final class ResourceClient {
   }
 
   public IndividualResource create(JsonObject request, String tenantId, Map<String, String> headers) {
-
     Response response = attemptToCreate("", request, tenantId, headers);
 
     assertThat(
@@ -202,7 +199,6 @@ public final class ResourceClient {
   }
 
   public void createNoResponse(JsonObject request) {
-
     Response response = attemptToCreate(request);
 
     assertThat(
@@ -231,13 +227,15 @@ public final class ResourceClient {
   }
 
   public void replace(UUID id, Builder builder) {
-
     replace(id, builder.create());
   }
 
   public void replace(UUID id, JsonObject request) {
+    replace(id, request, new HashMap<>());
+  }
 
-    Response putResponse = attemptToReplace(id != null ? id.toString() : null, request);
+  public void replace(UUID id, JsonObject request, Map<String, String> headers) {
+    Response putResponse = attemptToReplace(id != null ? id.toString() : null, request, TENANT_ID, headers);
 
     assertThat(
       String.format("Failed to update %s %s: %s", resourceName, id, putResponse.getBody()),
@@ -269,8 +267,23 @@ public final class ResourceClient {
     return TestBase.get(client.get(urlMakerWithId(id), TENANT_ID));
   }
 
-  public Response deleteIfPresent(String id) {
+  public void delete(UUID id) {
+    delete(id, Map.of());
+  }
 
+  public void delete(UUID id, Map<String, String> headers) {
+    Response response = deleteIfPresent(id != null ? id.toString() : null, headers);
+
+    assertThat(String.format(
+        "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
+      response.getStatusCode(), is(204));
+  }
+
+  public Response attemptToDelete(UUID id) {
+    return deleteIfPresent(id != null ? id.toString() : null);
+  }
+
+  public Response deleteIfPresent(String id) {
     CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
     client.delete(urlMakerWithId(id),
@@ -279,27 +292,31 @@ public final class ResourceClient {
     return TestBase.get(deleteFinished);
   }
 
-  public void delete(UUID id) {
-    Response response = deleteIfPresent(id != null ? id.toString() : null);
+  public Response deleteIfPresent(String id, Map<String, String> headers) {
+    CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
+
+    client.delete(urlMakerWithId(id), headers,
+      TENANT_ID, ResponseHandler.any(deleteFinished));
+
+    return TestBase.get(deleteFinished);
+  }
+
+  public void deleteByQuery(String query, Map<String, String> headers) {
+    Response response = attemptDeleteByQuery(query, TENANT_ID, headers);
 
     assertThat(String.format(
-        "Failed to delete %s %s: %s", resourceName, id, response.getBody()),
+        "Failed to delete %s by query '%s': %s", resourceName, query, response.getBody()),
       response.getStatusCode(), is(204));
   }
 
-  public Response attemptToDelete(UUID id) {
+  public Response attemptDeleteByQuery(String query, String tenantId, Map<String, String> headers) {
+    CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
-    return deleteIfPresent(id != null ? id.toString() : null);
-  }
+    var cql = PercentCodec.encode(query);
+    client.delete(urlMaker.combine("?query=" + cql), headers, tenantId,
+      ResponseHandler.any(deleteFinished));
 
-  public Response attemptDeleteAll() {
-    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
-
-    var cql = PercentCodec.encode("cql.allRecords=1");
-    client.delete(urlMaker.combine("?query=" + cql), TENANT_ID,
-      ResponseHandler.any(deleteAllFinished));
-
-    return TestBase.get(deleteAllFinished);
+    return TestBase.get(deleteFinished);
   }
 
   public void deleteAll() {
@@ -308,6 +325,28 @@ public final class ResourceClient {
     assertThat(String.format(
         "Failed to delete %s: %s", resourceName, response.getBody()),
       response.getStatusCode(), is(204));
+  }
+
+  public void deleteAll(Map<String, String> headers) {
+    final Response response = attemptDeleteAll(headers);
+
+    assertThat(String.format(
+        "Failed to delete %s: %s", resourceName, response.getBody()),
+      response.getStatusCode(), is(204));
+  }
+
+  public Response attemptDeleteAll() {
+    return attemptDeleteAll(Map.of());
+  }
+
+  public Response attemptDeleteAll(Map<String, String> headers) {
+    CompletableFuture<Response> deleteAllFinished = new CompletableFuture<>();
+
+    var cql = PercentCodec.encode("cql.allRecords=1");
+    client.delete(urlMaker.combine("?query=" + cql), headers, TENANT_ID,
+      ResponseHandler.any(deleteAllFinished));
+
+    return TestBase.get(deleteAllFinished);
   }
 
   public void deleteAllIndividually() {
