@@ -2252,7 +2252,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
   }
 
   @Test
@@ -2286,7 +2285,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(422));
-
   }
 
   @Test
@@ -2432,9 +2430,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
   }
-
 
   @Test
   public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
@@ -2537,6 +2533,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     "?query=",
     "?query=%20%20",
   })
+
   @Test
   public void cannotDeleteItemsWithoutCql(String query) {
     var response = getClient().delete(itemsStorageUrl(query), TENANT_ID).get(10, SECONDS);

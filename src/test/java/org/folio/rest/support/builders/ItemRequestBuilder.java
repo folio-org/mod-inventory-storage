@@ -375,7 +375,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       itemLevelAdditionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
-
   }
 
   public ItemRequestBuilder withDiscoverySuppress(boolean discoverySuppress) {
