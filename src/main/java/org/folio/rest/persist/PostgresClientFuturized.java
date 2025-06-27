@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +23,10 @@ public class PostgresClientFuturized {
 
   public PostgresClientFuturized(PostgresClient postgresClient) {
     this.postgresClient = postgresClient;
+  }
+
+  public PostgresClient getClient() {
+    return postgresClient;
   }
 
   public <T> Future<String> save(String table, String id, T entity) {
@@ -56,6 +61,14 @@ public class PostgresClientFuturized {
     Promise<SQLConnection> result = promise();
 
     postgresClient.startTx(result);
+
+    return result.future();
+  }
+
+  public Future<RowStream<Row>> selectStream(Conn con, String query) {
+    Promise<RowStream<Row>> result = promise();
+
+    con.selectStream(query, Tuple.tuple(), result::complete);
 
     return result.future();
   }

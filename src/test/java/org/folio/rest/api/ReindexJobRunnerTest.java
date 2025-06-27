@@ -27,6 +27,7 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
@@ -68,7 +69,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+      .when(postgresClientFuturized).selectStream(any(Conn.class), anyString());
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
@@ -100,7 +101,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+      .when(postgresClientFuturized).selectStream(any(Conn.class), anyString());
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
@@ -133,7 +134,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+      .when(postgresClientFuturized).selectStream(any(Conn.class), anyString());
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
