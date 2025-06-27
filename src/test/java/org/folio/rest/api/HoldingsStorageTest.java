@@ -70,6 +70,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
@@ -110,6 +111,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
   };
+  private static final String INVALID_VALUE = "invalid value";
+  private static final String INVALID_TYPE_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+    INVALID_VALUE);
+
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
@@ -466,6 +471,50 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .put("_version", 2);
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidStatisticalCodeIds() {
+    var instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+    holdingToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_MESSAGE));
+  }
+
+  @Test
+  public void cannotUpdateHoldingWithInvalidStatisticalCodeIds() {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var holdingResource = createHoldingRecord(holdingToCreate);
+
+    var holdingId = holdingResource.getId();
+    var holdingToUpdate = holdingsClient.getById(holdingId);
+    var holding = holdingToUpdate.getJson();
+    holding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToReplace(holdingId.toString(), holding, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_MESSAGE));
   }
 
   @Test

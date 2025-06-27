@@ -10,9 +10,10 @@ import static org.folio.rest.jaxrs.resource.HoldingsStorage.PostHoldingsStorageH
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.PutHoldingsStorageHoldingsByHoldingsRecordIdResponse;
 import static org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse;
 import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.postSync;
 import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.persist.PgUtil.respond422method;
+import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -24,10 +25,12 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -38,10 +41,15 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
+import org.folio.rest.persist.PgExceptionFacade;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
+import org.folio.rest.tools.messages.MessageConsts;
+import org.folio.rest.tools.messages.Messages;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
@@ -57,6 +65,9 @@ import org.folio.validator.NotesValidators;
 public class HoldingsService {
   private static final Logger log = getLogger(HoldingsService.class);
   private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
+  private static final String LOCATION_PREFIX = "/holdings-storage/holdings/";
+  private static final String RESPOND_400_WITH_TEXT_PLAIN = "respond400WithTextPlain";
+  private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private static final Pattern INSTANCEID_PATTERN = Pattern.compile(
       "^ *instanceId *== *\"?("
       // UUID
@@ -66,6 +77,7 @@ public class HoldingsService {
       // allow any sub-set of the fields and allow the fields in any order
       + "(( +(effectiveLocation\\.name|callNumberPrefix|callNumber|callNumberSuffix))+) *$");
 
+  private final Messages messages = Messages.getInstance();
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
@@ -149,15 +161,59 @@ public class HoldingsService {
       .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> {
+        if (StringUtils.isEmpty(hr.getId())) {
+          hr.setId(UUID.randomUUID().toString());
+        }
         final Promise<Response> postResponse = promise();
 
-        post(HOLDINGS_RECORD_TABLE, hr, okapiHeaders, vertxContext,
-          PostHoldingsStorageHoldingsResponse.class, postResponse);
-
+        holdingsRepository.save(hr.getId(), hr, reply -> {
+          try {
+            if (reply.succeeded()) {
+              postResponse.handle(Future.succeededFuture(PostHoldingsStorageHoldingsResponse
+                .respond201WithApplicationJson(reply.result(),
+                  PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(LOCATION_PREFIX))));
+            } else {
+              handleFailedResponse(hr.getId(), reply.cause(), postResponse);
+            }
+          } catch (Exception e) {
+            internalServerErrorDuringPost(e, postResponse);
+          }
+        });
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
       })
       .map(ResponseHandlerUtil::handleHridError);
+  }
+
+  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
+    log.error(e.getMessage(), e);
+    handler.handle(Future.succeededFuture(PostHoldingsStorageHoldingsResponse
+      .respond500WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
+  }
+
+  private void handleFailedResponse(String id, Throwable cause, Handler<AsyncResult<Response>> handler) {
+    log.error(cause.getMessage(), cause);
+    try {
+      Class<? extends ResponseDelegate> responseClass = PostHoldingsStorageHoldingsResponse.class;
+      Method respond400 = responseClass.getMethod(RESPOND_400_WITH_TEXT_PLAIN, Object.class);
+      Method respond500 = responseClass.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
+      PgExceptionFacade pgException = new PgExceptionFacade(cause);
+      if (pgException.isForeignKeyViolation()) {
+        handler.handle(PgUtil.responseForeignKeyViolation(HOLDINGS_RECORD_TABLE, id, pgException,
+          respond422method(responseClass), respond400, respond500));
+      }
+      if (pgException.isUniqueViolation()) {
+        handler.handle(PgUtil.responseUniqueViolation(HOLDINGS_RECORD_TABLE, id, pgException,
+          respond422method(responseClass), respond400, respond500));
+      }
+      if (pgException.isInvalidTextRepresentation()) {
+        handler.handle(PgUtil.response(cause.getMessage(), respond400, respond500));
+      }
+      handler.handle(PgUtil.response(cause.getMessage(), respond500, respond500));
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+      handler.handle(Future.failedFuture(e));
+    }
   }
 
   public Future<Response> deleteHolding(String hrId) {
