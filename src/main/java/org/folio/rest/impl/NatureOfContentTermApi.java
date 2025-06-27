@@ -18,11 +18,10 @@ import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.NatureOfContentTerms;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.NatureOfContentTerms {
@@ -41,9 +40,8 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, NatureOfContentTerm.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(REFERENCE_TABLE, NatureOfContentTerm.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             if (reply.succeeded()) {
@@ -83,8 +81,7 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(REFERENCE_TABLE, id, entity,
           reply -> {
             if (reply.succeeded()) {
               String ret = reply.result();
@@ -122,29 +119,28 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
                                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(REFERENCE_TABLE, id,
-          reply -> {
-            if (reply.failed()) {
-              String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-              msg = (msg == null) ? INTERNAL_SERVER_ERROR_MESSAGE : msg;
-              log.info(msg);
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .delete(REFERENCE_TABLE, id,
+            reply -> {
+              if (reply.failed()) {
+                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                msg = (msg == null) ? INTERNAL_SERVER_ERROR_MESSAGE : msg;
+                log.info(msg);
+                asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
+                  .respond400WithTextPlain(msg)));
+                return;
+              }
+              int updated = reply.result().rowCount();
+              if (updated != 1) {
+                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
+                log.error(msg);
+                asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
+                  .respond404WithTextPlain(msg)));
+                return;
+              }
               asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
-                .respond400WithTextPlain(msg)));
-              return;
-            }
-            int updated = reply.result().rowCount();
-            if (updated != 1) {
-              String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
-              log.error(msg);
-              asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
-                .respond404WithTextPlain(msg)));
-              return;
-            }
-            asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse
-              .respond204()));
-          });
+                .respond204()));
+            });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         asyncResultHandler.handle(Future.succeededFuture(DeleteNatureOfContentTermsByIdResponse.respond500WithTextPlain(
@@ -159,12 +155,11 @@ public class NatureOfContentTermApi implements org.folio.rest.jaxrs.resource.Nat
                                           Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(id);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(REFERENCE_TABLE, entity, id,
           reply -> {
             if (reply.succeeded()) {
               if (reply.result().rowCount() == 0) {

@@ -18,11 +18,10 @@ import org.folio.rest.jaxrs.model.ContributorType;
 import org.folio.rest.jaxrs.model.ContributorTypes;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 /**
@@ -43,9 +42,8 @@ public class ContributorTypeApi implements org.folio.rest.jaxrs.resource.Contrib
                                   Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(CONTRIBUTOR_TYPE_TABLE, ContributorType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(CONTRIBUTOR_TYPE_TABLE, ContributorType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -94,8 +92,7 @@ public class ContributorTypeApi implements org.folio.rest.jaxrs.resource.Contrib
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(
           CONTRIBUTOR_TYPE_TABLE, id, entity,
           reply -> {
             try {
@@ -144,36 +141,35 @@ public class ContributorTypeApi implements org.folio.rest.jaxrs.resource.Contrib
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(CONTRIBUTOR_TYPE_TABLE, contributorTypeId,
-          reply -> {
-            try {
-              if (reply.failed()) {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .delete(CONTRIBUTOR_TYPE_TABLE, contributorTypeId,
+            reply -> {
+              try {
+                if (reply.failed()) {
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
+                    return;
+                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteContributorTypesByContributorTypeIdResponse
+                    .respond400WithTextPlain(msg)));
                   return;
                 }
-                log.info(msg);
+                int updated = reply.result().rowCount();
+                if (updated != 1) {
+                  String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
+                  log.error(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteContributorTypesByContributorTypeIdResponse
+                    .respond404WithTextPlain(msg)));
+                  return;
+                }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteContributorTypesByContributorTypeIdResponse
-                  .respond400WithTextPlain(msg)));
-                return;
+                  .respond204()));
+              } catch (Exception e) {
+                internalServerErrorDuringDelete(e, asyncResultHandler);
               }
-              int updated = reply.result().rowCount();
-              if (updated != 1) {
-                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
-                log.error(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteContributorTypesByContributorTypeIdResponse
-                  .respond404WithTextPlain(msg)));
-                return;
-              }
-              asyncResultHandler.handle(Future.succeededFuture(DeleteContributorTypesByContributorTypeIdResponse
-                .respond204()));
-            } catch (Exception e) {
-              internalServerErrorDuringDelete(e, asyncResultHandler);
-            }
-          });
+            });
       } catch (Exception e) {
         internalServerErrorDuringDelete(e, asyncResultHandler);
       }
@@ -188,39 +184,39 @@ public class ContributorTypeApi implements org.folio.rest.jaxrs.resource.Contrib
                                                      Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(contributorTypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-          CONTRIBUTOR_TYPE_TABLE, entity, contributorTypeId,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                if (reply.result().rowCount() == 0) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
-                      .respond404WithTextPlain(messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .update(CONTRIBUTOR_TYPE_TABLE, entity, contributorTypeId,
+            reply -> {
+              try {
+                if (reply.succeeded()) {
+                  if (reply.result().rowCount() == 0) {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
+                        .respond404WithTextPlain(
+                          messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
+                  } else {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
+                        .respond204()));
+                  }
                 } else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
-                      .respond204()));
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
+                    return;
+                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
+                    .respond400WithTextPlain(msg)));
                 }
-              } else {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
-                  return;
-                }
-                log.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(PutContributorTypesByContributorTypeIdResponse
-                  .respond400WithTextPlain(msg)));
+              } catch (Exception e) {
+                internalServerErrorDuringPut(e, asyncResultHandler);
               }
-            } catch (Exception e) {
-              internalServerErrorDuringPut(e, asyncResultHandler);
-            }
-          });
+            });
       } catch (Exception e) {
         internalServerErrorDuringPut(e, asyncResultHandler);
       }

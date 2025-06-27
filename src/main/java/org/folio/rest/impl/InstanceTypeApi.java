@@ -18,11 +18,10 @@ import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InstanceTypes;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 /**
@@ -43,9 +42,8 @@ public class InstanceTypeApi implements org.folio.rest.jaxrs.resource.InstanceTy
                                Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_TYPE_TABLE, InstanceType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(INSTANCE_TYPE_TABLE, InstanceType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -94,8 +92,7 @@ public class InstanceTypeApi implements org.folio.rest.jaxrs.resource.InstanceTy
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(
           INSTANCE_TYPE_TABLE, id, entity,
           reply -> {
             try {
@@ -144,36 +141,35 @@ public class InstanceTypeApi implements org.folio.rest.jaxrs.resource.InstanceTy
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(INSTANCE_TYPE_TABLE, instanceTypeId,
-          reply -> {
-            try {
-              if (reply.failed()) {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .delete(INSTANCE_TYPE_TABLE, instanceTypeId,
+            reply -> {
+              try {
+                if (reply.failed()) {
+                  String msg = PgExceptionUtil.badRequestMessage(reply.cause());
+                  if (msg == null) {
+                    internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
+                    return;
+                  }
+                  log.info(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
+                    .respond400WithTextPlain(msg)));
                   return;
                 }
-                log.info(msg);
+                int updated = reply.result().rowCount();
+                if (updated != 1) {
+                  String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
+                  log.error(msg);
+                  asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
+                    .respond404WithTextPlain(msg)));
+                  return;
+                }
                 asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                  .respond400WithTextPlain(msg)));
-                return;
+                  .respond204()));
+              } catch (Exception e) {
+                internalServerErrorDuringDelete(e, asyncResultHandler);
               }
-              int updated = reply.result().rowCount();
-              if (updated != 1) {
-                String msg = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
-                log.error(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                  .respond404WithTextPlain(msg)));
-                return;
-              }
-              asyncResultHandler.handle(Future.succeededFuture(DeleteInstanceTypesByInstanceTypeIdResponse
-                .respond204()));
-            } catch (Exception e) {
-              internalServerErrorDuringDelete(e, asyncResultHandler);
-            }
-          });
+            });
       } catch (Exception e) {
         internalServerErrorDuringDelete(e, asyncResultHandler);
       }
@@ -188,12 +184,11 @@ public class InstanceTypeApi implements org.folio.rest.jaxrs.resource.InstanceTy
                                                Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(instanceTypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(
           INSTANCE_TYPE_TABLE, entity, instanceTypeId,
           reply -> {
             try {

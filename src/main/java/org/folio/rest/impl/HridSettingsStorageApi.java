@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import static org.folio.rest.support.PostgresClientFactory.getInstance;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -11,9 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.jaxrs.resource.HridSettingsStorage;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HridManager;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class HridSettingsStorageApi implements HridSettingsStorage {
   private static final Logger log = LogManager.getLogger();
@@ -26,9 +26,7 @@ public class HridSettingsStorageApi implements HridSettingsStorage {
     try {
       vertxContext.runOnContext(v -> {
         try {
-          final PostgresClient postgresClient = PostgresClient.getInstance(vertxContext.owner(),
-            TenantTool.tenantId(okapiHeaders));
-          final HridManager hridManager = new HridManager(postgresClient);
+          final HridManager hridManager = new HridManager(getInstance(vertxContext, okapiHeaders));
           hridManager.getHridSettings()
             .map(hridSettings -> successGet(asyncResultHandler, hridSettings))
             .otherwise(error -> internalErrorGet(asyncResultHandler, error));
@@ -50,9 +48,7 @@ public class HridSettingsStorageApi implements HridSettingsStorage {
     try {
       vertxContext.runOnContext(v -> {
         try {
-          final PostgresClient postgresClient = PostgresClient.getInstance(
-            vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-          final HridManager hridManager = new HridManager(postgresClient);
+          final HridManager hridManager = new HridManager(getInstance(vertxContext, okapiHeaders));
           hridManager.updateHridSettings(hridSettings)
             .map(success -> successPut(asyncResultHandler))
             .otherwise(error -> internalErrorPut(asyncResultHandler, error));

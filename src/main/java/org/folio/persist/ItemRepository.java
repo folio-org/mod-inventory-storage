@@ -37,7 +37,7 @@ public class ItemRepository extends AbstractRepository<Item> {
   public Future<RowSet<Row>> delete(String cql) {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
+      String sql = "DELETE FROM " + getFullTableName(tableName)
         + " " + cqlWrapper.getWhereClause()
         + " RETURNING (SELECT instanceId::text FROM holdings_record WHERE id = holdingsRecordId), jsonb::text";
       return postgresClient.execute(sql);
@@ -48,8 +48,8 @@ public class ItemRepository extends AbstractRepository<Item> {
 
   public Future<List<Map<String, Object>>> getReindexItemRecords(String fromId, String toId) {
     var sql = "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
-              + " FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " i"
-              + " JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+              + " FROM " + getFullTableName(ITEM_TABLE) + " i"
+              + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE)
               + " hr ON i.holdingsrecordid = hr.id"
               + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
 

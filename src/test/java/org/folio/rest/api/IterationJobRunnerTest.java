@@ -30,7 +30,6 @@ import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
-import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.fixtures.InstanceIterationFixture;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
@@ -67,7 +66,7 @@ public class IterationJobRunnerTest {
     instanceRepository = mock(InstanceRepository.class);
 
     var postgresClient = postgresClient(getContext(), okapiHeaders());
-    jobRunner = new IterationJobRunner(new PostgresClientFuturized(postgresClient),
+    jobRunner = new IterationJobRunner(postgresClient,
       jobRepository, instanceRepository, getContext(), okapiHeaders());
 
     KAFKA_CONSUMER.discardAllMessages();

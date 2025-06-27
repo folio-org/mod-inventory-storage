@@ -20,9 +20,9 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.InstanceNoteTypes {
@@ -41,9 +41,8 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, InstanceNoteType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(REFERENCE_TABLE, InstanceNoteType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             if (reply.succeeded()) {
@@ -83,8 +82,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(REFERENCE_TABLE, id, entity,
           reply -> {
             if (reply.succeeded()) {
               String ret = reply.result();
@@ -123,8 +121,7 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient postgres = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
         postgres.delete(REFERENCE_TABLE, id,
           reply -> {
             if (reply.failed()) {
@@ -160,12 +157,11 @@ public class InstanceNoteTypeApi implements org.folio.rest.jaxrs.resource.Instan
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(id);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(REFERENCE_TABLE, entity, id,
           reply -> {
             if (reply.succeeded()) {
               if (reply.result().rowCount() == 0) {

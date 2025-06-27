@@ -8,13 +8,13 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemShelvingOrderMigrationServiceTest {
-  private final PostgresClientFuturized postgresClient = mock(PostgresClientFuturized.class);
+  private final PostgresClient postgresClient = mock(PostgresClient.class);
   private final ItemShelvingOrderMigrationService migrationService =
     new ItemShelvingOrderMigrationService(postgresClient, mock(ItemRepository.class));
 

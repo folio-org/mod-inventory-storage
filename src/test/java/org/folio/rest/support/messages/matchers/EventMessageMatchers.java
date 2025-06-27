@@ -162,11 +162,6 @@ public class EventMessageMatchers {
   }
 
   @NotNull
-  private static Matcher<EventMessage> hasBody(Matcher<?> matcher) {
-    return hasProperty("body", matcher);
-  }
-
-  @NotNull
   private Matcher<EventMessage> isCreateEvent() {
     return hasType("CREATE");
   }

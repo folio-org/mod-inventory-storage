@@ -17,9 +17,9 @@ import org.folio.rest.jaxrs.model.ContributorNameTypes;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
 /**
  * Implements the instance contributor name type persistency using postgres jsonb.
@@ -55,8 +55,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(
           CONTRIBUTOR_NAME_TYPE_TABLE, id, entity,
           reply -> {
             try {
@@ -105,8 +104,7 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient postgres = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
         postgres.delete(CONTRIBUTOR_NAME_TYPE_TABLE, contributorNameTypeId,
           reply -> {
             try {
@@ -152,12 +150,11 @@ public class ContributorNameTypeApi implements org.folio.rest.jaxrs.resource.Con
                                                              Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(contributorNameTypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(
           CONTRIBUTOR_NAME_TYPE_TABLE, entity, contributorNameTypeId,
           reply -> {
             try {

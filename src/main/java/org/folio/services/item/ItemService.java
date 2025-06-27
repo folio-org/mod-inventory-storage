@@ -57,7 +57,6 @@ import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
@@ -86,20 +85,17 @@ public class ItemService {
   private final ItemDomainEventPublisher domainEventService;
   private final ItemRepository itemRepository;
   private final PostgresClient postgresClient;
-  private final PostgresClientFuturized postgresClientFuturized;
   private final HoldingsRepository holdingsRepository;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
-
-    postgresClient = postgresClient(vertxContext, okapiHeaders);
-    postgresClientFuturized = new PostgresClientFuturized(postgresClient);
-    hridManager = new HridManager(postgresClient);
-    effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
-    domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
-    itemRepository = new ItemRepository(vertxContext, okapiHeaders);
-    holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
+    this.postgresClient = postgresClient(vertxContext, okapiHeaders);
+    this.hridManager = new HridManager(postgresClient);
+    this.effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
+    this.domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
+    this.itemRepository = new ItemRepository(vertxContext, okapiHeaders);
+    this.holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
   }
 
   public Future<Response> createItem(Item entity) {
@@ -313,8 +309,8 @@ public class ItemService {
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     String sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
-                 + "FROM " + postgresClientFuturized.getFullTableName(ITEM_TABLE) + " "
-                 + "LEFT JOIN " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+                 + "FROM " + itemRepository.getFullTableName(ITEM_TABLE) + " "
+                 + "LEFT JOIN " + itemRepository.getFullTableName(HOLDINGS_RECORD_TABLE)
                  + "  ON holdings_record.id = $2 "
                  + "WHERE item.id = $1";
     return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
@@ -347,7 +343,7 @@ public class ItemService {
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
-    String tableName = postgresClientFuturized.getFullTableName(ITEM_TABLE);
+    String tableName = itemRepository.getFullTableName(ITEM_TABLE);
     Tuple tuple = Tuple.of(itemJson, item.getId());
 
     return postgresClient.execute("UPDATE " + tableName + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb::text", tuple)
