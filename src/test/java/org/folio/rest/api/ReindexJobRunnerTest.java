@@ -16,18 +16,26 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
@@ -65,15 +73,22 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
     instanceReindex.postReindexJob(reindexJob);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
+    var postgresClient = spy(getPostgresClient());
+    var connection = mock(Conn.class);
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
+        .apply(connection));
+
+    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
+      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
+      return succeededFuture();
+    });
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClient).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -97,15 +112,22 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
     instanceReindex.postReindexJob(reindexJob);
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
+    var postgresClient = spy(getPostgresClient());
+    var connection = mock(Conn.class);
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
+        .apply(connection));
+
+    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
+      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
+      return succeededFuture();
+    });
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClient).startReindex(reindexJob);
 
     await().until(() -> instanceReindex.getReindexJob(reindexJob.getId())
       .getJobStatus() == IDS_PUBLISHED);
@@ -130,15 +152,22 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   public void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = instanceReindexJob();
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
+    var postgresClient = spy(getPostgresClient());
+    var connection = mock(Conn.class);
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
+        .apply(connection));
+
+    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
+      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
+      return succeededFuture();
+    });
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
 
-    jobRunner(postgresClientFuturized).startReindex(reindexJob);
+    jobRunner(postgresClient).startReindex(reindexJob);
 
     instanceReindex.cancelReindexJob(reindexJob.getId());
 
@@ -151,14 +180,13 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
   }
 
-  private ReindexJobRunner jobRunner(PostgresClientFuturized postgresClientFuturized) {
-    return new ReindexJobRunner(postgresClientFuturized,
+  private ReindexJobRunner jobRunner(PostgresClient postgresClient) {
+    return new ReindexJobRunner(postgresClient,
       repository, getContext(), instanceEventPublisher, TENANT_ID);
   }
 
-  private PostgresClientFuturized getPostgresClientFuturized() {
-    var postgresClient = postgresClient(getContext(), okapiHeaders());
-    return new PostgresClientFuturized(postgresClient);
+  private PostgresClient getPostgresClient() {
+    return postgresClient(getContext(), okapiHeaders());
   }
 
   private ReindexJobRepository getRepository() {

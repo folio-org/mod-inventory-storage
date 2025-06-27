@@ -20,7 +20,7 @@ public final class BatchOperationContextFactory {
       return succeededFuture(new BatchOperationContext<>(all, emptyList(), publishEvents));
     }
 
-    return repository.getById(all, idGetter).map(found -> {
+    return repository.getByIds(all, idGetter).map(found -> {
       final var toBeCreated = all.stream()
         .filter(entity -> !found.containsKey(idGetter.apply(entity)))
         .toList();

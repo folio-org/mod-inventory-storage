@@ -22,15 +22,22 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
@@ -43,7 +50,8 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.ShelvingOrderMigrationJobRunner;
@@ -117,14 +125,21 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   public void canCancelMigration() {
     var rowStream = new TestRowStream(5_000_000);
     var migrationJob = migrationJob();
-    var postgresClientFuturized = spy(getPostgresClientFuturized());
+    var postgresClient = spy(getPostgresClient());
+    var connection = mock(Conn.class);
 
-    doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
+        .apply(connection));
+
+    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
+      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
+      return succeededFuture();
+    });
 
     get(repository.save(migrationJob.getId(), migrationJob).toCompletionStage()
       .toCompletableFuture());
-    var amc = new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClientFuturized);
+    var amc = new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClient);
     jobRunner().startAsyncMigration(migrationJob,
       new AsyncMigrationContext(amc, ITEM_SHELVING_ORDER_MIGRATION.getValue()));
 
@@ -155,9 +170,8 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       .withSubmittedDate(new Date());
   }
 
-  private PostgresClientFuturized getPostgresClientFuturized() {
-    var postgresClient = postgresClient(getContext(), okapiHeaders());
-    return new PostgresClientFuturized(postgresClient);
+  private PostgresClient getPostgresClient() {
+    return postgresClient(getContext(), okapiHeaders());
   }
 
   private ShelvingOrderMigrationJobRunner jobRunner() {

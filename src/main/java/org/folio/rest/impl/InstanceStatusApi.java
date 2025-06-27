@@ -14,16 +14,15 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceStatus;
 import org.folio.rest.jaxrs.model.InstanceStatuses;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.InstanceStatuses {
 
@@ -40,9 +39,8 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, InstanceStatus.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(RESOURCE_TABLE, InstanceStatus.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -91,8 +89,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
           id = entity.getId();
         }
 
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(RESOURCE_TABLE, id, entity,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -132,15 +129,9 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
   @Override
   public void deleteInstanceStatuses(Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-
     try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
-            tenantId, "mod_inventory_storage", RESOURCE_TABLE),
+      vertxContext.runOnContext(v -> PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+        .delete(RESOURCE_TABLE, new Criterion(),
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(
@@ -149,8 +140,7 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
               asyncResultHandler.handle(Future.succeededFuture(
                 DeleteInstanceStatusesResponse.respond500WithTextPlain(reply.cause().getMessage())));
             }
-          });
-      });
+          }));
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteInstanceStatusesResponse.respond500WithTextPlain(e.getMessage())));
@@ -174,9 +164,8 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, instanceStatusId,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).delete(RESOURCE_TABLE, instanceStatusId,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -222,12 +211,11 @@ public class InstanceStatusApi implements org.folio.rest.jaxrs.resource.Instance
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
         if (entity.getId() == null) {
           entity.setId(instanceStatusId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(RESOURCE_TABLE, entity, instanceStatusId,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(RESOURCE_TABLE, entity, instanceStatusId,
           reply -> {
             try {
               if (reply.succeeded()) {

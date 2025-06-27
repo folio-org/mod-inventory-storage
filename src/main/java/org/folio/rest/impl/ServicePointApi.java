@@ -14,14 +14,13 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.Servicepoint;
 import org.folio.rest.jaxrs.model.Servicepoints;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.servicepoint.ServicePointService;
 
@@ -34,6 +33,19 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
   private static final String ECS_ROUTING_QUERY_FILTER = "cql.allRecords=1 NOT ecsRequestRouting=true";
   private static final Logger logger = LogManager.getLogger();
+
+  public static String validateServicePoint(Servicepoint svcpt) {
+
+    HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
+    boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
+
+    if (!pickupLocation && holdShelfExpiryPeriod != null) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
+    } else if (pickupLocation && holdShelfExpiryPeriod == null) {
+      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
+    }
+    return null;
+  }
 
   @Validate
   @Override
@@ -103,20 +115,16 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                   Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = getTenant(okapiHeaders);
-        PostgresClient pgClient = getPgClient(vertxContext, tenantId);
-        final String deleteAllQuery = String.format("DELETE FROM %s_%s.%s",
-          tenantId, "mod_inventory_storage", SERVICE_POINT_TABLE);
-        logger.info("Deleting all service points with query {}", deleteAllQuery);
-        pgClient.execute(deleteAllQuery, mutateReply -> {
-          if (mutateReply.failed()) {
-            String message = logAndSaveError(mutateReply.cause());
-            asyncResultHandler.handle(Future.succeededFuture(
-              DeleteServicePointsResponse.respond500WithTextPlain(getErrorResponse(message))));
-          } else {
-            asyncResultHandler.handle(Future.succeededFuture(DeleteServicePointsResponse.respond204()));
-          }
-        });
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .delete(SERVICE_POINT_TABLE, new Criterion(), mutateReply -> {
+            if (mutateReply.failed()) {
+              String message = logAndSaveError(mutateReply.cause());
+              asyncResultHandler.handle(Future.succeededFuture(
+                DeleteServicePointsResponse.respond500WithTextPlain(getErrorResponse(message))));
+            } else {
+              asyncResultHandler.handle(Future.succeededFuture(DeleteServicePointsResponse.respond204()));
+            }
+          });
       } catch (Exception e) {
         String message = logAndSaveError(e);
         asyncResultHandler.handle(Future.succeededFuture(
@@ -129,8 +137,9 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Validate
   @Override
   public void putServicePointsByServicepointId(String servicepointId,
-    Servicepoint entity, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+                                               Servicepoint entity, Map<String, String> okapiHeaders,
+                                               Handler<AsyncResult<Response>> asyncResultHandler,
+                                               Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
       try {
@@ -215,10 +224,6 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
-  PostgresClient getPgClient(Context vertxContext, String tenantId) {
-    return PostgresClient.getInstance(vertxContext.owner(), tenantId);
-  }
-
   private String getErrorResponse(String response) {
     //Check to see if we're suppressing messages or not
     return response;
@@ -230,27 +235,9 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     return message;
   }
 
-  private String getTenant(Map<String, String> headers) {
-    return TenantTool.calculateTenantId(headers.get(
-      RestVerticle.OKAPI_HEADER_TENANT));
-  }
-
   private boolean isDuplicate(String errorMessage) {
     return errorMessage != null && errorMessage.contains(
       "duplicate key value violates unique constraint");
-  }
-
-  public static String validateServicePoint(Servicepoint svcpt) {
-
-    HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
-    boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
-
-    if (!pickupLocation && holdShelfExpiryPeriod != null) {
-      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
-    } else if (pickupLocation && holdShelfExpiryPeriod == null) {
-      return SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
-    }
-    return null;
   }
 
   private Future<Boolean> checkServicePointInUse() {

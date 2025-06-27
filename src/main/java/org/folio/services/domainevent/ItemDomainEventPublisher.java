@@ -59,7 +59,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
     log.info("[{}] items were updated, sending events for them", oldItems.size());
 
-    return repository.getById(oldItems, Item::getId)
+    return repository.getByIds(oldItems, Item::getId)
       .map(updatedItems -> mapOldItemsToNew(oldHoldings, newHoldings, oldItems, updatedItems.values()))
       .compose(domainEventService::publishRecordsUpdated);
   }
@@ -89,7 +89,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
   @Override
   protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items) {
-    return holdingsRepository.getById(items, Item::getHoldingsRecordId)
+    return holdingsRepository.getByIds(items, Item::getHoldingsRecordId)
       .map(holdings -> items.stream()
         .map(item -> pair(getInstanceId(holdings, item), item))
         .toList());

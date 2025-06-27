@@ -112,7 +112,7 @@ abstract class AbstractDomainEventPublisher<D, E> {
 
     log.info("[{}] records were updated, sending events for them", oldRecords.size());
 
-    return repository.getById(oldRecords, this::getId)
+    return repository.getByIds(oldRecords, this::getId)
       .compose(updatedItems -> convertDomainsToEvents(updatedItems.values(), oldRecords))
       .compose(domainEventService::publishRecordsUpdated);
   }

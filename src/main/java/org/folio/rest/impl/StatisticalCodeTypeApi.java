@@ -14,16 +14,15 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.StatisticalCodeType;
 import org.folio.rest.jaxrs.model.StatisticalCodeTypes;
+import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.StatisticalCodeTypes {
   public static final String RESOURCE_TABLE = "statistical_code_type";
@@ -39,9 +38,8 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, StatisticalCodeType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(RESOURCE_TABLE, StatisticalCodeType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -90,8 +88,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
           id = entity.getId();
         }
 
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(RESOURCE_TABLE, id, entity,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -131,14 +128,9 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
   @Override
   public void deleteStatisticalCodeTypes(Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    String tenantId = TenantTool.tenantId(okapiHeaders);
     try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
-            tenantId, "mod_inventory_storage", RESOURCE_TABLE),
+      vertxContext.runOnContext(v -> PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+        .delete(RESOURCE_TABLE, new Criterion(),
           reply -> {
             if (reply.succeeded()) {
               asyncResultHandler.handle(Future.succeededFuture(
@@ -147,8 +139,7 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
               asyncResultHandler.handle(Future.succeededFuture(
                 DeleteStatisticalCodeTypesResponse.respond500WithTextPlain(reply.cause().getMessage())));
             }
-          });
-      });
+          }));
     } catch (Exception e) {
       asyncResultHandler.handle(Future.succeededFuture(
         DeleteStatisticalCodeTypesResponse.respond500WithTextPlain(e.getMessage())));
@@ -172,9 +163,8 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                                 Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, statisticalCodeTypeId,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).delete(RESOURCE_TABLE, statisticalCodeTypeId,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -222,38 +212,40 @@ public class StatisticalCodeTypeApi implements org.folio.rest.jaxrs.resource.Sta
                                                              Handler<AsyncResult<Response>> asyncResultHandler,
                                                              Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
         if (entity.getId() == null) {
           entity.setId(statisticalCodeTypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(RESOURCE_TABLE, entity, statisticalCodeTypeId,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                if (reply.result().rowCount() == 0) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .update(RESOURCE_TABLE, entity, statisticalCodeTypeId,
+            reply -> {
+              try {
+                if (reply.succeeded()) {
+                  if (reply.result().rowCount() == 0) {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
+                        .respond404WithTextPlain(
+                          MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
+                  } else {
+                    asyncResultHandler.handle(
+                      io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
+                        .respond204()));
+                  }
                 } else {
+                  LOG.error(reply.cause().getMessage());
                   asyncResultHandler.handle(
                     io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                      .respond204()));
+                      .respond400WithTextPlain(
+                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
                 }
-              } else {
-                LOG.error(reply.cause().getMessage());
+              } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
                 asyncResultHandler.handle(
                   io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                    .respond400WithTextPlain(
+                    .respond500WithTextPlain(
                       MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(
-                io.vertx.core.Future.succeededFuture(PutStatisticalCodeTypesByStatisticalCodeTypeIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
+            });
       } catch (Exception e) {
         LOG.error(e.getMessage(), e);
         asyncResultHandler.handle(

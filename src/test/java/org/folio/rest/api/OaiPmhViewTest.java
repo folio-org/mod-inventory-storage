@@ -48,10 +48,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,8 +60,8 @@ import org.junit.runner.RunWith;
 public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
 
-  private static final PostgresClient POSTGRES_CLIENT = PostgresClient.getInstance(getVertx(),
-    TenantTool.calculateTenantId(TENANT_ID));
+  private static final PostgresClient POSTGRES_CLIENT = PostgresClientFactory
+    .getInstance(getVertx().getOrCreateContext(), TENANT_ID);
 
   private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS =
     "skipSuppressedFromDiscoveryRecords";

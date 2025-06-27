@@ -14,13 +14,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -139,7 +137,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
       .withStatisticalCodeIds(codes)
       .create();
 
-    holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    createHoldingRecord(holdingToCreate);
 
     CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
 
@@ -178,7 +176,7 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
 
-    holdingsClient.create(holdingToCreate, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    createHoldingRecord(holdingToCreate);
 
     UUID itemId = UUID.randomUUID();
 

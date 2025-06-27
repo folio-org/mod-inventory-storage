@@ -104,10 +104,6 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     return createItemRequest(itemId, holdingsRecordId, "565578437802", false);
   }
 
-  static JsonObject nod(UUID holdingsRecordId) {
-    return nod(UUID.randomUUID(), holdingsRecordId);
-  }
-
   private static JsonObject uprooted(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "657670342075", true);
   }

@@ -16,6 +16,7 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -180,7 +181,7 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = new URL(url);
+      finalUrl = URI.create(url).toURL();
     } catch (Exception e) {
       LOG.error("URL error: {}: {}", e.getMessage(), url, e);
     }
@@ -219,12 +220,7 @@ public class HttpClient {
     String tenantId,
     Handler<HttpResponse<Buffer>> responseHandler) {
 
-    request(HttpMethod.DELETE, url, tenantId)
-      .recover(error -> {
-        LOG.error(error.getMessage(), error);
-        return null;
-      })
-      .onSuccess(responseHandler);
+    delete(url, Map.of(), tenantId, responseHandler);
   }
 
   public void delete(
@@ -234,11 +230,23 @@ public class HttpClient {
 
     URL finalUrl = null;
     try {
-      finalUrl = new URL(url);
+      finalUrl = URI.create(url).toURL();
     } catch (Exception e) {
       LOG.info("URL error: {}: {}", e.getMessage(), url, e);
     }
     delete(finalUrl, tenantId, responseHandler);
+  }
+
+  public void delete(URL url,
+                     Map<String, String> headers,
+                     String tenantId,
+                     Handler<HttpResponse<Buffer>> responseHandler) {
+    request(HttpMethod.DELETE, url, null, headers, tenantId)
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
   }
 
   public CompletableFuture<Response> delete(URL url, String tenantId) {

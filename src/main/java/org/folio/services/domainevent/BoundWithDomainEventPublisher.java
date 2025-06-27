@@ -27,7 +27,7 @@ public class BoundWithDomainEventPublisher extends AbstractDomainEventPublisher<
 
   @Override
   protected Future<List<Pair<String, BoundWithPart>>> getRecordIds(Collection<BoundWithPart> boundWithParts) {
-    return holdingsRepository.getById(boundWithParts, BoundWithPart::getHoldingsRecordId)
+    return holdingsRepository.getByIds(boundWithParts, BoundWithPart::getHoldingsRecordId)
       .map(holdings -> boundWithParts.stream()
         .map(bound -> pair(getInstanceId(holdings, bound), bound))
         .toList());

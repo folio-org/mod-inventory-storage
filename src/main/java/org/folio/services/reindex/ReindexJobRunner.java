@@ -23,9 +23,9 @@ import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.utils.DatabaseUtils;
 
 public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
@@ -33,13 +33,13 @@ public class ReindexJobRunner {
   private static final int POOL_SIZE = 2;
   private static volatile WorkerExecutor workerExecutor;
 
-  private final PostgresClientFuturized postgresClient;
+  private final PostgresClient postgresClient;
   private final ReindexJobRepository reindexJobRepository;
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher;
   private final String tenantId;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
+    this(PgUtil.postgresClient(vertxContext, okapiHeaders),
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
@@ -47,7 +47,7 @@ public class ReindexJobRunner {
       tenantId(okapiHeaders));
   }
 
-  public ReindexJobRunner(PostgresClientFuturized postgresClient, ReindexJobRepository repository,
+  public ReindexJobRunner(PostgresClient postgresClient, ReindexJobRepository repository,
                           Context vertxContext, CommonDomainEventPublisher<Instance> domainEventPublisher,
                           String tenantId) {
 
@@ -87,15 +87,12 @@ public class ReindexJobRunner {
   }
 
   private Future<Long> streamInstanceIds(ReindexContext context) {
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(ctx -> postgresClient.selectStream(ctx.connection,
-        "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE)))
+    var query = "SELECT id FROM " + postgresClient.getSchemaName() + '.' + INSTANCE_TABLE;
+    return postgresClient.withTrans(conn -> DatabaseUtils.selectStream(conn, query)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
         context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
           .onFailure(error -> log.warn("Unable to commit transaction", error));
 
         if (recordsPublished.failed()) {
@@ -105,7 +102,7 @@ public class ReindexJobRunner {
           log.info("Reindex completed");
           logReindexCompleted(recordsPublished.result(), context);
         }
-      });
+      }));
   }
 
   private void logReindexCompleted(Long recordsPublished, ReindexContext context) {
@@ -158,16 +155,10 @@ public class ReindexJobRunner {
 
   private static final class ReindexContext {
     private final ReindexJob reindexJob;
-    private SQLConnection connection;
     private RowStream<Row> stream;
 
     private ReindexContext(ReindexJob reindexJob) {
       this.reindexJob = reindexJob;
-    }
-
-    private ReindexContext withConnection(SQLConnection connection) {
-      this.connection = connection;
-      return this;
     }
 
     private ReindexContext withStream(RowStream<Row> stream) {
