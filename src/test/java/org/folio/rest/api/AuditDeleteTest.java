@@ -112,7 +112,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     recordJsonObject.put("sourceId", getPreparedHoldingSourceId().toString());
     recordJsonObject.remove("holdingsItems");
     recordJsonObject.remove("bareHoldingsItems");
-    holdingsClient.replace(holdingsRecordId, recordJsonObject);
+    updateHoldingRecord(holdingsRecordId, recordJsonObject);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));
     //when

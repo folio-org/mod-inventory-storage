@@ -202,7 +202,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     JsonObject recordJsonObject = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
     recordJsonObject.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     recordJsonObject.put("sourceId", sourceId);
-    holdingsClient.replace(holdingsRecordIdPredefined, recordJsonObject);
+    updateHoldingRecord(holdingsRecordIdPredefined, recordJsonObject);
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
