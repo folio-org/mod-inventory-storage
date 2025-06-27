@@ -76,6 +76,7 @@ public class HoldingsService {
       + " +sortBy"
       // allow any sub-set of the fields and allow the fields in any order
       + "(( +(effectiveLocation\\.name|callNumberPrefix|callNumber|callNumberSuffix))+) *$");
+  private static final Pattern WHITESPACE_PATTERN = Pattern.compile(" +");
 
   private final Messages messages = Messages.getInstance();
   private final Context vertxContext;
@@ -118,7 +119,7 @@ public class HoldingsService {
       return Future.succeededFuture();
     }
     var instanceId = matcher.group(1);
-    var sortBy = matcher.group(2).split(" +");
+    var sortBy = WHITESPACE_PATTERN.split(matcher.group(2));
     return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit)
         .map(row -> {
           var json = "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
