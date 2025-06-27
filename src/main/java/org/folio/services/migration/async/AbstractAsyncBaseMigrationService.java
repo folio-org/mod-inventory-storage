@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 
 public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrationService {
 
@@ -27,12 +27,12 @@ public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrati
   }
 
   @Override
-  protected Future<RowStream<Row>> openStream(SQLConnection connection) {
+  protected Future<RowStream<Row>> openStream(Conn connection) {
     return postgresClient.selectStream(connection, selectSql());
   }
 
   @Override
-  protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
+  protected Future<Integer> updateBatch(List<Row> batch, Conn connection) {
     var instances = batch.stream()
       .map(row -> row.getJsonObject("jsonb"))
       .map(json -> json.mapTo(Instance.class))

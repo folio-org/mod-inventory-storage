@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 
 public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
@@ -39,29 +39,26 @@ public abstract class BaseMigrationService {
 
   public Future<Void> runMigration() {
     log.info("Starting migration for class [class={}]", getClass());
-
-    return postgresClient.startTx()
-      .compose(con -> openStream(con)
-        .compose(rows -> handleUpdate(rows, con))
-        .onSuccess(records -> log.info("Migration for the class has been "
-          + "completed [class={}, recordsProcessed={}]", getClass(), records))
-        .onFailure(error -> log.error("Unable to complete migration for class [class={}]",
-          getClass(), error))
-        .onComplete(result -> postgresClient.endTx(con)))
+    return postgresClient.getClient().withTrans(conn -> openStream(conn)
+        .compose(rows -> handleUpdate(rows, conn)
+          .onSuccess(records -> log.info("Migration for the class has been "
+                                         + "completed [class={}, recordsProcessed={}]", getClass(), records))
+          .onFailure(error -> log.error("Unable to complete migration for class [class={}]",
+            getClass(), error))))
       .mapEmpty();
   }
 
   public abstract String getMigrationName();
 
-  protected abstract Future<RowStream<Row>> openStream(SQLConnection connection);
+  protected abstract Future<RowStream<Row>> openStream(Conn connection);
 
-  protected abstract Future<Integer> updateBatch(List<Row> batch, SQLConnection connection);
+  protected abstract Future<Integer> updateBatch(List<Row> batch, Conn connection);
 
   protected <T> T rowToClass(Row row, Class<T> clazz) {
     return readValue(row.getValue("jsonb").toString(), clazz);
   }
 
-  private Future<Integer> handleUpdate(RowStream<Row> stream, SQLConnection connection) {
+  private Future<Integer> handleUpdate(RowStream<Row> stream, Conn connection) {
     var batchStream = new BatchedReadStream<>(stream);
     var promise = Promise.<Integer>promise();
     var recordsUpdated = new AtomicInteger(0);
