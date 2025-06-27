@@ -10,12 +10,12 @@ import java.util.Collections;
 import java.util.List;
 import org.folio.rest.jaxrs.model.AffectedEntity;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.utils.DatabaseUtils;
 
 public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRunner {
 
   private static final String SELECT_SQL = "SELECT id FROM %s "
-    + "WHERE jsonb->>'effectiveCallNumberComponents' IS NOT NULL";
+                                           + "WHERE jsonb->>'effectiveCallNumberComponents' IS NOT NULL";
 
   @Override
   public String getMigrationName() {
@@ -28,7 +28,8 @@ public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRu
   }
 
   @Override
-  protected Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient, Conn connection) {
-    return postgresClient.selectStream(connection, format(SELECT_SQL, postgresClient.getFullTableName("item")));
+  protected Future<RowStream<Row>> openStream(String schemaName, Conn connection) {
+    var query = format(SELECT_SQL, schemaName + ".item");
+    return DatabaseUtils.selectStream(connection, query);
   }
 }

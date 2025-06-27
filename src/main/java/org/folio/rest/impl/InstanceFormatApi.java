@@ -18,11 +18,10 @@ import org.folio.rest.jaxrs.model.InstanceFormat;
 import org.folio.rest.jaxrs.model.InstanceFormats;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 /**
@@ -43,9 +42,8 @@ public class InstanceFormatApi implements org.folio.rest.jaxrs.resource.Instance
                                  Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(INSTANCE_FORMAT_TABLE, InstanceFormat.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(INSTANCE_FORMAT_TABLE, InstanceFormat.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -94,8 +92,7 @@ public class InstanceFormatApi implements org.folio.rest.jaxrs.resource.Instance
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(
           INSTANCE_FORMAT_TABLE, id, entity,
           reply -> {
             try {
@@ -144,9 +141,7 @@ public class InstanceFormatApi implements org.folio.rest.jaxrs.resource.Instance
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(INSTANCE_FORMAT_TABLE, instanceFormatId,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).delete(INSTANCE_FORMAT_TABLE, instanceFormatId,
           reply -> {
             try {
               if (reply.failed()) {
@@ -188,12 +183,11 @@ public class InstanceFormatApi implements org.folio.rest.jaxrs.resource.Instance
                                                    Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(instanceFormatId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(
           INSTANCE_FORMAT_TABLE, entity, instanceFormatId,
           reply -> {
             try {

@@ -9,22 +9,22 @@ import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
+import org.folio.utils.DatabaseUtils;
 
 public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrationService {
 
   private static final String SELECT_SQL = "SELECT jsonb FROM %s WHERE "
-    + "id in (%s) FOR UPDATE";
+                                           + "id in (%s) FOR UPDATE";
 
-  private final PostgresClientFuturized postgresClient;
+  private final PostgresClient postgresClient;
 
   public ShelvingOrderAsyncMigrationService(Context context, Map<String, String> okapiHeaders) {
-    this(new PostgresClientFuturized(PgUtil.postgresClient(context, okapiHeaders)),
-      new ItemRepository(context, okapiHeaders));
+    this(PgUtil.postgresClient(context, okapiHeaders), new ItemRepository(context, okapiHeaders));
   }
 
-  public ShelvingOrderAsyncMigrationService(PostgresClientFuturized postgresClient,
+  public ShelvingOrderAsyncMigrationService(PostgresClient postgresClient,
                                             ItemRepository itemRepository) {
 
     super(postgresClient, itemRepository);
@@ -33,7 +33,7 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
 
   @Override
   protected Future<RowStream<Row>> openStream(Conn connection) {
-    return postgresClient.selectStream(connection, selectSql());
+    return DatabaseUtils.selectStream(connection, selectSql());
   }
 
   @Override
@@ -41,6 +41,6 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
     String ids = getIdsForMigration().stream()
       .map(id -> "'" + id + "'")
       .collect(Collectors.joining(", "));
-    return String.format(SELECT_SQL, postgresClient.getFullTableName("item"), ids);
+    return String.format(SELECT_SQL, postgresClient.getSchemaName() + ".item", ids);
   }
 }

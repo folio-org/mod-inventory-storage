@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 
@@ -44,12 +43,11 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
       .mapEmpty();
   }
 
-  protected abstract Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient,
-                                                       Conn connection);
+  protected abstract Future<RowStream<Row>> openStream(String schemaName, Conn connection);
 
   private Future<Long> streamIdsForMigration(StreamingContext context) {
     var postgresClient = context.getMigrationContext().getPostgresClient();
-    return postgresClient.getClient().withTrans(conn -> openStream(postgresClient, conn)
+    return postgresClient.withTrans(conn -> openStream(postgresClient.getSchemaName(), conn)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {

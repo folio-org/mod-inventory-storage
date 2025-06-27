@@ -14,14 +14,14 @@ import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.Versioned;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
 
 public abstract class BaseMigrationService {
   private static final Logger log = getLogger(BaseMigrationService.class);
   private final Versioned version;
-  private final PostgresClientFuturized postgresClient;
+  private final PostgresClient postgresClient;
 
-  protected BaseMigrationService(String fromVersion, PostgresClientFuturized client) {
+  protected BaseMigrationService(String fromVersion, PostgresClient client) {
     this.version = versioned(fromVersion);
     this.postgresClient = client;
   }
@@ -39,7 +39,7 @@ public abstract class BaseMigrationService {
 
   public Future<Void> runMigration() {
     log.info("Starting migration for class [class={}]", getClass());
-    return postgresClient.getClient().withTrans(conn -> openStream(conn)
+    return postgresClient.withTrans(conn -> openStream(conn)
         .compose(rows -> handleUpdate(rows, conn)
           .onSuccess(records -> log.info("Migration for the class has been "
                                          + "completed [class={}, recordsProcessed={}]", getClass(), records))

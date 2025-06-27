@@ -33,6 +33,7 @@ import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.utils.DatabaseUtils;
 
 public class InstanceRepository extends AbstractRepository<Instance> {
   public static final String INSTANCE_TABLE = "instance";
@@ -72,7 +73,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         ON CONFLICT DO NOTHING;
         """
         .formatted(
-          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
           sourcePairs.stream()
             .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
             .collect(Collectors.joining(", "))
@@ -96,7 +97,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         ON CONFLICT DO NOTHING;
         """
         .formatted(
-          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
           typePairs.stream()
             .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
             .collect(Collectors.joining(", "))
@@ -112,7 +113,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
       String sql = """
         DELETE FROM %s WHERE instance_id = '%s' AND source_id IN ( %s );
         """.formatted(
-        postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+        getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
         instanceId,
         sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", "))
       );
@@ -128,7 +129,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         DELETE FROM %s WHERE instance_id = '%s' AND type_id IN ( %s );
         """
         .formatted(
-          postgresClientFuturized.getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
           instanceId,
           typeIds.stream().map(id -> "'" + id + "'")
             .collect(Collectors.joining(", "))
@@ -140,8 +141,8 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   public Future<RowStream<Row>> getAllIds(Conn connection) {
-    return postgresClientFuturized.selectStream(connection,
-      "SELECT id FROM " + postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
+    var query = "SELECT id FROM " + getFullTableName(INSTANCE_TABLE);
+    return DatabaseUtils.selectStream(connection, query);
   }
 
   /**
@@ -154,7 +155,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   public Future<RowSet<Row>> delete(String cql) {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
+      String sql = "DELETE FROM " + getFullTableName(tableName)
                    + " " + cqlWrapper.getWhereClause()
                    + " RETURNING id::text, jsonb::text";
       return postgresClient.execute(sql);
@@ -194,9 +195,9 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         sql.append(", 'subInstanceRelationships', sub_instance_relationships");
       }
       sql.append(")::text FROM ")
-        .append(postgresClientFuturized.getFullTableName(INSTANCE_SET_VIEW))
+        .append(getFullTableName(INSTANCE_SET_VIEW))
         .append(" JOIN ")
-        .append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE))
+        .append(getFullTableName(INSTANCE_TABLE))
         .append(" USING (id) ");
 
       var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
@@ -229,14 +230,14 @@ public class InstanceRepository extends AbstractRepository<Instance> {
                                                                boolean notConsortiumRecords) {
     var sql = new StringBuilder("WITH bound_instances AS (");
     sql.append("SELECT DISTINCT hr.instanceId FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
+    sql.append(getFullTableName(BOUND_WITH_TABLE));
     sql.append(" as bw JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
     sql.append(" as hr ON hr.id = bw.holdingsrecordid");
     sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
     sql.append(") ");
     sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
+    sql.append(getFullTableName(INSTANCE_TABLE));
     sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
     sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
 
@@ -268,7 +269,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
   private String unlinkInstanceFromSubjectSql(String table, String id) {
     return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
-      postgresClientFuturized.getFullTableName(table), id);
+      getFullTableName(table), id);
   }
 
   private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {
@@ -279,7 +280,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     sql.append("'holdingsRecords', inventory_view.jsonb->'holdingsRecords', ");
     sql.append("'items', ").append(selectItemsWithBoundedRecords()).append(") AS jsonb ");
     sql.append("FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
+    sql.append(getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
     sql.append(" AS inventory_view ");
     sql.append(appendCqlQuery(query, limit, offset));
     return sql;
@@ -330,21 +331,21 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
   private StringBuilder selectItemsByInstance() {
     var sql = new StringBuilder("SELECT item.jsonb FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
     sql.append(" AS hr JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
+    sql.append(getFullTableName(ITEM_TABLE));
     sql.append(" ON item.holdingsRecordId = hr.id AND hr.instanceId = inventory_view.id ");
     return sql;
   }
 
   private StringBuilder selectBoundedItems() {
     var sql = new StringBuilder("SELECT item.jsonb FROM ");
-    sql.append(postgresClientFuturized.getFullTableName(ITEM_TABLE));
+    sql.append(getFullTableName(ITEM_TABLE));
     sql.append(" JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(BOUND_WITH_TABLE));
+    sql.append(getFullTableName(BOUND_WITH_TABLE));
     sql.append(" AS bwp ON item.id = bwp.itemid ");
     sql.append("JOIN ");
-    sql.append(postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
     sql.append(" AS hr ON hr.id = bwp.holdingsrecordid AND hr.instanceId = inventory_view.id");
     return sql;
   }

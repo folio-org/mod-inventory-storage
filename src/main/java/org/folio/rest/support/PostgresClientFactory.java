@@ -5,7 +5,12 @@ import java.util.Map;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.TenantTool;
 
-public class PostgresClientFactory {
+public final class PostgresClientFactory {
+
+  private PostgresClientFactory() {
+    throw new UnsupportedOperationException("Cannot instantiate utility class");
+  }
+
   /**
    * Return a PostgresClient.
    *
@@ -13,8 +18,8 @@ public class PostgresClientFactory {
    * @param okapiHeaders Where to get the tenantId from.
    * @return the PostgresClient for the vertx and the tenantId
    */
-  public PostgresClient getInstance(Context vertxContext, Map<String, String> okapiHeaders) {
-    return PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
+  public static PostgresClient getInstance(Context vertxContext, Map<String, String> okapiHeaders) {
+    return getInstance(vertxContext, TenantTool.tenantId(okapiHeaders));
   }
 
   /**
@@ -24,7 +29,7 @@ public class PostgresClientFactory {
    * @param tenantId     A tenantId.
    * @return the PostgresClient for the vertx and the tenantId
    */
-  public PostgresClient getInstance(Context vertxContext, String tenantId) {
+  public static PostgresClient getInstance(Context vertxContext, String tenantId) {
     return PostgresClient.getInstance(vertxContext.owner(), tenantId);
   }
 }

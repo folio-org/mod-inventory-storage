@@ -10,16 +10,17 @@ import java.util.stream.Collectors;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.utils.DatabaseUtils;
 
 public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrationService {
 
   private static final String WHERE_CONDITION = "id in (%s)";
 
-  protected final PostgresClientFuturized postgresClient;
+  protected final PostgresClient postgresClient;
   protected final InstanceRepository instanceRepository;
 
-  protected AbstractAsyncBaseMigrationService(String version, PostgresClientFuturized postgresClient,
+  protected AbstractAsyncBaseMigrationService(String version, PostgresClient postgresClient,
                                               InstanceRepository instanceRepository) {
     super(version, postgresClient);
     this.postgresClient = postgresClient;
@@ -28,7 +29,7 @@ public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrati
 
   @Override
   protected Future<RowStream<Row>> openStream(Conn connection) {
-    return postgresClient.selectStream(connection, selectSql());
+    return DatabaseUtils.selectStream(connection, selectSql());
   }
 
   @Override
@@ -54,6 +55,6 @@ public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrati
 
       whereCondition = String.format(WHERE_CONDITION, ids);
     }
-    return String.format(getSelectSqlQuery(), postgresClient.getFullTableName(INSTANCE_TABLE), whereCondition);
+    return String.format(getSelectSqlQuery(), postgresClient.getSchemaName() + '.' + INSTANCE_TABLE, whereCondition);
   }
 }
