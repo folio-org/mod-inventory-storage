@@ -207,9 +207,9 @@ public class HoldingsService {
           respond422method(responseClass), respond400, respond500));
       }
       if (pgException.isInvalidTextRepresentation()) {
-        handler.handle(PgUtil.response(cause.getMessage(), respond400, respond500));
+        handler.handle(PgUtil.response(pgException.getMessage(), respond400, respond500));
       }
-      handler.handle(PgUtil.response(cause.getMessage(), respond500, respond500));
+      handler.handle(PgUtil.response(pgException.getMessage(), respond500, respond500));
     } catch (Exception e) {
       log.error(e.getMessage(), e);
       handler.handle(Future.failedFuture(e));
