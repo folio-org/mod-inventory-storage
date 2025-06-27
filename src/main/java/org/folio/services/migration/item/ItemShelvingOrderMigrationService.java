@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.folio.services.migration.async.AsyncBaseMigrationService;
 
@@ -37,12 +37,12 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
   }
 
   @Override
-  protected Future<RowStream<Row>> openStream(SQLConnection connection) {
+  protected Future<RowStream<Row>> openStream(Conn connection) {
     return postgresClient.selectStream(connection, selectSql());
   }
 
   @Override
-  protected Future<Integer> updateBatch(List<Row> batch, SQLConnection connection) {
+  protected Future<Integer> updateBatch(List<Row> batch, Conn connection) {
     var items = batch.stream()
       .map(row -> rowToClass(row, Item.class))
       .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)

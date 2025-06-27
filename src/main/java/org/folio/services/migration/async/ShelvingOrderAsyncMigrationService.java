@@ -7,9 +7,9 @@ import io.vertx.sqlclient.RowStream;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 
 public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrationService {
@@ -32,7 +32,7 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
   }
 
   @Override
-  protected Future<RowStream<Row>> openStream(SQLConnection connection) {
+  protected Future<RowStream<Row>> openStream(Conn connection) {
     return postgresClient.selectStream(connection, selectSql());
   }
 

@@ -93,8 +93,8 @@ public abstract class AbstractRepository<T> {
     return postgresClient.update(tableName, entity, id);
   }
 
-  public Future<RowSet<Row>> updateBatch(List<T> records, SQLConnection connection) {
-    return postgresClient.withConn(succeededFuture(connection), conn -> conn.upsertBatch(tableName, records));
+  public Future<RowSet<Row>> updateBatch(List<T> records, Conn connection) {
+    return connection.upsertBatch(tableName, records);
   }
 
   public Future<T> fetchAndUpdate(String id, UnaryOperator<T> builder) {
