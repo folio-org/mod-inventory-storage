@@ -95,7 +95,7 @@ public class IterationJobRunner {
   private Future<Long> streamInstanceIds(IterationContext context) {
     return postgresClient.getClient().withTrans(conn -> selectInstanceIds(conn)
       .map(context::withStream)
-      .compose(this::processStream))
+      .compose(this::processStream)
       .onComplete(recordsPublished -> {
         context.stream.close()
           .onFailure(error -> log.warn("Unable to commit transaction", error));
@@ -110,7 +110,7 @@ public class IterationJobRunner {
 
           logIterationCompleted(published, context);
         }
-      });
+      }));
   }
 
   private Future<RowStream<Row>> selectInstanceIds(Conn connection) {
