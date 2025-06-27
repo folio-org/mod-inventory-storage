@@ -9,7 +9,6 @@ import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVE
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
-import static org.folio.rest.support.JsonObjectMatchers.hasSoleMessageContaining;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsafeUrl;
@@ -76,7 +75,6 @@ import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
-import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -341,34 +339,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
-  }
-
-  @Test
-  @Ignore("Schema does not have additional properties set to false")
-  public void cannotProvideAdditionalPropertiesInHolding()
-    throws InterruptedException,
-    TimeoutException,
-    ExecutionException {
-
-    UUID instanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(instanceId));
-
-    JsonObject request = new HoldingRequestBuilder()
-      .forInstance(instanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create();
-
-    request.put("somethingAdditional", "foo");
-
-    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
-
-    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
-      ResponseHandler.jsonErrors(createCompleted));
-
-    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
-    assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
   @Test

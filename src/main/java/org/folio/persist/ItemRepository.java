@@ -4,7 +4,6 @@ import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -14,9 +13,9 @@ import java.util.List;
 import java.util.Map;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLWrapper;
 
 public class ItemRepository extends AbstractRepository<Item> {
@@ -24,7 +23,7 @@ public class ItemRepository extends AbstractRepository<Item> {
     super(postgresClient(context, okapiHeaders), ITEM_TABLE, Item.class);
   }
 
-  public Future<List<Item>> getItemsForHoldingRecord(AsyncResult<SQLConnection> connection, String holdingRecordId) {
+  public Future<List<Item>> getItemsForHoldingRecord(Conn connection, String holdingRecordId) {
     final Criterion criterion = new Criterion(new Criteria().setJSONB(false)
       .addField("holdingsRecordId").setOperation("=").setVal(holdingRecordId));
 

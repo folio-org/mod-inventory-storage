@@ -28,7 +28,6 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -55,10 +54,10 @@ import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
@@ -233,7 +232,7 @@ public class ItemService {
   /**
    * Return items before update.
    */
-  public Future<List<Item>> updateItemsOnHoldingChanged(AsyncResult<SQLConnection> connection,
+  public Future<List<Item>> updateItemsOnHoldingChanged(Conn connection,
                                                         HoldingsRecord holdingsRecord) {
 
     return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
@@ -285,7 +284,7 @@ public class ItemService {
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
-    AsyncResult<SQLConnection> connectionResult, Collection<Item> items, HoldingsRecord holdingsRecord) {
+    Conn connection, Collection<Item> items, HoldingsRecord holdingsRecord) {
 
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
@@ -296,10 +295,9 @@ public class ItemService {
         }
         return item;
       })
-      .map(this::updateSingleItemBatchFactory)
+      .map(this::updateSingleItemBatchFactory0)
       .toList();
 
-    final SQLConnection connection = connectionResult.result();
     Future<RowSet<Row>> lastUpdate = succeededFuture();
     for (var factory : batchFactories) {
       lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
@@ -309,7 +307,7 @@ public class ItemService {
     return allItemsUpdated.future();
   }
 
-  private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
+  private Function<Conn, Future<RowSet<Row>>> updateSingleItemBatchFactory0(Item item) {
     return connection -> itemRepository.update(connection, item.getId(), item);
   }
 

@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.PostgresClientFuturized;
@@ -43,6 +44,11 @@ public abstract class AbstractRepository<T> {
     return postgresClientFuturized.get(tableName, recordType, criterion);
   }
 
+  public Future<List<T>> get(Conn connection, Criterion criterion) {
+    return connection.get(tableName, recordType, criterion, false)
+      .map(Results::getResults);
+  }
+
   public Future<List<T>> get(AsyncResult<SQLConnection> connection, Criterion criterion) {
     return postgresClient.withConn(connection, conn -> conn.get(tableName, recordType, criterion, false))
       .map(Results::getResults);
@@ -69,6 +75,10 @@ public abstract class AbstractRepository<T> {
         "select 1 from " + postgresClient.getSchemaName() + "." + tableName + " where id = $1 limit 1",
         Tuple.of(id))
       .map(ar -> ar != null && ar.rowCount() == 1);
+  }
+
+  public Future<RowSet<Row>> update(Conn connection, String id, T entity) {
+    return connection.update(tableName, entity, id);
   }
 
   public Future<RowSet<Row>> update(AsyncResult<SQLConnection> connection, String id, T entity) {
