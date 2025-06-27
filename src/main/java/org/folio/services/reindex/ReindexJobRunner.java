@@ -24,7 +24,6 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 
 public class ReindexJobRunner {
@@ -87,15 +86,12 @@ public class ReindexJobRunner {
   }
 
   private Future<Long> streamInstanceIds(ReindexContext context) {
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(ctx -> postgresClient.selectStream(ctx.connection,
-        "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE)))
+    return postgresClient.getClient().withTrans(conn -> postgresClient
+      .selectStream(conn, "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE)))
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
         context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
           .onFailure(error -> log.warn("Unable to commit transaction", error));
 
         if (recordsPublished.failed()) {
@@ -158,16 +154,10 @@ public class ReindexJobRunner {
 
   private static final class ReindexContext {
     private final ReindexJob reindexJob;
-    private SQLConnection connection;
     private RowStream<Row> stream;
 
     private ReindexContext(ReindexJob reindexJob) {
       this.reindexJob = reindexJob;
-    }
-
-    private ReindexContext withConnection(SQLConnection connection) {
-      this.connection = connection;
-      return this;
     }
 
     private ReindexContext withStream(RowStream<Row> stream) {
