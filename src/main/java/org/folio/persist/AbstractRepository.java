@@ -4,6 +4,7 @@ import static io.vertx.core.Future.succeededFuture;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
@@ -36,6 +37,10 @@ public abstract class AbstractRepository<T> {
 
   public Future<String> save(String id, T entity) {
     return postgresClientFuturized.save(tableName, id, entity);
+  }
+
+  public void save(String id, T entity, Handler<AsyncResult<T>> replyHandler) {
+    postgresClientFuturized.save(tableName, id, entity, replyHandler);
   }
 
   public Future<List<T>> get(Criterion criterion) {
