@@ -1,6 +1,5 @@
 package org.folio.rest.persist;
 
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
@@ -57,34 +56,10 @@ public class PostgresClientFuturized {
     return promise.future();
   }
 
-  public Future<SQLConnection> startTx() {
-    Promise<SQLConnection> result = promise();
-
-    postgresClient.startTx(result);
-
-    return result.future();
-  }
-
   public Future<RowStream<Row>> selectStream(Conn con, String query) {
     Promise<RowStream<Row>> result = promise();
 
     con.selectStream(query, Tuple.tuple(), result::complete);
-
-    return result.future();
-  }
-
-  public Future<RowStream<Row>> selectStream(SQLConnection con, String query) {
-    Promise<RowStream<Row>> result = promise();
-
-    postgresClient.selectStream(succeededFuture(con), query, result);
-
-    return result.future();
-  }
-
-  public Future<Void> endTx(SQLConnection connection) {
-    Promise<Void> result = promise();
-
-    postgresClient.endTx(succeededFuture(connection), result);
 
     return result.future();
   }
