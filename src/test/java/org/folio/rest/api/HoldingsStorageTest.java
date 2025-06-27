@@ -39,6 +39,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -112,7 +113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
   };
   private static final String INVALID_VALUE = "invalid value";
-  private static final String INVALID_TYPE_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+  private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
     INVALID_VALUE);
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
@@ -489,7 +490,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_MESSAGE));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
@@ -514,7 +515,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_MESSAGE));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidInstanceId() {
+    var instanceId = UUID.randomUUID();
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(422));
+    assertTrue(response.getBody().contains(String.format(
+      "Cannot set holdings_record.instanceid = %s because it does not exist in instance.id.", instanceId)));
   }
 
   @Test
