@@ -31,7 +31,6 @@ import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
 
@@ -140,7 +139,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     }
   }
 
-  public Future<RowStream<Row>> getAllIds(SQLConnection connection) {
+  public Future<RowStream<Row>> getAllIds(Conn connection) {
     return postgresClientFuturized.selectStream(connection,
       "SELECT id FROM " + postgresClientFuturized.getFullTableName(INSTANCE_TABLE));
   }

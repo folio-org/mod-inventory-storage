@@ -43,6 +43,7 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.async.AsyncMigrationContext;
@@ -120,7 +121,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var postgresClientFuturized = spy(getPostgresClientFuturized());
 
     doReturn(succeededFuture(rowStream))
-      .when(postgresClientFuturized).selectStream(any(), anyString());
+      .when(postgresClientFuturized).selectStream(any(Conn.class), anyString());
 
     get(repository.save(migrationJob.getId(), migrationJob).toCompletionStage()
       .toCompletableFuture());

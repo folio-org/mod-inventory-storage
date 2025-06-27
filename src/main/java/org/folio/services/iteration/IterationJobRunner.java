@@ -22,9 +22,9 @@ import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
@@ -93,14 +93,11 @@ public class IterationJobRunner {
   }
 
   private Future<Long> streamInstanceIds(IterationContext context) {
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(this::selectInstanceIds)
+    return postgresClient.getClient().withTrans(conn -> selectInstanceIds(conn)
       .map(context::withStream)
-      .compose(this::processStream)
+      .compose(this::processStream))
       .onComplete(recordsPublished -> {
         context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
           .onFailure(error -> log.warn("Unable to commit transaction", error));
 
         if (recordsPublished.failed()) {
@@ -116,8 +113,8 @@ public class IterationJobRunner {
       });
   }
 
-  private Future<RowStream<Row>> selectInstanceIds(IterationContext ctx) {
-    return instanceRepository.getAllIds(ctx.connection);
+  private Future<RowStream<Row>> selectInstanceIds(Conn connection) {
+    return instanceRepository.getAllIds(connection);
   }
 
   private void logIterationCompleted(Long recordsPublished, IterationContext context) {
@@ -176,16 +173,10 @@ public class IterationJobRunner {
   private static final class IterationContext {
 
     private final IterationJob job;
-    private SQLConnection connection;
     private RowStream<Row> stream;
 
     private IterationContext(IterationJob job) {
       this.job = job;
-    }
-
-    private IterationContext withConnection(SQLConnection connection) {
-      this.connection = connection;
-      return this;
     }
 
     private IterationContext withStream(RowStream<Row> stream) {
