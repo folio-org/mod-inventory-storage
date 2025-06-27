@@ -9,8 +9,8 @@ import io.vertx.sqlclient.RowStream;
 import java.util.Collections;
 import java.util.List;
 import org.folio.rest.jaxrs.model.AffectedEntity;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 
 public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRunner {
 
@@ -28,7 +28,7 @@ public class ShelvingOrderMigrationJobRunner extends AbstractAsyncMigrationJobRu
   }
 
   @Override
-  protected Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient, SQLConnection connection) {
+  protected Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient, Conn connection) {
     return postgresClient.selectStream(connection, format(SELECT_SQL, postgresClient.getFullTableName("item")));
   }
 }

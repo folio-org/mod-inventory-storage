@@ -87,7 +87,7 @@ public class ReindexJobRunner {
 
   private Future<Long> streamInstanceIds(ReindexContext context) {
     return postgresClient.getClient().withTrans(conn -> postgresClient
-      .selectStream(conn, "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE)))
+      .selectStream(conn, "SELECT id FROM " + postgresClient.getFullTableName(INSTANCE_TABLE))
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
@@ -101,7 +101,7 @@ public class ReindexJobRunner {
           log.info("Reindex completed");
           logReindexCompleted(recordsPublished.result(), context);
         }
-      });
+      }));
   }
 
   private void logReindexCompleted(Long recordsPublished, ReindexContext context) {

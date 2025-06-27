@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 
@@ -45,19 +45,15 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   }
 
   protected abstract Future<RowStream<Row>> openStream(PostgresClientFuturized postgresClient,
-                                                       SQLConnection connection);
+                                                       Conn connection);
 
   private Future<Long> streamIdsForMigration(StreamingContext context) {
     var postgresClient = context.getMigrationContext().getPostgresClient();
-
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(streamingContext -> openStream(postgresClient, streamingContext.connection))
+    return postgresClient.getClient().withTrans(conn -> openStream(postgresClient, conn)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
         context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
           .onFailure(error -> log.warn("Unable to commit transaction", error));
         if (recordsPublished.failed()) {
           log.warn("Unable to publish ids for async migration", recordsPublished.cause());
@@ -68,7 +64,7 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
             .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(),
               context.getJobId());
         }
-      });
+      }));
   }
 
   private Future<Long> processStream(StreamingContext context) {
@@ -92,7 +88,6 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
     private final AsyncMigrationContext migrationContext;
     private final AsyncMigrationJobService migrationService;
     private final CommonDomainEventPublisher<AsyncMigrationJob> publisher;
-    private SQLConnection connection;
     private RowStream<Row> stream;
 
     private StreamingContext(AsyncMigrationJob job, AsyncMigrationContext migrationContext,
@@ -114,11 +109,6 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
 
     public CommonDomainEventPublisher<AsyncMigrationJob> getPublisher() {
       return publisher;
-    }
-
-    private AbstractAsyncMigrationJobRunner.StreamingContext withConnection(SQLConnection connection) {
-      this.connection = connection;
-      return this;
     }
 
     private AbstractAsyncMigrationJobRunner.StreamingContext withStream(RowStream<Row> stream) {
