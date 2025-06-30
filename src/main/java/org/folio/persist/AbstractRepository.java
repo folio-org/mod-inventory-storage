@@ -38,10 +38,6 @@ public abstract class AbstractRepository<T> {
     return postgresClient.save(tableName, id, entity);
   }
 
-  public Future<T> save(String table, String id, T entity) {
-    return postgresClient.saveAndReturnUpdatedEntity(table, id, entity);
-  }
-
   public Future<List<T>> get(Criterion criterion) {
     return postgresClient.get(tableName, recordType, criterion, false)
       .map(Results::getResults);
