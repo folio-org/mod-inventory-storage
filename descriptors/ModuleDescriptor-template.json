@@ -300,7 +300,7 @@
     },
     {
       "id": "instance-storage-bulk",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -627,7 +627,7 @@
     },
     {
       "id": "inventory-record-bulk",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
