@@ -1,6 +1,5 @@
 package org.folio.rest.api;
 
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -8,14 +7,12 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -101,8 +98,7 @@ public class EffectiveLocationMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   private IndividualResource createHoldingsRecord(HoldingRequestBuilder holdingRequestBuilder) {
-    return holdingsClient.create(holdingRequestBuilder.create(), TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return createHoldingRecord(holdingRequestBuilder.create());
   }
 
   private RowSet<Row> runSql(String sql) throws

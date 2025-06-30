@@ -7,6 +7,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -14,20 +15,25 @@ import static org.mockito.Mockito.when;
 
 import io.vertx.core.Future;
 import java.util.UUID;
+import java.util.function.Function;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.ReindexJob;
+import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PostgresClient;
 import org.junit.Test;
 
 public class ReindexServiceTest {
 
   private final ReindexJobRunner runner = mock(ReindexJobRunner.class);
-  private final ReindexJobRepository repository = mock(ReindexJobRepository.class);
+  private final PostgresClient postgresClient = mock(PostgresClient.class);
+  private final ReindexJobRepository repository = new ReindexJobRepository(postgresClient);
   private final ReindexService reindexService = new ReindexService(repository, runner);
+  private final Conn connection = mock(Conn.class);
 
   @Test
   public void canSubmitReindex() {
-    when(repository.save(any(), any()))
+    when(postgresClient.save(any(), any(), any(ReindexJob.class)))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
     var reindexJob = get(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
@@ -46,8 +52,12 @@ public class ReindexServiceTest {
     reindexJob.withId(UUID.randomUUID().toString());
     reindexJob.withJobStatus(IDS_PUBLISHED);
 
-    when(repository.fetchAndUpdate(any(), any())).thenCallRealMethod();
-    when(repository.getById(reindexJob.getId()))
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocationOnMock -> {
+        var function = invocationOnMock.<Function<Conn, Future<ReindexJob>>>getArgument(0);
+        return function.apply(connection);
+      });
+    when(connection.getByIdForUpdate(any(), eq(reindexJob.getId()), eq(ReindexJob.class)))
       .thenReturn(Future.succeededFuture(reindexJob));
 
     get(reindexService.cancelReindex(reindexJob.getId()));

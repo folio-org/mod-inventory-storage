@@ -45,10 +45,10 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static final UUID INSTANCE_ID = UUID.randomUUID();
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
-    = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(KAFKA_CONSUMER);
+    = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   @SneakyThrows
   @Before
@@ -89,7 +89,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
     holding.put("sourceId", getPreparedHoldingSourceId().toString());
-    holdingsClient.replace(holdingsRecordId, holding);
+    updateHoldingRecord(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
@@ -115,7 +115,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.remove("temporaryLocationId");
     holding.put("sourceId", getPreparedHoldingSourceId().toString());
-    holdingsClient.replace(holdingsRecordId, holding);
+    updateHoldingRecord(holdingsRecordId, holding);
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
@@ -138,7 +138,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     JsonObject holding = holdingsClient.getById(holdingsRecordId).getJson();
     holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
     holding.put("sourceId", getPreparedHoldingSourceId().toString());
-    holdingsClient.replace(holdingsRecordId, holding);
+    updateHoldingRecord(holdingsRecordId, holding);
 
     // fetch items
     Item itemWithPermLocationFetched = getItem(itemWithPermLocation.getId());
@@ -209,7 +209,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     holdingToUpdate.remove("bareHoldingsItems");
     holdingToUpdate.put("sourceId", getPreparedHoldingSourceId().toString());
     setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
-    holdingsClient.replace(holdingsRecordId, holdingToUpdate);
+    updateHoldingRecord(holdingsRecordId, holdingToUpdate);
 
     JsonObject associatedItem = itemsClient.getById(itemId).getJson();
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
