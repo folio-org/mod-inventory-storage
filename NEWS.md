@@ -23,6 +23,7 @@
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
+* Fix an iteration job is never finished after a cancellation request ([MODINVSTOR-1434](https://folio-org.atlassian.net/browse/MODINVSTOR-1434))
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
@@ -31,6 +32,7 @@
 * Stabilize tests by waiting for subscription/unsubscription finished in test Kafka consumer ([MODINVSTOR-1410](https://folio-org.atlassian.net/browse/MODINVSTOR-1410))
 * Stabilize tests by increasing the number of attempts to start the Kafka container ([MODINVSTOR-1413](https://folio-org.atlassian.net/browse/MODINVSTOR-1413))
 * Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
+* Refactor usage of deprecated `PostgresClient` methods ([MODINVSTOR-1367](https://folio-org.atlassian.net/browse/MODINVSTOR-1367))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

@@ -12,12 +12,10 @@ import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -426,8 +424,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-    return holdingsClient.create(holdingRequestBuilder.create(), TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return createHoldingRecord(holdingRequestBuilder.create());
   }
 
   private IndividualResource createItem(UUID holdingsRecordId) {

@@ -39,7 +39,6 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final String LOCATION_PREFIX = "/item-damaged-statuses/";
   private final Messages messages = Messages.getInstance();
-  private PostgresClientFactory pgClientFactory = new PostgresClientFactory();
 
   @Validate
   @Override
@@ -169,7 +168,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     Context vertxContext) throws FieldException {
 
     CQLWrapper cql = getCql(query, limit, offset, REFERENCE_TABLE);
-    return Future.<Results<ItemDamageStatus>>future(promise -> pgClientFactory
+    return Future.<Results<ItemDamageStatus>>future(promise -> PostgresClientFactory
       .getInstance(vertxContext, okapiHeaders)
       .get(REFERENCE_TABLE,
         ItemDamageStatus.class,
@@ -187,7 +186,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     String id,
     Map<String, String> okapiHeaders,
     Context vertxContext) {
-    return Future.future(promise -> pgClientFactory
+    return Future.future(promise -> PostgresClientFactory
       .getInstance(vertxContext, okapiHeaders)
       .getById(REFERENCE_TABLE, id, ItemDamageStatus.class, promise));
   }
@@ -197,7 +196,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     if (isNull(entity.getId())) {
       entity.setId(UUID.randomUUID().toString());
     }
-    return Future.<String>future(promise -> pgClientFactory
+    return Future.<String>future(promise -> PostgresClientFactory
         .getInstance(vertxContext, okapiHeaders)
         .save(REFERENCE_TABLE, entity.getId(), entity, promise))
       .map(entity::withId);
@@ -231,7 +230,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     String id,
     Map<String, String> okapiHeaders,
     Context vertxContext) {
-    return Future.<RowSet<Row>>future(promise -> pgClientFactory
+    return Future.<RowSet<Row>>future(promise -> PostgresClientFactory
         .getInstance(vertxContext, okapiHeaders)
         .delete(REFERENCE_TABLE, id, promise))
       .map(RowSet<Row>::rowCount);
@@ -270,7 +269,7 @@ public class ItemDamagedStatusApi implements ItemDamagedStatuses {
     if (isNull(entity.getId())) {
       entity.setId(id);
     }
-    return Future.<RowSet<Row>>future(promise -> pgClientFactory
+    return Future.<RowSet<Row>>future(promise -> PostgresClientFactory
         .getInstance(vertxContext, okapiHeaders)
         .update(REFERENCE_TABLE, entity, id, promise))
       .map(RowSet<Row>::rowCount);

@@ -22,9 +22,9 @@ import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClientFuturized;
-import org.folio.rest.persist.SQLConnection;
+import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
@@ -41,41 +41,29 @@ public class IterationJobRunner {
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
-  private final PostgresClientFuturized postgresClient;
+  private final PostgresClient postgresClient;
   private final IterationJobRepository jobRepository;
   private final InstanceRepository instanceRepository;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(new PostgresClientFuturized(PgUtil.postgresClient(vertxContext, okapiHeaders)),
+    this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
       new IterationJobRepository(vertxContext, okapiHeaders),
       new InstanceRepository(vertxContext, okapiHeaders),
       vertxContext,
       okapiHeaders);
   }
 
-  public IterationJobRunner(PostgresClientFuturized postgresClient, IterationJobRepository repository,
+  public IterationJobRunner(PostgresClient postgresClient, IterationJobRepository repository,
                             InstanceRepository instanceRepository, Context vertxContext,
                             Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
-
     this.postgresClient = postgresClient;
     this.jobRepository = repository;
     this.instanceRepository = instanceRepository;
 
     initWorker(vertxContext);
-  }
-
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (IterationJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
-        }
-      }
-    }
   }
 
   public void startIteration(IterationJob job) {
@@ -92,15 +80,23 @@ public class IterationJobRunner {
       .map(notUsed -> null);
   }
 
+  private static void initWorker(Context vertxContext) {
+    if (workerExecutor == null) {
+      synchronized (IterationJobRunner.class) {
+        if (workerExecutor == null) {
+          workerExecutor = vertxContext.owner()
+            .createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
+        }
+      }
+    }
+  }
+
   private Future<Long> streamInstanceIds(IterationContext context) {
-    return postgresClient.startTx()
-      .map(context::withConnection)
-      .compose(this::selectInstanceIds)
+    return postgresClient.withTrans(conn -> selectInstanceIds(conn)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
         context.stream.close()
-          .onComplete(notUsed -> postgresClient.endTx(context.connection))
           .onFailure(error -> log.warn("Unable to commit transaction", error));
 
         if (recordsPublished.failed()) {
@@ -113,11 +109,11 @@ public class IterationJobRunner {
 
           logIterationCompleted(published, context);
         }
-      });
+      }));
   }
 
-  private Future<RowStream<Row>> selectInstanceIds(IterationContext ctx) {
-    return instanceRepository.getAllIds(ctx.connection);
+  private Future<RowStream<Row>> selectInstanceIds(Conn connection) {
+    return instanceRepository.getAllIds(connection);
   }
 
   private void logIterationCompleted(Long recordsPublished, IterationContext context) {
@@ -176,16 +172,10 @@ public class IterationJobRunner {
   private static final class IterationContext {
 
     private final IterationJob job;
-    private SQLConnection connection;
     private RowStream<Row> stream;
 
     private IterationContext(IterationJob job) {
       this.job = job;
-    }
-
-    private IterationContext withConnection(SQLConnection connection) {
-      this.connection = connection;
-      return this;
     }
 
     private IterationContext withStream(RowStream<Row> stream) {

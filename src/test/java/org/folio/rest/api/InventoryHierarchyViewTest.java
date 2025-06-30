@@ -69,11 +69,11 @@ import org.awaitility.Awaitility;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.InventoryInstanceIds;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,29 +83,12 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS =
     "skipSuppressedFromDiscoveryRecords";
-  private final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
-    TenantTool.calculateTenantId(TENANT_ID));
+  private final PostgresClient postgresClient = PostgresClientFactory
+    .getInstance(getVertx().getOrCreateContext(), TENANT_ID);
   private UUID holdingsRecordIdPredefined;
   private Map<String, String> params;
   private JsonObject predefinedInstance;
   private JsonObject predefinedHoldings;
-
-  private static void verifyInstancesDataWithoutParameters(List<JsonObject> instancesData) {
-    assertThat(
-      instancesData.getFirst(),
-      allOf(
-        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
-        hasLocationLibraryCodeForItems("ML", "ML"),
-        hasTemporaryLocationLibraryCodeForItems("ML", "ML"),
-        hasLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
-        hasTemporaryLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
-        hasMaterialTypeIdForItems(journalMaterialTypeID, bookMaterialTypeID),
-        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
-        hasAggregatedNumberOfItems(2)
-      )
-    );
-  }
 
   @SneakyThrows
   @Before
@@ -202,7 +185,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     JsonObject recordJsonObject = holdingsClient.getById(holdingsRecordIdPredefined).getJson();
     recordJsonObject.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     recordJsonObject.put("sourceId", sourceId);
-    holdingsClient.replace(holdingsRecordIdPredefined, recordJsonObject);
+    updateHoldingRecord(holdingsRecordIdPredefined, recordJsonObject);
 
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     final List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
@@ -452,7 +435,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     boundWithClient.create(new BoundWithPartBuilder(holdingsRecordIdPredefined,
       UUID.fromString(itemJson.getString("id"))));
 
-    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[]{instanceId}, false, response -> {
+    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[] {instanceId}, false, response -> {
       assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
       var items = response.getJson().getJsonArray("items");
       assertThat(items.size(), is(3));
@@ -467,7 +450,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   public void shouldHaveLocationNameInItemsAndHoldingsLocations() {
     var instanceId = UUID.fromString(predefinedInstance.getString("id"));
 
-    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[]{instanceId}, false, response -> {
+    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[] {instanceId}, false, response -> {
       assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
       var items = response.getJson().getJsonArray("items");
       var holdings = response.getJson().getJsonArray("holdings");
@@ -584,6 +567,23 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       }
       future.complete(handler.result());
     });
+  }
+
+  private static void verifyInstancesDataWithoutParameters(List<JsonObject> instancesData) {
+    assertThat(
+      instancesData.getFirst(),
+      allOf(
+        hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
+        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasLocationLibraryCodeForItems("ML", "ML"),
+        hasTemporaryLocationLibraryCodeForItems("ML", "ML"),
+        hasLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
+        hasTemporaryLocationIdForItems(MAIN_LIBRARY_LOCATION_ID.toString(), THIRD_FLOOR_LOCATION_ID.toString()),
+        hasMaterialTypeIdForItems(journalMaterialTypeID, bookMaterialTypeID),
+        hasLocationCodeForItems("TestBaseWI/M", "TestBaseWI/TF"),
+        hasAggregatedNumberOfItems(2)
+      )
+    );
   }
 
   private List<JsonObject> getInventoryHierarchyInstances(Map<String, String> queryParams)

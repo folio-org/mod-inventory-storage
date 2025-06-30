@@ -83,13 +83,6 @@ public final class FakeKafkaConsumer {
       .toList();
   }
 
-  public Collection<EventMessage> getMessagesForReindexRecords(List<String> ids) {
-    return ids.stream()
-      .map(this::getMessagesForReindexRecord)
-      .flatMap(Collection::stream)
-      .toList();
-  }
-
   public Collection<EventMessage> getMessagesForHoldings(String holdingsId) {
     return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(holdingsId, holdingsId));
   }
