@@ -24,9 +24,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,8 +34,8 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
-  private final PostgresClient postgresClient = PostgresClient.getInstance(getVertx(),
-    TenantTool.calculateTenantId(TENANT_ID));
+  private final PostgresClient postgresClient = PostgresClientFactory
+    .getInstance(getVertx().getOrCreateContext(), TENANT_ID);
 
   @SneakyThrows
   @After

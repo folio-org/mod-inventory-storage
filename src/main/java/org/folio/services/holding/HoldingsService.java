@@ -20,10 +20,8 @@ import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -45,7 +43,6 @@ import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.PgExceptionFacade;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.support.CqlQuery;
 import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.messages.MessageConsts;
@@ -69,14 +66,14 @@ public class HoldingsService {
   private static final String RESPOND_400_WITH_TEXT_PLAIN = "respond400WithTextPlain";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private static final Pattern INSTANCEID_PATTERN = Pattern.compile(
-      "^ *instanceId *== *\"?("
-      // UUID
-      + "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
-      + ")\"?"
-      + " +sortBy"
-      // allow any sub-set of the fields and allow the fields in any order
-      + "(( +(effectiveLocation\\.name|callNumberPrefix|callNumber|callNumberSuffix))+) *$");
-  private static final Pattern WHITESPACE_PATTERN = Pattern.compile(" +");
+    "^ *instanceId *== *\"?("
+    // UUID
+    + "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+    + ")\"?"
+    + " +sortBy"
+    // allow any sub-set of the fields and allow the fields in any order
+    + "(( +(effectiveLocation\\.name|callNumberPrefix|callNumber|callNumberSuffix))+) *$");
+  private static final Pattern SPACE_REGEX = Pattern.compile(" +");
 
   private final Messages messages = Messages.getInstance();
   private final Context vertxContext;
@@ -119,19 +116,19 @@ public class HoldingsService {
       return Future.succeededFuture();
     }
     var instanceId = matcher.group(1);
-    var sortBy = WHITESPACE_PATTERN.split(matcher.group(2));
+    var sortBy = SPACE_REGEX.split(matcher.group(2));
     return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit)
-        .map(row -> {
-          var json = "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
-              + "  \"totalRecords\": " + row.getLong("total_records") + ",\n"
-              + "  \"resultInfo\": { \n"
-              + "    \"totalRecords\": " + row.getLong("total_records") + ",\n"
-              + "    \"totalRecordsEstimated\": false\n"
-              + "  }\n"
-              + "}";
-          return Response.ok(json, MediaType.APPLICATION_JSON).build();
-        })
-        .onFailure(e -> log.error("getByInstanceId:: {}", e.getMessage(), e));
+      .map(row -> {
+        var json = "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
+                   + "  \"totalRecords\": " + row.getLong("total_records") + ",\n"
+                   + "  \"resultInfo\": { \n"
+                   + "    \"totalRecords\": " + row.getLong("total_records") + ",\n"
+                   + "    \"totalRecordsEstimated\": false\n"
+                   + "  }\n"
+                   + "}";
+        return Response.ok(json, MediaType.APPLICATION_JSON).build();
+      })
+      .onFailure(e -> log.error("getByInstanceId:: {}", e.getMessage(), e));
   }
 
   /**
@@ -300,21 +297,13 @@ public class HoldingsService {
 
         return refuseWhenHridChanged(oldHoldings, newHoldings)
           .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-          .compose(notUsed -> {
-            final Promise<List<Item>> overallResult = promise();
-
-            postgresClient.startTx(
-              connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
-                .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
-                .onComplete(handleTransaction(connection, overallResult))
-            );
-
-            return overallResult.future()
-              .compose(itemsBeforeUpdate -> itemEventService
-                .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
-              .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-              .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
-          });
+          .compose(notUsed -> postgresClient
+            .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
+              .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
+            .compose(itemsBeforeUpdate -> itemEventService
+              .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+            .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+            .onSuccess(domainEventPublisher.publishUpdated(oldHoldings)));
       });
   }
 
@@ -329,43 +318,18 @@ public class HoldingsService {
     }
   }
 
-  private <T> Handler<AsyncResult<T>> handleTransaction(
-    AsyncResult<SQLConnection> connection, Promise<T> overallResult) {
-
-    return transactionResult -> {
-      if (transactionResult.succeeded()) {
-        postgresClient.endTx(connection, commitResult -> {
-          if (commitResult.succeeded()) {
-            overallResult.complete(transactionResult.result());
-          } else {
-            log.error("Unable to commit transaction", commitResult.cause());
-            overallResult.fail(commitResult.cause());
-          }
-        });
-      } else {
-        log.error("Reverting transaction");
-        postgresClient.rollbackTx(connection, revertResult -> {
-          if (revertResult.failed()) {
-            log.error("Unable to revert transaction", revertResult.cause());
-          }
-          overallResult.fail(transactionResult.cause());
-        });
-      }
-    };
-  }
-
   private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords) {
     return consortiumService.getConsortiumData(okapiHeaders)
-        .compose(consortiumDataOptional -> {
-          if (consortiumDataOptional.isPresent()) {
-            return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get());
-          }
-          return Future.succeededFuture();
-        });
+      .compose(consortiumDataOptional -> {
+        if (consortiumDataOptional.isPresent()) {
+          return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get());
+        }
+        return Future.succeededFuture();
+      });
   }
 
   private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
-                                                        ConsortiumData consortiumData) {
+                                                     ConsortiumData consortiumData) {
     Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
 
     for (HoldingsRecord holdingRecord : holdingsRecords) {
@@ -373,13 +337,13 @@ public class HoldingsService {
       instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
     }
     return Future.all(new ArrayList<>(instanceFuturesMap.values()))
-        .mapEmpty();
+      .mapEmpty();
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
     return instanceRepository.exists(instanceId)
       .compose(exists -> Boolean.TRUE.equals(exists) ? Future.succeededFuture() :
-        consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
+                         consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
       );
   }
 

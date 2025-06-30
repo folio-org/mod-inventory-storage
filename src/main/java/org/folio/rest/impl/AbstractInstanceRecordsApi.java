@@ -25,8 +25,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 
 public abstract class AbstractInstanceRecordsApi {
 
@@ -35,38 +34,14 @@ public abstract class AbstractInstanceRecordsApi {
   protected void fetchRecordsByQuery(String sql, Supplier<Tuple> paramsSupplier, RoutingContext routingContext,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
     final HttpServerResponse response = getResponse(routingContext);
     try {
       Tuple params = paramsSupplier.get();
-      log.debug("postgres params: {}", params);
-
-      PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-      ConnectionErrorHandler handleError = new ConnectionErrorHandler(postgresClient);
-
-      postgresClient.startTx(tx -> postgresClient.selectStream(tx, sql, params, ar -> {
-        if (ar.failed()) {
-          respondWithError(response, ar.cause(), asyncResultHandler);
-          return;
-        }
-
-        RowStream<Row> rowStream = ar.result();
-        rowStream
-          .exceptionHandler(e -> handleError.writeErrorAndCloseConn(e, tx, response, asyncResultHandler))
-          .endHandler(end -> postgresClient.endTx(tx, h -> {
-            if (h.failed()) {
-              respondWithError(response, h.cause(), asyncResultHandler);
-              return;
-            }
-            response.end();
-          })).handler(row -> {
-            response.write(createJsonFromRow(row));
-            if (response.writeQueueFull()) {
-              rowStream.pause();
-            }
-          });
-        response.drainHandler(drain -> rowStream.resume());
-      }));
+      log.debug("fetchRecordsByQuery::query params: {}", params);
+      PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+        .withReadTrans(conn -> conn.selectStream(sql, params,
+          rowStream -> configureRowStream(rowStream, response, asyncResultHandler)))
+        .onFailure(event -> respondWithError(response, event, asyncResultHandler));
     } catch (IllegalArgumentException e) {
       log.error(e);
       asyncResultHandler.handle(succeededFuture(respond400WithTextPlain(e.getMessage())));
@@ -121,6 +96,20 @@ public abstract class AbstractInstanceRecordsApi {
     }
 
     return tuple;
+  }
+
+  private void configureRowStream(RowStream<Row> rowStream, HttpServerResponse response,
+                                  Handler<AsyncResult<Response>> asyncResultHandler) {
+    rowStream
+      .exceptionHandler(e -> respondWithError(response, e, asyncResultHandler))
+      .endHandler(end -> response.end())
+      .handler(row -> {
+        response.write(createJsonFromRow(row));
+        if (response.writeQueueFull()) {
+          rowStream.pause();
+        }
+      });
+    response.drainHandler(drain -> rowStream.resume());
   }
 
   /**

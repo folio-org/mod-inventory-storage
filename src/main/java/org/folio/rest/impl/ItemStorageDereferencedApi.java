@@ -19,9 +19,8 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.jaxrs.resource.ItemStorageDereferenced;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.util.UuidUtil;
 
 /**
@@ -96,22 +95,21 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
       whereClause = "LIMIT " + limit + " OFFSET " + offset;
     }
 
-    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-    postgresClient.select(sqlQuery + whereClause, asyncResult -> {
+    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+      .select(sqlQuery + whereClause, asyncResult -> {
+        if (Boolean.TRUE.equals(handleSelectFailure(asyncResult, asyncResultHandler))) {
+          return;
+        }
+        if (asyncResult.result().size() != 0) {
+          asyncResult.result().forEach(row -> mappedResults.add(mapToDereferencedItem(row)));
+        }
+        DereferencedItems itemCollection = new DereferencedItems();
+        itemCollection.setDereferencedItems(mappedResults);
+        itemCollection.setTotalRecords(mappedResults.size());
 
-      if (Boolean.TRUE.equals(handleSelectFailure(asyncResult, asyncResultHandler))) {
-        return;
-      }
-      if (asyncResult.result().size() != 0) {
-        asyncResult.result().forEach(row -> mappedResults.add(mapToDereferencedItem(row)));
-      }
-      DereferencedItems itemCollection = new DereferencedItems();
-      itemCollection.setDereferencedItems(mappedResults);
-      itemCollection.setTotalRecords(mappedResults.size());
-
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
-    });
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
+      });
   }
 
   @Validate
@@ -126,21 +124,21 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
       return;
     }
     String whereClause = "WHERE item.id='" + itemId + "'";
-    PostgresClient postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
-    postgresClient.select(sqlQuery + whereClause, asyncResult -> {
-      if (Boolean.TRUE.equals(handleSelectFailure(asyncResult, asyncResultHandler))) {
-        return;
-      }
-      if (asyncResult.result().size() == 0) {
-        respondWith404Error("No item records found matching provided UUID.", asyncResultHandler);
-        return;
-      }
-      Row row = asyncResult.result().iterator().next();
+    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+      .select(sqlQuery + whereClause, asyncResult -> {
+        if (Boolean.TRUE.equals(handleSelectFailure(asyncResult, asyncResultHandler))) {
+          return;
+        }
+        if (asyncResult.result().size() == 0) {
+          respondWith404Error("No item records found matching provided UUID.", asyncResultHandler);
+          return;
+        }
+        Row row = asyncResult.result().iterator().next();
 
-      DereferencedItem item = mapToDereferencedItem(row);
-      asyncResultHandler.handle(Future.succeededFuture(
-        GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(item)));
-    });
+        DereferencedItem item = mapToDereferencedItem(row);
+        asyncResultHandler.handle(Future.succeededFuture(
+          GetItemStorageDereferencedItemsByItemIdResponse.respond200WithApplicationJson(item)));
+      });
   }
 
   private Boolean handleSelectFailure(AsyncResult<RowSet<Row>> asyncResult,

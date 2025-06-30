@@ -4,7 +4,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
-import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -20,11 +19,6 @@ public class HoldingsEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers;
 
   private final FakeKafkaConsumer kafkaConsumer;
-
-  public HoldingsEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
-    this.kafkaConsumer = kafkaConsumer;
-    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
-  }
 
   public HoldingsEventMessageChecks(FakeKafkaConsumer kafkaConsumer, String urlHeader) {
     this.kafkaConsumer = kafkaConsumer;

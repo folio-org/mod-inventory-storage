@@ -25,9 +25,9 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 public class HoldingsTypeApi implements org.folio.rest.jaxrs.resource.HoldingsTypes {
@@ -44,9 +44,8 @@ public class HoldingsTypeApi implements org.folio.rest.jaxrs.resource.HoldingsTy
                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, HoldingsType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(REFERENCE_TABLE, HoldingsType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -115,9 +114,7 @@ public class HoldingsTypeApi implements org.folio.rest.jaxrs.resource.HoldingsTy
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(REFERENCE_TABLE, id,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).delete(REFERENCE_TABLE, id,
           reply -> {
             try {
               if (reply.failed()) {
@@ -156,12 +153,11 @@ public class HoldingsTypeApi implements org.folio.rest.jaxrs.resource.HoldingsTy
   public void putHoldingsTypesById(String id, HoldingsType entity, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(id);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(REFERENCE_TABLE, entity, id,
           reply -> {
             try {
               if (reply.succeeded()) {
