@@ -20,9 +20,9 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.HoldingsNoteTypes {
@@ -40,31 +40,31 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, HoldingsNoteType.class,
-          new String[] {"*"}, cql, true, true,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                HoldingsNoteTypes records = new HoldingsNoteTypes();
-                List<HoldingsNoteType> noteTypes = reply.result().getResults();
-                records.setHoldingsNoteTypes(noteTypes);
-                records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetHoldingsNoteTypesResponse.respond200WithApplicationJson(records)));
-              } else {
-                log.error(reply.cause().getMessage(), reply.cause());
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+          .get(REFERENCE_TABLE, HoldingsNoteType.class,
+            new String[] {"*"}, cql, true, true,
+            reply -> {
+              try {
+                if (reply.succeeded()) {
+                  HoldingsNoteTypes records = new HoldingsNoteTypes();
+                  List<HoldingsNoteType> noteTypes = reply.result().getResults();
+                  records.setHoldingsNoteTypes(noteTypes);
+                  records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                    GetHoldingsNoteTypesResponse.respond200WithApplicationJson(records)));
+                } else {
+                  log.error(reply.cause().getMessage(), reply.cause());
+                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsNoteTypesResponse
+                    .respond400WithTextPlain(reply.cause().getMessage())));
+                }
+              } catch (Exception e) {
+                log.error(e.getMessage(), e);
                 asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsNoteTypesResponse
-                  .respond400WithTextPlain(reply.cause().getMessage())));
+                  .respond500WithTextPlain(messages.getMessage(
+                    DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
               }
-            } catch (Exception e) {
-              log.error(e.getMessage(), e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetHoldingsNoteTypesResponse
-                .respond500WithTextPlain(messages.getMessage(
-                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
+            });
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         String message = messages.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
@@ -89,8 +89,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(REFERENCE_TABLE, id, entity,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -133,8 +132,7 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient postgres = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
         postgres.delete(REFERENCE_TABLE, id,
           reply -> {
             try {
@@ -175,12 +173,11 @@ public class HoldingsNoteTypeApi implements org.folio.rest.jaxrs.resource.Holdin
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(id);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(REFERENCE_TABLE, entity, id,
           reply -> {
             try {
               if (reply.succeeded()) {

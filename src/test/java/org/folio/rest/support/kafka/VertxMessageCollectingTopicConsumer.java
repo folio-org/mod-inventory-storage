@@ -8,9 +8,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.rest.api.TestBase;
 
 public class VertxMessageCollectingTopicConsumer {
+
+  private static final Logger LOG = LogManager.getLogger();
+
   private final Set<String> topicNames;
   private final MessageCollector messageCollector;
   private KafkaConsumer<String, JsonObject> consumer;
@@ -39,12 +45,14 @@ public class VertxMessageCollectingTopicConsumer {
     consumer = KafkaConsumer.create(vertx, consumerProperties());
 
     consumer.handler(messageCollector::acceptMessage);
-    consumer.subscribe(topicNames);
+    LOG.info("Subscribing to topics: {}", topicNames);
+    TestBase.get(consumer.subscribe(topicNames));
   }
 
   void unsubscribe() {
     if (consumer != null) {
-      consumer.unsubscribe();
+      LOG.info("Unsubscribing from topics: {}", topicNames);
+      TestBase.get(consumer.unsubscribe());
     }
   }
 }

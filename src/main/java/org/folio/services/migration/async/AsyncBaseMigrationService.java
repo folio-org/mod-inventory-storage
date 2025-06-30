@@ -3,13 +3,13 @@ package org.folio.services.migration.async;
 import io.vertx.core.Future;
 import java.util.HashSet;
 import java.util.Set;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.services.migration.BaseMigrationService;
 
 public abstract class AsyncBaseMigrationService extends BaseMigrationService {
   private Set<String> idsForMigration = new HashSet<>();
 
-  protected AsyncBaseMigrationService(String fromVersion, PostgresClientFuturized client) {
+  protected AsyncBaseMigrationService(String fromVersion, PostgresClient client) {
     super(fromVersion, client);
   }
 

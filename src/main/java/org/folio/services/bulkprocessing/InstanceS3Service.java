@@ -85,7 +85,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   protected Future<Void> ensureEntitiesWithNonMarcControlledFieldsData(List<InstanceWrapper> instanceWrappers) {
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
-    return instanceRepository.getById(instances, Instance::getId).compose(existingInstances -> {
+    return instanceRepository.getByIds(instances, Instance::getId).compose(existingInstances -> {
       instances.forEach(instance -> {
         if (existingInstances.get(instance.getId()) != null) {
           InstanceBulkProcessingUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));

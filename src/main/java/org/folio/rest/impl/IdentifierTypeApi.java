@@ -20,9 +20,9 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.CQLParseException;
 
 /**
@@ -43,9 +43,8 @@ public class IdentifierTypeApi implements org.folio.rest.jaxrs.resource.Identifi
                                  Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(IDENTIFIER_TYPE_TABLE, IdentifierType.class,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).get(IDENTIFIER_TYPE_TABLE, IdentifierType.class,
           new String[] {"*"}, cql, true, true,
           reply -> {
             try {
@@ -94,8 +93,7 @@ public class IdentifierTypeApi implements org.folio.rest.jaxrs.resource.Identifi
           entity.setId(id);
         }
 
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(
           IDENTIFIER_TYPE_TABLE, id, entity,
           reply -> {
             try {
@@ -144,8 +142,7 @@ public class IdentifierTypeApi implements org.folio.rest.jaxrs.resource.Identifi
 
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient postgres = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
         postgres.delete(IDENTIFIER_TYPE_TABLE, identifierTypeId,
           reply -> {
             try {
@@ -188,12 +185,11 @@ public class IdentifierTypeApi implements org.folio.rest.jaxrs.resource.Identifi
                                                    Context vertxContext) {
 
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(identifierTypeId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(
           IDENTIFIER_TYPE_TABLE, entity, identifierTypeId,
           reply -> {
             try {

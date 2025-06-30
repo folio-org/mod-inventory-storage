@@ -13,16 +13,14 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationship;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationships;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.resource.ElectronicAccessRelationships {
 
@@ -40,9 +38,8 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                                                Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
         CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
           .get(RESOURCE_TABLE, ElectronicAccessRelationship.class,
             new String[] {"*"}, cql, true, true,
             reply -> {
@@ -95,8 +92,7 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
           id = entity.getId();
         }
 
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).save(RESOURCE_TABLE, id, entity,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -156,9 +152,8 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
           .delete(RESOURCE_TABLE, electronicAccessRelationshipId,
             reply -> {
               try {
@@ -210,12 +205,11 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       try {
         if (entity.getId() == null) {
           entity.setId(electronicAccessRelationshipId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
           .update(RESOURCE_TABLE, entity, electronicAccessRelationshipId,
             reply -> {
               try {

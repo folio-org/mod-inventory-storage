@@ -4,15 +4,12 @@ import static org.folio.rest.api.InstanceStorageTest.smallAngryPlanet;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
-import java.util.Map;
 import java.util.UUID;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
@@ -71,8 +68,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
       .forInstance(instance.getId())
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-    holdingsClient.create(holdingBuilder.create(), TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    createHoldingRecord(holdingBuilder.create());
 
     final Response removeResponse = instancesClient.attemptToDelete(instance.getId());
 
@@ -92,8 +88,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
       .forInstance(instance.getId())
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-    holdingsClient.create(holdingBuilder.create(), TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    createHoldingRecord(holdingBuilder.create());
 
     final Response removeResponse = instancesClient.attemptDeleteAll();
 

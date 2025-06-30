@@ -54,7 +54,7 @@ public class ItemEffectiveValuesService {
       .map(Item::getHoldingsRecordId)
       .collect(Collectors.toSet());
 
-    return holdingsRepository.getById(holdingsIds)
+    return holdingsRepository.getByIds(holdingsIds)
       .compose(holdingsRecordMap -> {
         if (holdingsRecordMap.keySet().containsAll(holdingsIds)) {
           return succeededFuture(holdingsRecordMap);

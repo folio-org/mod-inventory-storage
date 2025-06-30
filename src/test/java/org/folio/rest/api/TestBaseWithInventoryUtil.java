@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -31,6 +32,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
+import org.folio.rest.support.builders.Builder;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
@@ -203,10 +205,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .withSource(sourceId)
       .withPermanentLocation(holdingsPermanentLocationId);
 
-    return holdingsClient
-      .create(holdingsBuilderProcessor.apply(holdingsBuilder).create(), TENANT_ID,
-        Map.of(XOkapiHeaders.URL, mockServer.baseUrl()))
-      .getId();
+    return createHoldingRecord(holdingsBuilderProcessor.apply(holdingsBuilder).create()).getId();
   }
 
   protected static UUID createHolding(UUID instanceId,
@@ -223,7 +222,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       : electronicAccessUrls.stream()
       .map(url -> new JsonObject().put("uri", url))
       .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
-    return holdingsClient.create(
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
         .withSource(getPreparedHoldingSourceId())
@@ -231,53 +230,70 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .withPermanentLocation(holdingsPermanentLocationId)
         .withTemporaryLocation(holdingsTemporaryLocationId)
         .withElectronicAccess(electronicAccessArray)
-        .create(),
-      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
+        .create()).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumber(UUID holdingsPermanentLocationId) {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
 
-    return holdingsClient.create(
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
         .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumber("testCallNumber")
-        .create(),
-      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
+        .create()).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberPrefix(UUID holdingsPermanentLocationId) {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
 
-    return holdingsClient.create(
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
         .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberPrefix("testCallNumberPrefix")
-        .create(),
-      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
+        .create()).getId();
   }
 
   protected static UUID createInstanceAndHoldingWithCallNumberSuffix(UUID holdingsPermanentLocationId) {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
 
-    return holdingsClient.create(
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
         .withSource(getPreparedHoldingSourceId())
         .forInstance(instanceId)
         .withPermanentLocation(holdingsPermanentLocationId)
         .withCallNumberSuffix("testCallNumberSuffix")
-        .create(),
-      TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
+        .create()).getId();
+  }
+
+  protected static IndividualResource createHoldingRecord(JsonObject holdingsJson) {
+    return createHoldingRecord(holdingsJson, TENANT_ID);
+  }
+
+  protected static IndividualResource createHoldingRecord(JsonObject holdingsJson, String tenantId) {
+    return holdingsClient.create(holdingsJson, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+  }
+
+  protected static void updateHoldingRecord(UUID id, Builder builder) {
+    updateHoldingRecord(id, builder.create());
+  }
+
+  protected static void updateHoldingRecord(UUID id, JsonObject holdingJson) {
+    var holdingId = id != null ? id.toString() : null;
+    var putResponse = holdingsClient.attemptToReplace(holdingId, holdingJson, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(
+      String.format("Failed to update holding record %s: %s", id, putResponse.getBody()),
+      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   public static UUID createInstanceRecord(JsonObject instanceJson) {
