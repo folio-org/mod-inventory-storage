@@ -70,6 +70,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
@@ -111,10 +112,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
   };
   private final HoldingsEventMessageChecks holdingsMessageChecks
-    = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(KAFKA_CONSUMER);
+    = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   @SneakyThrows
   @BeforeClass
@@ -399,7 +400,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(NEW_TEST_TAG)))
       .put("administrativeNotes", new JsonArray().add(adminNote));
 
-    holdingsClient.replace(holdingId, replacement);
+    updateHoldingRecord(holdingId, replacement);
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -450,7 +451,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject replacement = holdingResource.copyJson()
       .put("instanceId", newInstanceId.toString());
 
-    holdingsClient.replace(holdingId, replacement);
+    updateHoldingRecord(holdingId, replacement);
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -481,7 +482,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingId = holdingResource.getId();
 
-    holdingsClient.delete(holdingId);
+    holdingsClient.delete(holdingId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -771,7 +772,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
 
-    holdingsClient.deleteAll();
+    holdingsClient.deleteAll(Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
     List<JsonObject> allHoldings = holdingsClient.getAll();
 
@@ -819,9 +820,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withHrid("123")
       .create()).getJson();
 
-    var response = getClient().delete(holdingsStorageUrl("?query=hrid==12*"), TENANT_ID).get(10, SECONDS);
+    holdingsClient.deleteByQuery("hrid==12*", Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
-    assertThat(response.getStatusCode(), is(204));
     assertExists(h2);
     assertExists(h4);
     assertNotExists(h1);
@@ -2611,8 +2611,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withSource(HOLDING_SOURCE_IDS[0])
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
 
-    JsonObject holding = holdingsClient.create(builder.create(), CONSORTIUM_MEMBER_TENANT,
-      Map.of(X_OKAPI_URL, mockServer.baseUrl())).getJson();
+    JsonObject holding = createHoldingRecord(builder.create(), CONSORTIUM_MEMBER_TENANT).getJson();
 
     assertThat(holding.getString("id"), is(notNullValue()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));

@@ -11,17 +11,28 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasProperty;
 
 import io.vertx.core.json.JsonObject;
+import java.net.MalformedURLException;
+import java.net.URI;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 public class HoldingsEventMessageChecks {
-  private final EventMessageMatchers eventMessageMatchers
-    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+  private final EventMessageMatchers eventMessageMatchers;
 
   private final FakeKafkaConsumer kafkaConsumer;
 
   public HoldingsEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
     this.kafkaConsumer = kafkaConsumer;
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+  }
+
+  public HoldingsEventMessageChecks(FakeKafkaConsumer kafkaConsumer, String urlHeader) {
+    this.kafkaConsumer = kafkaConsumer;
+    try {
+      this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, URI.create(urlHeader).toURL());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static String getId(JsonObject holdings) {

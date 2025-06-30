@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
@@ -44,7 +45,7 @@ public abstract class AbstractRepository<T> {
 
   public Future<List<T>> get(AsyncResult<SQLConnection> connection, Criterion criterion) {
     return postgresClient.withConn(connection, conn -> conn.get(tableName, recordType, criterion, false))
-        .map(Results::getResults);
+      .map(Results::getResults);
   }
 
   public Future<T> getById(String id) {
@@ -84,6 +85,13 @@ public abstract class AbstractRepository<T> {
 
   public Future<RowSet<Row>> updateBatch(List<T> records, SQLConnection connection) {
     return postgresClient.withConn(succeededFuture(connection), conn -> conn.upsertBatch(tableName, records));
+  }
+
+  public Future<T> fetchAndUpdate(String id, UnaryOperator<T> builder) {
+    return postgresClient.withTrans(conn -> conn.getByIdForUpdate(tableName, id, recordType)
+      .map(builder)
+      .compose(response -> conn.update(tableName, response, id)
+        .map(response)));
   }
 
   public Future<RowSet<Row>> deleteAll() {
