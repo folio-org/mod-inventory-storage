@@ -4,7 +4,6 @@ import static io.vertx.core.Promise.promise;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
@@ -39,8 +38,8 @@ public abstract class AbstractRepository<T> {
     return postgresClient.save(tableName, id, entity);
   }
 
-  public void save(String id, T entity, Handler<AsyncResult<T>> replyHandler) {
-    postgresClientFuturized.save(tableName, id, entity, replyHandler);
+  public Future<T> save(String table, String id, T entity) {
+    return postgresClient.saveAndReturnUpdatedEntity(table, id, entity);
   }
 
   public Future<List<T>> get(Criterion criterion) {

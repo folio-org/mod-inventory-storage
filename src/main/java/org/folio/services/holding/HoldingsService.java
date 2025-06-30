@@ -20,8 +20,10 @@ import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -38,7 +40,6 @@ import org.folio.dbschema.ObjectMapperTool;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.PgExceptionFacade;
 import org.folio.rest.persist.PgUtil;
@@ -164,19 +165,20 @@ public class HoldingsService {
         }
         final Promise<Response> postResponse = promise();
 
-        holdingsRepository.save(hr.getId(), hr, reply -> {
-          try {
-            if (reply.succeeded()) {
-              postResponse.handle(Future.succeededFuture(PostHoldingsStorageHoldingsResponse
-                .respond201WithApplicationJson(reply.result(),
-                  PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(LOCATION_PREFIX))));
-            } else {
-              handleFailedResponse(hr.getId(), reply.cause(), postResponse);
+        holdingsRepository.save(HOLDINGS_RECORD_TABLE, hr.getId(), hr)
+          .onComplete(reply -> {
+            try {
+              if (reply.succeeded()) {
+                postResponse.handle(Future.succeededFuture(PostHoldingsStorageHoldingsResponse
+                  .respond201WithApplicationJson(reply.result(),
+                    PostHoldingsStorageHoldingsResponse.headersFor201().withLocation(LOCATION_PREFIX))));
+              } else {
+                handleFailedResponse(hr.getId(), reply.cause(), postResponse);
+              }
+            } catch (Exception e) {
+              internalServerErrorDuringPost(e, postResponse);
             }
-          } catch (Exception e) {
-            internalServerErrorDuringPost(e, postResponse);
-          }
-        });
+          });
         return postResponse.future()
           .onSuccess(domainEventPublisher.publishCreated());
       })
