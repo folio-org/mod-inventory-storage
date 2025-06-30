@@ -26,7 +26,7 @@ import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.Processed;
 import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgUtil;
+import org.folio.rest.support.PostgresClientFactory;
 
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> MIGRATION_JOB_RUNNERS = List
@@ -39,7 +39,7 @@ public final class AsyncMigrationJobService {
 
   public AsyncMigrationJobService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.migrationJobRepository = new AsyncMigrationJobRepository(vertxContext, okapiHeaders);
-    var postgresClient = PgUtil.postgresClient(vertxContext, okapiHeaders);
+    var postgresClient = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
     this.migrationContext = new AsyncMigrationContext(vertxContext, okapiHeaders, postgresClient);
   }
 

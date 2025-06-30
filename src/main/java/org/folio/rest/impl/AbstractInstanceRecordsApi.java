@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.persist.PgUtil;
+import org.folio.rest.support.PostgresClientFactory;
 
 public abstract class AbstractInstanceRecordsApi {
 
@@ -38,7 +38,7 @@ public abstract class AbstractInstanceRecordsApi {
     try {
       Tuple params = paramsSupplier.get();
       log.debug("fetchRecordsByQuery::query params: {}", params);
-      PgUtil.postgresClient(vertxContext, okapiHeaders)
+      PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
         .withReadTrans(conn -> conn.selectStream(sql, params,
           rowStream -> configureRowStream(rowStream, response, asyncResultHandler)))
         .onFailure(event -> respondWithError(response, event, asyncResultHandler));

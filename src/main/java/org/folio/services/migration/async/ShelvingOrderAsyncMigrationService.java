@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 import org.folio.utils.DatabaseUtils;
 
@@ -21,7 +21,7 @@ public class ShelvingOrderAsyncMigrationService extends ItemShelvingOrderMigrati
   private final PostgresClient postgresClient;
 
   public ShelvingOrderAsyncMigrationService(Context context, Map<String, String> okapiHeaders) {
-    this(PgUtil.postgresClient(context, okapiHeaders), new ItemRepository(context, okapiHeaders));
+    this(PostgresClientFactory.getInstance(context, okapiHeaders), new ItemRepository(context, okapiHeaders));
   }
 
   public ShelvingOrderAsyncMigrationService(PostgresClient postgresClient,

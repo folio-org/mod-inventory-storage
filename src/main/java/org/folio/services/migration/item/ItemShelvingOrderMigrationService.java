@@ -11,9 +11,9 @@ import java.util.Map;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.services.migration.async.AsyncBaseMigrationService;
 import org.folio.utils.DatabaseUtils;
 
@@ -25,7 +25,7 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
   private final ItemRepository itemRepository;
 
   public ItemShelvingOrderMigrationService(Context context, Map<String, String> okapiHeaders) {
-    this(PgUtil.postgresClient(context, okapiHeaders),
+    this(PostgresClientFactory.getInstance(context, okapiHeaders),
       new ItemRepository(context, okapiHeaders));
   }
 

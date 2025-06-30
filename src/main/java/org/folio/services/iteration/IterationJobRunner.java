@@ -23,8 +23,8 @@ import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.domainevent.DomainEvent;
@@ -47,7 +47,7 @@ public class IterationJobRunner {
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(PgUtil.postgresClient(vertxContext, okapiHeaders),
+    this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
       new IterationJobRepository(vertxContext, okapiHeaders),
       new InstanceRepository(vertxContext, okapiHeaders),
       vertxContext,
@@ -59,7 +59,6 @@ public class IterationJobRunner {
                             Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
-
     this.postgresClient = postgresClient;
     this.jobRepository = repository;
     this.instanceRepository = instanceRepository;

@@ -22,8 +22,8 @@ import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.utils.DatabaseUtils;
 
@@ -39,7 +39,7 @@ public class ReindexJobRunner {
   private final String tenantId;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(PgUtil.postgresClient(vertxContext, okapiHeaders),
+    this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
       new ReindexJobRepository(vertxContext, okapiHeaders),
       vertxContext,
       new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
@@ -59,17 +59,6 @@ public class ReindexJobRunner {
     initWorker(vertxContext);
   }
 
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (ReindexJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
-        }
-      }
-    }
-  }
-
   public void startReindex(ReindexJob reindexJob) {
     workerExecutor.executeBlocking(
         promise -> {
@@ -80,10 +69,21 @@ public class ReindexJobRunner {
           } else {
             throw new UnsupportedOperationException(
               "Unknown resource name. Reindex job was not started for: "
-                + reindexJob.getResourceName().name());
+              + reindexJob.getResourceName().name());
           }
         })
       .map(notUsed -> null);
+  }
+
+  private static void initWorker(Context vertxContext) {
+    if (workerExecutor == null) {
+      synchronized (ReindexJobRunner.class) {
+        if (workerExecutor == null) {
+          workerExecutor = vertxContext.owner()
+            .createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
+        }
+      }
+    }
   }
 
   private Future<Long> streamInstanceIds(ReindexContext context) {
