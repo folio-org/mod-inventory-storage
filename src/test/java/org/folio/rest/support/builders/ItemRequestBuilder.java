@@ -9,7 +9,6 @@ import java.util.UUID;
 public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
   private static final String AVAILABLE_STATUS = "Available";
-  private static final String CHECKED_OUT_STATUS = "Checked out";
 
   private final UUID id;
   private final UUID holdingId;
@@ -89,10 +88,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return itemRequest;
   }
 
-  public ItemRequestBuilder checkOut() {
-    return withStatus(CHECKED_OUT_STATUS);
-  }
-
   public ItemRequestBuilder available() {
     return withStatus(AVAILABLE_STATUS);
   }
@@ -149,14 +144,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.itemLevelCallNumberTypeId,
       this.discoverySuppress,
       this.statisticalCodeIds);
-  }
-
-  public ItemRequestBuilder withNoBarcode() {
-    return withBarcode(null);
-  }
-
-  public ItemRequestBuilder withNoTemporaryLocation() {
-    return withTemporaryLocation(null);
   }
 
   public ItemRequestBuilder withTemporaryLocation(UUID temporaryLocationId) {
@@ -223,24 +210,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.materialTypeId,
       permanentLoanTypeId,
       this.temporaryLoanTypeId,
-      this.itemLevelCallNumberPrefix,
-      this.itemLevelCallNumber,
-      this.itemLevelCallNumberSuffix,
-      this.itemLevelCallNumberTypeId,
-      this.discoverySuppress,
-      this.statisticalCodeIds);
-  }
-
-  public ItemRequestBuilder withTemporaryLoanType(UUID loanTypeId) {
-    return new ItemRequestBuilder(
-      this.id,
-      this.holdingId,
-      this.barcode,
-      this.status,
-      this.temporaryLocationId,
-      this.materialTypeId,
-      this.permanentLoanTypeId,
-      loanTypeId,
       this.itemLevelCallNumberPrefix,
       this.itemLevelCallNumber,
       this.itemLevelCallNumberSuffix,

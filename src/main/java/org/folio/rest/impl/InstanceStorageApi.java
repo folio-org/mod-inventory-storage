@@ -27,12 +27,11 @@ import org.folio.rest.jaxrs.model.RetrieveDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.EndpointFailureHandler;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.instance.InstanceService;
 
 public class InstanceStorageApi implements InstanceStorage {
@@ -45,8 +44,6 @@ public class InstanceStorageApi implements InstanceStorage {
                                                       Map<String, String> okapiHeaders,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
-    PostgresClient postgresClient =
-      PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
     try {
       vertxContext.runOnContext(v -> {
@@ -58,29 +55,30 @@ public class InstanceStorageApi implements InstanceStorage {
 
           log.info("SQL generated from CQL: {}", cql);
 
-          postgresClient.get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, cql,
-            true, false, reply -> {
-              try {
-                if (reply.succeeded()) {
-                  List<InstanceRelationship> instanceRelationships = reply.result().getResults();
+          PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+            .get(INSTANCE_RELATIONSHIP_TABLE, InstanceRelationship.class, fieldList, cql,
+              true, false, reply -> {
+                try {
+                  if (reply.succeeded()) {
+                    List<InstanceRelationship> instanceRelationships = reply.result().getResults();
 
-                  InstanceRelationships instanceList = new InstanceRelationships();
-                  instanceList.setInstanceRelationships(instanceRelationships);
-                  instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
+                    InstanceRelationships instanceList = new InstanceRelationships();
+                    instanceList.setInstanceRelationships(instanceRelationships);
+                    instanceList.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
 
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      GetInstanceStorageInstanceRelationshipsResponse.respond200WithApplicationJson(instanceList)));
+                  } else {
+                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+                      GetInstanceStorageInstanceRelationshipsResponse.respond500WithTextPlain(
+                        reply.cause().getMessage())));
+                  }
+                } catch (Exception e) {
+                  log.error(e.getMessage(), e);
                   asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetInstanceStorageInstanceRelationshipsResponse.respond200WithApplicationJson(instanceList)));
-                } else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetInstanceStorageInstanceRelationshipsResponse.respond500WithTextPlain(
-                      reply.cause().getMessage())));
+                    GetInstanceStorageInstanceRelationshipsResponse.respond500WithTextPlain(e.getMessage())));
                 }
-              } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetInstanceStorageInstanceRelationshipsResponse.respond500WithTextPlain(e.getMessage())));
-              }
-            });
+              });
         } catch (Exception e) {
           log.error(e.getMessage(), e);
           asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
@@ -121,19 +119,18 @@ public class InstanceStorageApi implements InstanceStorage {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    PostgresClient postgresClient =
-      PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
 
-    postgresClient.delete(INSTANCE_RELATIONSHIP_TABLE, relationshipId, reply -> {
-      if (!reply.succeeded()) {
+    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+      .delete(INSTANCE_RELATIONSHIP_TABLE, relationshipId, reply -> {
+        if (!reply.succeeded()) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
+              .respond500WithTextPlain(reply.cause().getMessage())));
+          return;
+        }
         asyncResultHandler.handle(Future.succeededFuture(
-          DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse
-            .respond500WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse.respond204()));
-    });
+          DeleteInstanceStorageInstanceRelationshipsByRelationshipIdResponse.respond204()));
+      });
   }
 
   @Validate
@@ -144,12 +141,11 @@ public class InstanceStorageApi implements InstanceStorage {
                                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                                       Context vertxContext) {
     vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
       try {
         if (entity.getId() == null) {
           entity.setId(relationshipId);
         }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
+        PostgresClientFactory.getInstance(vertxContext, okapiHeaders).update(
           INSTANCE_RELATIONSHIP_TABLE, entity, relationshipId,
           reply -> {
             try {
@@ -317,25 +313,24 @@ public class InstanceStorageApi implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    PostgresClient postgresClient =
-      PostgresClient.getInstance(vertxContext.owner(), TenantTool.tenantId(okapiHeaders));
-    postgresClient.upsert(INSTANCE_SOURCE_MARC_TABLE, instanceId, entity, reply -> {
-      if (reply.succeeded()) {
-        asyncResultHandler.handle(Future.succeededFuture(
-          PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
-        return;
-      }
-      if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
-          && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
+      .upsert(INSTANCE_SOURCE_MARC_TABLE, instanceId, entity, reply -> {
+        if (reply.succeeded()) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse.respond204()));
+          return;
+        }
+        if (PgExceptionUtil.isForeignKeyViolation(reply.cause())
+            && reply.cause().getMessage().contains(INSTANCE_SOURCE_MARC_TABLE)) {
+          asyncResultHandler.handle(Future.succeededFuture(
+            PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
+              .respond404WithTextPlain(reply.cause().getMessage())));
+          return;
+        }
         asyncResultHandler.handle(Future.succeededFuture(
           PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-            .respond404WithTextPlain(reply.cause().getMessage())));
-        return;
-      }
-      asyncResultHandler.handle(Future.succeededFuture(
-        PutInstanceStorageInstancesSourceRecordMarcJsonByInstanceIdResponse
-          .respond500WithTextPlain(reply.cause().getMessage())));
-    });
+            .respond500WithTextPlain(reply.cause().getMessage())));
+      });
   }
 
   /**

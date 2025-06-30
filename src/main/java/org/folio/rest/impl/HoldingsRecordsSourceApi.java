@@ -16,13 +16,12 @@ import org.folio.rest.jaxrs.model.HoldingsRecordsSource.Source;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
 public class HoldingsRecordsSourceApi implements org.folio.rest.jaxrs.resource.HoldingsSources {
 
-  public static final String HOLDINGS_RECORD_TABLE = "holdings_record";
   private static final String REFERENCE_TABLE = "holdings_records_source";
   private static final Logger log = LogManager.getLogger();
   private final Messages messages = Messages.getInstance();
@@ -61,8 +60,7 @@ public class HoldingsRecordsSourceApi implements org.folio.rest.jaxrs.resource.H
                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     vertxContext.runOnContext(v -> {
       try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient pgClient = PostgresClient.getInstance(vertxContext.owner(), tenantId);
+        PostgresClient pgClient = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
         pgClient.getById(REFERENCE_TABLE,
           id, HoldingsRecordsSource.class,
           reply -> {

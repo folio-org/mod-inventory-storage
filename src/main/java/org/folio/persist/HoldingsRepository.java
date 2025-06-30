@@ -76,7 +76,7 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   public Future<RowSet<Row>> delete(String cql) {
     try {
       CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + postgresClientFuturized.getFullTableName(tableName)
+      String sql = "DELETE FROM " + getFullTableName(tableName)
         + " " + cqlWrapper.getWhereClause()
         + " RETURNING instanceId::text, jsonb::text";
       return postgresClient.execute(sql);
@@ -86,7 +86,7 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   }
 
   public Future<List<Map<String, Object>>> getReindexHoldingsRecords(String fromId, String toId) {
-    var sql = "SELECT jsonb FROM " + postgresClientFuturized.getFullTableName(HOLDINGS_RECORD_TABLE)
+    var sql = "SELECT jsonb FROM " + getFullTableName(HOLDINGS_RECORD_TABLE)
                  + " i WHERE id >= '" + fromId + "' AND id <= '" + toId + "'"
                  + ";";
     return postgresClient.select(sql).map(rows -> {
