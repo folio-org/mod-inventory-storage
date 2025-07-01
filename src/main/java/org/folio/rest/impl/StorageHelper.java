@@ -30,14 +30,6 @@ public final class StorageHelper {
     return message;
   }
 
-  static boolean isDuplicate(String message) {
-    return message != null && message.contains("duplicate key value violates unique constraint");
-  }
-
-  static boolean isInUse(String message) {
-    return message != null && message.contains("is still referenced");
-  }
-
   static CQLWrapper getCql(String query,
                            int limit, int offset, String tableName) throws FieldException {
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(tableName + ".jsonb");

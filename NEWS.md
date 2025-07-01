@@ -34,6 +34,7 @@
 * Stabilize tests by increasing the number of attempts to start the Kafka container ([MODINVSTOR-1413](https://folio-org.atlassian.net/browse/MODINVSTOR-1413))
 * Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
 * Refactor usage of deprecated `PostgresClient` methods ([MODINVSTOR-1367](https://folio-org.atlassian.net/browse/MODINVSTOR-1367))
+* Refactor controllers to extract common logic into shared class ([MODINVSTOR-1437](https://folio-org.atlassian.net/browse/MODINVSTOR-1437))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
