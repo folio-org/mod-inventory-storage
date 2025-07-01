@@ -2478,6 +2478,19 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
+
+    final JsonArray holdingsArray = threeHoldings();
+    var invalidHolding = holdingsArray.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatch(holdingsArray);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   @SneakyThrows
   public void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
     final UUID instanceId = UUID.randomUUID();
@@ -2887,6 +2900,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     // safe update, env var should not influence the regular API
     holdings.getJsonObject(1).put("copyNumber", "789");
     assertThat(postSynchronousBatch("?upsert=true", holdings), statusCodeIs(409));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    // insert
+    JsonArray holdings = threeHoldings();
+    var invalidHolding = holdings.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatchUnsafe(holdings);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test

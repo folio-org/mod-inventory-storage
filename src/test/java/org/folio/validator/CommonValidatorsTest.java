@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.rest.exceptions.BadRequestException;
@@ -61,5 +62,38 @@ class CommonValidatorsTest {
     assertTrue(result.failed());
     assertInstanceOf(BadRequestException.class, result.cause());
     assertEquals("invalid input syntax for type uuid: \"invalid-uuid\"", result.cause().getMessage());
+  }
+
+  @Test
+  void validateUuidFormatForList_returnsSucceededFuture_whenListIsEmpty() {
+    assertTrue(CommonValidators.validateUuidFormatForList(List.of(), item -> Set.of()).succeeded());
+  }
+
+  @Test
+  void validateUuidFormatForList_returnsSucceededFuture_whenAllUuidsAreValid() {
+    var items = List.of(
+      createHoldingsRecord(Set.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())),
+      createHoldingsRecord(Set.of(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+    );
+    assertTrue(CommonValidators.validateUuidFormatForList(items, HoldingsRecord::getStatisticalCodeIds).succeeded());
+  }
+
+  @Test
+  void validateUuidFormatForList_returnsFailedFuture_whenListContainsInvalidUuid() {
+    var items = List.of(
+      new HoldingsRecord(),
+      createHoldingsRecord(Set.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())),
+      createHoldingsRecord(Set.of(UUID.randomUUID().toString(), "invalid-uuid"))
+    );
+    var result = CommonValidators.validateUuidFormatForList(items, HoldingsRecord::getStatisticalCodeIds);
+    assertTrue(result.failed());
+    assertInstanceOf(BadRequestException.class, result.cause());
+    assertEquals("invalid input syntax for type uuid: \"invalid-uuid\"", result.cause().getMessage());
+  }
+
+  private HoldingsRecord createHoldingsRecord(Set<String> statisticalCodeIds) {
+    var holdingsRecord = new HoldingsRecord();
+    holdingsRecord.setStatisticalCodeIds(statisticalCodeIds);
+    return holdingsRecord;
   }
 }

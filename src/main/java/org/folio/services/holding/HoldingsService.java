@@ -16,6 +16,7 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
+import static org.folio.validator.CommonValidators.validateUuidFormatForList;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -205,7 +206,8 @@ public class HoldingsService {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
     }
 
-    return createShadowInstancesIfNeeded(holdings)
+    return validateUuidFormatForList(holdings, HoldingsRecord::getStatisticalCodeIds)
+      .compose(v -> createShadowInstancesIfNeeded(holdings))
       .compose(ar -> hridManager.populateHridForHoldings(holdings)
         .compose(NotesValidators::refuseHoldingLongNotes)
         .compose(result -> buildBatchOperationContext(upsert, holdings,

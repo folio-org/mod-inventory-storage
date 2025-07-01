@@ -23,6 +23,8 @@ import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
+import static org.folio.validator.CommonValidators.validateUuidFormat;
+import static org.folio.validator.CommonValidators.validateUuidFormatForList;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
@@ -101,7 +103,8 @@ public class ItemService {
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
 
-    return hridManager.populateHrid(entity)
+    return validateUuidFormat(entity.getStatisticalCodeIds())
+      .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(this::populateCirculationNoteId)
@@ -123,7 +126,8 @@ public class ItemService {
       .filter(item -> item.getStatus().getDate() == null)
       .forEach(item -> item.getStatus().setDate(itemStatusDate));
 
-    return hridManager.populateHridForItems(items)
+    return validateUuidFormatForList(items, Item::getStatisticalCodeIds)
+      .compose(v -> hridManager.populateHridForItems(items))
       .compose(NotesValidators::refuseItemLongNotes)
       .compose(result -> effectiveValuesService.populateEffectiveValues(items))
       .compose(this::populateCirculationNoteId)
@@ -141,7 +145,8 @@ public class ItemService {
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     PutData putData = new PutData();
-    return refuseLongNotes(newItem)
+    return validateUuidFormat(newItem.getStatisticalCodeIds())
+      .compose(v -> refuseLongNotes(newItem))
       .compose(this::populateCirculationNoteId)
       .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)

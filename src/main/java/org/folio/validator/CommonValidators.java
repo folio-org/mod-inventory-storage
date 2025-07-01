@@ -4,11 +4,13 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 
 import io.vertx.core.Future;
+import java.util.List;
 import java.util.Set;
-import java.util.UUID;
+import java.util.function.Function;
 import org.apache.commons.collections4.CollectionUtils;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
+import org.folio.util.UuidUtil;
 
 public final class CommonValidators {
   private CommonValidators() { }
@@ -20,13 +22,19 @@ public final class CommonValidators {
   public static Future<Void> validateUuidFormat(Set<String> ids) {
     if (CollectionUtils.isNotEmpty(ids)) {
       for (var id : ids) {
-        try {
-          UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
+        if (!UuidUtil.isUuid(id)) {
           return failedFuture(new BadRequestException(String.format("invalid input syntax for type uuid: \"%s\"", id)));
         }
       }
     }
     return succeededFuture();
+  }
+
+  public static <T> Future<Void> validateUuidFormatForList(List<T> entities, Function<T, Set<String>> uuidExtractor) {
+    return entities.stream()
+      .map(entity -> validateUuidFormat(uuidExtractor.apply(entity)))
+      .filter(Future::failed)
+      .findFirst()
+      .orElse(succeededFuture());
   }
 }
