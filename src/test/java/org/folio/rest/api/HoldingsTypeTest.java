@@ -9,9 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import org.folio.rest.api.entities.HoldingsType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
@@ -30,26 +28,46 @@ public class HoldingsTypeTest extends TestBase {
   }
 
   @Test
-  public void cannotCreateHoldingsTypeWithDuplicateName()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    JsonObject holdingsType = new JsonObject()
-      .put("name", "Custom")
-      .put("source", "folio");
+  public void cannotCreateHoldingsTypeWithDuplicateName() {
+    var holdingsType = getHoldingsTypeEntity("Custom 1");
 
     holdingsTypeClient.create(holdingsType);
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
     getClient().post(holdingsTypesUrl(""), holdingsType, TENANT_ID, ResponseHandler.json(postCompleted));
+    var response = get(postCompleted);
 
-    Response response = postCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertNameDuplicateError(response);
+  }
+
+  @Test
+  public void cannotUpdateHoldingsTypeWithDuplicateName() {
+    var holdingsType = getHoldingsTypeEntity("Custom 2");
+
+    holdingsTypeClient.create(holdingsType);
+
+    var id = holdingsTypeClient.create(getHoldingsTypeEntity("Custom 3")).getId();
+
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    getClient()
+      .put(holdingsTypesUrl("/" + id), holdingsType, TENANT_ID, ResponseHandler.json(putCompleted));
+    Response response = get(putCompleted);
+
+    assertNameDuplicateError(response);
+  }
+
+  private JsonObject getHoldingsTypeEntity(String name) {
+    return new HoldingsType(name, "folio").getJson();
+  }
+
+  private void assertNameDuplicateError(Response response) {
     assertThat(response.getStatusCode(), is(422));
-
     JsonArray errors = response.getJson().getJsonArray("errors");
     assertThat(errors.size(), is(1));
 
     JsonObject error = errors.getJsonObject(0);
     assertThat(error.getString("code"), is("name.duplicate"));
-    assertThat(error.getString("message"), is("Cannot create entity; name is not unique"));
+    assertThat(error.getString("message"), is("Cannot create/update entity; name is not unique"));
 
     JsonArray errorParameters = error.getJsonArray("parameters");
     assertThat(errorParameters.size(), is(1));

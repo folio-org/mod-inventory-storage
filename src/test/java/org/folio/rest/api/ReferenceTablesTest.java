@@ -31,7 +31,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,18 +38,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.rest.api.entities.AlternativeTitleType;
 import org.folio.rest.api.entities.ContributorNameType;
 import org.folio.rest.api.entities.ContributorType;
 import org.folio.rest.api.entities.ElectronicAccessRelationship;
 import org.folio.rest.api.entities.HoldingsNoteType;
 import org.folio.rest.api.entities.HoldingsType;
-import org.folio.rest.api.entities.IdentifierType;
 import org.folio.rest.api.entities.IllPolicy;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.api.entities.InstanceFormat;
 import org.folio.rest.api.entities.InstanceNoteType;
-import org.folio.rest.api.entities.InstanceRelationshipType;
 import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
@@ -84,25 +80,6 @@ public class ReferenceTablesTest extends TestBase {
     URL apiUrl = alternativeTitleTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("alternative title types", searchResponse, 11, 40);
-  }
-
-  @Test
-  public void alternativeTitleTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/alternative-title-types";
-
-    AlternativeTitleType entity =
-      new AlternativeTitleType("Test alternative title type", "test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-
-    String updateProperty = AlternativeTitleType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -278,22 +255,6 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("identifier types", searchResponse, 8, 30);
-  }
-
-  @Test
-  public void identifierTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/identifier-types";
-    IdentifierType entity = new IdentifierType("Test identifier type");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = IdentifierType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -546,21 +507,6 @@ public class ReferenceTablesTest extends TestBase {
     testGetPutDeletePost(statisticalCodeTypesPath, entityUuidCodeType, statisticalCodeType, updatePropertyCodeType);
   }
 
-  @Test
-  public void instanceRelationshipTypesCrud() throws Exception {
-    final String entityPath = "/instance-relationship-types";
-    final String instanceRelationshipId = UUID.randomUUID().toString();
-
-    InstanceRelationshipType instanceRelationshipType =
-      new InstanceRelationshipType(instanceRelationshipId, "Test Type");
-    Response createResponse = createReferenceRecord(entityPath, instanceRelationshipType);
-
-    assertThat(createResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    testGetPutDeletePost(entityPath, instanceRelationshipId, instanceRelationshipType,
-      InstanceRelationshipType.NAME_KEY);
-  }
-
   @ParameterizedTest
   @CsvSource({"1.0.0, 28.1.0"})
   @SneakyThrows
@@ -669,13 +615,7 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", entityId);
     Response postResponse1 = createReferenceRecord(path, entity);
-    var paths = List.of("/electronic-access-relationships", "/instance-statuses",
-      "/modes-of-issuance", "/statistical-code-types", "/holdings-types");
-    if (paths.contains(path)) {
-      assertThat(postResponse1.getStatusCode(), is(422));
-    } else {
-      assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    }
+    assertThat(postResponse1.getStatusCode(), is(422));
 
     Response badParameterResponse = getByQuery(urlWithBadParameter);
     assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));

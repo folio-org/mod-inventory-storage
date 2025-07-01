@@ -10,6 +10,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,8 +45,17 @@ public abstract class BaseApi<E, C> {
   public void postEntity(E entity, Map<String, String> okapiHeaders,
                          Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
                          Class<? extends ResponseDelegate> responseType) {
+    postEntity(entity, okapiHeaders, responseHandler, vertxContext, responseType, UnaryOperator.identity());
+  }
+
+  public void postEntity(E entity, Map<String, String> okapiHeaders,
+                         Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
+                         Class<? extends ResponseDelegate> responseType,
+                         UnaryOperator<Response> responseMapper) {
     runInContext(vertxContext, responseHandler,
-      v -> PgUtil.post(getReferenceTable(), entity, okapiHeaders, vertxContext, responseType, responseHandler));
+      v -> PgUtil.post(getReferenceTable(), entity, okapiHeaders, vertxContext, responseType)
+        .map(responseMapper)
+        .onComplete(responseHandler));
   }
 
   public void deleteEntities(Map<String, String> okapiHeaders,
@@ -78,8 +88,17 @@ public abstract class BaseApi<E, C> {
   public void putEntityById(String id, E entity, Map<String, String> okapiHeaders,
                             Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
                             Class<? extends ResponseDelegate> responseType) {
+    putEntityById(id, entity, okapiHeaders, responseHandler, vertxContext, responseType, UnaryOperator.identity());
+  }
+
+  public void putEntityById(String id, E entity, Map<String, String> okapiHeaders,
+                            Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
+                            Class<? extends ResponseDelegate> responseType,
+                            UnaryOperator<Response> responseMapper) {
     runInContext(vertxContext, responseHandler,
-      v -> PgUtil.put(getReferenceTable(), entity, id, okapiHeaders, vertxContext, responseType, responseHandler));
+      v -> PgUtil.put(getReferenceTable(), entity, id, okapiHeaders, vertxContext, responseType)
+        .map(responseMapper)
+        .onComplete(responseHandler));
   }
 
   protected abstract String getReferenceTable();
@@ -90,6 +109,27 @@ public abstract class BaseApi<E, C> {
 
   protected Map<String, Predicate<E>> deleteValidationPredicates() {
     return Map.of();
+  }
+
+  protected Response response400WithTextPlain(String message) {
+    var responseBuilder = Response.status(Response.Status.BAD_REQUEST)
+      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
+      .entity(message);
+    return responseBuilder.build();
+  }
+
+  protected Response response404WithTextPlain(String message) {
+    var responseBuilder = Response.status(Response.Status.NOT_FOUND)
+      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
+      .entity(message);
+    return responseBuilder.build();
+  }
+
+  protected Response response500WithTextPlain() {
+    var responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
+      .entity(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError));
+    return responseBuilder.build();
   }
 
   private void deleteWithValidation(String id, Map<String, String> okapiHeaders,
@@ -122,25 +162,17 @@ public abstract class BaseApi<E, C> {
   }
 
   private void respond400WithTextPlain(Handler<AsyncResult<Response>> responseHandler, String message) {
-    var responseBuilder = Response.status(Response.Status.BAD_REQUEST)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(message);
-    responseHandler.handle(succeededFuture(responseBuilder.build()));
+    responseHandler.handle(succeededFuture(response400WithTextPlain(message)));
   }
 
   private void respond404WithTextPlain(Handler<AsyncResult<Response>> responseHandler, String message) {
-    var responseBuilder = Response.status(Response.Status.NOT_FOUND)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(message);
-    responseHandler.handle(succeededFuture(responseBuilder.build()));
+    responseHandler.handle(succeededFuture(response404WithTextPlain(message)));
   }
 
   private void respond500WithTextPlain(Handler<AsyncResult<Response>> responseHandler, Throwable e) {
     log.error(e.getMessage(), e);
-    var responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError));
-    responseHandler.handle(succeededFuture(responseBuilder.build()));
+    var response = response500WithTextPlain();
+    responseHandler.handle(succeededFuture(response));
   }
 
   private void runInContext(Context context, Handler<AsyncResult<Response>> responseHandler, Handler<Void> action) {
