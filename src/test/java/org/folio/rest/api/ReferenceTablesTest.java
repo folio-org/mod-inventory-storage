@@ -704,12 +704,6 @@ public class ReferenceTablesTest extends TestBase {
 
     entity.put("id", "baduuid");
     Response postResponse2 = createReferenceRecord(path, entity);
-    paths = List.of("/instance-note-types", "/nature-of-content-terms");
-    if (paths.contains(path)) {
-      // unprocessable entity, fails UUID pattern
-      assertThat(postResponse2.getStatusCode(), is(422));
-    } else {
-      assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-    }
+    assertThat(postResponse2.getStatusCode(), is(422));
   }
 }
