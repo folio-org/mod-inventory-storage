@@ -61,9 +61,9 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
     final var response = statisticalCodeFixture
       .attemptCreateSerialManagementCode(secondStatisticalCode);
 
-    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getStatusCode(), is(422));
     assertThat(response.getBody(), containsString(
-      "duplicate key value violates unique constraint \"statistical_code_name_idx_unique\""));
+      "value already exists in table statistical_code: statistical code"));
   }
 
   @Test
@@ -105,10 +105,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("update or delete on table \"statistical_code\" violates foreign key constraint "
-         + "\"fk_statistical_code_id\" on table \"instance_statistical_code\": "
-         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced from "
-         + "table \"instance_statistical_code\"."));
+      is("Cannot delete statistical_code.id = b06fa5fe-a267-4597-8e74-3b308bd4c932 "
+         + "because id is still referenced from table instance_statistical_code."));
   }
 
   @Test
@@ -148,10 +146,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("update or delete on table \"statistical_code\" violates foreign key constraint "
-         + "\"fk_statistical_code_id\" on table \"holdings_record_statistical_code\": "
-         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) "
-         + "is still referenced from table \"holdings_record_statistical_code\"."));
+      is("Cannot delete statistical_code.id = b06fa5fe-a267-4597-8e74-3b308bd4c932 because id "
+         + "is still referenced from table holdings_record_statistical_code."));
   }
 
   @Test
@@ -201,10 +197,8 @@ public class StatisticalCodeTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody().trim(),
-      is("update or delete on table \"statistical_code\" violates foreign key constraint "
-         + "\"fk_statistical_code_id\" on table \"item_statistical_code\": "
-         + "Key (id)=(b06fa5fe-a267-4597-8e74-3b308bd4c932) is still referenced "
-         + "from table \"item_statistical_code\"."));
+      is("Cannot delete statistical_code.id = b06fa5fe-a267-4597-8e74-3b308bd4c932 "
+         + "because id is still referenced from table item_statistical_code."));
   }
 
   private JsonObject smallAngryPlanet(UUID id) {
