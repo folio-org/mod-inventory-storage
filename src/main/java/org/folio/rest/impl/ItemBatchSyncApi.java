@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -10,7 +11,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ItemsPost;
 import org.folio.rest.jaxrs.resource.ItemStorageBatchSynchronous;
-import org.folio.rest.support.EndpointFailureHandler;
 import org.folio.services.item.ItemService;
 
 public class ItemBatchSyncApi implements ItemStorageBatchSynchronous {
@@ -21,8 +21,6 @@ public class ItemBatchSyncApi implements ItemStorageBatchSynchronous {
 
     new ItemService(vertxContext, okapiHeaders).createItems(entity.getItems(), upsert, true)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-      .onFailure(EndpointFailureHandler.handleFailure(asyncResultHandler,
-        PostItemStorageBatchSynchronousResponse::respond422WithApplicationJson,
-        PostItemStorageBatchSynchronousResponse::respond500WithTextPlain));
+      .onFailure(handleFailure(asyncResultHandler));
   }
 }

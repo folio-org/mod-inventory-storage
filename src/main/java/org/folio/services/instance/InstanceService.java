@@ -17,6 +17,7 @@ import static org.folio.rest.persist.PgUtil.put;
 import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
+import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
@@ -125,7 +126,8 @@ public class InstanceService {
 
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
-    return hridManager.populateHrid(entity)
+    return validateUuidFormat(entity.getStatisticalCodeIds())
+      .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
       .compose(instance -> {
         final Promise<Response> postResponse = promise();
