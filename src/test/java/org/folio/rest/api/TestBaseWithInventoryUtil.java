@@ -67,6 +67,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
+  protected static final String STATISTICAL_CODE_IDS_KEY = "statisticalCodeIds";
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
   // see org.folio.rest.impl.TenantRefAPI.refPaths

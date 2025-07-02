@@ -38,6 +38,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -109,6 +110,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
   };
+  private static final String INVALID_VALUE = "invalid value";
+  private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+    INVALID_VALUE);
+
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
@@ -437,6 +442,67 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .put("_version", 2);
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidStatisticalCodeIds() {
+    var instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+    holdingToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void cannotUpdateHoldingWithInvalidStatisticalCodeIds() {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var holdingResource = createHoldingRecord(holdingToCreate);
+
+    var holdingId = holdingResource.getId();
+    var holdingToUpdate = holdingsClient.getById(holdingId);
+    var holding = holdingToUpdate.getJson();
+    holding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToReplace(holdingId.toString(), holding, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidInstanceId() {
+    var instanceId = UUID.randomUUID();
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(422));
+    assertTrue(response.getBody().contains(String.format(
+      "Cannot set holdings_record.instanceid = %s because it does not exist in instance.id.", instanceId)));
   }
 
   @Test
@@ -2412,6 +2478,19 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
+
+    final JsonArray holdingsArray = threeHoldings();
+    var invalidHolding = holdingsArray.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatch(holdingsArray);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   @SneakyThrows
   public void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
     final UUID instanceId = UUID.randomUUID();
@@ -2821,6 +2900,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     // safe update, env var should not influence the regular API
     holdings.getJsonObject(1).put("copyNumber", "789");
     assertThat(postSynchronousBatch("?upsert=true", holdings), statusCodeIs(409));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    // insert
+    JsonArray holdings = threeHoldings();
+    var invalidHolding = holdings.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatchUnsafe(holdings);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
