@@ -25,6 +25,7 @@
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
 * Fix an iteration job is never finished after a cancellation request ([MODINVSTOR-1434](https://folio-org.atlassian.net/browse/MODINVSTOR-1434))
+* Fix updateIdentifierTypeCanceledLCCN migration script ([MODINVSTOR-1361](https://folio-org.atlassian.net/browse/MODINVSTOR-1361))
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
