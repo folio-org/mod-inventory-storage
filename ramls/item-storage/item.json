@@ -71,7 +71,8 @@
     },
     "itemLevelCallNumberTypeId": {
       "type": "string",
-      "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc."
+      "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc.",
+      "$ref": "../uuid.json"
     },
     "effectiveCallNumberComponents": {
       "type": "object",
@@ -95,7 +96,7 @@
         "typeId": {
           "type": "string",
           "description": "Effective Call Number Type Id is the call number type id of the item, if available, otherwise that of the holding.",
-          "$ref": "uuid.json",
+          "$ref": "../uuid.json",
           "readonly": true
         }
       },
@@ -355,7 +356,7 @@
     "effectiveLocationId": {
       "type": "string",
       "description": "Read only current home location for the item.",
-      "$ref": "uuid.json",
+      "$ref": "../uuid.json",
       "readonly": true
     },
     "electronicAccess": {
@@ -401,7 +402,7 @@
       "description": "List of statistical code IDs",
       "items": {
         "type": "string",
-        "$ref" : "uuid.json"
+        "$ref" : "../uuid.json"
       },
       "uniqueItems": true
     },
@@ -413,11 +414,11 @@
       "description": "arbitrary tags associated with this item",
       "id": "tags",
       "type": "object",
-      "$ref": "raml-util/schemas/tags.schema"
+      "$ref": "../raml-util/schemas/tags.schema"
     },
     "metadata": {
       "type": "object",
-      "$ref": "raml-util/schemas/metadata.schema",
+      "$ref": "../raml-util/schemas/metadata.schema",
       "readonly": true
     },
     "holdingsRecord2": {
@@ -444,12 +445,12 @@
         "servicePointId": {
           "type": "string",
           "description": "Service point ID being used by a staff member when item was scanned in Check in app.",
-          "$ref": "uuid.json"
+          "$ref": "../uuid.json"
         },
         "staffMemberId": {
           "type": "string",
           "description": "ID a staff member who scanned the item",
-          "$ref": "uuid.json"
+          "$ref": "../uuid.json"
         }
       }
     }
