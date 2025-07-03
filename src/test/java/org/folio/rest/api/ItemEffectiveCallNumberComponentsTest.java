@@ -34,10 +34,10 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventoryUtil {
-  public static final String HOLDINGS_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
-  public static final String HOLDINGS_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
-  public static final String ITEM_LEVEL_CALL_NUMBER_TYPE = UUID.randomUUID().toString();
-  public static final String ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND = UUID.randomUUID().toString();
+  public static final String DEWEY_CALL_NUMBER_TYPE = "03dd64d0-5626-4ecd-8ece-4531e0069f35";
+  public static final String NLM_CALL_NUMBER_TYPE = "054d460d-d6b9-4469-9e37-7a78a2266655";
+  public static final String LC_CALL_NUMBER_TYPE = "95467209-6d7b-468b-94df-0f5d7ad2747d";
+  public static final String MOYS_CALL_NUMBER_TYPE = "828ae637-dfa3-4265-a1af-5279c436edff";
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
@@ -45,32 +45,6 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   @BeforeClass
   public static void createCallNumberTypes() {
     TestBase.beforeAll();
-
-    callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE);
-    callNumberTypesClient.deleteIfPresent(HOLDINGS_CALL_NUMBER_TYPE_SECOND);
-    callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE);
-    callNumberTypesClient.deleteIfPresent(ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND);
-
-    callNumberTypesClient.create(new JsonObject()
-      .put("id", HOLDINGS_CALL_NUMBER_TYPE)
-      .put("name", "Test Holdings call number type")
-      .put("source", "folio")
-    );
-    callNumberTypesClient.create(new JsonObject()
-      .put("id", HOLDINGS_CALL_NUMBER_TYPE_SECOND)
-      .put("name", "Test Holdings call number type second")
-      .put("source", "folio")
-    );
-    callNumberTypesClient.create(new JsonObject()
-      .put("id", ITEM_LEVEL_CALL_NUMBER_TYPE)
-      .put("name", "Test Item level call number type")
-      .put("source", "folio")
-    );
-    callNumberTypesClient.create(new JsonObject()
-      .put("id", ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND)
-      .put("name", "Test Item level call number type second")
-      .put("source", "folio")
-    );
   }
 
   @Test
@@ -116,13 +90,13 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       builder -> builder.withCallNumber("firstHRCallNumber")
         .withCallNumberPrefix("firstHRPrefix")
         .withCallNumberSuffix("firstHRSuffix")
-        .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE));
+        .withCallNumberTypeId(DEWEY_CALL_NUMBER_TYPE));
 
     final UUID secondHoldingsId = createInstanceAndHoldingWithBuilder(MAIN_LIBRARY_LOCATION_ID,
       builder -> builder.withCallNumber("secondHRCallNumber")
         .withCallNumberPrefix("secondHRPrefix")
         .withCallNumberSuffix("secondHRSuffix")
-        .withCallNumberTypeId(HOLDINGS_CALL_NUMBER_TYPE_SECOND));
+        .withCallNumberTypeId(NLM_CALL_NUMBER_TYPE));
 
     final UUID thirdHoldingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
@@ -135,12 +109,12 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       .put("itemLevelCallNumber", "allOwnComponentsCN")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
-      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+      .put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
     final JsonObject useAllOwnComponents = nodWithNoBarcode(thirdHoldingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN2")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS2")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP2")
-      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND);
+      .put("itemLevelCallNumberTypeId", MOYS_CALL_NUMBER_TYPE);
 
     itemsStorageSyncClient.createNoResponse(new JsonObject()
       .put("items", new JsonArray()
@@ -154,35 +128,35 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       hasCallNumber("firstHRCallNumber"),
       hasSuffix("firstHRSuffix"),
       hasPrefix("firstHRPrefix"),
-      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE)
+      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
     )));
 
     assertThat(getById(useOwnCallNumber), effectiveCallNumberComponents(allOf(
       hasCallNumber("ownCallNumber"),
       hasSuffix("secondHRSuffix"),
       hasPrefix("secondHRPrefix"),
-      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE_SECOND)
+      hasTypeId(NLM_CALL_NUMBER_TYPE)
     )));
 
     assertThat(getById(useFirstHoldingsAndOwnSuffix), effectiveCallNumberComponents(allOf(
       hasCallNumber("firstHRCallNumber"),
       hasSuffix("ownSuffix"),
       hasPrefix("firstHRPrefix"),
-      hasTypeId(HOLDINGS_CALL_NUMBER_TYPE)
+      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
     )));
 
     assertThat(getById(useAllOwnComponentsSharedHoldings), effectiveCallNumberComponents(allOf(
       hasCallNumber("allOwnComponentsCN"),
       hasSuffix("allOwnComponentsCNS"),
       hasPrefix("allOwnComponentsCNP"),
-      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE)
+      hasTypeId(LC_CALL_NUMBER_TYPE)
     )));
 
     assertThat(getById(useAllOwnComponents), effectiveCallNumberComponents(allOf(
       hasCallNumber("allOwnComponentsCN2"),
       hasSuffix("allOwnComponentsCNS2"),
       hasPrefix("allOwnComponentsCNP2"),
-      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND)
+      hasTypeId(MOYS_CALL_NUMBER_TYPE)
     )));
   }
 
@@ -193,7 +167,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       .put("itemLevelCallNumber", "allOwnComponentsCN")
       .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
       .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
-      .put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+      .put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
 
     itemsStorageSyncClient.createNoResponse(new JsonObject()
       .put("items", new JsonArray()
@@ -203,7 +177,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       hasCallNumber("allOwnComponentsCN"),
       hasSuffix("allOwnComponentsCNS"),
       hasPrefix("allOwnComponentsCNP"),
-      hasTypeId(ITEM_LEVEL_CALL_NUMBER_TYPE)
+      hasTypeId(LC_CALL_NUMBER_TYPE)
     )));
   }
 

@@ -1,9 +1,9 @@
 package org.folio.rest.api.testdata;
 
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.HOLDINGS_CALL_NUMBER_TYPE;
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.HOLDINGS_CALL_NUMBER_TYPE_SECOND;
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.DEWEY_CALL_NUMBER_TYPE;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.LC_CALL_NUMBER_TYPE;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.MOYS_CALL_NUMBER_TYPE;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.NLM_CALL_NUMBER_TYPE;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -46,9 +46,9 @@ public class ItemEffectiveCallNumberComponentsTestData {
       {forProperty("prefix"), null, "itCNPrefix"},
       {forProperty("prefix"), null, null},
       // CallNumberTypeId
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, ITEM_LEVEL_CALL_NUMBER_TYPE},
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null},
-      {forProperty("typeId"), null, ITEM_LEVEL_CALL_NUMBER_TYPE},
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, LC_CALL_NUMBER_TYPE},
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, null},
+      {forProperty("typeId"), null, LC_CALL_NUMBER_TYPE},
       {forProperty("typeId"), null, null},
       };
   }
@@ -95,24 +95,24 @@ public class ItemEffectiveCallNumberComponentsTestData {
       {forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", null, null},
       {forProperty("prefix"), null, "targetHrCNPrefix", "initItCNPrefix", null},
       // CallNumberTypeId
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND,
-       ITEM_LEVEL_CALL_NUMBER_TYPE, ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, NLM_CALL_NUMBER_TYPE,
+       LC_CALL_NUMBER_TYPE, MOYS_CALL_NUMBER_TYPE
       },
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE,
-       ITEM_LEVEL_CALL_NUMBER_TYPE_SECOND
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, null, LC_CALL_NUMBER_TYPE,
+       MOYS_CALL_NUMBER_TYPE
       },
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND,
-       ITEM_LEVEL_CALL_NUMBER_TYPE, null
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, NLM_CALL_NUMBER_TYPE,
+       LC_CALL_NUMBER_TYPE, null
       },
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE, null},
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, null, ITEM_LEVEL_CALL_NUMBER_TYPE,
-       ITEM_LEVEL_CALL_NUMBER_TYPE
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, null, LC_CALL_NUMBER_TYPE, null},
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, null, LC_CALL_NUMBER_TYPE,
+       LC_CALL_NUMBER_TYPE
       },
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE,
-       ITEM_LEVEL_CALL_NUMBER_TYPE, null
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, DEWEY_CALL_NUMBER_TYPE,
+       LC_CALL_NUMBER_TYPE, null
       },
-      {forProperty("typeId"), HOLDINGS_CALL_NUMBER_TYPE, HOLDINGS_CALL_NUMBER_TYPE_SECOND, null, null},
-      {forProperty("typeId"), null, HOLDINGS_CALL_NUMBER_TYPE_SECOND, ITEM_LEVEL_CALL_NUMBER_TYPE, null},
+      {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, NLM_CALL_NUMBER_TYPE, null, null},
+      {forProperty("typeId"), null, NLM_CALL_NUMBER_TYPE, LC_CALL_NUMBER_TYPE, null},
       };
   }
 
