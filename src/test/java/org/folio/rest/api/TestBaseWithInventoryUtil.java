@@ -67,6 +67,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
+  protected static final String STATISTICAL_CODE_IDS_KEY = "statisticalCodeIds";
   // These UUIDs were taken from reference-data folder.
   // When the vertical gets started the data from the reference-data folder are loaded to the DB.
   // see org.folio.rest.impl.TenantRefAPI.refPaths
@@ -275,13 +276,21 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .create()).getId();
   }
 
-  protected static IndividualResource createHoldingRecord(JsonObject instanceJson) {
-    return holdingsClient.create(instanceJson, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+  protected static IndividualResource createHoldingRecord(JsonObject holdingsJson) {
+    return createHoldingRecord(holdingsJson, TENANT_ID);
+  }
+
+  protected static IndividualResource createHoldingRecord(JsonObject holdingsJson, String tenantId) {
+    return holdingsClient.create(holdingsJson, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
   }
 
   protected static void updateHoldingRecord(UUID id, Builder builder) {
+    updateHoldingRecord(id, builder.create());
+  }
+
+  protected static void updateHoldingRecord(UUID id, JsonObject holdingJson) {
     var holdingId = id != null ? id.toString() : null;
-    var putResponse = holdingsClient.attemptToReplace(holdingId, builder.create(), TENANT_ID,
+    var putResponse = holdingsClient.attemptToReplace(holdingId, holdingJson, TENANT_ID,
       Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
     assertThat(
       String.format("Failed to update holding record %s: %s", id, putResponse.getBody()),

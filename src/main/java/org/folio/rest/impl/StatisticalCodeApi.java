@@ -1,121 +1,33 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.StatisticalCode;
 import org.folio.rest.jaxrs.model.StatisticalCodes;
-import org.folio.rest.persist.PgExceptionUtil;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.z3950.zing.cql.CQLParseException;
 
-public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.StatisticalCodes {
+public class StatisticalCodeApi extends BaseApi<StatisticalCode, StatisticalCodes>
+  implements org.folio.rest.jaxrs.resource.StatisticalCodes {
+
   public static final String REFERENCE_TABLE = "statistical_code";
-
-  private static final String LOCATION_PREFIX = "/statistical-codes/";
-  private static final Logger LOG = LogManager.getLogger();
-  private static final Messages MESSAGES = Messages.getInstance();
 
   @Validate
   @Override
   public void getStatisticalCodes(String query, String totalRecords, int offset, int limit,
                                   Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(REFERENCE_TABLE, StatisticalCode.class,
-          new String[] {"*"}, cql, true, true,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                StatisticalCodes records = new StatisticalCodes();
-                List<StatisticalCode> statisticalCodes = reply.result().getResults();
-                records.setStatisticalCodes(statisticalCodes);
-                records.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  GetStatisticalCodesResponse.respond200WithApplicationJson(records)));
-              } else {
-                LOG.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesResponse
-                  .respond400WithTextPlain(reply.cause().getMessage())));
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(
-                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
-        if (e.getCause() instanceof CQLParseException) {
-          message = " CQL parse error " + e.getLocalizedMessage();
-        }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetStatisticalCodesResponse
-          .respond500WithTextPlain(message)));
-      }
-    });
+    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
+      GetStatisticalCodesResponse.class);
   }
 
   @Validate
   @Override
   public void postStatisticalCodes(StatisticalCode entity, Map<String, String> okapiHeaders,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String id = entity.getId();
-        if (id == null) {
-          id = UUID.randomUUID().toString();
-          entity.setId(id);
-        }
-
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(REFERENCE_TABLE, id, entity,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                String ret = reply.result();
-                entity.setId(ret);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostStatisticalCodesResponse
-                  .respond201WithApplicationJson(entity,
-                    PostStatisticalCodesResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-              } else {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringPost(reply.cause(), asyncResultHandler);
-                  return;
-                }
-                LOG.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(PostStatisticalCodesResponse
-                  .respond400WithTextPlain(msg)));
-              }
-            } catch (Exception e) {
-              internalServerErrorDuringPost(e, asyncResultHandler);
-            }
-          });
-      } catch (Exception e) {
-        internalServerErrorDuringPost(e, asyncResultHandler);
-      }
-    });
+    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostStatisticalCodesResponse.class);
   }
 
   @Validate
@@ -123,8 +35,8 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
   public void getStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    PgUtil.getById(REFERENCE_TABLE, StatisticalCode.class, id, okapiHeaders, vertxContext,
-      GetStatisticalCodesByStatisticalCodeIdResponse.class, asyncResultHandler);
+    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
+      GetStatisticalCodesByStatisticalCodeIdResponse.class);
   }
 
   @Validate
@@ -132,42 +44,8 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
   public void deleteStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
                                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                                         Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.tenantId(okapiHeaders);
-        PostgresClient postgres = PostgresClient.getInstance(vertxContext.owner(), tenantId);
-        postgres.delete(REFERENCE_TABLE, id,
-          reply -> {
-            try {
-              if (reply.failed()) {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringDelete(reply.cause(), asyncResultHandler);
-                  return;
-                }
-                LOG.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-                  .respond400WithTextPlain(msg)));
-                return;
-              }
-              int updated = reply.result().rowCount();
-              if (updated != 1) {
-                String msg = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1, updated);
-                LOG.error(msg);
-                asyncResultHandler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-                  .respond404WithTextPlain(msg)));
-                return;
-              }
-              asyncResultHandler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-                .respond204()));
-            } catch (Exception e) {
-              internalServerErrorDuringDelete(e, asyncResultHandler);
-            }
-          });
-      } catch (Exception e) {
-        internalServerErrorDuringDelete(e, asyncResultHandler);
-      }
-    });
+    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
+      DeleteStatisticalCodesByStatisticalCodeIdResponse.class);
   }
 
   @Validate
@@ -176,64 +54,22 @@ public class StatisticalCodeApi implements org.folio.rest.jaxrs.resource.Statist
                                                      Map<String, String> okapiHeaders,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.tenantId(okapiHeaders);
-      try {
-        if (entity.getId() == null) {
-          entity.setId(id);
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(REFERENCE_TABLE, entity, id,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                if (reply.result().rowCount() == 0) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
-                } else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-                      .respond204()));
-                }
-              } else {
-                String msg = PgExceptionUtil.badRequestMessage(reply.cause());
-                if (msg == null) {
-                  internalServerErrorDuringPut(reply.cause(), asyncResultHandler);
-                  return;
-                }
-                LOG.info(msg);
-                asyncResultHandler.handle(Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-                  .respond400WithTextPlain(msg)));
-              }
-            } catch (Exception e) {
-              internalServerErrorDuringPut(e, asyncResultHandler);
-            }
-          });
-      } catch (Exception e) {
-        internalServerErrorDuringPut(e, asyncResultHandler);
-      }
-    });
+    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
+      PutStatisticalCodesByStatisticalCodeIdResponse.class);
   }
 
-  private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    return StorageHelper.getCql(query, limit, offset, REFERENCE_TABLE);
+  @Override
+  protected String getReferenceTable() {
+    return REFERENCE_TABLE;
   }
 
-  private void internalServerErrorDuringPost(Throwable e, Handler<AsyncResult<Response>> handler) {
-    LOG.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PostStatisticalCodesResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
+  @Override
+  protected Class<StatisticalCode> getEntityClass() {
+    return StatisticalCode.class;
   }
 
-  private void internalServerErrorDuringDelete(Throwable e, Handler<AsyncResult<Response>> handler) {
-    LOG.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(DeleteStatisticalCodesByStatisticalCodeIdResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-  }
-
-  private void internalServerErrorDuringPut(Throwable e, Handler<AsyncResult<Response>> handler) {
-    LOG.error(e.getMessage(), e);
-    handler.handle(Future.succeededFuture(PutStatisticalCodesByStatisticalCodeIdResponse
-      .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
+  @Override
+  protected Class<StatisticalCodes> getEntityCollectionClass() {
+    return StatisticalCodes.class;
   }
 }

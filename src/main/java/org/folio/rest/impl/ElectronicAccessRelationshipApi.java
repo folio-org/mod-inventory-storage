@@ -1,36 +1,19 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
-import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationship;
 import org.folio.rest.jaxrs.model.ElectronicAccessRelationships;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
-public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.resource.ElectronicAccessRelationships {
+public class ElectronicAccessRelationshipApi
+  extends BaseApi<ElectronicAccessRelationship, ElectronicAccessRelationships>
+  implements org.folio.rest.jaxrs.resource.ElectronicAccessRelationships {
 
   public static final String RESOURCE_TABLE = "electronic_access_relationship";
-
-  private static final String LOCATION_PREFIX = "/electronic-access-relationships/";
-  private static final Logger LOG = LogManager.getLogger();
-  private static final Messages MESSAGES = Messages.getInstance();
 
   @Validate
   @Override
@@ -38,46 +21,8 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                                                Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
-          .get(RESOURCE_TABLE, ElectronicAccessRelationship.class,
-            new String[] {"*"}, cql, true, true,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  ElectronicAccessRelationships electronicAccessRelationships = new ElectronicAccessRelationships();
-                  List<ElectronicAccessRelationship> relationships = reply.result().getResults();
-                  electronicAccessRelationships.setElectronicAccessRelationships(relationships);
-                  electronicAccessRelationships.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    GetElectronicAccessRelationshipsResponse.respond200WithApplicationJson(
-                      electronicAccessRelationships)));
-                } else {
-                  LOG.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsResponse
-                      .respond400WithTextPlain(reply.cause().getMessage())));
-                }
-              } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(
-                    DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-              }
-            });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
-        if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
-          message = " CQL parse error " + e.getLocalizedMessage();
-        }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetElectronicAccessRelationshipsResponse
-          .respond500WithTextPlain(message)));
-      }
-    });
+    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
+      GetElectronicAccessRelationshipsResponse.class);
   }
 
   @Validate
@@ -86,175 +31,49 @@ public class ElectronicAccessRelationshipApi implements org.folio.rest.jaxrs.res
                                                 Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        String id = UUID.randomUUID().toString();
-        if (entity.getId() == null) {
-          entity.setId(id);
-        } else {
-          id = entity.getId();
-        }
-
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                String ret = reply.result();
-                entity.setId(ret);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                  .respond201WithApplicationJson(entity,
-                    PostElectronicAccessRelationshipsResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-              } else {
-                LOG.error(reply.cause().getMessage(), reply.cause());
-                if (isDuplicate(reply.cause().getMessage())) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                      .respond422WithApplicationJson(
-                        org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                          "name", entity.getName(), "Relationship type exists"))));
-                } else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                      .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
-                        MessageConsts.InternalServerError))));
-                }
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostElectronicAccessRelationshipsResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostElectronicAccessRelationshipsResponse.class);
   }
 
   @Validate
   @Override
-  public void getElectronicAccessRelationshipsByElectronicAccessRelationshipId(
-    String electronicAccessRelationshipId,
-
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
-    PgUtil.getById(RESOURCE_TABLE, ElectronicAccessRelationship.class, electronicAccessRelationshipId,
-      okapiHeaders, vertxContext, GetElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse.class,
-      asyncResultHandler);
+  public void getElectronicAccessRelationshipsById(String id, Map<String, String> okapiHeaders,
+                                                   Handler<AsyncResult<Response>> asyncResultHandler,
+                                                   Context vertxContext) {
+    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
+      GetElectronicAccessRelationshipsByIdResponse.class);
   }
 
   @Validate
   @Override
-  public void deleteElectronicAccessRelationshipsByElectronicAccessRelationshipId(
-    String electronicAccessRelationshipId,
-
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
-          .delete(RESOURCE_TABLE, electronicAccessRelationshipId,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  if (reply.result().rowCount() == 1) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                        .respond204()));
-                  } else {
-                    LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
-                      1, reply.result().rowCount()));
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                        .respond404WithTextPlain(
-                          MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError,
-                            1, reply.result().rowCount()))));
-                  }
-                } else {
-                  LOG.error(reply.cause().getMessage(), reply.cause());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                      .respond400WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE,
-                        MessageConsts.InternalServerError))));
-                }
-              } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                    .respond500WithTextPlain(
-                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-              }
-            });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-          DeleteElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+  public void deleteElectronicAccessRelationshipsById(String id, Map<String, String> okapiHeaders,
+                                                      Handler<AsyncResult<Response>> asyncResultHandler,
+                                                      Context vertxContext) {
+    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
+      DeleteElectronicAccessRelationshipsByIdResponse.class);
   }
 
   @Validate
   @Override
-  public void putElectronicAccessRelationshipsByElectronicAccessRelationshipId(
-    String electronicAccessRelationshipId,
-
-    ElectronicAccessRelationship entity,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      try {
-        if (entity.getId() == null) {
-          entity.setId(electronicAccessRelationshipId);
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId)
-          .update(RESOURCE_TABLE, entity, electronicAccessRelationshipId,
-            reply -> {
-              try {
-                if (reply.succeeded()) {
-                  if (reply.result().rowCount() == 0) {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                        .respond404WithTextPlain(
-                          MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
-                  } else {
-                    asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                      PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                        .respond204()));
-                  }
-                } else {
-                  LOG.error(reply.cause().getMessage());
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                    PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                      .respond400WithTextPlain(
-                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-                }
-              } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-                  PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-                    .respond500WithTextPlain(
-                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-              }
-            });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(
-          io.vertx.core.Future.succeededFuture(PutElectronicAccessRelationshipsByElectronicAccessRelationshipIdResponse
-            .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+  public void putElectronicAccessRelationshipsById(String id, ElectronicAccessRelationship entity,
+                                                   Map<String, String> okapiHeaders,
+                                                   Handler<AsyncResult<Response>> asyncResultHandler,
+                                                   Context vertxContext) {
+    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
+      PutElectronicAccessRelationshipsByIdResponse.class);
   }
 
-  private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
+  @Override
+  protected String getReferenceTable() {
+    return RESOURCE_TABLE;
+  }
+
+  @Override
+  protected Class<ElectronicAccessRelationship> getEntityClass() {
+    return ElectronicAccessRelationship.class;
+  }
+
+  @Override
+  protected Class<ElectronicAccessRelationships> getEntityCollectionClass() {
+    return ElectronicAccessRelationships.class;
   }
 }

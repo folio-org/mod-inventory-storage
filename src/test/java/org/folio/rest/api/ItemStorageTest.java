@@ -110,6 +110,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String INVALID_VALUE = "invalid value";
+  private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+    INVALID_VALUE);
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
@@ -366,6 +369,32 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotCreateAnItemWithInvalidStatisticalCodeIds() {
+    UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    UUID id = UUID.randomUUID();
+
+    JsonObject itemToCreate = new JsonObject()
+      .put("id", id.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
+      ResponseHandler.text(createCompleted));
+
+    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(postResponse.getStatusCode(), is(400));
+    assertThat(postResponse.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @SneakyThrows
@@ -1130,8 +1159,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void cannotCreateItemWithNonUuidStatisticalCodes() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds", new JsonArray().add("07"));
-    assertThat(itemsClient.attemptToCreate(nod), hasValidationError(
-      "elements in list must match pattern", "statisticalCodeIds", "[07]"));
+
+    var response = itemsClient.attemptToCreate(nod);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(String.format("invalid input syntax for type uuid: \"%s\"",
+      "07")));
   }
 
   @Test
@@ -1140,9 +1173,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject nod = nod(holdingsRecordId).put("statisticalCodeIds",
       new JsonArray().add("00000000-0000-4444-8888-000000000000").add("12345678"));
     JsonObject items = new JsonObject().put("items", new JsonArray().add(nod));
-    assertThat(itemsStorageSyncClient.attemptToCreate(items), hasValidationError(
-      "elements in list must match pattern", "items[0].statisticalCodeIds",
-      "[00000000-0000-4444-8888-000000000000, 12345678]"));
+    var response = itemsStorageSyncClient.attemptToCreate(items);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(String.format("invalid input syntax for type uuid: \"%s\"",
+      "12345678")));
   }
 
   @Test
@@ -1150,9 +1185,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonObject nod = createItem(nod(holdingsRecordId));
     nod.put("statisticalCodeIds", new JsonArray().add("1234567890123456789012345678901234567890"));
-    assertThat(itemsClient.attemptToReplace(nod.getString("id"), nod), hasValidationError(
-      "elements in list must match pattern", "statisticalCodeIds",
-      "[1234567890123456789012345678901234567890]"));
+
+    var response = itemsClient.attemptToReplace(nod.getString("id"), nod);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(String.format("invalid input syntax for type uuid: \"%s\"",
+      "1234567890123456789012345678901234567890")));
   }
 
   @Test
@@ -1282,6 +1320,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
+    JsonArray itemsArray = threeItems();
+    var invalidItem = itemsArray.getJsonObject(1);
+    invalidItem.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatch(itemsArray);
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
     // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
     JsonArray itemsArray = threeItems();
@@ -1302,6 +1351,21 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     // safe update, env var should not influence the regular API
     itemsArray.getJsonObject(1).put("barcode", "456");
     assertThat(postSynchronousBatch("?upsert=true", itemsArray), statusCodeIs(409));
+  }
+
+  @Test
+  public void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    JsonArray itemsArray = threeItems();
+    var invalidItem = itemsArray.getJsonObject(1);
+    invalidItem.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatchUnsafe(itemsArray);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test

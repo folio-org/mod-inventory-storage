@@ -17,6 +17,7 @@
 * Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
 * New enum property `defaultCheckInActionForUseAtLocation` for reading room circulation ([MODINVSTOR-1376](https://folio-org.atlassian.net/browse/MODINVSTOR-1376))
+* Holdings record statistical codes validation enhancement ([MODINVSTOR-1185](https://folio-org.atlassian.net/browse/MODINVSTOR-1185))
 * Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 
 ### Bug fixes
@@ -25,13 +26,18 @@
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
+* Fix an iteration job is never finished after a cancellation request ([MODINVSTOR-1434](https://folio-org.atlassian.net/browse/MODINVSTOR-1434))
+* Fix updateIdentifierTypeCanceledLCCN migration script ([MODINVSTOR-1361](https://folio-org.atlassian.net/browse/MODINVSTOR-1361))
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
 * Remove `subjectSeriesMigration` async migration as non-actual ([MODINVSTOR-1408](https://folio-org.atlassian.net/browse/MODINVSTOR-1408))
 * Stabilize `canMigratePrecedingSucceedingTitles` test by searching title in the result list first ([MODINVSTOR-1407](https://folio-org.atlassian.net/browse/MODINVSTOR-1407))
 * Stabilize tests by waiting for subscription/unsubscription finished in test Kafka consumer ([MODINVSTOR-1410](https://folio-org.atlassian.net/browse/MODINVSTOR-1410))
+* Stabilize tests by increasing the number of attempts to start the Kafka container ([MODINVSTOR-1413](https://folio-org.atlassian.net/browse/MODINVSTOR-1413))
 * Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
+* Refactor usage of deprecated `PostgresClient` methods ([MODINVSTOR-1367](https://folio-org.atlassian.net/browse/MODINVSTOR-1367))
+* Refactor controllers to extract common logic into shared class ([MODINVSTOR-1437](https://folio-org.atlassian.net/browse/MODINVSTOR-1437))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

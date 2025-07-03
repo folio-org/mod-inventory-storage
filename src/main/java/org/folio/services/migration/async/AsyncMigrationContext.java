@@ -2,12 +2,12 @@ package org.folio.services.migration.async;
 
 import io.vertx.core.Context;
 import java.util.Map;
-import org.folio.rest.persist.PostgresClientFuturized;
+import org.folio.rest.persist.PostgresClient;
 
 public class AsyncMigrationContext {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
-  private final PostgresClientFuturized postgresClient;
+  private final PostgresClient postgresClient;
   private String migrationName;
 
   public AsyncMigrationContext(AsyncMigrationContext context, String migrationName) {
@@ -18,7 +18,7 @@ public class AsyncMigrationContext {
   }
 
   public AsyncMigrationContext(Context vertxContext, Map<String, String> okapiHeaders,
-                               PostgresClientFuturized postgresClient) {
+                               PostgresClient postgresClient) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
     this.postgresClient = postgresClient;
@@ -32,7 +32,7 @@ public class AsyncMigrationContext {
     return okapiHeaders;
   }
 
-  public PostgresClientFuturized getPostgresClient() {
+  public PostgresClient getPostgresClient() {
     return postgresClient;
   }
 

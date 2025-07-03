@@ -1,82 +1,25 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
-import static org.folio.rest.tools.utils.ValidationHelper.isDuplicate;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.IssuanceMode;
 import org.folio.rest.jaxrs.model.IssuanceModes;
 import org.folio.rest.jaxrs.resource.ModesOfIssuance;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
 
-public class ModeOfIssuanceApi implements ModesOfIssuance {
+public class ModeOfIssuanceApi extends BaseApi<IssuanceMode, IssuanceModes> implements ModesOfIssuance {
   public static final String RESOURCE_TABLE = "mode_of_issuance";
-
-  private static final String LOCATION_PREFIX = "/modes-of-issuance/";
-  private static final Logger LOG = LogManager.getLogger();
-  private static final Messages MESSAGES = Messages.getInstance();
 
   @Validate
   @Override
   public void getModesOfIssuance(String query, String totalRecords, int offset, int limit,
                                  Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        CQLWrapper cql = getCql(query, limit, offset);
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).get(RESOURCE_TABLE, IssuanceMode.class,
-          new String[] {"*"}, cql, true, true,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                IssuanceModes issuanceModes = new IssuanceModes();
-                List<IssuanceMode> modes = reply.result().getResults();
-                issuanceModes.setIssuanceModes(modes);
-                issuanceModes.setTotalRecords(reply.result().getResultInfo().getTotalRecords());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse.respond200WithApplicationJson(
-                    issuanceModes)));
-              } else {
-                LOG.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
-                  .respond400WithTextPlain(reply.cause().getMessage())));
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(
-                  DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        String message = MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError);
-        if (e.getCause() != null && e.getCause().getClass().getSimpleName().endsWith("CQLParseException")) {
-          message = " CQL parse error " + e.getLocalizedMessage();
-        }
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetModesOfIssuanceResponse
-          .respond500WithTextPlain(message)));
-      }
-    });
+    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
+      GetModesOfIssuanceResponse.class);
   }
 
   @Validate
@@ -84,80 +27,14 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
   public void postModesOfIssuance(IssuanceMode entity, Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        String id = UUID.randomUUID().toString();
-        if (entity.getId() == null) {
-          entity.setId(id);
-        } else {
-          id = entity.getId();
-        }
-
-        String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).save(RESOURCE_TABLE, id, entity,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                String ret = reply.result();
-                entity.setId(ret);
-                asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                  .respond201WithApplicationJson(entity,
-                    PostModesOfIssuanceResponse.headersFor201().withLocation(LOCATION_PREFIX + ret))));
-              } else {
-                LOG.error(reply.cause().getMessage(), reply.cause());
-                if (isDuplicate(reply.cause().getMessage())) {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                    .respond422WithApplicationJson(
-                      org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage(
-                        "name", entity.getName(), "Mode of issuance exists"))));
-                } else {
-                  asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                    .respond400WithTextPlain(
-                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-                }
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-                .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PostModesOfIssuanceResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostModesOfIssuanceResponse.class);
   }
 
   @Validate
   @Override
   public void deleteModesOfIssuance(Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    String tenantId = TenantTool.tenantId(okapiHeaders);
-    try {
-      vertxContext.runOnContext(v -> {
-        PostgresClient postgresClient = PostgresClient.getInstance(
-          vertxContext.owner(), TenantTool.calculateTenantId(tenantId));
-
-        postgresClient.execute(String.format("DELETE FROM %s_%s.%s",
-            tenantId, "mod_inventory_storage", RESOURCE_TABLE),
-          reply -> {
-            if (reply.succeeded()) {
-              asyncResultHandler.handle(Future.succeededFuture(
-                DeleteModesOfIssuanceResponse.respond204()));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(
-                DeleteModesOfIssuanceResponse.respond500WithTextPlain(reply.cause().getMessage())));
-            }
-          });
-      });
-    } catch (Exception e) {
-      asyncResultHandler.handle(Future.succeededFuture(
-        DeleteModesOfIssuanceResponse.respond500WithTextPlain(e.getMessage())));
-    }
+    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
   }
 
   @Validate
@@ -166,8 +43,8 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    PgUtil.getById(RESOURCE_TABLE, IssuanceMode.class, modeOfIssuanceId, okapiHeaders, vertxContext,
-      GetModesOfIssuanceByModeOfIssuanceIdResponse.class, asyncResultHandler);
+    getEntityById(modeOfIssuanceId, okapiHeaders, asyncResultHandler, vertxContext,
+      GetModesOfIssuanceByModeOfIssuanceIdResponse.class);
   }
 
   @Validate
@@ -176,46 +53,8 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                                                       Map<String, String> okapiHeaders,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      try {
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).delete(RESOURCE_TABLE, modeOfIssuanceId,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                if (reply.result().rowCount() == 1) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                      .respond204()));
-                } else {
-                  LOG.error(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1,
-                    reply.result().rowCount()));
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                      .respond404WithTextPlain(
-                        MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.DeletedCountError, 1,
-                          reply.result().rowCount()))));
-                }
-              } else {
-                LOG.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                    .respond400WithTextPlain(
-                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(
-                io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(DeleteModesOfIssuanceByModeOfIssuanceIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+    deleteEntityById(modeOfIssuanceId, okapiHeaders, asyncResultHandler, vertxContext,
+      DeleteModesOfIssuanceByModeOfIssuanceIdResponse.class);
   }
 
   @Validate
@@ -224,48 +63,22 @@ public class ModeOfIssuanceApi implements ModesOfIssuance {
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      try {
-        if (entity.getId() == null) {
-          entity.setId(modeOfIssuanceId);
-        }
-        PostgresClient.getInstance(vertxContext.owner(), tenantId).update(RESOURCE_TABLE, entity, modeOfIssuanceId,
-          reply -> {
-            try {
-              if (reply.succeeded()) {
-                if (reply.result().rowCount() == 0) {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                      .respond404WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.NoRecordsUpdated))));
-                } else {
-                  asyncResultHandler.handle(
-                    io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                      .respond204()));
-                }
-              } else {
-                LOG.error(reply.cause().getMessage());
-                asyncResultHandler.handle(
-                  io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                    .respond400WithTextPlain(
-                      MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-              }
-            } catch (Exception e) {
-              LOG.error(e.getMessage(), e);
-              asyncResultHandler.handle(
-                io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-                  .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-            }
-          });
-      } catch (Exception e) {
-        LOG.error(e.getMessage(), e);
-        asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(PutModesOfIssuanceByModeOfIssuanceIdResponse
-          .respond500WithTextPlain(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))));
-      }
-    });
+    putEntityById(modeOfIssuanceId, entity, okapiHeaders, asyncResultHandler, vertxContext,
+      PutModesOfIssuanceByModeOfIssuanceIdResponse.class);
   }
 
-  private CQLWrapper getCql(String query, int limit, int offset) throws FieldException {
-    return StorageHelper.getCql(query, limit, offset, RESOURCE_TABLE);
+  @Override
+  protected String getReferenceTable() {
+    return RESOURCE_TABLE;
+  }
+
+  @Override
+  protected Class<IssuanceMode> getEntityClass() {
+    return IssuanceMode.class;
+  }
+
+  @Override
+  protected Class<IssuanceModes> getEntityCollectionClass() {
+    return IssuanceModes.class;
   }
 }

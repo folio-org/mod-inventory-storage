@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.tools.utils.TenantTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +36,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   private static final int TIMEOUT_MILLIS = 1000;
 
   private static final PostgresClient POSTGRES_CLIENT =
-    PostgresClient.getInstance(
-      getVertx(), TenantTool.calculateTenantId(TENANT_ID));
+    PostgresClientFactory.getInstance(getVertx().getOrCreateContext(), TENANT_ID);
 
   private UUID holdingsRecordId;
 
@@ -112,7 +111,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
     recordJsonObject.put("sourceId", getPreparedHoldingSourceId().toString());
     recordJsonObject.remove("holdingsItems");
     recordJsonObject.remove("bareHoldingsItems");
-    holdingsClient.replace(holdingsRecordId, recordJsonObject);
+    updateHoldingRecord(holdingsRecordId, recordJsonObject);
     //then
     assertThat(getRecordsFromAuditTable(AUDIT_HOLDINGS_RECORD).size(), is(0));
     //when

@@ -16,10 +16,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
-import org.awaitility.Awaitility;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.utility.KafkaUtility;
 import org.junit.Before;
@@ -30,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.BindMode;
-import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -61,7 +57,8 @@ public class InstallUpgradeIT {
   public static final KafkaContainer KAFKA =
     new KafkaContainer(KafkaUtility.getImageName())
       .withNetwork(NETWORK)
-      .withNetworkAliases("mykafka");
+      .withNetworkAliases("mykafka")
+      .withStartupAttempts(3);
 
   @ClassRule(order = 1)
   public static final PostgreSQLContainer<?> POSTGRES =
@@ -113,19 +110,6 @@ public class InstallUpgradeIT {
 
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .willReturn(WireMock.ok().withBody(new JsonObject().put(USER_TENANTS_FIELD, JsonArray.of()).encode())));
-  }
-
-  static void postgresExec(String... command) {
-    Awaitility.await().atMost(Duration.ofSeconds(1)).ignoreExceptions().until(() -> {
-      POSTGRES.execInContainer("true");  // sometimes throws IOException "Broken pipe"
-      return true;
-    });
-    try {
-      ExecResult execResult = POSTGRES.execInContainer(command);
-      assertThat(execResult.getStdout() + "\n" + execResult.getStderr(), execResult.getExitCode(), is(0));
-    } catch (InterruptedException | IOException | UnsupportedOperationException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   @Before

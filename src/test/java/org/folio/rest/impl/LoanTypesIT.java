@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
@@ -127,7 +126,7 @@ class LoanTypesIT extends BaseReferenceDataIntegrationTest<Loantype, Loantypes> 
     doPost(client, resourceUrl(), loanType)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(response -> doPost(client, resourceUrl(), loanType))
-      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
 
@@ -148,7 +147,7 @@ class LoanTypesIT extends BaseReferenceDataIntegrationTest<Loantype, Loantypes> 
           
         return doPost(client, resourceUrl(), anotherLoanType);
       })
-      .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
+      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
 
