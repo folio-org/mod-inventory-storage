@@ -1,15 +1,10 @@
-## v29.2.0 YYYY-mm-DD
-
-### Features
-
-- Adds an array to hold additional call numbers on the holding and item level
-
 ## v29.1.0 YYYY-mm-DD
 ### Breaking changes
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `item-storage 10.2`
+* Provides `holdings-storage 8.1`
+* Provides `item-storage 10.3`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
 
@@ -22,6 +17,7 @@
 * Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
 * New enum property `defaultCheckInActionForUseAtLocation` for reading room circulation ([MODINVSTOR-1376](https://folio-org.atlassian.net/browse/MODINVSTOR-1376))
+* Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
