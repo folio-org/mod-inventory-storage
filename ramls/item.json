@@ -48,33 +48,13 @@
       "description": "A system generated normalization of the call number that allows for call number sorting in reports and search results",
       "readonly": true
     },
-    "itemLevelAdditionalCallNumbers": {
+    "additionalCallNumbers": {
       "description": "Additional Call Numbers to track the history of identifiers assigned to an item.",
       "type": "array",
       "items": {
         "type": "object",
-        "properties": {
-
-          "typeId": {
-            "type": "string",
-            "description": "unique ID for the type of call number on a item, a UUID",
-            "$ref": "./uuid.json"
-          },
-          "prefix": {
-            "type": "string",
-            "description": "Prefix of the call number on the item level."
-          },
-          "callNumber": {
-            "type": "string",
-            "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item."
-          },
-          "suffix": {
-            "type": "string",
-            "description": "Suffix of the call number on the item level."
-          }
-        },
-        "additionalProperties": false,
-        "required": ["callNumber"]
+        "$ref": "additionalCallNumber.json",
+        "uniqueItems": true
       }
     },
     "itemLevelCallNumber": {

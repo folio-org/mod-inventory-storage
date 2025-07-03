@@ -3331,6 +3331,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingId = UUID.randomUUID();
     List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("123456789")
+      .withPrefix("A")
+      .withSuffix("Z")
+      .withTypeId(LC_CN_TYPE_ID));
     String hrid = "hrid";
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)

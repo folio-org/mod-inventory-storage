@@ -1,3 +1,4 @@
+
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -2226,9 +2227,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateItemWithMinimalAdditionalCallNumberObject() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
     String callNumber = "This is the only mandatory field";
-    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber));
+    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber));
 
     UUID id = UUID.randomUUID();
 
@@ -2239,7 +2240,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     setItemSequence(1);
@@ -2257,8 +2258,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotCreateItemWithoutAdditionalCallNumberCallNumber() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
-    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents()
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
       .withPrefix("prefix")
       .withSuffix("suffix")
       .withTypeId(LC_CN_TYPE_ID));
@@ -2272,7 +2273,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     setItemSequence(1);
@@ -2290,12 +2291,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateAndUpdateItemWithAdditionalCallNumbers() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
     final String callNumber = "Test";
     final String prefix = "A";
     final String suffix = "Z";
     final String typeId = LC_CN_TYPE_ID;
-    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
+    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
       .withSuffix(suffix).withTypeId(typeId));
 
     UUID id = UUID.randomUUID();
@@ -2307,7 +2308,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     setItemSequence(1);
@@ -2322,7 +2323,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
-    JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("itemLevelAdditionalCallNumbers")
+    JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("additionalCallNumbers")
       .getJsonObject(0);
     final String itemLevelAdditionalCallNumber = postResponseAdditionalCallNumbers.getString("callNumber");
     final String itemLevelAdditionalPrefix = postResponseAdditionalCallNumbers.getString("prefix");
@@ -2333,14 +2334,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemLevelAdditionalSuffix, is(suffix));
     assertThat(itemLevelTypeId, is(typeId));
 
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbersUpdated = new ArrayList<>();
+    List<EffectiveCallNumberComponents> additionalCallNumbersUpdated = new ArrayList<>();
     final String newCallNumber = "newCallNumber";
-    itemLevelAdditionalCallNumbersUpdated
+    additionalCallNumbersUpdated
       .add(new EffectiveCallNumberComponents().withCallNumber(newCallNumber).withPrefix(prefix)
         .withSuffix(suffix).withTypeId(typeId));
-    itemLevelAdditionalCallNumbersUpdated.add(new EffectiveCallNumberComponents().withCallNumber("some")
+    additionalCallNumbersUpdated.add(new EffectiveCallNumberComponents().withCallNumber("some")
       .withPrefix("prefix").withSuffix("suffix").withTypeId(typeId));
-    itemToCreate.put("itemLevelAdditionalCallNumbers", itemLevelAdditionalCallNumbersUpdated);
+    itemToCreate.put("additionalCallNumbers", additionalCallNumbersUpdated);
     itemToCreate.put("_version", 1);
 
     setItemSequence(2);
@@ -2354,7 +2355,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     getClient().get(itemsStorageUrl("/" + id), TENANT_ID, ResponseHandler.json(getCompleted));
     Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
-    JsonArray updatedAdditionalCallNumbers = getResponse.getJson().getJsonArray("itemLevelAdditionalCallNumbers");
+    JsonArray updatedAdditionalCallNumbers = getResponse.getJson().getJsonArray("additionalCallNumbers");
 
     assertThat(updatedAdditionalCallNumbers.size(), is(2));
   }
@@ -2377,7 +2378,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", additionalCallNumbers)
+      .put("additionalCallNumbers", additionalCallNumbers)
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
@@ -2385,7 +2386,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     JsonObject itemUpdate = itemToCreate.copy();
-    itemUpdate.remove("itemLevelAdditionalCallNumbers");
+    itemUpdate.remove("additionalCallNumbers");
     itemUpdate.put("_version", 1);
     CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + id.toString()), itemUpdate, TENANT_ID,
@@ -2400,14 +2401,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject updatedItem = getResponse.getJson();
 
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItem.containsKey("itemLevelAdditionalCallNumbers"), is(true));
-    assertThat(updatedItem.getJsonArray("itemLevelAdditionalCallNumbers").size(), is(0));
+    assertThat(updatedItem.containsKey("additionalCallNumbers"), is(true));
+    assertThat(updatedItem.getJsonArray("additionalCallNumbers").size(), is(0));
   }
 
   @Test
   public void canCreateItemWithEmptyAdditionalCallNumbers() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject()
@@ -2417,7 +2418,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     setItemSequence(1);
@@ -2435,12 +2436,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> itemLevelAdditionalCallNumbers = new ArrayList<>();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
     String callNumber = "Test";
     String prefix = "A";
     String suffix = "Z";
     String typeId = "non-uuid";
-    itemLevelAdditionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
+    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
       .withSuffix(suffix).withTypeId(typeId));
 
     UUID id = UUID.randomUUID();
@@ -2452,7 +2453,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("itemLevelAdditionalCallNumbers", new JsonArray(itemLevelAdditionalCallNumbers))
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     setItemSequence(1);
