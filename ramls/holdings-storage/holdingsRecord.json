@@ -64,6 +64,15 @@
         "$ref": "electronicAccessItem.json"
       }
     },
+    "additionalCallNumbers": {
+      "description": "Additional Call Numbers to track the history of identifiers assigned to an item.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "../additionalCallNumber.json",
+        "uniqueItems": true
+      }
+    },
     "callNumberTypeId": {
       "type": "string",
       "description": "unique ID for the type of call number on a holdings record, a UUID",
