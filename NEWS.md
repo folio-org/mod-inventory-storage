@@ -8,6 +8,8 @@
 * Provides `item-storage-dereferenced 1.1`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
+* Provides `inventory-hierarchy 0.7`
+
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
@@ -18,6 +20,7 @@
 * Create index for "deleted" field to improve performance of mod-oai-pmh views ([MODOAIPMH-614](https://folio-org.atlassian.net/browse/MODOAIPMH-614))
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
 * New enum property `defaultCheckInActionForUseAtLocation` for reading room circulation ([MODINVSTOR-1376](https://folio-org.atlassian.net/browse/MODINVSTOR-1376))
+* Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
 * Holdings record statistical codes validation enhancement ([MODINVSTOR-1185](https://folio-org.atlassian.net/browse/MODINVSTOR-1185))
 * Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 
