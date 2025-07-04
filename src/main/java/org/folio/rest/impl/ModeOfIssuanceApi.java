@@ -11,7 +11,8 @@ import org.folio.rest.jaxrs.model.IssuanceModes;
 import org.folio.rest.jaxrs.resource.ModesOfIssuance;
 
 public class ModeOfIssuanceApi extends BaseApi<IssuanceMode, IssuanceModes> implements ModesOfIssuance {
-  public static final String RESOURCE_TABLE = "mode_of_issuance";
+
+  public static final String MODE_OF_ISSUANCE_TABLE = "mode_of_issuance";
 
   @Validate
   @Override
@@ -69,7 +70,7 @@ public class ModeOfIssuanceApi extends BaseApi<IssuanceMode, IssuanceModes> impl
 
   @Override
   protected String getReferenceTable() {
-    return RESOURCE_TABLE;
+    return MODE_OF_ISSUANCE_TABLE;
   }
 
   @Override

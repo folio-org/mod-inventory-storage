@@ -13,7 +13,7 @@ import org.folio.rest.persist.PgUtil;
 public class NatureOfContentTermApi extends BaseApi<NatureOfContentTerm, NatureOfContentTerms>
   implements org.folio.rest.jaxrs.resource.NatureOfContentTerms {
 
-  public static final String REFERENCE_TABLE = "nature_of_content_term";
+  public static final String NATURE_OF_CONTENT_TERM_TABLE = "nature_of_content_term";
 
   @Validate
   @Override
@@ -35,7 +35,7 @@ public class NatureOfContentTermApi extends BaseApi<NatureOfContentTerm, NatureO
   @Override
   public void getNatureOfContentTermsById(String id, Map<String, String> okapiHeaders,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.getById(REFERENCE_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
+    PgUtil.getById(NATURE_OF_CONTENT_TERM_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
       vertxContext, GetNatureOfContentTermsByIdResponse.class, asyncResultHandler);
   }
 
@@ -57,7 +57,7 @@ public class NatureOfContentTermApi extends BaseApi<NatureOfContentTerm, NatureO
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return NATURE_OF_CONTENT_TERM_TABLE;
   }
 
   @Override
