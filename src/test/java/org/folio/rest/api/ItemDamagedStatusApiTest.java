@@ -88,7 +88,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
-    assertThat(result.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+    assertThat(result.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
@@ -108,7 +108,7 @@ public class ItemDamagedStatusApiTest extends TestBase {
       .get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(result, notNullValue());
-    assertThat(result.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+    assertThat(result.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test

@@ -114,6 +114,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String STAFF_SUPPRESS = "staffSuppress";
+  private static final String INVALID_VALUE = "invalid value";
+  private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+    INVALID_VALUE);
 
   private final Set<String> natureOfContentIdsToRemoveAfterTest = new HashSet<>();
 
@@ -341,6 +344,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(422));
 
     assertThat(response.getBody(), containsString("must match"));
+  }
+
+  @SneakyThrows
+  @Test
+  public void cannotCreateAnInstanceWithInvalidStatisticalCodeIds() {
+
+    JsonObject instanceToCreate = smallAngryPlanet(null);
+    instanceToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
+      text(createCompleted));
+
+    Response response = createCompleted.get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
@@ -1977,6 +1997,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotBatchCreateInstancesWithInvalidStatisticalCodeIds() throws Exception {
+    var instanceCollection = createRequestForMultipleInstances(3);
+    var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
+
+    instanceToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.text(createCompleted));
+    var response = createCompleted.get(30, SECONDS);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   public void cannotPostSynchronousBatchWithInvalidInstance() {
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
@@ -2080,6 +2117,22 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     // safe update, env var should not influence the regular API
     instances.getJsonObject(1).put("title", "sunset");
     assertThat(postSynchronousBatch("?upsert=true", instances), statusCodeIs(409));
+  }
+
+  @Test
+  public void canPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    // insert
+    JsonArray instances = new JsonArray().add(uprooted(UUID.randomUUID())).add(temeraire(UUID.randomUUID()));
+    var invalidInstance = instances.getJsonObject(1);
+    invalidInstance.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatchUnsafe(instances);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test

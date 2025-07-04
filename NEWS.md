@@ -3,7 +3,9 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `item-storage 10.2`
+* Provides `holdings-storage 8.1`
+* Provides `item-storage 10.3`
+* Provides `item-storage-dereferenced 1.1`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
 * Provides `inventory-hierarchy 0.7`
@@ -19,6 +21,8 @@
 * Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1425](https://folio-org.atlassian.net/browse/MODINVSTOR-1425))
 * New enum property `defaultCheckInActionForUseAtLocation` for reading room circulation ([MODINVSTOR-1376](https://folio-org.atlassian.net/browse/MODINVSTOR-1376))
 * Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
+* Holdings record statistical codes validation enhancement ([MODINVSTOR-1185](https://folio-org.atlassian.net/browse/MODINVSTOR-1185))
+* Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
@@ -27,6 +31,7 @@
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
 * Fix an iteration job is never finished after a cancellation request ([MODINVSTOR-1434](https://folio-org.atlassian.net/browse/MODINVSTOR-1434))
+* Fix updateIdentifierTypeCanceledLCCN migration script ([MODINVSTOR-1361](https://folio-org.atlassian.net/browse/MODINVSTOR-1361))
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
@@ -36,6 +41,7 @@
 * Stabilize tests by increasing the number of attempts to start the Kafka container ([MODINVSTOR-1413](https://folio-org.atlassian.net/browse/MODINVSTOR-1413))
 * Stabilize tests by fixing  cache issue during create/update holding ([MODINVSTOR-1405](https://folio-org.atlassian.net/browse/MODINVSTOR-1405))
 * Refactor usage of deprecated `PostgresClient` methods ([MODINVSTOR-1367](https://folio-org.atlassian.net/browse/MODINVSTOR-1367))
+* Refactor controllers to extract common logic into shared class ([MODINVSTOR-1437](https://folio-org.atlassian.net/browse/MODINVSTOR-1437))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

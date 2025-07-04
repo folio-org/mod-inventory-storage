@@ -10,12 +10,14 @@ import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
 import static org.folio.rest.support.ResponseHandler.json;
+import static org.folio.rest.support.ResponseHandler.jsonErrors;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -38,6 +40,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -49,6 +52,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,11 +74,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
+import org.folio.rest.support.JsonErrorResponse;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
@@ -109,6 +115,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b02")
   };
+  private static final String INVALID_VALUE = "invalid value";
+  private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
+    INVALID_VALUE);
+
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
@@ -437,6 +447,67 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .put("_version", 2);
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidStatisticalCodeIds() {
+    var instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+    holdingToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void cannotUpdateHoldingWithInvalidStatisticalCodeIds() {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    JsonObject holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var holdingResource = createHoldingRecord(holdingToCreate);
+
+    var holdingId = holdingResource.getId();
+    var holdingToUpdate = holdingsClient.getById(holdingId);
+    var holding = holdingToUpdate.getJson();
+    holding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = holdingsClient.attemptToReplace(holdingId.toString(), holding, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithInvalidInstanceId() {
+    var instanceId = UUID.randomUUID();
+
+    var holdingToCreate = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(response.getStatusCode(), is(422));
+    assertTrue(response.getBody().contains(String.format(
+      "Cannot set holdings_record.instanceid = %s because it does not exist in instance.id.", instanceId)));
   }
 
   @Test
@@ -2412,6 +2483,19 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
+
+    final JsonArray holdingsArray = threeHoldings();
+    var invalidHolding = holdingsArray.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatch(holdingsArray);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   @SneakyThrows
   public void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
     final UUID instanceId = UUID.randomUUID();
@@ -2824,6 +2908,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    // insert
+    JsonArray holdings = threeHoldings();
+    var invalidHolding = holdings.getJsonObject(1);
+    invalidHolding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
+
+    var response = postSynchronousBatchUnsafe(holdings);
+
+    assertThat(response.getStatusCode(), is(400));
+    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+  }
+
+  @Test
   @Ignore
   public void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithoutUpsert() {
     canPostSynchronousBatchUnsafeAndCreateShadowInstance("");
@@ -3179,6 +3279,204 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseStatement.getString("statement"), is("Test statement"));
     assertThat(responseStatement.getString("note"), is("Test note"));
     assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
+  @Test
+  public void cannotCreateHoldingWithAdditionalCallNumbersMissingCallNumber()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = List.of(new EffectiveCallNumberComponents());
+
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+
+    CompletableFuture<JsonErrorResponse> createCompleted = new CompletableFuture<>();
+
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.jsonErrors(createCompleted));
+
+    JsonErrorResponse response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(422));
+  }
+
+  @Test
+  public void canCreateHoldingWithMinimalAdditionalCallNumbers()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = List.of(new EffectiveCallNumberComponents()
+      .withCallNumber("123456789"));
+
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canCreateHoldingWithAdditionalCallNumbers()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("123456789")
+      .withPrefix("A")
+      .withSuffix("Z")
+      .withTypeId(LC_CN_TYPE_ID));
+
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    JsonObject additionalCallNumbersRespone = response.getJson()
+      .getJsonArray("additionalCallNumbers")
+      .getJsonObject(0);
+    assertThat(additionalCallNumbersRespone.getString("callNumber"), is("123456789"));
+    assertThat(additionalCallNumbersRespone.getString("prefix"), is("A"));
+    assertThat(additionalCallNumbersRespone.getString("suffix"), is("Z"));
+    assertThat(additionalCallNumbersRespone.getString("typeId"), is(LC_CN_TYPE_ID.toString()));
+  }
+
+  @Test
+  public void canCreateHoldingWithEmptyAdditionalCallNumbers()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  }
+
+  @Test
+  public void canDeleteAdditionalCallNumberFromHolding()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("123456789")
+      .withPrefix("A")
+      .withSuffix("Z")
+      .withTypeId(LC_CN_TYPE_ID));
+    String hrid = "hrid";
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid(hrid)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    request.remove("additionalCallNumbers");
+    request.put("_version", 1);
+
+    final CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+
+    getClient().put(holdingsStorageUrl(String.format("/%s", holdingId)), request, TENANT_ID,
+      jsonErrors(updateCompleted));
+
+    final JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void canUpdateHoldingsAdditionalCallNumbers()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    UUID instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    UUID holdingId = UUID.randomUUID();
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("123456789").withPrefix("A").withSuffix("Z").withTypeId(LC_CN_TYPE_ID));
+    String hrid = "hrid";
+    final JsonObject request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid(hrid)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withAdditionalCallNumbers(additionalCallNumbers).create();
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
+      ResponseHandler.json(createCompleted));
+    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("secondCallNumber")
+      .withPrefix("A").withSuffix("Z")
+      .withTypeId(LC_CN_TYPE_ID));
+    request.put("additionalCallNumbers", additionalCallNumbers);
+    request.put("_version", 1);
+
+    final CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+
+    getClient().put(holdingsStorageUrl(String.format("/%s", holdingId)), request, TENANT_ID,
+      jsonErrors(updateCompleted));
+
+    final JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(holdingsStorageUrl(String.format("/%s", holdingId)), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+    final Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    final JsonObject holding = getResponse.getJson();
+    assertThat(holding.getJsonArray("additionalCallNumbers").size(), is(2));
+    final JsonObject additionalCallNumber = holding.getJsonArray("additionalCallNumbers").getJsonObject(1);
+    assertThat(additionalCallNumber.getString("callNumber"), is("secondCallNumber"));
   }
 
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {

@@ -1,23 +1,17 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.succeededFuture;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
 import org.folio.rest.jaxrs.model.ServicePointsUsers;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.support.PostgresClientFactory;
 
-public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
-  private static final Logger logger = LogManager.getLogger();
+public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePointsUsers>
+  implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
+
   private static final String SERVICE_POINT_USER_TABLE = "service_point_user";
 
   @Validate
@@ -25,10 +19,8 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
   public void getServicePointsUsers(String query, String totalRecords, int offset, int limit,
                                     Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    PgUtil.get(SERVICE_POINT_USER_TABLE, ServicePointsUser.class, ServicePointsUsers.class,
-      query, offset, limit, okapiHeaders, vertxContext, GetServicePointsUsersResponse.class,
-      asyncResultHandler);
+    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
+      GetServicePointsUsersResponse.class);
   }
 
   @Validate
@@ -36,28 +28,14 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
   public void postServicePointsUsers(ServicePointsUser entity,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    PgUtil.post(SERVICE_POINT_USER_TABLE, entity, okapiHeaders, vertxContext,
-      PostServicePointsUsersResponse.class, asyncResultHandler);
+    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostServicePointsUsersResponse.class);
   }
 
   @Validate
   @Override
   public void deleteServicePointsUsers(Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-
-    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
-      .delete(SERVICE_POINT_USER_TABLE, new Criterion(), mutateReply -> {
-        if (mutateReply.succeeded()) {
-          asyncResultHandler.handle(succeededFuture(DeleteServicePointsUsersResponse.respond204()));
-        } else {
-          final String message = mutateReply.cause().getMessage();
-
-          logger.warn("Unable to remove all records", mutateReply.cause());
-
-          asyncResultHandler.handle(succeededFuture(DeleteServicePointsUsersResponse.respond500WithTextPlain(message)));
-        }
-      });
+    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
   }
 
   @Validate
@@ -66,10 +44,8 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
                                                          Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
-
-    PgUtil.getById(SERVICE_POINT_USER_TABLE, ServicePointsUser.class, servicePointsUserId,
-      okapiHeaders, vertxContext, GetServicePointsUsersByServicePointsUserIdResponse.class,
-      asyncResultHandler);
+    getEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
+      GetServicePointsUsersByServicePointsUserIdResponse.class);
   }
 
   @Validate
@@ -78,9 +54,8 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
                                                             Map<String, String> okapiHeaders,
                                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                                             Context vertxContext) {
-
-    PgUtil.deleteById(SERVICE_POINT_USER_TABLE, servicePointsUserId, okapiHeaders, vertxContext,
-      DeleteServicePointsUsersByServicePointsUserIdResponse.class, asyncResultHandler);
+    deleteEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
+      DeleteServicePointsUsersByServicePointsUserIdResponse.class);
   }
 
   @Validate
@@ -90,8 +65,22 @@ public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.Servi
                                                          Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
+    putEntityById(servicePointsUserId, entity, okapiHeaders, asyncResultHandler, vertxContext,
+      PutServicePointsUsersByServicePointsUserIdResponse.class);
+  }
 
-    PgUtil.put(SERVICE_POINT_USER_TABLE, entity, servicePointsUserId, okapiHeaders, vertxContext,
-      PutServicePointsUsersByServicePointsUserIdResponse.class, asyncResultHandler);
+  @Override
+  protected String getReferenceTable() {
+    return SERVICE_POINT_USER_TABLE;
+  }
+
+  @Override
+  protected Class<ServicePointsUser> getEntityClass() {
+    return ServicePointsUser.class;
+  }
+
+  @Override
+  protected Class<ServicePointsUsers> getEntityCollectionClass() {
+    return ServicePointsUsers.class;
   }
 }
