@@ -746,6 +746,16 @@
           "fieldName": "effectiveLocationId",
           "targetTable": "location",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "itemLevelCallNumberTypeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveCallNumberComponents.typeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
         }
       ],
       "uniqueIndex": [
@@ -1276,6 +1286,11 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/createDiscoverySuppressSourceIndex.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "before",
+      "snippetPath": "item/cleanupCallNumberTypes.sql",
       "fromModuleVersion": "29.1.0"
     }
   ]

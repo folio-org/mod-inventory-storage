@@ -5,7 +5,7 @@ import static com.github.tomakehurst.wiremock.http.Response.Builder.like;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
-import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.ITEM_LEVEL_CALL_NUMBER_TYPE;
+import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.LC_CALL_NUMBER_TYPE;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
 import static org.folio.rest.support.HttpResponseMatchers.statusCodeIs;
@@ -102,7 +102,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
-  public static final String NEW_TEST_TAG = "new test tag";
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String X_OKAPI_URL = "X-Okapi-Url";
@@ -110,6 +109,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final String CONSORTIUM_MEMBER_TENANT = "consortium";
   private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "nopermissions";
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+  private static final String NEW_TEST_TAG = "new test tag";
   private static final UUID[] HOLDING_SOURCE_IDS = {
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b00"),
     UUID.fromString("7fbd5d84-abcd-1978-8899-6cb173998b01"),
@@ -1178,7 +1178,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumberSuffix", suffix);
     itemToCreate.put("itemLevelCallNumberPrefix", prefix);
-    itemToCreate.put("itemLevelCallNumberTypeId", ITEM_LEVEL_CALL_NUMBER_TYPE);
+    itemToCreate.put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
     itemToCreate.put("volume", volume);
     itemToCreate.put("enumeration", enumeration);
     itemToCreate.put("chronology", chronology);
