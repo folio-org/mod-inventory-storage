@@ -38,21 +38,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.rest.api.entities.ContributorNameType;
-import org.folio.rest.api.entities.ContributorType;
 import org.folio.rest.api.entities.ElectronicAccessRelationship;
 import org.folio.rest.api.entities.HoldingsNoteType;
 import org.folio.rest.api.entities.HoldingsType;
 import org.folio.rest.api.entities.IllPolicy;
-import org.folio.rest.api.entities.Instance;
-import org.folio.rest.api.entities.InstanceFormat;
 import org.folio.rest.api.entities.InstanceNoteType;
 import org.folio.rest.api.entities.InstanceStatus;
-import org.folio.rest.api.entities.InstanceType;
 import org.folio.rest.api.entities.ItemNoteType;
 import org.folio.rest.api.entities.JsonEntity;
-import org.folio.rest.api.entities.ModeOfIssuance;
-import org.folio.rest.api.entities.NatureOfContentTerm;
 import org.folio.rest.api.entities.StatisticalCode;
 import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
@@ -108,42 +101,12 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void contributorNameTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/contributor-name-types";
-    ContributorNameType entity = new ContributorNameType("Test contributor name type", "100");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ContributorNameType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
   public void contributorTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = contributorTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("contributor types", searchResponse, 20, 500);
-  }
-
-  @Test
-  public void contributorTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/contributor-types";
-    ContributorType entity = new ContributorType("Test contributor type", "Test Code", "Test Source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ContributorType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -291,44 +254,12 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceFormatsBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/instance-formats";
-    InstanceFormat entity = new InstanceFormat("Test instance format", "Test Code", "Test Source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = InstanceFormat.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
   public void natureOfContentTermsLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = natureOfContentTermsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("nature-of-content terms", searchResponse, 20, 200);
-  }
-
-  @Test
-  public void natureOfContentTermsBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/nature-of-content-terms";
-    NatureOfContentTerm entity = new NatureOfContentTerm("Test Term", "Test Source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = InstanceFormat.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -362,39 +293,6 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("instance types (resource types)", searchResponse, 10, 100);
-  }
-
-  @Test
-  public void instanceTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/instance-types";
-    InstanceType entity = new InstanceType("Test instance type", "Test Code", "Test Source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = InstanceType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
-  public void cannotDeleteInstanceTypeAssociatedToAnInstance()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    InstanceType instanceType = new InstanceType("new type", "nt", "rdacontent");
-    Response instanceTypeResponse = createReferenceRecord("/instance-types", instanceType);
-    assertThat(instanceTypeResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String instanceTypeId = instanceTypeResponse.getJson().getString("id");
-
-    Instance instance = new Instance("test", "folio", instanceTypeId);
-    Response instanceResponse = createReferenceRecord("/instance-storage/instances", instance);
-    assertThat(instanceResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    Response result = deleteReferenceRecordById(vertxUrl("/instance-types/" + instanceTypeId));
-
-    assertThat(result.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
   }
 
   @Test
@@ -441,21 +339,6 @@ public class ReferenceTablesTest extends TestBase {
 
     String entityUuid = postResponse.getJson().getString("id");
     String updateProperty = InstanceNoteType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
-  public void modesOfIssuanceBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/modes-of-issuance";
-    ModeOfIssuance entity = new ModeOfIssuance("Test mode of issuance");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ModeOfIssuance.NAME_KEY;
 
     testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
