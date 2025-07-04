@@ -50,6 +50,15 @@
       "description": "A system generated normalization of the call number that allows for call number sorting in reports and search results",
       "readonly": true
     },
+    "additionalCallNumbers": {
+      "description": "Additional Call Numbers to track the history of identifiers assigned to an item.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "additionalCallNumber.json",
+        "uniqueItems": true
+      }
+    },
     "itemLevelCallNumber": {
       "type": "string",
       "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item. The call number is used to determine the items physical position in a shelving sequence, e.g. K1 .M44. The Item level call number, is the call number on item level."

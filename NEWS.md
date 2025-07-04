@@ -5,6 +5,7 @@
 ### New APIs versions
 * Provides `holdings-storage 8.1`
 * Provides `item-storage 10.3`
+* Provides `item-storage-dereferenced 1.1`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
 
