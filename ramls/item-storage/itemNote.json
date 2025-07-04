@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An item note",
+  "javaType": "org.folio.rest.jaxrs.model.ItemNote",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "itemNoteTypeId": {
+      "type": "string",
+      "description": "ID of the type of note"
+    },
+    "note": {
+      "type": "string",
+      "description": "Text content of the note"
+    },
+    "staffOnly": {
+      "type": "boolean",
+      "description": "If true, determines that the note should not be visible for others than staff",
+      "default": false
+    }
+  }
+}
+
