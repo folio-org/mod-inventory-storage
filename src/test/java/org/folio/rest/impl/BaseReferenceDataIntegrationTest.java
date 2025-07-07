@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxTestContext;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +89,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void getCollection_shouldReturn200AndEmptyCollection(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
+    var client = vertx.createHttpClient();
     doGet(client, resourceUrl())
       .onComplete(verifyStatus(ctx, HTTP_OK))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
@@ -107,8 +106,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void getCollection_shouldReturn200AndRecordCollectionBasedOnQuery(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-
+    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -143,8 +141,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void get_shouldReturn200AndRecordById(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-
+    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -164,8 +161,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void post_shouldReturn201AndCreatedRecord(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-
+    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -202,8 +198,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void put_shouldReturn204AndRecordIsUpdated(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-
+    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -226,8 +221,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void delete_shouldReturn204AndRecordIsDeleted(Vertx vertx, VertxTestContext ctx) {
-    HttpClient client = vertx.createHttpClient();
-
+    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
