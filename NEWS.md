@@ -43,6 +43,7 @@
 * Refactor usage of deprecated `PostgresClient` methods ([MODINVSTOR-1367](https://folio-org.atlassian.net/browse/MODINVSTOR-1367))
 * Refactor controllers to extract common logic into shared class ([MODINVSTOR-1437](https://folio-org.atlassian.net/browse/MODINVSTOR-1437))
 * Cover contributor-types, contributor-name-types, instance-formats, instance-types, nature-of-content-terms, classification-types, modes-of-issuance APIs with integration tests ([MODINVSTOR-1166](https://folio-org.atlassian.net/browse/MODINVSTOR-1166))
+* Cover instance-statuses, electronic-access-relationships, statistical-code-types, statistical-codes, ill-policies, holdings-types, call-number-types APIs with integration tests ([MODINVSTOR-1167](https://folio-org.atlassian.net/browse/MODINVSTOR-1167))
 
 ### Dependencies
 * Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`

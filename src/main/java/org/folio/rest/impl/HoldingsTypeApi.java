@@ -21,7 +21,7 @@ import org.folio.rest.jaxrs.model.Parameter;
 public class HoldingsTypeApi extends BaseApi<HoldingsType, HoldingsTypes>
   implements org.folio.rest.jaxrs.resource.HoldingsTypes {
 
-  public static final String REFERENCE_TABLE = "holdings_type";
+  public static final String HOLDINGS_TYPE_TABLE = "holdings_type";
 
   @Validate
   @Override
@@ -64,7 +64,7 @@ public class HoldingsTypeApi extends BaseApi<HoldingsType, HoldingsTypes>
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return HOLDINGS_TYPE_TABLE;
   }
 
   @Override

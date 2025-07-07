@@ -22,7 +22,6 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -38,16 +37,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.rest.api.entities.ElectronicAccessRelationship;
 import org.folio.rest.api.entities.HoldingsNoteType;
-import org.folio.rest.api.entities.HoldingsType;
-import org.folio.rest.api.entities.IllPolicy;
 import org.folio.rest.api.entities.InstanceNoteType;
-import org.folio.rest.api.entities.InstanceStatus;
 import org.folio.rest.api.entities.ItemNoteType;
 import org.folio.rest.api.entities.JsonEntity;
-import org.folio.rest.api.entities.StatisticalCode;
-import org.folio.rest.api.entities.StatisticalCodeType;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.utility.ModuleUtility;
@@ -119,51 +112,6 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void electronicAccessRelationshipsBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/electronic-access-relationships";
-    ElectronicAccessRelationship entity = new ElectronicAccessRelationship("Test electronic access relationship type");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ElectronicAccessRelationship.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
-  public void canCreateAndGetElectronicAccessRelationshipWithSourceFieldPopulated()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityName = "Electronic access relationship with 'source' field";
-    String entitySource = "Consortium";
-
-    String apiUrl = "/electronic-access-relationships";
-    ElectronicAccessRelationship entity = new ElectronicAccessRelationship(entityName);
-    entity.put("source", entitySource);
-
-    // post new electronic access relationship with 'source' field populated
-    Response postResponse = createReferenceRecord(apiUrl, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(postResponse.getJson().getString("id"), notNullValue());
-    assertThat(postResponse.getJson().getString("name"), is(entityName));
-    assertThat(postResponse.getJson().getString("source"), is(entitySource));
-
-    // get saved electronic access relationship by id and verify all fields have been populated
-    String entityId = postResponse.getJson().getString("id");
-
-    Response getResponse = getById(vertxUrl(apiUrl + "/" + entityId));
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(getResponse.getJson().getString("id"), is(entityId));
-    assertThat(getResponse.getJson().getString("name"), is(entityName));
-    assertThat(getResponse.getJson().getString("source"), is(entitySource));
-
-    // delete created resource
-    deleteReferenceRecordById(vertxUrl(apiUrl + "/" + entityId));
-  }
-
-  @Test
   public void holdingsNoteTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = holdingsNoteTypesUrl("");
@@ -197,21 +145,6 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void holdingsTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/holdings-types";
-    HoldingsType entity = new HoldingsType("Test holdings note type", "test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = HoldingsType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
   public void identifierTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = identifierTypesUrl("");
@@ -227,21 +160,6 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("ILL policies", searchResponse, 5, 20);
-  }
-
-  @Test
-  public void illPoliciesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/ill-policies";
-    IllPolicy entity = new IllPolicy("Test ILL policy", "Test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = IllPolicy.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -269,21 +187,6 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("instance statuses", searchResponse, 5, 20);
-  }
-
-  @Test
-  public void instanceStatusesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/instance-statuses";
-    InstanceStatus entity = new InstanceStatus("Test instance status", "Test Code", "Test Source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = InstanceStatus.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -359,35 +262,6 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponseCodes = getReferenceRecords(statisticalCodesUrl);
     validateNumberOfReferenceRecords("statistical codes", searchResponseCodes, 10, 500);
-  }
-
-  @Test
-  public void statisticalCodesAndCodeTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String statisticalCodeTypesPath = "/statistical-code-types";
-    String statisticalCodesPath = "/statistical-codes";
-
-    String statisticalCodeTypeId = "8c5b634a-0a4a-47ec-b9b2-d66980656ffd";
-    StatisticalCodeType statisticalCodeType =
-      new StatisticalCodeType(statisticalCodeTypeId, "Test statistical code type", "Test source");
-    StatisticalCode statisticalCode =
-      new StatisticalCode("Test statistical name", "Test statistical code", statisticalCodeTypeId, "Test source");
-
-    Response postResponseCodeType = createReferenceRecord(statisticalCodeTypesPath, statisticalCodeType);
-    assertThat(postResponseCodeType.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    Response postResponseCode = createReferenceRecord(statisticalCodesPath, statisticalCode);
-    assertThat(postResponseCode.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuidCode = postResponseCode.getJson().getString("id");
-    String updatePropertyCode = StatisticalCode.NAME_KEY;
-
-    testGetPutDeletePost(statisticalCodesPath, entityUuidCode, statisticalCode, updatePropertyCode);
-
-    String entityUuidCodeType = postResponseCodeType.getJson().getString("id");
-    String updatePropertyCodeType = StatisticalCodeType.NAME_KEY;
-
-    testGetPutDeletePost(statisticalCodeTypesPath, entityUuidCodeType, statisticalCodeType, updatePropertyCodeType);
   }
 
   @ParameterizedTest
