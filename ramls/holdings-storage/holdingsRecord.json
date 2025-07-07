@@ -61,7 +61,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "electronicAccessItem.json"
+        "$ref": "../common/electronicAccessItem.json"
       }
     },
     "additionalCallNumbers": {
@@ -69,7 +69,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "../additionalCallNumber.json",
+        "$ref": "../common/callNumberComponents.json",
         "uniqueItems": true
       }
     },

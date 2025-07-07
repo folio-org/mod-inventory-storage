@@ -22,7 +22,7 @@
       "type": "array",
       "description": "Items of the instance",
       "items": {
-        "$ref": "item.json"
+        "$ref": "item-storage/item.json"
       }
     },
     "precedingTitles": {

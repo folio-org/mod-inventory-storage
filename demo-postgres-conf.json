@@ -1,7 +1,7 @@
 {
   "host" : "localhost",
   "port" : 5432,
-  "database" : "demo",
-  "username" : "demo_mod_inventory_storage_admin",
-  "password" : "admin"
+  "database" : "folio",
+  "username" : "folio_admin",
+  "password" : "folio_admin"
 }
