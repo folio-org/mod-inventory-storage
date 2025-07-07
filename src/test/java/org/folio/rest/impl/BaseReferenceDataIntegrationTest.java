@@ -117,7 +117,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
       .compose(s -> {
         List<Future<TestResponse>> futures = new ArrayList<>();
         for (String query : queries()) {
-          var testResponseFuture = doGet(client, resourceUrl() + "?query=" + query)
+          var testResponseFuture = doGet(client, resourceUrl() + "?query=" + query + "&limit=500")
             .onComplete(verifyStatus(ctx, HTTP_OK))
             .andThen(ctx.succeeding(response -> ctx.verify(() -> {
               var collection = response.bodyAsClass(collectionClass());
