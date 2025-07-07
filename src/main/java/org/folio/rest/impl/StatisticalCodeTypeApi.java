@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.StatisticalCodeTypes;
 public class StatisticalCodeTypeApi extends BaseApi<StatisticalCodeType, StatisticalCodeTypes>
   implements org.folio.rest.jaxrs.resource.StatisticalCodeTypes {
 
-  public static final String RESOURCE_TABLE = "statistical_code_type";
+  public static final String STATISTICAL_CODE_TYPE_TABLE = "statistical_code_type";
 
   @Validate
   @Override
@@ -70,7 +70,7 @@ public class StatisticalCodeTypeApi extends BaseApi<StatisticalCodeType, Statist
 
   @Override
   protected String getReferenceTable() {
-    return RESOURCE_TABLE;
+    return STATISTICAL_CODE_TYPE_TABLE;
   }
 
   @Override

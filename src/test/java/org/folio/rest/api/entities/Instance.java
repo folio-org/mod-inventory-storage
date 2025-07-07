@@ -8,6 +8,7 @@ public class Instance extends JsonEntity {
 
   public static final String IDENTIFIERS_KEY = "identifiers";
   public static final String CONTRIBUTORS_KEY = "contributors";
+  public static final String STATISTICAL_CODE_IDS_KEY = "statisticalCodeIds";
 
   public Instance() { }
 

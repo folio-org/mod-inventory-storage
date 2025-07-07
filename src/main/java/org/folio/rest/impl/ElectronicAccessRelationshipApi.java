@@ -13,7 +13,7 @@ public class ElectronicAccessRelationshipApi
   extends BaseApi<ElectronicAccessRelationship, ElectronicAccessRelationships>
   implements org.folio.rest.jaxrs.resource.ElectronicAccessRelationships {
 
-  public static final String RESOURCE_TABLE = "electronic_access_relationship";
+  public static final String ELECTRONIC_ACCESS_RELATIONSHIP_TABLE = "electronic_access_relationship";
 
   @Validate
   @Override
@@ -64,7 +64,7 @@ public class ElectronicAccessRelationshipApi
 
   @Override
   protected String getReferenceTable() {
-    return RESOURCE_TABLE;
+    return ELECTRONIC_ACCESS_RELATIONSHIP_TABLE;
   }
 
   @Override

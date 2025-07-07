@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.IllPolicy;
 public class IllPolicyApi extends BaseApi<IllPolicy, IllPolicies>
   implements org.folio.rest.jaxrs.resource.IllPolicies {
 
-  public static final String REFERENCE_TABLE = "ill_policy";
+  public static final String ILL_POLICY_TABLE = "ill_policy";
 
   @Validate
   @Override
@@ -52,7 +52,7 @@ public class IllPolicyApi extends BaseApi<IllPolicy, IllPolicies>
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return ILL_POLICY_TABLE;
   }
 
   @Override
