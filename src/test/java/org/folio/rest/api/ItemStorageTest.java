@@ -1,4 +1,3 @@
-
 package org.folio.rest.api;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -237,8 +236,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     );
 
     JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     itemToCreate.put("id", id.toString());
+    itemToCreate.put("order", 100);
+    itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
@@ -253,76 +253,26 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
     itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
     itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
-
     itemToCreate.put("statisticalCodeIds", List.of(statisticalCodeId));
-
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
     setItemSequence(1);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
     getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
       ResponseHandler.json(createCompleted));
-
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postResponse.getJson();
-
-    assertThat(itemFromPost.getString("id"), is(id.toString()));
-    assertThat(itemFromPost.getJsonArray("administrativeNotes").contains(adminNote), is(true));
-    assertThat(itemFromPost.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(itemFromPost.getString("barcode"), is("565578437802"));
-    assertThat(itemFromPost.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
-    assertThat(itemFromPost.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(itemFromPost.getString("permanentLoanTypeId"),
-      is(canCirculateLoanTypeID));
-    assertThat(itemFromPost.getString("temporaryLocationId"),
-      is(ANNEX_LIBRARY_LOCATION_ID.toString()));
-    assertThat(itemFromPost.getString("inTransitDestinationServicePointId"),
-      is(inTransitServicePointId));
-    assertThat(itemFromPost.getString("hrid"), is("it00000000001"));
-    assertThat(itemFromPost.getString("copyNumber"), is("copy1"));
-    assertThat(itemFromPost.getString("effectiveShelvingOrder"),
-      is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
+    assertItem(postResponse.getJson(), id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
+      statisticalCodeId);
 
     Response getResponse = getById(id);
-
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
     JsonObject itemFromGet = getResponse.getJson();
 
-    assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
-    assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(itemFromPost.getString("displaySummary"), is(displaySummary));
-    assertThat(itemFromGet.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(itemFromGet.getString("permanentLoanTypeId"),
-      is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getString("temporaryLocationId"),
-      is(ANNEX_LIBRARY_LOCATION_ID.toString()));
-    assertThat(itemFromGet.getString("inTransitDestinationServicePointId"),
-      is(inTransitServicePointId));
-    assertThat(itemFromGet.getString("hrid"), is("it00000000001"));
-
-    List<String> tags = getTags(itemFromGet);
-
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
-    assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
-    assertThat(itemFromGet.getString("effectiveShelvingOrder"),
-      is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
-    assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
-
+    assertItem(itemFromGet, id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
+      statisticalCodeId);
     itemMessageChecks.createdMessagePublished(itemFromGet);
   }
 
@@ -1964,7 +1914,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     int numOfItemsToCreate = 5;
     for (int i = 1; i <= numOfItemsToCreate; i++) {
       JsonObject itemCreateRequest = createItemRequest(UUID.randomUUID(), holdingsRecordId,
-              RandomStringUtils.insecure().next(10));
+        RandomStringUtils.insecure().next(10));
       String itemId = createItem(itemCreateRequest).getString("id");
       itemIds.add(itemId);
     }
@@ -1976,7 +1926,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> responseHandler = new CompletableFuture<>();
     getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
-            ResponseHandler.json(responseHandler));
+      ResponseHandler.json(responseHandler));
 
     Response response = responseHandler.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(200));
@@ -2004,12 +1954,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     RetrieveDto retrieveDto = new RetrieveDto();
     retrieveDto.setLimit(3);
     getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
-            ResponseHandler.json(firstPageCompleted));
+      ResponseHandler.json(firstPageCompleted));
 
     retrieveDto.setLimit(3);
     retrieveDto.setOffset(3);
     getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
-            ResponseHandler.json(secondPageCompleted));
+      ResponseHandler.json(secondPageCompleted));
 
     Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
@@ -2531,7 +2481,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(postResponse.getStatusCode(), is(422));
   }
-  
+
   @Test
   public void canDeleteAllItems() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
@@ -3425,6 +3375,31 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return item;
   }
 
+  private void assertItem(JsonObject itemFromGet, UUID id, String adminNote, UUID holdingsRecordId,
+                          String displaySummary, String inTransitServicePointId, UUID statisticalCodeId) {
+    assertThat(itemFromGet.getString("id"), is(id.toString()));
+    assertThat(itemFromGet.getInteger("order"), is(100));
+    assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(itemFromGet.getString("displaySummary"), is(displaySummary));
+    assertThat(itemFromGet.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
+    assertThat(itemFromGet.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+    assertThat(itemFromGet.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
+    assertThat(itemFromGet.getString("hrid"), is("it00000000001"));
+
+    List<String> tags = getTags(itemFromGet);
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(itemFromGet.getString("copyNumber"), is("copy1"));
+    assertThat(itemFromGet.getString("effectiveShelvingOrder"),
+      is("PS 43623 R534 P37 42005 COP Y1 allOwnComponentsCNS"));
+    assertThat(itemFromGet.getJsonArray("statisticalCodeIds"), hasItem(statisticalCodeId.toString()));
+  }
+
   private static JsonObject createItemRequest(
     UUID id,
     UUID holdingsRecordId,
@@ -3642,7 +3617,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private static JsonObject createItemRequestForLoan(String holdingsRecordId, String permanentLoanTypeId,
-                                                    String temporaryLoanTypeId) {
+                                                     String temporaryLoanTypeId) {
     var item = new JsonObject();
 
     item.put("status", new JsonObject().put("name", "Available"));

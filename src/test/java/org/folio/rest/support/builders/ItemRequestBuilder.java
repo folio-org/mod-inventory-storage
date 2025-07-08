@@ -13,6 +13,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
   private final UUID id;
   private final UUID holdingId;
+  private final Integer order;
   private final String barcode;
   private final String status;
   private final UUID materialTypeId;
@@ -28,13 +29,14 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
   private final List<UUID> statisticalCodeIds;
 
   public ItemRequestBuilder() {
-    this(UUID.randomUUID(), null, null, AVAILABLE_STATUS,
+    this(UUID.randomUUID(), null, 0, null, AVAILABLE_STATUS,
       null, null, null, null, null, null, null, null, new ArrayList<>(), false, new ArrayList<>());
   }
 
   private ItemRequestBuilder(
     UUID id,
     UUID holdingId,
+    Integer order,
     String barcode,
     String status,
     UUID temporaryLocationId,
@@ -51,6 +53,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
 
     this.id = id;
     this.holdingId = holdingId;
+    this.order = order;
     this.barcode = barcode;
     this.status = status;
     this.temporaryLocationId = temporaryLocationId;
@@ -70,6 +73,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     JsonObject itemRequest = new JsonObject();
 
     put(itemRequest, "id", id);
+    put(itemRequest, "order", order);
     put(itemRequest, "barcode", barcode);
     put(itemRequest, "holdingsRecordId", holdingId);
     put(itemRequest, "materialTypeId", materialTypeId);
@@ -101,6 +105,27 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       id,
       this.holdingId,
+      this.order,
+      this.barcode,
+      this.status,
+      this.temporaryLocationId,
+      this.materialTypeId,
+      this.permanentLoanTypeId,
+      this.temporaryLoanTypeId,
+      this.itemLevelCallNumberPrefix,
+      this.itemLevelCallNumber,
+      this.itemLevelCallNumberSuffix,
+      this.itemLevelCallNumberTypeId,
+      this.additionalCallNumbers,
+      this.discoverySuppress,
+      this.statisticalCodeIds);
+  }
+
+  public ItemRequestBuilder withOrder(Integer order) {
+    return new ItemRequestBuilder(
+      this.id,
+      this.holdingId,
+      order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -120,6 +145,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       status,
       this.temporaryLocationId,
@@ -139,6 +165,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       barcode,
       this.status,
       this.temporaryLocationId,
@@ -158,6 +185,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       temporaryLocationId,
@@ -177,6 +205,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -196,6 +225,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -215,6 +245,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -234,6 +265,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -253,6 +285,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -272,6 +305,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -291,6 +325,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -310,6 +345,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -330,6 +366,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -349,6 +386,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,
@@ -368,6 +406,7 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
     return new ItemRequestBuilder(
       this.id,
       this.holdingId,
+      this.order,
       this.barcode,
       this.status,
       this.temporaryLocationId,

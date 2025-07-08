@@ -4,11 +4,15 @@
 
 ### New APIs versions
 * Provides `holdings-storage 8.1`
-* Provides `item-storage 10.3`
-* Provides `item-storage-dereferenced 1.1`
+* Provides `item-storage 10.4`
+* Provides `item-storage-batch-sync 1.1`
+* Provides `item-storage-batch-sync-unsafe 1.1`
+* Provides `item-storage-dereferenced 1.2`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
-*  Provides `inventory-hierarchy 0.7`
+* Provides `inventory-hierarchy 0.8`
+* Provides `inventory-view 3.2`
+* Provides `inventory-view-instance-set 3.2`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
@@ -22,6 +26,7 @@
 * Holdings record statistical codes validation enhancement ([MODINVSTOR-1185](https://folio-org.atlassian.net/browse/MODINVSTOR-1185))
 * Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 * Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
+* Addition of the order field to the existing item-related APIs ([MODINVSTOR-1439](https://folio-org.atlassian.net/browse/MODINVSTOR-1439))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

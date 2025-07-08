@@ -109,6 +109,10 @@ public final class InventoryHierarchyResponseMatchers {
     return hasItemsElement(JsonPointer.from("/materialTypeId"), ArrayUtils.toArray(materialTypeIds));
   }
 
+  public static Matcher<JsonObject> hasOrderForItems(Integer... orders) {
+    return hasItemsElement(JsonPointer.from("/order"), ArrayUtils.<Integer>toArray(orders));
+  }
+
   public static Matcher<JsonObject> hasAggregatedNumberOfHoldings(int size) {
     return hasHoldingsCount(size);
   }
@@ -149,8 +153,8 @@ public final class InventoryHierarchyResponseMatchers {
     };
   }
 
-  private static Matcher<JsonObject> hasElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer,
-                                                String[] expectedValue) {
+  private static <T> Matcher<JsonObject> hasElement(JsonPointer rootJsonPointer, JsonPointer jsonPointer,
+                                                T[] expectedValue) {
 
     return new TypeSafeMatcher<>() {
       @Override
@@ -166,13 +170,15 @@ public final class InventoryHierarchyResponseMatchers {
         if (items == null) {
           return false;
         }
-        final List<String> actualValues = items.stream()
+
+        @SuppressWarnings("unchecked")
+        final List<T> actualValues = items.stream()
           .map(jsonPointer::queryJson)
-          .map(String.class::cast)
+          .map(value -> (T) value)
           .toList();
 
-        return Arrays.asList(expectedValue)
-          .containsAll(actualValues);
+        return actualValues
+          .containsAll(Arrays.asList(expectedValue));
       }
     };
   }
@@ -203,6 +209,10 @@ public final class InventoryHierarchyResponseMatchers {
   }
 
   private static Matcher<JsonObject> hasItemsElement(JsonPointer jsonPointer, String[] expectedValue) {
+    return hasElement(itemsFieldsPointer, jsonPointer, expectedValue);
+  }
+
+  private static Matcher<JsonObject> hasItemsElement(JsonPointer jsonPointer, Integer[] expectedValue) {
     return hasElement(itemsFieldsPointer, jsonPointer, expectedValue);
   }
 
