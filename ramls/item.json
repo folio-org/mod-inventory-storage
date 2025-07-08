@@ -19,6 +19,10 @@
       "type": "string",
       "description": "ID of the holdings record the item is a member of."
     },
+    "order": {
+      "type": "integer",
+      "description": "Order of the item in the holdings record."
+    },
     "formerIds": {
       "type": "array",
       "description": "Previous identifiers assigned to the item",

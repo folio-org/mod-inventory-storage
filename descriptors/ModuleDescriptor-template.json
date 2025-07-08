@@ -11,7 +11,7 @@
   "provides": [
     {
       "id": "item-storage-dereferenced",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [{
         "methods": ["GET"],
         "pathPattern": "/item-storage-dereferenced/items",
@@ -24,7 +24,7 @@
     },
     {
       "id": "item-storage",
-      "version": "10.3",
+      "version": "10.4",
       "handlers": [
         {
           "methods": ["GET"],
@@ -77,7 +77,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -88,7 +88,7 @@
     },
     {
       "id": "item-storage-batch-sync-unsafe",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1297,7 +1297,7 @@
     },
     {
       "id": "inventory-hierarchy",
-      "version": "0.7",
+      "version": "0.8",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1312,7 +1312,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "3.1",
+      "version": "3.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1323,7 +1323,7 @@
     },
     {
       "id": "inventory-view-instance-set",
-      "version": "3.1",
+      "version": "3.2",
       "handlers": [
         {
           "methods": ["GET"],
