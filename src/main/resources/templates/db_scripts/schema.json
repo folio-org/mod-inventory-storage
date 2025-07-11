@@ -1250,7 +1250,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/removeInactiveLocationFilterFromItemsAndHoldingsView.sql",
+      "snippetPath": "inventory-hierarchy/removeInactiveLocationFilterAndAddLocationStatusFromItemsAndHoldingsView.sql",
       "fromModuleVersion": "29.1.0"
     }
   ]
