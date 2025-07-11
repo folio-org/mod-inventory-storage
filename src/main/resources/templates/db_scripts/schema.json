@@ -804,6 +804,12 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "order",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
         }
       ],
       "ginIndex": [
