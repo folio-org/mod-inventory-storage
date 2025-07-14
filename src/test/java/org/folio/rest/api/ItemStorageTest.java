@@ -1259,6 +1259,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatch() {
     JsonArray itemsArray = threeItems();
+    for (int i = 0; i < threeItems().size(); i++) {
+      JsonObject item = itemsArray.getJsonObject(i);
+      item.put("order", i);
+    }
     assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
     for (Object item : itemsArray) {
       assertExists((JsonObject) item);
