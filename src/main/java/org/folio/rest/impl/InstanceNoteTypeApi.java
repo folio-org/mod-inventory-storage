@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.InstanceNoteTypes;
 public class InstanceNoteTypeApi extends BaseApi<InstanceNoteType, InstanceNoteTypes>
   implements org.folio.rest.jaxrs.resource.InstanceNoteTypes {
 
-  public static final String REFERENCE_TABLE = "instance_note_type";
+  public static final String INSTANCE_NOTE_TYPE_TABLE = "instance_note_type";
 
   @Validate
   @Override
@@ -54,7 +54,7 @@ public class InstanceNoteTypeApi extends BaseApi<InstanceNoteType, InstanceNoteT
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return INSTANCE_NOTE_TYPE_TABLE;
   }
 
   @Override

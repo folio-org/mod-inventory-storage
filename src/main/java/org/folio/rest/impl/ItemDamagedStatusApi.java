@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.ItemDamageStatuses;
 public class ItemDamagedStatusApi extends BaseApi<ItemDamageStatus, ItemDamageStatuses>
   implements org.folio.rest.jaxrs.resource.ItemDamagedStatuses {
 
-  public static final String REFERENCE_TABLE = "item_damaged_status";
+  public static final String ITEM_DAMAGED_STATUS_TABLE = "item_damaged_status";
 
   @Validate
   @Override
@@ -59,7 +59,7 @@ public class ItemDamagedStatusApi extends BaseApi<ItemDamageStatus, ItemDamageSt
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return ITEM_DAMAGED_STATUS_TABLE;
   }
 
   @Override

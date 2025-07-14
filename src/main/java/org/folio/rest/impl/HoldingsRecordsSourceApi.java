@@ -14,7 +14,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecordsSources;
 public class HoldingsRecordsSourceApi extends BaseApi<HoldingsRecordsSource, HoldingsRecordsSources>
   implements org.folio.rest.jaxrs.resource.HoldingsSources {
 
-  private static final String REFERENCE_TABLE = "holdings_records_source";
+  public static final String HOLDINGS_RECORDS_SOURCE_TABLE = "holdings_records_source";
 
   @Validate
   @Override
@@ -59,7 +59,7 @@ public class HoldingsRecordsSourceApi extends BaseApi<HoldingsRecordsSource, Hol
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return HOLDINGS_RECORDS_SOURCE_TABLE;
   }
 
   @Override

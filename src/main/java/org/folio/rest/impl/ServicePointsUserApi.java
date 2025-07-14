@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.ServicePointsUsers;
 public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePointsUsers>
   implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
 
-  private static final String SERVICE_POINT_USER_TABLE = "service_point_user";
+  public static final String SERVICE_POINT_USER_TABLE = "service_point_user";
 
   @Validate
   @Override
