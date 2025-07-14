@@ -808,7 +808,7 @@
         {
           "fieldName": "order",
           "tOps": "ADD",
-          "sqlExpression": "((jsonb->>'order')::int)"
+          "sqlExpression": "(jsonb->'order')"
         }
       ],
       "ginIndex": [
