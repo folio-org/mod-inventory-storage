@@ -314,6 +314,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromGet.getInteger("order"), is(1));
 
     List<String> tags = getTags(itemFromGet);
 
@@ -2869,6 +2870,34 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .map(IndividualResource::getId)
       .collect(Collectors.toSet());
     assertThat(allFoundIds, hasItems(itemWithWholeCallNumber.getId(), itemNoPrefix.getId()));
+  }
+
+  @Test
+  public void shouldBatchCreateItems() {
+    final var items = threeItems();
+    var itemIds = JsonArrayHelper.toList(items)
+      .stream()
+      .map(item -> {
+        UUID itemId = UUID.randomUUID();
+        item.put("id", itemId.toString());
+        return itemId;
+      })
+      .toList();
+
+    final var response = itemsStorageSyncClient
+      .attemptToCreate(new JsonObject().put("items", items));
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    for (var id : itemIds) {
+      var getResponse = getById(id);
+      assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      var itemFromGet = getResponse.getJson();
+
+      assertThat(itemFromGet.getString("id"), is(id.toString()));
+      assertThat(itemFromGet.getString("hrid"), notNullValue());
+      assertThat(itemFromGet.getInteger("order"), anyOf(is(1), is(2), is(3)));
+    }
   }
 
   @Test
