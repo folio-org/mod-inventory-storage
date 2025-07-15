@@ -314,6 +314,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
+    assertThat(itemFromGet.getInteger("order"), is(1));
 
     List<String> tags = getTags(itemFromGet);
 
@@ -1258,6 +1259,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatch() {
     JsonArray itemsArray = threeItems();
+    populateOrder(itemsArray);
+    
     assertThat(postSynchronousBatch(itemsArray), statusCodeIs(HttpStatus.HTTP_CREATED));
     for (Object item : itemsArray) {
       assertExists((JsonObject) item);
@@ -1362,11 +1365,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .add(nod(existingItemId, holdingsRecordId))
       .add(smallAngryPlanet(holdingsRecordId))
       .add(interestingTimes(holdingsRecordId));
+    populateOrder(itemsArray1);
 
     final JsonArray itemsArray2 = new JsonArray()
       .add(nod(existingItemId, holdingsRecordId))
       .add(temeraire(holdingsRecordId))
       .add(uprooted(holdingsRecordId));
+    populateOrder(itemsArray2);
 
     final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
     final var existingItemBeforeUpdate = getById(existingItemId).getJson();
@@ -2872,6 +2877,34 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void shouldBatchCreateItems() {
+    final var items = threeItems();
+    var itemIds = JsonArrayHelper.toList(items)
+      .stream()
+      .map(item -> {
+        UUID itemId = UUID.randomUUID();
+        item.put("id", itemId.toString());
+        return itemId;
+      })
+      .toList();
+
+    final var response = itemsStorageSyncClient
+      .attemptToCreate(new JsonObject().put("items", items));
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    for (var id : itemIds) {
+      var getResponse = getById(id);
+      assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+      var itemFromGet = getResponse.getJson();
+
+      assertThat(itemFromGet.getString("id"), is(id.toString()));
+      assertThat(itemFromGet.getString("hrid"), notNullValue());
+      assertThat(itemFromGet.getInteger("order"), anyOf(is(1), is(2), is(3)));
+    }
+  }
+
+  @Test
   public void cannotCreateItemWithNonExistentHoldingsRecordId() {
     final UUID nonExistentHoldingsRecordId = UUID.randomUUID();
 
@@ -3373,6 +3406,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   static JsonObject removeBarcode(JsonObject item) {
     item.remove("barcode");
     return item;
+  }
+
+  private void populateOrder(JsonArray itemsArray2) {
+    for (int i = 0; i < itemsArray2.size(); i++) {
+      JsonObject item = itemsArray2.getJsonObject(i);
+      item.put("order", i);
+    }
   }
 
   private void assertItem(JsonObject itemFromGet, UUID id, String adminNote, UUID holdingsRecordId,

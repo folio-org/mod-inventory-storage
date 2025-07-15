@@ -38,10 +38,6 @@
             "description": "System-assigned sequential ID which maps to the Instance ID",
             "type": "string"
           },
-          "order": {
-            "type": "integer",
-            "description": "Order of the item in the holdings record."
-          },
           "suppressFromDiscovery": {
             "description": "Indicate if record should not be displayed in a discovery system",
             "type": "boolean"
@@ -447,6 +443,10 @@
           "suppressFromDiscovery": {
             "description": "Indicate if record should not be displayed in a discovery system",
             "type": "boolean"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Order of the item in the holdings record."
           },
           "status": {
             "description": "The status of the item",
