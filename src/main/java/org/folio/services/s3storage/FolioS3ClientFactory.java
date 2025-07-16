@@ -11,9 +11,9 @@ public class FolioS3ClientFactory {
   public static final String S3_BUCKET_CONFIG = "S3_BUCKET";
   public static final String S3_ACCESS_KEY_ID_CONFIG = "S3_ACCESS_KEY_ID";
   public static final String S3_SECRET_ACCESS_KEY_CONFIG = "S3_SECRET_ACCESS_KEY";
-  public static final String S3_IS_AWS_CONFIG = "S3_IS_AWS_";
-  private static final String S3_URL_DEFAULT = "http://127.0.0.1:9000";
-  private static final String S3_BUCKET_DEFAULT = "marc-migrations";
+  public static final String S3_IS_AWS_CONFIG = "S3_IS_AWS";
+  private static final String S3_URL_DEFAULT = "https://s3.amazonaws.com";
+  private static final String S3_BUCKET_DEFAULT = "mod-inventory-storage";
   private static final String S3_IS_AWS_DEFAULT = "false";
 
   public FolioS3Client getFolioS3Client() {
