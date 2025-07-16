@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.ItemNoteTypes;
 public class ItemNoteTypeApi extends BaseApi<ItemNoteType, ItemNoteTypes>
   implements org.folio.rest.jaxrs.resource.ItemNoteTypes {
 
-  private static final String REFERENCE_TABLE = "item_note_type";
+  public static final String ITEM_NOTE_TYPE_TABLE = "item_note_type";
 
   @Validate
   @Override
@@ -53,7 +53,7 @@ public class ItemNoteTypeApi extends BaseApi<ItemNoteType, ItemNoteTypes>
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return ITEM_NOTE_TYPE_TABLE;
   }
 
   @Override
