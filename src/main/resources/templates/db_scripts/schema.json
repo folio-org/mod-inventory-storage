@@ -1225,11 +1225,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "oaipmh/addMigrationToUpdateDeleted.sql",
-      "fromModuleVersion": "29.0.9"
-    },
-    {
-      "run": "after",
       "snippetPath": "statistical-code/delete-deprecated-triggers.sql",
       "fromModuleVersion": "29.1.0"
     },
