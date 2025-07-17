@@ -123,6 +123,11 @@
       "folio:linkToField": "id",
       "folio:includedElement": "servicepoints"
     },
+    "isShadow": {
+      "description": "Whether this location is a shadow location. Shadow locations are used to represent virtual locations that no items are assignable to them. They only relate to external libraries and virtual items.",
+      "type": "boolean",
+      "default": false
+    },
     "metadata": {
       "type": "object",
       "$ref": "../raml-util/schemas/metadata.schema",
