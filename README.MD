@@ -184,7 +184,7 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 These environment variables configure the module interaction with S3-compatible storage (AWS S3, Minio Server):
 * `S3_URL` (default value - `https://s3.amazonaws.com`)
 * `S3_REGION` (default value - `us-west-2`)
-* `S3_BUCKET` (default value - `mod-inventory-storage`)
+* `S3_BUCKET`
 * `S3_ACCESS_KEY_ID`
 * `S3_SECRET_ACCESS_KEY`
 * `S3_IS_AWS` (default value - `false`)
