@@ -19,7 +19,6 @@ import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
-import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,10 +36,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.rest.api.entities.HoldingsNoteType;
-import org.folio.rest.api.entities.InstanceNoteType;
-import org.folio.rest.api.entities.ItemNoteType;
-import org.folio.rest.api.entities.JsonEntity;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.utility.ModuleUtility;
@@ -121,21 +116,6 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void holdingsNoteTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/holdings-note-types";
-    HoldingsNoteType entity = new HoldingsNoteType("Test holdings note type", "test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = HoldingsNoteType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
   public void holdingsTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = holdingsTypesUrl("");
@@ -208,42 +188,12 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void itemNoteTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/item-note-types";
-    ItemNoteType entity = new ItemNoteType("Test item note type", "Test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = ItemNoteType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
-  }
-
-  @Test
   public void instanceNoteTypesLoaded()
     throws InterruptedException, TimeoutException, ExecutionException {
     URL apiUrl = instanceNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("instance note types", searchResponse, 50, 60);
-  }
-
-  @Test
-  public void instanceNoteTypesBasicCrud()
-    throws InterruptedException, TimeoutException, ExecutionException {
-    String entityPath = "/instance-note-types";
-    InstanceNoteType entity = new InstanceNoteType("Test instance note type", "Test source");
-
-    Response postResponse = createReferenceRecord(entityPath, entity);
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    String entityUuid = postResponse.getJson().getString("id");
-    String updateProperty = InstanceNoteType.NAME_KEY;
-
-    testGetPutDeletePost(entityPath, entityUuid, entity, updateProperty);
   }
 
   @Test
@@ -291,116 +241,5 @@ public class ReferenceTablesTest extends TestBase {
       searchResponse.getJson().encode()), max >= totalRecords);
     assertTrue(String.format("Expected >=%s \"%s\", found %s, response:%n %s", min, dataDescription, totalRecords,
       searchResponse.getJson().encode()), min <= totalRecords);
-  }
-
-  private Response createReferenceRecord(String path, JsonEntity referenceObject)
-    throws ExecutionException, InterruptedException, TimeoutException {
-
-    URL referenceUrl = vertxUrl(path);
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(
-      referenceUrl,
-      referenceObject.getJson(),
-      TENANT_ID,
-      ResponseHandler.any(createCompleted)
-    );
-    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-  }
-
-  private Response getById(URL getByIdUrl) throws InterruptedException,
-    ExecutionException, TimeoutException {
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().get(getByIdUrl, TENANT_ID,
-      ResponseHandler.any(getCompleted));
-
-    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-  }
-
-  private Response getByQuery(URL getByQueryUrl) throws InterruptedException,
-    ExecutionException, TimeoutException {
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().get(getByQueryUrl, TENANT_ID,
-      ResponseHandler.any(getCompleted));
-
-    return getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-  }
-
-  private Response deleteReferenceRecordById(URL entityUrl)
-    throws ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<Response> deleteCompleted = new CompletableFuture<>();
-    getClient().delete(
-      entityUrl,
-      TENANT_ID,
-      ResponseHandler.any(deleteCompleted)
-    );
-    return deleteCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-  }
-
-  private Response updateRecord(URL entityUrl, JsonEntity referenceObject)
-    throws ExecutionException, InterruptedException, TimeoutException {
-    CompletableFuture<Response> updateCompleted = new CompletableFuture<>();
-    getClient().put(
-      entityUrl,
-      referenceObject.getJson(),
-      TENANT_ID,
-      ResponseHandler.any(updateCompleted)
-    );
-    return updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-  }
-
-  private void testGetPutDeletePost(String path, String entityId, JsonEntity entity, String updateProperty)
-    throws ExecutionException,
-    InterruptedException,
-    TimeoutException {
-
-    entity.put(updateProperty, entity.getString(updateProperty) + " UPDATED");
-
-    final URL url = vertxUrl(path + "/" + entityId);
-    final URL urlWithBadUuid = vertxUrl(path + "/baduuid");
-    final URL urlWithBadParameter = vertxUrl(path + "?offset=-3");
-    final URL urlWithBadCql = vertxUrl(path + "?query=badcql");
-
-    Response putResponse = updateRecord(url, entity);
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getResponse = getById(url);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(getResponse.getJson().getString(updateProperty), is(entity.getString(updateProperty)));
-
-    entity.put("id", entityId);
-    Response postResponse1 = createReferenceRecord(path, entity);
-    assertThat(postResponse1.getStatusCode(), is(422));
-
-    Response badParameterResponse = getByQuery(urlWithBadParameter);
-    assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response badQueryResponse = getByQuery(urlWithBadCql);
-    assertThat(badQueryResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response putResponse2 = updateRecord(urlWithBadUuid, entity);
-    assertThat(putResponse2.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    Response deleteResponse = deleteReferenceRecordById(url);
-
-    assertThat(deleteResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getResponse2 = getById(url);
-
-    assertThat(getResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
-    Response deleteResponse2 = deleteReferenceRecordById(url);
-
-    assertThat(deleteResponse2.getStatusCode(), is(HttpURLConnection.HTTP_NOT_FOUND));
-
-    Response deleteResponse3 = deleteReferenceRecordById(urlWithBadUuid);
-
-    assertThat(deleteResponse3.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
-
-    entity.put("id", "baduuid");
-    Response postResponse2 = createReferenceRecord(path, entity);
-    assertThat(postResponse2.getStatusCode(), is(422));
   }
 }

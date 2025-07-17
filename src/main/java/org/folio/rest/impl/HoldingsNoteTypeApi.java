@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.HoldingsNoteTypes;
 public class HoldingsNoteTypeApi extends BaseApi<HoldingsNoteType, HoldingsNoteTypes>
   implements org.folio.rest.jaxrs.resource.HoldingsNoteTypes {
 
-  public static final String REFERENCE_TABLE = "holdings_note_type";
+  public static final String HOLDINGS_NOTE_TYPE_TABLE = "holdings_note_type";
 
   @Validate
   @Override
@@ -54,7 +54,7 @@ public class HoldingsNoteTypeApi extends BaseApi<HoldingsNoteType, HoldingsNoteT
 
   @Override
   protected String getReferenceTable() {
-    return REFERENCE_TABLE;
+    return HOLDINGS_NOTE_TYPE_TABLE;
   }
 
   @Override
