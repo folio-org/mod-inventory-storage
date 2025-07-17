@@ -24,6 +24,7 @@
 * Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 * Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
 * Update get_items_and_holdings_view to get location status ([MODINVSTOR-1447](https://folio-org.atlassian.net/browse/MODINVSTOR-1447))
+* Remove migration script to update 'deleted' field of instance.jsonb ([MODINVSTOR-1449](https://folio-org.atlassian.net/browse/MODINVSTOR-1449))
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
 
 ### Bug fixes
