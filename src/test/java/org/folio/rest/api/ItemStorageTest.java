@@ -112,6 +112,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final String INVALID_VALUE = "invalid value";
   private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
     INVALID_VALUE);
+  private static final String ORDER_FIELD = "order";
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
@@ -237,7 +238,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", id.toString());
-    itemToCreate.put("order", 100);
+    itemToCreate.put(ORDER_FIELD, 100);
     itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
@@ -283,13 +284,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     UUID id = UUID.randomUUID();
 
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    JsonObject itemToCreate = minimalItem(id, holdingsRecordId);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -314,12 +309,95 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("id"), is(id.toString()));
     assertThat(itemFromGet.getJsonObject("status").getString("name"),
       is("Available"));
-    assertThat(itemFromGet.getInteger("order"), is(1));
+    assertThat(itemFromGet.getInteger(ORDER_FIELD), is(1));
 
     List<String> tags = getTags(itemFromGet);
 
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canCreateSeveralItemsThatWillCalculateDifferentOrder() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    var id1 = UUID.randomUUID();
+    var id2 = UUID.randomUUID();
+
+    var itemToCreate1 = minimalItem(id1, holdingsRecordId);
+    var itemToCreate2 = minimalItem(id2, holdingsRecordId);
+
+    var createCompleted1 = new CompletableFuture<Response>();
+    var createCompleted2 = new CompletableFuture<Response>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate1, TENANT_ID,
+      ResponseHandler.json(createCompleted1));
+    getClient().post(itemsStorageUrl(""), itemToCreate2, TENANT_ID,
+      ResponseHandler.json(createCompleted2));
+
+    var postResponse1 = createCompleted1.get(TIMEOUT, TimeUnit.SECONDS);
+    var postResponse2 = createCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var getResponse1 = getById(id1);
+    var getResponse2 = getById(id2);
+
+    assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), anyOf(is(1), is(2)));
+    assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), anyOf(is(1), is(2)));
+    assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), not(is(getResponse1.getJson().getInteger(ORDER_FIELD))));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canCreateSeveralItemsThatWillCalculateOrderWhenItDecreasesInNextRequest() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    var id1 = UUID.randomUUID();
+    var id2 = UUID.randomUUID();
+
+    var itemToCreate1 = minimalItem(id1, holdingsRecordId).put(ORDER_FIELD, 1000);
+    var itemToCreate2 = minimalItem(id2, holdingsRecordId).put(ORDER_FIELD, 10);
+
+    var createCompleted1 = new CompletableFuture<Response>();
+    var createCompleted2 = new CompletableFuture<Response>();
+
+    getClient().post(itemsStorageUrl(""), itemToCreate1, TENANT_ID,
+      ResponseHandler.json(createCompleted1));
+    getClient().post(itemsStorageUrl(""), itemToCreate2, TENANT_ID,
+      ResponseHandler.json(createCompleted2));
+
+    var postResponse1 = createCompleted1.get(TIMEOUT, TimeUnit.SECONDS);
+    var postResponse2 = createCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var id3 = UUID.randomUUID();
+    var itemToCreate3 = minimalItem(id3, holdingsRecordId);
+    var createCompleted3 = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""), itemToCreate3, TENANT_ID,
+      ResponseHandler.json(createCompleted3));
+    var postResponse3 = createCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(postResponse3.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var getResponse1 = getById(id1);
+    var getResponse2 = getById(id2);
+    var getResponse3 = getById(id3);
+
+    assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), is(1000));
+    assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), is(10));
+    assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
+  }
+
+  private JsonObject minimalItem(UUID id, UUID holdingsRecordId) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
   }
 
   @SneakyThrows
@@ -2900,7 +2978,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
       assertThat(itemFromGet.getString("id"), is(id.toString()));
       assertThat(itemFromGet.getString("hrid"), notNullValue());
-      assertThat(itemFromGet.getInteger("order"), anyOf(is(1), is(2), is(3)));
+      assertThat(itemFromGet.getInteger(ORDER_FIELD), anyOf(is(1), is(2), is(3)));
     }
   }
 
@@ -3411,14 +3489,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private void populateOrder(JsonArray itemsArray2) {
     for (int i = 0; i < itemsArray2.size(); i++) {
       JsonObject item = itemsArray2.getJsonObject(i);
-      item.put("order", i);
+      item.put(ORDER_FIELD, i);
     }
   }
 
   private void assertItem(JsonObject itemFromGet, UUID id, String adminNote, UUID holdingsRecordId,
                           String displaySummary, String inTransitServicePointId, UUID statisticalCodeId) {
     assertThat(itemFromGet.getString("id"), is(id.toString()));
-    assertThat(itemFromGet.getInteger("order"), is(100));
+    assertThat(itemFromGet.getInteger(ORDER_FIELD), is(100));
     assertThat(itemFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
