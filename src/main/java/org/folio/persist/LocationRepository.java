@@ -28,12 +28,13 @@ public class LocationRepository extends AbstractRepository<Location> {
   private CQLWrapper getFetchCqlWrapper(String cql, int offset, int limit, String totalRecords, boolean includeShadows)
     throws FieldException {
     var field = new CQL2PgJSON(LOCATION_TABLE + ".jsonb");
+    var queryForShadowLocation = includeShadows ? "isShadow=true" : "isShadow<>true";
     if (StringUtils.isBlank(cql)) {
-      return new CQLWrapper(field, "isShadow=" + includeShadows, limit, offset, totalRecords);
+      return new CQLWrapper(field, queryForShadowLocation, limit, offset, totalRecords);
     }
 
     var cqlWrapper = new CQLWrapper(field, cql, limit, offset, totalRecords);
-    var cqlWrapperForShadowLocations = new CQLWrapper(field, "isShadow=" + includeShadows);
+    var cqlWrapperForShadowLocations = new CQLWrapper(field, queryForShadowLocation);
     return cqlWrapper.addWrapper(cqlWrapperForShadowLocations);
   }
 }
