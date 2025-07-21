@@ -12,7 +12,7 @@ import org.folio.rest.jaxrs.model.InstanceStatuses;
 public class InstanceStatusApi extends BaseApi<InstanceStatus, InstanceStatuses>
   implements org.folio.rest.jaxrs.resource.InstanceStatuses {
 
-  public static final String RESOURCE_TABLE = "instance_status";
+  public static final String INSTANCE_STATUS_TABLE = "instance_status";
 
   @Validate
   @Override
@@ -69,7 +69,7 @@ public class InstanceStatusApi extends BaseApi<InstanceStatus, InstanceStatuses>
 
   @Override
   protected String getReferenceTable() {
-    return RESOURCE_TABLE;
+    return INSTANCE_STATUS_TABLE;
   }
 
   @Override

@@ -3363,7 +3363,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(additionalCallNumbersRespone.getString("callNumber"), is("123456789"));
     assertThat(additionalCallNumbersRespone.getString("prefix"), is("A"));
     assertThat(additionalCallNumbersRespone.getString("suffix"), is("Z"));
-    assertThat(additionalCallNumbersRespone.getString("typeId"), is(LC_CN_TYPE_ID.toString()));
+    assertThat(additionalCallNumbersRespone.getString("typeId"), is(LC_CN_TYPE_ID));
   }
 
   @Test
@@ -3477,6 +3477,29 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(holding.getJsonArray("additionalCallNumbers").size(), is(2));
     final JsonObject additionalCallNumber = holding.getJsonArray("additionalCallNumbers").getJsonObject(1);
     assertThat(additionalCallNumber.getString("callNumber"), is("secondCallNumber"));
+  }
+
+  @Test
+  public void canNotRemoveHoldingsSourcesAttachedToHoldings() {
+    var instanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    setHoldingsSequence(1);
+
+    var holdingId = UUID.randomUUID();
+    var holdingToCreate = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+    var holdingSourceId = holdingToCreate.getString("sourceId");
+
+    createHoldingRecord(holdingToCreate);
+
+    var response = holdingsSourceClient.attemptToDelete(UUID.fromString(holdingSourceId));
+    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
   }
 
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {

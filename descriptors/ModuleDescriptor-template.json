@@ -434,7 +434,7 @@
     },
     {
       "id": "locations",
-      "version": "3.1",
+      "version": "3.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1297,7 +1297,7 @@
     },
     {
       "id": "inventory-hierarchy",
-      "version": "0.6",
+      "version": "0.7",
       "handlers": [
         {
           "methods": ["GET"],

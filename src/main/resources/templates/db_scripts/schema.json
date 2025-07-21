@@ -1110,22 +1110,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSource.sql",
-      "fromModuleVersion": "26.0.1"
-    },
-    {
-      "run": "after",
       "snippetPath": "inventory-hierarchy/correctGetUpdatedInstanceIdsViewToSupportDeletion.sql",
-      "fromModuleVersion": "26.0.1"
-    },
-    {
-      "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceImprove.sql",
-      "fromModuleVersion": "26.0.1"
-    },
-    {
-      "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportSourceFix.sql",
       "fromModuleVersion": "26.0.1"
     },
     {
@@ -1165,22 +1150,12 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportBoundWithItems.sql",
-      "fromModuleVersion": "26.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateForItemInsertUpdateToHandleBoundWith.sql",
       "fromModuleVersion": "26.1.0"
     },
     {
       "run": "after",
       "snippetPath": "addIdentifierTypeCancelledLCCN.sql",
-      "fromModuleVersion": "27.1.0"
-    },
-    {
-      "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportAdditionalFields.sql",
       "fromModuleVersion": "27.1.0"
     },
     {
@@ -1250,11 +1225,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/updateRecordsViewFunctionToSupportLocationNameSeparately.sql",
-      "fromModuleVersion": "28.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "inventory-hierarchy/fixElectronicAccessOrder.sql",
       "fromModuleVersion": "29.0.1"
     },
@@ -1262,11 +1232,6 @@
       "run": "after",
       "snippetPath": "oaipmh/createDeletedIndex.sql",
       "fromModuleVersion": "29.0.8"
-    },
-    {
-      "run": "after",
-      "snippetPath": "oaipmh/addMigrationToUpdateDeleted.sql",
-      "fromModuleVersion": "29.0.9"
     },
     {
       "run": "after",
@@ -1291,6 +1256,16 @@
     {
       "run": "before",
       "snippetPath": "item/cleanupCallNumberTypes.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/removeInactiveLocationFilterAndAddLocationStatusFromItemsAndHoldingsView.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocations.sql",
       "fromModuleVersion": "29.1.0"
     }
   ]

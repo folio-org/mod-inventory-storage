@@ -1,5 +1,5 @@
 drop function if exists ${myuniversity}_${mymodule}.get_items_and_holdings_view;
--- Add support of bound-with items
+-- Add support name and discoveryDisplayName of location separately
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_items_and_holdings_view(instanceIds                        uuid[],
                                                                                    skipSuppressedFromDiscoveryRecords bool DEFAULT TRUE)
     RETURNS TABLE
@@ -28,7 +28,6 @@ WITH
                            ON (loc.jsonb ->> 'campusId')::uuid = locCamp.id
                  LEFT JOIN loclibrary locLib
                            ON (loc.jsonb ->> 'libraryId')::uuid = locLib.id
-        WHERE (loc.jsonb ->> 'isActive')::bool = true
     ),
     -- Passed instances ids
     viewInstances(instId, source, modeOfIssuance, natureOfContent) AS (
@@ -61,24 +60,36 @@ WITH
                                                                  'formerIds', hr.jsonb -> 'formerIds',
                                                                  'location',
                                                                  CASE WHEN hr.id IS NOT NULL THEN
-                                                                          json_build_object('permanentLocation',
+                                                                          json_build_object(                                                                                            'permanentLocation',
                                                                                             jsonb_build_object('name', COALESCE(holdPermLoc.locJsonb ->> 'discoveryDisplayName', holdPermLoc.locJsonb ->> 'name'),
                                                                                                                'code', holdPermLoc.locJsonb ->> 'code',
+                                                                                                               'id', holdPermLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (holdPermLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', holdPermLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', holdPermLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', holdPermLoc.locInstJsonb ->> 'name'),
+                                                                                                               'libraryCode', holdPermLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', holdPermLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', holdPermLoc.locJsonb ->> 'name'),
                                                                                             'temporaryLocation',
                                                                                             jsonb_build_object('name', COALESCE(holdTempLoc.locJsonb ->> 'discoveryDisplayName', holdTempLoc.locJsonb ->> 'name'),
                                                                                                                'code', holdTempLoc.locJsonb ->> 'code',
+                                                                                                               'id', holdTempLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (holdTempLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', holdTempLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', holdTempLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', holdTempLoc.locInstJsonb ->> 'name'),
+                                                                                                               'libraryCode', holdTempLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', holdTempLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', holdTempLoc.locJsonb ->> 'name'),
                                                                                             'effectiveLocation',
                                                                                             jsonb_build_object('name', COALESCE(holdEffLoc.locJsonb ->> 'discoveryDisplayName', holdEffLoc.locJsonb ->> 'name'),
                                                                                                                'code', holdEffLoc.locJsonb ->> 'code',
+                                                                                                               'id', holdEffLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (holdEffLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', holdEffLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', holdEffLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', holdEffLoc.locInstJsonb ->> 'name'))
+                                                                                                               'libraryCode', holdEffLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', holdEffLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', holdEffLoc.locJsonb ->> 'name'))
                                                                       ELSE NULL END::jsonb,
                                                                  'callNumber', json_build_object('prefix', hr.jsonb ->> 'callNumberPrefix',
                                                                                                  'suffix', hr.jsonb ->> 'callNumberSuffix',
@@ -126,25 +137,36 @@ WITH
                                                                  'status', item.jsonb #>> '{status, name}',
                                                                  'formerIds', item.jsonb -> 'formerIds',
                                                                  'location',
-                                                                 CASE WHEN item.id IS NOT NULL THEN
-                                                                          json_build_object('location',
+                                                                 CASE WHEN item.id IS NOT NULL THEN                                                                                          json_build_object('location',
                                                                                             jsonb_build_object('name', COALESCE(itemEffLoc.locJsonb ->> 'discoveryDisplayName', itemEffLoc.locJsonb ->> 'name'),
                                                                                                                'code', itemEffLoc.locJsonb ->> 'code',
+                                                                                                               'id', itemEffLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (itemEffLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', itemEffLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', itemEffLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', itemEffLoc.locInstJsonb ->> 'name'),
+                                                                                                               'libraryCode', itemEffLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', itemEffLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', itemEffLoc.locJsonb ->> 'name'),
                                                                                             'permanentLocation',
                                                                                             jsonb_build_object('name', COALESCE(itemPermLoc.locJsonb ->> 'discoveryDisplayName', itemPermLoc.locJsonb ->> 'name'),
                                                                                                                'code', itemPermLoc.locJsonb ->> 'code',
+                                                                                                               'id', itemPermLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (itemPermLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', itemPermLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', itemPermLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', itemPermLoc.locInstJsonb ->> 'name'),
+                                                                                                               'libraryCode', itemPermLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', itemPermLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', itemPermLoc.locJsonb ->> 'name'),
                                                                                             'temporaryLocation',
                                                                                             jsonb_build_object('name', COALESCE(itemTempLoc.locJsonb ->> 'discoveryDisplayName', itemTempLoc.locJsonb ->> 'name'),
                                                                                                                'code', itemTempLoc.locJsonb ->> 'code',
+                                                                                                               'id', itemTempLoc.locJsonb ->> 'id',
+                                                                                                               'isActive', (itemTempLoc.locJsonb ->> 'isActive')::bool,
                                                                                                                'campusName', itemTempLoc.locCampJsonb ->> 'name',
                                                                                                                'libraryName', itemTempLoc.locLibJsonb ->> 'name',
-                                                                                                               'institutionName', itemTempLoc.locInstJsonb ->> 'name'))
+                                                                                                               'libraryCode', itemTempLoc.locLibJsonb ->> 'code',
+                                                                                                               'institutionName', itemTempLoc.locInstJsonb ->> 'name',
+                                                                                                               'locationName', itemTempLoc.locJsonb ->> 'name'))
                                                                       ELSE NULL END::jsonb,
                                                                  'callNumber', item.jsonb -> 'effectiveCallNumberComponents' ||
                                                                                jsonb_build_object('typeName', cnt.jsonb ->> 'name'),
@@ -154,6 +176,7 @@ WITH
                                                                  'volume', item.jsonb ->> 'volume',
                                                                  'enumeration', item.jsonb ->> 'enumeration',
                                                                  'chronology', item.jsonb ->>'chronology',
+                                                                 'displaySummary', item.jsonb ->>'displaySummary',
                                                                  'yearCaption', item.jsonb -> 'yearCaption',
                                                                  'itemIdentifier', item.jsonb ->> 'itemIdentifier',
                                                                  'numberOfPieces', item.jsonb ->> 'numberOfPieces',
@@ -164,6 +187,7 @@ WITH
                                                                  'itemDamagedStatus', itemDmgStat.jsonb ->> 'name',
                                                                  'itemDamagedStatusDate', item.jsonb ->> 'itemDamagedStatusDate',
                                                                  'materialType', mt.jsonb ->> 'name',
+                                                                 'materialTypeId', mt.jsonb ->> 'id',
                                                                  'permanentLoanType', plt.jsonb ->> 'name',
                                                                  'temporaryLoanType', tlt.jsonb ->> 'name',
                                                                  'electronicAccess',
