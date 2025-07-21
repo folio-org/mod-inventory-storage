@@ -11,7 +11,7 @@ import static org.awaitility.Awaitility.waitAtMost;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
-import static org.folio.rest.api.ServicePointTest.createHoldShelfExpiryPeriod;
+import static org.folio.rest.impl.ServicePointsIT.createHoldShelfExpiryPeriod;
 import static org.folio.rest.support.http.InterfaceUrls.servicePointsUrl;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;

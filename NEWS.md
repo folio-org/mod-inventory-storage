@@ -28,6 +28,8 @@
 * Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
 * Addition of the order field to the existing item-related APIs ([MODINVSTOR-1439](https://folio-org.atlassian.net/browse/MODINVSTOR-1439))
 * Calculate the order field if not exist on item create/update ([MODINVSTOR-1443](https://folio-org.atlassian.net/browse/MODINVSTOR-1443))
+* Update get_items_and_holdings_view to get location status ([MODINVSTOR-1447](https://folio-org.atlassian.net/browse/MODINVSTOR-1447))
+* Remove migration script to update 'deleted' field of instance.jsonb ([MODINVSTOR-1449](https://folio-org.atlassian.net/browse/MODINVSTOR-1449))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

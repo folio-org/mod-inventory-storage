@@ -378,7 +378,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var createCompleted3 = new CompletableFuture<Response>();
     getClient().post(itemsStorageUrl(""), itemToCreate3, TENANT_ID,
       ResponseHandler.json(createCompleted3));
-    var postResponse3 = createCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
+    var postResponse3 = createCompleted3.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(postResponse3.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     var getResponse1 = getById(id1);
