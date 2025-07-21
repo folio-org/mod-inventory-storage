@@ -2,7 +2,6 @@ package org.folio.services.location;
 
 import static org.folio.rest.impl.StorageHelper.logAndSaveError;
 import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.get;
 import static org.folio.rest.persist.PgUtil.post;
 import static org.folio.rest.persist.PgUtil.put;
 
@@ -16,8 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.persist.LocationRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Location;
@@ -26,10 +27,10 @@ import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.resource.Locations.DeleteLocationsByIdResponse;
 import org.folio.rest.jaxrs.resource.Locations.DeleteLocationsResponse;
 import org.folio.rest.jaxrs.resource.Locations.GetLocationsByIdResponse;
-import org.folio.rest.jaxrs.resource.Locations.GetLocationsResponse;
 import org.folio.rest.jaxrs.resource.Locations.PostLocationsResponse;
 import org.folio.rest.jaxrs.resource.Locations.PutLocationsByIdResponse;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.LocationDomainEventPublisher;
 
 public class LocationService {
@@ -49,9 +50,21 @@ public class LocationService {
     this.domainEventService = new LocationDomainEventPublisher(context, okapiHeaders);
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return get(LOCATION_TABLE, Location.class, Locations.class,
-      cql, offset, limit, okapiHeaders, context, GetLocationsResponse.class);
+  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                     boolean includeShadowLocations) {
+    try {
+      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadowLocations)
+        .map(results -> {
+          var collection = new Locations();
+          collection.setLocations(results.getResults());
+          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
+          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
+        });
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> getById(String id) {

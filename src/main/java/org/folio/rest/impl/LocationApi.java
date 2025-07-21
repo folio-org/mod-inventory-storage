@@ -16,10 +16,12 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
 
   @Validate
   @Override
-  public void getLocations(String query, String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
-                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getLocations(boolean includeShadowLocations, String query, String totalRecords, int offset, int limit,
+                           Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                           Context vertxContext) {
 
-    new LocationService(vertxContext, okapiHeaders).getByQuery(query, offset, limit)
+    new LocationService(vertxContext, okapiHeaders)
+      .getByQuery(query, offset, limit, totalRecords, includeShadowLocations)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
