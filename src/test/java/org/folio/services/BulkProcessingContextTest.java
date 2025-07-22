@@ -19,7 +19,8 @@ public class BulkProcessingContextTest {
 
     assertEquals("parent-folder/bulkInstances_failedEntities", context.getErrorEntitiesFilePath());
     assertEquals("parent-folder/bulkInstances_errors", context.getErrorsFilePath());
-    assertEquals("temp/parent-folder/bulkInstances_failedEntities", context.getErrorEntitiesFileLocalPath());
-    assertEquals("temp/parent-folder/bulkInstances_errors", context.getErrorsFileLocalPath());
+    assertEquals(
+      "mod-inventory-storage/parent-folder/bulkInstances_failedEntities", context.getErrorEntitiesFileLocalPath());
+    assertEquals("mod-inventory-storage/parent-folder/bulkInstances_errors", context.getErrorsFileLocalPath());
   }
 }
