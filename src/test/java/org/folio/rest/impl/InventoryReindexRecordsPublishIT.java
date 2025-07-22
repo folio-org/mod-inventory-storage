@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
-import org.folio.rest.jaxrs.model.Holding;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.PublishReindexRecords;
 import org.folio.rest.jaxrs.model.RecordIdsRange;
@@ -152,7 +152,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       arguments(
         HOLDING_TABLE,
         PublishReindexRecords.RecordType.HOLDINGS,
-        List.of(new Holding().withId(RECORD1_ID), new Holding().withId(RECORD2_ID)))
+        List.of(new HoldingsRecord().withId(RECORD1_ID), new HoldingsRecord().withId(RECORD2_ID)))
     );
   }
 }
