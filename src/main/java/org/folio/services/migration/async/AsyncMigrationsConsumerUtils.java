@@ -41,7 +41,8 @@ public final class AsyncMigrationsConsumerUtils {
         headers.put(TENANT_HEADER, tenantId);
 
         var availableMigrations = Set.of(
-          new ShelvingOrderAsyncMigrationService(vertxContext, headers));
+          new ShelvingOrderAsyncMigrationService(vertxContext, headers),
+          new ItemOrderMigrationService(vertxContext, headers));
         var jobService = new AsyncMigrationJobService(vertxContext, headers);
 
         var migrationEvents = buildIdsForMigrations(v.getValue());

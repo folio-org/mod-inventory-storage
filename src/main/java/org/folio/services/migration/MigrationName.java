@@ -1,6 +1,8 @@
 package org.folio.services.migration;
 
 public enum MigrationName {
+
+  ITEM_ORDER_MIGRATION("itemOrderMigration"),
   ITEM_SHELVING_ORDER_MIGRATION("itemShelvingOrderMigration");
 
   private final String value;

@@ -30,7 +30,8 @@ import org.folio.rest.support.PostgresClientFactory;
 
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> MIGRATION_JOB_RUNNERS = List
-    .of(new ShelvingOrderMigrationJobRunner());
+    .of(new ShelvingOrderMigrationJobRunner(),
+        new ItemOrderMigrationJobRunner());
   private static final List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
     .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
