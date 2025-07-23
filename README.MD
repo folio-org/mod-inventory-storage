@@ -182,12 +182,13 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 * `DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING`
 
 These environment variables configure the module interaction with S3-compatible storage (AWS S3, Minio Server):
-* `S3_URL` (default value - `http://127.0.0.1:9000`)
-* `S3_REGION`
-* `S3_BUCKET` (default value - `marc-migrations`)
+* `S3_URL` (default value - `https://s3.amazonaws.com`)
+* `S3_REGION` (default value - `us-west-2`)
+* `S3_BUCKET`
 * `S3_ACCESS_KEY_ID`
 * `S3_SECRET_ACCESS_KEY`
 * `S3_IS_AWS` (default value - `false`)
+* `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
 # Local Deployment using Docker
