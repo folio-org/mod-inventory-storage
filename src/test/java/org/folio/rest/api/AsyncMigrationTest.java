@@ -107,9 +107,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(1), migrations.getTotalRecords());
-    assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
-      migrations.getAsyncMigrations().getFirst().getMigrations().getFirst());
+    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
   }
 
   @Test

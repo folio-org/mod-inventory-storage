@@ -32,6 +32,7 @@
 * Update get_items_and_holdings_view to get location status ([MODINVSTOR-1447](https://folio-org.atlassian.net/browse/MODINVSTOR-1447))
 * Remove migration script to update 'deleted' field of instance.jsonb ([MODINVSTOR-1449](https://folio-org.atlassian.net/browse/MODINVSTOR-1449))
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
+* Implement async migration that will populate the item's order field ([MODINVNSTOR-1442](https://folio-org.atlassian.net/browse/MODINVSTOR-1442))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
