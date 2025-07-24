@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Item Storage
-version: v10.3
+version: v11.0
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -9,8 +9,8 @@ documentation:
     content: <b>Storage for items in the inventory</b>
 
 types:
-  item: !include item.json
-  items: !include items.json
+  item: !include item-storage/item.json
+  items: !include item-storage/items.json
   errors: !include raml-util/schemas/errors.schema
   retrieveDto: !include retrieveEntitiesDto.json
 
@@ -28,10 +28,10 @@ resourceTypes:
     displayName: Items
     type:
       collection:
-        exampleCollection: !include  examples/items_get.json
+        exampleCollection: !include  examples/item-storage/items_get.json
         schemaCollection: items
         schemaItem: item
-        exampleItem: !include  examples/item_get.json
+        exampleItem: !include  examples/item-storage/item_get.json
     get:
       is: [pageable,
          searchable: {description: "using CQL (indexes for item and material type)",
@@ -57,7 +57,7 @@ resourceTypes:
     /{itemId}:
       type:
         collection-item:
-          exampleItem: !include examples/item_get.json
+          exampleItem: !include examples/item-storage/item_get.json
           schema: item
       get:
     /retrieve:

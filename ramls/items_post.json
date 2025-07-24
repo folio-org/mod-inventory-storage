@@ -9,7 +9,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "item.json"
+        "$ref": "item-storage/item.json"
       }
     }
   },

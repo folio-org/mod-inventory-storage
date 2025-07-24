@@ -17,7 +17,7 @@
       "type": "integer"
     },
     "resultInfo": {
-      "$ref": "raml-util/schemas/resultInfo.schema",
+      "$ref": "../raml-util/schemas/resultInfo.schema",
       "readonly": true
     }
   },
