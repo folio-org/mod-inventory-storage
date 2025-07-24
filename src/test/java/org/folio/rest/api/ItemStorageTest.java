@@ -376,16 +376,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
   }
 
-  private JsonObject minimalItem(UUID id, UUID holdingsRecordId) {
-    return new JsonObject()
-      .put("id", id.toString())
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-  }
-
   @SneakyThrows
   @Test
   public void cannotCreateAnItemWithInvalidStatisticalCodeIds() {
@@ -3438,6 +3428,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   static JsonObject removeBarcode(JsonObject item) {
     item.remove("barcode");
     return item;
+  }
+
+  private JsonObject minimalItem(UUID id, UUID holdingsRecordId) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
   }
 
   private Response postSynchronousBatchWithExistingId(String subPath) {
