@@ -1,13 +1,13 @@
-## v29.1.0 YYYY-mm-DD
+## v30.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Constraint item call number type ID to refer to a known type ([MODINVSTOR-987](https://folio-org.atlassian.net/browse/MODINVSTOR-987))
 
 ### New APIs versions
-* Provides `holdings-storage 8.1`
-* Provides `item-storage 10.4`
-* Provides `item-storage-batch-sync 1.1`
-* Provides `item-storage-batch-sync-unsafe 1.1`
+* Provides `item-storage 11.0`
+* Provides `item-storage-batch-sync 2.0`
+* Provides `item-storage-batch-sync-unsafe 2.0`
 * Provides `item-storage-dereferenced 1.2`
+* Provides `holdings-storage 8.1`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
 * Provides `inventory-hierarchy 0.8`

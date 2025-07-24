@@ -6,7 +6,7 @@
     "typeId": {
       "type": "string",
       "description": "unique ID for the type of call number on a holdings record, a UUID",
-      "$ref": "./uuid.json"
+      "$ref": "../uuid.json"
     },
     "prefix": {
       "type": "string",

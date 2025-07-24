@@ -34,7 +34,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "../item.json"
+        "$ref": "../item-storage/item.json"
       },
       "readonly": true,
       "folio:isVirtual": true,
@@ -48,7 +48,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "../item.json"
+        "$ref": "../item-storage/item.json"
       },
       "readonly": true,
       "folio:isVirtual": true,
