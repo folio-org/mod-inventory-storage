@@ -444,6 +444,10 @@
             "description": "Indicate if record should not be displayed in a discovery system",
             "type": "boolean"
           },
+          "order": {
+            "type": "integer",
+            "description": "Order of the item in the holdings record."
+          },
           "status": {
             "description": "The status of the item",
             "type": "string"

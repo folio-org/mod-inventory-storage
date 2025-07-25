@@ -814,6 +814,11 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "order",
+          "tOps": "ADD",
+          "sqlExpression": "(jsonb->'order')"
         }
       ],
       "ginIndex": [
@@ -1260,7 +1265,12 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/removeInactiveLocationFilterAndAddLocationStatusFromItemsAndHoldingsView.sql",
+      "snippetPath": "inventory-hierarchy/createItemsAndHoldingsViewFunction.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "item/create-set-order-trigger.sql",
       "fromModuleVersion": "29.1.0"
     },
     {

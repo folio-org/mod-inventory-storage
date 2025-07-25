@@ -25,6 +25,10 @@
       "description": "Holdings record the item is a member of.",
       "$ref": "holdings-storage/holdingsRecord.json"
     },
+    "order": {
+      "type": "integer",
+      "description": "Order of the item in the holdings record."
+    },
     "formerIds": {
       "type": "array",
       "description": "Previous identifiers assigned to the item",

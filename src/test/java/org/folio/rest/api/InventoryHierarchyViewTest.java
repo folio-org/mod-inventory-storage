@@ -19,6 +19,7 @@ import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationIdForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasLocationLibraryCodeForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasMaterialTypeIdForItems;
+import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasOrderForItems;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationCodeForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasPermanentLocationForHoldings;
 import static org.folio.rest.support.matchers.InventoryHierarchyResponseMatchers.hasSourceForInstance;
@@ -106,8 +107,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     predefinedInstance = instancesClient.getAll().getFirst();
 
-    createItem(MAIN_LIBRARY_LOCATION_ID, "item barcode", "item effective call number 1", journalMaterialTypeId);
-    createItem(THIRD_FLOOR_LOCATION_ID, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
+    createItem(MAIN_LIBRARY_LOCATION_ID, 1, "item barcode", "item effective call number 1", journalMaterialTypeId);
+    createItem(THIRD_FLOOR_LOCATION_ID, 2, "item barcode 2", "item effective call number 2", bookMaterialTypeId);
 
     removeAllEvents();
   }
@@ -319,9 +320,9 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   public void canGetFromInventoryHierarchyViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
-    super.createItem(
-      createItemRequest(THIRD_FLOOR_LOCATION_ID, "item barcode 3", "item effective call number 3", bookMaterialTypeId)
-        .withDiscoverySuppress(true));
+    var itemRequest = createItemRequest(THIRD_FLOOR_LOCATION_ID, 3, "item barcode 3", "item effective call number 3",
+      bookMaterialTypeId);
+    createItem(itemRequest.withDiscoverySuppress(true));
     // when
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "true");
     params.put("source", "TEST");
@@ -343,7 +344,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
         hasCallNumberForItems("item effective call number 1", "item effective call number 3",
           "item effective call number 2"),
         hasAggregatedNumberOfItems(3),
-        hasEffectiveLocationInstitutionNameForItems("Primary Institution")
+        hasEffectiveLocationInstitutionNameForItems("Primary Institution"),
+        hasOrderForItems(1, 2, 3)
       ));
   }
 
@@ -614,13 +616,15 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     return instancesWithItemsAndHoldings;
   }
 
-  private void createItem(UUID mainLibraryLocationId, String s, String s2, UUID journalMaterialTypeId) {
-    super.createItem(createItemRequest(mainLibraryLocationId, s, s2, journalMaterialTypeId).create());
+  private void createItem(UUID locationId, Integer order, String barcode, String callNumber, UUID materialTypeId) {
+    super.createItem(createItemRequest(locationId, order, barcode, callNumber, materialTypeId).create());
   }
 
-  private ItemRequestBuilder createItemRequest(UUID locationId, String barcode, String callNumber,
+  private ItemRequestBuilder createItemRequest(UUID locationId, Integer order, String barcode, String callNumber,
                                                UUID materialTypeId) {
-    return new ItemRequestBuilder().forHolding(holdingsRecordIdPredefined)
+    return new ItemRequestBuilder()
+      .forHolding(holdingsRecordIdPredefined)
+      .withOrder(order)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withTemporaryLocation(locationId)
       .withBarcode(barcode)

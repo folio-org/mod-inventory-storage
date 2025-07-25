@@ -10,6 +10,7 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
+import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
 import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -53,6 +54,7 @@ import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.sql.TestRowStream;
+import org.folio.services.migration.MigrationName;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.ShelvingOrderMigrationJobRunner;
 import org.junit.Before;
@@ -73,43 +75,20 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMigrateItems() {
-    var numberOfRecords = 101;
+  public void canMigrateItemsForShelvingOrder() {
+    testMigration(ITEM_SHELVING_ORDER_MIGRATION, 101);
+  }
 
-    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
-    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
-      itemsClient.create(pojo2JsonObject(buildItem(holdingsRecordId, ONLINE_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
-        .withItemLevelCallNumber("K1 .M44")
-        .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
-
-    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of(ITEM_SHELVING_ORDER_MIGRATION.getValue())));
-
-    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
-                                              .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
-
-    var job = asyncMigration.getMigrationJob(migrationJob.getId());
-
-    assertThat(job.getPublished().stream().map(Published::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getProcessed().stream().map(Processed::getCount)
-      .mapToInt(Integer::intValue).sum(), is(numberOfRecords));
-    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
-
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
-    StorageTestSuite.deleteAll(instancesStorageUrl(""));
+  @Test
+  public void canMigrateItemsForPopulateOrders() {
+    testMigration(ITEM_ORDER_MIGRATION, 1);
   }
 
   @Test
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(1), migrations.getTotalRecords());
-    assertEquals(ITEM_SHELVING_ORDER_MIGRATION.getValue(),
-      migrations.getAsyncMigrations().getFirst().getMigrations().getFirst());
+    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
   }
 
   @Test
@@ -152,6 +131,36 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getJobStatus(), is(CANCELLED));
     assertThat(job.getPublished().getFirst().getCount(), greaterThanOrEqualTo(1000));
+  }
+
+  private void testMigration(MigrationName migration, int expectedCount) {
+    var numberOfRecords = 101;
+
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    IntStream.range(0, numberOfRecords).parallel().forEach(v ->
+      itemsClient.create(pojo2JsonObject(buildItem(holdingsRecordId, ONLINE_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
+        .withItemLevelCallNumber("K1 .M44")
+        .withEffectiveCallNumberComponents(new EffectiveCallNumberComponents().withCallNumber("K1 .M44")))));
+
+    var migrationJob = asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
+      .withMigrations(List.of(migration.getValue())));
+
+    await().atMost(25, SECONDS).until(() -> asyncMigration.getMigrationJob(migrationJob.getId())
+                                              .getJobStatus() == AsyncMigrationJob.JobStatus.COMPLETED);
+
+    var job = asyncMigration.getMigrationJob(migrationJob.getId());
+
+    assertThat(job.getPublished().stream().map(Published::getCount)
+      .mapToInt(Integer::intValue).sum(), is(expectedCount));
+    assertThat(job.getProcessed().stream().map(Processed::getCount)
+      .mapToInt(Integer::intValue).sum(), is(expectedCount));
+    assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
+    assertThat(job.getSubmittedDate(), notNullValue());
+
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""));
+    StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
   private static Map<String, String> okapiHeaders() {

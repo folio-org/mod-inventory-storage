@@ -6,10 +6,13 @@
 * Provides `item-storage 11.0`
 * Provides `item-storage-batch-sync 2.0`
 * Provides `item-storage-batch-sync-unsafe 2.0`
+* Provides `item-storage-dereferenced 1.2`
 * Provides `holdings-storage 8.1`
 * Provides `instance-storage 11.2`
 * Provides `service-points 3.5`
-* Provides `inventory-hierarchy 0.7`
+* Provides `inventory-hierarchy 0.8`
+* Provides `inventory-view 3.2`
+* Provides `inventory-view-instance-set 3.2`
 * Provides `locations 3.2`
 
 ### Features
@@ -24,9 +27,12 @@
 * Holdings record statistical codes validation enhancement ([MODINVSTOR-1185](https://folio-org.atlassian.net/browse/MODINVSTOR-1185))
 * Adds an array to hold additional call numbers on the holding and item level ([MODINVSTOR-1432](https://folio-org.atlassian.net/browse/MODINVSTOR-1432))
 * Update `get_items_and_holdings_view` to properly handle inactive locations ([MODINVSTOR-1438](https://folio-org.atlassian.net/browse/MODINVSTOR-1438))
+* Addition of the order field to the existing item-related APIs ([MODINVSTOR-1439](https://folio-org.atlassian.net/browse/MODINVSTOR-1439))
+* Calculate the order field if not exist on item create/update ([MODINVSTOR-1443](https://folio-org.atlassian.net/browse/MODINVSTOR-1443))
 * Update get_items_and_holdings_view to get location status ([MODINVSTOR-1447](https://folio-org.atlassian.net/browse/MODINVSTOR-1447))
 * Remove migration script to update 'deleted' field of instance.jsonb ([MODINVSTOR-1449](https://folio-org.atlassian.net/browse/MODINVSTOR-1449))
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
+* Implement async migration that will populate the item's order field ([MODINVNSTOR-1442](https://folio-org.atlassian.net/browse/MODINVSTOR-1442))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

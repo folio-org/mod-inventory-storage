@@ -105,4 +105,8 @@ public abstract class AbstractRepository<T> {
   public String getFullTableName(String tableName) {
     return convertToPsqlStandard(postgresClient.getTenantId()) + "." + tableName;
   }
+
+  public String getFullTableName() {
+    return convertToPsqlStandard(postgresClient.getTenantId()) + "." + this.tableName;
+  }
 }

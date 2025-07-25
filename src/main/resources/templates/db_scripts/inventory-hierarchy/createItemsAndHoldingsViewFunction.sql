@@ -128,6 +128,7 @@ WITH
                                               jsonb_build_object('id', item.id,
                                                                  'hrId', item.jsonb ->> 'hrId',
                                                                  'holdingsRecordId', (item.jsonb ->> 'holdingsRecordId')::UUID,
+                                                                 'order', (item.jsonb ->> 'order')::int,
                                                                  'suppressFromDiscovery',
                                                                  CASE WHEN item.id IS NOT NULL THEN
                                                                               COALESCE((i.jsonb ->> 'discoverySuppress')::bool, false) OR
