@@ -1418,27 +1418,41 @@
         {
           "methods": ["GET"],
           "pathPattern": "/custom-fields",
-          "permissionsRequired": ["inventory-storage.custom.fields.collection.get"]
+          "permissionsRequired": ["inventory-storage.custom-fields.collection.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/custom-fields",
+          "permissionsRequired": ["inventory-storage.custom-fields.collection.put"]
         },
         {
           "methods": ["POST"],
           "pathPattern": "/custom-fields",
-          "permissionsRequired": ["inventory-storage.custom.fields.item.post"]
+          "permissionsRequired": ["inventory-storage.custom-fields.item.post"]
         },
         {
           "methods": ["GET"],
           "pathPattern": "/custom-fields/{id}",
-          "permissionsRequired": ["inventory-storage.custom.fields.item.get"]
+          "permissionsRequired": ["inventory-storage.custom-fields.item.get"]
         },
         {
           "methods": ["PUT"],
           "pathPattern": "/custom-fields/{id}",
-          "permissionsRequired": ["inventory-storage.custom.fields.item.put"]
+          "permissionsRequired": ["inventory-storage.custom-fields.item.put"]
         },
         {
           "methods": ["DELETE"],
           "pathPattern": "/custom-fields/{id}",
-          "permissionsRequired": ["inventory-storage.custom.fields.item.delete"]
+          "permissionsRequired": ["inventory-storage.custom-fields.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/custom-fields/stats/{id}",
+          "permissionRequired": ["inventory-storage.custom-fields.item.stats.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "custom-fields/option/stats/"
         }
       ]
     }
@@ -1609,6 +1623,62 @@
       "permissionName": "inventory-storage.instances.item.delete",
       "displayName": "inventory storage - delete individual instance",
       "description": "delete individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.collection.get",
+      "displayName": "Custom Fields - get collection",
+      "description": "Get Custom Fields collection"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.collection.put",
+      "displayName": "Custom Fields - put collection",
+      "description": "Put Custom Fields collection"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.post",
+      "displayName": "Custom Fields - create field",
+      "description": "Create Custom Field"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.get",
+      "displayName": "Custom Fields - get field",
+      "description": "Get Custom Field"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.put",
+      "displayName": "Custom Fields - modify field",
+      "description": "Modify Custom Field"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.delete",
+      "displayName": "Custom Fields - delete field",
+      "description": "Delete Custom Field"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.stats.get",
+      "displayName": "Custom Fields - get item usage statistic",
+      "description": "Get Custom Field Statistic"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.item.option.stats.get",
+      "displayName": "Custom Fields - get item option usage statistic",
+      "description": "Get Custom Field Option Statistic"
+    },
+    {
+      "permissionName": "inventory-storage.custom-fields.all",
+      "displayName": "Custom Fields module - all permissions",
+      "description": "Entire set of permissions needed to use the custom fields module",
+      "subPermissions": [
+        "inventory-storage.custom-fields.collection.get",
+        "inventory-storage.custom-fields.collection.put",
+        "inventory-storage.custom-fields.item.post",
+        "inventory-storage.custom-fields.item.get",
+        "inventory-storage.custom-fields.item.put",
+        "inventory-storage.custom-fields.item.delete",
+        "inventory-storage.custom-fields.item.stats.get",
+        "inventory-storage.custom-fields.item.option.stats.get"
+      ],
+      "visible": false
     },
     {
       "permissionName": "inventory-storage.instances.preceding-succeeding-titles.collection.put",
