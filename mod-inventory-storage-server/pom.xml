@@ -66,6 +66,11 @@
       <artifactId>folio-s3-client</artifactId>
       <version>${folio-s3-client.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-custom-fields</artifactId>
+      <version>2.3.1</version>
+    </dependency>
 
     <!-- Test Dependencies  -->
     <dependency>
