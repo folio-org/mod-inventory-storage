@@ -1409,6 +1409,38 @@
           "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
         }
       ]
+    },
+    {
+      "id": "custom-fields",
+      "version": "1.0",
+      "interfaceType" : "multiple",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/custom-fields",
+          "permissionsRequired": ["inventory-storage.custom.fields.collection.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/custom-fields",
+          "permissionsRequired": ["inventory-storage.custom.fields.item.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/custom-fields/{id}",
+          "permissionsRequired": ["inventory-storage.custom.fields.item.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/custom-fields/{id}",
+          "permissionsRequired": ["inventory-storage.custom.fields.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/custom-fields/{id}",
+          "permissionsRequired": ["inventory-storage.custom.fields.item.delete"]
+        }
+      ]
     }
   ],
   "optional": [
