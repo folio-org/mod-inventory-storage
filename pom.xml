@@ -275,6 +275,11 @@
       <version>${system-stubs-junit4.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-custom-fields</artifactId>
+      <version>2.3.1</version>
+    </dependency>
   </dependencies>
 
   <build>
