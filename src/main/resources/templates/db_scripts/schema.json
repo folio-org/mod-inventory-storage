@@ -6,6 +6,11 @@
       "fromModuleVersion": "1.0"
     },
     {
+      "run": "after",
+      "snippetPath": "create_custom_fields_indexes.sql",
+      "fromModuleVersion": "mod-inventory-storage-29.0.12"
+    },
+    {
       "tableName": "authority",
       "mode": "delete",
       "withMetadata": true,
