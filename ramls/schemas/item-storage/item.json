@@ -309,6 +309,11 @@
       "type": "object",
       "description": "Information about when an item was last scanned in the Inventory app.",
       "$ref": "itemLastCheckIn.json"
+    },
+    "customFields": {
+      "description": "Object that contains custom fields",
+      "type": "object",
+      "additionalProperties": true
     }
   },
   "additionalProperties": false,
