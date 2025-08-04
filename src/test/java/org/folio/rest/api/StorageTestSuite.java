@@ -21,6 +21,7 @@ import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.IterationJobRepositoryTest;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
@@ -59,6 +60,7 @@ import org.junit.runners.Suite;
   ItemShelvingOrderMigrationServiceApiTest.class,
   ItemStorageTest.class,
   IterationJobRunnerTest.class,
+  IterationJobRepositoryTest.class,
   LegacyItemEffectiveLocationMigrationScriptTest.class,
   NotificationSendingErrorRepositoryTest.class,
   OaiPmhViewTest.class,
