@@ -4,9 +4,9 @@ import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Map;
 import java.util.function.UnaryOperator;
-import io.vertx.core.Future;
 import org.folio.rest.jaxrs.model.IterationJob;
 
 public class IterationJobRepository extends AbstractRepository<IterationJob> {
