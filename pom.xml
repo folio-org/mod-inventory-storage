@@ -23,6 +23,7 @@
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.3</log4j.version>
     <folio-s3-client.version>2.4.0-SNAPSHOT</folio-s3-client.version>
+    <folio-custom-fields.version>3.0.0-SNAPSHOT</folio-custom-fields.version>
 
     <okapi-testing.version>6.2.3</okapi-testing.version>
     <junit.version>5.12.2</junit.version>
@@ -278,7 +279,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-custom-fields</artifactId>
-      <version>2.3.1</version>
+      <version>${folio-custom-fields.version}</version>
     </dependency>
   </dependencies>
 

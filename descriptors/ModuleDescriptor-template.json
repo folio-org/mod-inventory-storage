@@ -1412,7 +1412,7 @@
     },
     {
       "id": "custom-fields",
-      "version": "1.0",
+      "version": "3.0",
       "interfaceType" : "multiple",
       "handlers": [
         {
@@ -1447,12 +1447,13 @@
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/custom-fields/stats/{id}",
-          "permissionRequired": ["inventory-storage.custom-fields.item.stats.get"]
+          "pathPattern": "/custom-fields/{id}/stats",
+          "permissionsRequired": ["inventory-storage.custom-fields.item.stats.get"]
         },
         {
           "methods": ["GET"],
-          "pathPattern": "custom-fields/option/stats/"
+          "pathPattern": "/custom-fields/{id}/options/{optId}/stats",
+          "permissionsRequired": ["inventory-storage.custom-fields.item.option.stats.get"]
         }
       ]
     }
