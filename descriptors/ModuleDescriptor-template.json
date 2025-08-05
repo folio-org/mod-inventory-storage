@@ -1464,11 +1464,12 @@
         {
           "methods": ["GET"],
           "pathPattern": "/custom-fields/stats/{id}",
-          "permissionRequired": ["inventory-storage.custom-fields.item.stats.get"]
+          "permissionsRequired": ["inventory-storage.custom-fields.item.stats.get"]
         },
         {
           "methods": ["GET"],
-          "pathPattern": "custom-fields/option/stats/"
+          "pathPattern": "custom-fields/option/stats/",
+          "permissionsRequired": ["inventory-storage.custom-fields.item.option.stats.get"]
         }
       ]
     }
