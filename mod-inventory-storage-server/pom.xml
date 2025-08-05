@@ -69,7 +69,7 @@
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-custom-fields</artifactId>
-      <version>2.3.1</version>
+      <version>${folio-custom-fields.version}</version>
     </dependency>
 
     <!-- Test Dependencies  -->
