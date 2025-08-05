@@ -36,6 +36,7 @@
     <log4j.version>2.25.3</log4j.version>
     <folio-s3-client.version>3.0.0-SNAPSHOT</folio-s3-client.version>
     <jackson.version>2.21.1</jackson.version>
+    <folio-custom-fields.version>3.0.0-SNAPSHOT</folio-custom-fields.version>
 
     <!-- Test dependency versions -->
     <okapi-testing.version>7.0.2</okapi-testing.version>
