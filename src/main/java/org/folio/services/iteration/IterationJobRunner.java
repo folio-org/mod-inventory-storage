@@ -134,7 +134,7 @@ public class IterationJobRunner {
     }
 
     return jobRepository
-      .fetchAndUpdate(context.getJobId(), job -> job.withMessagesPublished(records.intValue()))
+      .fetchAndUpdateIterationJob(context.getJobId(), job -> job.withMessagesPublished(records.intValue()))
       .map(job -> {
         if (job.getJobStatus() == CANCELLATION_PENDING) {
           throw new IllegalStateException("The job has been cancelled");
