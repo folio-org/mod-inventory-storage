@@ -114,7 +114,8 @@ public abstract class AbstractRepository<T> {
     return convertToPsqlStandard(postgresClient.getTenantId()) + "." + this.tableName;
   }
 
-  public CQLWrapper getFetchCqlWrapper(String genericCql, int offset, int limit, String totalRecords, String specificCql)
+  public CQLWrapper getFetchCqlWrapper(String genericCql, int offset, int limit, String totalRecords,
+                                       String specificCql)
     throws FieldException {
     var field = new CQL2PgJSON(tableName + ".jsonb");
     if (StringUtils.isBlank(genericCql)) {

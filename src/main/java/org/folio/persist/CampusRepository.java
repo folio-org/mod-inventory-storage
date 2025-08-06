@@ -4,8 +4,8 @@ import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
-import java.util.Map;
 import io.vertx.core.Future;
+import java.util.Map;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.persist.interfaces.Results;
