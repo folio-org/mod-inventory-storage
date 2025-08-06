@@ -5,11 +5,21 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
 import java.util.Map;
+import io.vertx.core.Future;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Loccamp;
+import org.folio.rest.persist.interfaces.Results;
 
 public class CampusRepository extends AbstractRepository<Loccamp> {
 
   public CampusRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), CAMPUS_TABLE, Loccamp.class);
+  }
+
+  public Future<Results<Loccamp>> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                            boolean includeShadow) throws FieldException {
+    var cqlForIsShadowField = "isShadow=" + includeShadow;
+    var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
+    return postgresClient.get(CAMPUS_TABLE, recordType, cqlWrapper, true);
   }
 }

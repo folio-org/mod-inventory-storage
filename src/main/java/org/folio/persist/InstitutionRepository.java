@@ -5,7 +5,10 @@ import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TAB
 
 import io.vertx.core.Context;
 import java.util.Map;
+import io.vertx.core.Future;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Locinst;
+import org.folio.rest.persist.interfaces.Results;
 
 public class InstitutionRepository extends AbstractRepository<Locinst> {
 
@@ -13,5 +16,12 @@ public class InstitutionRepository extends AbstractRepository<Locinst> {
                                Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), INSTITUTION_TABLE,
       Locinst.class);
+  }
+
+  public Future<Results<Locinst>> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                             boolean includeShadow) throws FieldException {
+    var cqlForIsShadowField = "isShadow=" + includeShadow;
+    var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
+    return postgresClient.get(INSTITUTION_TABLE, recordType, cqlWrapper, true);
   }
 }
