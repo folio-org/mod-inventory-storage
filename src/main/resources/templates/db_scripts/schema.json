@@ -1280,7 +1280,17 @@
     },
     {
       "run": "after",
-      "snippetPath": "populateIsShadowIfNotSetForExistingLocationUnits.sql",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationInstitution.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationCampus.sql",
+      "fromModuleVersion": "29.1.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationLibrary.sql",
       "fromModuleVersion": "29.1.0"
     }
   ]
