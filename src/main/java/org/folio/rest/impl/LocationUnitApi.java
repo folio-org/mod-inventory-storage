@@ -23,12 +23,12 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsInstitutions(String query, String totalRecords, int offset, int limit,
-                                           Map<String, String> okapiHeaders,
+  public void getLocationUnitsInstitutions(boolean includeShadow, String query, String totalRecords, int offset,
+                                           int limit, Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
     new InstitutionService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit)
+      .getByQuery(query, offset, limit, totalRecords, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -90,13 +90,13 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsCampuses(String query, String totalRecords, int offset, int limit,
+  public void getLocationUnitsCampuses(boolean includeShadow, String query, String totalRecords, int offset, int limit,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
 
     new CampusService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit)
+      .getByQuery(query, offset, limit, totalRecords, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -157,12 +157,12 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void getLocationUnitsLibraries(String query, String totalRecords, int offset, int limit,
+  public void getLocationUnitsLibraries(boolean includeShadow, String query, String totalRecords, int offset, int limit,
                                         Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
     new LibraryService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit)
+      .getByQuery(query, offset, limit, totalRecords, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }

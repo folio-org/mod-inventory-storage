@@ -4,9 +4,11 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 
 import io.vertx.core.Context;
+import io.vertx.core.Future;
 import java.util.Map;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.jaxrs.model.Loclib;
-
+import org.folio.rest.persist.interfaces.Results;
 
 public class LibraryRepository extends AbstractRepository<Loclib> {
 
@@ -14,4 +16,11 @@ public class LibraryRepository extends AbstractRepository<Loclib> {
     super(postgresClient(context, okapiHeaders), LIBRARY_TABLE, Loclib.class);
   }
 
+
+  public Future<Results<Loclib>> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                            boolean includeShadow) throws FieldException {
+    var cqlForIsShadowField = "isShadow=" + includeShadow;
+    var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
+    return postgresClient.get(LIBRARY_TABLE, recordType, cqlWrapper, true);
+  }
 }

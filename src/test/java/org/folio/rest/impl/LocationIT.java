@@ -163,7 +163,7 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
             .andThen(ctx.succeeding(response -> ctx.verify(() -> {
               var locationsCollection = response.bodyAsClass(Locations.class);
               assertThat(locationsCollection)
-                .as("verify collection for query param and value: includeShadowLocations=true")
+                .as("verify collection for query param and value: includeShadowLocations=" + param)
                 .isNotNull()
                 .hasFieldOrPropertyWithValue("totalRecords", 1)
                 .extracting(Locations::getLocations).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
@@ -171,8 +171,8 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
 
               var collectionRecord = locationsCollection.getLocations().getFirst();
               verifyRecordFields(collectionRecord, locationsByQueryParam.get(param),
-                List.of(Location::getName, Location::getIsActive),
-                "verify collection's record for query param: ?includeShadowLocations=true");
+                List.of(Location::getName, Location::getIsShadow),
+                "verify collection's record for query param: ?includeShadowLocations=" + param);
             })));
           futures.add(responseFuture);
         }

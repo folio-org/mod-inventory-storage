@@ -42,6 +42,12 @@ resourceTypes:
         pageable
       ]
       description: Return a list of institutions
+      queryParameters:
+        includeShadow:
+          description: Whether to include shadow institutions in the response or not.
+          type: boolean
+          required: false
+          default: false
     post:
       description: Create a new institution
       is: [validate]
@@ -77,6 +83,12 @@ resourceTypes:
         pageable
       ]
       description: Return a list of campuses
+      queryParameters:
+        includeShadow:
+          description: Whether to include shadow campuses in the response or not.
+          type: boolean
+          required: false
+          default: false
     post:
       description: Create a new campus
       is: [validate]
@@ -112,6 +124,12 @@ resourceTypes:
         pageable
       ]
       description: Return a list of libraries
+      queryParameters:
+        includeShadow:
+          description: Whether to include shadow libraries in the response or not.
+          type: boolean
+          required: false
+          default: false
     post:
       description: Create a new library
       is: [validate]

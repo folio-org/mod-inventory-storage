@@ -10,17 +10,19 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.Map;
 import java.util.function.Function;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.persist.LibraryRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Loclibs;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsLibrariesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsLibrariesByIdResponse;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.LibraryDomainEventPublisher;
 
 public class LibraryService {
@@ -41,9 +43,20 @@ public class LibraryService {
       new LibraryDomainEventPublisher(context, okapiHeaders);
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(LIBRARY_TABLE, Loclib.class, Loclibs.class, cql, offset,
-      limit, okapiHeaders, context, GetLocationUnitsLibrariesResponse.class);
+  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords, boolean includeShadow) {
+    try {
+      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
+        .map(results -> {
+          var collection = new Loclibs();
+          collection.setLoclibs(results.getResults());
+          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
+          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
+        });
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> getById(String id) {

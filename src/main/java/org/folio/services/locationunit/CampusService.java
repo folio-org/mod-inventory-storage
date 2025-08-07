@@ -11,17 +11,19 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.Map;
 import java.util.function.Function;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.persist.CampusRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Loccamp;
 import org.folio.rest.jaxrs.model.Loccamps;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsCampusesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsCampusesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsCampusesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsCampusesByIdResponse;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.CampusDomainEventPublisher;
 
 public class CampusService {
@@ -40,10 +42,20 @@ public class CampusService {
     this.domainEventService = new CampusDomainEventPublisher(context, okapiHeaders);
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(CAMPUS_TABLE, Loccamp.class, Loccamps.class,
-      cql, offset, limit, okapiHeaders, context,
-      GetLocationUnitsCampusesResponse.class);
+  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords, boolean includeShadow) {
+    try {
+      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
+        .map(results -> {
+          var collection = new Loccamps();
+          collection.setLoccamps(results.getResults());
+          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
+          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
+        });
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> getById(String id) {
