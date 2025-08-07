@@ -1281,17 +1281,17 @@
     {
       "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocationInstitution.sql",
-      "fromModuleVersion": "29.1.0"
+      "fromModuleVersion": "30.0.0"
     },
     {
       "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocationCampus.sql",
-      "fromModuleVersion": "29.1.0"
+      "fromModuleVersion": "30.0.0"
     },
     {
       "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocationLibrary.sql",
-      "fromModuleVersion": "29.1.0"
+      "fromModuleVersion": "30.0.0"
     }
   ]
 }
