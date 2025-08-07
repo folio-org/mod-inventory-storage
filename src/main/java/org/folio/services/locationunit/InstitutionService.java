@@ -11,18 +11,20 @@ import io.vertx.sqlclient.RowSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.extern.log4j.Log4j2;
 import org.folio.persist.InstitutionRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Locinst;
 import org.folio.rest.jaxrs.model.Locinsts;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.InstitutionDomainEventPublisher;
 
 @Log4j2
@@ -46,10 +48,20 @@ public class InstitutionService {
       new InstitutionDomainEventPublisher(vertxContext, okapiHeaders);
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return PgUtil.get(INSTITUTION_TABLE, Locinst.class, Locinsts.class, cql,
-      offset, limit, okapiHeaders, vertxContext,
-      GetLocationUnitsInstitutionsResponse.class);
+  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords, boolean includeShadow) {
+    try {
+      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
+        .map(results -> {
+          var collection = new Locinsts();
+          collection.setLocinsts(results.getResults());
+          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
+          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
+        });
+    } catch (CQLQueryValidationException e) {
+      return Future.failedFuture(new BadRequestException(e.getMessage()));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> getById(String id) {

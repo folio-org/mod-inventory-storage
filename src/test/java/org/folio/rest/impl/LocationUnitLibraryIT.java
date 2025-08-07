@@ -4,20 +4,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loccamp;
@@ -120,6 +125,49 @@ class LocationUnitLibraryIT
         rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
       .onFailure(ctx::failNow)
       .onComplete(event -> ctx.completeNow());
+  }
+
+  @Test
+  void getCollection_shouldReturnRecordCollectionBasedOnIncludeShadowQueryParam(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    var nonShadowLibrary = sampleRecord();
+    var shadowLibrary = sampleRecord()
+      .withIsShadow(true)
+      .withName("test-shadow-library")
+      .withCode("shadow");
+    var libraryByQueryParam = Map.of(false, nonShadowLibrary, true, shadowLibrary);
+
+    Future.all(
+        postgresClient.save(referenceTable(), nonShadowLibrary),
+        postgresClient.save(referenceTable(), shadowLibrary)
+      )
+      .compose(s -> {
+        List<Future<TestResponse>> futures = new ArrayList<>();
+        for (boolean param : libraryByQueryParam.keySet()) {
+          var responseFuture = doGet(client, resourceUrl() + "?includeShadow=" + param)
+            .onComplete(verifyStatus(ctx, HTTP_OK))
+            .andThen(ctx.succeeding(response -> ctx.verify(() -> {
+              var collectionUnits = response.bodyAsClass(Loclibs.class);
+              assertThat(collectionUnits)
+                .as("verify collection for query param and value: includeShadow=" + param)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("totalRecords", 1)
+                .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+                .hasSize(1);
+
+              var collectionRecord = collectionUnits.getLoclibs().getFirst();
+              verifyRecordFields(collectionRecord, libraryByQueryParam.get(param),
+                List.of(Loclib::getName, Loclib::getIsShadow),
+                "verify collection's record for query param: ?includeShadow=" + param);
+            })));
+          futures.add(responseFuture);
+        }
+        return Future.all(futures);
+      })
+      .onFailure(ctx::failNow)
+      .onSuccess(event -> ctx.completeNow());
   }
 
   @Test

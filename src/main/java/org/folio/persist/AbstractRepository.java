@@ -17,9 +17,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.interfaces.Results;
 
 public abstract class AbstractRepository<T> {
@@ -108,5 +112,18 @@ public abstract class AbstractRepository<T> {
 
   public String getFullTableName() {
     return convertToPsqlStandard(postgresClient.getTenantId()) + "." + this.tableName;
+  }
+
+  public CQLWrapper getFetchCqlWrapper(String genericCql, int offset, int limit, String totalRecords,
+                                       String specificCql)
+    throws FieldException {
+    var field = new CQL2PgJSON(tableName + ".jsonb");
+    if (StringUtils.isBlank(genericCql)) {
+      return new CQLWrapper(field, specificCql, limit, offset, totalRecords);
+    }
+
+    var cqlWrapper = new CQLWrapper(field, genericCql, limit, offset, totalRecords);
+    var cqlWrapperForShadowLocations = new CQLWrapper(field, specificCql);
+    return cqlWrapper.addWrapper(cqlWrapperForShadowLocations);
   }
 }
