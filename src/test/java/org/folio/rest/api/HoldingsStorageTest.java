@@ -3028,16 +3028,27 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdWithUpsertTrue() {
+  public void canPostSynchronousBatchWithExistingIdWithUpsertTrueAndItemUpdate()
+    throws ExecutionException, InterruptedException, TimeoutException {
     final String existingHrId = UUID.randomUUID().toString();
     final JsonArray holdingsArray1 = threeHoldings();
     final JsonArray holdingsArray2 = threeHoldings();
 
     holdingsArray1.getJsonObject(1).put("id", existingHrId);
-    holdingsArray2.getJsonObject(1).put("id", existingHrId);
+    var updatedHolding = holdingsArray1.getJsonObject(1).copy()
+      .put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    holdingsArray2.set(1, updatedHolding);
 
     final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
     final JsonObject holdingsBeforeUpdate = getById(existingHrId).getJson();
+
+    final JsonObject itemForExistingHolding = create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(UUID.fromString(existingHrId))
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create())
+      .getJson();
+
     final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
 
     assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
@@ -3054,6 +3065,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsMessageChecks.updatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate,
       mockServer.baseUrl());
+
+    JsonObject expectedUpdatedItem = itemForExistingHolding.copy()
+      .put("_version", 2)
+      .put("effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+
+    itemMessageChecks.updatedMessagePublished(itemForExistingHolding, expectedUpdatedItem,
+      holdingsBeforeUpdate.getString("instanceId"));
   }
 
   @Test
