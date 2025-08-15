@@ -273,6 +273,14 @@ public class ItemService {
     return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
   }
 
+  public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,
+                                                 org.folio.services.ItemEffectiveValuesService effectiveValuesService) {
+    effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
+    if (isItemFieldsAffected(holdingsRecord, item)) {
+      populateMetadata(item, holdingsRecord.getMetadata());
+    }
+  }
+
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
     return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
            || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
@@ -290,10 +298,7 @@ public class ItemService {
     final Promise<RowSet<Row>> allItemsUpdated = promise();
     final var batchFactories = items.stream()
       .map(item -> {
-        effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
-        if (isItemFieldsAffected(holdingsRecord, item)) {
-          populateMetadata(item, holdingsRecord.getMetadata());
-        }
+        populateItemFromHoldings(item, holdingsRecord, effectiveValuesService);
         return item;
       })
       .map(this::updateSingleItemBatchFactory0)

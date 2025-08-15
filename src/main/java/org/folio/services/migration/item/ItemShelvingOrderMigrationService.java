@@ -52,7 +52,7 @@ public class ItemShelvingOrderMigrationService extends AsyncBaseMigrationService
       .map(EffectiveCallNumberComponentsUtil::calculateAndSetEffectiveShelvingOrder)
       .toList();
 
-    return itemRepository.updateBatch(items, connection).map(notUsed -> items.size());
+    return itemRepository.upsertBatch(items, connection).map(notUsed -> items.size());
   }
 
   protected String selectSql() {
