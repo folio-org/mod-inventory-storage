@@ -363,11 +363,19 @@ public class HoldingsService {
   }
 
   private String buildUpsertQuery(String holdingsTableName) {
-    return "upserted AS ("
-      + "  INSERT INTO " + holdingsTableName + " (id, jsonb)"
-      + "  SELECT id, data FROM upsert_data"
-      + "  ON CONFLICT (id) DO UPDATE SET jsonb = EXCLUDED.jsonb"
+    return "updated AS ("
+      + "  UPDATE " + holdingsTableName + " SET jsonb = upsert_data.data "
+      + "  FROM upsert_data WHERE " + holdingsTableName + ".id = upsert_data.id "
+      + "  RETURNING " + holdingsTableName + ".id"
+      + "), "
+      + "inserted AS ("
+      + "  INSERT INTO " + holdingsTableName + " (id, jsonb) "
+      + "  SELECT id, data FROM upsert_data "
+      + "  WHERE id NOT IN (SELECT id FROM updated) "
       + "  RETURNING id"
+      + "), "
+      + "upserted AS ("
+      + "  SELECT id FROM updated UNION ALL SELECT id FROM inserted"
       + "), ";
   }
 
@@ -403,7 +411,7 @@ public class HoldingsService {
                                          Map<String, HoldingsRecord> oldHoldingsMap) {
     if (!"null".equals(oldHoldingsContent) && !oldHoldingsMap.containsKey(id)) {
       try {
-        var oldHolding = org.folio.dbschema.ObjectMapperTool.readValue(oldHoldingsContent, HoldingsRecord.class);
+        var oldHolding = ObjectMapperTool.readValue(oldHoldingsContent, HoldingsRecord.class);
         oldHoldingsMap.put(id, oldHolding);
       } catch (Exception e) {
         log.warn("Failed to parse old holdings record content for id: {}", id, e);
@@ -415,7 +423,7 @@ public class HoldingsService {
                                      Map<String, List<Item>> oldItemsMap) {
     if (oldItemContent != null) {
       try {
-        var oldItem = org.folio.dbschema.ObjectMapperTool.readValue(oldItemContent, Item.class);
+        var oldItem = ObjectMapperTool.readValue(oldItemContent, Item.class);
         oldItemsMap.computeIfAbsent(id, k -> new ArrayList<>()).add(oldItem);
       } catch (Exception e) {
         log.warn("Failed to parse old item record content for holdings {}", id, e);
@@ -445,13 +453,13 @@ public class HoldingsService {
 
       if (newHolding != null) {
         // Deep copy items for event publishing
-        var itemsCopy = (List<Item>) deepCopy(items, Item.class);
-        itemsBeforeUpdate.put(holdingsId, itemsCopy);
 
         // Only update items if holdings actually changed
         try {
           var holdingsChanged = oldHolding == null || !equalsIgnoringMetadata(oldHolding, newHolding);
           if (holdingsChanged) {
+            var itemsCopy = (List<Item>) deepCopy(items, Item.class);
+            itemsBeforeUpdate.put(holdingsId, itemsCopy);
             for (var item : items) {
               itemService.populateItemFromHoldings(item, newHolding, effectiveValuesService);
               allItemsToUpdate.add(item);

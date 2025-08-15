@@ -3028,20 +3028,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdWithUpsertTrueAndItemUpdate()
+  public void canPostSynchronousBatchWithExistingIdWithUpsertTrueMultipleTimesAndItemUpdate()
     throws ExecutionException, InterruptedException, TimeoutException {
     final String existingHrId = UUID.randomUUID().toString();
     final JsonArray holdingsArray1 = threeHoldings();
     final JsonArray holdingsArray2 = threeHoldings();
 
     holdingsArray1.getJsonObject(1).put("id", existingHrId);
-    var updatedHolding = holdingsArray1.getJsonObject(1).copy()
-      .put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    holdingsArray2.set(1, updatedHolding);
 
+    //create 3 holdings
     final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
-    final JsonObject holdingsBeforeUpdate = getById(existingHrId).getJson();
+    assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
 
+    final JsonObject createdHolding = getById(existingHrId).getJson();
+    holdingsArray2.set(1, createdHolding);
+
+    //create item for existing holding
     final JsonObject itemForExistingHolding = create(itemsStorageUrl(""), new ItemRequestBuilder()
       .forHolding(UUID.fromString(existingHrId))
       .withPermanentLoanType(canCirculateLoanTypeId)
@@ -3049,11 +3051,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .create())
       .getJson();
 
+    //update 1 holding, create 2 new holdings. Item is not updated since no changes to updated holding
     final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
-
-    assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
     assertThat(secondResponse, statusCodeIs(HTTP_CREATED));
+    var updatedHolding = createdHolding.copy()
+      .put("_version", 2);
+    holdingsMessageChecks.updatedMessagePublished(createdHolding, updatedHolding, mockServer.baseUrl());
 
+    //verify all holdings create messages
     Stream.concat(holdingsArray1.stream(), holdingsArray2.stream())
       .map(json -> ((JsonObject) json).getString("id"))
       .filter(id -> !id.equals(existingHrId))
@@ -3061,17 +3066,20 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .map(Response::getJson)
       .forEach(holding -> holdingsMessageChecks.createdMessagePublished(holding, TENANT_ID, mockServer.baseUrl()));
 
-    var holdingsAfterUpdate = getById(existingHrId).getJson();
+    //update 1 holding with changed location
+    var holdingsArray3 = new JsonArray().add(
+      updatedHolding.copy().put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString()));
+    final Response thirdResponse = postSynchronousBatch("?upsert=true", holdingsArray3);
+    assertThat(thirdResponse, statusCodeIs(HTTP_CREATED));
+    var updatedHolding2 = getById(existingHrId).getJson();
+    holdingsMessageChecks.updatedMessagePublished(updatedHolding, updatedHolding2, mockServer.baseUrl());
 
-    holdingsMessageChecks.updatedMessagePublished(holdingsBeforeUpdate, holdingsAfterUpdate,
-      mockServer.baseUrl());
-
+    //Verify item is updated since holding's effective location is changed
     JsonObject expectedUpdatedItem = itemForExistingHolding.copy()
       .put("_version", 2)
       .put("effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-
     itemMessageChecks.updatedMessagePublished(itemForExistingHolding, expectedUpdatedItem,
-      holdingsBeforeUpdate.getString("instanceId"));
+      createdHolding.getString("instanceId"));
   }
 
   @Test
