@@ -27,10 +27,31 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
+
 @RunWith(JUnitParamsRunner.class)
-public class CustomFieldsApiTest extends TestBase {
+public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   private final UUID userId = UUID.randomUUID();
+  private final JsonObject meta = new JsonObject()
+      .put("creation_date", "2016-11-05T07:23")
+      .put("last_login_date", "");
+
+  private final JsonObject personal = new JsonObject()
+      .put("lastName", "Handey")
+      .put("firstName", "Jack")
+      .put("preferredFirstName", "Jackie")
+      .put("email", "jhandey@biglibrary.org")
+      .put("phone", "2125551212");
+
+  private final JsonObject user = new JsonObject()
+      .put("username", "jhandey")
+      .put("id", userId)
+      .put("active", true)
+      .put("type", "patron")
+      .put("patronGroup", "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
+      .put("meta", meta)
+      .put("personal", personal);
 
   private final List<JsonObject> simpleItems = List
       .of(simpleItem(), simpleItem(), simpleItem());
@@ -97,10 +118,14 @@ public class CustomFieldsApiTest extends TestBase {
 
   private Response saveCustomFieldAndExpectText(CustomField customFieldToCreate) {
     var createCompleted = new CompletableFuture<Response>();
+    String usersUrl = "http://localhost:" + mockServer.port();
+    Map<String, String> headers = Map
+        .of(XOkapiHeaders.USER_ID, userId.toString(), XOkapiHeaders.URL, usersUrl,
+            XOkapiHeaders.URL_TO, usersUrl);
     getClient().post(
         customFieldsUrl(""),
         JsonObject.mapFrom(customFieldToCreate),
-        Map.of(XOkapiHeaders.USER_ID, userId.toString()),
+        headers,
         TENANT_ID,
         ResponseHandler.any(createCompleted));
     return get(createCompleted);
@@ -127,6 +152,10 @@ public class CustomFieldsApiTest extends TestBase {
   public void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     removeAllEvents();
+    // folio-custom-field depends on UserService information for saving custom
+    // fields
+    WireMock.stubFor(WireMock.get("/users/" + userId)
+        .willReturn(WireMock.okJson(user.encode())));
   }
 
   @After
@@ -140,8 +169,6 @@ public class CustomFieldsApiTest extends TestBase {
     // given
     // Response response2 = saveItemAndExpectText(simpleItems.get(0));
     Response response = saveCustomFieldAndExpectText(customFields.get(0));
-    // unauthorized, create user or mock UserService.getUserInfo, mocking did not
-    // work
     // Response response = getCustomFieldAndExpectText();
     // Response response2 = saveItemAndExpectText(simpleItems.get(0));
     saveCustomFieldAndExpectText(customFields.get(1));
