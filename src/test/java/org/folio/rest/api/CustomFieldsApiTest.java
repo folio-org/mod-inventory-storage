@@ -20,6 +20,7 @@ import org.folio.rest.jaxrs.model.CustomField.Type;
 import org.folio.rest.jaxrs.model.SelectField;
 import org.folio.rest.jaxrs.model.SelectFieldOption;
 import org.folio.rest.jaxrs.model.SelectFieldOptions;
+import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
@@ -103,9 +104,8 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return new JsonObject()
         .put("id", UUID.randomUUID().toString())
         .put("status", new JsonObject().put("name", "Available"))
-        .put("holdingsRecordId", UUID.randomUUID().toString())
-        .put("materialTypeId", UUID.randomUUID().toString())
-        .put("permanentLoanTypeId", UUID.randomUUID().toString());
+        .put("materialTypeId", journalMaterialTypeID)
+        .put("permanentLoanTypeId", canCirculateLoanTypeId);
   }
 
   private JsonObject itemAddCustomFields(JsonObject itemToCreate, JsonObject customFields) {
@@ -131,21 +131,15 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return get(createCompleted);
   }
 
-  // private Response getCustomFieldAndExpectText() {
-  // var createCompleted = new CompletableFuture<Response>();
-  // getClient().get(customFieldsUrl(""), TENANT_ID,
-  // ResponseHandler.any(createCompleted));
-  // return get(createCompleted);
-  // }
-
-  private Response saveItemAndExpectText(JsonObject itemToCreate) {
+  private Response getCustomFieldAndExpectText() {
     var createCompleted = new CompletableFuture<Response>();
-    getClient().post(
-        itemsStorageUrl(""),
-        itemToCreate,
-        TENANT_ID,
+    getClient().get(customFieldsUrl(""), TENANT_ID,
         ResponseHandler.any(createCompleted));
     return get(createCompleted);
+  }
+
+  private IndividualResource saveItem(JsonObject itemToCreate) {
+    return itemsClient.create(itemToCreate);
   }
 
   @Before
@@ -167,15 +161,18 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   @Test
   public void testGetCustomFields() {
     // given
-    // Response response2 = saveItemAndExpectText(simpleItems.get(0));
+    UUID holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    IndividualResource item1 = saveItem(simpleItems.get(0).put("holdingsRecordId", holdingId.toString()));
     Response response = saveCustomFieldAndExpectText(customFields.get(0));
-    // Response response = getCustomFieldAndExpectText();
-    // Response response2 = saveItemAndExpectText(simpleItems.get(0));
     saveCustomFieldAndExpectText(customFields.get(1));
     saveCustomFieldAndExpectText(customFields.get(2));
+    Response response3 = getCustomFieldAndExpectText();
     simpleItems.get(0);
     // when
+    // add customfield to item1
     // then
+    // customfield has an entry customfield with reference to the customfield object
+    // and a value
   }
 
   @Test
