@@ -38,7 +38,7 @@ public abstract class AbstractAsyncBaseMigrationService extends AsyncBaseMigrati
       .map(row -> row.getJsonObject("jsonb"))
       .map(json -> json.mapTo(Instance.class))
       .toList();
-    return instanceRepository.updateBatch(instances, connection)
+    return instanceRepository.upsertBatch(instances, connection)
       .map(notUsed -> instances.size());
   }
 
