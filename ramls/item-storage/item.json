@@ -308,7 +308,7 @@
     "customFields": {
       "description": "Object that contains custom fields",
       "type": "object",
-      "additionalProperties": true
+      "$ref": "../common/custom_fields.json"
     }
   },
   "additionalProperties": false,
