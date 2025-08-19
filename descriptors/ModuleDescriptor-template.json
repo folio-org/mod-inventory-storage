@@ -1412,7 +1412,7 @@
     },
     {
       "id": "custom-fields",
-      "version": "1.0",
+      "version": "3.0",
       "interfaceType" : "multiple",
       "handlers": [
         {
