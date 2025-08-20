@@ -7,15 +7,15 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.URL;
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import junitparams.JUnitParamsRunner;
-
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.CustomField.Type;
 import org.folio.rest.support.IndividualResource;
@@ -23,10 +23,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import com.github.tomakehurst.wiremock.client.WireMock;
+import org.junit.Test;
 
 @RunWith(JUnitParamsRunner.class)
 public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
