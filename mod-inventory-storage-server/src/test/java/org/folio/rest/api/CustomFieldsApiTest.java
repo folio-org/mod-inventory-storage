@@ -5,9 +5,9 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,11 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import junitparams.JUnitParamsRunner;
 
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.rest.jaxrs.model.CustomField;
 import org.folio.rest.jaxrs.model.CustomField.Type;
-import org.folio.rest.jaxrs.model.SelectField;
-import org.folio.rest.jaxrs.model.SelectFieldOption;
-import org.folio.rest.jaxrs.model.SelectFieldOptions;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -33,12 +29,43 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 @RunWith(JUnitParamsRunner.class)
 public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
+  private static final String ACTIVE = "active";
+  private static final String CREATION_DATE = "creation_date";
+  private static final String CUSTOM_FIELDS = "customFields";
+  private static final String CUSTOM_FIELDS_URL = "/custom-fields";
+  private static final String EMAIL = "email";
+  private static final String ENTITY_TYPE = "entityType";
+  private static final String FIRST_NAME = "firstName";
+  private static final String HOLDING_RECORD_ID = "holdingsRecordId";
+  private static final String HTTP_LOCALHOST = "http://localhost:";
+  private static final String ID = "id";
+  private static final String ITEM = "item";
+  private static final String LAST_LOGIN_DATE = "last_login_date";
+  private static final String LAST_NAME = "lastName";
+  private static final String MATERIAL_TYPE_ID = "materialTypeId";
+  private static final String META = "meta";
+  private static final String MULTI_SELECT = "multiSelect";
+  private static final String NAME = "name";
+  private static final String OPTIONS = "options";
+  private static final String PATRON_GROUP = "patronGroup";
+  private static final String PERMANENT_LOAN_TYPE_ID = "permanentLoanTypeId";
+  private static final String PERSONAL = "personal";
+  private static final String PHONE = "phone";
+  private static final String PREFERRED_FIRST_NAME = "preferredFirstName";
+  private static final String SELECT_FIELD = "selectField";
+  private static final String STATUS = "status";
+  private static final String TYPE = "type";
+  private static final String USERNAME = "username";
+  private static final String USERS_URL = "/users/";
+  private static final String VALUE = "value";
+  private static final String VALUES = "values";
+
   private final UUID userId = UUID.randomUUID();
   private final JsonObject user = createSimpleUser(userId);
   private UUID holdingId;
   private final List<JsonObject> simpleItems = List
       .of(simpleItem(), simpleItem(), simpleItem());
-  private final List<CustomField> customFields = createCustomFields("item");
+  private final List<JsonObject> customFields = createCustomFields(ITEM);
 
   @Before
   public void beforeEach() {
@@ -46,7 +73,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
     // folio-custom-field depends on UserService information for saving custom
     // fields
-    WireMock.stubFor(WireMock.get("/users/" + userId)
+    WireMock.stubFor(WireMock.get(USERS_URL + userId)
         .willReturn(WireMock.okJson(user.encode())));
     holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
   }
@@ -60,7 +87,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   @Test
   public void testAddCustomFieldsToItem() {
     // given
-    IndividualResource item1 = saveItem(simpleItems.get(0).put("holdingsRecordId", holdingId.toString()));
+    IndividualResource item1 = saveItem(simpleItems.get(0).put(HOLDING_RECORD_ID, holdingId.toString()));
     Response response = saveCustomFieldAndExpectText(customFields.get(0));
     saveCustomFieldAndExpectText(customFields.get(1));
     saveCustomFieldAndExpectText(customFields.get(2));
@@ -108,72 +135,67 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   }
 
-  private List<CustomField> createCustomFields(String entityType) {
-    CustomField textbox = new CustomField()
-        .withId(UUID.randomUUID().toString())
-        .withName("textbox")
-        .withType(Type.TEXTBOX_SHORT)
-        .withEntityType(entityType);
-    CustomField singleselect = new CustomField()
-        .withId(UUID.randomUUID().toString())
-        .withName("singleselect")
-        .withType(Type.SINGLE_SELECT_DROPDOWN)
-        .withSelectField(
-            new SelectField()
-                .withMultiSelect(false)
-                .withOptions(
-                    new SelectFieldOptions()
-                        .withValues(
-                            Arrays.asList(
-                                new SelectFieldOption().withId("opt_0").withValue("opt0"),
-                                new SelectFieldOption().withId("opt_1").withValue("opt1"),
-                                new SelectFieldOption().withId("opt_2").withValue("opt2")))))
-        .withEntityType(entityType);
-    CustomField multiselect = new CustomField()
-        .withId(UUID.randomUUID().toString())
-        .withName("multiselect")
-        .withType(Type.MULTI_SELECT_DROPDOWN)
-        .withSelectField(
-            new SelectField()
-                .withMultiSelect(true)
-                .withOptions(
-                    new SelectFieldOptions()
-                        .withValues(
-                            Arrays.asList(
-                                new SelectFieldOption().withId("opt_0").withValue("opt0"),
-                                new SelectFieldOption().withId("opt_1").withValue("opt1"),
-                                new SelectFieldOption().withId("opt_2").withValue("opt2"),
-                                new SelectFieldOption().withId("opt_3").withValue("opt3")))))
-        .withEntityType(entityType);
+  private List<JsonObject> createCustomFields(String entityType) {
+    JsonObject textbox = new JsonObject()
+        .put(ID, UUID.randomUUID().toString())
+        .put(NAME, "textbox")
+        .put(TYPE, Type.TEXTBOX_SHORT)
+        .put(ENTITY_TYPE, entityType);
 
+    JsonObject singleselect = new JsonObject()
+        .put(ID, UUID.randomUUID().toString())
+        .put(NAME, "singleselect")
+        .put(TYPE, Type.SINGLE_SELECT_DROPDOWN)
+        .put(ENTITY_TYPE, entityType)
+        .put(SELECT_FIELD, new JsonObject()
+            .put(MULTI_SELECT, false)
+            .put(OPTIONS, new JsonObject()
+                .put(VALUES, new JsonArray()
+                    .add(new JsonObject().put(ID, "opt_0").put(VALUE, "opt0"))
+                    .add(new JsonObject().put(ID, "opt_1").put(VALUE, "opt1"))
+                    .add(new JsonObject().put(ID, "opt_2").put(VALUE, "opt2")))));
+
+    JsonObject multiselect = new JsonObject()
+        .put(ID, UUID.randomUUID().toString())
+        .put(NAME, "multiselect")
+        .put(TYPE, Type.MULTI_SELECT_DROPDOWN)
+        .put(ENTITY_TYPE, entityType)
+        .put(SELECT_FIELD, new JsonObject()
+            .put(MULTI_SELECT, true)
+            .put(OPTIONS, new JsonObject()
+                .put(VALUES, new JsonArray()
+                    .add(new JsonObject().put(ID, "opt_0").put(VALUE, "opt0"))
+                    .add(new JsonObject().put(ID, "opt_1").put(VALUE, "opt1"))
+                    .add(new JsonObject().put(ID, "opt_2").put(VALUE, "opt2"))
+                    .add(new JsonObject().put(ID, "opt_3").put(VALUE, "opt3")))));
     return List.of(textbox, singleselect, multiselect);
   }
 
   private JsonObject simpleItem() {
     return new JsonObject()
-        .put("id", UUID.randomUUID().toString())
-        .put("status", new JsonObject().put("name", "Available"))
-        .put("materialTypeId", journalMaterialTypeID)
-        .put("permanentLoanTypeId", canCirculateLoanTypeId);
+        .put(ID, UUID.randomUUID().toString())
+        .put(STATUS, new JsonObject().put(NAME, "Available"))
+        .put(MATERIAL_TYPE_ID, journalMaterialTypeID)
+        .put(PERMANENT_LOAN_TYPE_ID, canCirculateLoanTypeId);
   }
 
   private JsonObject itemAddCustomFields(JsonObject itemToCreate, JsonObject customFields) {
-    return itemToCreate.copy().put("customFields", customFields);
+    return itemToCreate.copy().put(CUSTOM_FIELDS, customFields);
   }
 
-  public static URL customFieldsUrl(String subPath) {
-    return vertxUrl("/custom-fields" + subPath);
+  private static URL customFieldsUrl(String subPath) {
+    return vertxUrl(CUSTOM_FIELDS_URL + subPath);
   }
 
-  private Response saveCustomFieldAndExpectText(CustomField customFieldToCreate) {
+  private Response saveCustomFieldAndExpectText(JsonObject customFieldToCreate) {
     var createCompleted = new CompletableFuture<Response>();
-    String usersUrl = "http://localhost:" + mockServer.port();
+    String usersUrl = HTTP_LOCALHOST + mockServer.port();
     Map<String, String> headers = Map
         .of(XOkapiHeaders.USER_ID, userId.toString(), XOkapiHeaders.URL, usersUrl,
             XOkapiHeaders.URL_TO, usersUrl);
     getClient().post(
         customFieldsUrl(""),
-        JsonObject.mapFrom(customFieldToCreate),
+        customFieldToCreate,
         headers,
         TENANT_ID,
         ResponseHandler.any(createCompleted));
@@ -193,23 +215,23 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   private JsonObject createSimpleUser(UUID newUserId) {
     JsonObject meta = new JsonObject()
-        .put("creation_date", "2016-11-05T07:23")
-        .put("last_login_date", "");
+        .put(CREATION_DATE, "2016-11-05T07:23")
+        .put(LAST_LOGIN_DATE, "");
 
     JsonObject personal = new JsonObject()
-        .put("lastName", "Handey")
-        .put("firstName", "Jack")
-        .put("preferredFirstName", "Jackie")
-        .put("email", "jhandey@biglibrary.org")
-        .put("phone", "2125551212");
+        .put(LAST_NAME, "Handey")
+        .put(FIRST_NAME, "Jack")
+        .put(PREFERRED_FIRST_NAME, "Jackie")
+        .put(EMAIL, "jhandey@biglibrary.org")
+        .put(PHONE, "2125551212");
 
     return new JsonObject()
-        .put("username", "jhandey")
-        .put("id", newUserId)
-        .put("active", true)
-        .put("type", "patron")
-        .put("patronGroup", "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
-        .put("meta", meta)
-        .put("personal", personal);
+        .put(USERNAME, "jhandey")
+        .put(ID, newUserId)
+        .put(ACTIVE, true)
+        .put(TYPE, "patron")
+        .put(PATRON_GROUP, "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
+        .put(META, meta)
+        .put(PERSONAL, personal);
   }
 }
