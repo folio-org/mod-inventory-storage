@@ -4,6 +4,8 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -198,7 +200,9 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         headers,
         TENANT_ID,
         ResponseHandler.any(createCompleted));
-    return get(createCompleted);
+    Response response = get(createCompleted);
+    assertThat(response.getStatusCode(), is(201));
+    return response;
   }
 
   private Response getCustomFieldAndExpectText() {
