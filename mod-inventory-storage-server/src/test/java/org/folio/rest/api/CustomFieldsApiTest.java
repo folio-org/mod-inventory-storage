@@ -1,13 +1,17 @@
 package org.folio.rest.api;
 
+import static io.restassured.RestAssured.given;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.restassured.http.Header;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -19,6 +23,7 @@ import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.CustomField.Type;
+import org.folio.rest.jaxrs.model.CustomFieldStatistic;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -60,6 +65,8 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   private static final String USERS_URL = "/users/";
   private static final String VALUE = "value";
   private static final String VALUES = "values";
+  private static final String CUSTOM_FIELDS_STATS_ENDPOINT = "/{id}/stats";
+  private static final String CUSTOM_FIELDS_OPTIONS_STATS_ENDPOINT = "/custom-fields/{id}/options/{optId}/stats";
 
   private final UUID userId = UUID.randomUUID();
   private final JsonObject user = createSimpleUser(userId);
@@ -86,7 +93,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   }
 
   /*
-   * Create simple items with custom fields.
+   * Create simple items with custom fields and check the statistics count
    */
   @Test
   public void testSaveItemsWithCustomFields() {
@@ -108,7 +115,9 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     saveItem(itemWithCustomField1);
     saveItem(itemWithCustomField2);
     // then
-    // the items should be created.
+    // the items should be created
+    // and statistics should work.
+    assertEquals(3, getCustomFieldStatisticCount(customFields.get(1).getString(ID)));
   }
 
   @Test
@@ -288,5 +297,17 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         .put(PATRON_GROUP, "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
         .put(META, meta)
         .put(PERSONAL, personal);
+  }
+
+  private int getCustomFieldStatisticCount(String customFieldId) {
+    return given()
+        .header(new Header(TENANT, TENANT_ID))
+        .pathParams("id", customFieldId)
+        .get(customFieldsUrl(CUSTOM_FIELDS_STATS_ENDPOINT))
+        .then()
+        .statusCode(200)
+        .extract()
+        .as(CustomFieldStatistic.class)
+        .getCount();
   }
 }
