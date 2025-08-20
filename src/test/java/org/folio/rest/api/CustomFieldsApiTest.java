@@ -84,20 +84,30 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
+  /*
+   * Create simple items with custom fields.
+   */
   @Test
-  public void testAddCustomFieldsToItem() {
+  public void testSaveItemsWithCustomFields() {
     // given
-    IndividualResource item1 = saveItem(simpleItems.get(0).put(HOLDING_RECORD_ID, holdingId.toString()));
-    Response response = saveCustomFieldAndExpectText(customFields.get(0));
-    saveCustomFieldAndExpectText(customFields.get(1));
-    saveCustomFieldAndExpectText(customFields.get(2));
-    Response response3 = getCustomFieldAndExpectText();
-    simpleItems.get(0);
+    // 3 simple items and default custom fields as JsonObjects
+    // (textbox, singleselect, multiselect)
     // when
-    // add customfield to item1
+    // saving the custom fields in the database
+    saveCustomField(customFields.get(0));
+    saveCustomField(customFields.get(1));
+    saveCustomField(customFields.get(2));
+    // adding references to the 3 custom fields and
+    // corresponding values for each of the items
+    JsonObject itemWithCustomField0 = itemAddCustomFields(0);
+    JsonObject itemWithCustomField1 = itemAddCustomFields(1);
+    JsonObject itemWithCustomField2 = itemAddCustomFields(2);
+    // and saving the items with custom field values in the database
+    saveItem(itemWithCustomField0);
+    saveItem(itemWithCustomField1);
+    saveItem(itemWithCustomField2);
     // then
-    // customfield has an entry customfield with reference to the customfield object
-    // and a value
+    // the items should be created.
   }
 
   @Test
