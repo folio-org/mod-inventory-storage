@@ -135,6 +135,18 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   }
 
+  private JsonObject createSelectField(int numberOfValues) {
+    JsonArray values = new JsonArray();
+    for (int i = 0; i < numberOfValues; i++) {
+      values = values.add(new JsonObject().put(ID, "opt_" + i).put(VALUE, "opt" + i));
+    }
+
+    return new JsonObject()
+        .put(MULTI_SELECT, false)
+        .put(OPTIONS, new JsonObject()
+            .put(VALUES, values));
+  }
+
   private List<JsonObject> createCustomFields(String entityType) {
     JsonObject textbox = new JsonObject()
         .put(ID, UUID.randomUUID().toString())
@@ -147,27 +159,14 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         .put(NAME, "singleselect")
         .put(TYPE, Type.SINGLE_SELECT_DROPDOWN)
         .put(ENTITY_TYPE, entityType)
-        .put(SELECT_FIELD, new JsonObject()
-            .put(MULTI_SELECT, false)
-            .put(OPTIONS, new JsonObject()
-                .put(VALUES, new JsonArray()
-                    .add(new JsonObject().put(ID, "opt_0").put(VALUE, "opt0"))
-                    .add(new JsonObject().put(ID, "opt_1").put(VALUE, "opt1"))
-                    .add(new JsonObject().put(ID, "opt_2").put(VALUE, "opt2")))));
+        .put(SELECT_FIELD, createSelectField(3));
 
     JsonObject multiselect = new JsonObject()
         .put(ID, UUID.randomUUID().toString())
         .put(NAME, "multiselect")
         .put(TYPE, Type.MULTI_SELECT_DROPDOWN)
         .put(ENTITY_TYPE, entityType)
-        .put(SELECT_FIELD, new JsonObject()
-            .put(MULTI_SELECT, true)
-            .put(OPTIONS, new JsonObject()
-                .put(VALUES, new JsonArray()
-                    .add(new JsonObject().put(ID, "opt_0").put(VALUE, "opt0"))
-                    .add(new JsonObject().put(ID, "opt_1").put(VALUE, "opt1"))
-                    .add(new JsonObject().put(ID, "opt_2").put(VALUE, "opt2"))
-                    .add(new JsonObject().put(ID, "opt_3").put(VALUE, "opt3")))));
+        .put(SELECT_FIELD, createSelectField(4));
     return List.of(textbox, singleselect, multiselect);
   }
 
