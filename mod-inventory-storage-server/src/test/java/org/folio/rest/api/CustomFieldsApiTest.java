@@ -146,18 +146,34 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   }
 
-  private JsonObject createSelectField(int numberOfValues) {
+  /**
+   * Creates a select field or multiselect.
+   * Adds numberOfValues options to the select.
+   * 
+   * @param numberOfValues number of options added
+   * @param multiselect    flag deciding if result is a select field or a
+   *                       multiselect
+   * @return a select field or multiselect as JsonObject
+   */
+  private JsonObject createSelectField(int numberOfValues, boolean multiselect) {
     JsonArray values = new JsonArray();
     for (int i = 0; i < numberOfValues; i++) {
       values = values.add(new JsonObject().put(ID, "opt_" + i).put(VALUE, "opt" + i));
     }
 
     return new JsonObject()
-        .put(MULTI_SELECT, false)
+        .put(MULTI_SELECT, multiselect)
         .put(OPTIONS, new JsonObject()
             .put(VALUES, values));
   }
 
+  /**
+   * Create a list of custom fields as json objects for the entityType
+   * The list consists of a textbox, a single select and a multi select.
+   * 
+   * @param entityType
+   * @return list of custom fields as json objects
+   */
   private List<JsonObject> createCustomFields(String entityType) {
     JsonObject textbox = new JsonObject()
         .put(ID, UUID.randomUUID().toString())
@@ -170,15 +186,22 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         .put(NAME, "singleselect")
         .put(TYPE, Type.SINGLE_SELECT_DROPDOWN)
         .put(ENTITY_TYPE, entityType)
-        .put(SELECT_FIELD, createSelectField(3));
+        .put(SELECT_FIELD, createSelectField(3, false));
 
     JsonObject multiselect = new JsonObject()
         .put(ID, UUID.randomUUID().toString())
         .put(NAME, "multiselect")
         .put(TYPE, Type.MULTI_SELECT_DROPDOWN)
         .put(ENTITY_TYPE, entityType)
-        .put(SELECT_FIELD, createSelectField(4));
+        .put(SELECT_FIELD, createSelectField(4, true));
     return List.of(textbox, singleselect, multiselect);
+  }
+
+  private JsonObject createCustomFieldValues() {
+    return new JsonObject()
+        .put("textbox", "text1")
+        .put("singleselect", "opt_0")
+        .put("multiselect", new JsonArray().add("opt_1").add("opt_2"));
   }
 
   private JsonObject simpleItem() {
@@ -186,18 +209,39 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         .put(ID, UUID.randomUUID().toString())
         .put(STATUS, new JsonObject().put(NAME, "Available"))
         .put(MATERIAL_TYPE_ID, journalMaterialTypeID)
-        .put(PERMANENT_LOAN_TYPE_ID, canCirculateLoanTypeId);
+        .put(PERMANENT_LOAN_TYPE_ID, canCirculateLoanTypeID);
   }
 
-  private JsonObject itemAddCustomFields(JsonObject itemToCreate, JsonObject customFields) {
-    return itemToCreate.copy().put(CUSTOM_FIELDS, customFields);
+  /**
+   * Add custom field references by name and values to the specified item
+   * by the choosen index in simpleItems.
+   * 
+   * @param itemToCreateIndex index of choosen item from simpleItems
+   * @return a complete json object with custom fields
+   */
+  private JsonObject itemAddCustomFields(int itemToCreateIndex) {
+    return simpleItems
+        .get(itemToCreateIndex)
+        .copy()
+        .put(HOLDING_RECORD_ID, holdingId.toString())
+        .put(CUSTOM_FIELDS, createCustomFieldValues());
   }
 
   private static URL customFieldsUrl(String subPath) {
     return vertxUrl(CUSTOM_FIELDS_URL + subPath);
   }
 
-  private Response saveCustomFieldAndExpectText(JsonObject customFieldToCreate) {
+  /**
+   * Save the customfield with the API.
+   * Assert the customfields got created by checking the status code.
+   * 
+   * Here we also need to add the mock to a user interface because custom fields
+   * still have dependencies on a user
+   * 
+   * @param customFieldToCreate
+   * @return
+   */
+  private Response saveCustomField(JsonObject customFieldToCreate) {
     var createCompleted = new CompletableFuture<Response>();
     String usersUrl = HTTP_LOCALHOST + mockServer.port();
     Map<String, String> headers = Map
@@ -214,13 +258,12 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return response;
   }
 
-  private Response getCustomFieldAndExpectText() {
-    var createCompleted = new CompletableFuture<Response>();
-    getClient().get(customFieldsUrl(""), TENANT_ID,
-        ResponseHandler.any(createCompleted));
-    return get(createCompleted);
-  }
-
+  /**
+   * Asserts the item got created by checking the status code.
+   * 
+   * @param itemToCreate
+   * @return
+   */
   private IndividualResource saveItem(JsonObject itemToCreate) {
     return itemsClient.create(itemToCreate);
   }
