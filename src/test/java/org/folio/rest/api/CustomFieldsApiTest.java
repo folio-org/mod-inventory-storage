@@ -34,30 +34,79 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   private final UUID userId = UUID.randomUUID();
-  private final JsonObject meta = new JsonObject()
-      .put("creation_date", "2016-11-05T07:23")
-      .put("last_login_date", "");
-
-  private final JsonObject personal = new JsonObject()
-      .put("lastName", "Handey")
-      .put("firstName", "Jack")
-      .put("preferredFirstName", "Jackie")
-      .put("email", "jhandey@biglibrary.org")
-      .put("phone", "2125551212");
-
-  private final JsonObject user = new JsonObject()
-      .put("username", "jhandey")
-      .put("id", userId)
-      .put("active", true)
-      .put("type", "patron")
-      .put("patronGroup", "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
-      .put("meta", meta)
-      .put("personal", personal);
-
+  private final JsonObject user = createSimpleUser(userId);
+  private UUID holdingId;
   private final List<JsonObject> simpleItems = List
       .of(simpleItem(), simpleItem(), simpleItem());
-
   private final List<CustomField> customFields = createCustomFields("item");
+
+  @Before
+  public void beforeEach() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    removeAllEvents();
+    // folio-custom-field depends on UserService information for saving custom
+    // fields
+    WireMock.stubFor(WireMock.get("/users/" + userId)
+        .willReturn(WireMock.okJson(user.encode())));
+    holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+  }
+
+  @After
+  public void afterEach() {
+    StorageTestSuite.deleteAll(itemsStorageUrl(""));
+    removeAllEvents();
+  }
+
+  @Test
+  public void testAddCustomFieldsToItem() {
+    // given
+    IndividualResource item1 = saveItem(simpleItems.get(0).put("holdingsRecordId", holdingId.toString()));
+    Response response = saveCustomFieldAndExpectText(customFields.get(0));
+    saveCustomFieldAndExpectText(customFields.get(1));
+    saveCustomFieldAndExpectText(customFields.get(2));
+    Response response3 = getCustomFieldAndExpectText();
+    simpleItems.get(0);
+    // when
+    // add customfield to item1
+    // then
+    // customfield has an entry customfield with reference to the customfield object
+    // and a value
+  }
+
+  @Test
+  public void putCustomFields() {
+
+  }
+
+  @Test
+  public void postCustomFields() {
+
+  }
+
+  @Test
+  public void getCustomFieldById() {
+
+  }
+
+  @Test
+  public void putCustomFieldById() {
+
+  }
+
+  @Test
+  public void deleteCustomFieldById() {
+
+  }
+
+  @Test
+  public void getCustomFieldStatsById() {
+
+  }
+
+  @Test
+  public void getCustomFieldOptionStats() {
+
+  }
 
   private List<CustomField> createCustomFields(String entityType) {
     CustomField textbox = new CustomField()
@@ -142,71 +191,25 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return itemsClient.create(itemToCreate);
   }
 
-  @Before
-  public void beforeEach() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    removeAllEvents();
-    // folio-custom-field depends on UserService information for saving custom
-    // fields
-    WireMock.stubFor(WireMock.get("/users/" + userId)
-        .willReturn(WireMock.okJson(user.encode())));
-  }
+  private JsonObject createSimpleUser(UUID newUserId) {
+    JsonObject meta = new JsonObject()
+        .put("creation_date", "2016-11-05T07:23")
+        .put("last_login_date", "");
 
-  @After
-  public void afterEach() {
-    StorageTestSuite.deleteAll(itemsStorageUrl(""));
-    removeAllEvents();
-  }
+    JsonObject personal = new JsonObject()
+        .put("lastName", "Handey")
+        .put("firstName", "Jack")
+        .put("preferredFirstName", "Jackie")
+        .put("email", "jhandey@biglibrary.org")
+        .put("phone", "2125551212");
 
-  @Test
-  public void testGetCustomFields() {
-    // given
-    UUID holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    IndividualResource item1 = saveItem(simpleItems.get(0).put("holdingsRecordId", holdingId.toString()));
-    Response response = saveCustomFieldAndExpectText(customFields.get(0));
-    saveCustomFieldAndExpectText(customFields.get(1));
-    saveCustomFieldAndExpectText(customFields.get(2));
-    Response response3 = getCustomFieldAndExpectText();
-    simpleItems.get(0);
-    // when
-    // add customfield to item1
-    // then
-    // customfield has an entry customfield with reference to the customfield object
-    // and a value
-  }
-
-  @Test
-  public void putCustomFields() {
-
-  }
-
-  @Test
-  public void postCustomFields() {
-
-  }
-
-  @Test
-  public void getCustomFieldById() {
-
-  }
-
-  @Test
-  public void putCustomFieldById() {
-
-  }
-
-  @Test
-  public void deleteCustomFieldById() {
-
-  }
-
-  @Test
-  public void getCustomFieldStatsById() {
-
-  }
-
-  @Test
-  public void getCustomFieldOptionStats() {
-
+    return new JsonObject()
+        .put("username", "jhandey")
+        .put("id", newUserId)
+        .put("active", true)
+        .put("type", "patron")
+        .put("patronGroup", "4bb563d9-3f9d-4e1e-8d1d-04e75666d68f")
+        .put("meta", meta)
+        .put("personal", personal);
   }
 }
