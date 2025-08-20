@@ -10,6 +10,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.CompletableFuture;
 import java.util.List;
@@ -209,7 +210,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
         TENANT_ID,
         ResponseHandler.any(createCompleted));
     Response response = get(createCompleted);
-    assertThat(response.getStatusCode(), is(201));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     return response;
   }
 
