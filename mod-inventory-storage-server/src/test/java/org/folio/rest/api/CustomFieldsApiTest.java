@@ -16,10 +16,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import junitparams.JUnitParamsRunner;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.CustomField.Type;
@@ -29,8 +29,8 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
@@ -158,7 +158,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   /**
    * Creates a select field or multiselect.
    * Adds numberOfValues options to the select.
-   * 
+   *
    * @param numberOfValues number of options added
    * @param multiselect    flag deciding if result is a select field or a
    *                       multiselect
@@ -167,7 +167,9 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   private JsonObject createSelectField(int numberOfValues, boolean multiselect) {
     JsonArray values = new JsonArray();
     for (int i = 0; i < numberOfValues; i++) {
-      values = values.add(new JsonObject().put(ID, "opt_" + i).put(VALUE, "opt" + i));
+      values.add(new JsonObject()
+          .put(ID, "opt_" + i)
+          .put(VALUE, "opt" + i));
     }
 
     return new JsonObject()
@@ -179,8 +181,8 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   /**
    * Create a list of custom fields as json objects for the entityType
    * The list consists of a textbox, a single select and a multi select.
-   * 
-   * @param entityType
+   *
+   * @param entityType The entity type the custom field is added to
    * @return list of custom fields as json objects
    */
   private List<JsonObject> createCustomFields(String entityType) {
@@ -224,7 +226,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   /**
    * Add custom field references by name and values to the specified item
    * by the choosen index in simpleItems.
-   * 
+   *
    * @param itemToCreateIndex index of choosen item from simpleItems
    * @return a complete json object with custom fields
    */
@@ -243,12 +245,11 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   /**
    * Save the customfield with the API.
    * Assert the customfields got created by checking the status code.
-   * 
    * Here we also need to add the mock to a user interface because custom fields
    * still have dependencies on a user
-   * 
-   * @param customFieldToCreate
-   * @return
+   *
+   * @param customFieldToCreate The JsonObject representing the custom field
+   * @return Response of the creation request
    */
   private Response saveCustomField(JsonObject customFieldToCreate) {
     var createCompleted = new CompletableFuture<Response>();
@@ -269,9 +270,9 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
 
   /**
    * Asserts the item got created by checking the status code.
-   * 
-   * @param itemToCreate
-   * @return
+   *
+   * @param itemToCreate The JsonObject representing the item to create
+   * @return The IndividualResource of the json response of the creation request
    */
   private IndividualResource saveItem(JsonObject itemToCreate) {
     return itemsClient.create(itemToCreate);
