@@ -49,6 +49,7 @@ import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInA
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -2008,6 +2009,224 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(responseItems.size(), is(numOfItemsToCreate));
     assertThat(responseJson.getInteger("totalRecords"), is(numOfItemsToCreate));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_positive() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.remove("hrid");
+    itemsJson.put("barcode", null);
+    itemsJson.put("order", 55);
+
+    // update item via PATCH
+    CompletableFuture<Response> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated
+    CompletableFuture<Response> itemFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(itemFuture));
+    var itemResponse = itemFuture.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertEquals("55", itemResponse.getJson().getValue("order").toString());
+    assertEquals("it00000000001", itemResponse.getJson().getValue("hrid").toString());
+    assertNull(itemResponse.getJson().getValue("barcode"));
+
+    itemMessageChecks.updatedMessagePublished(response.getJson(), getById(itemId).getJson());
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeIfItemsEmpty() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // try to update empty item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray()),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(400));
+    assertTrue(patchResponse.getBody().contains("Expected at least one item to update"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeIfInvalidFieldName() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.put("invalidField", "text");
+
+    // update item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(400));
+    assertTrue(patchResponse.getBody().contains("Invalid item format: Unrecognized field"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeIfNotExistedStatisticalCodeIds() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.put("statisticalCodeIds", new JsonArray().add(randomUUID()));
+
+    // update item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(422));
+    assertTrue(patchResponse.getBody().contains("Cannot set item.statistical_code_id"));
+    assertTrue(patchResponse.getBody().contains("it does not exist in statistical_code.id"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeIfNotExistedHoldingId() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.put("holdingsRecordId", randomUUID());
+
+    // update item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(422));
+    assertTrue(patchResponse.getBody().contains("Cannot set item.holdingsrecordid"));
+    assertTrue(patchResponse.getBody().contains("it does not exist in holdings_record.id."));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeIfNotExistedItemId() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    var notExistedItemId = randomUUID();
+    itemsJson.put("id", notExistedItemId);
+
+    // update item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(404));
+    assertTrue(patchResponse.getBody().contains("Unable to update items. The following item IDs were not found: [%s]"
+      .formatted(notExistedItemId)));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeOptimisticLocking() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.json(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    var notExistedItemId = randomUUID();
+    itemsJson.put("_version", 5);
+
+    // update item via PATCH
+    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(409));
+    assertTrue(patchResponse.getBody().contains("(optimistic locking): Stored _version is 1, _version of request is %s"
+      .formatted(5)));
   }
 
   @Test

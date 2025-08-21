@@ -29,6 +29,7 @@ import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -47,6 +48,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.okapi.common.XOkapiHeaders;
@@ -55,7 +58,9 @@ import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.ItemPatch;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -64,6 +69,7 @@ import org.folio.rest.support.HridManager;
 import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -79,6 +85,7 @@ public class ItemService {
   private static final String INSTANCE_ID_WITH_ITEM_JSON = """
     {"instanceId": "%s",%s
     """;
+  private static final String ITEMS_NOT_FOUND = "Unable to update items. The following item IDs were not found: %s";
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -138,8 +145,36 @@ public class ItemService {
       .map(ResponseHandlerUtil::handleHridError);
   }
 
-  public Future<Response> updateItems(List<Item> items) {
-    return createItems(items, true, true);
+  public Future<Response> updateItems(List<ItemPatch> items) {
+    if (CollectionUtils.isEmpty(items)) {
+      return Future.succeededFuture(
+        ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain("Expected at least one item to update"));
+    }
+
+    List<Item> itemList;
+    try {
+      itemList = OBJECT_MAPPER.convertValue(items, new TypeReference<>() {});
+    } catch (IllegalArgumentException e) {
+      log.error("updateItems:: Failed to convert items", e);
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+        "Invalid item format: " + e.getMessage()));
+    }
+
+    itemList.forEach(item -> validateUuidFormat(item.getStatisticalCodeIds())
+      .compose(v -> refuseLongNotes(item))
+      .compose(v -> StringUtils.isNotEmpty(item.getHoldingsRecordId())
+        ? getItemAndHolding(item.getId(), item.getHoldingsRecordId())
+        : Future.succeededFuture()));
+
+    return buildBatchOperationContext(true, itemList, itemRepository, Item::getId, true)
+      .compose(batchOperation -> {
+        if (CollectionUtils.isNotEmpty(batchOperation.recordsToBeCreated())) {
+          return buildItemsNotFoundResponse(batchOperation);
+        }
+        return postgresClient.withTransaction(conn ->
+            itemRepository.updateItems(conn, items))
+          .onSuccess(domainEventService.publishUpdated(batchOperation));
+      });
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
@@ -394,6 +429,16 @@ public class ItemService {
       }
     }
     return Future.succeededFuture(item);
+  }
+
+  private Future<Response> buildItemsNotFoundResponse(BatchOperationContext<Item> batchOperation) {
+    var idsNotFound = batchOperation.recordsToBeCreated().stream()
+      .map(Item::getId)
+      .toList();
+    var message = ITEMS_NOT_FOUND.formatted(idsNotFound);
+    log.warn("updateItems:: {}", message);
+    return Future.succeededFuture(
+      ItemStorage.PatchItemStorageItemsResponse.respond404WithTextPlain(message));
   }
 
   private static final class PutData {

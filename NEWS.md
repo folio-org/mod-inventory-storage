@@ -3,7 +3,7 @@
 * Constraint item call number type ID to refer to a known type ([MODINVSTOR-987](https://folio-org.atlassian.net/browse/MODINVSTOR-987))
 
 ### New APIs versions
-* Provides `item-storage 11.0`
+* Provides `item-storage 11.1`
 * Provides `item-storage-batch-sync 2.0`
 * Provides `item-storage-batch-sync-unsafe 2.0`
 * Provides `item-storage-dereferenced 1.2`
@@ -35,6 +35,7 @@
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
 * Implement async migration that will populate the item's order field ([MODINVNSTOR-1442](https://folio-org.atlassian.net/browse/MODINVSTOR-1442))
 * Add new `isShadow` property to location units (institution, campus, library) schemas ([MODINVNSTOR-1455](https://folio-org.atlassian.net/browse/MODINVSTOR-1455))
+* Create a new API to support the update of items' order ([MODINVSTOR-1441](https://folio-org.atlassian.net/browse/MODINVSTOR-1441))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
