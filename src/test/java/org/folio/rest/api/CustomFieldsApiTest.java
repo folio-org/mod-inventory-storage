@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import junitparams.JUnitParamsRunner;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.CustomField.Type;
+import org.folio.rest.jaxrs.model.CustomFieldOptionStatistic;
 import org.folio.rest.jaxrs.model.CustomFieldStatistic;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -66,7 +67,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   private static final String VALUE = "value";
   private static final String VALUES = "values";
   private static final String CUSTOM_FIELDS_STATS_ENDPOINT = "/{id}/stats";
-  private static final String CUSTOM_FIELDS_OPTIONS_STATS_ENDPOINT = "/custom-fields/{id}/options/{optId}/stats";
+  private static final String CUSTOM_FIELDS_OPTIONS_STATS_ENDPOINT = "/{id}/options/{optId}/stats";
 
   private final UUID userId = UUID.randomUUID();
   private final JsonObject user = createSimpleUser(userId);
@@ -93,7 +94,10 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   }
 
   /*
-   * Create simple items with custom fields and check the statistics count
+   * Create simple items with custom fields and check the statistics count.
+   * POST /custom-fields
+   * GET /custom-fields/{id}/stats
+   * GET /custom-fields/{id}/options/{optId}/stats
    */
   @Test
   public void testSaveItemsWithCustomFields() {
@@ -117,42 +121,102 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     // then
     // the items should be created
     // and statistics should work.
-    assertEquals(3, getCustomFieldStatisticCount(customFields.get(1).getString(ID)));
+    assertEquals(3, getCustomFieldStatisticCount(customFieldsId(1)));
+    assertEquals(3, getCustomFieldOptionStatisticCount(customFieldsId(1), "opt_0"));
+  }
+
+  /**
+   *
+   * POST /custom-fields
+   * GET /custom-fields
+   * GET /custom-fields/{id}/stats
+   */
+  @Test
+  public void testDeleteCustomField() {
+    // given
+    // simple item and default custom field as JsonObject
+    // (textbox)
+    // when
+    // saving the custom field in the database
+    assertEquals(0, getCustomFieldsCount());
+    saveCustomField(customFields.get(0));
+    assertEquals(1, getCustomFieldsCount());
+    assertEquals(0, getCustomFieldStatisticCount(customFieldsId(0)));
+    // adding references to the custom field and
+    // corresponding value
+    // and saving the items with custom field values in the database
+    IndividualResource item = saveItem(itemAddCustomFields(0, List.of(0)));
+    assertEquals(true, itemContainsCustomField(item, "textbox"));
+    assertEquals(1, getCustomFieldStatisticCount(customFieldsId(0)));
+    deleteCustomField(customFieldsId(0));
+    // then
+    // the items should be created
+    assertEquals(0, getCustomFieldsCount());
+    // check that item has no custom field anymore
+    IndividualResource updatedItem = getItem(item.getId());
+    assertEquals(false, itemContainsCustomField(updatedItem, "textbox"));
+  }
+
+  /**
+   * remove single option from custom field
+   * customFieldsPO.get(1).getSelectField().getOptions().getValues().removeFirst();
+   * putCustomField(customFieldsPO.get(1));
+   * 
+   * assertEquals(2,
+   * purchaseOrder1.getCustomFields().getAdditionalProperties().size());
+   * assertNull(purchaseOrder1.getCustomFields().getAdditionalProperties().get("singleselect"));
+   * assertThat(purchaseOrder2, samePropertyValuesAs(purchaseOrders.get(1)));
+   * 
+   * POST /custom-fields
+   * PUT /custom-fields/{id}
+   */
+  @Test
+  public void testCustomFieldPut() {
+    // given
+    // simple item and default custom field as JsonObject
+    // (singleselect)
+    // when
+    // saving the custom field in the database
+    saveCustomField(customFields.get(1));
+    // adding references to the custom field and
+    // corresponding value
+    // and saving the items with custom field values in the database
+    IndividualResource item = saveItem(itemAddCustomFields(0, List.of(1)));
+
   }
 
   @Test
-  public void putCustomFields() {
+  void testPutPutCustomFieldCollection() {
+    // // populate with sample data
+    // populateSampleData();
 
+    // // remove opt from custom field using PutCustomFieldsCollection
+    // customFieldsPO.get(1).getSelectField().getOptions().getValues().removeFirst();
+    // putCustomFieldCollection(
+    // new PutCustomFieldCollection()
+    // .withCustomFields(customFieldsPO)
+    // .withEntityType("purchase_order"));
+
+    // // POs should be updated
+    // Map<String, PurchaseOrder> allPurchaseOrders = getAllPurchaseOrders();
+    // PurchaseOrder purchaseOrder1 =
+    // allPurchaseOrders.get(purchaseOrders.get(0).getId());
+    // PurchaseOrder purchaseOrder2 =
+    // allPurchaseOrders.get(purchaseOrders.get(1).getId());
+    // assertEquals(2,
+    // purchaseOrder1.getCustomFields().getAdditionalProperties().size());
+    // assertNull(purchaseOrder1.getCustomFields().getAdditionalProperties().get("singleselect"));
+    // assertEquals(3,
+    // purchaseOrder2.getCustomFields().getAdditionalProperties().size());
+    // assertThat(purchaseOrder2, samePropertyValuesAs(purchaseOrders.get(1)));
   }
 
-  @Test
-  public void postCustomFields() {
-
+  private boolean itemContainsCustomField(IndividualResource item, String name) {
+    return ((JsonObject) item.getJson().getValue(CUSTOM_FIELDS)).containsKey(name);
   }
 
-  @Test
-  public void getCustomFieldById() {
-
-  }
-
-  @Test
-  public void putCustomFieldById() {
-
-  }
-
-  @Test
-  public void deleteCustomFieldById() {
-
-  }
-
-  @Test
-  public void getCustomFieldStatsById() {
-
-  }
-
-  @Test
-  public void getCustomFieldOptionStats() {
-
+  private String customFieldsId(int index) {
+    return customFields.get(index).getString(ID);
   }
 
   /**
@@ -208,11 +272,15 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return List.of(textbox, singleselect, multiselect);
   }
 
-  private JsonObject createCustomFieldValues() {
-    return new JsonObject()
-        .put("textbox", "text1")
-        .put("singleselect", "opt_0")
-        .put("multiselect", new JsonArray().add("opt_1").add("opt_2"));
+  private JsonObject createCustomFieldValues(List<Integer> customFieldIndices) {
+    JsonObject customFieldValues = new JsonObject();
+    if (customFieldIndices.contains(0))
+      customFieldValues.put("textbox", "text1");
+    if (customFieldIndices.contains(1))
+      customFieldValues.put("singleselect", "opt_0");
+    if (customFieldIndices.contains(2))
+      customFieldValues.put("multiselect", new JsonArray().add("opt_1").add("opt_2"));
+    return customFieldValues;
   }
 
   private JsonObject simpleItem() {
@@ -231,11 +299,15 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
    * @return a complete json object with custom fields
    */
   private JsonObject itemAddCustomFields(int itemToCreateIndex) {
+    return itemAddCustomFields(itemToCreateIndex, List.of(0, 1, 2));
+  }
+
+  private JsonObject itemAddCustomFields(int itemToCreateIndex, List<Integer> customFieldIndices) {
     return simpleItems
         .get(itemToCreateIndex)
         .copy()
         .put(HOLDING_RECORD_ID, holdingId.toString())
-        .put(CUSTOM_FIELDS, createCustomFieldValues());
+        .put(CUSTOM_FIELDS, createCustomFieldValues(customFieldIndices));
   }
 
   private static URL customFieldsUrl(String subPath) {
@@ -268,6 +340,22 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     return response;
   }
 
+  private Response deleteCustomField(String id) {
+    var createCompleted = new CompletableFuture<Response>();
+    String usersUrl = HTTP_LOCALHOST + mockServer.port();
+    Map<String, String> headers = Map
+        .of(XOkapiHeaders.USER_ID, userId.toString(), XOkapiHeaders.URL, usersUrl,
+            XOkapiHeaders.URL_TO, usersUrl);
+    getClient().delete(
+        customFieldsUrl("/" + id),
+        headers,
+        TENANT_ID,
+        ResponseHandler.any(createCompleted));
+    Response response = get(createCompleted);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    return response;
+  }
+
   /**
    * Asserts the item got created by checking the status code.
    *
@@ -276,6 +364,12 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
    */
   private IndividualResource saveItem(JsonObject itemToCreate) {
     return itemsClient.create(itemToCreate);
+  }
+
+  private IndividualResource getItem(UUID id) {
+    Response response = itemsClient.getById(id);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    return new IndividualResource(response);
   }
 
   private JsonObject createSimpleUser(UUID newUserId) {
@@ -303,12 +397,35 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
   private int getCustomFieldStatisticCount(String customFieldId) {
     return given()
         .header(new Header(TENANT, TENANT_ID))
-        .pathParams("id", customFieldId)
+        .pathParams(ID, customFieldId)
         .get(customFieldsUrl(CUSTOM_FIELDS_STATS_ENDPOINT))
         .then()
         .statusCode(200)
         .extract()
         .as(CustomFieldStatistic.class)
         .getCount();
+  }
+
+  private int getCustomFieldOptionStatisticCount(String customFieldId, String optionId) {
+    return given()
+        .header(new Header(TENANT, TENANT_ID))
+        .pathParams(ID, customFieldId, "optId", optionId)
+        .get(customFieldsUrl(CUSTOM_FIELDS_OPTIONS_STATS_ENDPOINT))
+        .then()
+        .statusCode(200)
+        .extract()
+        .as(CustomFieldOptionStatistic.class)
+        .getCount();
+  }
+
+  private int getCustomFieldsCount() {
+    var createCompleted = new CompletableFuture<Response>();
+    getClient().get(
+        customFieldsUrl("/"),
+        TENANT_ID,
+        ResponseHandler.any(createCompleted));
+    Response response = get(createCompleted);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    return new JsonObject(response.getBody()).getInteger("totalRecords");
   }
 }
