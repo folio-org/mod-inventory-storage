@@ -2215,7 +2215,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     // modify item body
     var itemsJson = response.getJson();
-    var notExistedItemId = randomUUID();
     itemsJson.put("_version", 5);
 
     // update item via PATCH
