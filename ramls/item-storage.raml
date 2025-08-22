@@ -11,6 +11,7 @@ documentation:
 types:
   item: !include item-storage/item.json
   items: !include item-storage/items.json
+  itemsPatch: !include itemspatch.json
   errors: !include raml-util/schemas/errors.schema
   retrieveDto: !include retrieveEntitiesDto.json
 
@@ -39,6 +40,42 @@ resourceTypes:
           ]
     post:
       is: [validate]
+    patch:
+      is: [validate]
+      body:
+        application/json:
+          type: itemsPatch
+          example:
+            strict: false
+            value: examples/items_patch.json
+      responses:
+        204:
+          description: "Items successfully updated"
+        400:
+          description: "Bad request: malformed request body"
+          body:
+            text/plain:
+              example: "Bad request: malformed request body"
+        404:
+          description: "There is no source record for that item ID"
+          body:
+            text/plain:
+              example: "There is no source record for that item ID"
+        409:
+          description: "Optimistic locking version conflict"
+          body:
+            text/plain:
+              example: "Optimistic locking version conflict"
+        413:
+          description: "Payload Too Large"
+          body:
+            text/plain:
+              example: "Payload Too Large"
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
     delete:
       is: [searchable: { description: "CQL to select items to delete, use cql.allRecords=1 to delete all", example: "barcode==\"123-0*\"" } ]
       responses:

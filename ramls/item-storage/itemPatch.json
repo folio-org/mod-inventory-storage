@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An item record",
+  "javaType": "org.folio.rest.jaxrs.model.ItemPatch",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique identifier for the item record",
+      "$ref": "../uuid.json"
+    },
+    "_version": {
+      "description": "Version of the item record",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": true,
+  "required": [
+    "id",
+    "_version"
+  ]
+}

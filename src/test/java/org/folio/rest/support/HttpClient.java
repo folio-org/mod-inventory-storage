@@ -174,6 +174,30 @@ public class HttpClient {
     return asResponse(request(HttpMethod.PUT, url, body, tenantId));
   }
 
+  public void patch(
+    URL url,
+    Object body,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
+
+    patch(url, body, Map.of(), tenantId, responseHandler);
+  }
+
+  public void patch(
+    URL url,
+    Object body,
+    Map<String, String> headers,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
+
+    request(HttpMethod.PATCH, url, body, headers, tenantId)
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
+  }
+
   public void get(
     String url,
     String tenantId,
