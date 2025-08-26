@@ -15,6 +15,7 @@
 * Provides `inventory-view-instance-set 3.2`
 * Provides `locations 3.2`
 * Provides `location-units 2.1`
+* Provides `custom-fields 3.0`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
@@ -35,6 +36,7 @@
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
 * Implement async migration that will populate the item's order field ([MODINVNSTOR-1442](https://folio-org.atlassian.net/browse/MODINVSTOR-1442))
 * Add new `isShadow` property to location units (institution, campus, library) schemas ([MODINVNSTOR-1455](https://folio-org.atlassian.net/browse/MODINVSTOR-1455))
+* Add custom fields for items with dependencies on folio-custom-fields, new API, permissions and database scripts ([MODINVNSTOR-1446](https://folio-org.atlassian.net/browse/MODINVSTOR-1446))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
