@@ -2021,7 +2021,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(smallAngryPlanet(itemId, holdingsRecordId));
 
     // get item
-    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    var completableFuture = new CompletableFuture<Response>();
     getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
       ResponseHandler.any(completableFuture));
     var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
@@ -2034,24 +2034,22 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemsJson.put("order", 55);
 
     // update item via PATCH
-    CompletableFuture<Response> patchCompleted = new CompletableFuture<>();
+    var patchCompleted = new CompletableFuture<Response>();
     getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
       TENANT_ID, ResponseHandler.empty(patchCompleted));
     var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(patchResponse.getStatusCode(), is(204));
 
     // verify item is updated
-    CompletableFuture<Response> itemFuture = new CompletableFuture<>();
-    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
-      ResponseHandler.json(itemFuture));
-    var itemResponse = itemFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
 
     assertThat(itemResponse.getStatusCode(), is(200));
-    assertEquals("55", itemResponse.getJson().getValue("order").toString());
-    assertEquals("it00000000001", itemResponse.getJson().getValue("hrid").toString());
-    assertNull(itemResponse.getJson().getValue("barcode"));
+    assertEquals("55", itemResponseJson.getValue("order").toString());
+    assertEquals("it00000000001", itemResponseJson.getValue("hrid").toString());
+    assertNull(itemResponseJson.getValue("barcode"));
 
-    itemMessageChecks.updatedMessagePublished(response.getJson(), getById(itemId).getJson());
+    itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
   }
 
   @Test
