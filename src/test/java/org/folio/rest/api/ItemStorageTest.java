@@ -82,6 +82,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Items;
@@ -433,7 +434,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(422));
     assertThat(postResponse.getBody(),
       containsString(("Cannot set item.itemlevelcallnumbertypeid = %s "
-                      + "because it does not exist in call_number_type.id.").formatted(notExistedTypeId)));
+        + "because it does not exist in call_number_type.id.").formatted(notExistedTypeId)));
   }
 
   @Test
@@ -2146,25 +2147,25 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(smallAngryPlanet(itemId, holdingsRecordId));
 
     // get item
-    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    var completableFuture = new CompletableFuture<Response>();
     getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
       ResponseHandler.json(completableFuture));
     var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(200));
 
     // modify item body
+    var nonExistentHoldingId = randomUUID();
     var itemsJson = response.getJson();
-    itemsJson.put("holdingsRecordId", randomUUID());
+    itemsJson.put("holdingsRecordId", nonExistentHoldingId);
 
     // update item via PATCH
-    CompletableFuture<JsonErrorResponse> patchCompleted = new CompletableFuture<>();
+    var patchCompleted = new CompletableFuture<JsonErrorResponse>();
     getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
       TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
     var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
-    assertThat(patchResponse.getStatusCode(), is(422));
-    assertTrue(patchResponse.getBody().contains("Cannot set item.holdingsrecordid"));
-    assertTrue(patchResponse.getBody().contains("it does not exist in holdings_record.id."));
+    assertThat(patchResponse.getStatusCode(), is(404));
+    assertTrue(patchResponse.getBody().contains("Holdings not found: " + nonExistentHoldingId));
   }
 
   @Test
@@ -2194,7 +2195,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(patchResponse.getStatusCode(), is(404));
-    assertTrue(patchResponse.getBody().contains("Unable to update items. The following item IDs were not found: [%s]"
+    assertTrue(patchResponse.getBody().contains("Item not found in database: %s"
       .formatted(notExistedItemId)));
   }
 
@@ -2226,6 +2227,54 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(patchResponse.getStatusCode(), is(409));
     assertTrue(patchResponse.getBody().contains("(optimistic locking): Stored _version is 1, _version of request is %s"
       .formatted(5)));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateItems_negativeRequiredFields() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId1 = randomUUID();
+    var itemId2 = randomUUID();
+
+    // Create two items
+    createItem(smallAngryPlanet(itemId1, holdingsRecordId));
+    createItem(nod(itemId2, holdingsRecordId));
+
+    // Create patch requests with missing required fields
+    var itemPatch1 = new JsonObject()
+      .put("id", itemId1.toString())
+      .put("_version", 1)
+      .put("materialTypeId", "")  // empty materialTypeId
+      .put("permanentLoanTypeId", "")  // empty permanentLoanTypeId
+      .put("status", new JsonObject());  // status without name
+
+    var itemPatch2 = new JsonObject()
+      .put("id", itemId2.toString())
+      .put("_version", 1)
+      .put("holdingsRecordId", "")  // empty holdingsRecordId
+      .put("status", null);  // null status
+
+    var patchRequest = new JsonObject()
+      .put("items", new JsonArray().add(itemPatch1).add(itemPatch2));
+
+    // Attempt to patch items
+    var patchCompleted = new CompletableFuture<JsonErrorResponse>();
+    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
+      ResponseHandler.jsonErrors(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    // Verify validation errors
+    assertThat(patchResponse.getStatusCode(), is(422));
+
+    var errors = patchResponse.getErrors();
+    assertThat(errors.size(), is(2));
+
+    var expectedErrors = List.of(
+      buildRequiredFieldsError(itemId1.toString(), List.of("materialTypeId", "permanentLoanTypeId", "status.name")),
+      buildRequiredFieldsError(itemId2.toString(), List.of("holdingsRecordId", "status"))
+    );
+
+    assertEquals(expectedErrors, errors);
   }
 
   @Test
@@ -2439,9 +2488,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     // StackOverflowError in java.util.regex.Pattern https://issues.folio.org/browse/CIRC-119
     String url = itemsStorageUrl("") + "?query="
-                 + urlEncode("barcode==("
-                             + "a or b or c or d or e or f or g or h or j or k or l or m or n or o or p or q or s "
-                             + "or t or u or v or w or x or y or z or 673274826203)");
+      + urlEncode("barcode==("
+      + "a or b or c or d or e or f or g or h or j or k or l or m or n or o or p or q or s "
+      + "or t or u or v or w or x or y or z or 673274826203)");
 
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
@@ -2470,7 +2519,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
 
     Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-                            itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
+      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
 
     for (Item item : itemsToCreate) {
       IndividualResource createdItem = createItem(item);
@@ -3631,6 +3680,19 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
   }
 
+  private JsonObject buildRequiredFieldsError(String itemId, List<String> fieldNames) {
+    var parameters = fieldNames.stream()
+      .map(fieldName -> new org.folio.rest.jaxrs.model.Parameter()
+        .withKey("field")
+        .withValue(fieldName))
+      .toList();
+
+    return JsonObject.mapFrom(new Error()
+      .withMessage("Required fields cannot be removed. ItemId: " + itemId)
+      .withCode("field.required")
+      .withParameters(parameters));
+  }
+
   static JsonObject nod(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "565578437802");
   }
@@ -3934,7 +3996,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private List<UUID> searchByCallNumberEyeReadable(String searchTerm) {
     return itemsClient
       .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR "
-               + "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
+        + "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
       .stream()
       .map(IndividualResource::getId)
       .toList();
