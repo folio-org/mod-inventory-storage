@@ -9,17 +9,17 @@ import static org.folio.services.location.LocationService.LOCATION_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -35,6 +35,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
@@ -141,45 +144,43 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
       .onComplete(event -> ctx.completeNow());
   }
 
-  @Test
-  void getCollection_shouldReturnRecordCollectionBasedOnShadowLocationsQueryParam(Vertx vertx, VertxTestContext ctx) {
+  @MethodSource("queryStringAndParam")
+  @ParameterizedTest
+  void getCollection_shouldReturnRecordCollectionBasedOnQueryStringAndParam(String queryStringAndParam, int total,
+                                                                            List<String> codes,
+                                                                            Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    var nonShadowLocation = sampleRecord();
+    var nonShadowLocation1 = sampleRecord().withCode("code1").withName("test-location1");
+    var nonShadowLocation2 = sampleRecord().withCode("code2").withName("test-location2");
     var shadowLocation = sampleRecord()
       .withIsShadow(true)
       .withName("test-shadow-location")
       .withCode("shadow");
-    var locationsByQueryParam = Map.of(false, nonShadowLocation, true, shadowLocation);
 
     Future.all(
-      postgresClient.save(referenceTable(), nonShadowLocation),
+      postgresClient.save(referenceTable(), nonShadowLocation1),
+      postgresClient.save(referenceTable(), nonShadowLocation2),
       postgresClient.save(referenceTable(), shadowLocation)
     )
-      .compose(s -> {
-        List<Future<TestResponse>> futures = new ArrayList<>();
-        for (boolean param : locationsByQueryParam.keySet()) {
-          var responseFuture = doGet(client, resourceUrl() + "?includeShadowLocations=" + param)
-            .onComplete(verifyStatus(ctx, HTTP_OK))
-            .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-              var locationsCollection = response.bodyAsClass(Locations.class);
-              assertThat(locationsCollection)
-                .as("verify collection for query param and value: includeShadowLocations=" + param)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("totalRecords", 1)
-                .extracting(Locations::getLocations).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-                .hasSize(1);
+      .compose(s ->
+        doGet(client, resourceUrl() + queryStringAndParam)
+          .onComplete(verifyStatus(ctx, HTTP_OK))
+          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
+            var locationsCollection = response.bodyAsClass(Locations.class);
+            assertThat(locationsCollection)
+              .as("verify collection for query and param: " + queryStringAndParam)
+              .isNotNull()
+              .hasFieldOrPropertyWithValue("totalRecords", total)
+              .extracting(Locations::getLocations).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+              .hasSize(total);
 
-              var collectionRecord = locationsCollection.getLocations().getFirst();
-              verifyRecordFields(collectionRecord, locationsByQueryParam.get(param),
-                List.of(Location::getName, Location::getIsShadow),
-                "verify collection's record for query param: ?includeShadowLocations=" + param);
-            })));
-          futures.add(responseFuture);
-        }
-        return Future.all(futures);
-      })
+            assertThat(locationsCollection.getLocations())
+              .hasSize(total)
+              .extracting(Location::getCode)
+              .containsAll(codes);
+          }))))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -316,5 +317,17 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
           .containsOnly("id value already exists in table location: " + sampleRecord.getId());
         ctx.completeNow();
       })));
+  }
+
+  private static Stream<Arguments> queryStringAndParam() {
+    return Stream.of(
+      arguments("", 2, List.of("code1", "code2")),
+      arguments("?query=code=code1", 1, List.of("code1")),
+      arguments("?includeShadowLocations=false", 2, List.of("code1", "code2")),
+      arguments("?includeShadowLocations=true", 3, List.of("code1", "code2", "shadow")),
+      arguments("?query=code=shadow", 0, List.of()),
+      arguments("?includeShadowLocations=true&query=code=shadow", 1, List.of("shadow")),
+      arguments("?includeShadowLocations=true&query=code1=code1", 0, List.of())
+    );
   }
 }
