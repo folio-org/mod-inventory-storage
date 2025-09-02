@@ -18,7 +18,7 @@ public class LocationRepository extends AbstractRepository<Location> {
 
   public Future<Results<Location>> getByQuery(String cql, int offset, int limit, String totalRecords,
                                               boolean includeShadowLocations) throws FieldException {
-    var cqlForIsShadowField = "isShadow=" + includeShadowLocations;
+    var cqlForIsShadowField = Boolean.FALSE.equals(includeShadowLocations) ? "isShadow=false" : null;
     var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
     return postgresClient.get(LOCATION_TABLE, recordType, cqlWrapper, true);
   }

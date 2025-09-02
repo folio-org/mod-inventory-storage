@@ -18,7 +18,7 @@ public class CampusRepository extends AbstractRepository<Loccamp> {
 
   public Future<Results<Loccamp>> getByQuery(String cql, int offset, int limit, String totalRecords,
                                             boolean includeShadow) throws FieldException {
-    var cqlForIsShadowField = "isShadow=" + includeShadow;
+    var cqlForIsShadowField = Boolean.FALSE.equals(includeShadow) ? "isShadow=false" : null;
     var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
     return postgresClient.get(CAMPUS_TABLE, recordType, cqlWrapper, true);
   }
