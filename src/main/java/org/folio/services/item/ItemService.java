@@ -464,7 +464,7 @@ public class ItemService {
 
           // Set new holdings if it's the same as current
           var newHoldingsId = patchData.getNewItem().getHoldingsRecordId();
-          if (newHoldingsId.equals(currentHoldingsId)) {
+          if (newHoldingsId == null || newHoldingsId.equals(currentHoldingsId)) {
             patchData.setNewHoldings(patchData.getOldHoldings());
           }
         }
