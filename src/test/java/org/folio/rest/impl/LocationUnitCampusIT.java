@@ -158,7 +158,7 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
               .hasSize(total)
               .extracting(Loccamp::getCode)
               .containsAll(codes);
-            })))
+          })))
       )
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
