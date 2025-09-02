@@ -18,7 +18,7 @@ public class LibraryRepository extends AbstractRepository<Loclib> {
 
   public Future<Results<Loclib>> getByQuery(String cql, int offset, int limit, String totalRecords,
                                             boolean includeShadow) throws FieldException {
-    var cqlForIsShadowField = "isShadow=" + includeShadow;
+    var cqlForIsShadowField = Boolean.FALSE.equals(includeShadow) ? "isShadow=false" : null;
     var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);
     return postgresClient.get(LIBRARY_TABLE, recordType, cqlWrapper, true);
   }

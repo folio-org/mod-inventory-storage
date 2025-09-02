@@ -35,6 +35,7 @@
 * Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
 * Implement async migration that will populate the item's order field ([MODINVNSTOR-1442](https://folio-org.atlassian.net/browse/MODINVSTOR-1442))
 * Add new `isShadow` property to location units (institution, campus, library) schemas ([MODINVNSTOR-1455](https://folio-org.atlassian.net/browse/MODINVSTOR-1455))
+* Adjust behavior for `includeShadowLocations` and `includeShadow` query params of location and location units respectively ([MODINVNSTOR-1459](https://folio-org.atlassian.net/browse/MODINVSTOR-1459))
 * Create a new API to support the update of items' order ([MODINVSTOR-1441](https://folio-org.atlassian.net/browse/MODINVSTOR-1441))
 
 ### Bug fixes
