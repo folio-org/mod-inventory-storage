@@ -10,18 +10,18 @@ import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -36,6 +36,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitLibraryIT
@@ -127,45 +130,44 @@ class LocationUnitLibraryIT
       .onComplete(event -> ctx.completeNow());
   }
 
-  @Test
-  void getCollection_shouldReturnRecordCollectionBasedOnIncludeShadowQueryParam(Vertx vertx, VertxTestContext ctx) {
+  @MethodSource("queryStringAndParam")
+  @ParameterizedTest
+  void getCollection_shouldReturnRecordCollectionBasedOnQueryStringAndParam(String queryStringAndParam, int total,
+                                                                            List<String> codes, Vertx vertx,
+                                                                            VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    var nonShadowLibrary = sampleRecord();
+    var nonShadowLibrary1 = sampleRecord().withName("test-library1").withCode("code1");
+    var nonShadowLibrary2 = sampleRecord().withName("test-library2").withCode("code2");
     var shadowLibrary = sampleRecord()
       .withIsShadow(true)
       .withName("test-shadow-library")
       .withCode("shadow");
-    var libraryByQueryParam = Map.of(false, nonShadowLibrary, true, shadowLibrary);
 
     Future.all(
-        postgresClient.save(referenceTable(), nonShadowLibrary),
+        postgresClient.save(referenceTable(), nonShadowLibrary1),
+        postgresClient.save(referenceTable(), nonShadowLibrary2),
         postgresClient.save(referenceTable(), shadowLibrary)
       )
-      .compose(s -> {
-        List<Future<TestResponse>> futures = new ArrayList<>();
-        for (boolean param : libraryByQueryParam.keySet()) {
-          var responseFuture = doGet(client, resourceUrl() + "?includeShadow=" + param)
-            .onComplete(verifyStatus(ctx, HTTP_OK))
-            .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-              var collectionUnits = response.bodyAsClass(Loclibs.class);
-              assertThat(collectionUnits)
-                .as("verify collection for query param and value: includeShadow=" + param)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("totalRecords", 1)
-                .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-                .hasSize(1);
+      .compose(s ->
+        doGet(client, resourceUrl() + queryStringAndParam)
+          .onComplete(verifyStatus(ctx, HTTP_OK))
+          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
+            var collectionUnits = response.bodyAsClass(Loclibs.class);
+            assertThat(collectionUnits)
+              .as("verify collection for query and param: " + queryStringAndParam)
+              .isNotNull()
+              .hasFieldOrPropertyWithValue("totalRecords", total)
+              .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+              .hasSize(total);
 
-              var collectionRecord = collectionUnits.getLoclibs().getFirst();
-              verifyRecordFields(collectionRecord, libraryByQueryParam.get(param),
-                List.of(Loclib::getName, Loclib::getIsShadow),
-                "verify collection's record for query param: ?includeShadow=" + param);
-            })));
-          futures.add(responseFuture);
-        }
-        return Future.all(futures);
-      })
+            assertThat(collectionUnits.getLoclibs())
+              .hasSize(total)
+              .extracting(Loclib::getCode)
+              .containsAll(codes);
+          })))
+      )
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -252,5 +254,17 @@ class LocationUnitLibraryIT
           .contains("Not found");
         ctx.completeNow();
       })));
+  }
+
+  private static Stream<Arguments> queryStringAndParam() {
+    return Stream.of(
+      arguments("", 2, List.of("code1", "code2")),
+      arguments("?query=code=code1", 1, List.of("code1")),
+      arguments("?includeShadow=false", 2, List.of("code1", "code2")),
+      arguments("?includeShadow=true", 3, List.of("code1", "code2", "shadow")),
+      arguments("?query=code=shadow", 0, List.of()),
+      arguments("?includeShadow=true&query=code=shadow", 1, List.of("shadow")),
+      arguments("?includeShadow=true&query=code1=code1", 0, List.of())
+    );
   }
 }
