@@ -10,17 +10,17 @@ import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -35,6 +35,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
@@ -119,45 +122,44 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
       .onComplete(event -> ctx.completeNow());
   }
 
-  @Test
-  void getCollection_shouldReturnRecordCollectionBasedOnIncludeShadowQueryParam(Vertx vertx, VertxTestContext ctx) {
+  @MethodSource("queryStringAndParam")
+  @ParameterizedTest
+  void getCollection_shouldReturnRecordCollectionBasedOnQueryStringAndParam(String queryStringAndParam, int total,
+                                                                            List<String> codes, Vertx vertx,
+                                                                            VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    var nonShadowCampus = sampleRecord();
+    var nonShadowCampus1 = sampleRecord().withName("test-campus1").withCode("code1");
+    var nonShadowCampus2 = sampleRecord().withName("test-campus2").withCode("code2");
     var shadowCampus = sampleRecord()
       .withIsShadow(true)
       .withName("test-shadow-campus")
       .withCode("shadow");
-    var campusByQueryParam = Map.of(false, nonShadowCampus, true, shadowCampus);
 
     Future.all(
-        postgresClient.save(referenceTable(), nonShadowCampus),
+        postgresClient.save(referenceTable(), nonShadowCampus1),
+        postgresClient.save(referenceTable(), nonShadowCampus2),
         postgresClient.save(referenceTable(), shadowCampus)
       )
-      .compose(s -> {
-        List<Future<TestResponse>> futures = new ArrayList<>();
-        for (boolean param : campusByQueryParam.keySet()) {
-          var responseFuture = doGet(client, resourceUrl() + "?includeShadow=" + param)
-            .onComplete(verifyStatus(ctx, HTTP_OK))
-            .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-              var collectionUnits = response.bodyAsClass(Loccamps.class);
-              assertThat(collectionUnits)
-                .as("verify collection for query param and value: includeShadow=" + param)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("totalRecords", 1)
-                .extracting(Loccamps::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-                .hasSize(1);
+      .compose(s ->
+        doGet(client, resourceUrl() + queryStringAndParam)
+          .onComplete(verifyStatus(ctx, HTTP_OK))
+          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
+            var collectionUnits = response.bodyAsClass(Loccamps.class);
+            assertThat(collectionUnits)
+              .as("verify collection for query param: " + queryStringAndParam)
+              .isNotNull()
+              .hasFieldOrPropertyWithValue("totalRecords", total)
+              .extracting(Loccamps::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+              .hasSize(total);
 
-              var collectionRecord = collectionUnits.getLoccamps().getFirst();
-              verifyRecordFields(collectionRecord, campusByQueryParam.get(param),
-                List.of(Loccamp::getName, Loccamp::getIsShadow),
-                "verify collection's record for query param: ?includeShadow=" + param);
-            })));
-          futures.add(responseFuture);
-        }
-        return Future.all(futures);
-      })
+            assertThat(collectionUnits.getLoccamps())
+              .hasSize(total)
+              .extracting(Loccamp::getCode)
+              .containsAll(codes);
+            })))
+      )
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -265,5 +267,17 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
         .compose(libraryId -> doDelete(client, resourceUrl() + "/" + campusId)))
       .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  private static Stream<Arguments> queryStringAndParam() {
+    return Stream.of(
+      arguments("", 2, List.of("code1", "code2")),
+      arguments("?query=code=code1", 1, List.of("code1")),
+      arguments("?includeShadow=false", 2, List.of("code1", "code2")),
+      arguments("?includeShadow=true", 3, List.of("code1", "code2", "shadow")),
+      arguments("?query=code=shadow", 0, List.of()),
+      arguments("?includeShadow=true&query=code=shadow", 1, List.of("shadow")),
+      arguments("?includeShadow=true&query=code1=code1", 0, List.of())
+    );
   }
 }
