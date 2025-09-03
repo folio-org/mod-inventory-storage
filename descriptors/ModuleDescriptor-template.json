@@ -24,7 +24,7 @@
     },
     {
       "id": "item-storage",
-      "version": "11.0",
+      "version": "11.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -43,6 +43,10 @@
           "pathPattern": "/item-storage/items",
           "permissionsRequired": ["inventory-storage.items.item.post"]
         }, {
+          "methods": ["PATCH"],
+          "pathPattern": "/item-storage/items",
+          "permissionsRequired": ["inventory-storage.items.collection.patch"]
+        },{
           "methods": ["PUT"],
           "pathPattern": "/item-storage/items/{id}",
           "permissionsRequired": ["inventory-storage.items.item.put"]
@@ -1479,6 +1483,11 @@
       "description": "create individual item in storage"
     },
     {
+      "permissionName": "inventory-storage.items.collection.patch",
+      "displayName": "inventory storage - update items collection",
+      "description": "update items in storage"
+    },
+    {
       "permissionName": "inventory-storage.items.item.put",
       "displayName": "inventory storage - modify item",
       "description": "modify item in storage"
@@ -2615,6 +2624,7 @@
         "inventory-storage.items.retrieve.collection.post",
         "inventory-storage.items.item.get",
         "inventory-storage.items.item.post",
+        "inventory-storage.items.collection.patch",
         "inventory-storage.items.item.put",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
