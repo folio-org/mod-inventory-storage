@@ -104,6 +104,20 @@ abstract class AbstractDomainEventPublisher<D, E> {
     };
   }
 
+  public Handler<Response> publishUpdated(BatchOperationContext<D> batchOperation) {
+    return response -> {
+      if (!isUpdateSuccessResponse(response)) {
+        log.warn("Records update failed, skipping event publishing");
+        return;
+      }
+      log.info("Records updated {}", batchOperation.existingRecords().size());
+
+      if (batchOperation.publishEvents()) {
+        publishUpdated(batchOperation.existingRecords());
+      }
+    };
+  }
+
   protected Future<Void> publishUpdated(Collection<D> oldRecords) {
     if (oldRecords.isEmpty()) {
       log.info("No records were updated, skipping event sending");

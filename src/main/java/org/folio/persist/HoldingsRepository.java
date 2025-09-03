@@ -97,4 +97,22 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
       return resultList;
     });
   }
+
+  public Future<RowSet<Row>> getHoldingsByIds(List<String> holdingsIds) {
+    if (holdingsIds.isEmpty()) {
+      return Future.succeededFuture();
+    }
+
+    var holdingsIdsArray = String.join("','", holdingsIds);
+    var sql = """
+      SELECT id::text, jsonb::text
+      FROM %s
+      WHERE id = ANY(ARRAY['%s']::uuid[])
+      """.formatted(
+      getFullTableName(HOLDINGS_RECORD_TABLE),
+      holdingsIdsArray
+    );
+
+    return postgresClient.execute(sql);
+  }
 }
