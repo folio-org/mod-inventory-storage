@@ -2324,6 +2324,145 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @SneakyThrows
+  public void shouldNotUpdateEffectiveShelvingOrder() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("itemLevelCallNumber", "call number");
+    itemJson.put("itemLevelCallNumberSuffix", "suffix");
+
+    // Create item
+    createItem(itemJson);
+
+    // verify item is created with effectiveShelvingOrder field
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertEquals("call number suffix", itemResponseJson.getValue("effectiveShelvingOrder").toString());
+
+    // Create patch request to update effectiveShelvingOrder field directly
+    var itemPatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("effectiveShelvingOrder", "new shelving order");
+    var patchRequest = new JsonObject()
+      .put("items", new JsonArray().add(itemPatch));
+
+    // Attempt to patch item
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
+      ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated and effectiveShelvingOrder is unchanged
+    var itemUpdatedResponse = getById(itemId);
+    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
+    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
+    assertEquals("call number suffix", itemUpdatedResponseJson.getValue("effectiveShelvingOrder").toString());
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateEffectiveLocationIdFromItemRecord() {
+    var holdingsRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
+    var itemId = randomUUID();
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
+    itemJson.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+
+    // Create item
+    createItem(itemJson);
+
+    // verify item is created and effectiveLocation equals temporaryLocationId
+    var itemUpdatedResponse = getById(itemId);
+    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
+    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("effectiveLocationId").toString());
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("temporaryLocationId").toString());
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("permanentLocationId").toString());
+
+    // update item with temporaryLocationId = null
+    var itemUpdatePatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("temporaryLocationId", null);
+
+    var patchUpdateRequest = new JsonObject()
+      .put("items", new JsonArray().add(itemUpdatePatch));
+
+    var patchUpdateCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), patchUpdateRequest, TENANT_ID,
+      ResponseHandler.empty(patchUpdateCompleted));
+    var patchUpdateResponse = patchUpdateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchUpdateResponse.getStatusCode(), is(204));
+
+    // verify effectiveLocation id equals permanentLocationId as temporaryLocationId is null
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(), itemResponseJson.getValue("effectiveLocationId").toString());
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(), itemResponseJson.getValue("permanentLocationId").toString());
+    assertNull(itemResponseJson.getValue("temporaryLocationId"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateEffectiveLocationIdFromHoldingRecord() {
+    var holdingsRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
+    var itemId = randomUUID();
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
+    itemJson.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+
+    // Create item
+    createItem(itemJson);
+
+    // verify item is created and effectiveLocation equals temporaryLocationId
+    var itemUpdatedResponse = getById(itemId);
+    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
+    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("effectiveLocationId").toString());
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("temporaryLocationId").toString());
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
+      itemUpdatedResponseJson.getValue("permanentLocationId").toString());
+
+    // update item with temporaryLocationId = null and permanentLocationId = null
+    var itemUpdatePatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("temporaryLocationId", null)
+      .put("permanentLocationId", null);
+
+    var patchUpdateRequest = new JsonObject()
+      .put("items", new JsonArray().add(itemUpdatePatch));
+
+    var patchUpdateCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), patchUpdateRequest, TENANT_ID,
+      ResponseHandler.empty(patchUpdateCompleted));
+    var patchUpdateResponse = patchUpdateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchUpdateResponse.getStatusCode(), is(204));
+
+    // verify effectiveLocation id equals holding permanentLocationId as holding temporaryLocationId,
+    // item temporaryLocationId and item permanentLocationId are null
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertEquals(SECOND_FLOOR_LOCATION_ID.toString(), itemResponseJson.getValue("effectiveLocationId").toString());
+    assertNull(itemResponseJson.getValue("temporaryLocationId"));
+    assertNull(itemResponseJson.getValue("permanentLocationId"));
+  }
+
+  @Test
   public void shouldPageAllRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 

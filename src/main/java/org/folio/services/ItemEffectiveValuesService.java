@@ -50,7 +50,7 @@ public class ItemEffectiveValuesService {
   }
 
   public void populateEffectiveValues(Item newItem, PatchData patchData) {
-    updateItemEffectiveLocation(newItem, patchData.getNewHoldings());
+    updateItemEffectiveLocation(newItem, patchData);
     setCallNumberComponents(newItem, patchData);
     calculateAndSetEffectiveShelvingOrder(newItem);
   }
