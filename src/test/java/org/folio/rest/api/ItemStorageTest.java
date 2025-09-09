@@ -2276,6 +2276,54 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @SneakyThrows
+  public void shouldUpdateCallNumberFields() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("itemLevelCallNumber", "call number");
+    itemJson.put("itemLevelCallNumberPrefix", "prefix");
+    itemJson.put("itemLevelCallNumberSuffix", "suffix");
+    itemJson.put("itemLevelCallNumberTypeId", "03dd64d0-5626-4ecd-8ece-4531e0069f35");
+    itemJson.put("volume", "vol");
+    itemJson.put("enumeration", "en");
+
+    // Create item
+    createItem(itemJson);
+
+    // Create patch request to update call number prefix and set typeId to null
+    var itemPatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("itemLevelCallNumberPrefix", "prefix upd")
+      .put("itemLevelCallNumberTypeId", null);
+    var patchRequest = new JsonObject()
+      .put("items", new JsonArray().add(itemPatch));
+
+    // Attempt to patch item
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
+      ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertEquals("prefix upd", itemResponseJson.getValue("itemLevelCallNumberPrefix").toString());
+    var callNumberComponents = itemResponseJson.getJsonObject("effectiveCallNumberComponents");
+    assertNotNull(callNumberComponents);
+    assertEquals("call number", callNumberComponents.getValue("callNumber"));
+    assertEquals("prefix upd", callNumberComponents.getValue("prefix"));
+    assertEquals("suffix", callNumberComponents.getValue("suffix"));
+    assertNull(callNumberComponents.getValue("typeId"));
+  }
+
+  @Test
   public void shouldPageAllRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 

@@ -41,13 +41,14 @@ resourceTypes:
     post:
       is: [validate]
     patch:
+      description: Update multiple items by a single request
       is: [validate]
       body:
         application/json:
           type: itemsPatch
           example:
             strict: false
-            value: examples/items_patch.json
+            value: !include examples/items_patch.json
       responses:
         204:
           description: "Items successfully updated"
