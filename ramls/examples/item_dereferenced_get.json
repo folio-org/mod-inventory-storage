@@ -1,68 +1,198 @@
 {
-  "id": "0b96a642-5e7f-452d-9cae-9cee66c9a892",
-  "instanceRecord": {
-    "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-    "source": "Local: MARC",
-    "title": "ADVANCING LIBRARY EDUCATION: TECHNOLOGICAL INNOVATION AND INSTRUCTIONAL DESIGN",
-    "contributors": [
-      {
-        "name": "Sigal, Ari",
-        "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
-        "primary": true
-      }
-    ],
-    "identifiers": [
-      {
-        "identifierTypeId": "2e48e713-17f3-4c13-a9f8-23845bb210af",
-        "value": "9781466636897"
-      },
-      {
-        "identifierTypeId": "6051f95c-028e-4c6a-8a9e-ee689dd51453",
-        "value": "1"
-      }
-    ],
-    "instanceTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2c",
-    "tags" : {
-      "tagList" : [
-        "important"
-      ]
+  "id" : "7212ba6a-8dcf-45a1-be9a-ffaa847c4423",
+  "instanceRecord" : {
+    "id" : "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
+    "_version" : 1,
+    "hrid" : "inst000000000022",
+    "source" : "FOLIO",
+    "title" : "A semantic web primer",
+    "indexTitle" : "Semantic web primer",
+    "alternativeTitles" : [ ],
+    "editions" : [ ],
+    "series" : [ {
+      "value" : "Cooperative information systems"
+    } ],
+    "identifiers" : [ {
+      "value" : "0262012103",
+      "identifierTypeId" : "8261054f-be78-422d-bd51-4ed9f33c3422"
+    }, {
+      "value" : "9780262012102",
+      "identifierTypeId" : "8261054f-be78-422d-bd51-4ed9f33c3422"
+    }, {
+      "value" : "2003065165",
+      "identifierTypeId" : "c858e4f2-2b6b-4385-842b-60732ee14abb"
+    } ],
+    "contributors" : [ {
+      "name" : "Antoniou, Grigoris",
+      "contributorTypeId" : "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+      "contributorTypeText" : "",
+      "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a"
+    }, {
+      "name" : "Van Harmelen, Frank",
+      "contributorTypeId" : "6e09d47d-95e2-4d8a-831b-f777b8ef6d81",
+      "contributorTypeText" : "",
+      "contributorNameTypeId" : "2b94c631-fca9-4892-a730-03ee529ffe2a"
+    } ],
+    "subjects" : [ {
+      "value" : "Semantic Web"
+    } ],
+    "classifications" : [ {
+      "classificationNumber" : "025.04",
+      "classificationTypeId" : "42471af9-7d25-4f3a-bf78-60d29dcf463b"
+    }, {
+      "classificationNumber" : "TK5105.88815 .A58 2004",
+      "classificationTypeId" : "ce176ace-a53e-4b4d-aa89-725ed7b2edac"
+    } ],
+    "publication" : [ {
+      "publisher" : "MIT Press",
+      "place" : "Cambridge, Mass. ",
+      "dateOfPublication" : "c2004",
+      "role" : "Publisher"
+    } ],
+    "publicationFrequency" : [ ],
+    "publicationRange" : [ ],
+    "electronicAccess" : [ ],
+    "instanceTypeId" : "6312d172-f0cf-40f6-b27d-9fa8feaf332f",
+    "instanceFormatIds" : [ ],
+    "instanceFormats" : [ ],
+    "physicalDescriptions" : [ "xx, 238 p. : ill. ; 24 cm." ],
+    "languages" : [ "eng" ],
+    "notes" : [ {
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note" : "Includes bibliographical references and index.",
+      "staffOnly" : false
+    }, {
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note" : "The development of the Semantic Web, with machine-readable content, has the potential to revolutionize the World Wide Web and its uses. A Semantic Web Primer provides an introduction and guide to this continuously evolving field, describing its key ideas, languages, and technologies. Suitable for use as a textbook or for independent study by professionals, it concentrates on undergraduate-level fundamental concepts and techniques that will enable readers to proceed with building applications on their own and includes exercises, project descriptions, and annotated references to relevant online materials. The third edition of this widely used text has been thoroughly updated, with significant new material that reflects a rapidly developing field. Treatment of the different languages (OWL2, rules) expands the coverage of RDF and OWL, defining the data model independently of XML and including coverage of N3/Turtle and RDFa. A chapter is devoted to OWL2, the new W3C standard. This edition also features additional coverage of the query language SPARQL, the rule language RIF and the possibility of interaction between rules and ontology languages and applications. The chapter on Semantic Web applications reflects the rapid developments of the past few years. A new chapter offers ideas for term projects",
+      "staffOnly" : false
+    } ],
+    "administrativeNotes" : [ ],
+    "modeOfIssuanceId" : "9d18a02f-5897-4c31-9106-c9abb5c7ae8b",
+    "catalogedDate" : "2019-04-05",
+    "previouslyHeld" : false,
+    "discoverySuppress" : false,
+    "deleted" : false,
+    "statisticalCodeIds" : [ "b5968c9e-cddc-4576-99e3-8e60aed8b0dd" ],
+    "statusId" : "9634a5ab-9228-4703-baf2-4d12ebc77d56",
+    "statusUpdatedDate" : "2025-09-07T22:09:14.532+0000",
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:14.531+00:00",
+      "updatedDate" : "2025-09-07T22:09:14.531+00:00"
+    },
+    "holdingsRecords2" : [ ],
+    "natureOfContentTermIds" : [ ]
+  },
+  "_version" : 1,
+  "hrid" : "item000000000014",
+  "holdingsRecord" : {
+    "id" : "e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19",
+    "_version" : 1,
+    "sourceId" : "7fbd5d84-abcd-1978-8899-6cb173998bbd",
+    "hrid" : "hold000000000009",
+    "holdingsTypeId" : "03c9c400-b9e3-4a07-ac0e-05ab470233ed",
+    "formerIds" : [ ],
+    "instanceId" : "5bf370e0-8cca-4d9c-82e4-5170ab2a0a39",
+    "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+    "effectiveLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+    "electronicAccess" : [ ],
+    "additionalCallNumbers" : [ ],
+    "callNumberTypeId" : "512173a7-bd09-490e-b773-17d83f2b63fe",
+    "callNumber" : "TK5105.88815 . A58 2004 FT MEADE",
+    "shelvingTitle" : " TK5105.88815",
+    "administrativeNotes" : [ ],
+    "notes" : [ ],
+    "illPolicyId" : "46970b40-918e-47a4-a45d-b1677a2d3d46",
+    "holdingsStatements" : [ ],
+    "holdingsStatementsForIndexes" : [ ],
+    "holdingsStatementsForSupplements" : [ ],
+    "statisticalCodeIds" : [ "b5968c9e-cddc-4576-99e3-8e60aed8b0dd" ],
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:14.727+00:00",
+      "updatedDate" : "2025-09-07T22:09:14.727+00:00"
     }
   },
-  "holdingsRecord": {
-    "id": "65cb2bf0-d4c2-4886-8ad0-b76f1ba75d61",
-    "instanceId": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
-    "permanentLocationId": "d9cd0bed-1b49-4b5e-a7bd-064b8d177231",
-    "holdingsStatements": [
-      {
-        "statement": "Line 1",
-        "note": "Note to line 1"
-      },
-      {
-        "statement": "Line 2",
-        "note": "Note to line2"
-      }
-    ],
-    "tags" : {
-      "tagList" : [
-        "important"
-      ]
+  "order" : 1,
+  "formerIds" : [ ],
+  "barcode" : "10101",
+  "effectiveShelvingOrder" : "TK5105.88815 . A58 2004 FT MEADE Copy 2",
+  "additionalCallNumbers" : [ ],
+  "itemLevelCallNumber" : "TK5105.88815 . A58 2004 FT MEADE",
+  "effectiveCallNumberComponents" : {
+    "callNumber" : "TK5105.88815 . A58 2004 FT MEADE",
+    "typeId" : "512173a7-bd09-490e-b773-17d83f2b63fe"
+  },
+  "enumeration" : "",
+  "chronology" : "",
+  "yearCaption" : [ ],
+  "copyNumber" : "Copy 2",
+  "administrativeNotes" : [ ],
+  "notes" : [ ],
+  "circulationNotes" : [ ],
+  "status" : {
+    "name" : "Available",
+    "date" : "2025-09-07T22:09:14.809+00:00"
+  },
+  "materialType" : {
+    "id" : "1a54b431-2e4f-452d-9cae-9cee66c9a892",
+    "name" : "book",
+    "source" : "folio",
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:08.450+00:00",
+      "updatedDate" : "2025-09-07T22:09:08.450+00:00"
     }
   },
-  "barcode": "645398607547",
-  "status": {
-    "name": "In transit"
+  "permanentLoanType" : {
+    "id" : "2b94c631-fca9-4892-a730-03ee529ffe27",
+    "name" : "Can circulate",
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:08.497+00:00",
+      "updatedDate" : "2025-09-07T22:09:08.497+00:00"
+    }
   },
-  "materialType": {
-    "name": "book"
+  "permanentLocation" : {
+    "id" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+    "name" : "Main Library",
+    "code" : "KU/CC/DI/M",
+    "isActive" : true,
+    "institutionId" : "40ee00ca-a518-4b49-be01-0638d0a4ac57",
+    "campusId" : "62cf76b7-cca5-4d33-9217-edf42ce1a848",
+    "libraryId" : "5d78803e-ca04-4b4a-aeae-2c63b924518b",
+    "primaryServicePoint" : "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+    "servicePointIds" : [ "3a40852d-49fd-4df2-a1f9-6e2641a6e91f" ],
+    "servicePoints" : [ ],
+    "isShadow" : false,
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:14.300+00:00",
+      "updatedDate" : "2025-09-07T22:09:14.300+00:00"
+    }
   },
-  "permanentLoanType": {
-    "id": "2b94c631-fca9-4892-a730-03ee529ffe27",
-    "name": "Can circulate"
+  "effectiveLocation" : {
+    "id" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+    "name" : "Main Library",
+    "code" : "KU/CC/DI/M",
+    "isActive" : true,
+    "institutionId" : "40ee00ca-a518-4b49-be01-0638d0a4ac57",
+    "campusId" : "62cf76b7-cca5-4d33-9217-edf42ce1a848",
+    "libraryId" : "5d78803e-ca04-4b4a-aeae-2c63b924518b",
+    "primaryServicePoint" : "3a40852d-49fd-4df2-a1f9-6e2641a6e91f",
+    "servicePointIds" : [ "3a40852d-49fd-4df2-a1f9-6e2641a6e91f" ],
+    "servicePoints" : [ ],
+    "isShadow" : false,
+    "metadata" : {
+      "createdDate" : "2025-09-07T22:09:14.300+00:00",
+      "updatedDate" : "2025-09-07T22:09:14.300+00:00"
+    }
   },
-  "inTransitDestinationServicePointId": "5b31ec8c-95a7-4b91-95cc-b551a74b91ca",
-  "tags" : {
-    "tagList" : [
-      "important"
-    ]
+  "electronicAccess" : [ {
+    "uri" : "http://www.loc.gov/catdir/toc/ecip0718/2007020429.html",
+    "linkText" : "Links available",
+    "materialsSpecification" : "Table of contents",
+    "publicNote" : "Table of contents only",
+    "relationshipId" : "3b430592-2e09-4b48-9a0c-0636d66b9fb3"
+  } ],
+  "statisticalCodeIds" : [ "b5968c9e-cddc-4576-99e3-8e60aed8b0dd" ],
+  "metadata" : {
+    "createdDate" : "2025-09-07T22:09:14.809+00:00",
+    "updatedDate" : "2025-09-07T22:09:14.809+00:00"
   }
 }
