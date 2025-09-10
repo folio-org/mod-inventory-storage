@@ -20,6 +20,7 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.services.item.PatchData;
 
 public class ItemEffectiveValuesService {
   private final HoldingsRepository holdingsRepository;
@@ -46,6 +47,12 @@ public class ItemEffectiveValuesService {
     setCallNumberComponents(item, hr);
     calculateAndSetEffectiveShelvingOrder(item);
     return item;
+  }
+
+  public void populateEffectiveValues(Item newItem, PatchData patchData) {
+    updateItemEffectiveLocation(newItem, patchData);
+    setCallNumberComponents(newItem, patchData);
+    calculateAndSetEffectiveShelvingOrder(newItem);
   }
 
   private Future<Map<String, HoldingsRecord>> getHoldingsRecordsForItems(List<Item> items) {
