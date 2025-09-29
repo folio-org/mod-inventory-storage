@@ -2,8 +2,10 @@ package org.folio.rest.support;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +13,7 @@ import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.CallNumberUtils;
+import org.folio.services.item.PatchData;
 
 public final class EffectiveCallNumberComponentsUtil {
 
@@ -18,6 +21,10 @@ public final class EffectiveCallNumberComponentsUtil {
 
   public static void setCallNumberComponents(Item item, HoldingsRecord hr) {
     item.setEffectiveCallNumberComponents(buildComponents(item, hr));
+  }
+
+  public static void setCallNumberComponents(Item newItem, PatchData patchData) {
+    newItem.setEffectiveCallNumberComponents(buildComponents(patchData));
   }
 
   public static Item calculateAndSetEffectiveShelvingOrder(Item item) {
@@ -83,5 +90,55 @@ public final class EffectiveCallNumberComponentsUtil {
       .withPrefix(updatedCallNumberPrefix)
       .withSuffix(updatedCallNumberSuffix)
       .withTypeId(updatedCallNumberTypeId);
+  }
+
+  private static EffectiveCallNumberComponents buildComponents(PatchData patchData) {
+    var holdings = patchData.getNewHoldings();
+    var itemPatchFields = patchData.getPatchRequest().getAdditionalProperties();
+    var oldCallNumberComponents = patchData.getOldItem().getEffectiveCallNumberComponents();
+
+    var callNumber = getFieldValue(
+      itemPatchFields, "itemLevelCallNumber",
+      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getCallNumber() : null,
+      holdings::getCallNumber
+    );
+
+    var prefix = getFieldValue(
+      itemPatchFields, "itemLevelCallNumberPrefix",
+      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getPrefix() : null,
+      holdings::getCallNumberPrefix
+    );
+
+    var suffix = getFieldValue(
+      itemPatchFields, "itemLevelCallNumberSuffix",
+      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getSuffix() : null,
+      holdings::getCallNumberSuffix
+    );
+
+    var typeId = getFieldValue(
+      itemPatchFields, "itemLevelCallNumberTypeId",
+      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getTypeId() : null,
+      holdings::getCallNumberTypeId
+    );
+
+    return new EffectiveCallNumberComponents()
+      .withCallNumber(callNumber)
+      .withPrefix(prefix)
+      .withSuffix(suffix)
+      .withTypeId(typeId);
+  }
+
+  private static String getFieldValue(Map<String, Object> fields, String key, Supplier<String> oldComponentSupplier,
+                                      Supplier<String> holdingsSupplier) {
+    if (fields.containsKey(key)) {
+      var value = fields.get(key);
+      return value != null ? value.toString() : null;
+    }
+    var oldValue = oldComponentSupplier.get();
+    if (oldValue != null) {
+      return oldValue;
+    }
+    var holdingsValue = holdingsSupplier.get();
+    return isNotBlank(holdingsValue) ? holdingsValue : null;
   }
 }

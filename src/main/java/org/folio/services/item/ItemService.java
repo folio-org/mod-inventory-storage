@@ -546,16 +546,8 @@ public class ItemService {
       : Future.succeededFuture();
 
     return validationFuture.compose(v -> {
-      boolean holdingsChanged = !Objects.equals(
-        patchData.getOldItem().getHoldingsRecordId(),
-        newItem.getHoldingsRecordId()
-      );
-
-      if (holdingsChanged) {
-        effectiveValuesService.populateEffectiveValues(newItem, patchData.getNewHoldings());
-        ItemUtils.transferEffectiveValuesToPatch(newItem, patchData.getPatchRequest());
-      }
-
+      effectiveValuesService.populateEffectiveValues(newItem, patchData);
+      ItemUtils.transferEffectiveValuesToPatch(newItem, patchData.getPatchRequest());
       return Future.succeededFuture(patchData);
     });
   }
