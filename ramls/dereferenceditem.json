@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "An item record with related record data",
+  "description": "An item record with related record data added (instanceRecord, holdingsRecord, materialType, permanentLoanType, temporaryLoanType, permanentLocation, temporaryLocation, effectiveLocation) and id fields removed (holdingsRecordId, instanceId, materialTypeId, permanentLocationId, temporaryLocationId, effectiveLocationId, permanentLoanTypeId, temporaryLoanTypeId).",
   "type": "object",
   "properties": {
     "id": {
