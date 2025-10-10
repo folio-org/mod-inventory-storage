@@ -618,8 +618,6 @@ public class ItemService {
     }
   }
 
-
-
   private static final class PutData {
     private Item oldItem;
     private HoldingsRecord oldHoldings;
