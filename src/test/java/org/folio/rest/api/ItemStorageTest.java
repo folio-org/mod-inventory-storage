@@ -2052,6 +2052,42 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
   }
 
+  @SneakyThrows
+  @Test
+  public void shouldNormalizeOrderFieldToIntegerWhenStringTypeInRequest() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    var completableFuture = new CompletableFuture<Response>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.put("order", "55");
+
+    // update item via PATCH
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertThat(itemResponseJson.getInteger(ORDER_FIELD), is(55));
+
+    itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
+  }
+
   @Test
   @SneakyThrows
   public void shouldUpdateItems_negativeIfItemsEmpty() {

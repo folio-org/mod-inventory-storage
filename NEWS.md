@@ -49,6 +49,7 @@
 * Fix inconsistent "messagesPublished" updates caused by asynchronous execution in IterationJobRunner. ([MODINVSTOR-1450](https://folio-org.atlassian.net/browse/MODINVSTOR-1450))
 * Fix items not being updated on /holdings-storage/batch/synchronous ([MODINVSTOR-1368](https://folio-org.atlassian.net/browse/MODINVSTOR-1368))
 * Fix typo in Instance Notes type name. ([MODINVSTOR-1396](https://folio-org.atlassian.net/browse/MODINVSTOR-1396))
+* Fix item sorting by order as a number ([MODINVSTOR-1470](https://folio-org.atlassian.net/browse/MODINVSTOR-1470))
 
 ### Tech Dept
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))

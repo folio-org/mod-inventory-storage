@@ -178,6 +178,12 @@ public class ItemService {
         if (patchDataToUpdate.isEmpty()) {
           return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
         }
+        try {
+          normalizeOrderField(items);
+        } catch (NumberFormatException e) {
+          return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+            "Invalid order value: " + e.getMessage()));
+        }
         return postgresClient.withTransaction(conn ->
             itemRepository.updateItems(conn, items)
               .<Response>compose(updatedItems -> {
@@ -594,6 +600,25 @@ public class ItemService {
       })
       .toList());
   }
+
+  private void normalizeOrderField(List<ItemPatch> items) {
+    for (ItemPatch itemPatch : items) {
+      var additionalProps = itemPatch.getAdditionalProperties();
+      if (additionalProps == null) {
+        return;
+      }
+      var orderValue = additionalProps.get("order");
+      if (orderValue instanceof String strOrder && !strOrder.isEmpty()) {
+        try {
+          additionalProps.put("order", Integer.valueOf(strOrder));
+        } catch (NumberFormatException e) {
+          throw new NumberFormatException("Invalid order value: " + strOrder);
+        }
+      }
+    }
+  }
+
+
 
   private static final class PutData {
     private Item oldItem;
