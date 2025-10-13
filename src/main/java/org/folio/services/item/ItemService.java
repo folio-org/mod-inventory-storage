@@ -23,6 +23,9 @@ import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
+import static org.folio.validator.CommonValidators.normalizeIfList;
+import static org.folio.validator.CommonValidators.normalizeIfMap;
+import static org.folio.validator.CommonValidators.normalizeProperty;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.CommonValidators.validateUuidFormatForList;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -48,6 +51,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.Logger;
@@ -85,6 +89,31 @@ public class ItemService {
   private static final String INSTANCE_ID_WITH_ITEM_JSON = """
     {"instanceId": "%s",%s
     """;
+  // Constants for item field names used in normalization
+  private static final String ORDER = "order";
+  private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String NOTES = "notes";
+  private static final String CIRCULATION_NOTES = "circulationNotes";
+  private static final String PERMANENT_LOCATION = "permanentLocation";
+  private static final String TEMPORARY_LOCATION = "temporaryLocation";
+  private static final String HOLDINGS_RECORD_2 = "holdingsRecord2";
+  private static final String VERSION = "_version";
+  private static final String IS_ACTIVE = "isActive";
+  private static final String IS_FLOATING_COLLECTION = "isFloatingCollection";
+  private static final String IS_SHADOW = "isShadow";
+  private static final String INSTITUTION = "institution";
+  private static final String CAMPUS = "campus";
+  private static final String LIBRARY = "library";
+  private static final String PRIMARY_SERVICE_POINT_OBJECT = "primaryServicePointObject";
+  private static final String SERVICE_POINTS = "servicePoints";
+  private static final String PICKUP_LOCATION = "pickupLocation";
+  private static final String ECS_REQUEST_ROUTING = "ecsRequestRouting";
+  private static final String SHELVING_LAG_TIME = "shelvingLagTime";
+  private static final String HOLD_SHELF_EXPIRY_PERIOD = "holdShelfExpiryPeriod";
+  private static final String DURATION = "duration";
+  private static final String STAFF_SLIPS = "staffSlips";
+  private static final String PRINT_BY_DEFAULT = "printByDefault";
+  private static final String STAFF_ONLY = "staffOnly";
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -179,10 +208,11 @@ public class ItemService {
           return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
         }
         try {
-          normalizeOrderField(items);
-        } catch (NumberFormatException e) {
+          normalizeItemFields(items);
+        } catch (Exception e) {
+          log.warn("updateItems:: Unable to normalize fields", e);
           return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
-            "Invalid order value: " + e.getMessage()));
+            "Unable to normalize fields: " + e.getMessage()));
         }
         return postgresClient.withTransaction(conn ->
             itemRepository.updateItems(conn, items)
@@ -601,21 +631,69 @@ public class ItemService {
       .toList());
   }
 
-  private void normalizeOrderField(List<ItemPatch> items) {
-    for (ItemPatch itemPatch : items) {
-      var additionalProps = itemPatch.getAdditionalProperties();
-      if (additionalProps == null) {
-        return;
-      }
-      var orderValue = additionalProps.get("order");
-      if (orderValue instanceof String strOrder && !strOrder.isEmpty()) {
-        try {
-          additionalProps.put("order", Integer.valueOf(strOrder));
-        } catch (NumberFormatException e) {
-          throw new NumberFormatException("Invalid order value: " + strOrder);
-        }
-      }
-    }
+  private void normalizeItemFields(List<ItemPatch> items) {
+    items.stream()
+      .map(ItemPatch::getAdditionalProperties)
+      .filter(Objects::nonNull)
+      .forEach(props -> {
+        normalizeProperty(props, ORDER, Integer::valueOf);
+        normalizeProperty(props, DISCOVERY_SUPPRESS, Boolean::valueOf);
+
+        // normalize "staffOnly" property in notes and circulationNotes lists
+        normalizeStaffOnlyInNestedLists(props, NOTES, CIRCULATION_NOTES);
+
+        // normalize locations
+        normalizeIfMap(props, PERMANENT_LOCATION, this::normalizeLocation);
+        normalizeIfMap(props, TEMPORARY_LOCATION, this::normalizeLocation);
+
+        // normalize holdingsRecord2
+        normalizeIfMap(props, HOLDINGS_RECORD_2, holdingsProps -> {
+          normalizeProperty(holdingsProps, VERSION, Integer::valueOf);
+          normalizeProperty(holdingsProps, DISCOVERY_SUPPRESS, Boolean::valueOf);
+          normalizeStaffOnlyInNestedLists(holdingsProps, NOTES);
+        });
+      });
+  }
+
+  private void normalizeLocation(Map<String, Object> location) {
+    normalizeProperty(location, IS_ACTIVE, Boolean::valueOf);
+    normalizeProperty(location, IS_FLOATING_COLLECTION, Boolean::valueOf);
+    normalizeProperty(location, IS_SHADOW, Boolean::valueOf);
+    normalizeIsShadowInNestedObjects(location, INSTITUTION, CAMPUS, LIBRARY);
+
+    normalizeIfMap(location, PRIMARY_SERVICE_POINT_OBJECT, this::normalizeServicePoint);
+    normalizeIfList(location, SERVICE_POINTS, this::normalizeServicePoint);
+  }
+
+  private void normalizeServicePoint(Map<String, Object> servicePoint) {
+    normalizeProperty(servicePoint, PICKUP_LOCATION, Boolean::valueOf);
+    normalizeProperty(servicePoint, ECS_REQUEST_ROUTING, Boolean::valueOf);
+    normalizeProperty(servicePoint, SHELVING_LAG_TIME, Integer::valueOf);
+
+    normalizeIfMap(servicePoint, HOLD_SHELF_EXPIRY_PERIOD, holdShelfExpiryPeriod ->
+      normalizeProperty(holdShelfExpiryPeriod, DURATION, Integer::valueOf));
+
+    normalizeIfMap(servicePoint, STAFF_SLIPS, staffSlips ->
+      normalizeProperty(staffSlips, PRINT_BY_DEFAULT, Boolean::valueOf));
+  }
+
+  private void normalizeStaffOnlyInNestedLists(Map<String, Object> props, String... fields) {
+    Stream.of(fields)
+      .map(props::get)
+      .filter(value -> value instanceof List<?> list && !list.isEmpty())
+      .map(value -> (List<?>) value)
+      .forEach(list -> list.stream()
+        .filter(Map.class::isInstance)
+        .map(note -> (Map<String, Object>) note)
+        .forEach(noteMap -> normalizeProperty(noteMap, STAFF_ONLY, Boolean::valueOf)));
+  }
+
+  private void normalizeIsShadowInNestedObjects(Map<String, Object> props, String... fields) {
+    Stream.of(fields)
+      .map(props::get)
+      .filter(Map.class::isInstance)
+      .map(value -> (Map<String, Object>) value)
+      .forEach(nestedMap -> normalizeProperty(nestedMap, IS_SHADOW, Boolean::valueOf));
   }
 
   private static final class PutData {

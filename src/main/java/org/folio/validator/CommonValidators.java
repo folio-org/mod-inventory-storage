@@ -5,7 +5,9 @@ import static io.vertx.core.Future.succeededFuture;
 
 import io.vertx.core.Future;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import org.apache.commons.collections4.CollectionUtils;
 import org.folio.rest.exceptions.BadRequestException;
@@ -36,5 +38,27 @@ public final class CommonValidators {
       .filter(Future::failed)
       .findFirst()
       .orElse(succeededFuture());
+  }
+
+  public static <T> void normalizeProperty(Map<String, Object> properties, String key, Function<String, T> converter) {
+    var value = properties.get(key);
+    if (value instanceof String strValue && !strValue.isEmpty()) {
+      properties.put(key, converter.apply(strValue));
+    }
+  }
+
+  public static void normalizeIfMap(Map<String, Object> props, String key, Consumer<Map<String, Object>> action) {
+    if (props.get(key) instanceof Map<?, ?> map) {
+      action.accept((Map<String, Object>) map);
+    }
+  }
+
+  public static void normalizeIfList(Map<String, Object> props, String key, Consumer<Map<String, Object>> action) {
+    if (props.get(key) instanceof List<?> list) {
+      list.stream()
+        .filter(Map.class::isInstance)
+        .map(item -> (Map<String, Object>) item)
+        .forEach(action);
+    }
   }
 }
