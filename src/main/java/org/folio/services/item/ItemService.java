@@ -86,6 +86,9 @@ public class ItemService {
   private static final String INSTANCE_ID_WITH_ITEM_JSON = """
     {"instanceId": "%s",%s
     """;
+  private static final List<String> READ_ONLY_FIELDS = List.of(
+    "permanentLocation", "temporaryLocation", "effectiveLocationId", "effectiveShelvingOrder",
+    "effectiveCallNumberComponents", "holdingsRecord2", "metadata", "materialType");
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -156,6 +159,7 @@ public class ItemService {
     try {
       patchDataList = items.stream()
         .map(itemPatch -> {
+          removeReadOnlyFields(itemPatch);
           var patchData = new PatchData();
           patchData.setPatchRequest(itemPatch);
           patchData.setNewItem(OBJECT_MAPPER.convertValue(itemPatch, Item.class));
@@ -202,6 +206,13 @@ public class ItemService {
               }))
           .recover(ItemUtils::handleUpdateItemsError);
       });
+  }
+
+  private void removeReadOnlyFields(ItemPatch itemPatch) {
+    var additionalProperties = itemPatch.getAdditionalProperties();
+    if (additionalProperties != null) {
+      READ_ONLY_FIELDS.forEach(additionalProperties::remove);
+    }
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
