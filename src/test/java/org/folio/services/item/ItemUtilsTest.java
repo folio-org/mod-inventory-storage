@@ -181,6 +181,107 @@ class ItemUtilsTest {
     assertTrue(result.cause() instanceof ValidationException || result.cause() instanceof RuntimeException);
   }
 
+  @Test
+  @DisplayName("Should normalize item fields correctly")
+  void normalizeItemFields_shouldNormalizeFieldsCorrectly() {
+    // Given
+    var props = new HashMap<String, Object>();
+    props.put("order", "1");
+    props.put("discoverySuppress", "true");
+    props.put("notes", List.of(
+      new HashMap<>(Map.of("staffOnly", "true")),
+      new HashMap<>(Map.of("staffOnly", "false"))
+    ));
+    props.put("circulationNotes", List.of(
+      new HashMap<>(Map.of("staffOnly", "false"))
+    ));
+    props.put("permanentLocation", new HashMap<>(Map.of(
+      "isActive", "true",
+      "primaryServicePointObject", new HashMap<>(Map.of("pickupLocation", "true"))
+    )));
+    props.put("temporaryLocation", new HashMap<>(Map.of(
+      "isFloatingCollection", "false",
+      "servicePoints", List.of(new HashMap<>(Map.of("shelvingLagTime", "120")))
+    )));
+    props.put("holdingsRecord2", new HashMap<>(Map.of(
+      "_version", "2",
+      "discoverySuppress", "false",
+      "notes", List.of(new HashMap<>(Map.of("staffOnly", "true")))
+    )));
+
+    var itemPatch = new ItemPatch();
+    props.forEach(itemPatch::withAdditionalProperty);
+
+    // When
+    ItemUtils.normalizeItemFields(List.of(itemPatch));
+
+    // Then
+    var normalizedProps = itemPatch.getAdditionalProperties();
+    assertEquals(1, normalizedProps.get("order"));
+    assertEquals(true, normalizedProps.get("discoverySuppress"));
+
+    // Notes normalization
+    var notes = (List<Map<String, Object>>) normalizedProps.get("notes");
+    assertEquals(true, notes.getFirst().get("staffOnly"));
+    assertEquals(false, notes.get(1).get("staffOnly"));
+
+    // Circulation notes normalization
+    var circulationNotes = (List<Map<String, Object>>) normalizedProps.get("circulationNotes");
+    assertEquals(false, circulationNotes.getFirst().get("staffOnly"));
+
+    // Permanent location normalization
+    var permanentLocation = (Map<String, Object>) normalizedProps.get("permanentLocation");
+    assertEquals(true, permanentLocation.get("isActive"));
+    var primaryServicePointObject = (Map<String, Object>) permanentLocation.get("primaryServicePointObject");
+    assertEquals(true, primaryServicePointObject.get("pickupLocation"));
+
+    // Temporary location normalization
+    var temporaryLocation = (Map<String, Object>) normalizedProps.get("temporaryLocation");
+    assertEquals(false, temporaryLocation.get("isFloatingCollection"));
+    var servicePoints = (List<Map<String, Object>>) temporaryLocation.get("servicePoints");
+    assertEquals(120, servicePoints.getFirst().get("shelvingLagTime"));
+
+    // HoldingsRecord2 normalization
+    var holdingsRecord2 = (Map<String, Object>) normalizedProps.get("holdingsRecord2");
+    assertEquals(2, holdingsRecord2.get("_version"));
+    assertEquals(false, holdingsRecord2.get("discoverySuppress"));
+    var holdingsNotes = (List<Map<String, Object>>) holdingsRecord2.get("notes");
+    assertEquals(true, holdingsNotes.getFirst().get("staffOnly"));
+  }
+
+  @Test
+  @DisplayName("Should not fail when properties are missing")
+  void normalizeItemFields_shouldHandleMissingProperties() {
+    // Given
+    var itemPatch = new ItemPatch();
+
+    // When
+    ItemUtils.normalizeItemFields(List.of(itemPatch));
+
+    // Then
+    assertTrue(itemPatch.getAdditionalProperties().isEmpty());
+  }
+
+  @Test
+  @DisplayName("Should not change properties with incorrect types for normalization")
+  void normalizeItemFields_shouldNotChangeNotStringType() {
+    // Given
+    var props = new HashMap<String, Object>();
+    props.put("order", 5);
+    props.put("discoverySuppress", true);
+    var itemPatch = new ItemPatch();
+    props.forEach(itemPatch::withAdditionalProperty);
+    var items = List.of(itemPatch);
+
+    // When
+    ItemUtils.normalizeItemFields(items);
+
+    // Then
+    var normalizedProps = itemPatch.getAdditionalProperties();
+    assertEquals(5, normalizedProps.get("order"));
+    assertEquals(true, normalizedProps.get("discoverySuppress"));
+  }
+
   private static Stream<Arguments> provideValidRequiredFieldsCases() {
     return Stream.of(
       Arguments.of(
