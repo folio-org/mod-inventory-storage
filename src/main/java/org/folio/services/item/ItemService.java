@@ -208,13 +208,6 @@ public class ItemService {
       });
   }
 
-  private void removeReadOnlyFields(ItemPatch itemPatch) {
-    var additionalProperties = itemPatch.getAdditionalProperties();
-    if (additionalProperties != null) {
-      READ_ONLY_FIELDS.forEach(additionalProperties::remove);
-    }
-  }
-
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     var putData = new PutData();
@@ -612,6 +605,13 @@ public class ItemService {
         }
       })
       .toList());
+  }
+
+  private void removeReadOnlyFields(ItemPatch itemPatch) {
+    var additionalProperties = itemPatch.getAdditionalProperties();
+    if (additionalProperties != null) {
+      READ_ONLY_FIELDS.forEach(additionalProperties::remove);
+    }
   }
 
   private static final class PutData {
