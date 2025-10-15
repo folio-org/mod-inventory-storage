@@ -1,10 +1,14 @@
 package org.folio.validator;
 
+import static org.folio.validator.CommonValidators.normalizeProperty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.rest.exceptions.BadRequestException;
@@ -13,6 +17,10 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.junit.jupiter.api.Test;
 
 class CommonValidatorsTest {
+
+  private static final String FIELD = "fieldName";
+  private static final String VALUE_STRING = "10";
+  private static final int VALUE_INT = 10;
 
   @Test
   void refuseIfNotFound_returnsSucceededFuture_whenEntityIsNotNull() {
@@ -89,6 +97,38 @@ class CommonValidatorsTest {
     assertTrue(result.failed());
     assertInstanceOf(BadRequestException.class, result.cause());
     assertEquals("invalid input syntax for type uuid: \"invalid-uuid\"", result.cause().getMessage());
+  }
+
+  @Test
+  void normalizeProperty_shouldConvertStringValueToInt() {
+    Map<String, Object> properties = new HashMap<>(Map.of(FIELD, VALUE_STRING));
+    normalizeProperty(properties, FIELD, Integer::valueOf);
+
+    assertEquals(VALUE_INT, properties.get(FIELD));
+  }
+
+  @Test
+  void normalizeProperty_shouldConvertStringValueToBoolean() {
+    Map<String, Object> properties = new HashMap<>(Map.of(FIELD, "true"));
+    normalizeProperty(properties, FIELD, Boolean::valueOf);
+
+    assertEquals(true, properties.get(FIELD));
+  }
+
+  @Test
+  void normalizeProperty_shouldNotConvertNonStringValue() {
+    Map<String, Object> properties = new HashMap<>(Map.of(FIELD, VALUE_INT));
+    normalizeProperty(properties, FIELD, Object::toString);
+
+    assertEquals(VALUE_INT, properties.get(FIELD));
+  }
+
+  @Test
+  void normalizeProperty_shouldDoNothingIfFieldNotPresent() {
+    Map<String, Object> properties = new HashMap<>();
+    normalizeProperty(properties, FIELD, Integer::valueOf);
+
+    assertNull(properties.get(FIELD));
   }
 
   private HoldingsRecord createHoldingsRecord(Set<String> statisticalCodeIds) {

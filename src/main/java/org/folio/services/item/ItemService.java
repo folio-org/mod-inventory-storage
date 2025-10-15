@@ -22,6 +22,7 @@ import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
 import static org.folio.rest.support.CollectionUtil.deepCopy;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.services.item.ItemUtils.normalizeItemFields;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.CommonValidators.validateUuidFormatForList;
@@ -85,6 +86,9 @@ public class ItemService {
   private static final String INSTANCE_ID_WITH_ITEM_JSON = """
     {"instanceId": "%s",%s
     """;
+  private static final List<String> READ_ONLY_FIELDS = List.of(
+    "permanentLocation", "temporaryLocation", "effectiveLocationId", "effectiveShelvingOrder",
+    "effectiveCallNumberComponents", "holdingsRecord2", "metadata", "materialType");
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -155,6 +159,7 @@ public class ItemService {
     try {
       patchDataList = items.stream()
         .map(itemPatch -> {
+          removeReadOnlyFields(itemPatch);
           var patchData = new PatchData();
           patchData.setPatchRequest(itemPatch);
           patchData.setNewItem(OBJECT_MAPPER.convertValue(itemPatch, Item.class));
@@ -177,6 +182,13 @@ public class ItemService {
       .compose(patchDataToUpdate -> {
         if (patchDataToUpdate.isEmpty()) {
           return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
+        }
+        try {
+          normalizeItemFields(items);
+        } catch (Exception e) {
+          log.warn("updateItems:: Unable to normalize fields", e);
+          return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+            "Unable to normalize fields: " + e.getMessage()));
         }
         return postgresClient.withTransaction(conn ->
             itemRepository.updateItems(conn, items)
@@ -593,6 +605,13 @@ public class ItemService {
         }
       })
       .toList());
+  }
+
+  private void removeReadOnlyFields(ItemPatch itemPatch) {
+    var additionalProperties = itemPatch.getAdditionalProperties();
+    if (additionalProperties != null) {
+      READ_ONLY_FIELDS.forEach(additionalProperties::remove);
+    }
   }
 
   private static final class PutData {

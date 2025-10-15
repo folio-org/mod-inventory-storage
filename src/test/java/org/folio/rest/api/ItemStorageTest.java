@@ -48,6 +48,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -2048,6 +2049,84 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertEquals("55", itemResponseJson.getValue("order").toString());
     assertEquals("it00000000001", itemResponseJson.getValue("hrid").toString());
     assertNull(itemResponseJson.getValue("barcode"));
+
+    itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
+  }
+
+  @SneakyThrows
+  @Test
+  public void shouldNormalizeOrderFieldToIntegerWhenStringTypeInRequest() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    var completableFuture = new CompletableFuture<Response>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // modify item body
+    var itemsJson = response.getJson();
+    itemsJson.put("order", "55");
+
+    // update item via PATCH
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertThat(itemResponseJson.getInteger(ORDER_FIELD), is(55));
+
+    itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
+  }
+
+  @SneakyThrows
+  @Test
+  public void shouldRemoveReadOnlyFields() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    // create item
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    // get item
+    var completableFuture = new CompletableFuture<Response>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
+      ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+
+    // add read-only fields to item body
+    var itemsJson = response.getJson();
+    itemsJson.put("order", 10);
+    itemsJson.put("holdingsRecord2", new JsonObject());
+    itemsJson.put("permanentLocation", new JsonObject());
+    itemsJson.put("effectiveShelvingOrder", new JsonObject());
+
+    // update item via PATCH
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    // verify item is updated
+    var itemResponse = getById(itemId);
+    var itemResponseJson = itemResponse.getJson();
+
+    assertThat(itemResponse.getStatusCode(), is(200));
+    assertFalse(itemResponseJson.containsKey("holdingsRecord2"));
+    assertFalse(itemResponseJson.containsKey("permanentLocation"));
+    assertFalse(itemResponseJson.containsKey("effectiveShelvingOrder"));
+    assertTrue(itemResponseJson.containsKey("order"));
 
     itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
   }

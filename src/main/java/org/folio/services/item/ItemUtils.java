@@ -3,11 +3,14 @@ package org.folio.services.item;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.validator.CommonValidators.normalizeProperty;
 
 import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.ValidationException;
@@ -21,6 +24,12 @@ import org.folio.rest.persist.PgUtil;
 public final class ItemUtils {
 
   private static final Logger log = getLogger(ItemUtils.class);
+  // Constants for item field names used in normalization
+  private static final String ORDER = "order";
+  private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
+  private static final String NOTES = "notes";
+  private static final String CIRCULATION_NOTES = "circulationNotes";
+  private static final String STAFF_ONLY = "staffOnly";
 
   private ItemUtils() {
     throw new UnsupportedOperationException("Utility class");
@@ -123,5 +132,29 @@ public final class ItemUtils {
       log.error("handleUpdateItemsError:: Failed to get respond500WithTextPlain method", e);
       return Future.failedFuture(throwable);
     }
+  }
+
+  public static void normalizeItemFields(List<ItemPatch> items) {
+    items.stream()
+      .map(ItemPatch::getAdditionalProperties)
+      .filter(props -> Objects.nonNull(props) && !props.isEmpty())
+      .forEach(props -> {
+        normalizeProperty(props, ORDER, Integer::valueOf);
+        normalizeProperty(props, DISCOVERY_SUPPRESS, Boolean::valueOf);
+
+        // normalize "staffOnly" property in notes and circulationNotes lists
+        normalizeStaffOnlyInNestedLists(props, NOTES, CIRCULATION_NOTES);
+      });
+  }
+
+  private static void normalizeStaffOnlyInNestedLists(Map<String, Object> props, String... fields) {
+    Stream.of(fields)
+      .map(props::get)
+      .filter(value -> value instanceof List<?> list && !list.isEmpty())
+      .map(value -> (List<?>) value)
+      .forEach(list -> list.stream()
+        .filter(Map.class::isInstance)
+        .map(field -> (Map<String, Object>) field)
+        .forEach(fieldMap -> normalizeProperty(fieldMap, STAFF_ONLY, Boolean::valueOf)));
   }
 }

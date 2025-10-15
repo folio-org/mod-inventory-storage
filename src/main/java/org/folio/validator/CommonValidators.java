@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 
 import io.vertx.core.Future;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import org.apache.commons.collections4.CollectionUtils;
@@ -36,5 +37,12 @@ public final class CommonValidators {
       .filter(Future::failed)
       .findFirst()
       .orElse(succeededFuture());
+  }
+
+  public static <T> void normalizeProperty(Map<String, Object> properties, String key, Function<String, T> converter) {
+    var value = properties.get(key);
+    if (value instanceof String strValue && !strValue.isEmpty()) {
+      properties.put(key, converter.apply(strValue));
+    }
   }
 }
