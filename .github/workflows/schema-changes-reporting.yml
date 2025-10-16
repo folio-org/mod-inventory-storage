@@ -4,11 +4,11 @@ on:
   push:
     branches: ["**"]
     paths:
-      - "ramls/*.json"
+      - "ramls/**/*.json"
   pull_request:
     branches: ["**"]
     paths:
-      - "ramls/*.json"
+      - "ramls/**/*.json"
   release:
     types: [created, published]
   workflow_dispatch:
