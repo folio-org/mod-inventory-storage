@@ -1,0 +1,292 @@
+name: Schema changes (mod-inventory-storage)
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "ramls/*.json"
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "ramls/*.json"
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Optional base ref (tag/commit)"
+        required: false
+      head:
+        description: "Optional head ref (tag/commit)"
+        required: false
+      module_name:
+        description: 'Module name (e.g. folio-org/mod-inventory-storage)'
+        required: true
+        default: 'folio-org/mod-inventory-storage'
+  workflow_call:
+    inputs:
+      base:
+        description: "Optional base ref (tag/commit)"
+        required: false
+        type: string
+      head:
+        description: "Optional head ref (tag/commit)"
+        required: false
+        type: string
+      repository:
+        required: false
+        type: string
+      artifact_name:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history incl. tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          repository: ${{ github.event.inputs.module_name }}
+          ref: main
+
+      - name: Determine BASE/HEAD
+        id: refs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          BASE_IN=""
+          HEAD_IN=""
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BASE_IN="${{ github.event.inputs.base || '' }}"
+            HEAD_IN="${{ github.event.inputs.head || '' }}"
+          elif [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            BASE_IN="${{ inputs.base || '' }}"
+            HEAD_IN="${{ inputs.head || '' }}"
+          fi
+
+          case "${{ github.event_name }}" in
+            push)
+              BASE="${BASE_IN:-${{ github.event.before }}}"
+              HEAD="${HEAD_IN:-${GITHUB_SHA}}"
+              ;;
+            pull_request)
+              BASE="${BASE_IN:-${{ github.event.pull_request.base.sha }}}"
+              HEAD="${HEAD_IN:-${{ github.event.pull_request.head.sha }}}"
+              ;;
+            release)
+              CUR_TAG="${{ github.event.release.tag_name }}"
+              HEAD="${HEAD_IN:-$CUR_TAG}"
+              PREV_TAG="$(git tag --sort=-creatordate | grep -A1 "^${CUR_TAG}$" | tail -n1 || true)"
+              [[ -z "$PREV_TAG" ]] && PREV_TAG="$(git tag --sort=creatordate | head -n1 || true)"
+              [[ -z "$PREV_TAG" ]] && PREV_TAG="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+              BASE="${BASE_IN:-$PREV_TAG}"
+              ;;
+            workflow_dispatch|workflow_call)
+              if [[ -n "$BASE_IN" || -n "$HEAD_IN" ]]; then
+                HEAD="${HEAD_IN:-${GITHUB_SHA}}"
+                BASE="${BASE_IN:-$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)}"
+              else
+                CUR_TAG="$(git tag --sort=-creatordate | sed -n '1p' || true)"
+                PREV_TAG="$(git tag --sort=-creatordate | sed -n '2p' || true)"
+                if [[ -n "$CUR_TAG" && -n "$PREV_TAG" ]]; then
+                  HEAD="$CUR_TAG"
+                  BASE="$PREV_TAG"
+                else
+                  HEAD="${GITHUB_SHA}"
+                  BASE="$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)"
+                fi
+              fi
+              ;;
+            *)
+              HEAD="${HEAD_IN:-${GITHUB_SHA}}"
+              BASE="${BASE_IN:-$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)}"
+              ;;
+          esac
+
+          git rev-parse "$BASE" "$HEAD" >/dev/null
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      - name: Install jq (quiet)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+
+      - name: Build report (summary only, refactored)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE="${{ steps.refs.outputs.base }}"
+          HEAD="${{ steps.refs.outputs.head }}"
+          MAX_LINES=500
+
+          mkfile() { mktemp -t "$1.XXXXXX"; }
+          truncate_or_all() {
+            local LINES
+            LINES=$(wc -l < "$1" || echo 0)
+            if (( LINES > MAX_LINES )); then
+              head -n "$MAX_LINES" "$1"
+              echo "_Output truncated to ${MAX_LINES} lines._"
+            else
+              cat "$1"
+            fi
+          }
+
+          git -c diff.renames=true diff --name-status -M "$BASE" "$HEAD" -- ramls/*.json > /tmp/status.txt || true
+
+          REPO_NAME="${{ inputs.repository || github.repository }}"
+          {
+            echo "## JSON Schema Changes (\`$REPO_NAME\`)"
+            echo
+            echo "- Base: \`$BASE\`"
+            echo "- Head: \`$HEAD\`"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ ! -s /tmp/status.txt ]]; then
+            echo "_No JSON schema changes detected in \`ramls/\` (top-level)._ " >> "$GITHUB_STEP_SUMMARY"
+            cat "$GITHUB_STEP_SUMMARY" > report.md
+            exit 0
+          fi
+
+          {
+            echo "### Changed files"
+            echo
+            echo "| Status | File (HEAD) |"
+            echo "|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          CHANGES=()
+          while IFS= read -r LINE; do
+            CHANGES+=("$LINE")
+          done < /tmp/status.txt
+
+          for LINE in "${CHANGES[@]}"; do
+            IFS=$'\t' read -r S A B <<< "$LINE"
+            FILE="$A"
+            [[ "$S" == R* ]] && FILE="$B"
+            case "$S" in
+              M) STATUS="Modified" ;;
+              A) STATUS="Added" ;;
+              D) STATUS="Deleted" ;;
+              R*) PCT="${S#R}"; STATUS="Renamed (${PCT}%)" ;;
+              C*) PCT="${S#C}"; STATUS="Copied (${PCT}%)" ;;
+              T) STATUS="Type changed" ;;
+              U) STATUS="Unmerged" ;;
+              X) STATUS="Unknown" ;;
+              B) STATUS="Broken pairing" ;;
+              *) STATUS="$S" ;;
+            esac
+            echo "| $STATUS | \`$FILE\` |" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          {
+            echo
+            echo "### Diffs (normalized first, fallback to raw if empty)"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for LINE in "${CHANGES[@]}"; do
+            IFS=$'\t' read -r S A B <<< "$LINE"
+            BASE_PATH="$A"
+            HEAD_PATH="$A"
+            TITLE="$A"
+            if [[ "$S" == R* ]]; then
+              BASE_PATH="$A"
+              HEAD_PATH="$B"
+              TITLE="$B"
+            fi
+
+            echo "#### \`$TITLE\`" >> "$GITHUB_STEP_SUMMARY"
+
+            BASE_RAW="$(mkfile base_raw)"
+            HEAD_RAW="$(mkfile head_raw)"
+            git show "$BASE:$BASE_PATH" 2>/dev/null > "$BASE_RAW" || true
+            git show "$HEAD:$HEAD_PATH" 2>/dev/null > "$HEAD_RAW" || true
+
+            BASE_NORM="$(mkfile base_json)"
+            HEAD_NORM="$(mkfile head_json)"
+            VALID_BASE=1; VALID_HEAD=1
+            if ! jq -S . < "$BASE_RAW" > "$BASE_NORM" 2>/dev/null; then VALID_BASE=0; echo '{}' > "$BASE_NORM"; fi
+            if ! jq -S . < "$HEAD_RAW" > "$HEAD_NORM" 2>/dev/null; then VALID_HEAD=0; echo '{}' > "$HEAD_NORM"; fi
+
+            NORM_DIFF="$(mkfile norm_diff)"
+            if ! diff -u --label "$TITLE (base)" --label "$TITLE (head)" "$BASE_NORM" "$HEAD_NORM" > "$NORM_DIFF"; then
+              echo '```diff' >> "$GITHUB_STEP_SUMMARY"
+              truncate_or_all "$NORM_DIFF" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            else
+              [[ $VALID_BASE -eq 0 || $VALID_HEAD -eq 0 ]] && echo "_Note: one of the versions is not valid JSON — raw diff only._" >> "$GITHUB_STEP_SUMMARY"
+              echo "_No structural changes (after normalization)_" >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+
+              RAW_DIFF="$(mkfile raw_diff)"
+              diff -u --label "$TITLE (base)" --label "$TITLE (head)" "$BASE_RAW" "$HEAD_RAW" > "$RAW_DIFF" || true
+              echo "_Showing raw textual diff (formatting/whitespace changes may appear)_" >> "$GITHUB_STEP_SUMMARY"
+              echo '```diff' >> "$GITHUB_STEP_SUMMARY"
+              truncate_or_all "$RAW_DIFF" >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+
+            echo >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          cat "$GITHUB_STEP_SUMMARY" > report.md
+
+      - name: Ensure report exists
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          ls -l report.md || true
+          test -s report.md || (echo "report.md is missing or empty" && exit 1)
+
+      - name: Comment PR with report
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: "Schema Changes Report"
+          recreate: true
+          path: report.md
+
+      - name: Install pandoc
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pandoc
+
+      - name: Write minimal GitHub-like CSS
+        run: |
+          cat > style.css <<'CSS'
+          body { margin: 2rem auto; max-width: 900px; font: 16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#24292f; }
+          h1,h2,h3 { border-bottom:1px solid #d0d7de; padding-bottom:.3rem; }
+          pre,code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+          pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
+          table { border-collapse: collapse; width: 100%; }
+          th,td { border:1px solid #d0d7de; padding:6px 10px; }
+          blockquote { color:#57606a; border-left:4px solid #d0d7de; padding:0 1rem; margin:0; }
+          CSS
+
+      - name: Convert report.md -> report.html
+        run: |
+          pandoc \
+            --from=gfm --to=html5 --standalone \
+            --metadata=pagetitle:"Schema Changes Report" \
+            --css=style.css --self-contained \
+            -o report.html report.md
+
+      - name: Upload artifacts (MD + HTML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name || format('report-{0}-{1}', github.run_id, github.job) }}
+          path: |
+            report.md
+            report.html
+          if-no-files-found: error
+          retention-days: 7
