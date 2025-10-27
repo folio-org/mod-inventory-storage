@@ -19,10 +19,6 @@ on:
       head:
         description: "Optional head ref (tag/commit)"
         required: false
-      module_name:
-        description: 'Module name (e.g. folio-org/mod-inventory-storage)'
-        required: true
-        default: 'folio-org/mod-inventory-storage'
   workflow_call:
     inputs:
       base:
@@ -57,7 +53,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          repository: ${{ github.event.inputs.module_name }}
+          repository: folio-org/mod-inventory-storage
           ref: master
 
       - name: Determine BASE/HEAD
