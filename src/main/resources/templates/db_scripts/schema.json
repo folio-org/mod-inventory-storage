@@ -1300,7 +1300,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "item/update_set_order_function.sql",
+      "snippetPath": "item/update_set_order_with_reset_sequence_on_empty_holding.sql",
       "fromModuleVersion": "30.0.0"
     }
   ]
