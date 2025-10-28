@@ -24,12 +24,26 @@ BEGIN
 
         -- Check if the order field is null
         IF income_order IS NULL THEN
-            -- Update or insert the max order value in the tracker table
-            INSERT INTO ${myuniversity}_${mymodule}.item_order_tracker (holdings_id)
-            VALUES (holding_record_id)
-            ON CONFLICT (holdings_id) DO UPDATE
-                SET max_order = ${myuniversity}_${mymodule}.item_order_tracker.max_order + 1
-            RETURNING max_order INTO new_order;
+            -- Check if there is at least one item for this holdings record
+            IF EXISTS (
+              SELECT 1
+              FROM ${myuniversity}_${mymodule}.item
+              WHERE holdingsrecordid = holding_record_id
+            ) THEN
+                -- Update or insert the max order value in the tracker table
+                INSERT INTO ${myuniversity}_${mymodule}.item_order_tracker (holdings_id)
+                VALUES (holding_record_id)
+                ON CONFLICT (holdings_id) DO UPDATE
+                    SET max_order = ${myuniversity}_${mymodule}.item_order_tracker.max_order + 1
+                RETURNING max_order INTO new_order;
+            ELSE
+                -- This is the first item for this holdings record, set max_order to 1 by default
+                new_order := 1;
+                INSERT INTO ${myuniversity}_${mymodule}.item_order_tracker (holdings_id, max_order)
+                VALUES (holding_record_id, 1)
+                ON CONFLICT (holdings_id) DO UPDATE
+                    SET max_order = 1;
+            END IF;
 
             -- Set the new order value in the item
             NEW.jsonb := jsonb_set(

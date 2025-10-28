@@ -1270,11 +1270,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "item/create-set-order-trigger.sql",
-      "fromModuleVersion": "29.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocations.sql",
       "fromModuleVersion": "29.1.0"
     },
@@ -1300,7 +1295,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "item/update_set_order_with_reset_sequence_on_empty_holding.sql",
+      "snippetPath": "item/create-set-order-trigger.sql",
       "fromModuleVersion": "30.0.0"
     }
   ]
