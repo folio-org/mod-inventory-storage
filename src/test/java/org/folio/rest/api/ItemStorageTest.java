@@ -54,8 +54,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.Instant;
@@ -117,6 +120,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private static final String INVALID_TYPE_ERROR_MESSAGE = String.format("invalid input syntax for type uuid: \"%s\"",
     INVALID_UUID);
   private static final String ORDER_FIELD = "order";
+  private static final Vertx VERTX = Vertx.vertx();
 
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
@@ -2051,6 +2055,82 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertNull(itemResponseJson.getValue("barcode"));
 
     itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldResetItemOrderWhenAllItemsAreDeletedAndNewOneIsCreated() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId1 = randomUUID();
+    var itemId2 = randomUUID();
+
+    // create items
+    var item1 = smallAngryPlanet(itemId1, holdingsRecordId);
+    var item2 = smallAngryPlanet(itemId2, holdingsRecordId);
+    item2.put("barcode", "1234567890");
+    createItem(item1);
+    createItem(item2);
+
+    assertEquals(2, getMaxOrder(holdingsRecordId));
+
+    // delete ALL items for the holding
+    deleteAllItemsForHolding(holdingsRecordId);
+    assertNotExists(item1);
+    assertNotExists(item2);
+
+    // verify max order still 2
+    assertEquals(2, getMaxOrder(holdingsRecordId));
+
+    // create new first item for the holding
+    createItem(item2);
+
+    // verify order is reset to 1
+    assertEquals(1, getMaxOrder(holdingsRecordId));
+    // assert item order
+    assertEquals(1, getOrder(itemId2));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldSetNewItemOrderToNextValueEvenAfterItemDeletion() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId1 = randomUUID();
+    var itemId2 = randomUUID();
+
+    // create item1 and verify order is 1
+    var item1 = smallAngryPlanet(itemId1, holdingsRecordId);
+    createItem(item1);
+    var firstItemOrder = getOrder(itemId1);
+    assertEquals(1, firstItemOrder);
+
+    // create item2 and verify order is 2
+    var item2 = smallAngryPlanet(itemId2, holdingsRecordId);
+    item2.put("barcode", "1234567890");
+    createItem(item2);
+    var secondItemOrder = getOrder(itemId2);
+    assertEquals(2, secondItemOrder);
+
+    // verify max order is 2
+    assertEquals(2, getMaxOrder(holdingsRecordId));
+
+    // delete item2 with order 2
+    var response = getClient().delete(itemsStorageUrl("?query=id==" + itemId2), TENANT_ID).get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(204));
+    assertNotExists(item2);
+
+    // verify max order is still 2
+    assertEquals(2, getMaxOrder(holdingsRecordId));
+
+    // create new item and verify order is 3
+    var itemId3 = randomUUID();
+    var item3 = smallAngryPlanet(itemId3, holdingsRecordId);
+    item3.put("barcode", "1111111111");
+    createItem(item3);
+    var itemOrder = getOrder(itemId3);
+    assertEquals(3, itemOrder);
+
+    // verify max order is 3
+    assertEquals(3, getMaxOrder(holdingsRecordId));
   }
 
   @SneakyThrows
@@ -4295,5 +4375,47 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     item.put("permanentLoanTypeId", canCirculateLoanTypeID);
 
     return item;
+  }
+
+  @SneakyThrows
+  private void deleteAllItemsForHolding(UUID holdingsRecordId) {
+    var response = getClient().delete(itemsStorageUrl("?query=holdingsRecordId==" + holdingsRecordId), TENANT_ID)
+      .get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  @SneakyThrows
+  private RowSet<Row> runSql(String sql) {
+    CompletableFuture<RowSet<Row>> future = new CompletableFuture<>();
+
+    PostgresClient.getInstance(VERTX).execute(sql, handler -> {
+      if (handler.succeeded()) {
+        future.complete(handler.result());
+      }
+      future.completeExceptionally(handler.cause());
+    });
+    return future.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private int getMaxOrder(UUID holdingsRecordId) {
+    var query = String.format(
+      "SELECT max_order FROM %s_mod_inventory_storage.item_order_tracker WHERE holdings_id = '%s';",
+      TENANT_ID, holdingsRecordId);
+
+    var result = runSql(query);
+    assertEquals(1, result.rowCount());
+
+    var entry = result.iterator().next().toJson();
+    return entry.getInteger("max_order");
+  }
+
+  @SneakyThrows
+  private int getOrder(UUID itemId) {
+    var completableFuture = new CompletableFuture<Response>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID, ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertThat(response.getStatusCode(), is(200));
+    return response.getJson().getInteger(ORDER_FIELD);
   }
 }
