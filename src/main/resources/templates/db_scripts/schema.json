@@ -1270,11 +1270,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "item/create-set-order-trigger.sql",
-      "fromModuleVersion": "29.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocations.sql",
       "fromModuleVersion": "29.1.0"
     },
@@ -1296,6 +1291,11 @@
     {
       "run": "after",
       "snippetPath": "updateInstanceNoteTypeName.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "item/create-set-order-trigger.sql",
       "fromModuleVersion": "30.0.0"
     }
   ]
