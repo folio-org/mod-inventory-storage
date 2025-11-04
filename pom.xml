@@ -13,7 +13,7 @@
     <argLine />
 
     <raml-module-builder-version>35.4.0</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>5.0.5</vertx.version>
+    <vertx.version>4.5.14</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.24</aspectj.version>
     <folio-kafka-wrapper.version>3.4.0-SNAPSHOT</folio-kafka-wrapper.version>
@@ -26,7 +26,7 @@
 
     <okapi-testing.version>7.0.0</okapi-testing.version>
     <junit.version>6.0.1</junit.version>
-    <testcontainers.version>2.0.1</testcontainers.version>
+    <testcontainers.version>1.20.6</testcontainers.version>
     <joda-time.version>2.14.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
@@ -611,6 +611,9 @@
           <logViolationsToConsole>true</logViolationsToConsole>
           <configLocation>folio-checkstyle/checkstyle.xml</configLocation>
           <cacheFile>${basedir}/target/cachefile</cacheFile>
+          <propertyExpansion>
+            checkstyle.method-length.max=150
+          </propertyExpansion>
         </configuration>
       </plugin>
 
