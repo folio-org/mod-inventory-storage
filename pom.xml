@@ -13,9 +13,9 @@
     <argLine />
 
     <raml-module-builder-version>35.4.0</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.14</vertx.version>
+    <vertx.version>5.0.5</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
-    <aspectj.version>1.9.24</aspectj.version>
+    <aspectj.version>1.9.25</aspectj.version>
     <folio-kafka-wrapper.version>3.4.0-SNAPSHOT</folio-kafka-wrapper.version>
     <caffeine.version>3.2.3</caffeine.version>
     <lombok.version>1.18.42</lombok.version>
@@ -26,7 +26,7 @@
 
     <okapi-testing.version>7.0.0</okapi-testing.version>
     <junit.version>6.0.1</junit.version>
-    <testcontainers.version>1.20.6</testcontainers.version>
+    <testcontainers.version>2.0.1</testcontainers.version>
     <joda-time.version>2.14.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
     <junit4.version>4.13.2</junit4.version>
@@ -41,7 +41,7 @@
     <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
     <properties-maven-plugin.version>1.2.1</properties-maven-plugin.version>
-    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+    <maven-release-plugin.version>3.2.0</maven-release-plugin.version>
     <aspectj-maven-plugin.version>1.14.1</aspectj-maven-plugin.version>
     <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     <copy-rename-maven-plugin.version>1.0.1</copy-rename-maven-plugin.version>
