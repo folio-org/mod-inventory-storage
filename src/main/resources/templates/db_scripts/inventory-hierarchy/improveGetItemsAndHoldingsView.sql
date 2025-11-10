@@ -75,6 +75,7 @@ WITH
             'id', item.id,
             'hrId', item.jsonb ->> 'hrId',
             'holdingsRecordId', (item.jsonb ->> 'holdingsRecordId')::UUID,
+            'order', (item.jsonb ->> 'order')::int,
             'suppressFromDiscovery', COALESCE((i.jsonb ->> 'discoverySuppress')::bool, false) OR COALESCE((hr.jsonb ->> 'discoverySuppress')::bool, false) OR COALESCE((item.jsonb ->> 'discoverySuppress')::bool, false),
             'status', item.jsonb #>> '{status, name}',
             'formerIds', item.jsonb -> 'formerIds',
