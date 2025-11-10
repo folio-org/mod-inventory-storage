@@ -38,6 +38,7 @@
 * Adjust behavior for `includeShadowLocations` and `includeShadow` query params of location and location units respectively ([MODINVNSTOR-1459](https://folio-org.atlassian.net/browse/MODINVSTOR-1459))
 * Create a new API to support the update of items' order ([MODINVSTOR-1441](https://folio-org.atlassian.net/browse/MODINVSTOR-1441))
 * Reset the order sequence to 1 if there are no more items for the holding ([MODINVSTOR-1472](https://folio-org.atlassian.net/browse/MODINVSTOR-1472))
+* Improve performance of get_items_and_holdings_view to avoid extra memory and space consumption ([MODINVSTOR-1474](https://folio-org.atlassian.net/browse/MODINVSTOR-1474))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
