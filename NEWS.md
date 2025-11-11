@@ -53,6 +53,7 @@
 * Fix item sorting by order as a number ([MODINVSTOR-1470](https://folio-org.atlassian.net/browse/MODINVSTOR-1470))
 
 ### Tech Dept
+* Updates sample-data/instances JSON to include missing required fields that were introduced over the years.
 * Stabilize `canRequestOaiPmhViewWithOrderedElectronicAccess` test by refining item lookup logic ([MODINVSTOR-1406](https://folio-org.atlassian.net/browse/MODINVSTOR-1406))
 * Remove `subjectSeriesMigration` async migration as non-actual ([MODINVSTOR-1408](https://folio-org.atlassian.net/browse/MODINVSTOR-1408))
 * Stabilize `canMigratePrecedingSucceedingTitles` test by searching title in the result list first ([MODINVSTOR-1407](https://folio-org.atlassian.net/browse/MODINVSTOR-1407))
