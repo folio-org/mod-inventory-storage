@@ -35,7 +35,7 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.kafka.KafkaContainer;
 
 /**
- * Check the shaded fat uber jar and Dockerfile:
+ * Check the shaded fat uber jar and Dockerfile.
  *
  * <p>Test /admin/health.
  *
