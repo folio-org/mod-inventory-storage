@@ -1060,11 +1060,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/addEffectiveHoldingsToItemsAndHoldingsView.sql",
-      "fromModuleVersion": "20.3.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "addInstanceFormatsAudioBelt.sql",
       "fromModuleVersion": "20.3.0"
     },
@@ -1077,11 +1072,6 @@
       "run": "after",
       "snippetPath": "addIdentifierTypesUpcIsmn.sql",
       "fromModuleVersion": "21.1.0"
-    },
-    {
-      "run": "after",
-      "snippetPath": "inventory-hierarchy/addHoldingsIfItemsSuppressedItemsAndHoldingsView.sql",
-      "fromModuleVersion": "22.0.0"
     },
     {
       "run": "after",
@@ -1265,11 +1255,6 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/createItemsAndHoldingsViewFunction.sql",
-      "fromModuleVersion": "29.1.0"
-    },
-    {
-      "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocations.sql",
       "fromModuleVersion": "29.1.0"
     },
@@ -1300,7 +1285,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "inventory-hierarchy/improveGetItemsAndHoldingsView.sql",
+      "snippetPath": "inventory-hierarchy/createItemsAndHoldingsViewFunction.sql",
       "fromModuleVersion": "30.0.0"
     }
   ]
