@@ -118,15 +118,8 @@ public class ItemService {
       .compose(NotesValidators::refuseLongNotes)
       .compose(effectiveValuesService::populateEffectiveValues)
       .compose(this::populateCirculationNoteId)
-      .compose(item -> {
-        final Promise<Response> postResponse = promise();
-
-        post(ITEM_TABLE, item, okapiHeaders, vertxContext,
-          PostItemStorageItemsResponse.class, postResponse);
-
-        return postResponse.future()
-          .onSuccess(domainEventService.publishCreated());
-      })
+      .compose(item -> post(ITEM_TABLE, item, okapiHeaders, vertxContext, PostItemStorageItemsResponse.class)
+        .onSuccess(domainEventService.publishCreated()))
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -245,15 +238,9 @@ public class ItemService {
   public Future<Response> deleteItem(String itemId) {
     return itemRepository.getById(itemId)
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(item -> {
-        final Promise<Response> deleteResult = promise();
-
-        deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
-          DeleteItemStorageItemsByItemIdResponse.class, deleteResult);
-
-        return deleteResult.future()
-          .onSuccess(domainEventService.publishRemoved(item));
-      });
+      .compose(item -> deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
+        DeleteItemStorageItemsByItemIdResponse.class)
+        .onSuccess(domainEventService.publishRemoved(item)));
   }
 
   public Future<Response> deleteItems(String cql) {
@@ -315,6 +302,14 @@ public class ItemService {
       .compose(items -> domainEventService.publishReindexItems(rangeId, items));
   }
 
+  public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,
+                                       org.folio.services.ItemEffectiveValuesService effectiveValuesService) {
+    effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
+    if (isItemFieldsAffected(holdingsRecord, item)) {
+      populateMetadata(item, holdingsRecord.getMetadata());
+    }
+  }
+
   private static Response putFailure(Throwable e) {
     var msg = PgExceptionUtil.badRequestMessage(e);
     if (msg == null) {
@@ -329,7 +324,7 @@ public class ItemService {
       var value = matcher.group(2);
       var refTable = matcher.group(3);
       msg = "Cannot set item " + field + " = " + value
-        + " because it does not exist in " + refTable + ".id.";
+            + " because it does not exist in " + refTable + ".id.";
     } else {
       matcher = KEY_ALREADY_EXISTS_PATTERN.matcher(msg);
       if (matcher.find()) {
@@ -339,23 +334,15 @@ public class ItemService {
     return PutItemStorageItemsByItemIdResponse.respond400WithTextPlain(msg);
   }
 
-  public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,
-                                       org.folio.services.ItemEffectiveValuesService effectiveValuesService) {
-    effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
-    if (isItemFieldsAffected(holdingsRecord, item)) {
-      populateMetadata(item, holdingsRecord.getMetadata());
-    }
-  }
-
   private static boolean isItemFieldsAffected(HoldingsRecord holdingsRecord, Item item) {
     return isBlank(item.getItemLevelCallNumber()) && isNotBlank(holdingsRecord.getCallNumber())
-      || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
-      || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
-      || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
-      || isNull(item.getPermanentLocationId())
-      && isNull(item.getTemporaryLocationId())
-      && (!isNull(holdingsRecord.getTemporaryLocationId())
-      || !isNull(holdingsRecord.getPermanentLocationId()));
+           || isBlank(item.getItemLevelCallNumberPrefix()) && isNotBlank(holdingsRecord.getCallNumberPrefix())
+           || isBlank(item.getItemLevelCallNumberSuffix()) && isNotBlank(holdingsRecord.getCallNumberSuffix())
+           || isBlank(item.getItemLevelCallNumberTypeId()) && isNotBlank(holdingsRecord.getCallNumberTypeId())
+           || isNull(item.getPermanentLocationId())
+              && isNull(item.getTemporaryLocationId())
+              && (!isNull(holdingsRecord.getTemporaryLocationId())
+                  || !isNull(holdingsRecord.getPermanentLocationId()));
   }
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
@@ -385,10 +372,10 @@ public class ItemService {
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
     var sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
-      + "FROM " + itemRepository.getFullTableName(ITEM_TABLE) + " "
-      + "LEFT JOIN " + itemRepository.getFullTableName(HOLDINGS_RECORD_TABLE)
-      + "  ON holdings_record.id = $2 "
-      + "WHERE item.id = $1";
+              + "FROM " + itemRepository.getFullTableName(ITEM_TABLE) + " "
+              + "LEFT JOIN " + itemRepository.getFullTableName(HOLDINGS_RECORD_TABLE)
+              + "  ON holdings_record.id = $2 "
+              + "WHERE item.id = $1";
     return postgresClient.execute(sql, Tuple.of(itemId, holdingsId))
       .compose(rowSet -> {
         if (rowSet.size() == 0) {
@@ -495,8 +482,8 @@ public class ItemService {
         .toList();
 
       var errorMessage = missingItemIds.size() == 1
-        ? "Item not found in database: " + missingItemIds.get(0)
-        : "Items not found in database: " + String.join(", ", missingItemIds);
+                         ? "Item not found in database: " + missingItemIds.get(0)
+                         : "Items not found in database: " + String.join(", ", missingItemIds);
 
       throw new NotFoundException(errorMessage);
     }
@@ -551,11 +538,11 @@ public class ItemService {
     var patchRequest = patchData.getPatchRequest();
 
     var hridPresentInPatch = patchRequest.getAdditionalProperties() != null
-      && patchRequest.getAdditionalProperties().containsKey("hrid");
+                             && patchRequest.getAdditionalProperties().containsKey("hrid");
 
     var validationFuture = hridPresentInPatch
-      ? refuseWhenHridChanged(patchData.getOldItem(), newItem).mapEmpty()
-      : Future.succeededFuture();
+                           ? refuseWhenHridChanged(patchData.getOldItem(), newItem).mapEmpty()
+                           : Future.succeededFuture();
 
     return validationFuture.compose(v -> {
       effectiveValuesService.populateEffectiveValues(newItem, patchData);

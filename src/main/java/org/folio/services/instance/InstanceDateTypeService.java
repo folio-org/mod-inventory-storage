@@ -60,7 +60,7 @@ public class InstanceDateTypeService {
         final Promise<Response> putResult = promise();
 
         put(INSTANCE_DATE_TYPE_TABLE, entity, id, okapiHeaders, vertxContext,
-          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult);
+          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult::handle);
 
         return putResult.future()
           .onSuccess(eventPublisher.publishUpdated(oldDateType));
@@ -73,7 +73,7 @@ public class InstanceDateTypeService {
         final Promise<Response> putResult = promise();
 
         put(INSTANCE_DATE_TYPE_TABLE, oldDateType.withName(entity.getName()), id, okapiHeaders, vertxContext,
-          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult);
+          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult::handle);
 
         return putResult.future()
           .onSuccess(eventPublisher.publishUpdated(oldDateType));
