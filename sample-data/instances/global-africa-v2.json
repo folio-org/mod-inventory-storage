@@ -139,7 +139,9 @@
   ],
   "notes": [
     {
-      "note": "Literaturangaben"
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Literaturangaben",
+      "staffOnly": false
     },
     {
       "note": "Introduction: The environment in colonial Africa -- British Cameroon grasslands of Bamenda : geography and history -- Heterogeneous societies and ethnic identity : Fulani and cattle migrations -- Resource conflicts : farmers, pastoralists, cattle taxes and disputes over grazing and land -- Towards a resolution : the land settlement question -- Transforming British Bamenda : cattle wealth and development -- Semi-autonomy for pastoralists : native authority and court for the Fulani -- Modernizing the minds : introduction Western education to the pastoral Fulani -- Managing development : grazing innovations -- Continuity and change : the limits of colonial modernization",

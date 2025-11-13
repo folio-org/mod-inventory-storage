@@ -70,16 +70,24 @@
   ],
   "notes": [
     {
-      "note": "Title from disc label."
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Title from disc label.",
+      "staffOnly": false
     },
     {
-      "note": "All compositions written by Omar Sosa and Seckou Keita, except tracks 6, 8 and 10 written by Omar Sosa."
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "All compositions written by Omar Sosa and Seckou Keita, except tracks 6, 8 and 10 written by Omar Sosa.",
+      "staffOnly": false
     },
     {
-      "note": "Produced by Steve Argüelles and Omar Sosa."
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Produced by Steve Argüelles and Omar Sosa.",
+      "staffOnly": false
     },
     {
-      "note": "Omar Sosa, grand piano, Fender Rhodes, sampler, microKorg, vocals ; Seckou Keita, kora, talking drum, djembe, sabar, vocals ; Wu Tong, sheng, bawu ; Mieko Miyazaki, koto ; Gustavo Ovalles, bata drums, culo'e puya, maracas, guataca, calabaza, clave ; E'Joung-Ju, geojungo ; Mosin Khan Kawa, nagadi ; Dominique Huchet, bird effects."
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Omar Sosa, grand piano, Fender Rhodes, sampler, microKorg, vocals ; Seckou Keita, kora, talking drum, djembe, sabar, vocals ; Wu Tong, sheng, bawu ; Mieko Miyazaki, koto ; Gustavo Ovalles, bata drums, culo'e puya, maracas, guataca, calabaza, clave ; E'Joung-Ju, geojungo ; Mosin Khan Kawa, nagadi ; Dominique Huchet, bird effects.",
+      "staffOnly": false
     }
   ]
 }
