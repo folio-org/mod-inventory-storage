@@ -19,7 +19,6 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.Timeout;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.sqlclient.Row;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -76,23 +75,14 @@ public class HridSettingsStorageTest extends TestBase {
       // has not changed. Since tests are executed in a non-deterministic order, we need to
       // ensure that the sequences are reset to 1 on start and that the next HRID value will be
       // use 1 as the number component.
-      Promise<Row> instancePromise = Promise.promise();
-      Promise<Row> holdingPromise = Promise.promise();
-      Promise<Row> itemPromise = Promise.promise();
-      postgresClient.selectSingle("select setval('hrid_instances_seq',1,FALSE)", instancePromise);
-      instancePromise.future().map(v -> {
-        postgresClient.selectSingle("select setval('hrid_holdings_seq',1,FALSE)", holdingPromise);
-        return null;
-      });
-      holdingPromise.future().map(v -> {
-        postgresClient.selectSingle("select setval('hrid_items_seq',1,FALSE)", itemPromise);
-        return null;
-      });
-      itemPromise.future().map(v -> {
-        log.info("Initializing values complete");
-        async.complete();
-        return null;
-      });
+      postgresClient.selectSingle("select setval('hrid_instances_seq',1,FALSE)")
+        .compose(v -> postgresClient.selectSingle("select setval('hrid_holdings_seq',1,FALSE)"))
+        .compose(v -> postgresClient.selectSingle("select setval('hrid_items_seq',1,FALSE)"))
+        .map(v -> {
+          log.info("Initializing values complete");
+          async.complete();
+          return null;
+        });
     });
 
     removeAllEvents();

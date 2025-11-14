@@ -61,11 +61,11 @@ public class ReindexJobRunner {
 
   public void startReindex(ReindexJob reindexJob) {
     workerExecutor.executeBlocking(
-        promise -> {
+        () -> {
           if (reindexJob.getResourceName() == ReindexJob.ResourceName.INSTANCE) {
-            streamInstanceIds(new ReindexContext(reindexJob))
+            return streamInstanceIds(new ReindexContext(reindexJob))
               .map(notUsed -> null)
-              .onComplete(promise);
+              .result();
           } else {
             throw new UnsupportedOperationException(
               "Unknown resource name. Reindex job was not started for: "

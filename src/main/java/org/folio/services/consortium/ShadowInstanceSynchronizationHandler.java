@@ -29,7 +29,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.persist.PostgresClient;
@@ -160,7 +159,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     for (String tenantId : tenantIds) {
       updateFutures.add(updateShadowInstance(instance, tenantId, headers));
     }
-    return GenericCompositeFuture.join(updateFutures);
+    return Future.join(updateFutures);
   }
 
   private void prepareInstanceForUpdate(Instance instance) {

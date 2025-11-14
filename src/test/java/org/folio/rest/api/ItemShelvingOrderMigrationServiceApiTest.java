@@ -51,8 +51,8 @@ public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase 
 
   private JsonObject getTenantAttributes() {
     return pojo2JsonObject(new TenantAttributes()
-      .withModuleFrom("20.1.1")
-      .withModuleTo("20.2." + nextPatch.incrementAndGet())
+      .withModuleFrom("mod-inventory-storage-20.1.1")
+      .withModuleTo("mod-inventory-storage-20.2." + nextPatch.incrementAndGet())
       .withParameters(List.of(
         new Parameter().withKey("loadSample").withValue("false"),
         new Parameter().withKey("loadReference").withValue("false"))));

@@ -1,5 +1,6 @@
 ## v30.0.0 YYYY-mm-DD
 ### Breaking changes
+* Upgrade to Vert.x 5.0.x ([MODINVSTOR-1484](https://folio-org.atlassian.net/browse/MODINVSTOR-1484))
 * Constraint item call number type ID to refer to a known type ([MODINVSTOR-987](https://folio-org.atlassian.net/browse/MODINVSTOR-987))
 
 ### New APIs versions

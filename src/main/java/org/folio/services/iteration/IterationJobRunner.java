@@ -73,10 +73,8 @@ public class IterationJobRunner {
     eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
       fullTopicName);
 
-    workerExecutor.executeBlocking(
-        promise -> streamInstanceIds(new IterationContext(job))
-          .map(notUsed -> null)
-          .onComplete(promise))
+    workerExecutor.executeBlocking(() -> streamInstanceIds(new IterationContext(job)))
+      .flatMap(future -> future)
       .map(notUsed -> null);
   }
 

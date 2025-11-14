@@ -5,7 +5,6 @@ import io.vertx.core.Context;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.ThreadingModel;
 import io.vertx.core.Vertx;
 import org.apache.logging.log4j.LogManager;
@@ -33,24 +32,20 @@ public class InitApiImpl implements InitAPI {
   }
 
   private Future<Void> initAsyncMigrationVerticle(Vertx vertx) {
-    Promise<Void> promise = Promise.promise();
     long startTime = System.currentTimeMillis();
     DeploymentOptions options = new DeploymentOptions();
     options.setThreadingModel(ThreadingModel.WORKER);
     options.setInstances(1);
 
-    vertx.deployVerticle(AsyncMigrationConsumerVerticle.class, options, result -> {
-      if (result.succeeded()) {
+    return vertx.deployVerticle(AsyncMigrationConsumerVerticle.class, options)
+      .onSuccess(result -> {
         long elapsedTime = System.currentTimeMillis() - startTime;
         log.info("initAsyncMigrationVerticle:: AsyncMigrationConsumerVerticle was deployed in {} milliseconds",
           elapsedTime);
-        promise.complete();
-      } else {
-        log.error("initAsyncMigrationVerticle:: AsyncMigrationConsumerVerticle was not started", result.cause());
-        promise.fail(result.cause());
-      }
-    });
-    return promise.future();
+      })
+      .onFailure(failure ->
+        log.error("initAsyncMigrationVerticle:: AsyncMigrationConsumerVerticle was not started", failure))
+      .mapEmpty();
   }
 
   private Future<Void> initShadowInstanceSynchronizationVerticle(Vertx vertx, ConsortiumDataCache consortiumDataCache) {
@@ -60,9 +55,9 @@ public class InitApiImpl implements InitAPI {
 
     return vertx.deployVerticle(() -> new ShadowInstanceSynchronizationVerticle(consortiumDataCache), options)
       .onSuccess(v -> log.info("initShadowInstanceSynchronizationVerticle:: "
-        + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
+                               + "ShadowInstanceSynchronizationVerticle verticle was successfully started"))
       .onFailure(e -> log.error("initShadowInstanceSynchronizationVerticle:: "
-        + "ShadowInstanceSynchronizationVerticle verticle was not successfully started", e))
+                                + "ShadowInstanceSynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 
@@ -80,18 +75,17 @@ public class InitApiImpl implements InitAPI {
   }
 
   private Future<Object> initServicePointSynchronizationVerticle(Vertx vertx,
-    ConsortiumDataCache consortiumDataCache) {
+                                                                 ConsortiumDataCache consortiumDataCache) {
 
     DeploymentOptions options = new DeploymentOptions()
       .setThreadingModel(ThreadingModel.WORKER)
       .setInstances(1);
 
-    return vertx.deployVerticle(() -> new ServicePointSynchronizationVerticle(consortiumDataCache),
-        options)
+    return vertx.deployVerticle(() -> new ServicePointSynchronizationVerticle(consortiumDataCache), options)
       .onSuccess(v -> log.info("initServicePointSynchronizationVerticle:: "
-        + "ServicePointSynchronizationVerticle verticle was successfully started"))
+                               + "ServicePointSynchronizationVerticle verticle was successfully started"))
       .onFailure(e -> log.error("initServicePointSynchronizationVerticle:: "
-        + "ServicePointSynchronizationVerticle verticle was not successfully started", e))
+                                + "ServicePointSynchronizationVerticle verticle was not successfully started", e))
       .mapEmpty();
   }
 
