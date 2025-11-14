@@ -1916,6 +1916,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatch() throws Exception {
+    log.info("Starting canPostSynchronousBatch");
     JsonArray instancesArray = new JsonArray();
     int numberOfInstances = 1000;
 
@@ -1950,6 +1951,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .toList();
 
     instanceMessageChecks.createdMessagesPublished(createdInstances);
+    log.info("Finished canPostSynchronousBatch");
   }
 
   @Test
