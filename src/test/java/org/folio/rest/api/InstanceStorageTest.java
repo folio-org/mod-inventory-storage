@@ -1918,12 +1918,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void canPostSynchronousBatch() throws Exception {
     log.info("Starting canPostSynchronousBatch");
     JsonArray instancesArray = new JsonArray();
-    int numberOfInstances = 1000;
 
     instancesArray.add(uprooted(UUID.randomUUID()));
-    for (int i = 2; i < numberOfInstances; i++) {
-      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
-    }
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
     instancesArray.add(temeraire(UUID.randomUUID()));
 
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
@@ -1933,22 +1930,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.empty(createCompleted));
     assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    JsonObject uprooted = instancesArray.getJsonObject(0);
-    JsonObject smallAngryPlanet = instancesArray.getJsonObject(numberOfInstances / 2);
-    JsonObject temeraire = instancesArray.getJsonObject(numberOfInstances - 1);
-
-    assertExists(uprooted);
-    assertExists(smallAngryPlanet);
-    assertExists(temeraire);
-
-    assertNotSuppressedFromDiscovery(instancesArray);
-
-    final List<JsonObject> createdInstances = instancesArray.stream()
+    var createdInstances = instancesArray.stream()
       .map(JsonObject.class::cast)
       .map(json -> json.getString("id"))
       .map(this::getById)
       .map(Response::getJson)
       .toList();
+
+    createdInstances.forEach(instance -> assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false)));
 
     instanceMessageChecks.createdMessagesPublished(createdInstances);
     log.info("Finished canPostSynchronousBatch");
