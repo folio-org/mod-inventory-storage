@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.impl.StorageHelper.POST_SYNC_MAX_ENTITIES_PROPERTY;
 import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -91,6 +92,7 @@ public final class StorageTestSuite {
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
     System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
+    System.setProperty(POST_SYNC_MAX_ENTITIES_PROPERTY, "10");
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
