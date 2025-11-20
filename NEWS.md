@@ -1,3 +1,18 @@
+## v29.0.13 2025-11-20
+### New APIs versions
+* Provides `instance-storage v11.2`
+* Provides `instance-storage-batch-sync v3.1`
+* Provides `instance-storage-batch-sync-unsafe v3.1`
+* Provides `instance-storage-bulk v1.1`
+* Provides `inventory-record-bulk v1.1`
+* Provides `inventory-view v3.1`
+* Provides `inventory-view-instance-set v3.1`
+* Provides `service-points v3.5`
+
+### Features
+* Add new sourceUri field to instance schema ([MODINVSTOR-1466](https://folio-org.atlassian.net/browse/MODINVSTOR-1466))
+* Add new defaultCheckInActionForUseAtLocation field to service point schema ([MODINVSTOR-1467](https://folio-org.atlassian.net/browse/MODINVSTOR-1467))
+
 ## v29.0.12 2025-07-16
 ### Bug fixes
 * rollback - Execute migration script to add "deleted" field to instance.jsonb if it's missing ([MODINVSTOR-1449](https://folio-org.atlassian.net/browse/MODINVSTOR-1449))
