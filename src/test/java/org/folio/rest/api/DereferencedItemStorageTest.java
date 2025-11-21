@@ -184,7 +184,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getBarcode(), is("036000291452"));
     assertThat(item.getId(), is(SMALL_ANGRY_PLANET_ID.toString()));
     assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
-    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
+    assertThat(item.getPermanentLoanType().getName(), is("Can circulate"));
     assertThat(item.getMaterialType().getName(), is("journal"));
     assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
     assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
@@ -197,13 +197,13 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(item.getBarcode(), is("657670342075"));
     assertThat(item.getId(), is(UPROOTED_ID.toString()));
     assertThat(item.getInstanceRecord().getTitle(), is("Long Way to a Small Angry Planet"));
-    assertThat(item.getPermanentLoanType().getName(), is("Can Circulate"));
+    assertThat(item.getPermanentLoanType().getName(), is("Can circulate"));
     assertThat(item.getMaterialType().getName(), is("journal"));
     assertThat(item.getHoldingsRecord().getInstanceId(), is(item.getInstanceRecord().getId()));
     assertThat(item.getPermanentLocation().getName(), is("Annex Library"));
     assertThat(item.getTemporaryLocation().getName(), is("Second Floor"));
     assertThat(item.getEffectiveLocation().getName(), is(item.getTemporaryLocation().getName()));
-    assertThat(item.getTemporaryLoanType().getName(), is("Non-Circulating"));
+    assertThat(item.getTemporaryLoanType().getName(), is("Selected"));
   }
 
   @SneakyThrows
