@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locCampusStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locInstitutionStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.locLibraryStorageUrl;
@@ -146,7 +145,6 @@ public abstract class TestBase {
     StorageTestSuite.deleteAll(locLibraryStorageUrl(""), tenantId);
     StorageTestSuite.deleteAll(locCampusStorageUrl(""), tenantId);
     StorageTestSuite.deleteAll(locInstitutionStorageUrl(""), tenantId);
-    StorageTestSuite.deleteAll(loanTypesStorageUrl(""), tenantId);
     StorageTestSuite.deleteAll(materialTypesStorageUrl(""), tenantId);
     StorageTestSuite.deleteAll(servicePointsUsersUrl(""), tenantId);
     StorageTestSuite.deleteAll(servicePointsUrl(""), tenantId);

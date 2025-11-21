@@ -89,7 +89,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("_version", 1);
 
     if (includeOptionalFields) {
-      itemToCreate.put("temporaryLoanTypeId", nonCirculatingLoanTypeID);
+      itemToCreate.put("temporaryLoanTypeId", selectedLoanTypeID);
       itemToCreate.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID);
     }
 
