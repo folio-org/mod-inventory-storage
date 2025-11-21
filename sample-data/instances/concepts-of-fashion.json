@@ -41,7 +41,9 @@
   ],
   "notes": [
     {
-      "note": "Dissertation New York University 1993"
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Dissertation New York University 1993",
+      "staffOnly": false
     },
     {
       "note": "Mikrofiche-Ausgabe",

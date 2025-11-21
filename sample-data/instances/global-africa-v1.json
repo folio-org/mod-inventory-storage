@@ -119,7 +119,9 @@
   ],
   "notes": [
     {
-      "note": "Literaturangaben"
+      "instanceNoteTypeId" : "6a2533a7-4de2-4e64-8466-074c2fa9308c",
+      "note": "Literaturangaben",
+      "staffOnly": false
     },
     {
       "note": "Introduction: Dissent, protest and dispute Africa / Emmanuel M. Mbah and Toyin Falola -- The music of heaven, the music of Earth, and the music of brats: Tuareg Islam, the Devil, and musical performance / Susan J. Rasmussen -- Finding social change backstage and behind the scenes in South African theatre / Nathanael Vlachos -- Soccer and political (ex)pression in Africa: the case of Cameroon / Alain Lawo-Sukam -- Child labor resistance in southern Nigeria, 1916-1938 / Adam Paddock -- M'Fain goes home: African soldiers in the Gabon campaign of 1940 / Mark Reeves -- \\\"Disgraceful disturbances\\\": TANU, the Tanganyikan Rifles, and the 1964 mutiny / Charles Thomas -- The role of ethnicity in political formation in Kenya: 1963-2007 / Tade O. Okediji and Wahutu J. Siguru -- Land, boundaries, chiefs and wars / Toyin Falola -- Borders and boundaries within Ethiopia: dilemmas of group identity, representation and agency / Alexander Meckelburg -- Rural agrarian land conflicts in postcolonial Nigeria's central region / Sati Fwatshak -- The evolution of the Mungiki militia in Kenya, 1990 to 2010 / Felix Kiruthu -- Refugee-warriors and other people's wars in post-colonial Africa: the experience of Rwandese and South African military exiles (1960-94) / Tim Stapleton -- Oiling the guns and gunning for oil: the youth and Niger Delta oil conflicts in Nigeria / Christian C. Madubuko.",
