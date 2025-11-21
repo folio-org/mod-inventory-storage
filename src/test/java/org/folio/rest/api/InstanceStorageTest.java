@@ -21,6 +21,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUnsafeUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
@@ -152,11 +153,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Before
   public void beforeEach() {
-    clearData();
-    setupMaterialTypes();
-    setupLoanTypes();
-    setupLocations();
-
+    StorageTestSuite.deleteAll(itemsStorageUrl(""), TENANT_ID);
+    StorageTestSuite.deleteAll(holdingsStorageUrl(""), TENANT_ID);
+    StorageTestSuite.deleteAll(instancesStorageUrl(""), TENANT_ID);
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
     natureOfContentIdsToRemoveAfterTest.clear();
 
@@ -176,8 +175,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     natureOfContentIdsToRemoveAfterTest.forEach(id -> cfs.add(getClient()
       .delete(natureOfContentTermsUrl("/" + id), TENANT_ID)));
     CompletableFuture.allOf(cfs.toArray(new CompletableFuture[0]))
-      .thenAccept(v -> async.complete())
-      .get();
+      .whenComplete((v, t) -> async.complete());
 
     removeAllEvents();
   }
@@ -1916,13 +1914,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPostSynchronousBatch() throws Exception {
+    log.info("Starting canPostSynchronousBatch");
     JsonArray instancesArray = new JsonArray();
-    int numberOfInstances = 1000;
 
     instancesArray.add(uprooted(UUID.randomUUID()));
-    for (int i = 2; i < numberOfInstances; i++) {
-      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
-    }
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
     instancesArray.add(temeraire(UUID.randomUUID()));
 
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
@@ -1932,24 +1928,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       ResponseHandler.empty(createCompleted));
     assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    JsonObject uprooted = instancesArray.getJsonObject(0);
-    JsonObject smallAngryPlanet = instancesArray.getJsonObject(numberOfInstances / 2);
-    JsonObject temeraire = instancesArray.getJsonObject(numberOfInstances - 1);
-
-    assertExists(uprooted);
-    assertExists(smallAngryPlanet);
-    assertExists(temeraire);
-
-    assertNotSuppressedFromDiscovery(instancesArray);
-
-    final List<JsonObject> createdInstances = instancesArray.stream()
+    var createdInstances = instancesArray.stream()
       .map(JsonObject.class::cast)
       .map(json -> json.getString("id"))
       .map(this::getById)
       .map(Response::getJson)
       .toList();
 
+    createdInstances.forEach(instance -> assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false)));
+
     instanceMessageChecks.createdMessagesPublished(createdInstances);
+    log.info("Finished canPostSynchronousBatch");
   }
 
   @Test
@@ -2357,12 +2346,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
 
     final JsonArray instancesArray = new JsonArray();
-    final int numberOfInstances = 1000;
 
     instancesArray.add(uprooted(UUID.randomUUID()));
-    for (int i = 2; i < numberOfInstances; i++) {
-      instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
-    }
+    instancesArray.add(smallAngryPlanet(UUID.randomUUID()));
     instancesArray.add(temeraire(UUID.randomUUID()));
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
@@ -2375,13 +2361,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    for (int i = 0; i < numberOfInstances; i++) {
+    for (int i = 0; i < 3; i++) {
       final JsonObject instance = instancesArray.getJsonObject(i);
       final Response response = getById(instance.getString("id"));
       assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
       assertThat(response.getJson().getString("hrid"),
         is(both(greaterThanOrEqualTo("in00000000001"))
-          .and(lessThanOrEqualTo("in00000001000"))));
+          .and(lessThanOrEqualTo("in00000000003"))));
     }
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");

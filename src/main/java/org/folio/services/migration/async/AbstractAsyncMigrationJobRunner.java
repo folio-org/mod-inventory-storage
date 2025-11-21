@@ -23,9 +23,7 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
 
   @Override
   public void startAsyncMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
-    context.getVertxContext().executeBlocking(v ->
-      startMigration(migrationJob, context)
-        .onComplete(result -> v.complete()));
+    context.getVertxContext().executeBlocking(() -> startMigration(migrationJob, context).result());
   }
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {

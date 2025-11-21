@@ -10,6 +10,8 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
@@ -17,11 +19,10 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaConsumerWrapper;
 import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.services.caches.ConsortiumDataCache;
 
 public class SynchronizationVerticle extends AbstractVerticle {
-
+  private static final Logger log = LogManager.getLogger(SynchronizationVerticle.class);
   private static final String TENANT_PATTERN = "\\w{1,}";
 
   private static final List<InventoryKafkaTopic> TOPICS = List.of(INSTANCE_DATE_TYPE);
@@ -43,6 +44,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
+    log.info("start:: Starting SynchronizationVerticle");
     var httpClient = vertx.createHttpClient();
     var handler = new SynchronizationAsyncRecordHandler(consortiumDataCache, httpClient, vertx);
 
@@ -50,7 +52,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
       .map(kafkaTopic -> createKafkaConsumerWrapper(kafkaTopic, handler))
       .toList();
 
-    GenericCompositeFuture.all(futures)
+    Future.all(futures)
       .onFailure(startPromise::fail)
       .onSuccess(ar -> {
         futures.forEach(future -> consumerWrappers.add(future.result()));
@@ -64,7 +66,7 @@ public class SynchronizationVerticle extends AbstractVerticle {
       .map(KafkaConsumerWrapper::stop)
       .toList();
 
-    GenericCompositeFuture.all(stopFutures).onComplete(ar -> stopPromise.complete());
+    Future.all(stopFutures).onComplete(ar -> stopPromise.complete());
   }
 
   private Future<KafkaConsumerWrapper<String, String>> createKafkaConsumerWrapper(

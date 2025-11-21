@@ -132,7 +132,7 @@ public class InstallUpgradeIT {
     setTenant("latest");
 
     JsonObject body = new JsonObject()
-      .put("module_to", "999999.0.0")
+      .put("module_to", "mod-inventory-storage-999999.0.0")
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
         .add(new JsonObject().put("key", "loadSample").put("value", "true")));
@@ -140,7 +140,7 @@ public class InstallUpgradeIT {
     postTenant(body);
 
     // migrate from 0.0.0 to current version, installation and migration should be idempotent
-    body.put("module_from", "0.0.0");
+    body.put("module_from", "mod-inventory-storage-0.0.0");
     postTenant(body);
 
     smokeTest();

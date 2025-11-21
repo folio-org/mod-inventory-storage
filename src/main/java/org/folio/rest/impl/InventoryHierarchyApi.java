@@ -5,7 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Tuple;
-import io.vertx.sqlclient.impl.ArrayTuple;
+import io.vertx.sqlclient.internal.ArrayTuple;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;

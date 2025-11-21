@@ -40,19 +40,17 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
+    log.info("start:: Starting AsyncMigrationConsumerVerticle");
     var topicName = ASYNC_MIGRATION.fullTopicName(TENANT_FOR_MIGRATION);
-
     KafkaConsumer<String, JsonObject> consumer = KafkaConsumer
-      .<String, JsonObject>create(vertx,
-        getKafkaConsumerProperties(AsyncMigrationConsumerVerticle.class.getSimpleName() + "_group"))
-      .subscribe(Pattern.compile(topicName), ar -> {
-        if (ar.succeeded()) {
-          log.info("Consumer created. SubscriptionPattern: {}", topicName);
-          startPromise.complete();
-        } else {
-          startPromise.fail(ar.cause());
-        }
-      }).pollTimeout(Duration.ofMillis(PERIOD));
+      .create(vertx, getKafkaConsumerProperties(AsyncMigrationConsumerVerticle.class.getSimpleName() + "_group"));
+
+    consumer.subscribe(Pattern.compile(topicName))
+      .onSuccess(event -> {
+        log.info("Consumer created. SubscriptionPattern: {}", topicName);
+        startPromise.complete();
+      })
+      .onFailure(startPromise::fail);
 
     vertx.setPeriodic(PERIOD, v ->
       consumer.poll(Duration.ofMillis(100))

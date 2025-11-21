@@ -6,6 +6,8 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.GlobalLoadSensor;
 import org.folio.kafka.KafkaConfig;
@@ -15,6 +17,8 @@ import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.services.caches.ConsortiumDataCache;
 
 public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
+
+  private static final Logger log = LogManager.getLogger(ShadowInstanceSynchronizationVerticle.class);
 
   private static final String LOAD_LIMIT_PARAM = "consumer.instance-synchronization.load-limit";
   private static final String DEFAULT_LOAD_LIMIT = "5";
@@ -28,6 +32,7 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
+    log.info("start:: Starting ShadowInstanceSynchronizationVerticle");
     HttpClient httpClient = vertx.createHttpClient();
     ShadowInstanceSynchronizationHandler handler =
       new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);

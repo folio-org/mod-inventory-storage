@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
 import org.folio.dbschema.Versioned;
 import org.folio.kafka.services.KafkaAdminClientService;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
@@ -185,7 +184,7 @@ public class TenantRefApi extends TenantAPI {
       .map(BaseMigrationService::runMigration)
       .toList();
 
-    return GenericCompositeFuture.all(startedMigrations)
+    return Future.all(startedMigrations)
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))
       .onFailure(error -> log.error("Some java migrations failed", error))
       .mapEmpty();

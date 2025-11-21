@@ -13,10 +13,12 @@ import org.folio.rest.persist.cql.CQLWrapper;
  */
 public final class StorageHelper {
 
+  public static final String POST_SYNC_MAX_ENTITIES_PROPERTY = "POST_SYNC_MAX_ENTITIES";
+
   /**
    * Limit for PgUtil.postSync to avoid out-of-memory.
    */
-  public static final int MAX_ENTITIES = 10000;
+  public static final int MAX_ENTITIES = Integer.parseInt(System.getProperty(POST_SYNC_MAX_ENTITIES_PROPERTY, "10000"));
 
   private static final Logger logger = LogManager.getLogger();
 
