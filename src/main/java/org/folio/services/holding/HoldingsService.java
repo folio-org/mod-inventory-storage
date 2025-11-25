@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -276,7 +277,7 @@ public class HoldingsService {
 
   private Future<Response> performUpsertWithItemUpdates(List<HoldingsRecord> holdings, boolean optimisticLocking) {
     if (optimisticLocking) {
-      holdings.stream().filter(holding -> -1 == holding.getVersion())
+      holdings.stream().filter(holding -> Objects.equals(-1, holding.getVersion()))
         .forEach(holding -> holding.setVersion(null));
     } else {
       if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {

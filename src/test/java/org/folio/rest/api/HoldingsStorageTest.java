@@ -3030,21 +3030,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canPostSynchronousBatchWithExistingIdWithUpsertTrueMultipleTimesAndItemUpdate()
     throws ExecutionException, InterruptedException, TimeoutException {
-    final String existingHrId = UUID.randomUUID().toString();
-    final JsonArray holdingsArray1 = threeHoldings();
-    final JsonArray holdingsArray2 = threeHoldings();
+    final var existingHrId = UUID.randomUUID().toString();
+    final var holdingsArray1 = threeHoldings();
+    final var holdingsArray2 = threeHoldings();
 
     holdingsArray1.getJsonObject(1).put("id", existingHrId);
+    //verify that holdings could be created with upsert=true and no version
+    final var holdingIdWithoutVersion = holdingsArray1.getJsonObject(0).getString("id");
+    holdingsArray1.getJsonObject(0).remove("_version");
 
     //create 3 holdings
-    final Response firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
+    final var firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
     assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
 
-    final JsonObject createdHolding = getById(existingHrId).getJson();
+    final var createdHolding = getById(existingHrId).getJson();
     holdingsArray2.set(1, createdHolding);
 
     //create item for existing holding
-    final JsonObject itemForExistingHolding = create(itemsStorageUrl(""), new ItemRequestBuilder()
+    final var itemForExistingHolding = create(itemsStorageUrl(""), new ItemRequestBuilder()
       .forHolding(UUID.fromString(existingHrId))
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withMaterialType(bookMaterialTypeId)
@@ -3052,7 +3055,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .getJson();
 
     //update 1 holding, create 2 new holdings. Item is not updated since no changes to updated holding
-    final Response secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
+    final var secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
     assertThat(secondResponse, statusCodeIs(HTTP_CREATED));
     var updatedHolding = createdHolding.copy()
       .put("_version", 2);
@@ -3064,6 +3067,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .filter(id -> !id.equals(existingHrId))
       .map(this::getById)
       .map(Response::getJson)
+      .map(holding -> {
+        // Remove _version from holding that was created without it
+        if (holding.getString("id").equals(holdingIdWithoutVersion)) {
+          holding.remove("_version");
+        }
+        return holding;
+      })
       .forEach(holding -> holdingsMessageChecks.createdMessagePublished(holding, TENANT_ID, mockServer.baseUrl()));
 
     //update 1 holding with changed location
