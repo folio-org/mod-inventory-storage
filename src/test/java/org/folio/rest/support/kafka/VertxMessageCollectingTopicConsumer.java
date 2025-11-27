@@ -53,6 +53,7 @@ public class VertxMessageCollectingTopicConsumer {
     if (consumer != null) {
       LOG.info("Unsubscribing from topics: {}", topicNames);
       TestBase.get(consumer.unsubscribe());
+      TestBase.get(consumer.close());
     }
   }
 }
