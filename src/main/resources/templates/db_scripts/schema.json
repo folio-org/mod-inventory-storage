@@ -1287,6 +1287,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/createItemsAndHoldingsViewFunction.sql",
       "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "loan-types/updateLoanTypeSources.sql",
+      "fromModuleVersion": "30.0.0"
     }
   ]
 }

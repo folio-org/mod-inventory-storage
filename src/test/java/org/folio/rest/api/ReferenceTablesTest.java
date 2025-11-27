@@ -15,6 +15,7 @@ import static org.folio.rest.support.http.InterfaceUrls.instanceNoteTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instanceTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemNoteTypesUrl;
+import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
@@ -22,6 +23,7 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -39,7 +41,6 @@ import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.utility.ModuleUtility;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -47,13 +48,6 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class ReferenceTablesTest extends TestBase {
-
-  @SneakyThrows
-  @Before
-  public void beforeEach() {
-    clearData();
-    removeAllEvents();
-  }
 
   @Test
   public void alternativeTitleTypesLoaded()
@@ -212,6 +206,20 @@ public class ReferenceTablesTest extends TestBase {
 
     Response searchResponseCodes = getReferenceRecords(statisticalCodesUrl);
     validateNumberOfReferenceRecords("statistical codes", searchResponseCodes, 10, 500);
+  }
+
+  @Test
+  public void loanTypesLoaded()
+    throws InterruptedException, TimeoutException, ExecutionException {
+    URL loanTypesStorageUrl = loanTypesStorageUrl("");
+
+    Response searchResponseCodes = getReferenceRecords(loanTypesStorageUrl);
+    validateNumberOfReferenceRecords("loan types", searchResponseCodes, 4, 4);
+    var loanTypesCollection = searchResponseCodes.getJson().getJsonArray("loantypes");
+    for (int i = 0; i < loanTypesCollection.size(); i++) {
+      var source = loanTypesCollection.getJsonObject(i).getString("source");
+      assertEquals("folio", source);
+    }
   }
 
   @ParameterizedTest

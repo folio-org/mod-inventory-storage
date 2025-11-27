@@ -3,7 +3,6 @@ package org.folio.rest.api;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
-import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
@@ -35,7 +34,6 @@ import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.Builder;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
 import org.junit.BeforeClass;
@@ -86,8 +84,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static String bookMaterialTypeID;
   protected static UUID canCirculateLoanTypeId;
   protected static String canCirculateLoanTypeID;
-  protected static UUID nonCirculatingLoanTypeId;
-  protected static String nonCirculatingLoanTypeID;
+  protected static UUID selectedLoanTypeId;
+  protected static String selectedLoanTypeID;
 
   @BeforeClass
   public static void testBaseWithInvUtilBeforeClass() {
@@ -159,11 +157,10 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static void setupLoanTypes(String tenantId) {
-    LoanTypesClient loanTypesClient = new LoanTypesClient(getClient(), loanTypesStorageUrl(""));
-    canCirculateLoanTypeID = loanTypesClient.create("Can Circulate", tenantId);
+    canCirculateLoanTypeID = "2b94c631-fca9-4892-a730-03ee529ffe27";
     canCirculateLoanTypeId = UUID.fromString(canCirculateLoanTypeID);
-    nonCirculatingLoanTypeID = loanTypesClient.create("Non-Circulating", tenantId);
-    nonCirculatingLoanTypeId = UUID.fromString(nonCirculatingLoanTypeID);
+    selectedLoanTypeID = "a1dc1ce3-d56f-4d8a-b498-d5d674ccc845";
+    selectedLoanTypeId = UUID.fromString(selectedLoanTypeID);
   }
 
   protected static void setupLocations() {

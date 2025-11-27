@@ -12,7 +12,8 @@
     },
     "source": {
       "description": "Origin of the loan type record, e.g. 'System', 'User', 'Consortium' etc.",
-      "type": "string"
+      "type": "string",
+      "default": "local"
     },
     "metadata": {
       "type": "object",

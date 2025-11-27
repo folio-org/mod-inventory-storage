@@ -3975,7 +3975,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     var completed = new CompletableFuture<Response>();
     getClient().post(itemsStorageUrl(""),
-      createItemRequestForLoan(holdingsRecordId, nonCirculatingLoanTypeID, canCirculateLoanTypeID), TENANT_ID,
+      createItemRequestForLoan(holdingsRecordId, selectedLoanTypeID, canCirculateLoanTypeID), TENANT_ID,
       ResponseHandler.json(completed));
     var response = completed.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(HTTP_CREATED.toInt()));
