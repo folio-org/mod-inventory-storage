@@ -24,9 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,14 +50,11 @@ import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
-import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
-import org.folio.services.domainevent.HoldingDomainEventPublisher;
-import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.item.ItemService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -84,28 +78,26 @@ public class HoldingsService {
   private final HridManager hridManager;
   private final ItemService itemService;
   private final HoldingsRepository holdingsRepository;
-  private final ItemDomainEventPublisher itemEventService;
-  private final HoldingDomainEventPublisher domainEventPublisher;
   private final InstanceRepository instanceRepository;
   private final ConsortiumService consortiumService;
-  private final ItemRepository itemRepository;
   private final ItemEffectiveValuesService effectiveValuesService;
+  private final HoldingsUpsertSqlBuilder upsertSqlBuilder;
+  private final HoldingsEventPublisher eventPublisher;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     this.vertxContext = context;
     this.okapiHeaders = okapiHeaders;
 
-    itemService = new ItemService(context, okapiHeaders);
-    postgresClient = postgresClient(context, okapiHeaders);
-    hridManager = new HridManager(postgresClient);
-    holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    itemEventService = new ItemDomainEventPublisher(context, okapiHeaders);
-    domainEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
-    instanceRepository = new InstanceRepository(context, okapiHeaders);
-    consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+    this.itemService = new ItemService(context, okapiHeaders);
+    this.postgresClient = postgresClient(context, okapiHeaders);
+    this.hridManager = new HridManager(postgresClient);
+    this.holdingsRepository = new HoldingsRepository(context, okapiHeaders);
+    this.instanceRepository = new InstanceRepository(context, okapiHeaders);
+    this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
       context.get(ConsortiumDataCache.class.getName()));
-    itemRepository = new ItemRepository(context, okapiHeaders);
-    effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
+    this.effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
+    this.upsertSqlBuilder = new HoldingsUpsertSqlBuilder(holdingsRepository, new ItemRepository(context, okapiHeaders));
+    this.eventPublisher = new HoldingsEventPublisher(context, okapiHeaders);
   }
 
   /**
@@ -143,7 +135,7 @@ public class HoldingsService {
    */
   public Future<Response> deleteAllHoldings() {
     return holdingsRepository.deleteAll()
-      .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
+      .onSuccess(notUsed -> eventPublisher.publishAllRemoved())
       .map(Response.noContent().build());
   }
 
@@ -167,7 +159,7 @@ public class HoldingsService {
       .compose(NotesValidators::refuseLongNotes)
       .compose(hr -> post(HOLDINGS_RECORD_TABLE, hr, okapiHeaders, vertxContext,
         PostHoldingsStorageHoldingsResponse.class)
-        .onSuccess(domainEventPublisher.publishCreated()))
+        .onSuccess(eventPublisher.publishCreated()))
       .map(ResponseHandlerUtil::handleHridError);
   }
 
@@ -176,7 +168,7 @@ public class HoldingsService {
       .compose(CommonValidators::refuseIfNotFound)
       .compose(hr -> deleteById(HOLDINGS_RECORD_TABLE, hrId, okapiHeaders, vertxContext,
         DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class)
-        .onSuccess(domainEventPublisher.publishRemoved(hr)));
+        .onSuccess(eventPublisher.publishRemoved(hr)));
   }
 
   public Future<Response> deleteHoldings(String cql) {
@@ -195,7 +187,7 @@ public class HoldingsService {
         rowSet.iterator().forEachRemaining(row -> {
             try {
               var holdingId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
-              domainEventPublisher.publishRemoved(holdingId, row.getString(1));
+              eventPublisher.publishRemoved(holdingId, row.getString(1));
             } catch (JsonProcessingException ex) {
               log.error("deleteHoldings:: Failed to parse json : {}", ex.getMessage(), ex);
               throw new IllegalArgumentException(ex.getCause());
@@ -222,7 +214,7 @@ public class HoldingsService {
             holdingsRepository, HoldingsRecord::getId, true)
             .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, validatedHoldings, MAX_ENTITIES,
               false, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-              .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)));
+              .onSuccess(eventPublisher.publishCreatedOrUpdated(batchOperation)));
         }
 
         // For upsert operations, use the new transaction-based approach
@@ -233,7 +225,7 @@ public class HoldingsService {
 
   public Future<Void> publishReindexHoldingsRecords(String rangeId, String fromId, String toId) {
     return holdingsRepository.getReindexHoldingsRecords(fromId, toId)
-      .compose(holdings -> domainEventPublisher.publishReindexHoldings(rangeId, holdings));
+      .compose(holdings -> eventPublisher.publishReindexHoldings(rangeId, holdings));
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
@@ -260,10 +252,10 @@ public class HoldingsService {
           .compose(notUsed -> postgresClient
             .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
               .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
-            .compose(itemsBeforeUpdate -> itemEventService
-              .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+            .onSuccess(itemsBeforeUpdate ->
+              eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
             .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-            .onSuccess(domainEventPublisher.publishUpdated(oldHoldings)));
+            .onSuccess(eventPublisher.publishUpdated(oldHoldings)));
       });
   }
 
@@ -294,7 +286,7 @@ public class HoldingsService {
         .compose(upsertResult -> updateItemsForHoldingsChange(conn, holdings, upsertResult)
           .map(itemsBeforeUpdate -> Pair.of(upsertResult.getLeft(), itemsBeforeUpdate))))
       .onSuccess(oldData ->
-        publishHoldingsAndItemEvents(holdings, oldData.getLeft(), oldData.getRight()))
+        eventPublisher.publishHoldingsAndItemEvents(holdings, oldData.getLeft(), oldData.getRight()))
       .map(v -> PostHoldingsStorageBatchSynchronousResponse.respond201());
   }
 
@@ -304,129 +296,14 @@ public class HoldingsService {
       return Future.succeededFuture(Pair.of(Map.of(), Map.of()));
     }
 
-    var sqlAndParamsResult = buildUpsertSqlWithParams(holdings);
+    var sqlAndParamsResult = upsertSqlBuilder.buildUpsertSqlWithParams(holdings);
     if (sqlAndParamsResult.getLeft() == null) {
       return Future.failedFuture(sqlAndParamsResult.getRight());
     }
 
     var sqlAndParams = sqlAndParamsResult.getLeft();
     return conn.execute(sqlAndParams.getLeft(), sqlAndParams.getRight())
-      .map(this::processUpsertResultSet);
-  }
-
-  private Pair<Pair<String, Tuple>, Exception> buildUpsertSqlWithParams(List<HoldingsRecord> holdings) {
-    var sqlBuilder = new StringBuilder();
-    var params = new ArrayList<>();
-    var paramIndex = 1;
-
-    sqlBuilder.append("WITH upsert_data AS (");
-    for (int i = 0; i < holdings.size(); i++) {
-      if (i > 0) {
-        sqlBuilder.append(" UNION ALL ");
-      }
-      sqlBuilder.append("SELECT $").append(paramIndex++).append("::uuid as id, $")
-        .append(paramIndex++).append("::jsonb as data");
-
-      var holding = holdings.get(i);
-      params.add(holding.getId());
-      try {
-        params.add(PostgresClient.pojo2JsonObject(holding));
-      } catch (Exception e) {
-        return Pair.of(null, e);
-      }
-    }
-
-    var holdingsTableName = holdingsRepository.getFullTableName();
-    var itemsTableName = itemRepository.getFullTableName();
-
-    sqlBuilder.append("), ")
-      .append(buildOldDataQueries(holdingsTableName, itemsTableName))
-      .append(buildUpsertQuery(holdingsTableName))
-      .append(buildCombinedResultsQuery())
-      .append("SELECT id, old_holdings_content, old_item_content FROM combined_results");
-
-    var sqlAndParams = Pair.of(sqlBuilder.toString(), Tuple.from(params));
-    return Pair.of(sqlAndParams, null);
-  }
-
-  private String buildOldDataQueries(String holdingsTableName, String itemsTableName) {
-    return "old_holdings_data AS ("
-           + "  SELECT id, jsonb::text as old_content FROM " + holdingsTableName
-           + "  WHERE id = ANY(SELECT id FROM upsert_data)"
-           + "), "
-           + "old_items_data AS ("
-           + "  SELECT holdingsrecordid, jsonb::text as item_content FROM " + itemsTableName
-           + "  WHERE holdingsrecordid = ANY(SELECT id FROM upsert_data)"
-           + "), ";
-  }
-
-  private String buildUpsertQuery(String holdingsTableName) {
-    return "updated AS ("
-           + "  UPDATE " + holdingsTableName + " SET jsonb = upsert_data.data "
-           + "  FROM upsert_data WHERE " + holdingsTableName + ".id = upsert_data.id "
-           + "  RETURNING " + holdingsTableName + ".id"
-           + "), "
-           + "inserted AS ("
-           + "  INSERT INTO " + holdingsTableName + " (id, jsonb) "
-           + "  SELECT id, data FROM upsert_data "
-           + "  WHERE id NOT IN (SELECT id FROM updated) "
-           + "  RETURNING id"
-           + "), "
-           + "upserted AS ("
-           + "  SELECT id FROM updated UNION ALL SELECT id FROM inserted"
-           + "), ";
-  }
-
-  private String buildCombinedResultsQuery() {
-    return "combined_results AS ("
-           + "  SELECT "
-           + "    u.id, "
-           + "    COALESCE(oh.old_content, 'null') as old_holdings_content, "
-           + "    oi.item_content as old_item_content"
-           + "  FROM upserted u "
-           + "  LEFT JOIN old_holdings_data oh ON u.id = oh.id"
-           + "  LEFT JOIN old_items_data oi ON u.id = oi.holdingsrecordid"
-           + ")";
-  }
-
-  private Pair<Map<String, HoldingsRecord>, Map<String, List<Item>>> processUpsertResultSet(RowSet<Row> rowSet) {
-    var oldHoldingsMap = new HashMap<String, HoldingsRecord>();
-    var oldItemsMap = new HashMap<String, List<Item>>();
-
-    for (var row : rowSet) {
-      var id = row.getUUID(0).toString();
-      var oldHoldingsContent = row.getString(1);
-      var oldItemContent = row.getString(2);
-
-      processOldHoldingsContent(id, oldHoldingsContent, oldHoldingsMap);
-      processOldItemContent(id, oldItemContent, oldItemsMap);
-    }
-
-    return Pair.of(oldHoldingsMap, oldItemsMap);
-  }
-
-  private void processOldHoldingsContent(String id, String oldHoldingsContent,
-                                         Map<String, HoldingsRecord> oldHoldingsMap) {
-    if (!"null".equals(oldHoldingsContent) && !oldHoldingsMap.containsKey(id)) {
-      try {
-        var oldHolding = ObjectMapperTool.readValue(oldHoldingsContent, HoldingsRecord.class);
-        oldHoldingsMap.put(id, oldHolding);
-      } catch (Exception e) {
-        log.warn("Failed to parse old holdings record content for id: {}", id, e);
-      }
-    }
-  }
-
-  private void processOldItemContent(String id, String oldItemContent,
-                                     Map<String, List<Item>> oldItemsMap) {
-    if (oldItemContent != null) {
-      try {
-        var oldItem = ObjectMapperTool.readValue(oldItemContent, Item.class);
-        oldItemsMap.computeIfAbsent(id, k -> new ArrayList<>()).add(oldItem);
-      } catch (Exception e) {
-        log.warn("Failed to parse old item record content for holdings {}", id, e);
-      }
-    }
+      .map(HoldingsUpsertResultProcessor::processUpsertResultSet);
   }
 
   private Future<Map<String, List<Item>>> updateItemsForHoldingsChange(
@@ -473,47 +350,8 @@ public class HoldingsService {
       return Future.succeededFuture(itemsBeforeUpdate);
     }
 
-    return itemRepository.updateBatch(allItemsToUpdate, conn)
+    return itemService.updateBatch(conn, allItemsToUpdate)
       .map(notUsed -> itemsBeforeUpdate);
-  }
-
-  private Future<Void> publishHoldingsAndItemEvents(List<HoldingsRecord> newHoldings,
-                                                    Map<String, HoldingsRecord> oldHoldings,
-                                                    Map<String, List<Item>> itemsBeforeUpdate) {
-
-    var itemEventFutures = publishItemEvents(newHoldings, oldHoldings, itemsBeforeUpdate);
-    return Future.all(itemEventFutures)
-      .onSuccess(v -> publishHoldingsEvents(newHoldings, oldHoldings))
-      .mapEmpty();
-  }
-
-  private List<Future<Void>> publishItemEvents(List<HoldingsRecord> newHoldings,
-                                               Map<String, HoldingsRecord> oldHoldings,
-                                               Map<String, List<Item>> itemsBeforeUpdate) {
-
-    var itemFutures = new ArrayList<Future<Void>>();
-
-    for (var newHolding : newHoldings) {
-      var holdingsId = newHolding.getId();
-      var oldHolding = oldHoldings.get(holdingsId);
-      var itemsBefore = itemsBeforeUpdate.get(holdingsId);
-
-      if (oldHolding != null && itemsBefore != null) {
-        itemFutures.add(itemEventService.publishUpdated(oldHolding, newHolding, itemsBefore));
-      }
-    }
-    return itemFutures;
-  }
-
-  private void publishHoldingsEvents(List<HoldingsRecord> newHoldings, Map<String, HoldingsRecord> oldHoldingsMap) {
-    var oldHoldings = new ArrayList<>(oldHoldingsMap.values());
-    var createdHoldings = newHoldings.stream()
-      .filter(entity -> !oldHoldingsMap.containsKey(entity.getId()))
-      .toList();
-
-    var batchContext = new BatchOperationContext<>(createdHoldings, oldHoldings, true);
-    domainEventPublisher.publishCreatedOrUpdated(batchContext)
-      .handle(Response.status(201).build());
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {

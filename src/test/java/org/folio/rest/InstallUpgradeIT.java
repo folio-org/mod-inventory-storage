@@ -129,13 +129,19 @@ public class InstallUpgradeIT {
 
   @Test
   public void installAndUpgrade() {
+    when()
+      .get("/admin/health")
+      .then()
+      .statusCode(200)
+      .body(is("\"OK\""));
+    
     setTenant("latest");
 
     JsonObject body = new JsonObject()
       .put("module_to", "mod-inventory-storage-999999.0.0")
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-        .add(new JsonObject().put("key", "loadSample").put("value", "true")));
+        .add(new JsonObject().put("key", "loadSample").put("value", "false")));
 
     postTenant(body);
 
@@ -197,10 +203,10 @@ public class InstallUpgradeIT {
 
   private void smokeTest() {
     when()
-      .get("/instance-storage/instances?limit=1000")
+      .get("/classification-types?limit=1000")
       .then()
       .statusCode(200)
-      .body("instances.size()", is(36));
+      .body("classificationTypes.size()", is(10));
 
     given()
       .body("{'instances':{'startNumber':9}, 'holdings':{'startNumber':7}, 'items':{'startNumber':5}}"
