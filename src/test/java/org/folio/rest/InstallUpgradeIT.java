@@ -144,6 +144,8 @@ public class InstallUpgradeIT {
     postTenant(body);
 
     smokeTest();
+
+    MOD_MIS.stop();
   }
 
   /**
