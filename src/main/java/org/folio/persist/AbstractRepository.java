@@ -59,7 +59,7 @@ public abstract class AbstractRepository<T> {
   public Future<Map<String, T>> getByIds(Collection<String> ids) {
     final Promise<Map<String, T>> promise = promise();
 
-    postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), recordType, promise);
+    postgresClient.getById(tableName, new JsonArray(new ArrayList<>(ids)), recordType, promise::handle);
 
     return promise.future();
   }

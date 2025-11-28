@@ -4,10 +4,8 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
@@ -91,19 +89,10 @@ public class TestRowStream implements RowStream<Row> {
 
   @Override
   public Future<Void> close() {
-    Promise<Void> promise = Promise.promise();
-
-    close(promise);
-
-    return promise.future();
-  }
-
-  @Override
-  public void close(Handler<AsyncResult<Void>> completionHandler) {
     closed = true;
     synchronized (this) {
       notifyAll();
     }
-    completionHandler.handle(succeededFuture());
+    return succeededFuture();
   }
 }

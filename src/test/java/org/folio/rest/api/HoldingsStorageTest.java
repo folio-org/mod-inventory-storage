@@ -96,11 +96,14 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 @RunWith(JUnitParamsRunner.class)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
@@ -172,22 +175,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     mockUserTenantsForNonConsortiumMember();
     mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
     mockUserTenantsForTenantWithoutPermissions();
-  }
-
-  private void canPostSynchronousBatchUnsafeAndCreateShadowInstance(String subpath) {
-    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
-      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    mockSharingInstance();
-
-    JsonArray holdingsArray = threeHoldingsWithoutInstance();
-    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT),
-      statusCodeIs(HTTP_CREATED));
-    for (Object hrObj : holdingsArray) {
-      final JsonObject holding = (JsonObject) hrObj;
-      assertExists(holding, CONSORTIUM_MEMBER_TENANT);
-      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
-        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
-    }
   }
 
   @SneakyThrows
@@ -746,14 +733,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(nod(instanceId));
     Function4<UUID, String, String, String, String> createHolding =
-        (location, prefix, callNumber, suffix) -> createHoldingRecord(new HoldingRequestBuilder()
-            .forInstance(instanceId)
-            .withSource(getPreparedHoldingSourceId())
-            .withPermanentLocation(location)
-            .withCallNumberPrefix(prefix)
-            .withCallNumber(callNumber)
-            .withCallNumberSuffix(suffix).create())
-          .getId().toString();
+      (location, prefix, callNumber, suffix) -> createHoldingRecord(new HoldingRequestBuilder()
+        .forInstance(instanceId)
+        .withSource(getPreparedHoldingSourceId())
+        .withPermanentLocation(location)
+        .withCallNumberPrefix(prefix)
+        .withCallNumber(callNumber)
+        .withCallNumberSuffix(suffix).create())
+        .getId().toString();
     final var h7 = createHolding.invoke(SECOND_FLOOR_LOCATION_ID, "b", "k", "p");
     final var h6 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "c", "j", "q");
     final var h5 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "b", "k", "q");
@@ -763,10 +750,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final var h1 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "p");
     final var h0 = createHolding.invoke(ANNEX_LIBRARY_LOCATION_ID, "b", "k", "q");
     Function<String, List<String>> getHoldingsIds = query -> holdingsClient.getByQuery(query).stream()
-        .map(holding -> holding.getString("id")).toList();
+      .map(holding -> holding.getString("id")).toList();
 
     var query = "instanceId==" + instanceId
-        + " sortBy effectiveLocation.name callNumberPrefix callNumber callNumberSuffix";
+                + " sortBy effectiveLocation.name callNumberPrefix callNumber callNumberSuffix";
     query = "?query=" + PercentCodec.encode(query);
     var ids = getHoldingsIds.apply(query);
     assertThat(ids, is(List.of(h0, h1, h2, h3, h4, h5, h6, h7)));
@@ -2984,7 +2971,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject firstError = errors.getJsonObject(0);
     assertThat(firstError.getString("message"), matchesPattern("Cannot set holdings_record.instanceid = [\\S]+ "
-      + "because it does not exist in instance.id."));
+                                                               + "because it does not exist in instance.id."));
     assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("holdings_record.instanceid"));
 
@@ -3536,6 +3523,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     var response = holdingsSourceClient.attemptToDelete(UUID.fromString(holdingSourceId));
     assertThat(response.getStatusCode(), is(HttpStatus.HTTP_BAD_REQUEST.toInt()));
+  }
+
+  private void canPostSynchronousBatchUnsafeAndCreateShadowInstance(String subpath) {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+    mockSharingInstance();
+
+    JsonArray holdingsArray = threeHoldingsWithoutInstance();
+    assertThat(postSynchronousBatchUnsafe(subpath, holdingsArray, CONSORTIUM_MEMBER_TENANT),
+      statusCodeIs(HTTP_CREATED));
+    for (Object hrObj : holdingsArray) {
+      final JsonObject holding = (JsonObject) hrObj;
+      assertExists(holding, CONSORTIUM_MEMBER_TENANT);
+      holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id"),
+        CONSORTIUM_MEMBER_TENANT).getJson(), CONSORTIUM_MEMBER_TENANT, mockServer.baseUrl());
+    }
   }
 
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {

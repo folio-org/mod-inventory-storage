@@ -34,7 +34,6 @@ import org.folio.rest.impl.AbstractInstanceRecordsApi;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
-import org.mockito.ArgumentMatchers;
 
 @RunWith(VertxUnitRunner.class)
 public class AbstractInstanceRecordsApiTest extends TestBase {
@@ -108,9 +107,7 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
 
   private HttpServerResponse getHttpServerResponseMock() {
     HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
-    doAnswer(AdditionalAnswers.answerVoid(
-      (Handler<AsyncResult<Void>> handler) -> handler.handle(Future.succeededFuture())))
-      .when(httpServerResponse).end(ArgumentMatchers.<Handler<AsyncResult<Void>>>any());
+    when(httpServerResponse.end()).thenReturn(Future.succeededFuture());
     return httpServerResponse;
   }
 

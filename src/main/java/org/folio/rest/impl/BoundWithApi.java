@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.ws.rs.core.Response;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.persist.BoundWithRepository;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
@@ -126,13 +125,13 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
         var futures = getCreateBoundWithPartFutures(
           entity.getItemId(), boundWithItem.get().getHoldingsRecordId(),
           incomingParts, existingParts.get(), okapiHeaders, vertxContext);
-        return GenericCompositeFuture.all(futures);
+        return Future.all(futures);
       })
       .compose(x -> {
         var futures = getDeleteBoundWithPartFutures(
           boundWithItem.get().getHoldingsRecordId(),
           existingParts.get(), incomingParts, vertxContext, okapiHeaders);
-        return GenericCompositeFuture.all(futures);
+        return Future.all(futures);
       })
       .onSuccess(x -> asyncResultHandler.handle(succeededFuture(respond204())))
       .onFailure(handleFailure(asyncResultHandler));
@@ -155,7 +154,7 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
         for (BoundWithContent entry : requestEntity.getBoundWithContents()) {
           holdingsFutures.add(holdings.getById(entry.getHoldingsRecordId()));
         }
-        return GenericCompositeFuture.all(holdingsFutures);
+        return Future.all(holdingsFutures);
       })
       .compose(holdingsFound -> {
         for (int i = 0; i < holdingsFound.size(); i++) {

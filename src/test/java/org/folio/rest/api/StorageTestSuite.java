@@ -1,5 +1,6 @@
 package org.folio.rest.api;
 
+import static org.folio.rest.impl.StorageHelper.POST_SYNC_MAX_ENTITIES_PROPERTY;
 import static org.folio.utility.KafkaUtility.startKafka;
 import static org.folio.utility.KafkaUtility.stopKafka;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -10,7 +11,6 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import io.vertx.core.Promise;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.net.URL;
@@ -92,6 +92,7 @@ public final class StorageTestSuite {
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
     System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
+    System.setProperty(POST_SYNC_MAX_ENTITIES_PROPERTY, "10");
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
@@ -158,13 +159,8 @@ public final class StorageTestSuite {
     CompletableFuture<Boolean> cf = new CompletableFuture<>();
 
     try {
-      PostgresClient postgresClient = PostgresClient.getInstance(getVertx(), tenantId);
-
-      Promise<RowSet<Row>> promise = Promise.promise();
-      String sql = String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName);
-      postgresClient.execute(sql, promise);
-
-      promise.future()
+      PostgresClient.getInstance(getVertx(), tenantId)
+        .execute(String.format("DELETE FROM %s_%s.%s", tenantId, "mod_inventory_storage", tableName))
         .map(deleteResult -> cf.complete(deleteResult.rowCount() >= 0))
         .otherwise(error -> cf.complete(false));
 
@@ -189,8 +185,7 @@ public final class StorageTestSuite {
   }
 
   private static RowSet<Row> getRecordsWithUnmatchedIds(String tenantId, String tableName) {
-    PostgresClient dbClient = PostgresClient.getInstance(
-      getVertx(), tenantId);
+    PostgresClient dbClient = PostgresClient.getInstance(getVertx(), tenantId);
 
     CompletableFuture<RowSet<Row>> selectCompleted = new CompletableFuture<>();
 

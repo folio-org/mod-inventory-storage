@@ -43,6 +43,7 @@ public class ServicePointSynchronizationVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> startPromise) {
+    log.info("start:: Starting ServicePointSynchronizationVerticle");
     var httpClient = vertx.createHttpClient();
 
     createConsumers(httpClient)

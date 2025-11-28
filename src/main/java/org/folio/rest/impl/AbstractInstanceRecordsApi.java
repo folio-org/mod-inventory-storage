@@ -14,7 +14,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
-import io.vertx.sqlclient.impl.ArrayTuple;
+import io.vertx.sqlclient.internal.ArrayTuple;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
