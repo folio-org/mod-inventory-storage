@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -283,6 +284,11 @@ public class HoldingsService {
       log.warn("performUpsertWithItemUpdates:: Error during metadata population", e);
       return Future.failedFuture(e.getMessage());
     }
+
+    // Set id if missing
+    holdings.forEach(holding -> holding.setId(holding.getId() == null
+                                              ? UUID.randomUUID().toString()
+                                              : holding.getId()));
 
     return postgresClient.withTrans(conn -> upsertHoldingsAndGetOldContent(conn, holdings)
         .compose(upsertResult -> updateItemsForHoldingsChange(conn, holdings, upsertResult)

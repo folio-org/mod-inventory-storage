@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static com.github.tomakehurst.wiremock.http.Response.Builder.like;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.api.ItemEffectiveCallNumberComponentsTest.LC_CALL_NUMBER_TYPE;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
@@ -32,6 +33,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -2934,6 +2936,30 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       holdingsMessageChecks.createdMessagePublished(getById(holding.getString("id")).getJson(),
         TENANT_ID, mockServer.baseUrl());
     }
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
+    var holdingsArray = new JsonArray();
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId), TENANT_ID);
+    var holdingsRecord = new JsonObject()
+      .put("instanceId", instanceId.toString())
+      .put("sourceId", HOLDING_SOURCE_IDS[0].toString())
+      .put("_version", 1)
+      .put("callNumber", "test-call-number")
+      .put("permanentLocationId", MAIN_LIBRARY_LOCATION_ID.toString());
+    holdingsArray.add(holdingsRecord);
+    assertThat(postSynchronousBatch("?upsert=true", holdingsArray), statusCodeIs(HTTP_CREATED));
+    var getCompleted = new CompletableFuture<Response>();
+    getClient().get(holdingsStorageUrl("") + "?query=callNumber=test-call-number", TENANT_ID, json(getCompleted));
+    var response = TestBase.get(getCompleted);
+    assertThat(response, statusCodeIs(HTTP_OK));
+    var createdHolding = response.getJson().getJsonArray("holdingsRecords").getJsonObject(0);
+    assertThat(createdHolding.getString("id"), notNullValue());
+    assertThat(createdHolding.getString("callNumber"), equalTo("test-call-number"));
+    holdingsMessageChecks.createdMessagePublished(getById(createdHolding.getString("id")).getJson(),
+      TENANT_ID, mockServer.baseUrl());
   }
 
   @Test
