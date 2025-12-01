@@ -141,6 +141,10 @@ public class ItemService {
       .map(ResponseHandlerUtil::handleHridError);
   }
 
+  public Future<RowSet<Row>> updateBatch(Conn conn, List<Item> allItemsToUpdate) {
+    return itemRepository.updateBatch(allItemsToUpdate, conn);
+  }
+
   public Future<Response> updateItems(List<ItemPatch> items) {
     if (CollectionUtils.isEmpty(items)) {
       return Future.succeededFuture(
