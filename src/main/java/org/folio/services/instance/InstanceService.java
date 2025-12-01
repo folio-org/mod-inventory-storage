@@ -25,8 +25,6 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.pgclient.PgException;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
@@ -173,6 +172,7 @@ public class InstanceService {
                                           boolean publishEvents, Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
+    setMissingInstanceIds(instances);
 
     return hridManager.populateHridForInstances(instances)
       .compose(NotesValidators::refuseInstanceLongNotes)
@@ -245,7 +245,8 @@ public class InstanceService {
         OptimisticLockingUtil.setVersionToMinusOne(instances);
       }
       MetadataUtil.populateMetadata(instances, okapiHeaders);
-      Future<RowSet<Row>> result = upsert
+
+      var result = upsert
         ? conn.upsertBatch(INSTANCE_TABLE, instances)
         : conn.saveBatch(INSTANCE_TABLE, instances);
 
@@ -263,6 +264,16 @@ public class InstanceService {
       logger.warn("postSyncInstance:: Error during batch instance", e);
       return Future.failedFuture(e.getMessage());
     }
+  }
+
+  private void setMissingInstanceIds(List<Instance> instances) {
+    if (instances == null) {
+      return;
+    }
+
+    instances.forEach(instance -> instance.setId(instance.getId() == null
+      ? UUID.randomUUID().toString()
+      : instance.getId()));
   }
 
   private Promise<Response> putInstance(Instance newInstance, String instanceId) {
