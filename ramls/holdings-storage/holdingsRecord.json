@@ -69,7 +69,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "../common/callNumberComponents.json",
+        "$ref": "../common/additionalCallNumberComponents.json",
         "uniqueItems": true
       }
     },
