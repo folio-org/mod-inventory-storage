@@ -82,6 +82,19 @@ public abstract class TestBase {
 
     StorageTestSuite.startupUnlessRunning();
 
+    initializeResourceClients();
+
+    statisticalCodeFixture = new StatisticalCodeFixture(getClient());
+    instanceReindex = new InstanceReindexFixture(getClient());
+    asyncMigration = new AsyncMigrationFixture(getClient());
+
+    KAFKA_CONSUMER.discardAllMessages();
+    KAFKA_CONSUMER.consume(getVertx());
+
+    logger.info("finishing @BeforeClass testBaseBeforeClass()");
+  }
+
+  private static void initializeResourceClients() {
     instancesClient = ResourceClient.forInstances(getClient());
     holdingsClient = ResourceClient.forHoldings(getClient());
     itemsClient = ResourceClient.forItems(getClient());
@@ -100,14 +113,6 @@ public abstract class TestBase {
     instanceTypesClient = ResourceClient.forInstanceTypes(getClient());
     illPoliciesClient = ResourceClient.forIllPolicies(getClient());
     servicePointsClient = ResourceClient.forServicePoints(getClient());
-    statisticalCodeFixture = new StatisticalCodeFixture(getClient());
-    instanceReindex = new InstanceReindexFixture(getClient());
-    asyncMigration = new AsyncMigrationFixture(getClient());
-
-    KAFKA_CONSUMER.discardAllMessages();
-    KAFKA_CONSUMER.consume(getVertx());
-
-    logger.info("finishing @BeforeClass testBaseBeforeClass()");
   }
 
   @AfterClass

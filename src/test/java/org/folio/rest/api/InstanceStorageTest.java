@@ -185,90 +185,23 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException, TimeoutException {
 
     UUID id = UUID.randomUUID();
-    NatureOfContentTerm journalContentType = createNatureOfContentTerm("journal_test");
-    NatureOfContentTerm bookContentType = createNatureOfContentTerm("book_test");
-
-    String[] natureOfContentIds = Stream.of(journalContentType, bookContentType)
-      .map(NatureOfContentTerm::getId)
-      .toArray(String[]::new);
-
+    String[] natureOfContentIds = createNatureOfContentTerms();
     String adminNote = "Administrative note";
-    var dates = new Dates()
-      .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
-      .withDate1("2023")
-      .withDate2("2024");
-    var subject = new Subject()
-      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
-      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
-      .withValue("subject");
-    var subjects = new JsonArray().add(subject);
-    JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
-    instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
-    instanceToCreate.put(DATES_KEY, pojo2JsonObject(dates));
-    instanceToCreate.put(SUBJECTS_KEY, subjects);
+    JsonObject instanceToCreate = createInstanceWithAllFields(id, natureOfContentIds, adminNote);
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID,
-      json(createCompleted));
-
+    getClient().post(instancesStorageUrl(""), instanceToCreate, TENANT_ID, json(createCompleted));
     Response response = createCompleted.get(10, SECONDS);
-
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject instance = response.getJson();
+    verifyCreatedInstanceFields(instance, id, natureOfContentIds, adminNote);
 
-    assertThat(instance.getString("id"), is(id.toString()));
-    assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
-    assertThat(instance.getBoolean("previouslyHeld"), is(false));
-    assertThat(instance.getJsonArray("administrativeNotes").contains(adminNote), is(true));
-
-    JsonArray identifiers = instance.getJsonArray("identifiers");
-    assertThat(identifiers.size(), is(1));
-    assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
-    assertThat(instance.getJsonArray("natureOfContentTermIds"),
-      containsInAnyOrder(natureOfContentIds));
-    assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false));
-
-    Response getResponse = getById(id);
-
-    JsonObject instanceFromGet = getResponse.getJson();
-
-    assertThat(instanceFromGet.getString("title"),
-      is("Long Way to a Small Angry Planet"));
-
-    JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
-    assertThat(identifiersFromGet.size(), is(1));
-    assertThat(identifiersFromGet, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
-
-    @SuppressWarnings("unchecked")
-    List<String> tags = instanceFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
-
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
-    assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
-      containsInAnyOrder(natureOfContentIds));
-
-    assertThat(
-      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-
-    assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
+    JsonObject instanceFromGet = getById(id).getJson();
+    verifyRetrievedInstanceFields(instanceFromGet, natureOfContentIds);
 
     instanceMessageChecks.createdMessagePublished(instanceFromGet);
-
-    var storedDates = instance.getJsonObject(DATES_KEY)
-      .mapTo(Dates.class);
-
-    assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
-    assertThat(storedDates.getDate1(), is("2023"));
-    assertThat(storedDates.getDate2(), is("2024"));
-
-    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
-
-    assertThat(storedSubject.getSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
-    assertThat(storedSubject.getTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
-    assertThat(storedSubject.getValue(), is(is(subject.getValue())));
+    verifyInstanceDatesAndSubjects(instance);
   }
 
   @Test
@@ -776,114 +709,88 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
-
     UUID firstInstanceId = UUID.randomUUID();
-
-    JsonObject firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
-
-    createInstance(firstInstanceToCreate);
-
     UUID secondInstanceId = UUID.randomUUID();
+    createInstance(smallAngryPlanet(firstInstanceId));
+    createInstance(nod(secondInstanceId));
 
-    JsonObject secondInstanceToCreate = nod(secondInstanceId);
-
-    createInstance(secondInstanceToCreate);
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().get(instancesStorageUrl(""), TENANT_ID,
-      json(getCompleted));
-
-    Response response = getCompleted.get(10, SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
+    JsonObject responseBody = getAllInstancesResponse();
     JsonArray allInstances = responseBody.getJsonArray(INSTANCES_KEY);
 
     assertThat(allInstances.size(), is(2));
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(2));
 
+    JsonObject[] instances = orderInstancesById(allInstances, firstInstanceId);
+    assertSmallAngryPlanetInstance(instances[0], firstInstanceId);
+    assertNodInstance(instances[1], secondInstanceId);
+  }
+
+  private JsonObject getAllInstancesResponse() throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(instancesStorageUrl(""), TENANT_ID, json(getCompleted));
+    return getCompleted.get(10, SECONDS).getJson();
+  }
+
+  private JsonObject[] orderInstancesById(JsonArray allInstances, UUID expectedFirstId) {
     JsonObject firstInstance = allInstances.getJsonObject(0);
     JsonObject secondInstance = allInstances.getJsonObject(1);
-
-    // no "sortBy" used so the database can return them in any order.
-    // swap if needed:
-    if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
-      JsonObject tmp = firstInstance;
-      firstInstance = secondInstance;
-      secondInstance = tmp;
+    // no "sortBy" used so the database can return them in any order. swap if needed:
+    if (expectedFirstId.toString().equals(secondInstance.getString("id"))) {
+      return new JsonObject[]{secondInstance, firstInstance};
     }
+    return new JsonObject[]{firstInstance, secondInstance};
+  }
 
-    assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
-    assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
-
-    assertThat(firstInstance.getJsonArray("identifiers").size(), is(1));
-    assertThat(firstInstance.getJsonArray("identifiers"),
+  private void assertSmallAngryPlanetInstance(JsonObject instance, UUID expectedId) {
+    assertThat(instance.getString("id"), is(expectedId.toString()));
+    assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(instance.getJsonArray("identifiers").size(), is(1));
+    assertThat(instance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+  }
 
-    assertThat(secondInstance.getString("id"), is(secondInstanceId.toString()));
-    assertThat(secondInstance.getString("title"), is("Nod"));
-
-    assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
-    assertThat(secondInstance.getJsonArray("identifiers"),
+  private void assertNodInstance(JsonObject instance, UUID expectedId) {
+    assertThat(instance.getString("id"), is(expectedId.toString()));
+    assertThat(instance.getString("title"), is("Nod"));
+    assertThat(instance.getJsonArray("identifiers").size(), is(1));
+    assertThat(instance.getJsonArray("identifiers"),
       hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
   }
 
   @Test
   public void canRetrieveAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
     var firstInstanceId = UUID.randomUUID();
-    var firstInstanceToCreate = smallAngryPlanet(firstInstanceId);
     var secondInstanceId = UUID.randomUUID();
-    var secondInstanceToCreate = nod(secondInstanceId);
+    createInstance(smallAngryPlanet(firstInstanceId));
+    createInstance(nod(secondInstanceId));
 
-    createInstance(firstInstanceToCreate);
-    createInstance(secondInstanceToCreate);
-
-    var query = "(cql.allRecords=1) sortBy title";
-    var retrieveCompleted = new CompletableFuture<Response>();
-    var retrieveByTitleCompleted = new CompletableFuture<Response>();
-
-    getClient().post(instancesStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
-      json(retrieveCompleted));
-    getClient().post(instancesStorageUrl("/retrieve"), new JsonObject().put("query", query), TENANT_ID,
-      json(retrieveByTitleCompleted));
-
-    var retrieveBody = retrieveCompleted.get(10, SECONDS).getJson();
-    var allInstances = retrieveBody.getJsonArray(INSTANCES_KEY);
-
-    var retrieveByTitleBody = retrieveByTitleCompleted.get(10, SECONDS).getJson();
-    var sortedInstances = retrieveByTitleBody.getJsonArray(INSTANCES_KEY);
+    var retrieveResponses = retrieveInstancesWithAndWithoutSort();
+    var allInstances = retrieveResponses[0].getJsonArray(INSTANCES_KEY);
+    var sortedInstances = retrieveResponses[1].getJsonArray(INSTANCES_KEY);
 
     assertThat(allInstances.size(), is(2));
     assertThat(sortedInstances.size(), is(2));
-    assertThat(retrieveBody.getInteger(TOTAL_RECORDS_KEY), is(2));
+    assertThat(retrieveResponses[0].getInteger(TOTAL_RECORDS_KEY), is(2));
 
-    var firstInstance = allInstances.getJsonObject(0);
-    var secondInstance = allInstances.getJsonObject(1);
-    // no "sortBy" used so the database can return them in any order.
-    // swap if needed:
-    if (firstInstanceId.toString().equals(secondInstance.getString("id"))) {
-      var tmp = firstInstance;
-      firstInstance = secondInstance;
-      secondInstance = tmp;
-    }
-    final var sortedInstance = sortedInstances.getJsonObject(0);
+    var orderedInstances = orderInstancesById(allInstances, firstInstanceId);
+    assertSmallAngryPlanetInstance(orderedInstances[0], firstInstanceId);
+    assertNodInstance(orderedInstances[1], secondInstanceId);
+    assertThat(sortedInstances.getJsonObject(0).getString("title"), is("Long Way to a Small Angry Planet"));
+  }
 
-    assertThat(firstInstance.getString("id"), is(firstInstanceId.toString()));
-    assertThat(firstInstance.getString("title"), is("Long Way to a Small Angry Planet"));
+  private JsonObject[] retrieveInstancesWithAndWithoutSort()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var retrieveCompleted = new CompletableFuture<Response>();
+    var retrieveByTitleCompleted = new CompletableFuture<Response>();
 
-    assertThat(firstInstance.getJsonArray("identifiers").size(), is(1));
-    assertThat(firstInstance.getJsonArray("identifiers"),
-      hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+    getClient().post(instancesStorageUrl("/retrieve"), new JsonObject(), TENANT_ID, json(retrieveCompleted));
+    getClient().post(instancesStorageUrl("/retrieve"),
+      new JsonObject().put("query", "(cql.allRecords=1) sortBy title"), TENANT_ID, json(retrieveByTitleCompleted));
 
-    assertThat(secondInstance.getString("id"), is(secondInstanceId.toString()));
-    assertThat(secondInstance.getString("title"), is("Nod"));
-
-    assertThat(secondInstance.getJsonArray("identifiers").size(), is(1));
-    assertThat(secondInstance.getJsonArray("identifiers"),
-      hasItem(identifierMatches(UUID_ASIN.toString(), "B01D1PLMDO")));
-
-    assertThat(sortedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
+    return new JsonObject[]{
+      retrieveCompleted.get(10, SECONDS).getJson(),
+      retrieveByTitleCompleted.get(10, SECONDS).getJson()
+    };
   }
 
   @Test
@@ -1007,9 +914,20 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canGetWithOptimizedSql(TestContext testContext) {
-    int n = PgUtil.getOptimizedSqlSize() / 2;
-    PostgresClient pg = PostgresClient.getInstance(getVertx(), TENANT_ID);
+    var n = PgUtil.getOptimizedSqlSize() / 2;
+    var pg = PostgresClient.getInstance(getVertx(), TENANT_ID);
+    insertTestDataForOptimizedSql(testContext, pg, n);
 
+    assertOptimizedSqlLimit9Results();
+    assertOptimizedSqlLimit5Results();
+    assertOptimizedSqlOffset6Limit3Results();
+    assertOptimizedSqlOffset1Limit8Results();
+    assertOptimizedSqlOffset1Limit20Results();
+    assertOptimizedSqlDescendingOffset1Limit3Results();
+    assertOptimizedSqlDescendingOffset6Limit3Results();
+  }
+
+  private void insertTestDataForOptimizedSql(TestContext testContext, PostgresClient pg, int n) {
     // "b foo" records are before the getOptimizedSqlSize() limit
     // "d foo" records are after the getOptimizedSqlSize() limit
     insert(testContext, pg, "a", n);
@@ -1017,83 +935,79 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     insert(testContext, pg, "c", n);
     insert(testContext, pg, "d foo", 5);
     insert(testContext, pg, "e", n);
+  }
 
-    // limit=9
-    JsonObject json = searchForInstances("title=foo sortBy title", 0, 9);
-    JsonArray allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlLimit9Results() {
+    var json = searchForInstances("title=foo sortBy title", 0, 9);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(9));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
-    for (int i = 0; i < 5; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("b foo " + (i + 1)));
-    }
-    for (int i = 0; i < 3; i++) {
-      JsonObject instance = allInstances.getJsonObject(5 + i);
-      assertThat(instance.getString("title"), is("d foo " + (i + 1)));
-    }
+    assertInstanceTitles(allInstances, 0, 5, "b foo ");
+    assertInstanceTitles(allInstances, 5, 3, "d foo ");
+  }
 
-    // limit=5
-    json = searchForInstances("title=foo sortBy title", 0, 5);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlLimit5Results() {
+    var json = searchForInstances("title=foo sortBy title", 0, 5);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(5));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
-    for (int i = 0; i < 5; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("b foo " + (i + 1)));
-    }
+    assertInstanceTitles(allInstances, 0, 5, "b foo ");
+  }
 
-    // offset=6, limit=3
-    json = searchForInstances("title=foo sortBy title", 6, 3);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlOffset6Limit3Results() {
+    var json = searchForInstances("title=foo sortBy title", 6, 3);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(3));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
     for (int i = 0; i < 3; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("d foo " + (1 + i + 1)));
+      assertThat(allInstances.getJsonObject(i).getString("title"), is("d foo " + (2 + i)));
     }
+  }
 
-    // offset=1, limit=8
-    json = searchForInstances("title=foo sortBy title", 1, 8);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlOffset1Limit8Results() {
+    var json = searchForInstances("title=foo sortBy title", 1, 8);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(8));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
     for (int i = 0; i < 4; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("b foo " + (1 + i + 1)));
+      assertThat(allInstances.getJsonObject(i).getString("title"), is("b foo " + (2 + i)));
     }
-    for (int i = 0; i < 4; i++) {
-      JsonObject instance = allInstances.getJsonObject(4 + i);
-      assertThat(instance.getString("title"), is("d foo " + (i + 1)));
-    }
+    assertInstanceTitles(allInstances, 4, 4, "d foo ");
+  }
 
-    // "b foo", offset=1, limit=20
-    json = searchForInstances("title=b sortBy title/sort.ascending", 1, 20);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlOffset1Limit20Results() {
+    var json = searchForInstances("title=b sortBy title/sort.ascending", 1, 20);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(4));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(5));
     for (int i = 0; i < 4; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("b foo " + (1 + i + 1)));
+      assertThat(allInstances.getJsonObject(i).getString("title"), is("b foo " + (2 + i)));
     }
+  }
 
-    // sort.descending, offset=1, limit=3
-    json = searchForInstances("title=foo sortBy title/sort.descending", 1, 3);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlDescendingOffset1Limit3Results() {
+    var json = searchForInstances("title=foo sortBy title/sort.descending", 1, 3);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(3));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
     for (int i = 0; i < 3; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("d foo " + (4 - i)));
+      assertThat(allInstances.getJsonObject(i).getString("title"), is("d foo " + (4 - i)));
     }
+  }
 
-    // sort.descending, offset=6, limit=3
-    json = searchForInstances("title=foo sortBy title/sort.descending", 6, 3);
-    allInstances = json.getJsonArray(INSTANCES_KEY);
+  private void assertOptimizedSqlDescendingOffset6Limit3Results() {
+    var json = searchForInstances("title=foo sortBy title/sort.descending", 6, 3);
+    var allInstances = json.getJsonArray(INSTANCES_KEY);
     assertThat(allInstances.size(), is(3));
     assertThat(json.getInteger(TOTAL_RECORDS_KEY), is(10));
     for (int i = 0; i < 3; i++) {
-      JsonObject instance = allInstances.getJsonObject(i);
-      assertThat(instance.getString("title"), is("b foo " + (4 - i)));
+      assertThat(allInstances.getJsonObject(i).getString("title"), is("b foo " + (4 - i)));
+    }
+  }
+
+  private void assertInstanceTitles(JsonArray instances, int startIndex, int count, String prefix) {
+    for (int i = 0; i < count; i++) {
+      assertThat(instances.getJsonObject(startIndex + i).getString("title"), is(prefix + (i + 1)));
     }
   }
 
@@ -1293,27 +1207,31 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canSearchBySubjects() throws Exception {
-    JsonObject first = new JsonObject()
-      .put("title", "first")
-      .put("subjects", new JsonArray()
-        .add(new JsonObject().put("value", "foo"))
-        .add(new JsonObject().put("value", "bar"))
-        .add(new JsonObject().put("value", "baz"))
-      );
-    JsonObject second = new JsonObject()
-      .put("title", "second")
-      .put("subjects", new JsonArray()
-        .add(new JsonObject().put("value", "abc def ghi"))
-        .add(new JsonObject().put("value", "uvw xyz"))
-      );
+    JsonObject first = buildInstanceWithSubjects("first", "foo", "bar", "baz");
+    JsonObject second = buildInstanceWithSubjects("second", "abc def ghi", "uvw xyz");
 
-    JsonObject[] instances = {first, second};
+    createInstancesWithTypeAndSource(first, second);
+    assertSubjectSearchResults();
+  }
+
+  private JsonObject buildInstanceWithSubjects(String title, String... subjectValues) {
+    JsonObject instance = new JsonObject().put("title", title);
+    JsonArray subjects = new JsonArray();
+    for (String value : subjectValues) {
+      subjects.add(new JsonObject().put("value", value));
+    }
+    return instance.put("subjects", subjects);
+  }
+
+  private void createInstancesWithTypeAndSource(JsonObject... instances) throws Exception {
     for (JsonObject instance : instances) {
       instance.put("source", "test");
       instance.put("instanceTypeId", UUID_INSTANCE_TYPE.toString());
       createInstance(instance);
     }
+  }
 
+  private void assertSubjectSearchResults() {
     matchInstanceTitles(searchForInstances("subjects=foo"), "first");
     matchInstanceTitles(searchForInstances("subjects=bar"), "first");
     matchInstanceTitles(searchForInstances("subjects=baz"), "first");
@@ -1330,180 +1248,125 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByBarcode()
-    throws InterruptedException,
-    TimeoutException,
-    ExecutionException {
-
+  public void canSearchByBarcode() throws Exception {
     UUID expectedInstanceId = UUID.randomUUID();
     UUID expectedHoldingId = UUID.randomUUID();
-
     createInstance(smallAngryPlanet(expectedInstanceId));
-
-    createHoldings(new HoldingRequestBuilder()
-      .withId(expectedHoldingId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .forInstance(expectedInstanceId)
-      .create());
-
-    createItem(new ItemRequestBuilder()
-      .forHolding(expectedHoldingId)
-      .withBarcode("706949453641")
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withMaterialType(bookMaterialTypeId)
-      .create());
+    createHoldingsForInstance(expectedHoldingId, expectedInstanceId);
+    createItemWithBarcode(expectedHoldingId, "706949453641");
 
     UUID otherInstanceId = UUID.randomUUID();
     UUID otherHoldingId = UUID.randomUUID();
-
     createInstance(nod(otherInstanceId));
-
-    createHoldings(new HoldingRequestBuilder()
-      .withId(otherHoldingId)
-      .withSource(getPreparedHoldingSourceId())
-      .forInstance(otherInstanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .create());
-
-    createItem(new ItemRequestBuilder()
-      .forHolding(expectedHoldingId)
-      .withMaterialType(bookMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withBarcode("766043059304")
-      .create());
+    createHoldingsForInstance(otherHoldingId, otherInstanceId);
+    createItemWithBarcode(expectedHoldingId, "766043059304");
 
     //Use == as exact match is intended for barcode
     canSort("item.barcode==706949453641", "Long Way to a Small Angry Planet");
   }
 
-  // This is intended to demonstrate usage of the two different views
-  @Test
-  public void canSearchByBarcodeAndPermanentLocation()
-    throws InterruptedException, TimeoutException, ExecutionException {
-
-    UUID smallAngryPlanetInstanceId = UUID.randomUUID();
-    UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
-
-    createInstance(smallAngryPlanet(smallAngryPlanetInstanceId));
-
+  private void createHoldingsForInstance(UUID holdingId, UUID instanceId) throws Exception {
     createHoldings(new HoldingRequestBuilder()
-      .withId(mainLibrarySmallAngryHoldingId)
+      .withId(holdingId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .forInstance(smallAngryPlanetInstanceId)
+      .forInstance(instanceId)
       .create());
+  }
 
+  private void createItemWithBarcode(UUID holdingId, String barcode) {
     createItem(new ItemRequestBuilder()
-      .forHolding(mainLibrarySmallAngryHoldingId)
-      .withBarcode("706949453641")
+      .forHolding(holdingId)
+      .withBarcode(barcode)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withMaterialType(bookMaterialTypeId)
       .create());
+  }
 
+  // This is intended to demonstrate usage of the two different views
+  @Test
+  public void canSearchByBarcodeAndPermanentLocation() throws Exception {
+    UUID smallAngryPlanetInstanceId = UUID.randomUUID();
+    UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
     UUID annexSmallAngryHoldingId = UUID.randomUUID();
-
-    createHoldings(new HoldingRequestBuilder()
-      .withId(annexSmallAngryHoldingId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)
-      .forInstance(smallAngryPlanetInstanceId)
-      .create());
-
-    createItem(new ItemRequestBuilder()
-      .forHolding(annexSmallAngryHoldingId)
-      .withBarcode("70704539201")
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withMaterialType(bookMaterialTypeId)
-      .create());
+    createInstance(smallAngryPlanet(smallAngryPlanetInstanceId));
+    createHoldingsWithLocationAndItem(mainLibrarySmallAngryHoldingId, smallAngryPlanetInstanceId,
+      MAIN_LIBRARY_LOCATION_ID, "706949453641");
+    createHoldingsWithLocationAndItem(annexSmallAngryHoldingId, smallAngryPlanetInstanceId,
+      ANNEX_LIBRARY_LOCATION_ID, "70704539201");
 
     UUID nodInstanceId = UUID.randomUUID();
     UUID nodHoldingId = UUID.randomUUID();
-
     createInstance(nod(nodInstanceId));
+    createHoldingsWithLocationAndItem(nodHoldingId, nodInstanceId, MAIN_LIBRARY_LOCATION_ID, "766043059304");
 
+    assertBarcodeAndLocationSearchResults();
+  }
+
+  private void createHoldingsWithLocationAndItem(UUID holdingId, UUID instanceId,
+                                                   UUID locationId, String barcode) throws Exception {
     createHoldings(new HoldingRequestBuilder()
-      .withId(nodHoldingId)
+      .withId(holdingId)
       .withSource(getPreparedHoldingSourceId())
-      .forInstance(nodInstanceId)
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withPermanentLocation(locationId)
+      .forInstance(instanceId)
       .create());
+    createItemWithBarcode(holdingId, barcode);
+  }
 
-    createItem(new ItemRequestBuilder()
-      .forHolding(nodHoldingId)
-      .withMaterialType(bookMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withBarcode("766043059304")
-      .create());
-
+  private void assertBarcodeAndLocationSearchResults() {
     //Use == as exact match is intended for barcode and location ID
     canSort(format("item.barcode==706949453641 and holdingsRecords.permanentLocationId==%s", MAIN_LIBRARY_LOCATION_ID),
       "Long Way to a Small Angry Planet");
-
     canSort(format("holdingsRecords.permanentLocationId=\"%s\" sortBy title/sort.descending", MAIN_LIBRARY_LOCATION_ID),
       "Nod", "Long Way to a Small Angry Planet");
-    System.out.println("canSearchByBarcodeAndPermanentLocation");
   }
 
   // This is intended to demonstrate that instances without holdings or items
   // are not excluded from searching
   @Test
-  public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances()
-    throws InterruptedException, TimeoutException, ExecutionException {
-
+  public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances() throws Exception {
     UUID smallAngryPlanetInstanceId = UUID.randomUUID();
     UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
-
-    createInstance(smallAngryPlanet(smallAngryPlanetInstanceId));
-
-    createHoldings(new HoldingRequestBuilder()
-      .withId(mainLibrarySmallAngryHoldingId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .forInstance(smallAngryPlanetInstanceId)
-      .create());
-
-    createItem(new ItemRequestBuilder()
-      .forHolding(mainLibrarySmallAngryHoldingId)
-      .withBarcode("706949453641")
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withMaterialType(bookMaterialTypeId)
-      .create());
-
     UUID nodInstanceId = UUID.randomUUID();
 
+    createInstanceWithHoldingAndItem(smallAngryPlanetInstanceId, mainLibrarySmallAngryHoldingId);
     createInstance(nod(nodInstanceId));
 
+    Response searchResponse = searchByBarcodeOrTitle();
+    assertInstancesFoundInSearch(searchResponse, smallAngryPlanetInstanceId, nodInstanceId);
+  }
+
+  private void createInstanceWithHoldingAndItem(UUID instanceId, UUID holdingId) throws Exception {
+    createInstance(smallAngryPlanet(instanceId));
+    createHoldingsForInstance(holdingId, instanceId);
+    createItemWithBarcode(holdingId, "706949453641");
+  }
+
+  private Response searchByBarcodeOrTitle() throws InterruptedException, ExecutionException, TimeoutException {
     CompletableFuture<Response> searchCompleted = new CompletableFuture<>();
-
-    String url = instancesStorageUrl("") + "?query="
-      + urlEncode("item.barcode=706949453641* or title=Nod*");
-
+    String url = instancesStorageUrl("") + "?query=" + urlEncode("item.barcode=706949453641* or title=Nod*");
     getClient().get(url, TENANT_ID, json(searchCompleted));
-    Response searchResponse = searchCompleted.get(10, SECONDS);
+    return searchCompleted.get(10, SECONDS);
+  }
 
+  private void assertInstancesFoundInSearch(Response searchResponse, UUID firstInstanceId, UUID secondInstanceId) {
     assertThat(searchResponse.getStatusCode(), is(200));
     JsonObject responseBody = searchResponse.getJson();
-
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY), is(2));
 
     List<JsonObject> foundInstances = toList(responseBody.getJsonArray(INSTANCES_KEY));
-
     assertThat(foundInstances.size(), is(2));
 
     Optional<JsonObject> firstInstance = foundInstances.stream()
-      .filter(instance -> instance.getString("id").equals(smallAngryPlanetInstanceId.toString()))
+      .filter(instance -> instance.getString("id").equals(firstInstanceId.toString()))
       .findFirst();
-
     Optional<JsonObject> secondInstance = foundInstances.stream()
-      .filter(instance -> instance.getString("id").equals(nodInstanceId.toString()))
+      .filter(instance -> instance.getString("id").equals(secondInstanceId.toString()))
       .findFirst();
 
-    assertThat("Instance with barcode should be found",
-      firstInstance.isPresent(), is(true));
-
-    assertThat("Instance with title and no holding or items, should be found",
-      secondInstance.isPresent(), is(true));
+    assertThat("Instance with barcode should be found", firstInstance.isPresent(), is(true));
+    assertThat("Instance with title and no holding or items, should be found", secondInstance.isPresent(), is(true));
   }
 
   @Test
@@ -1650,111 +1513,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Test
   public void testCrossTableQueries() {
-    final String url = instancesStorageUrl("") + "?query=";
+    setupCrossTableQueryTestData();
+    String[] queryUrls = buildCrossTableQueryUrls(instancesStorageUrl("") + "?query=");
 
-    //////// create instance objects /////////////////////////////
-    JsonArray identifiers = new JsonArray();
-    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
-    JsonArray contributors = new JsonArray();
-    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
-    JsonArray tags = new JsonArray();
-    tags.add("test-tag");
-
-    UUID idJ1 = UUID.randomUUID();
-    JsonObject j1 = createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-    UUID idJ2 = UUID.randomUUID();
-    JsonObject j2 = createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-    UUID idJ3 = UUID.randomUUID();
-    JsonObject j3 = createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
-      identifiers, contributors, UUID_INSTANCE_TYPE, tags);
-
-    createInstance(j1);
-    createInstance(j2);
-    createInstance(j3);
-    ////////////////////// done /////////////////////////////////////
-
-    ///////// create location objects //////////////////////////////
-    UUID loc1 = UUID.fromString("11111111-dee7-48eb-b03f-d02fdf0debd0");
-    LocationUtility.createLocation(loc1, "location1", "IX/L1");
-    UUID loc2 = UUID.fromString("99999999-dee7-48eb-b03f-d02fdf0debd0");
-    LocationUtility.createLocation(loc2, "location2", "IX/L2");
-    /////////////////// done //////////////////////////////////////
-
-    /////////////////// create holdings records ///////////////////
-    JsonObject jho1 = new JsonObject();
-    String holdings1Uuid = loc1.toString();
-    jho1.put("id", UUID.randomUUID().toString());
-    jho1.put("instanceId", idJ1.toString());
-    jho1.put("sourceId", getPreparedHoldingSourceId().toString());
-    jho1.put("permanentLocationId", holdings1Uuid);
-
-    JsonObject jho2 = new JsonObject();
-    String holdings2Uuid = loc2.toString();
-    jho2.put("id", UUID.randomUUID().toString());
-    jho2.put("instanceId", idJ2.toString());
-    jho2.put("sourceId", getPreparedHoldingSourceId().toString());
-    jho2.put("permanentLocationId", holdings2Uuid);
-
-    JsonObject jho3 = new JsonObject();
-    jho3.put("id", UUID.randomUUID().toString());
-    jho3.put("instanceId", idJ3.toString());
-    jho3.put("sourceId", getPreparedHoldingSourceId().toString());
-    jho3.put("permanentLocationId", holdings2Uuid);
-
-    createHoldings(jho1);
-    createHoldings(jho2);
-    createHoldings(jho3);
-    ////////////////////////done //////////////////////////////////////
-
-    String url1 = url + urlEncode("title=Long Way to a Small Angry Planet* sortby title");
-    String url2 = url + urlEncode("title=cql.allRecords=1 sortBy title");
-    String url3 =
-      url + urlEncode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title");
-    String url4 = url + urlEncode("title=cql.allRecords=1 sortby title");
-    String url5 = url + urlEncode(
-      "title=cql.allRecords=1 and holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 "
-        + "sortby title");
-    //non existant - 0 results
-    String url6 = url + urlEncode(
-      "title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby holdingsRecords.permanentLocationId");
-
-    CompletableFuture<Response> cqlCf1 = new CompletableFuture<>();
-    CompletableFuture<Response> cqlCf2 = new CompletableFuture<>();
-    CompletableFuture<Response> cqlCf3 = new CompletableFuture<>();
-    CompletableFuture<Response> cqlCf4 = new CompletableFuture<>();
-    CompletableFuture<Response> cqlCf5 = new CompletableFuture<>();
-    CompletableFuture<Response> cqlCf6 = new CompletableFuture<>();
-
-    String[] urls = new String[] {url1, url2, url3, url4, url5, url6};
-    @SuppressWarnings("unchecked")
-    CompletableFuture<Response>[] cqlCf = new CompletableFuture[] {cqlCf1, cqlCf2, cqlCf3, cqlCf4, cqlCf5, cqlCf6};
-
-    for (int i = 0; i < 6; i++) {
-      CompletableFuture<Response> cf = cqlCf[i];
-      String cqlUrl = urls[i];
-      getClient().get(cqlUrl, TENANT_ID, json(cf));
-
-      Response cqlResponse = cf.get(10, SECONDS);
-      assertThat(cqlResponse.getStatusCode(), is(HTTP_OK));
-      System.out.println(cqlResponse.getBody()
-        + "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + cqlUrl);
-
-      if (i == 0 || i == 1) {
-        assertThat(3, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
-        assertThat("TEST1", is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
-      }  else if (i == 2) {
-        assertThat(2, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
-        assertThat("TEST2", is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
-      } else if (i == 3) {
-        assertThat("TEST1", is(cqlResponse.getJson().getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
-      } else if (i == 4) {
-        assertThat(2, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
-      } else {
-        assertThat(0, is(cqlResponse.getJson().getInteger(TOTAL_RECORDS_KEY)));
-      }
-    }
+    executeCrossTableQueriesAndVerify(queryUrls);
   }
 
   @Test
@@ -1847,34 +1609,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       .put("statusId", getOtherInstanceType().getId().toString());
 
     createInstance(instanceToCreate);
-
     Response createdInstance = getById(id);
+    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
 
-    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
-      notNullValue());
+    JsonObject updatedInstanceWithCatStatus = updateInstanceWithStatus(
+      instanceToCreate, createdInstance, getCatalogedInstanceType().getId().toString());
+    JsonObject updatedInstanceWithOthStatus = updateInstanceWithStatus(
+      updatedInstanceWithCatStatus, createdInstance, getOtherInstanceType().getId().toString());
 
-    JsonObject instanceWithCatStatus = instanceToCreate.copy()
-      .put("hrid", createdInstance.getJson().getString("hrid"))
-      .put("statusId", getCatalogedInstanceType().getId().toString());
-    JsonObject updatedInstanceWithCatStatus = updateInstance(instanceWithCatStatus)
-      .getJson();
-
-    JsonObject instanceWithOthStatus = updatedInstanceWithCatStatus.copy()
-      .put("statusId", getOtherInstanceType().getId().toString());
-    JsonObject updatedInstanceWithOthStatus = updateInstance(instanceWithOthStatus)
-      .getJson();
-
-    // Assert that status updated date was changed since the first update
-    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY),
-      not(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY)));
-
-    assertThat(updatedInstanceWithCatStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-    assertThat(updatedInstanceWithOthStatus.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
-
-    assertThat(updatedInstanceWithCatStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(3)));
-    assertThat(updatedInstanceWithOthStatus
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+    verifyStatusUpdatedDateChanged(updatedInstanceWithCatStatus, updatedInstanceWithOthStatus);
   }
 
   /**
@@ -2047,22 +1790,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     Response response = instancesStorageSyncClient.attemptToCreate("?upsert=true", instanceCollection);
     assertThat(response, statusCodeIs(HttpStatus.HTTP_CREATED));
 
-    assertExists(instancesArray.getJsonObject(0));
-    assertExists(instancesArray.getJsonObject(1));
-    assertExists(instancesArray.getJsonObject(2));
-
-    Response getResponse = getById(duplicateId);
-    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
-    JsonObject updatedInstance = getResponse.getJson();
-    assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
-
-    instanceMessageChecks.updatedMessagePublished(existingInstance.getJson(), updatedInstance);
-
-    instanceMessageChecks.createdMessagePublished(
-      getById(firstInstanceToCreate.getString("id")).getJson());
-
-    instanceMessageChecks.createdMessagePublished(
-      getById(secondInstanceToCreate.getString("id")).getJson());
+    verifyBatchUpsertResults(instancesArray, duplicateId, existingInstance,
+      firstInstanceToCreate, secondInstanceToCreate);
   }
 
   @Test
@@ -2188,8 +1917,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(),
-      is("HRID value already exists in table instance: in00000000001"));
+    assertThat(response.getBody(), is("HRID value already exists in table instance: in00000000001"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateHRID");
   }
@@ -2408,7 +2136,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
 
     final JsonArray instancesArray = new JsonArray();
-
     instancesArray.add(uprooted(UUID.randomUUID()));
 
     final JsonObject t = temeraire(UUID.randomUUID());
@@ -2416,27 +2143,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instancesArray.add(t);
 
     final JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
-
     setInstanceSequence(1);
 
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
-
     assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
 
-    final Errors errors = response.getJson().mapTo(Errors.class);
-
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), hasSize(1));
-    var error = errors.getErrors().getFirst();
-    assertThat(error.getMessage(),
-      anyOf(containsString("value already exists"), containsString("duplicate key")));
-    assertThat(error.getParameters(), notNullValue());
-    var parameter = error.getParameters().getFirst();
-    assertThat(parameter, notNullValue());
-    assertThat(parameter.getKey(),
-      containsString("'hrid'"));
-    assertThat(parameter.getValue(),
-      is("in00000000001"));
+    verifyDuplicateHridError(response, "in00000000001");
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
   }
@@ -2490,9 +2202,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     final Response response = createCompleted.get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(),
-      is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already "
-        + "exists in table instance: match_key"));
+    assertThat(response.getBody(), is("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already "
+      + "exists in table instance: match_key"));
 
     log.info("Finished cannotCreateInstanceWithDuplicateMatchKey");
   }
@@ -3030,5 +2741,218 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertNotNull(metadata);
     assertNotNull(metadata.getString("createdDate"));
     assertNotNull(metadata.getString("updatedDate"));
+  }
+
+  private String[] createNatureOfContentTerms() throws InterruptedException, ExecutionException, TimeoutException {
+    NatureOfContentTerm journalContentType = createNatureOfContentTerm("journal_test");
+    NatureOfContentTerm bookContentType = createNatureOfContentTerm("book_test");
+
+    return Stream.of(journalContentType, bookContentType)
+      .map(NatureOfContentTerm::getId)
+      .toArray(String[]::new);
+  }
+
+  private JsonObject createInstanceWithAllFields(UUID id, String[] natureOfContentIds, String adminNote) {
+    var dates = new Dates()
+      .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
+      .withDate1("2023")
+      .withDate2("2024");
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("natureOfContentTermIds", Arrays.asList(natureOfContentIds));
+    instanceToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
+    instanceToCreate.put(DATES_KEY, pojo2JsonObject(dates));
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+    return instanceToCreate;
+  }
+
+  private void verifyCreatedInstanceFields(JsonObject instance, UUID id, String[] natureOfContentIds,
+                                           String adminNote) {
+    assertThat(instance.getString("id"), is(id.toString()));
+    assertThat(instance.getString("title"), is("Long Way to a Small Angry Planet"));
+    assertThat(instance.getBoolean("previouslyHeld"), is(false));
+    assertThat(instance.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+
+    JsonArray identifiers = instance.getJsonArray("identifiers");
+    assertThat(identifiers.size(), is(1));
+    assertThat(identifiers, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+    assertThat(instance.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
+    assertThat(instance.getBoolean(DISCOVERY_SUPPRESS), is(false));
+  }
+
+  private void verifyRetrievedInstanceFields(JsonObject instanceFromGet, String[] natureOfContentIds) {
+    assertThat(instanceFromGet.getString("title"),
+      is("Long Way to a Small Angry Planet"));
+
+    JsonArray identifiersFromGet = instanceFromGet.getJsonArray("identifiers");
+    assertThat(identifiersFromGet.size(), is(1));
+    assertThat(identifiersFromGet, hasItem(identifierMatches(UUID_ISBN.toString(), "9781473619777")));
+
+    @SuppressWarnings("unchecked")
+    List<String> tags = instanceFromGet.getJsonObject("tags").getJsonArray("tagList").getList();
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+    assertThat(instanceFromGet.getJsonArray("natureOfContentTermIds"),
+      containsInAnyOrder(natureOfContentIds));
+
+    assertThat(
+      instanceFromGet.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+
+    assertThat(instanceFromGet.getBoolean(DISCOVERY_SUPPRESS), is(false));
+  }
+
+  private void verifyInstanceDatesAndSubjects(JsonObject instance) {
+    var storedDates = instance.getJsonObject(DATES_KEY)
+      .mapTo(Dates.class);
+
+    assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
+    assertThat(storedDates.getDate1(), is("2023"));
+    assertThat(storedDates.getDate2(), is("2024"));
+
+    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
+
+    assertThat(storedSubject.getSourceId(), is(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString()));
+    assertThat(storedSubject.getTypeId(), is(UUID_INSTANCE_SUBJECT_TYPE_ID.toString()));
+    assertThat(storedSubject.getValue(), is("subject"));
+  }
+
+  private JsonObject updateInstanceWithStatus(JsonObject instanceTemplate, Response createdInstance, String statusId) {
+    JsonObject instanceWithStatus = instanceTemplate.copy()
+      .put("hrid", createdInstance.getJson().getString("hrid"))
+      .put("statusId", statusId);
+    return updateInstance(instanceWithStatus).getJson();
+  }
+
+  private void verifyStatusUpdatedDateChanged(JsonObject first, JsonObject second) {
+    assertThat(first.getString(STATUS_UPDATED_DATE_PROPERTY),
+      not(second.getString(STATUS_UPDATED_DATE_PROPERTY)));
+
+    assertThat(first.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+    assertThat(second.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
+
+    assertThat(first.getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(3)));
+    assertThat(second.getInstant(STATUS_UPDATED_DATE_PROPERTY), withinSecondsBeforeNow(seconds(2)));
+  }
+
+  private void setupCrossTableQueryTestData() throws Exception {
+    JsonArray identifiers = new JsonArray();
+    identifiers.add(identifier(UUID_ISBN, "9781473619777"));
+    JsonArray contributors = new JsonArray();
+    contributors.add(contributor(UUID_PERSONAL_NAME, "Chambers, Becky"));
+    JsonArray tags = new JsonArray();
+    tags.add("test-tag");
+
+    UUID idJ1 = UUID.randomUUID();
+    UUID idJ2 = UUID.randomUUID();
+    UUID idJ3 = UUID.randomUUID();
+
+    createInstance(createInstanceRequest(idJ1, "TEST1", "Long Way to a Small Angry Planet 1",
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags));
+    createInstance(createInstanceRequest(idJ2, "TEST2", "Long Way to a Small Angry Planet 2",
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags));
+    createInstance(createInstanceRequest(idJ3, "TEST3", "Long Way to a Small Angry Planet 3",
+      identifiers, contributors, UUID_INSTANCE_TYPE, tags));
+
+    UUID loc1 = UUID.fromString("11111111-dee7-48eb-b03f-d02fdf0debd0");
+    LocationUtility.createLocation(loc1, "location1", "IX/L1");
+    UUID loc2 = UUID.fromString("99999999-dee7-48eb-b03f-d02fdf0debd0");
+    LocationUtility.createLocation(loc2, "location2", "IX/L2");
+
+    createHoldings(createHoldingsRecord(idJ1.toString(), loc1.toString()));
+    createHoldings(createHoldingsRecord(idJ2.toString(), loc2.toString()));
+    createHoldings(createHoldingsRecord(idJ3.toString(), loc2.toString()));
+  }
+
+  private JsonObject createHoldingsRecord(String instanceId, String locationId) {
+    JsonObject holding = new JsonObject();
+    holding.put("id", UUID.randomUUID().toString());
+    holding.put("instanceId", instanceId);
+    holding.put("sourceId", getPreparedHoldingSourceId().toString());
+    holding.put("permanentLocationId", locationId);
+    return holding;
+  }
+
+  private String[] buildCrossTableQueryUrls(String baseUrl) {
+    return new String[] {
+      baseUrl + urlEncode("title=Long Way to a Small Angry Planet* sortby title"),
+      baseUrl + urlEncode("title=cql.allRecords=1 sortBy title"),
+      baseUrl + urlEncode("holdingsRecords.permanentLocationId=99999999-dee7-48eb-b03f-d02fdf0debd0 sortBy title"),
+      baseUrl + urlEncode("title=cql.allRecords=1 sortby title"),
+      baseUrl + urlEncode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId="
+        + "99999999-dee7-48eb-b03f-d02fdf0debd0 sortby title"),
+      baseUrl + urlEncode("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby"
+        + " holdingsRecords.permanentLocationId")
+    };
+  }
+
+  @SneakyThrows
+  private void executeCrossTableQueriesAndVerify(String[] urls) {
+    for (int i = 0; i < urls.length; i++) {
+      CompletableFuture<Response> cf = new CompletableFuture<>();
+      getClient().get(urls[i], TENANT_ID, json(cf));
+
+      Response cqlResponse = cf.get(10, SECONDS);
+      assertThat(cqlResponse.getStatusCode(), is(HTTP_OK));
+      System.out.println(cqlResponse.getBody()
+        + "\nStatus - " + cqlResponse.getStatusCode() + " at " + System.currentTimeMillis() + " for " + urls[i]);
+
+      verifyCrossTableQueryResult(i, cqlResponse);
+    }
+  }
+
+  private void verifyCrossTableQueryResult(int queryIndex, Response response) {
+    JsonObject json = response.getJson();
+    if (queryIndex == 0 || queryIndex == 1) {
+      assertThat(3, is(json.getInteger(TOTAL_RECORDS_KEY)));
+      assertThat("TEST1", is(json.getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
+    } else if (queryIndex == 2) {
+      assertThat(2, is(json.getInteger(TOTAL_RECORDS_KEY)));
+      assertThat("TEST2", is(json.getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
+    } else if (queryIndex == 3) {
+      assertThat("TEST1", is(json.getJsonArray(INSTANCES_KEY).getJsonObject(0).getString("source")));
+    } else if (queryIndex == 4) {
+      assertThat(2, is(json.getInteger(TOTAL_RECORDS_KEY)));
+    } else {
+      assertThat(0, is(json.getInteger(TOTAL_RECORDS_KEY)));
+    }
+  }
+
+  private void verifyBatchUpsertResults(JsonArray instancesArray, UUID duplicateId,
+                                        IndividualResource existingInstance,
+                                        JsonObject firstInstanceToCreate,
+                                        JsonObject secondInstanceToCreate) throws Exception {
+    assertExists(instancesArray.getJsonObject(0));
+    assertExists(instancesArray.getJsonObject(1));
+    assertExists(instancesArray.getJsonObject(2));
+
+    Response getResponse = getById(duplicateId);
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    JsonObject updatedInstance = getResponse.getJson();
+    assertThat(updatedInstance.getString("title"), is("Long Way to a Small Angry Planet"));
+
+    instanceMessageChecks.updatedMessagePublished(existingInstance.getJson(), updatedInstance);
+    instanceMessageChecks.createdMessagePublished(getById(firstInstanceToCreate.getString("id")).getJson());
+    instanceMessageChecks.createdMessagePublished(getById(secondInstanceToCreate.getString("id")).getJson());
+  }
+
+  private void verifyDuplicateHridError(Response response, String expectedHrid) {
+    final Errors errors = response.getJson().mapTo(Errors.class);
+
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), hasSize(1));
+    var error = errors.getErrors().getFirst();
+    assertThat(error.getMessage(),
+      anyOf(containsString("value already exists"), containsString("duplicate key")));
+    assertThat(error.getParameters(), notNullValue());
+    var parameter = error.getParameters().getFirst();
+    assertThat(parameter, notNullValue());
+    assertThat(parameter.getKey(), containsString("'hrid'"));
+    assertThat(parameter.getValue(), is(expectedHrid));
   }
 }

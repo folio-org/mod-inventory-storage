@@ -159,99 +159,61 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void testFilterByDates() throws InterruptedException, ExecutionException, TimeoutException {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
-    // given
-    // one instance, 1 holding, 2 items
-    // when
-    LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
+
+    // Test with start date in past (2000) - should return results
+    setStartDate(2000, 1, 1);
+    assertOaiPmhViewReturnsExpectedData();
+
+    // Test with end date in future (2500) - should return results
+    setEndDate(2500, 1, 1);
+    assertOaiPmhViewReturnsExpectedData();
+
+    // Test with start date in future (2050) - should return no results
+    setStartDate(2050, 1, 1);
+    assertOaiPmhViewReturnsNoData();
+
+    // Test with end date in past (2000) - should return no results
+    setEndDate(2000, 1, 1);
+    assertOaiPmhViewReturnsNoData();
+
+    // Test with valid date range (2000-2050) - should return results
+    setDateRange(2000, 1, 1, 2050, 1, 1);
+    assertOaiPmhViewReturnsExpectedData();
+
+    // Test with invalid date range (2000-2001) - should return no results
+    setDateRange(2000, 1, 1, 2001, 1, 1);
+    assertOaiPmhViewReturnsNoData();
+  }
+
+  private void setStartDate(int year, int month, int day) {
+    params.put("startDate", OffsetDateTime.of(LocalDateTime.of(year, month, day, 0, 0, 0), ZoneOffset.UTC).toString());
+  }
+
+  private void setEndDate(int year, int month, int day) {
+    params.put("endDate", OffsetDateTime.of(LocalDateTime.of(year, month, day, 0, 0, 0), ZoneOffset.UTC).toString());
+  }
+
+  private void setDateRange(int startYear, int startMonth, int startDay, int endYear, int endMonth, int endDay) {
+    setStartDate(startYear, startMonth, startDay);
+    setEndDate(endYear, endMonth, endDay);
+  }
+
+  private void assertOaiPmhViewReturnsExpectedData() throws InterruptedException, ExecutionException, TimeoutException {
     List<JsonObject> data = requestOaiPmhView(params);
-    // then
     assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
       hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
 
-    // The same call using newly added API
     List<JsonObject> instancesData = getOiaPmhViewInstances(params);
-    // then
     assertThat(instancesData.getFirst(),
       allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
+  }
 
-    // when
-    LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    data = requestOaiPmhView(params);
-    // then
-    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
-
-    // The same call using newly added API
-    instancesData = getOiaPmhViewInstances(params);
-    // then
-    assertThat(instancesData.getFirst(),
-      allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
-
-    // when
-    startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    data = requestOaiPmhView(params);
-    // then
+  private void assertOaiPmhViewReturnsNoData() throws InterruptedException, ExecutionException, TimeoutException {
+    List<JsonObject> data = requestOaiPmhView(params);
     assertThat(data.size(), is(0));
 
-    // The same call using newly added API
-    instancesData = getOiaPmhViewInstances(params);
-    // then
-    assertThat(instancesData.size(), is(0));
-
-    // when
-    endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    data = requestOaiPmhView(params);
-    // then
-    assertThat(data.size(), is(0));
-
-    // The same call using newly added API
-    instancesData = getOiaPmhViewInstances(params);
-    // then
-    assertThat(instancesData.size(), is(0));
-
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    data = requestOaiPmhView(params);
-    // then
-    assertThat(data.getFirst(), allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-      hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
-
-    // The same call using newly added API
-    instancesData = getOiaPmhViewInstances(params);
-    // then
-    assertThat(instancesData.getFirst(),
-      allOf(hasCallNumber("item effective call number 1", "item effective call number 2"),
-        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionName("Primary Institution")));
-
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2001, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    data = requestOaiPmhView(params);
-    // then
-    assertThat(data.size(), is(0));
-
-    // The same call using newly added API
-    instancesData = getOiaPmhViewInstances(params);
-    // then
+    List<JsonObject> instancesData = getOiaPmhViewInstances(params);
     assertThat(instancesData.size(), is(0));
   }
 

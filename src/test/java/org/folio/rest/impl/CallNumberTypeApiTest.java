@@ -125,33 +125,41 @@ public class CallNumberTypeApiTest extends TestBase {
     try (MockedStatic<TenantTool> mockedTenantTool = Mockito.mockStatic(TenantTool.class);
          MockedStatic<PgUtil> mockedPgUtil = Mockito.mockStatic(PgUtil.class);
          MockedStatic<PostgresClient> mockedPgClientStat = Mockito.mockStatic(PostgresClient.class)) {
-      mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
-      mockedPgClientStat.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(mockedPgClient);
-      mockedPgUtil.when(() -> PgUtil.put(
-        anyString(),
-        any(),
-        any(),
-        any(),
-        any(),
-        eq(CallNumberTypes.PutCallNumberTypesByIdResponse.class)
-      )).thenThrow(new RuntimeException("Test"));
+      configureMocksForPutTest(mockedTenantTool, mockedPgUtil, mockedPgClientStat, mockedPgClient);
 
       //When
-      callNumberTypesApi.putCallNumberTypesById(id,
-        entity,
-        okapiHeaders,
-        errorHandler,
-        vertex);
+      callNumberTypesApi.putCallNumberTypesById(id, entity, okapiHeaders, errorHandler, vertex);
 
       //Then
-      mockedPgUtil.verify(() -> PgUtil.put("call_number_type",
-        entity,
-        id,
-        okapiHeaders,
-        vertex,
-        CallNumberTypes.PutCallNumberTypesByIdResponse.class));
+      verifyPutCallWasMade(mockedPgUtil, entity, id, okapiHeaders, vertex);
       Mockito.verify(errorHandler).handle(any());
     }
+  }
+
+  private void configureMocksForPutTest(MockedStatic<TenantTool> mockedTenantTool,
+                                        MockedStatic<PgUtil> mockedPgUtil,
+                                        MockedStatic<PostgresClient> mockedPgClientStat,
+                                        PostgresClient mockedPgClient) {
+    mockedTenantTool.when(() -> TenantTool.tenantId(anyMap())).thenReturn("Test");
+    mockedPgClientStat.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(mockedPgClient);
+    mockedPgUtil.when(() -> PgUtil.put(
+      anyString(),
+      any(),
+      any(),
+      any(),
+      any(),
+      eq(CallNumberTypes.PutCallNumberTypesByIdResponse.class)
+    )).thenThrow(new RuntimeException("Test"));
+  }
+
+  private void verifyPutCallWasMade(MockedStatic<PgUtil> mockedPgUtil, CallNumberType entity,
+                                    String id, Map<String, String> okapiHeaders, Context vertex) {
+    mockedPgUtil.verify(() -> PgUtil.put("call_number_type",
+      entity,
+      id,
+      okapiHeaders,
+      vertex,
+      CallNumberTypes.PutCallNumberTypesByIdResponse.class));
   }
 
   private UUID create(String name, String source) {

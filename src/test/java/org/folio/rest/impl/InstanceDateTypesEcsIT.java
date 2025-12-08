@@ -9,6 +9,7 @@ import static org.folio.utility.RestUtility.CONSORTIUM_ID;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonArray;
@@ -46,32 +47,46 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
     var postgresCenterClient = PostgresClient.getInstance(vertx, CONSORTIUM_CENTRAL_TENANT);
     var postgresMemberClient = PostgresClient.getInstance(vertx, CONSORTIUM_MEMBER_TENANT);
 
-    var newRecord = new InstanceDateType()
+    var newRecord = createInstanceDateType();
+
+    postgresMemberClient.save(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), newRecord)
+      .compose(s -> postgresCenterClient.save(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), newRecord))
+      .compose(id -> patchAndVerifyCentralRecord(client, postgresCenterClient, id, ctx, centralRecordUpdated));
+
+    verifyMemberRecordUpdated(vertx, postgresMemberClient, newRecord.getId(), memberRecordUpdated);
+  }
+
+  private InstanceDateType createInstanceDateType() {
+    return new InstanceDateType()
       .withId(UUID.randomUUID().toString())
       .withName("name")
       .withCode("c")
       .withDisplayFormat(new DisplayFormat().withDelimiter(",").withKeepDelimiter(false))
       .withSource(InstanceDateType.Source.FOLIO);
+  }
 
-    postgresMemberClient.save(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), newRecord)
-      .compose(s -> postgresCenterClient.save(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), newRecord))
-      .compose(id -> {
-        var updatedRecord = new InstanceDateTypePatch().withName("Updated");
-        return doPatch(client, "/instance-date-types/" + id, CONSORTIUM_CENTRAL_TENANT, pojo2JsonObject(updatedRecord))
-          .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
-          .compose(r -> postgresCenterClient.getById(INSTANCE_DATE_TYPE_TABLE, id, InstanceDateType.class)
-            .onComplete(ctx.succeeding(dbRecord -> ctx.verify(() -> {
-              assertThat(dbRecord)
-                .extracting(InstanceDateType::getName)
-                .isEqualTo(updatedRecord.getName());
-              centralRecordUpdated.flag();
-            }))));
-      });
+  private Future<?> patchAndVerifyCentralRecord(HttpClient client,
+                                                                PostgresClient postgresCenterClient,
+                                                                String id, VertxTestContext ctx,
+                                                                io.vertx.junit5.Checkpoint checkpoint) {
+    var updatedRecord = new InstanceDateTypePatch().withName("Updated");
+    return doPatch(client, "/instance-date-types/" + id, CONSORTIUM_CENTRAL_TENANT, pojo2JsonObject(updatedRecord))
+      .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
+      .compose(r -> postgresCenterClient.getById(INSTANCE_DATE_TYPE_TABLE, id, InstanceDateType.class)
+        .onComplete(ctx.succeeding(dbRecord -> ctx.verify(() -> {
+          assertThat(dbRecord)
+            .extracting(InstanceDateType::getName)
+            .isEqualTo(updatedRecord.getName());
+          checkpoint.flag();
+        }))));
+  }
 
+  private void verifyMemberRecordUpdated(Vertx vertx, PostgresClient postgresMemberClient,
+                                          String recordId, io.vertx.junit5.Checkpoint checkpoint) {
     AtomicReference<InstanceDateType> atomicReference = new AtomicReference<>();
 
     vertx.setPeriodic(1000, 1000, event -> postgresMemberClient
-      .getById(INSTANCE_DATE_TYPE_TABLE, newRecord.getId(), InstanceDateType.class)
+      .getById(INSTANCE_DATE_TYPE_TABLE, recordId, InstanceDateType.class)
       .onComplete(e -> {
         if (e.succeeded()) {
           atomicReference.set(e.result());
@@ -82,7 +97,7 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
       assertThat(atomicReference.get()).isNotNull()
         .extracting(InstanceDateType::getName)
         .isEqualTo("Updated");
-      memberRecordUpdated.flag();
+      checkpoint.flag();
     });
   }
 

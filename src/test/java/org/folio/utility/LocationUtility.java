@@ -205,11 +205,36 @@ public final class LocationUtility {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
-    JsonObject request = new JsonObject();
-    request
+    JsonObject request = buildServicePointRequest(id, name, code, discoveryDisplayName, description,
+      shelvingLagTime, pickupLocation, shelfExpiryPeriod, slips, ecsRequestRouting);
+
+    send(servicePointsUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
+      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId,
+      ResponseHandler.json(createServicePoint));
+    return createServicePoint.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private static JsonObject buildServicePointRequest(UUID id, String name, String code,
+                                                      String discoveryDisplayName, String description,
+                                                      Integer shelvingLagTime, Boolean pickupLocation,
+                                                      HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                                      List<StaffSlip> slips, Boolean ecsRequestRouting) {
+    JsonObject request = new JsonObject()
       .put("name", name)
       .put("code", code)
       .put("discoveryDisplayName", discoveryDisplayName);
+
+    addOptionalServicePointFields(request, id, description, shelvingLagTime, pickupLocation,
+      ecsRequestRouting, shelfExpiryPeriod, slips);
+
+    return request;
+  }
+
+  private static void addOptionalServicePointFields(JsonObject request, UUID id, String description,
+                                                     Integer shelvingLagTime, Boolean pickupLocation,
+                                                     Boolean ecsRequestRouting,
+                                                     HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                                     List<StaffSlip> slips) {
     if (ecsRequestRouting != null) {
       request.put("ecsRequestRouting", ecsRequestRouting);
     }
@@ -228,22 +253,20 @@ public final class LocationUtility {
     if (shelfExpiryPeriod != null) {
       request.put("holdShelfExpiryPeriod", new JsonObject(Json.encode(shelfExpiryPeriod)));
     }
-
     if (!slips.isEmpty()) {
-      JsonArray staffSlips = new JsonArray();
-      for (StaffSlip ss : slips) {
-        JsonObject staffSlip = new JsonObject();
-        staffSlip.put("id", ss.getId());
-        staffSlip.put("printByDefault", ss.getPrintByDefault());
-        staffSlips.add(staffSlip);
-      }
-      request.put("staffSlips", staffSlips);
+      request.put("staffSlips", buildStaffSlipsArray(slips));
     }
+  }
 
-    send(servicePointsUrl("").toString(), HttpMethod.POST, "test_user", request.toString(),
-      SUPPORTED_CONTENT_TYPE_JSON_DEF, tenantId,
-      ResponseHandler.json(createServicePoint));
-    return createServicePoint.get(TIMEOUT, TimeUnit.SECONDS);
+  private static JsonArray buildStaffSlipsArray(List<StaffSlip> slips) {
+    JsonArray staffSlips = new JsonArray();
+    for (StaffSlip ss : slips) {
+      JsonObject staffSlip = new JsonObject();
+      staffSlip.put("id", ss.getId());
+      staffSlip.put("printByDefault", ss.getPrintByDefault());
+      staffSlips.add(staffSlip);
+    }
+    return staffSlips;
   }
 
   public static UUID getInstitutionId() {

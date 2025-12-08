@@ -100,64 +100,10 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
     final UUID thirdHoldingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    final JsonObject useFirstHoldingsComponents = nodWithNoBarcode(firstHoldingsId);
-    final JsonObject useOwnCallNumber = nodWithNoBarcode(secondHoldingsId)
-      .put("itemLevelCallNumber", "ownCallNumber");
-    final JsonObject useFirstHoldingsAndOwnSuffix = nodWithNoBarcode(firstHoldingsId)
-      .put("itemLevelCallNumberSuffix", "ownSuffix");
-    final JsonObject useAllOwnComponentsSharedHoldings = nodWithNoBarcode(firstHoldingsId)
-      .put("itemLevelCallNumber", "allOwnComponentsCN")
-      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
-      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
-      .put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
-    final JsonObject useAllOwnComponents = nodWithNoBarcode(thirdHoldingsId)
-      .put("itemLevelCallNumber", "allOwnComponentsCN2")
-      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS2")
-      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP2")
-      .put("itemLevelCallNumberTypeId", MOYS_CALL_NUMBER_TYPE);
+    JsonArray testItems = createTestItemsForBatchCreate(firstHoldingsId, secondHoldingsId, thirdHoldingsId);
+    itemsStorageSyncClient.createNoResponse(new JsonObject().put("items", testItems));
 
-    itemsStorageSyncClient.createNoResponse(new JsonObject()
-      .put("items", new JsonArray()
-        .add(useFirstHoldingsComponents)
-        .add(useOwnCallNumber)
-        .add(useFirstHoldingsAndOwnSuffix)
-        .add(useAllOwnComponentsSharedHoldings)
-        .add(useAllOwnComponents)));
-
-    assertThat(getById(useFirstHoldingsComponents), effectiveCallNumberComponents(allOf(
-      hasCallNumber("firstHRCallNumber"),
-      hasSuffix("firstHRSuffix"),
-      hasPrefix("firstHRPrefix"),
-      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
-    )));
-
-    assertThat(getById(useOwnCallNumber), effectiveCallNumberComponents(allOf(
-      hasCallNumber("ownCallNumber"),
-      hasSuffix("secondHRSuffix"),
-      hasPrefix("secondHRPrefix"),
-      hasTypeId(NLM_CALL_NUMBER_TYPE)
-    )));
-
-    assertThat(getById(useFirstHoldingsAndOwnSuffix), effectiveCallNumberComponents(allOf(
-      hasCallNumber("firstHRCallNumber"),
-      hasSuffix("ownSuffix"),
-      hasPrefix("firstHRPrefix"),
-      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
-    )));
-
-    assertThat(getById(useAllOwnComponentsSharedHoldings), effectiveCallNumberComponents(allOf(
-      hasCallNumber("allOwnComponentsCN"),
-      hasSuffix("allOwnComponentsCNS"),
-      hasPrefix("allOwnComponentsCNP"),
-      hasTypeId(LC_CALL_NUMBER_TYPE)
-    )));
-
-    assertThat(getById(useAllOwnComponents), effectiveCallNumberComponents(allOf(
-      hasCallNumber("allOwnComponentsCN2"),
-      hasSuffix("allOwnComponentsCNS2"),
-      hasPrefix("allOwnComponentsCNP2"),
-      hasTypeId(MOYS_CALL_NUMBER_TYPE)
-    )));
+    verifyBatchCreatedItemsCallNumberComponents(testItems);
   }
 
   @Test
@@ -203,43 +149,14 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
       holdingsPropertyName, holdingsInitValue
     );
 
-    IndividualResource createdItem = itemsClient.create(
-      nodWithNoBarcode(holdings.getId())
-        .put(itemPropertyName, itemInitValue)
-    );
+    IndividualResource createdItem = createItemAndVerifyInitialEffectiveValue(
+      holdings, itemPropertyName, itemInitValue, effectivePropertyName, initEffectiveValue);
 
-    JsonObject effectiveCallNumberComponents = createdItem.getJson()
-      .getJsonObject("effectiveCallNumberComponents");
+    updateHoldingsAndVerifyItemUpdate(holdings, holdingsPropertyName, holdingsTargetValue, createdItem);
 
-    assertNotNull(effectiveCallNumberComponents);
-    assertThat(effectiveCallNumberComponents.getString(effectivePropertyName),
-      is(initEffectiveValue));
+    updateItemIfNeeded(createdItem, itemPropertyName, itemInitValue, itemTargetValue);
 
-    updateHoldingRecord(holdings.getId(),
-      getHoldingsById(holdings.getJson())
-        .put("discoverySuppress", false) //ensure holdings has some updated field so update is not skipped
-        .put(holdingsPropertyName, holdingsTargetValue)
-    );
-
-    var itemAfterHoldingsUpdate = getById(createdItem.getJson());
-
-    itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
-
-    if (!Objects.equals(itemInitValue, itemTargetValue)) {
-      itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
-        .put(itemPropertyName, itemTargetValue), Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
-
-      itemMessageChecks.updatedMessagePublished(itemAfterHoldingsUpdate,
-        itemsClient.getById(createdItem.getId()).getJson());
-    }
-
-    final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();
-    final JsonObject updatedEffectiveCallNumberComponents = updatedItem
-      .getJsonObject("effectiveCallNumberComponents");
-
-    assertNotNull(updatedEffectiveCallNumberComponents);
-    assertThat(updatedEffectiveCallNumberComponents.getString(effectivePropertyName),
-      is(targetEffectiveValue));
+    verifyFinalEffectiveValue(createdItem, effectivePropertyName, targetEffectiveValue);
   }
 
   private IndividualResource createHoldingsWithPropertySetAndInstance(
@@ -267,5 +184,136 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
 
   private JsonObject getHoldingsById(JsonObject origin) {
     return holdingsClient.getByIdIfPresent(origin.getString("id")).getJson();
+  }
+
+  private JsonArray createTestItemsForBatchCreate(UUID firstHoldingsId, UUID secondHoldingsId, UUID thirdHoldingsId) {
+    final JsonObject useFirstHoldingsComponents = nodWithNoBarcode(firstHoldingsId);
+    final JsonObject useOwnCallNumber = nodWithNoBarcode(secondHoldingsId)
+      .put("itemLevelCallNumber", "ownCallNumber");
+    final JsonObject useFirstHoldingsAndOwnSuffix = nodWithNoBarcode(firstHoldingsId)
+      .put("itemLevelCallNumberSuffix", "ownSuffix");
+    final JsonObject useAllOwnComponentsSharedHoldings = nodWithNoBarcode(firstHoldingsId)
+      .put("itemLevelCallNumber", "allOwnComponentsCN")
+      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS")
+      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP")
+      .put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
+    final JsonObject useAllOwnComponents = nodWithNoBarcode(thirdHoldingsId)
+      .put("itemLevelCallNumber", "allOwnComponentsCN2")
+      .put("itemLevelCallNumberSuffix", "allOwnComponentsCNS2")
+      .put("itemLevelCallNumberPrefix", "allOwnComponentsCNP2")
+      .put("itemLevelCallNumberTypeId", MOYS_CALL_NUMBER_TYPE);
+
+    return new JsonArray()
+      .add(useFirstHoldingsComponents)
+      .add(useOwnCallNumber)
+      .add(useFirstHoldingsAndOwnSuffix)
+      .add(useAllOwnComponentsSharedHoldings)
+      .add(useAllOwnComponents);
+  }
+
+  private void verifyBatchCreatedItemsCallNumberComponents(JsonArray testItems) {
+    verifyItemCallNumberFromHoldings(testItems.getJsonObject(0));
+    verifyItemWithOwnCallNumber(testItems.getJsonObject(1));
+    verifyItemWithHoldingsAndOwnSuffix(testItems.getJsonObject(2));
+    verifyItemWithAllOwnComponentsSharedHoldings(testItems.getJsonObject(3));
+    verifyItemWithAllOwnComponents(testItems.getJsonObject(4));
+  }
+
+  private void verifyItemCallNumberFromHoldings(JsonObject item) {
+    assertThat(getById(item), effectiveCallNumberComponents(allOf(
+      hasCallNumber("firstHRCallNumber"),
+      hasSuffix("firstHRSuffix"),
+      hasPrefix("firstHRPrefix"),
+      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  private void verifyItemWithOwnCallNumber(JsonObject item) {
+    assertThat(getById(item), effectiveCallNumberComponents(allOf(
+      hasCallNumber("ownCallNumber"),
+      hasSuffix("secondHRSuffix"),
+      hasPrefix("secondHRPrefix"),
+      hasTypeId(NLM_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  private void verifyItemWithHoldingsAndOwnSuffix(JsonObject item) {
+    assertThat(getById(item), effectiveCallNumberComponents(allOf(
+      hasCallNumber("firstHRCallNumber"),
+      hasSuffix("ownSuffix"),
+      hasPrefix("firstHRPrefix"),
+      hasTypeId(DEWEY_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  private void verifyItemWithAllOwnComponentsSharedHoldings(JsonObject item) {
+    assertThat(getById(item), effectiveCallNumberComponents(allOf(
+      hasCallNumber("allOwnComponentsCN"),
+      hasSuffix("allOwnComponentsCNS"),
+      hasPrefix("allOwnComponentsCNP"),
+      hasTypeId(LC_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  private void verifyItemWithAllOwnComponents(JsonObject item) {
+    assertThat(getById(item), effectiveCallNumberComponents(allOf(
+      hasCallNumber("allOwnComponentsCN2"),
+      hasSuffix("allOwnComponentsCNS2"),
+      hasPrefix("allOwnComponentsCNP2"),
+      hasTypeId(MOYS_CALL_NUMBER_TYPE)
+    )));
+  }
+
+  private IndividualResource createItemAndVerifyInitialEffectiveValue(
+    IndividualResource holdings, String itemPropertyName, String itemInitValue,
+    String effectivePropertyName, String initEffectiveValue) {
+    IndividualResource createdItem = itemsClient.create(
+      nodWithNoBarcode(holdings.getId())
+        .put(itemPropertyName, itemInitValue)
+    );
+
+    JsonObject effectiveCallNumberComponents = createdItem.getJson()
+      .getJsonObject("effectiveCallNumberComponents");
+
+    assertNotNull(effectiveCallNumberComponents);
+    assertThat(effectiveCallNumberComponents.getString(effectivePropertyName),
+      is(initEffectiveValue));
+
+    return createdItem;
+  }
+
+  private void updateHoldingsAndVerifyItemUpdate(IndividualResource holdings, String holdingsPropertyName,
+                                                  String holdingsTargetValue, IndividualResource createdItem) {
+    updateHoldingRecord(holdings.getId(),
+      getHoldingsById(holdings.getJson())
+        .put("discoverySuppress", false) //ensure holdings has some updated field so update is not skipped
+        .put(holdingsPropertyName, holdingsTargetValue)
+    );
+
+    var itemAfterHoldingsUpdate = getById(createdItem.getJson());
+    itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
+  }
+
+  private void updateItemIfNeeded(IndividualResource createdItem, String itemPropertyName,
+                                   String itemInitValue, String itemTargetValue) {
+    if (!Objects.equals(itemInitValue, itemTargetValue)) {
+      var itemAfterHoldingsUpdate = getById(createdItem.getJson());
+      itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
+        .put(itemPropertyName, itemTargetValue), Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+
+      itemMessageChecks.updatedMessagePublished(itemAfterHoldingsUpdate,
+        itemsClient.getById(createdItem.getId()).getJson());
+    }
+  }
+
+  private void verifyFinalEffectiveValue(IndividualResource createdItem,
+                                          String effectivePropertyName, String targetEffectiveValue) {
+    final JsonObject updatedItem = itemsClient.getById(createdItem.getId()).getJson();
+    final JsonObject updatedEffectiveCallNumberComponents = updatedItem
+      .getJsonObject("effectiveCallNumberComponents");
+
+    assertNotNull(updatedEffectiveCallNumberComponents);
+    assertThat(updatedEffectiveCallNumberComponents.getString(effectivePropertyName),
+      is(targetEffectiveValue));
   }
 }

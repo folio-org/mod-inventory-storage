@@ -145,21 +145,8 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
       .compose(s ->
         doGet(client, resourceUrl() + queryStringAndParam)
           .onComplete(verifyStatus(ctx, HTTP_OK))
-          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-            var collectionUnits = response.bodyAsClass(Loccamps.class);
-            assertThat(collectionUnits)
-              .as("verify collection for query param: " + queryStringAndParam)
-              .isNotNull()
-              .hasFieldOrPropertyWithValue("totalRecords", total)
-              .extracting(Loccamps::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-              .hasSize(total);
-
-            assertThat(collectionUnits.getLoccamps())
-              .hasSize(total)
-              .extracting(Loccamp::getCode)
-              .containsAll(codes);
-          })))
-      )
+          .andThen(ctx.succeeding(response -> ctx.verify(() ->
+            verifyCampusCollection(response, queryStringAndParam, total, codes)))))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -267,6 +254,22 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
         .compose(libraryId -> doDelete(client, resourceUrl() + "/" + campusId)))
       .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  private void verifyCampusCollection(TestResponse response, String queryStringAndParam,
+                                      int total, List<String> codes) {
+    var collectionUnits = response.bodyAsClass(Loccamps.class);
+    assertThat(collectionUnits)
+      .as("verify collection for query param: " + queryStringAndParam)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue("totalRecords", total)
+      .extracting(Loccamps::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .hasSize(total);
+
+    assertThat(collectionUnits.getLoccamps())
+      .hasSize(total)
+      .extracting(Loccamp::getCode)
+      .containsAll(codes);
   }
 
   private static Stream<Arguments> queryStringAndParam() {

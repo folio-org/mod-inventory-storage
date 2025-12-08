@@ -24,20 +24,7 @@ public class ResponseMatcher {
       @Override
       protected boolean matchesSafely(Response response) {
         try {
-          if (response.getStatusCode() != 422) {
-            return false;
-          }
-
-          Errors errors = response.getJson().mapTo(Errors.class);
-          if (errors.getErrors().size() != 1) {
-            return false;
-          }
-          final Error error = errors.getErrors().getFirst();
-          if (error.getParameters() == null || error.getParameters().size() != 1) {
-            return false;
-          }
-          final Parameter parameter = error.getParameters().getFirst();
-          return Objects.equals(expectedValue, parameter.getValue());
+          return matchesParameterValue(response, expectedValue);
         } catch (DecodeException ex) {
           return false;
         }
@@ -59,29 +46,52 @@ public class ResponseMatcher {
 
       @Override
       protected boolean matchesSafely(Response response) {
-        if (response.getStatusCode() != 422) {
-          return false;
-        }
-
         try {
-          Errors errors = response.getJson().mapTo(Errors.class);
-          if (errors.getErrors().size() == 1) {
-            final Error error = errors.getErrors().getFirst();
-
-            if (error.getParameters() != null && error.getParameters().size() == 1) {
-              final Parameter parameter = error.getParameters().getFirst();
-
-              return Objects.equals(expectedMessage, error.getMessage())
-                     && Objects.equals(expectedKey, parameter.getKey())
-                     && Objects.equals(expectedValue, parameter.getValue());
-            }
-          }
-
-          return false;
+          return matchesMessageKeyAndValue(response, expectedMessage, expectedKey, expectedValue);
         } catch (DecodeException ex) {
           return false;
         }
       }
     };
   }
+
+  private static boolean matchesParameterValue(Response response, String expectedValue) {
+    if (response.getStatusCode() != 422) {
+      return false;
+    }
+
+    Errors errors = response.getJson().mapTo(Errors.class);
+    if (errors.getErrors().size() != 1) {
+      return false;
+    }
+    final Error error = errors.getErrors().getFirst();
+    if (error.getParameters() == null || error.getParameters().size() != 1) {
+      return false;
+    }
+    final Parameter parameter = error.getParameters().getFirst();
+    return Objects.equals(expectedValue, parameter.getValue());
+  }
+
+  private static boolean matchesMessageKeyAndValue(
+    Response response, String expectedMessage, String expectedKey, String expectedValue) {
+    if (response.getStatusCode() != 422) {
+      return false;
+    }
+
+    Errors errors = response.getJson().mapTo(Errors.class);
+    if (errors.getErrors().size() != 1) {
+      return false;
+    }
+    final Error error = errors.getErrors().getFirst();
+
+    if (error.getParameters() == null || error.getParameters().size() != 1) {
+      return false;
+    }
+    final Parameter parameter = error.getParameters().getFirst();
+
+    return Objects.equals(expectedMessage, error.getMessage())
+           && Objects.equals(expectedKey, parameter.getKey())
+           && Objects.equals(expectedValue, parameter.getValue());
+  }
 }
+

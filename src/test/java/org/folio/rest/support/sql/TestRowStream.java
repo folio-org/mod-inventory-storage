@@ -34,23 +34,7 @@ public class TestRowStream implements RowStream<Row> {
   public RowStream<Row> handler(Handler<Row> handler) {
     new Thread(() -> {
       try {
-        for (int i = 0; i < numberOfRecords; i++) {
-          if (closed) {
-            break;
-          }
-
-          if (!paused) {
-            var row = mock(Row.class);
-            var id = UUID.randomUUID();
-            when(row.getUUID("id")).thenReturn(id);
-            when(row.getValue("jsonb")).thenReturn(new JsonObject());
-            handler.handle(row);
-          } else {
-            synchronized (this) {
-              wait();
-            }
-          }
-        }
+        processRows(handler);
       } catch (Exception ex) {
         errorHandler.handle(ex);
       }
@@ -59,6 +43,30 @@ public class TestRowStream implements RowStream<Row> {
     }).start();
 
     return this;
+  }
+
+  private void processRows(Handler<Row> handler) throws InterruptedException {
+    for (int i = 0; i < numberOfRecords; i++) {
+      if (closed) {
+        break;
+      }
+
+      if (!paused) {
+        handleRow(handler);
+      } else {
+        synchronized (this) {
+          wait();
+        }
+      }
+    }
+  }
+
+  private void handleRow(Handler<Row> handler) {
+    var row = mock(Row.class);
+    var id = UUID.randomUUID();
+    when(row.getUUID("id")).thenReturn(id);
+    when(row.getValue("jsonb")).thenReturn(new JsonObject());
+    handler.handle(row);
   }
 
   @Override

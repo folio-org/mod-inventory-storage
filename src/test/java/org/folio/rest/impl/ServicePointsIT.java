@@ -304,42 +304,18 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
 
-    // Create a service point without holdShelfExpiryPeriod and with pickupLocation false
-    var initialServicePoint = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-
-    // Update request: add holdShelfExpiryPeriod and set pickupLocation true
-    var updateRequest = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod",
-        new JsonObject(Json.encode(createHoldShelfExpiryPeriod(5, IntervalId.WEEKS))));
+    var initialServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", false, null);
+    var updateRequest = createServicePoint(id, "Circ Desk 2", "cd2",
+      "Circulation Desk -- Basement", true, createHoldShelfExpiryPeriod(5, IntervalId.WEEKS));
 
     doPost(client, resourceUrl(), initialServicePoint)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, updateRequest))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(resp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(getResponse -> {
-        JsonObject responseJson = getResponse.jsonBody();
-        assertThat(responseJson.getString("id"), is(id.toString()));
-        assertThat(responseJson.getString("name"), is("Circ Desk 2"));
-        assertThat(responseJson.getString("code"), is("cd2"));
-        assertThat(responseJson.getBoolean("pickupLocation"), is(true));
-
-        JsonObject holdShelf = responseJson.getJsonObject("holdShelfExpiryPeriod");
-        assertThat(holdShelf.getInteger("duration"), is(5));
-        assertThat(holdShelf.getString("intervalId"), is(IntervalId.WEEKS.toString()));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResponse ->
+        verifyServicePointWithHoldShelf(getResponse, id, "Circ Desk 2", "cd2", true, 5, IntervalId.WEEKS, ctx)));
   }
 
   @Test
@@ -348,44 +324,19 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
 
-    // Create a service point without holdShelfExpiryPeriod and with pickupLocation false
-    var initialServicePoint = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-
-    // Update request: add holdShelfExpiryPeriod, holdShelfClosedLibraryDateManagement and set pickupLocation true
-    var updateRequest = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", true)
-      .put("holdShelfClosedLibraryDateManagement", MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value())
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod(5, IntervalId.WEEKS)));
+    var initialServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", false, null);
+    var updateRequest = createServicePoint(id, "Circ Desk 2", "cd2",
+      "Circulation Desk -- Basement", true, createHoldShelfExpiryPeriod(5, IntervalId.WEEKS))
+      .put("holdShelfClosedLibraryDateManagement", MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value());
 
     doPost(client, resourceUrl(), initialServicePoint)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, updateRequest))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(resp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(response -> {
-        JsonObject responseJson = response.jsonBody();
-        assertThat(responseJson.getString("id"), is(id.toString()));
-        assertThat(responseJson.getString("code"), is("cd2"));
-        assertThat(responseJson.getString("name"), is("Circ Desk 2"));
-        assertThat(responseJson.getBoolean("pickupLocation"), is(true));
-        assertThat(responseJson.getString("holdShelfClosedLibraryDateManagement"),
-          is(MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value()));
-
-        JsonObject holdShelfExpiry = responseJson.getJsonObject("holdShelfExpiryPeriod");
-        assertThat(holdShelfExpiry.getInteger("duration"), is(5));
-        assertThat(holdShelfExpiry.getString("intervalId"), is(IntervalId.WEEKS.toString()));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(response ->
+        verifyServicePointWithHoldShelfManagement(response, id, "Circ Desk 2", "cd2", 5, IntervalId.WEEKS, ctx)));
   }
 
   @Test
@@ -393,33 +344,16 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", false);
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", false, null);
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", false, null);
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(resp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(getResp -> {
-        var json = getResp.jsonBody();
-        assertThat(json.getString("id"), is(id.toString()));
-        assertThat(json.getString("code"), is("cd2"));
-        assertThat(json.getString("name"), is("Circ Desk 2"));
-        assertThat(json.getBoolean("pickupLocation"), is(false));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyBasicServicePointFields(getResp, id, "Circ Desk 2", "cd2", false, ctx)));
 
     awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForServicePoint(id.toString()),
       hasSize(2));
@@ -448,48 +382,23 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-      .onComplete(ctx.succeeding(resp -> {
-        JsonObject json = resp.jsonBody();
-        JsonArray errors = json.getJsonArray("errors");
-        assertThat(errors.size(), is(1));
-        assertThat(errors.getJsonObject(0).getString("message"),
-          is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
-        servicePointEventMessageChecks.updatedMessageWasNotPublished(initial);
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(resp ->
+        verifyUpdateError(resp, initial, SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY, ctx)));
   }
 
   @Test
   void cannotUpdateServicePointWithoutHoldShelfExpiryPeriodWhenItNeverExisted(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 102")
-      .put("code", "cd102")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 102")
-      .put("code", "cd102")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", true);
+    var initial = createServicePoint(id, "Circ Desk 102", "cd102", "Circulation Desk -- Hallway", false, null);
+    var update = createServicePoint(id, "Circ Desk 102", "cd102", "Circulation Desk -- Basement", true, null);
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-      .onComplete(ctx.succeeding(resp -> {
-        JsonObject json = resp.jsonBody();
-        JsonArray errors = json.getJsonArray("errors");
-        assertThat(errors.size(), is(1));
-        assertThat(errors.getJsonObject(0).getString("message"),
-          is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY));
-        servicePointEventMessageChecks.updatedMessageWasNotPublished(initial);
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(resp ->
+        verifyUpdateError(resp, initial, SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY, ctx)));
   }
 
   @Test
@@ -498,34 +407,15 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
     var defaultExpiry = createHoldShelfExpiryPeriod();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(defaultExpiry));
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", new JsonObject(Json.encode(defaultExpiry)));
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", true, defaultExpiry);
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", false, defaultExpiry);
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-      .onComplete(ctx.succeeding(resp -> {
-        JsonObject json = resp.jsonBody();
-        JsonArray errors = json.getJsonArray("errors");
-        assertThat(errors.size(), is(1));
-        assertThat(errors.getJsonObject(0).getString("message"),
-          is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
-        servicePointEventMessageChecks.updatedMessageWasNotPublished(initial);
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(resp ->
+        verifyUpdateError(resp, initial, SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC, ctx)));
   }
 
   @Test
@@ -534,34 +424,15 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
     var defaultExpiry = createHoldShelfExpiryPeriod();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", new JsonObject(Json.encode(defaultExpiry)));
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", false, null);
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", false, defaultExpiry);
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-      .onComplete(ctx.succeeding(resp -> {
-        JsonObject json = resp.jsonBody();
-        JsonArray errors = json.getJsonArray("errors");
-        assertThat(errors.size(), is(1));
-        assertThat(errors.getJsonObject(0).getString("message"),
-          is(SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC));
-        servicePointEventMessageChecks.updatedMessageWasNotPublished(initial);
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(resp ->
+        verifyUpdateError(resp, initial, SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC, ctx)));
   }
 
   @Test
@@ -569,38 +440,18 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()));
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod",
-        new JsonObject(Json.encode(createHoldShelfExpiryPeriod(5, IntervalId.WEEKS))));
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", true,
+      createHoldShelfExpiryPeriod());
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", true,
+      createHoldShelfExpiryPeriod(5, IntervalId.WEEKS));
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(resp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(getResp -> {
-        JsonObject json = getResp.jsonBody();
-        assertThat(json.getString("id"), is(id.toString()));
-        assertThat(json.getString("name"), is("Circ Desk 2"));
-        assertThat(json.getString("code"), is("cd2"));
-        assertThat(json.getBoolean("pickupLocation"), is(true));
-        JsonObject expiry = json.getJsonObject("holdShelfExpiryPeriod");
-        assertThat(expiry.getInteger("duration"), is(5));
-        assertThat(expiry.getString("intervalId"), is(IntervalId.WEEKS.toString()));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyUpdatedServicePointWithExpiry(getResp, id, ctx)));
 
     awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForServicePoint(id.toString()),
       hasSize(2));
@@ -611,19 +462,9 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()));
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", false);
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", true,
+      createHoldShelfExpiryPeriod());
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", false, null);
 
     doPost(client, resourceUrl(), initial)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
@@ -647,19 +488,9 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
   void canUpdateServicePointWithDefaultCheckInActionForUseAtLocation(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID();
-    var initial = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("shelvingLagTime", 20)
-      .put("pickupLocation", false)
-      .put("holdShelfExpiryPeriod", null);
-    var update = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
+    var initial = createServicePoint(id, "Circ Desk 1", "cd1", "Circulation Desk -- Hallway", false, null)
+      .put("shelvingLagTime", 20);
+    var update = createServicePoint(id, "Circ Desk 2", "cd2", "Circulation Desk -- Basement", false, null)
       .put("defaultCheckInActionForUseAtLocation", KEEP_ON_HOLD_SHELF.value());
 
     doPost(client, resourceUrl(), initial)
@@ -667,15 +498,8 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
       .compose(resp -> doPut(client, resourceUrl() + "/" + id, update))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(resp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(getResp -> {
-        JsonObject json = getResp.jsonBody();
-        assertThat(json.getString("id"), is(id.toString()));
-        assertThat(json.getString("code"), is("cd2"));
-        assertThat(json.getString("name"), is("Circ Desk 2"));
-        assertThat(json.getString("defaultCheckInActionForUseAtLocation"),
-          is(KEEP_ON_HOLD_SHELF.value()));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyServicePointWithCheckInAction(getResp, id, "Circ Desk 2", "cd2", ctx)));
 
     awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForServicePoint(id.toString()),
       hasSize(2));
@@ -699,18 +523,8 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
 
     doPost(client, resourceUrl(), servicePoint)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
-      .onComplete(ctx.succeeding(response -> {
-        JsonObject json = response.jsonBody();
-        assertThat(json.getString("id"), notNullValue());
-        assertThat(json.getString("code"), is("cd1"));
-        assertThat(json.getString("name"), is("Circ Desk 1"));
-        JsonArray slips = json.getJsonArray("staffSlips");
-        assertThat(slips.getJsonObject(0).getString("id"), is(uuidTrue));
-        assertThat(slips.getJsonObject(0).getBoolean("printByDefault"), is(true));
-        assertThat(slips.getJsonObject(1).getString("id"), is(uuidFalse));
-        assertThat(slips.getJsonObject(1).getBoolean("printByDefault"), is(false));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(response ->
+        verifyServicePointWithStaffSlips(response, "cd1", "Circ Desk 1", uuidTrue, uuidFalse, ctx)));
   }
 
   @Test
@@ -748,49 +562,16 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var spId2 = UUID.randomUUID();
     var spId3 = UUID.randomUUID();
 
-    var sp1 = new JsonObject()
-      .put("id", spId1.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk 1")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()))
-      .put("ecsRequestRouting", false);
-    var sp2 = new JsonObject()
-      .put("id", spId2.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk 2")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()))
-      .put("ecsRequestRouting", false);
-    var sp3 = new JsonObject()
-      .put("id", spId3.toString())
-      .put("name", "Circ Desk 3")
-      .put("code", "cd3")
-      .put("discoveryDisplayName", "Circulation Desk 3")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()))
-      .put("ecsRequestRouting", true);
+    var sp1 = createEcsServicePoint(spId1, "Circ Desk 1", "cd1", "Circulation Desk 1", false);
+    var sp2 = createEcsServicePoint(spId2, "Circ Desk 2", "cd2", "Circulation Desk 2", false);
+    var sp3 = createEcsServicePoint(spId3, "Circ Desk 3", "cd3", "Circulation Desk 3", true);
 
     doPost(client, resourceUrl(), sp1)
       .compose(resp -> doPost(client, resourceUrl(), sp2))
       .compose(resp -> doPost(client, resourceUrl(), sp3))
       .compose(resp -> doGet(client, resourceUrl() + queryParameters))
-      .onComplete(ctx.succeeding(getResp -> {
-        JsonArray arr = getResp.jsonBody().getJsonArray("servicepoints");
-        var servicePointIds = arr.stream()
-          .map(o -> ((JsonObject) o).getString("id"))
-          .toList();
-        assertThat(servicePointIds, hasItems(spId1.toString(), spId2.toString()));
-        if (shouldReturnRoutingServicePoints) {
-          assertThat(servicePointIds, hasItem(spId3.toString()));
-          assertThat(servicePointIds, hasSize(3));
-        } else {
-          assertThat(servicePointIds, hasSize(2));
-        }
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyEcsServicePointsResponse(getResp, spId1, spId2, spId3, shouldReturnRoutingServicePoints, ctx)));
   }
 
   @Test
@@ -800,37 +581,21 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     var staffSlipId = UUID.randomUUID().toString();
     var initialStaffSlips = new JsonArray()
       .add(new JsonObject().put("id", staffSlipId).put("printByDefault", true));
-    var initialServicePoint = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 1")
-      .put("code", "cd1")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()))
+    var updateStaffSlips = new JsonArray()
+      .add(new JsonObject().put("id", staffSlipId).put("printByDefault", false));
+
+    var initialServicePoint = createServicePoint(id, "Circ Desk 1", "cd1",
+      "Circulation Desk -- Hallway", true, createHoldShelfExpiryPeriod())
       .put("staffSlips", initialStaffSlips);
-    var updateServicePoint = new JsonObject()
-      .put("id", id.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", false)
-      .put("staffSlips", new JsonArray()
-        .add(new JsonObject().put("id", staffSlipId).put("printByDefault", false)));
+    var updateServicePoint = createServicePoint(id, "Circ Desk 2", "cd2",
+      "Circulation Desk -- Basement", false, null)
+      .put("staffSlips", updateStaffSlips);
 
     doPost(client, resourceUrl(), initialServicePoint)
       .compose(postResp -> doPut(client, resourceUrl() + "/" + id, updateServicePoint))
       .compose(putResp -> doGet(client, resourceUrl() + "/" + id))
-      .onComplete(ctx.succeeding(getResp -> {
-        JsonObject json = getResp.jsonBody();
-        assertThat(json.getString("id"), is(id.toString()));
-        assertThat(json.getString("name"), is("Circ Desk 2"));
-        assertThat(json.getString("code"), is("cd2"));
-        assertThat(json.getBoolean("pickupLocation"), is(false));
-        JsonArray slips = json.getJsonArray("staffSlips");
-        assertThat(slips.getJsonObject(0).getString("id"), is(staffSlipId));
-        assertThat(slips.getJsonObject(0).getBoolean("printByDefault"), is(false));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyUpdatedServicePointWithStaffSlips(getResp, id, "Circ Desk 2", "cd2", staffSlipId, false, ctx)));
   }
 
   @Test
@@ -855,15 +620,159 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     doPost(client, resourceUrl(), servicePoint1)
       .compose(postResp -> doPost(client, resourceUrl(), servicePoint2))
       .compose(putResp -> doGet(client, resourceUrl()))
-      .onComplete(ctx.succeeding(getResp -> {
-        var servicepoints = getResp.jsonBody().getJsonArray("servicepoints").stream()
-          .map(JsonObject.class::cast)
-          .toList();
-        assertThat(servicepoints.size(), is(1));
-        assertThat(servicepoints.getFirst().getString("id"),
-          is(id.toString()));
-        ctx.completeNow();
-      }));
+      .onComplete(ctx.succeeding(getResp ->
+        verifyFilteredServicePoints(getResp, id, ctx)));
+  }
+
+  private JsonObject createServicePoint(UUID id, String name, String code, String displayName,
+                                        boolean pickupLocation, HoldShelfExpiryPeriod holdShelfExpiryPeriod) {
+    var sp = new JsonObject()
+      .put("id", id.toString())
+      .put("name", name)
+      .put("code", code)
+      .put("discoveryDisplayName", displayName)
+      .put("pickupLocation", pickupLocation);
+    if (holdShelfExpiryPeriod != null) {
+      sp.put("holdShelfExpiryPeriod", new JsonObject(Json.encode(holdShelfExpiryPeriod)));
+    } else {
+      sp.put("holdShelfExpiryPeriod", null);
+    }
+    return sp;
+  }
+
+  private void verifyServicePointWithHoldShelf(TestResponse response, UUID id, String name, String code,
+                                                boolean pickupLocation, int duration, IntervalId intervalId,
+                                                VertxTestContext ctx) {
+    JsonObject responseJson = response.jsonBody();
+    assertThat(responseJson.getString("id"), is(id.toString()));
+    assertThat(responseJson.getString("name"), is(name));
+    assertThat(responseJson.getString("code"), is(code));
+    assertThat(responseJson.getBoolean("pickupLocation"), is(pickupLocation));
+    JsonObject holdShelf = responseJson.getJsonObject("holdShelfExpiryPeriod");
+    assertThat(holdShelf.getInteger("duration"), is(duration));
+    assertThat(holdShelf.getString("intervalId"), is(intervalId.toString()));
+    ctx.completeNow();
+  }
+
+  private void verifyServicePointWithHoldShelfManagement(TestResponse response, UUID id, String name, String code,
+                                                          int duration, IntervalId intervalId, VertxTestContext ctx) {
+    JsonObject responseJson = response.jsonBody();
+    assertThat(responseJson.getString("id"), is(id.toString()));
+    assertThat(responseJson.getString("code"), is(code));
+    assertThat(responseJson.getString("name"), is(name));
+    assertThat(responseJson.getBoolean("pickupLocation"), is(true));
+    assertThat(responseJson.getString("holdShelfClosedLibraryDateManagement"),
+      is(MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS.value()));
+    JsonObject holdShelfExpiry = responseJson.getJsonObject("holdShelfExpiryPeriod");
+    assertThat(holdShelfExpiry.getInteger("duration"), is(duration));
+    assertThat(holdShelfExpiry.getString("intervalId"), is(intervalId.toString()));
+    ctx.completeNow();
+  }
+
+  private void verifyBasicServicePointFields(TestResponse response, UUID id, String name, String code,
+                                              boolean pickupLocation, VertxTestContext ctx) {
+    var json = response.jsonBody();
+    assertThat(json.getString("id"), is(id.toString()));
+    assertThat(json.getString("code"), is(code));
+    assertThat(json.getString("name"), is(name));
+    assertThat(json.getBoolean("pickupLocation"), is(pickupLocation));
+    ctx.completeNow();
+  }
+
+  private void verifyUpdateError(TestResponse resp, JsonObject initial, String expectedMessage, VertxTestContext ctx) {
+    JsonObject json = resp.jsonBody();
+    JsonArray errors = json.getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+    assertThat(errors.getJsonObject(0).getString("message"), is(expectedMessage));
+    servicePointEventMessageChecks.updatedMessageWasNotPublished(initial);
+    ctx.completeNow();
+  }
+
+  private void verifyServicePointWithCheckInAction(TestResponse response, UUID id, String name, String code,
+                                                     VertxTestContext ctx) {
+    JsonObject json = response.jsonBody();
+    assertThat(json.getString("id"), is(id.toString()));
+    assertThat(json.getString("code"), is(code));
+    assertThat(json.getString("name"), is(name));
+    assertThat(json.getString("defaultCheckInActionForUseAtLocation"), is(KEEP_ON_HOLD_SHELF.value()));
+    ctx.completeNow();
+  }
+
+  private void verifyServicePointWithStaffSlips(TestResponse response, String code, String name,
+                                                  String uuidTrue, String uuidFalse, VertxTestContext ctx) {
+    JsonObject json = response.jsonBody();
+    assertThat(json.getString("id"), notNullValue());
+    assertThat(json.getString("code"), is(code));
+    assertThat(json.getString("name"), is(name));
+    JsonArray slips = json.getJsonArray("staffSlips");
+    assertThat(slips.getJsonObject(0).getString("id"), is(uuidTrue));
+    assertThat(slips.getJsonObject(0).getBoolean("printByDefault"), is(true));
+    assertThat(slips.getJsonObject(1).getString("id"), is(uuidFalse));
+    assertThat(slips.getJsonObject(1).getBoolean("printByDefault"), is(false));
+    ctx.completeNow();
+  }
+
+  private void verifyUpdatedServicePointWithStaffSlips(TestResponse response, UUID id, String name, String code,
+                                                         String staffSlipId, boolean printByDefault,
+                                                         VertxTestContext ctx) {
+    JsonObject json = response.jsonBody();
+    assertThat(json.getString("id"), is(id.toString()));
+    assertThat(json.getString("name"), is(name));
+    assertThat(json.getString("code"), is(code));
+    assertThat(json.getBoolean("pickupLocation"), is(false));
+    JsonArray slips = json.getJsonArray("staffSlips");
+    assertThat(slips.getJsonObject(0).getString("id"), is(staffSlipId));
+    assertThat(slips.getJsonObject(0).getBoolean("printByDefault"), is(printByDefault));
+    ctx.completeNow();
+  }
+
+  private void verifyFilteredServicePoints(TestResponse response, UUID expectedId, VertxTestContext ctx) {
+    var servicepoints = response.jsonBody().getJsonArray("servicepoints").stream()
+      .map(JsonObject.class::cast)
+      .toList();
+    assertThat(servicepoints.size(), is(1));
+    assertThat(servicepoints.getFirst().getString("id"), is(expectedId.toString()));
+    ctx.completeNow();
+  }
+
+  private JsonObject createEcsServicePoint(UUID id, String name, String code, String displayName,
+                                            boolean ecsRequestRouting) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("name", name)
+      .put("code", code)
+      .put("discoveryDisplayName", displayName)
+      .put("pickupLocation", true)
+      .put("holdShelfExpiryPeriod", JsonObject.mapFrom(createHoldShelfExpiryPeriod()))
+      .put("ecsRequestRouting", ecsRequestRouting);
+  }
+
+  private void verifyEcsServicePointsResponse(TestResponse response, UUID spId1, UUID spId2, UUID spId3,
+                                               boolean shouldReturnRoutingServicePoints, VertxTestContext ctx) {
+    JsonArray arr = response.jsonBody().getJsonArray("servicepoints");
+    var servicePointIds = arr.stream()
+      .map(o -> ((JsonObject) o).getString("id"))
+      .toList();
+    assertThat(servicePointIds, hasItems(spId1.toString(), spId2.toString()));
+    if (shouldReturnRoutingServicePoints) {
+      assertThat(servicePointIds, hasItem(spId3.toString()));
+      assertThat(servicePointIds, hasSize(3));
+    } else {
+      assertThat(servicePointIds, hasSize(2));
+    }
+    ctx.completeNow();
+  }
+
+  private void verifyUpdatedServicePointWithExpiry(TestResponse response, UUID id, VertxTestContext ctx) {
+    var json = response.jsonBody();
+    assertThat(json.getString("id"), is(id.toString()));
+    assertThat(json.getString("name"), is("Circ Desk 2"));
+    assertThat(json.getString("code"), is("cd2"));
+    assertThat(json.getBoolean("pickupLocation"), is(true));
+    var expiry = json.getJsonObject("holdShelfExpiryPeriod");
+    assertThat(expiry.getInteger("duration"), is(5));
+    assertThat(expiry.getString("intervalId"), is(IntervalId.WEEKS.toString()));
+    ctx.completeNow();
   }
 
   public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, IntervalId intervalId) {

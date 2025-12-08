@@ -182,12 +182,25 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
                                                      String suffix) {
 
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    JsonObject itemToCreate = buildItemWithCallNumberComponents(holdingsRecordId, prefix, callNumber,
+      volume, enumeration, chronology, copy, suffix);
 
+    setItemSequence(1);
+
+    var postResponse = saveItemAndExpectJson(itemToCreate);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    JsonObject itemFromPost = postResponse.getJson();
+    assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
+  }
+
+  private JsonObject buildItemWithCallNumberComponents(UUID holdingsRecordId, String prefix, String callNumber,
+                                                        String volume, String enumeration, String chronology,
+                                                        String copy, String suffix) {
     UUID id = randomUUID();
     final String inTransitServicePointId = randomUUID().toString();
 
     JsonObject itemToCreate = new JsonObject();
-
     itemToCreate.put("id", id.toString());
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("barcode", "565578437802");
@@ -196,7 +209,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-    itemToCreate.put("copyNumber", "copy1");
 
     itemToCreate.put("itemLevelCallNumber", callNumber);
     itemToCreate.put("itemLevelCallNumberSuffix", suffix);
@@ -206,18 +218,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("enumeration", enumeration);
     itemToCreate.put("chronology", chronology);
     itemToCreate.put("copyNumber", copy);
-
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
 
-    setItemSequence(1);
-
-    var postResponse = saveItemAndExpectJson(itemToCreate);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postResponse.getJson();
-
-    assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
+    return itemToCreate;
   }
 
   @Test
@@ -229,14 +232,36 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     String adminNote = "an admin note";
     String displaySummary = "Important item";
 
+    final UUID statisticalCodeId = createStatisticalCode();
+    JsonObject itemToCreate = buildDetailedItem(id, holdingsRecordId, adminNote, displaySummary,
+      inTransitServicePointId, statisticalCodeId);
+
+    setItemSequence(1);
+
+    var postResponse = saveItemAndExpectJson(itemToCreate);
+
+    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertItem(postResponse.getJson(), id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
+      statisticalCodeId);
+
+    verifyItemCreatedAndRetrieved(id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
+      statisticalCodeId);
+  }
+
+  private UUID createStatisticalCode() {
+    return createStatisticalCode("stcone", "Statistical code 1");
+  }
+
+  private UUID createStatisticalCode(String code, String name) {
     final var statisticalCode = statisticalCodeFixture
       .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stcone")
-        .withName("Statistical code 1"));
-    final UUID statisticalCodeId = UUID.fromString(
-      statisticalCode.getJson().getString("id")
-    );
+        .withCode(code)
+        .withName(name));
+    return UUID.fromString(statisticalCode.getJson().getString("id"));
+  }
 
+  private JsonObject buildDetailedItem(UUID id, UUID holdingsRecordId, String adminNote, String displaySummary,
+                                        String inTransitServicePointId, UUID statisticalCodeId) {
     JsonObject itemToCreate = new JsonObject();
     itemToCreate.put("id", id.toString());
     itemToCreate.put(ORDER_FIELD, 100);
@@ -250,22 +275,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
     itemToCreate.put("copyNumber", "copy1");
-
     itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
     itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
     itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
     itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
     itemToCreate.put("statisticalCodeIds", List.of(statisticalCodeId));
     itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+    return itemToCreate;
+  }
 
-    setItemSequence(1);
-
-    var postResponse = saveItemAndExpectJson(itemToCreate);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertItem(postResponse.getJson(), id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
-      statisticalCodeId);
-
+  private void verifyItemCreatedAndRetrieved(UUID id, String adminNote, UUID holdingsRecordId,
+                                              String displaySummary, String inTransitServicePointId,
+                                              UUID statisticalCodeId) {
     Response getResponse = getById(id);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject itemFromGet = getResponse.getJson();
@@ -366,6 +387,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
+    var id3 = createThirdItemAndVerifyOrder(holdingsRecordId, id1, id2);
+  }
+
+  @SneakyThrows
+  private UUID createThirdItemAndVerifyOrder(UUID holdingsRecordId, UUID id1, UUID id2) {
     var id3 = UUID.randomUUID();
     var itemToCreate3 = minimalItem(id3, holdingsRecordId);
     var createCompleted3 = new CompletableFuture<Response>();
@@ -381,6 +407,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), is(1000));
     assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), is(10));
     assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
+    return id3;
   }
 
   @SneakyThrows
@@ -447,27 +474,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     UUID itemId = randomUUID();
-
-    JsonObject checkInNoteWithoutId = new JsonObject()
-      .put("noteType", "Check in")
-      .put("note", "Check in note")
-      .put("staffOnly", false);
-
     UUID circulationNoteId = randomUUID();
-    JsonObject checkOutNoteWithId = new JsonObject()
-      .put("id", circulationNoteId)
-      .put("noteType", "Check out")
-      .put("note", "Check out note")
-      .put("staffOnly", false);
 
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", itemId.toString())
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
-      .put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+    JsonObject itemToCreate = buildItemWithCirculationNotes(holdingsRecordId, itemId, circulationNoteId);
 
     var postResponse = saveItemAndExpectJson(itemToCreate);
 
@@ -475,15 +484,38 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
-
     assertThat(itemFromPost.getString("id"), is(itemId.toString()));
 
-    Response getResponse = getById(itemId);
+    verifyCirculationNotesPopulated(itemId, circulationNoteId);
+  }
 
+  private JsonObject buildItemWithCirculationNotes(UUID holdingsRecordId, UUID itemId, UUID circulationNoteId) {
+    JsonObject checkInNoteWithoutId = new JsonObject()
+      .put("noteType", "Check in")
+      .put("note", "Check in note")
+      .put("staffOnly", false);
+
+    JsonObject checkOutNoteWithId = new JsonObject()
+      .put("id", circulationNoteId)
+      .put("noteType", "Check out")
+      .put("note", "Check out note")
+      .put("staffOnly", false);
+
+    return new JsonObject()
+      .put("id", itemId.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+  }
+
+  private void verifyCirculationNotesPopulated(UUID itemId, UUID circulationNoteId) {
+    Response getResponse = getById(itemId);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonObject itemFromGet = getResponse.getJson();
-
     assertThat(itemFromGet.getString("id"), is(itemId.toString()));
 
     JsonArray savedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
@@ -618,7 +650,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
-
     itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -631,13 +662,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
-
     String newId = itemFromPost.getString("id");
-
     assertThat(newId, is(notNullValue()));
 
-    Response getResponse = getById(UUID.fromString(newId));
+    verifyCreatedItemWithoutProvidedId(newId, holdingsRecordId);
+  }
 
+  private void verifyCreatedItemWithoutProvidedId(String newId, UUID holdingsRecordId) {
+    Response getResponse = getById(UUID.fromString(newId));
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonObject itemFromGet = getResponse.getJson();
@@ -645,14 +677,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromGet.getString("id"), is(newId));
     assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
     assertThat(itemFromGet.getString("barcode"), is("565578437802"));
-    assertThat(itemFromGet.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(itemFromGet.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(itemFromGet.getString("permanentLoanTypeId"),
-      is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getString("temporaryLocationId"),
-      is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(itemFromGet.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
+    assertThat(itemFromGet.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
 
     List<String> tags = getTags(itemFromGet);
 
@@ -736,17 +764,20 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("materialTypeId", bookMaterialTypeID);
 
     setItemSequence(1);
-
-    // create item
     createItem(itemToUpdate);
 
-    // populate circulationNotes and other necessary fields
+    UUID circulationNoteId = randomUUID();
+    updateItemWithCirculationNotes(itemToUpdate, circulationNoteId);
+
+    verifyUpdatedCirculationNotes(itemId, circulationNoteId);
+  }
+
+  private void updateItemWithCirculationNotes(JsonObject itemToUpdate, UUID circulationNoteId) {
     JsonObject checkInNoteWithoutId = new JsonObject()
       .put("noteType", "Check in")
       .put("note", "Check in note")
       .put("staffOnly", false);
 
-    UUID circulationNoteId = randomUUID();
     JsonObject checkOutNoteWithId = new JsonObject()
       .put("id", circulationNoteId)
       .put("noteType", "Check out")
@@ -757,15 +788,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToUpdate.put("hrid", "it00000000001");
     itemToUpdate.put("_version", "1");
 
-    // update item
     update(itemToUpdate);
+  }
 
+  private void verifyUpdatedCirculationNotes(UUID itemId, UUID circulationNoteId) {
     Response getResponse = getById(itemId);
-
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
     JsonObject itemFromGet = getResponse.getJson();
-
     assertThat(itemFromGet.getString("id"), is(itemId.toString()));
 
     JsonArray updatedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
@@ -1029,33 +1059,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(response.getStatusCode(), is(HTTP_OK));
     assertThat(response.getJson().getString("hrid"), is("it00000000001"));
 
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
     itemToCreate.put("id", randomUUID().toString());
     itemToCreate.put("hrid", "it00000000001");
 
-    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      json(createCompleted));
+    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID, json(createCompleted));
 
     final Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
-    assertThat(postResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
-
-    final Errors errors = postResponse.getJson().mapTo(Errors.class);
-
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
-    var error = errors.getErrors().getFirst();
-    assertThat(error, notNullValue());
-    assertThat(error.getMessage(),
-      is("HRID value already exists in table item: it00000000001"));
-    assertThat(error.getParameters(), notNullValue());
-    var parameter = error.getParameters().getFirst();
-    assertThat(parameter, notNullValue());
-    assertThat(parameter.getKey(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
-    assertThat(parameter.getValue(),
-      is("it00000000001"));
+    verifyDuplicateHridError(postResponse);
 
     log.info("Finished cannotCreateAnItemWithDuplicateHRID");
   }
@@ -1229,53 +1241,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldCreateAnItemWithManyProperties() throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldCreateAnItemWithManyProperties() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
     UUID id = randomUUID();
-
     final String inTransitServicePointId = randomUUID().toString();
 
-    JsonObject itemToCreate = new JsonObject();
+    JsonObject itemToCreate = createItemWithManyProperties(id, holdingsRecordId, inTransitServicePointId);
+    createItem(itemToCreate);
 
-    itemToCreate.put("id", id.toString());
-    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", journalMaterialTypeID);
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
-    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
-
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(itemsStorageUrl(""), itemToCreate,
-      TENANT_ID, ResponseHandler.empty(createCompleted));
-
-    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    Response getResponse = getById(id);
-
-    //PUT currently cannot return a response
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject item = getResponse.getJson();
-
-    final List<String> tags = getTags(item);
-
-    assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(item.getString("barcode"), is("565578437802"));
-    assertThat(item.getJsonObject("status").getString("name"), is("Available"));
-    assertThat(item.getString("materialTypeId"), is(journalMaterialTypeID));
-    assertThat(item.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
-    assertThat(item.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
-    assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
+    JsonObject item = getById(id).getJson();
+    verifyItemWithManyProperties(item, id, holdingsRecordId, inTransitServicePointId);
   }
 
   @Test
@@ -1434,17 +1409,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     final UUID existingItemId = randomUUID();
 
-    final JsonArray itemsArray1 = new JsonArray()
-      .add(nod(existingItemId, holdingsRecordId))
-      .add(smallAngryPlanet(holdingsRecordId))
-      .add(interestingTimes(holdingsRecordId));
-    populateOrder(itemsArray1);
-
-    final JsonArray itemsArray2 = new JsonArray()
-      .add(nod(existingItemId, holdingsRecordId))
-      .add(temeraire(holdingsRecordId))
-      .add(uprooted(holdingsRecordId));
-    populateOrder(itemsArray2);
+    final JsonArray itemsArray1 = createItemArrayWithExistingId(existingItemId, holdingsRecordId, true);
+    final JsonArray itemsArray2 = createItemArrayWithExistingId(existingItemId, holdingsRecordId, false);
 
     final var firstResponse = postSynchronousBatch("?upsert=true", itemsArray1);
     final var existingItemBeforeUpdate = getById(existingItemId).getJson();
@@ -1453,15 +1419,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(firstResponse.getStatusCode(), is(201));
     assertThat(secondResponse.getStatusCode(), is(201));
 
-    Stream.concat(itemsArray1.stream(), itemsArray2.stream())
-      .map(json -> ((JsonObject) json).getString("id"))
-      .filter(id -> !id.equals(existingItemId.toString()))
-      .map(this::getById)
-      .map(Response::getJson)
-      .forEach(itemMessageChecks::createdMessagePublished);
-
-    itemMessageChecks.updatedMessagePublished(existingItemBeforeUpdate,
-      getById(existingItemId).getJson());
+    verifyBatchCreatedMessages(itemsArray1, itemsArray2, existingItemId);
+    itemMessageChecks.updatedMessagePublished(existingItemBeforeUpdate, getById(existingItemId).getJson());
   }
 
   @Test
@@ -1531,25 +1490,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response response = postSynchronousBatch(itemsArray);
     assertThat(response.getStatusCode(), is(422));
 
-    final Errors errors = response.getJson().mapTo(Errors.class);
-
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
-    var error = errors.getErrors().getFirst();
-    assertThat(error, notNullValue());
-    assertThat(error.getMessage(),
-      is("HRID value already exists in table item: it00000000001"));
-    assertThat(error.getParameters(), notNullValue());
-    var parameter = error.getParameters().getFirst();
-    assertThat(parameter, notNullValue());
-    assertThat(parameter.getKey(),
-      is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
-    assertThat(parameter.getValue(),
-      is("it00000000001"));
-
-    for (int i = 0; i < itemsArray.size(); i++) {
-      assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
-    }
+    verifyDuplicateHridError(response, duplicateHrid);
+    verifyItemsNotCreated(itemsArray);
 
     log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
   }
@@ -1575,98 +1517,34 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReplaceAnItemAtSpecificLocation()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldReplaceAnItemAtSpecificLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
     UUID id = randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
-      .put("hrid", "testHRID");
-
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId).put("hrid", "testHRID");
     createItem(itemToCreate);
 
-    JsonObject replacement = itemToCreate.copy();
-    replacement.put("barcode", "125845734657")
-      .put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID.toString())
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
-
-    getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
-      TENANT_ID, ResponseHandler.empty(replaceCompleted));
-
-    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    JsonObject replacement = createReplacementItemWithTags(itemToCreate);
+    Response putResponse = putItem(id, replacement);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(id);
-
-    //PUT currently cannot return a response
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject item = getResponse.getJson();
-
-    final List<String> tags = getTags(item);
-
-    assertThat(item.getString("id"), is(id.toString()));
-    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(item.getString("barcode"), is("125845734657"));
-    assertThat(item.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(item.getString("materialTypeId"),
-      is(journalMaterialTypeID));
-    assertThat(item.getString("temporaryLocationId"),
-      is(MAIN_LIBRARY_LOCATION_ID.toString()));
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
+    JsonObject item = getById(id).getJson();
+    verifyReplacedItem(item, id, holdingsRecordId);
   }
 
   @Test
-  public void shouldPlaceAnItemInTransit() throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldPlaceAnItemInTransit() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
     UUID id = randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
-      .put("hrid", "testHRID");
-
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId).put("hrid", "testHRID");
     createItem(itemToCreate);
 
     final String inTransitServicePointId = randomUUID().toString();
-
-    JsonObject replacement = itemToCreate.copy();
-
-    replacement
-      .put("status", new JsonObject().put("name", "In transit"))
-      .put("inTransitDestinationServicePointId", inTransitServicePointId)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
-
-    getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
-      TENANT_ID, ResponseHandler.empty(replaceCompleted));
-
-    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    JsonObject replacement = createInTransitReplacement(itemToCreate, inTransitServicePointId);
+    Response putResponse = putItem(id, replacement);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(id);
-
-    //PUT currently cannot return a response
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject item = getResponse.getJson();
-
-    final List<String> tags = getTags(item);
-
-    assertThat(item.getString("id"), is(id.toString()));
-
-    assertThat(item.getJsonObject("status").getString("name"),
-      is("In transit"));
-
-    assertThat(item.getString("inTransitDestinationServicePointId"),
-      is(inTransitServicePointId));
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
+    JsonObject item = getById(id).getJson();
+    verifyInTransitItem(item, id, inTransitServicePointId);
   }
 
   @Test
@@ -1710,74 +1588,26 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldChangeStatusDateWhenItemStatusUpdated()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldChangeStatusDateWhenItemStatusUpdated() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
     UUID id = randomUUID();
-    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId)
-      .put("hrid", "testHRID");
-
+    JsonObject itemToCreate = smallAngryPlanet(id, holdingsRecordId).put("hrid", "testHRID");
     createItem(itemToCreate);
 
-    JsonObject replacement = itemToCreate.copy();
-
-    replacement
-      .put("status", new JsonObject().put("name", "Checked out"));
-
-    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
-
-    getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
-      TENANT_ID, ResponseHandler.empty(replaceCompleted));
-
-    Response putResponse = replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    JsonObject replacement = itemToCreate.copy().put("status", new JsonObject().put("name", "Checked out"));
+    Response putResponse = putItem(id, replacement);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    Response getResponse = getById(id);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    Item item = getResponse.getJson().mapTo(Item.class);
-
-    assertThat(item.getId(), is(id.toString()));
-
-    assertThat(item.getStatus().getName().value(), is("Checked out"));
-
-    assertThat(item.getStatus().getDate(),
-      notNullValue());
-
+    Item item = verifyItemStatusChanged(id, "Checked out");
     final Instant changedStatusDate = item.getStatus().getDate().toInstant();
 
-    JsonObject secondReplacement = getResponse.getJson().copy();
-
-    secondReplacement
+    JsonObject secondReplacement = getById(id).getJson().copy()
       .put("status", new JsonObject().put("name", "Available"));
-
-    CompletableFuture<Response> secondReplaceCompleted = new CompletableFuture<>();
-
-    getClient().put(itemsStorageUrl(String.format("/%s", id)), secondReplacement,
-      TENANT_ID, ResponseHandler.empty(secondReplaceCompleted));
-
-    Response secondPutResponse = secondReplaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    Response secondPutResponse = putItem(id, secondReplacement);
     assertThat(secondPutResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    getResponse = getById(id);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    Item resultItem = getResponse.getJson().mapTo(Item.class);
-
-    assertThat(resultItem.getId(), is(id.toString()));
-
-    assertThat(resultItem.getStatus().getName().value(), is("Available"));
-
-    Instant itemStatusDate = resultItem.getStatus().getDate().toInstant();
-
-    assertThat(itemStatusDate, not(changedStatusDate));
-
-    assertThat(itemStatusDate.isAfter(changedStatusDate), is(true));
+    Item resultItem = verifyItemStatusChanged(id, "Available");
+    verifyStatusDateUpdated(resultItem.getStatus().getDate().toInstant(), changedStatusDate);
   }
 
   @Test
@@ -1882,39 +1712,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     createItem(itemToCreate);
 
     JsonObject createdItem = getById(id).getJson();
-
     final String createdDate = createdItem.getJsonObject("status").getString("date");
-
     assertThat(createdItem.getJsonObject("status").getString("name"), is("Available"));
-    assertThat(createdItem.getJsonObject("status").getString("date"), is(createdDate));
 
-    JsonObject firstUpdateItem = createdItem.copy()
-      .put("itemLevelCallNumber", "newItCn");
+    JsonObject firstUpdatedItem = updateItemCallNumber(id, createdItem);
+    verifyStatusDateUnchanged(firstUpdatedItem, createdDate, "newItCn", null);
 
-    itemsClient.replace(id, firstUpdateItem);
-
-    JsonObject firstUpdatedItemResponse = itemsClient.getById(id).getJson();
-
-    assertThat(firstUpdatedItemResponse.getString("itemLevelCallNumber"),
-      is("newItCn"));
-    assertThat(firstUpdatedItemResponse.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(firstUpdatedItemResponse.getJsonObject("status").getString("date"),
-      is(createdDate));
-
-    JsonObject secondUpdateItem = firstUpdatedItemResponse.copy()
-      .put("temporaryLocationId", ONLINE_LOCATION_ID.toString());
-
-    itemsClient.replace(id, secondUpdateItem);
-
-    JsonObject secondUpdatedItemResponse = itemsClient.getById(id).getJson();
-
-    assertThat(secondUpdatedItemResponse.getString("temporaryLocationId"),
-      is(ONLINE_LOCATION_ID.toString()));
-    assertThat(secondUpdatedItemResponse.getJsonObject("status").getString("name"),
-      is("Available"));
-    assertThat(secondUpdatedItemResponse.getJsonObject("status").getString("date"),
-      is(createdDate));
+    JsonObject secondUpdatedItem = updateItemTemporaryLocation(id, firstUpdatedItem);
+    verifyStatusDateUnchanged(secondUpdatedItem, createdDate, null, ONLINE_LOCATION_ID);
   }
 
   @Test
@@ -1948,41 +1753,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldPageAllItems() throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldPageAllItems() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    createFiveTestItems(holdingsRecordId);
 
-    createItem(smallAngryPlanet(randomUUID(), holdingsRecordId));
-    createItem(nod(randomUUID(), holdingsRecordId));
-    createItem(uprooted(randomUUID(), holdingsRecordId));
-    createItem(temeraire(randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(randomUUID(), holdingsRecordId));
-
-    CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
-    CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
-
-    getClient().get(itemsStorageUrl("") + "?limit=3", TENANT_ID,
-      ResponseHandler.json(firstPageCompleted));
-
-    getClient().get(itemsStorageUrl("") + "?limit=3&offset=3", TENANT_ID,
-      ResponseHandler.json(secondPageCompleted));
-
-    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response firstPageResponse = getPagedItems(3, 0);
+    Response secondPageResponse = getPagedItems(3, 3);
 
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
 
-    JsonObject firstPage = firstPageResponse.getJson();
-    JsonObject secondPage = secondPageResponse.getJson();
-
-    JsonArray firstPageItems = firstPage.getJsonArray("items");
-    JsonArray secondPageItems = secondPage.getJsonArray("items");
-
-    assertThat(firstPageItems.size(), is(3));
-    assertThat(firstPage.getInteger("totalRecords"), is(5));
-
-    assertThat(secondPageItems.size(), is(2));
-    assertThat(secondPage.getInteger("totalRecords"), is(5));
+    verifyPagedResults(firstPageResponse.getJson(), 3);
+    verifyPagedResults(secondPageResponse.getJson(), 2);
   }
 
   @Test
@@ -2022,38 +1804,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldUpdateItems_positive() {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemId = randomUUID();
-    // create item
     createItem(smallAngryPlanet(itemId, holdingsRecordId));
 
-    // get item
-    var completableFuture = new CompletableFuture<Response>();
-    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
-      ResponseHandler.any(completableFuture));
-    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(response.getStatusCode(), is(200));
+    var response = getItemResponse(itemId);
+    var itemsJson = modifyItemForUpdate(response.getJson());
 
-    // modify item body
-    var itemsJson = response.getJson();
-    itemsJson.remove("hrid");
-    itemsJson.put("barcode", null);
-    itemsJson.put("order", 55);
-
-    // update item via PATCH
-    var patchCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
-      TENANT_ID, ResponseHandler.empty(patchCompleted));
-    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    var patchResponse = patchItems(itemsJson);
     assertThat(patchResponse.getStatusCode(), is(204));
 
-    // verify item is updated
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-
-    assertThat(itemResponse.getStatusCode(), is(200));
-    assertEquals("55", itemResponseJson.getValue("order").toString());
-    assertEquals("it00000000001", itemResponseJson.getValue("hrid").toString());
-    assertNull(itemResponseJson.getValue("barcode"));
-
+    var itemResponseJson = getById(itemId).getJson();
+    verifyUpdatedItem(itemResponseJson);
     itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
   }
 
@@ -2097,39 +1857,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var itemId1 = randomUUID();
     var itemId2 = randomUUID();
 
-    // create item1 and verify order is 1
-    var item1 = smallAngryPlanet(itemId1, holdingsRecordId);
-    createItem(item1);
-    var firstItemOrder = getOrder(itemId1);
-    assertEquals(1, firstItemOrder);
-
-    // create item2 and verify order is 2
-    var item2 = smallAngryPlanet(itemId2, holdingsRecordId);
-    item2.put("barcode", "1234567890");
-    createItem(item2);
-    var secondItemOrder = getOrder(itemId2);
-    assertEquals(2, secondItemOrder);
-
-    // verify max order is 2
+    createItemAndVerifyOrder(itemId1, holdingsRecordId, null, 1);
+    createItemAndVerifyOrder(itemId2, holdingsRecordId, "1234567890", 2);
     assertEquals(2, getMaxOrder(holdingsRecordId));
 
-    // delete item2 with order 2
-    var response = getClient().delete(itemsStorageUrl("?query=id==" + itemId2), TENANT_ID).get(10, SECONDS);
-    assertThat(response.getStatusCode(), is(204));
-    assertNotExists(item2);
+    deleteItemAndVerifyMaxOrder(itemId2, holdingsRecordId);
 
-    // verify max order is still 2
-    assertEquals(2, getMaxOrder(holdingsRecordId));
-
-    // create new item and verify order is 3
     var itemId3 = randomUUID();
-    var item3 = smallAngryPlanet(itemId3, holdingsRecordId);
-    item3.put("barcode", "1111111111");
-    createItem(item3);
-    var itemOrder = getOrder(itemId3);
-    assertEquals(3, itemOrder);
-
-    // verify max order is 3
+    createItemAndVerifyOrder(itemId3, holdingsRecordId, "1111111111", 3);
     assertEquals(3, getMaxOrder(holdingsRecordId));
   }
 
@@ -2174,40 +1909,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldRemoveReadOnlyFields() {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemId = randomUUID();
-    // create item
     createItem(smallAngryPlanet(itemId, holdingsRecordId));
 
-    // get item
-    var completableFuture = new CompletableFuture<Response>();
-    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID,
-      ResponseHandler.any(completableFuture));
-    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(response.getStatusCode(), is(200));
+    var response = getItemResponse(itemId);
+    var itemsJson = addReadOnlyFieldsToItem(response.getJson());
 
-    // add read-only fields to item body
-    var itemsJson = response.getJson();
-    itemsJson.put("order", 10);
-    itemsJson.put("holdingsRecord2", new JsonObject());
-    itemsJson.put("permanentLocation", new JsonObject());
-    itemsJson.put("effectiveShelvingOrder", new JsonObject());
-
-    // update item via PATCH
-    var patchCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
-      TENANT_ID, ResponseHandler.empty(patchCompleted));
-    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    var patchResponse = patchItems(itemsJson);
     assertThat(patchResponse.getStatusCode(), is(204));
 
-    // verify item is updated
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-
-    assertThat(itemResponse.getStatusCode(), is(200));
-    assertFalse(itemResponseJson.containsKey("holdingsRecord2"));
-    assertFalse(itemResponseJson.containsKey("permanentLocation"));
-    assertFalse(itemResponseJson.containsKey("effectiveShelvingOrder"));
-    assertTrue(itemResponseJson.containsKey("order"));
-
+    var itemResponseJson = getById(itemId).getJson();
+    verifyReadOnlyFieldsRemoved(itemResponseJson);
     itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
   }
 
@@ -2392,46 +2103,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemId1 = randomUUID();
     var itemId2 = randomUUID();
-
-    // Create two items
     createItem(smallAngryPlanet(itemId1, holdingsRecordId));
     createItem(nod(itemId2, holdingsRecordId));
 
-    // Create patch requests with missing required fields
-    var itemPatch1 = new JsonObject()
-      .put("id", itemId1.toString())
-      .put("_version", 1)
-      .put("materialTypeId", "")  // empty materialTypeId
-      .put("permanentLoanTypeId", "")  // empty permanentLoanTypeId
-      .put("status", new JsonObject());  // status without name
-
-    var itemPatch2 = new JsonObject()
-      .put("id", itemId2.toString())
-      .put("_version", 1)
-      .put("holdingsRecordId", "")  // empty holdingsRecordId
-      .put("status", null);  // null status
-
-    var patchRequest = new JsonObject()
-      .put("items", new JsonArray().add(itemPatch1).add(itemPatch2));
-
-    // Attempt to patch items
-    var patchCompleted = new CompletableFuture<JsonErrorResponse>();
-    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
-      ResponseHandler.jsonErrors(patchCompleted));
-    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    // Verify validation errors
-    assertThat(patchResponse.getStatusCode(), is(422));
-
-    var errors = patchResponse.getErrors();
-    assertThat(errors.size(), is(2));
-
-    var expectedErrors = List.of(
-      buildRequiredFieldsError(itemId1.toString(), List.of("materialTypeId", "permanentLoanTypeId", "status.name")),
-      buildRequiredFieldsError(itemId2.toString(), List.of("holdingsRecordId", "status"))
-    );
-
-    assertEquals(expectedErrors, errors);
+    var patchRequest = createPatchRequestWithMissingFields(itemId1, itemId2);
+    var patchResponse = patchItemsWithErrors(patchRequest);
+    verifyRequiredFieldsErrors(patchResponse, itemId1, itemId2);
   }
 
   @Test
@@ -2439,47 +2116,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldUpdateCallNumberFields() {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemId = randomUUID();
-    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
-    itemJson.put("itemLevelCallNumber", "call number");
-    itemJson.put("itemLevelCallNumberPrefix", "prefix");
-    itemJson.put("itemLevelCallNumberSuffix", "suffix");
-    itemJson.put("itemLevelCallNumberTypeId", "03dd64d0-5626-4ecd-8ece-4531e0069f35");
-    itemJson.put("volume", "vol");
-    itemJson.put("enumeration", "en");
-
-    // Create item
+    var itemJson = createItemWithCallNumberFields(itemId, holdingsRecordId);
     createItem(itemJson);
 
-    // Create patch request to update call number prefix and set typeId to null
-    var itemPatch = new JsonObject()
-      .put("id", itemId.toString())
-      .put("_version", 1)
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("itemLevelCallNumberPrefix", "prefix upd")
-      .put("itemLevelCallNumberTypeId", null);
-    var patchRequest = new JsonObject()
-      .put("items", new JsonArray().add(itemPatch));
-
-    // Attempt to patch item
-    var patchCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
-      ResponseHandler.empty(patchCompleted));
-    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    var patchRequest = createCallNumberUpdatePatch(itemId, holdingsRecordId);
+    var patchResponse = patchItemsResponse(patchRequest);
     assertThat(patchResponse.getStatusCode(), is(204));
 
-    // verify item is updated
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-
-    assertThat(itemResponse.getStatusCode(), is(200));
-    assertEquals("prefix upd", itemResponseJson.getValue("itemLevelCallNumberPrefix").toString());
-    var callNumberComponents = itemResponseJson.getJsonObject("effectiveCallNumberComponents");
-    assertNotNull(callNumberComponents);
-    assertEquals("call number", callNumberComponents.getValue("callNumber"));
-    assertEquals("prefix upd", callNumberComponents.getValue("prefix"));
-    assertEquals("suffix", callNumberComponents.getValue("suffix"));
-    assertNull(callNumberComponents.getValue("typeId"));
+    var itemResponseJson = getById(itemId).getJson();
+    verifyUpdatedCallNumberFields(itemResponseJson);
   }
 
   @Test
@@ -2490,36 +2135,16 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
     itemJson.put("itemLevelCallNumber", "call number");
     itemJson.put("itemLevelCallNumberSuffix", "suffix");
-
-    // Create item
     createItem(itemJson);
 
-    // verify item is created with effectiveShelvingOrder field
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-    assertThat(itemResponse.getStatusCode(), is(200));
+    var itemResponseJson = getById(itemId).getJson();
     assertEquals("call number suffix", itemResponseJson.getValue("effectiveShelvingOrder").toString());
 
-    // Create patch request to update effectiveShelvingOrder field directly
-    var itemPatch = new JsonObject()
-      .put("id", itemId.toString())
-      .put("_version", 1)
-      .put("effectiveShelvingOrder", "new shelving order");
-    var patchRequest = new JsonObject()
-      .put("items", new JsonArray().add(itemPatch));
-
-    // Attempt to patch item
-    var patchCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID,
-      ResponseHandler.empty(patchCompleted));
-    var patchResponse = patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    var patchRequest = createEffectiveShelvingOrderPatch(itemId);
+    var patchResponse = patchItemsResponse(patchRequest);
     assertThat(patchResponse.getStatusCode(), is(204));
 
-    // verify item is updated and effectiveShelvingOrder is unchanged
-    var itemUpdatedResponse = getById(itemId);
-    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
-    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
+    var itemUpdatedResponseJson = getById(itemId).getJson();
     assertEquals("call number suffix", itemUpdatedResponseJson.getValue("effectiveShelvingOrder").toString());
   }
 
@@ -2528,47 +2153,18 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldUpdateEffectiveLocationIdFromItemRecord() {
     var holdingsRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
     var itemId = randomUUID();
-    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
-    itemJson.put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
-    itemJson.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
-
-    // Create item
+    var itemJson = createItemWithLocations(itemId, holdingsRecordId);
     createItem(itemJson);
 
-    // verify item is created and effectiveLocation equals temporaryLocationId
-    var itemUpdatedResponse = getById(itemId);
-    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
-    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
-    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("effectiveLocationId").toString());
-    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("temporaryLocationId").toString());
-    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("permanentLocationId").toString());
+    var itemUpdatedResponseJson = getById(itemId).getJson();
+    verifyEffectiveLocationWithTemporary(itemUpdatedResponseJson);
 
-    // update item with temporaryLocationId = null
-    var itemUpdatePatch = new JsonObject()
-      .put("id", itemId.toString())
-      .put("_version", 1)
-      .put("temporaryLocationId", null);
+    var patchRequest = createLocationUpdatePatch(itemId);
+    var patchResponse = patchItemsResponse(patchRequest);
+    assertThat(patchResponse.getStatusCode(), is(204));
 
-    var patchUpdateRequest = new JsonObject()
-      .put("items", new JsonArray().add(itemUpdatePatch));
-
-    var patchUpdateCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), patchUpdateRequest, TENANT_ID,
-      ResponseHandler.empty(patchUpdateCompleted));
-    var patchUpdateResponse = patchUpdateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(patchUpdateResponse.getStatusCode(), is(204));
-
-    // verify effectiveLocation id equals permanentLocationId as temporaryLocationId is null
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-    assertThat(itemResponse.getStatusCode(), is(200));
-    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(), itemResponseJson.getValue("effectiveLocationId").toString());
-    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(), itemResponseJson.getValue("permanentLocationId").toString());
-    assertNull(itemResponseJson.getValue("temporaryLocationId"));
+    var itemResponseJson = getById(itemId).getJson();
+    verifyEffectiveLocationWithoutTemporary(itemResponseJson, ANNEX_LIBRARY_LOCATION_ID);
   }
 
   @Test
@@ -2576,91 +2172,33 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldUpdateEffectiveLocationIdFromHoldingRecord() {
     var holdingsRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
     var itemId = randomUUID();
-    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
-    itemJson.put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
-    itemJson.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
-
-    // Create item
+    var itemJson = createItemWithLocations(itemId, holdingsRecordId);
     createItem(itemJson);
 
-    // verify item is created and effectiveLocation equals temporaryLocationId
-    var itemUpdatedResponse = getById(itemId);
-    var itemUpdatedResponseJson = itemUpdatedResponse.getJson();
-    assertThat(itemUpdatedResponse.getStatusCode(), is(200));
-    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("effectiveLocationId").toString());
-    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("temporaryLocationId").toString());
-    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(),
-      itemUpdatedResponseJson.getValue("permanentLocationId").toString());
+    var itemUpdatedResponseJson = getById(itemId).getJson();
+    verifyEffectiveLocationWithTemporary(itemUpdatedResponseJson);
 
-    // update item with temporaryLocationId = null and permanentLocationId = null
-    var itemUpdatePatch = new JsonObject()
-      .put("id", itemId.toString())
-      .put("_version", 1)
-      .put("temporaryLocationId", null)
-      .put("permanentLocationId", null);
+    var patchRequest = createLocationClearPatch(itemId);
+    var patchResponse = patchItemsResponse(patchRequest);
+    assertThat(patchResponse.getStatusCode(), is(204));
 
-    var patchUpdateRequest = new JsonObject()
-      .put("items", new JsonArray().add(itemUpdatePatch));
-
-    var patchUpdateCompleted = new CompletableFuture<Response>();
-    getClient().patch(itemsStorageUrl(""), patchUpdateRequest, TENANT_ID,
-      ResponseHandler.empty(patchUpdateCompleted));
-    var patchUpdateResponse = patchUpdateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(patchUpdateResponse.getStatusCode(), is(204));
-
-    // verify effectiveLocation id equals holding permanentLocationId as holding temporaryLocationId,
-    // item temporaryLocationId and item permanentLocationId are null
-    var itemResponse = getById(itemId);
-    var itemResponseJson = itemResponse.getJson();
-    assertThat(itemResponse.getStatusCode(), is(200));
-    assertEquals(SECOND_FLOOR_LOCATION_ID.toString(), itemResponseJson.getValue("effectiveLocationId").toString());
-    assertNull(itemResponseJson.getValue("temporaryLocationId"));
-    assertNull(itemResponseJson.getValue("permanentLocationId"));
+    var itemResponseJson = getById(itemId).getJson();
+    verifyEffectiveLocationFromHolding(itemResponseJson);
   }
 
   @Test
-  public void shouldPageAllRetrieveItemsViaPost() throws InterruptedException, ExecutionException, TimeoutException {
+  public void shouldPageAllRetrieveItemsViaPost() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    createFiveTestItems(holdingsRecordId);
 
-    createItem(smallAngryPlanet(randomUUID(), holdingsRecordId));
-    createItem(nod(randomUUID(), holdingsRecordId));
-    createItem(uprooted(randomUUID(), holdingsRecordId));
-    createItem(temeraire(randomUUID(), holdingsRecordId));
-    createItem(interestingTimes(randomUUID(), holdingsRecordId));
-
-    final CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
-    final CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
-
-    RetrieveDto retrieveDto = new RetrieveDto();
-    retrieveDto.setLimit(3);
-    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
-      ResponseHandler.json(firstPageCompleted));
-
-    retrieveDto.setLimit(3);
-    retrieveDto.setOffset(3);
-    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID,
-      ResponseHandler.json(secondPageCompleted));
-
-    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    Response firstPageResponse = retrieveItemsPage(3, 0);
+    Response secondPageResponse = retrieveItemsPage(3, 3);
 
     assertThat(firstPageResponse.getStatusCode(), is(200));
     assertThat(secondPageResponse.getStatusCode(), is(200));
 
-    JsonObject firstPage = firstPageResponse.getJson();
-    JsonObject secondPage = secondPageResponse.getJson();
-
-    JsonArray firstPageItems = firstPage.getJsonArray("items");
-    JsonArray secondPageItems = secondPage.getJsonArray("items");
-
-    assertThat(firstPageItems.size(), is(3));
-    assertThat(firstPage.getInteger("totalRecords"), is(5));
-
-    assertThat(secondPageItems.size(), is(2));
-    assertThat(secondPage.getInteger("totalRecords"), is(5));
+    verifyPagedResults(firstPageResponse.getJson(), 3);
+    verifyPagedResults(secondPageResponse.getJson(), 2);
   }
 
   @Test
@@ -2856,41 +2394,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsWithPermLocation = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     UUID holdingsWithTempLocation = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
-    Item itemWithHoldingPermLocation = buildItem(holdingsWithPermLocation, null, null);
-    Item itemWithHoldingTempLocation = buildItem(holdingsWithTempLocation, null, null);
-    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, ONLINE_LOCATION_ID, null);
-    Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, SECOND_FLOOR_LOCATION_ID);
-    Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
-
-    Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
-
-    for (Item item : itemsToCreate) {
-      IndividualResource createdItem = createItem(item);
-      assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
-    }
+    Item[] testItems = createTestItemsForLocationSearch(holdingsWithPermLocation, holdingsWithTempLocation);
 
     final Items mainLibraryItems = findItems("effectiveLocationId=" + MAIN_LIBRARY_LOCATION_ID);
     final Items annexLibraryItems = findItems("effectiveLocationId=" + ANNEX_LIBRARY_LOCATION_ID);
     final Items onlineLibraryItems = findItems("effectiveLocationId=" + ONLINE_LOCATION_ID);
     final Items secondFloorLibraryItems = findItems("effectiveLocationId=" + SECOND_FLOOR_LOCATION_ID);
 
-    assertEquals(1, mainLibraryItems.getTotalRecords().intValue());
-    assertThat(mainLibraryItems.getItems().getFirst().getId(), is(itemWithHoldingPermLocation.getId()));
-
-    assertEquals(1, annexLibraryItems.getTotalRecords().intValue());
-    assertThat(annexLibraryItems.getItems().getFirst().getId(), is(itemWithHoldingTempLocation.getId()));
-
-    assertEquals(2, onlineLibraryItems.getTotalRecords().intValue());
-
-    assertThat(onlineLibraryItems.getItems()
-        .stream()
-        .map(Item::getId)
-        .toList(),
-      hasItems(itemWithTempLocation.getId(), itemWithAllLocation.getId()));
-
-    assertEquals(1, secondFloorLibraryItems.getTotalRecords().intValue());
-    assertThat(secondFloorLibraryItems.getItems().getFirst().getId(), is(itemWithPermLocation.getId()));
+    verifyEffectiveLocationSearchResults(mainLibraryItems, annexLibraryItems, onlineLibraryItems,
+      secondFloorLibraryItems, testItems);
   }
 
   @Test
@@ -2988,116 +2500,37 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateAndUpdateItemWithAdditionalCallNumbers() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
     final String callNumber = "Test";
     final String prefix = "A";
     final String suffix = "Z";
     final String typeId = LC_CN_TYPE_ID;
-    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
-      .withSuffix(suffix).withTypeId(typeId));
 
     UUID id = UUID.randomUUID();
-
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("hrid", "123456789")
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
+    JsonObject itemToCreate = createItemWithAdditionalCallNumbers(id, holdingsRecordId);
     setItemSequence(1);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    Response postResponse = postItemAndGetResponse(itemToCreate);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    verifyAdditionalCallNumbers(postResponse.getJson());
 
-    JsonObject itemFromPost = postResponse.getJson();
-    JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("additionalCallNumbers")
-      .getJsonObject(0);
-    final String itemLevelAdditionalCallNumber = postResponseAdditionalCallNumbers.getString("callNumber");
-    final String itemLevelAdditionalPrefix = postResponseAdditionalCallNumbers.getString("prefix");
-    final String itemLevelAdditionalSuffix = postResponseAdditionalCallNumbers.getString("suffix");
-    final String itemLevelTypeId = postResponseAdditionalCallNumbers.getString("typeId");
-    assertThat(itemLevelAdditionalCallNumber, is(callNumber));
-    assertThat(itemLevelAdditionalPrefix, is(prefix));
-    assertThat(itemLevelAdditionalSuffix, is(suffix));
-    assertThat(itemLevelTypeId, is(typeId));
-
-    List<EffectiveCallNumberComponents> additionalCallNumbersUpdated = new ArrayList<>();
-    final String newCallNumber = "newCallNumber";
-    additionalCallNumbersUpdated
-      .add(new EffectiveCallNumberComponents().withCallNumber(newCallNumber).withPrefix(prefix)
-        .withSuffix(suffix).withTypeId(typeId));
-    additionalCallNumbersUpdated.add(new EffectiveCallNumberComponents().withCallNumber("some")
-      .withPrefix("prefix").withSuffix("suffix").withTypeId(typeId));
-    itemToCreate.put("additionalCallNumbers", additionalCallNumbersUpdated);
-    itemToCreate.put("_version", 1);
-
-    setItemSequence(2);
-    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
-    getClient().put(itemsStorageUrl("/" + id), itemToCreate,
-      TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
-
-    JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    getClient().get(itemsStorageUrl("/" + id), TENANT_ID, ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    JsonArray updatedAdditionalCallNumbers = getResponse.getJson().getJsonArray("additionalCallNumbers");
-
+    updateItemWithNewAdditionalCallNumbers(id, itemToCreate);
+    JsonArray updatedAdditionalCallNumbers = getById(id).getJson().getJsonArray("additionalCallNumbers");
     assertThat(updatedAdditionalCallNumbers.size(), is(2));
   }
 
   @Test
   public void canDeleteAdditionalCallNumbersFromItem() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    JsonArray additionalCallNumbers = new JsonArray();
-    additionalCallNumbers.add(new JsonObject()
-      .put("callNumber", "Test")
-      .put("prefix", "A")
-      .put("suffix", "Z")
-      .put("typeId", LC_CN_TYPE_ID));
-
+    JsonArray additionalCallNumbers = createAdditionalCallNumbersArray();
     UUID id = UUID.randomUUID();
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("hrid", "123456789")
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("additionalCallNumbers", additionalCallNumbers)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    JsonObject itemToCreate = createItemJsonWithAdditionalCallNumbers(id, holdingsRecordId, additionalCallNumbers);
+
+    Response postResponse = postItemAndGetResponse(itemToCreate);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    JsonObject itemUpdate = itemToCreate.copy();
-    itemUpdate.remove("additionalCallNumbers");
-    itemUpdate.put("_version", 1);
-    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
-    getClient().put(itemsStorageUrl("/" + id.toString()), itemUpdate, TENANT_ID,
-      ResponseHandler.jsonErrors(updateCompleted));
-    Response putResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-    getClient().get(itemsStorageUrl("/" + id.toString()), TENANT_ID,
-      ResponseHandler.json(getCompleted));
-    Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    JsonObject updatedItem = getResponse.getJson();
+    JsonObject itemUpdate = removeAdditionalCallNumbersAndUpdate(itemToCreate, id);
+    JsonObject updatedItem = getById(id).getJson();
 
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     assertThat(updatedItem.containsKey("additionalCallNumbers"), is(true));
     assertThat(updatedItem.getJsonArray("additionalCallNumbers").size(), is(0));
   }
@@ -3133,35 +2566,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    String callNumber = "Test";
-    String prefix = "A";
-    String suffix = "Z";
-    String typeId = "non-uuid";
-    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
-      .withSuffix(suffix).withTypeId(typeId));
-
     UUID id = UUID.randomUUID();
-
-    JsonObject itemToCreate = new JsonObject()
-      .put("id", id.toString())
-      .put("hrid", "123456789")
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
+    JsonObject itemToCreate = createItemWithInvalidTypeId(id, holdingsRecordId);
     setItemSequence(1);
 
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-
-    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-
-    Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    Response postResponse = postItemAndGetResponse(itemToCreate);
     assertThat(postResponse.getStatusCode(), is(422));
   }
 
@@ -3432,36 +2841,13 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldFilterByFullCallNumber() {
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    final IndividualResource itemWithWholeCallNumber = createItemWithFullCallNumber(holdingsRecordId,
+      "callNumber");
+    createItemWithCallNumberPrefixAndNumber(holdingsRecordId);
+    createItemWithFullCallNumber(holdingsRecordId, "differentCallNumber");
 
-    final IndividualResource itemWithWholeCallNumber = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumberPrefix("prefix")
-        .withItemLevelCallNumber("callNumber")
-        .withItemLevelCallNumberSuffix("suffix")
-        .available());
-
-    itemsClient.create(new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withItemLevelCallNumberPrefix("prefix")
-      .withItemLevelCallNumber("callNumber")
-      .available());
-
-    itemsClient.create(new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withItemLevelCallNumberPrefix("prefix")
-      .withItemLevelCallNumber("differentCallNumber")
-      .withItemLevelCallNumberSuffix("suffix")
-      .available());
-
-    final List<IndividualResource> foundItems = itemsClient
-      .getMany("fullCallNumber == \"%s\"", "prefix callNumber suffix");
+    final List<IndividualResource> foundItems = itemsClient.getMany("fullCallNumber == \"%s\"",
+      "prefix callNumber suffix");
 
     assertThat(foundItems.size(), is(1));
     assertThat(foundItems.getFirst().getId(), is(itemWithWholeCallNumber.getId()));
@@ -3470,42 +2856,17 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldFilterByCallNumberAndSuffix() {
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    final IndividualResource itemWithWholeCallNumber = createItemWithFullCallNumber(holdingsRecordId,
+      "callNumber");
+    createItemWithCallNumberPrefixAndNumber(holdingsRecordId);
+    final IndividualResource itemNoPrefix = createItemWithCallNumberAndSuffix(holdingsRecordId
+    );
 
-    final IndividualResource itemWithWholeCallNumber = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumberPrefix("prefix")
-        .withItemLevelCallNumber("callNumber")
-        .withItemLevelCallNumberSuffix("suffix")
-        .available());
-
-    itemsClient.create(new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withItemLevelCallNumberPrefix("prefix")
-      .withItemLevelCallNumber("callNumber")
-      .available());
-
-    final IndividualResource itemNoPrefix = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("callNumber")
-        .withItemLevelCallNumberSuffix("suffix")
-        .available());
-
-    final List<IndividualResource> foundItems = itemsClient
-      .getMany("callNumberAndSuffix == \"%s\"", "callNumber suffix");
+    final List<IndividualResource> foundItems = itemsClient.getMany("callNumberAndSuffix == \"%s\"",
+      "callNumber suffix");
 
     assertThat(foundItems.size(), is(2));
-
-    final Set<UUID> allFoundIds = foundItems.stream()
-      .map(IndividualResource::getId)
-      .collect(Collectors.toSet());
+    final Set<UUID> allFoundIds = foundItems.stream().map(IndividualResource::getId).collect(Collectors.toSet());
     assertThat(allFoundIds, hasItems(itemWithWholeCallNumber.getId(), itemNoPrefix.getId()));
   }
 
@@ -3600,31 +2961,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldFindItemByCallNumberWhenThereIsSuffix() {
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    final IndividualResource firstItemToMatch = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 2014")
-        .available());
-
-    final IndividualResource secondItemToMatch = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 2014")
-        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
-        .available());
-
-    itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 ")
-        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
-        .available());
+    final IndividualResource firstItemToMatch = createItemWithCallNumber(holdingsRecordId, "GE77 .F73 2014", null);
+    final IndividualResource secondItemToMatch = createItemWithCallNumber(holdingsRecordId,
+      "GE77 .F73 2014", "Curriculum Materials Collection");
+    createItemWithCallNumber(holdingsRecordId, "GE77 .F73 ", "2014 Curriculum Materials Collection");
 
     final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73 2014");
 
@@ -3636,40 +2976,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   public void shouldFilterItemsWithCallNumberExplicitRightTruncation() {
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    final IndividualResource firstItemToMatch = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 2014")
-        .available());
-
-    final IndividualResource secondItemToMatch = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 2014")
-        .withItemLevelCallNumberSuffix("Curriculum Materials Collection")
-        .available());
-
-    final IndividualResource thirdItemToMatch = itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F73 ")
-        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
-        .available());
-
-    itemsClient.create(
-      new ItemRequestBuilder()
-        .forHolding(holdingsRecordId)
-        .withMaterialType(journalMaterialTypeId)
-        .withPermanentLoanType(canCirculateLoanTypeId)
-        .withItemLevelCallNumber("GE77 .F74 ")
-        .withItemLevelCallNumberSuffix("2014 Curriculum Materials Collection")
-        .available());
+    final IndividualResource firstItemToMatch = createItemWithCallNumber(holdingsRecordId, "GE77 .F73 2014", null);
+    final IndividualResource secondItemToMatch = createItemWithCallNumber(holdingsRecordId,
+      "GE77 .F73 2014", "Curriculum Materials Collection");
+    final IndividualResource thirdItemToMatch = createItemWithCallNumber(holdingsRecordId,
+      "GE77 .F73 ", "2014 Curriculum Materials Collection");
+    createItemWithCallNumber(holdingsRecordId, "GE77 .F74 ", "2014 Curriculum Materials Collection");
 
     final List<UUID> foundItems = searchByCallNumberEyeReadable("GE77 .F73*");
 
@@ -3725,37 +3037,12 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldCreateItemWithMultipleStatisticalCodeIds() {
-    final var firstStatisticalCode = statisticalCodeFixture
-      .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stcone")
-        .withName("Statistical code 1"));
-
-    final var secondStatisticalCode = statisticalCodeFixture
-      .attemptCreateSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stctwo")
-        .withName("Statistical code 2"));
-
+    final UUID firstStatisticalCodeId = createStatisticalCode("stcone", "Statistical code 1");
+    final UUID secondStatisticalCodeId = createStatisticalCode("stctwo", "Statistical code 2");
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    final UUID firstStatisticalCodeId = UUID.fromString(
-      firstStatisticalCode.getJson().getString("id")
-    );
-    final UUID secondStatisticalCodeId = UUID.fromString(
-      secondStatisticalCode.getJson().getString("id")
-    );
-
-    final String status = "Available";
-
-    final JsonObject itemToCreate = new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withStatus(status)
-      .withStatisticalCodeIds(Arrays.asList(
-        firstStatisticalCodeId,
-        secondStatisticalCodeId
-      ))
-      .create();
+    final JsonObject itemToCreate = createItemWithStatisticalCodes(holdingsRecordId,
+      firstStatisticalCodeId, secondStatisticalCodeId);
 
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
@@ -3764,78 +3051,31 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void cannotCreateItemWithAtLeastOneNonExistentStatisticalCodeId() {
-    final var statisticalCode = statisticalCodeFixture
-      .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stcone")
-        .withName("Statistical code 1"));
-
+    final UUID statisticalCodeId = createStatisticalCode("stcone", "Statistical code 1");
     final UUID nonExistentStatisticalCodeId = randomUUID();
-
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
-    final UUID statisticalCodeId = UUID.fromString(
-      statisticalCode.getJson().getString("id")
-    );
-
-    final String status = "Available";
-
-    final JsonObject itemToCreate = new ItemRequestBuilder()
-      .forHolding(holdingsRecordId)
-      .withMaterialType(journalMaterialTypeId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withStatus(status)
-      .withStatisticalCodeIds(Arrays.asList(
-        statisticalCodeId,
-        nonExistentStatisticalCodeId
-      ))
-      .create();
+    final JsonObject itemToCreate = createItemWithStatisticalCodes(holdingsRecordId,
+      statisticalCodeId, nonExistentStatisticalCodeId);
 
     final Response createdItem = itemsClient.attemptToCreate(itemToCreate);
 
-    String expectedMessage = String.format(
-      "Cannot set item.statistical_code_id = %s because it does not exist in statistical_code.id.",
-      nonExistentStatisticalCodeId
-    );
-
-    assertThat(createdItem, hasValidationError(
-      expectedMessage,
-      "item.statistical_code_id",
-      nonExistentStatisticalCodeId.toString()
-    ));
+    verifyStatisticalCodeValidationError(createdItem, nonExistentStatisticalCodeId);
   }
 
   @Test
   public void shouldUpdateItemWithStatisticalCodeId() throws Exception {
-    final var statisticalCode = statisticalCodeFixture
-      .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode("stcone")
-        .withName("Statistical code 1"));
-
+    final UUID statisticalCodeId = createStatisticalCode("stcone", "Statistical code 1");
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-
-    final UUID statisticalCodeId = UUID.fromString(
-      statisticalCode.getJson().getString("id")
-    );
-
-    JsonObject item = new JsonObject();
     String itemId = randomUUID().toString();
-    item.put("id", itemId);
-    item.put("status", new JsonObject().put("name", "Available"));
-    item.put("holdingsRecordId", holdingsRecordId.toString());
-    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    item.put("materialTypeId", bookMaterialTypeID);
-    item.put("hrid", "testHRID");
+
+    JsonObject item = createBasicItemJson(itemId, holdingsRecordId);
     createItem(item);
 
     item = getById(itemId).getJson();
-
     item.put("statisticalCodeIds", List.of(statisticalCodeId));
 
-    CompletableFuture<Response> completed = new CompletableFuture<>();
-    getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID,
-      ResponseHandler.empty(completed));
-    Response response = completed.get(TIMEOUT, TimeUnit.SECONDS);
-
+    Response response = updateItemWithStatisticalCodes(itemId, item);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
@@ -4103,6 +3343,37 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       JsonObject item = itemsArray2.getJsonObject(i);
       item.put(ORDER_FIELD, i);
     }
+  }
+
+  private void verifyDuplicateHridError(Response postResponse) {
+    assertThat(postResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+
+    final Errors errors = postResponse.getJson().mapTo(Errors.class);
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    var error = errors.getErrors().getFirst();
+    assertThat(error, notNullValue());
+    assertThat(error.getMessage(),
+      is("HRID value already exists in table item: it00000000001"));
+    assertThat(error.getParameters(), notNullValue());
+    var parameter = error.getParameters().getFirst();
+    assertThat(parameter, notNullValue());
+    assertThat(parameter.getKey(), is("hrid"));
+    assertThat(parameter.getValue(), is("it00000000001"));
+  }
+
+  private void verifyDuplicateHridError(Response response, String duplicateHrid) {
+    final Errors errors = response.getJson().mapTo(Errors.class);
+    assertThat(errors, notNullValue());
+    assertThat(errors.getErrors(), notNullValue());
+    var error = errors.getErrors().getFirst();
+    assertThat(error, notNullValue());
+    assertThat(error.getMessage(), is("HRID value already exists in table item: " + duplicateHrid));
+    assertThat(error.getParameters(), notNullValue());
+    var parameter = error.getParameters().getFirst();
+    assertThat(parameter, notNullValue());
+    assertThat(parameter.getKey(), is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
+    assertThat(parameter.getValue(), is(duplicateHrid));
   }
 
   private void assertItem(JsonObject itemFromGet, UUID id, String adminNote, UUID holdingsRecordId,
@@ -4417,5 +3688,579 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(200));
     return response.getJson().getInteger(ORDER_FIELD);
+  }
+
+  private JsonObject createItemWithManyProperties(UUID id, UUID holdingsRecordId, String inTransitServicePointId) {
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+    return itemToCreate;
+  }
+
+  private void verifyItemWithManyProperties(JsonObject item, UUID id, UUID holdingsRecordId,
+                                            String inTransitServicePointId) {
+    final List<String> tags = getTags(item);
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(item.getString("barcode"), is("565578437802"));
+    assertThat(item.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(item.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(item.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
+    assertThat(item.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+    assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  private JsonArray createItemArrayWithExistingId(UUID existingItemId, UUID holdingsRecordId, boolean isFirstArray) {
+    JsonArray array;
+    if (isFirstArray) {
+      array = new JsonArray()
+        .add(nod(existingItemId, holdingsRecordId))
+        .add(smallAngryPlanet(holdingsRecordId))
+        .add(interestingTimes(holdingsRecordId));
+    } else {
+      array = new JsonArray()
+        .add(nod(existingItemId, holdingsRecordId))
+        .add(temeraire(holdingsRecordId))
+        .add(uprooted(holdingsRecordId));
+    }
+    populateOrder(array);
+    return array;
+  }
+
+  private void verifyBatchCreatedMessages(JsonArray itemsArray1, JsonArray itemsArray2, UUID existingItemId) {
+    Stream.concat(itemsArray1.stream(), itemsArray2.stream())
+      .map(json -> ((JsonObject) json).getString("id"))
+      .filter(id -> !id.equals(existingItemId.toString()))
+      .map(this::getById)
+      .map(Response::getJson)
+      .forEach(itemMessageChecks::createdMessagePublished);
+  }
+
+  private void verifyItemsNotCreated(JsonArray itemsArray) {
+    for (int i = 0; i < itemsArray.size(); i++) {
+      assertGetNotFound(itemsStorageUrl("/" + itemsArray.getJsonObject(i).getString("id")));
+    }
+  }
+
+  @SneakyThrows
+  private Response putItem(UUID id, JsonObject replacement) {
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl(String.format("/%s", id)), replacement,
+      TENANT_ID, ResponseHandler.empty(replaceCompleted));
+    return replaceCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private JsonObject createReplacementItemWithTags(JsonObject itemToCreate) {
+    JsonObject replacement = itemToCreate.copy();
+    replacement.put("barcode", "125845734657")
+      .put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID.toString())
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    return replacement;
+  }
+
+  private void verifyReplacedItem(JsonObject item, UUID id, UUID holdingsRecordId) {
+    final List<String> tags = getTags(item);
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(item.getString("barcode"), is("125845734657"));
+    assertThat(item.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(item.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(item.getString("temporaryLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  private JsonObject createInTransitReplacement(JsonObject itemToCreate, String inTransitServicePointId) {
+    JsonObject replacement = itemToCreate.copy();
+    replacement.put("status", new JsonObject().put("name", "In transit"))
+      .put("inTransitDestinationServicePointId", inTransitServicePointId)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    return replacement;
+  }
+
+  private void verifyInTransitItem(JsonObject item, UUID id, String inTransitServicePointId) {
+    final List<String> tags = getTags(item);
+    assertThat(item.getString("id"), is(id.toString()));
+    assertThat(item.getJsonObject("status").getString("name"), is("In transit"));
+    assertThat(item.getString("inTransitDestinationServicePointId"), is(inTransitServicePointId));
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  private Item verifyItemStatusChanged(UUID id, String expectedStatus) {
+    Response getResponse = getById(id);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    Item item = getResponse.getJson().mapTo(Item.class);
+    assertThat(item.getId(), is(id.toString()));
+    assertThat(item.getStatus().getName().value(), is(expectedStatus));
+    assertThat(item.getStatus().getDate(), notNullValue());
+    return item;
+  }
+
+  private void verifyStatusDateUpdated(Instant newStatusDate, Instant oldStatusDate) {
+    assertThat(newStatusDate, not(oldStatusDate));
+    assertThat(newStatusDate.isAfter(oldStatusDate), is(true));
+  }
+
+  private JsonObject updateItemCallNumber(UUID id, JsonObject item) {
+    JsonObject updateItem = item.copy().put("itemLevelCallNumber", "newItCn");
+    itemsClient.replace(id, updateItem);
+    return itemsClient.getById(id).getJson();
+  }
+
+  private JsonObject updateItemTemporaryLocation(UUID id, JsonObject item) {
+    JsonObject updateItem = item.copy().put("temporaryLocationId", ONLINE_LOCATION_ID.toString());
+    itemsClient.replace(id, updateItem);
+    return itemsClient.getById(id).getJson();
+  }
+
+  private void verifyStatusDateUnchanged(JsonObject item, String expectedDate, String expectedCallNumber,
+                                         UUID expectedLocation) {
+    assertThat(item.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(item.getJsonObject("status").getString("date"), is(expectedDate));
+    if (expectedCallNumber != null) {
+      assertThat(item.getString("itemLevelCallNumber"), is(expectedCallNumber));
+    }
+    if (expectedLocation != null) {
+      assertThat(item.getString("temporaryLocationId"), is(expectedLocation.toString()));
+    }
+  }
+
+  private void createFiveTestItems(UUID holdingsRecordId) {
+    createItem(smallAngryPlanet(randomUUID(), holdingsRecordId));
+    createItem(nod(randomUUID(), holdingsRecordId));
+    createItem(uprooted(randomUUID(), holdingsRecordId));
+    createItem(temeraire(randomUUID(), holdingsRecordId));
+    createItem(interestingTimes(randomUUID(), holdingsRecordId));
+  }
+
+  @SneakyThrows
+  private Response getPagedItems(int limit, int offset) {
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("") + "?limit=" + limit + "&offset=" + offset,
+      TENANT_ID, ResponseHandler.json(completed));
+    return completed.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void verifyPagedResults(JsonObject page, int expectedSize) {
+    JsonArray items = page.getJsonArray("items");
+    assertThat(items.size(), is(expectedSize));
+    assertThat(page.getInteger("totalRecords"), is(5));
+  }
+
+  @SneakyThrows
+  private void createItemAndVerifyOrder(UUID itemId, UUID holdingsRecordId, String barcode, int expectedOrder) {
+    var item = smallAngryPlanet(itemId, holdingsRecordId);
+    if (barcode != null) {
+      item.put("barcode", barcode);
+    }
+    createItem(item);
+    assertEquals(expectedOrder, getOrder(itemId));
+  }
+
+  @SneakyThrows
+  private void deleteItemAndVerifyMaxOrder(UUID itemId, UUID holdingsRecordId) {
+    var item = smallAngryPlanet(itemId, holdingsRecordId);
+    var response = getClient().delete(itemsStorageUrl("?query=id==" + itemId), TENANT_ID).get(10, SECONDS);
+    assertThat(response.getStatusCode(), is(204));
+    assertNotExists(item);
+    assertEquals(2, getMaxOrder(holdingsRecordId));
+  }
+
+  @SneakyThrows
+  private Response getItemResponse(UUID itemId) {
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    getClient().get(itemsStorageUrl("/" + itemId), TENANT_ID, ResponseHandler.any(completableFuture));
+    var response = completableFuture.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(response.getStatusCode(), is(200));
+    return response;
+  }
+
+  private JsonObject modifyItemForUpdate(JsonObject item) {
+    item.remove("hrid");
+    item.put("barcode", null);
+    item.put("order", 55);
+    return item;
+  }
+
+  @SneakyThrows
+  private Response patchItems(JsonObject itemsJson) {
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    return patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void verifyUpdatedItem(JsonObject item) {
+    assertThat(item.getInteger(ORDER_FIELD), is(Integer.parseInt("55")));
+    assertEquals("it00000000001", item.getValue("hrid").toString());
+    assertNull(item.getValue("barcode"));
+  }
+
+  private JsonObject addReadOnlyFieldsToItem(JsonObject item) {
+    item.put("order", 10);
+    item.put("holdingsRecord2", new JsonObject());
+    item.put("permanentLocation", new JsonObject());
+    item.put("effectiveShelvingOrder", new JsonObject());
+    return item;
+  }
+
+  private void verifyReadOnlyFieldsRemoved(JsonObject item) {
+    assertFalse(item.containsKey("holdingsRecord2"));
+    assertFalse(item.containsKey("permanentLocation"));
+    assertFalse(item.containsKey("effectiveShelvingOrder"));
+    assertTrue(item.containsKey("order"));
+  }
+
+  private JsonObject createPatchRequestWithMissingFields(UUID itemId1, UUID itemId2) {
+    var itemPatch1 = new JsonObject()
+      .put("id", itemId1.toString())
+      .put("_version", 1)
+      .put("materialTypeId", "")
+      .put("permanentLoanTypeId", "")
+      .put("status", new JsonObject());
+    var itemPatch2 = new JsonObject()
+      .put("id", itemId2.toString())
+      .put("_version", 1)
+      .put("holdingsRecordId", "")
+      .put("status", null);
+    return new JsonObject().put("items", new JsonArray().add(itemPatch1).add(itemPatch2));
+  }
+
+  @SneakyThrows
+  private JsonErrorResponse patchItemsWithErrors(JsonObject patchRequest) {
+    var patchCompleted = new CompletableFuture<JsonErrorResponse>();
+    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID, ResponseHandler.jsonErrors(patchCompleted));
+    return patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void verifyRequiredFieldsErrors(JsonErrorResponse patchResponse, UUID itemId1, UUID itemId2) {
+    assertThat(patchResponse.getStatusCode(), is(422));
+    var errors = patchResponse.getErrors();
+    assertThat(errors.size(), is(2));
+    var expectedErrors = List.of(
+      buildRequiredFieldsError(itemId1.toString(), List.of("materialTypeId", "permanentLoanTypeId", "status.name")),
+      buildRequiredFieldsError(itemId2.toString(), List.of("holdingsRecordId", "status"))
+    );
+    assertEquals(expectedErrors, errors);
+  }
+
+  private JsonObject createItemWithCallNumberFields(UUID itemId, UUID holdingsRecordId) {
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("itemLevelCallNumber", "call number");
+    itemJson.put("itemLevelCallNumberPrefix", "prefix");
+    itemJson.put("itemLevelCallNumberSuffix", "suffix");
+    itemJson.put("itemLevelCallNumberTypeId", "03dd64d0-5626-4ecd-8ece-4531e0069f35");
+    itemJson.put("volume", "vol");
+    itemJson.put("enumeration", "en");
+    return itemJson;
+  }
+
+  private JsonObject createCallNumberUpdatePatch(UUID itemId, UUID holdingsRecordId) {
+    var itemPatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("itemLevelCallNumberPrefix", "prefix upd")
+      .put("itemLevelCallNumberTypeId", null);
+    return new JsonObject().put("items", new JsonArray().add(itemPatch));
+  }
+
+  @SneakyThrows
+  private Response patchItemsResponse(JsonObject patchRequest) {
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl(""), patchRequest, TENANT_ID, ResponseHandler.empty(patchCompleted));
+    return patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void verifyUpdatedCallNumberFields(JsonObject itemResponseJson) {
+    assertEquals("prefix upd", itemResponseJson.getValue("itemLevelCallNumberPrefix").toString());
+    var callNumberComponents = itemResponseJson.getJsonObject("effectiveCallNumberComponents");
+    assertNotNull(callNumberComponents);
+    assertEquals("call number", callNumberComponents.getValue("callNumber"));
+    assertEquals("prefix upd", callNumberComponents.getValue("prefix"));
+    assertEquals("suffix", callNumberComponents.getValue("suffix"));
+    assertNull(callNumberComponents.getValue("typeId"));
+  }
+
+  private JsonObject createEffectiveShelvingOrderPatch(UUID itemId) {
+    var itemPatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("effectiveShelvingOrder", "new shelving order");
+    return new JsonObject().put("items", new JsonArray().add(itemPatch));
+  }
+
+  private JsonObject createItemWithLocations(UUID itemId, UUID holdingsRecordId) {
+    var itemJson = smallAngryPlanet(itemId, holdingsRecordId);
+    itemJson.put("temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
+    itemJson.put("permanentLocationId", TestBaseWithInventoryUtil.ANNEX_LIBRARY_LOCATION_ID);
+    return itemJson;
+  }
+
+  private void verifyEffectiveLocationWithTemporary(JsonObject item) {
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(), item.getValue("effectiveLocationId").toString());
+    assertEquals(MAIN_LIBRARY_LOCATION_ID.toString(), item.getValue("temporaryLocationId").toString());
+    assertEquals(ANNEX_LIBRARY_LOCATION_ID.toString(), item.getValue("permanentLocationId").toString());
+  }
+
+  private JsonObject createLocationUpdatePatch(UUID itemId) {
+    var itemUpdatePatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("temporaryLocationId", null);
+    return new JsonObject().put("items", new JsonArray().add(itemUpdatePatch));
+  }
+
+  private void verifyEffectiveLocationWithoutTemporary(JsonObject item, UUID permLocationId) {
+    assertEquals(permLocationId.toString(), item.getValue("effectiveLocationId").toString());
+    assertEquals(permLocationId.toString(), item.getValue("permanentLocationId").toString());
+    assertNull(item.getValue("temporaryLocationId"));
+  }
+
+  private JsonObject createLocationClearPatch(UUID itemId) {
+    var itemUpdatePatch = new JsonObject()
+      .put("id", itemId.toString())
+      .put("_version", 1)
+      .put("temporaryLocationId", null)
+      .put("permanentLocationId", null);
+    return new JsonObject().put("items", new JsonArray().add(itemUpdatePatch));
+  }
+
+  private void verifyEffectiveLocationFromHolding(JsonObject item) {
+    assertEquals(TestBaseWithInventoryUtil.SECOND_FLOOR_LOCATION_ID.toString(),
+      item.getValue("effectiveLocationId").toString());
+    assertNull(item.getValue("temporaryLocationId"));
+    assertNull(item.getValue("permanentLocationId"));
+  }
+
+  @SneakyThrows
+  private Response retrieveItemsPage(int limit, int offset) {
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    RetrieveDto retrieveDto = new RetrieveDto();
+    retrieveDto.setLimit(limit);
+    retrieveDto.setOffset(offset);
+    getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID, ResponseHandler.json(completed));
+    return completed.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private Item[] createTestItemsForLocationSearch(UUID holdingsWithPermLocation, UUID holdingsWithTempLocation) {
+    Item itemWithHoldingPermLocation = buildItem(holdingsWithPermLocation, null, null);
+    Item itemWithHoldingTempLocation = buildItem(holdingsWithTempLocation, null, null);
+    Item itemWithTempLocation = buildItem(holdingsWithPermLocation, ONLINE_LOCATION_ID, null);
+    Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, SECOND_FLOOR_LOCATION_ID);
+    Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
+    Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
+      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
+    for (Item item : itemsToCreate) {
+      IndividualResource createdItem = createItem(item);
+      assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
+    }
+    return itemsToCreate;
+  }
+
+  private void verifyEffectiveLocationSearchResults(Items mainLibraryItems, Items annexLibraryItems,
+      Items onlineLibraryItems, Items secondFloorLibraryItems, Item[] testItems) {
+    assertEquals(1, mainLibraryItems.getTotalRecords().intValue());
+    assertThat(mainLibraryItems.getItems().getFirst().getId(), is(testItems[0].getId()));
+    assertEquals(1, annexLibraryItems.getTotalRecords().intValue());
+    assertThat(annexLibraryItems.getItems().getFirst().getId(), is(testItems[1].getId()));
+    assertEquals(2, onlineLibraryItems.getTotalRecords().intValue());
+    assertThat(onlineLibraryItems.getItems().stream().map(Item::getId).toList(),
+      hasItems(testItems[2].getId(), testItems[4].getId()));
+    assertEquals(1, secondFloorLibraryItems.getTotalRecords().intValue());
+    assertThat(secondFloorLibraryItems.getItems().getFirst().getId(), is(testItems[3].getId()));
+  }
+
+  private JsonObject createItemWithAdditionalCallNumbers(UUID id, UUID holdingsRecordId) {
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("Test").withPrefix("A").withSuffix("Z").withTypeId("95467209-6d7b-468b-94df-0f5d7ad2747d"));
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+  }
+
+  @SneakyThrows
+  private Response postItemAndGetResponse(JsonObject itemToCreate) {
+    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    getClient().post(itemsStorageUrl(""), itemToCreate, TENANT_ID, ResponseHandler.json(createCompleted));
+    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void verifyAdditionalCallNumbers(JsonObject itemFromPost) {
+    JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("additionalCallNumbers").getJsonObject(0);
+    assertThat(postResponseAdditionalCallNumbers.getString("callNumber"), is("Test"));
+    assertThat(postResponseAdditionalCallNumbers.getString("prefix"), is("A"));
+    assertThat(postResponseAdditionalCallNumbers.getString("suffix"), is("Z"));
+    assertThat(postResponseAdditionalCallNumbers.getString("typeId"), is("95467209-6d7b-468b-94df-0f5d7ad2747d"));
+  }
+
+  @SneakyThrows
+  private void updateItemWithNewAdditionalCallNumbers(UUID id, JsonObject itemToCreate) {
+    List<EffectiveCallNumberComponents> additionalCallNumbersUpdated = new ArrayList<>();
+    additionalCallNumbersUpdated.add(new EffectiveCallNumberComponents()
+      .withCallNumber("newCallNumber").withPrefix("A").withSuffix("Z").withTypeId(
+        "95467209-6d7b-468b-94df-0f5d7ad2747d"));
+    additionalCallNumbersUpdated.add(new EffectiveCallNumberComponents()
+      .withCallNumber("some").withPrefix("prefix").withSuffix("suffix").withTypeId(
+        "95467209-6d7b-468b-94df-0f5d7ad2747d"));
+    itemToCreate.put("additionalCallNumbers", additionalCallNumbersUpdated);
+    itemToCreate.put("_version", 1);
+    setItemSequence(2);
+    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + id),
+      itemToCreate, TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
+    JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  private JsonArray createAdditionalCallNumbersArray() {
+    JsonArray additionalCallNumbers = new JsonArray();
+    additionalCallNumbers.add(new JsonObject()
+      .put("callNumber", "Test")
+      .put("prefix", "A")
+      .put("suffix", "Z")
+      .put("typeId", LC_CN_TYPE_ID));
+    return additionalCallNumbers;
+  }
+
+  private JsonObject createItemJsonWithAdditionalCallNumbers(UUID id, UUID holdingsRecordId,
+                                                             JsonArray additionalCallNumbers) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("additionalCallNumbers", additionalCallNumbers)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+  }
+
+  @SneakyThrows
+  private JsonObject removeAdditionalCallNumbersAndUpdate(JsonObject itemToCreate, UUID id) {
+    JsonObject itemUpdate = itemToCreate.copy();
+    itemUpdate.remove("additionalCallNumbers");
+    itemUpdate.put("_version", 1);
+    CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + id.toString()),
+      itemUpdate, TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
+    Response putResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    return itemUpdate;
+  }
+
+  private JsonObject createItemWithInvalidTypeId(UUID id, UUID holdingsRecordId) {
+    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber("Test").withPrefix("A").withSuffix("Z").withTypeId("non-uuid"));
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("hrid", "123456789")
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("additionalCallNumbers", new JsonArray(additionalCallNumbers))
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+  }
+
+  private IndividualResource createItemWithFullCallNumber(UUID holdingsRecordId, String callNumber) {
+    return itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumberPrefix("prefix")
+      .withItemLevelCallNumber(callNumber)
+      .withItemLevelCallNumberSuffix("suffix")
+      .available());
+  }
+
+  private void createItemWithCallNumberPrefixAndNumber(UUID holdingsRecordId) {
+    itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumberPrefix("prefix")
+      .withItemLevelCallNumber("callNumber")
+      .available());
+  }
+
+  private IndividualResource createItemWithCallNumberAndSuffix(UUID holdingsRecordId) {
+    return itemsClient.create(new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumber("callNumber")
+      .withItemLevelCallNumberSuffix("suffix")
+      .available());
+  }
+
+  private IndividualResource createItemWithCallNumber(UUID holdingsRecordId, String callNumber, String suffix) {
+    ItemRequestBuilder builder = new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withItemLevelCallNumber(callNumber);
+    if (suffix != null) {
+      builder.withItemLevelCallNumberSuffix(suffix);
+    }
+    return itemsClient.create(builder.available());
+  }
+
+  private JsonObject createItemWithStatisticalCodes(UUID holdingsRecordId, UUID firstCodeId, UUID secondCodeId) {
+    return new ItemRequestBuilder()
+      .forHolding(holdingsRecordId)
+      .withMaterialType(journalMaterialTypeId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withStatus("Available")
+      .withStatisticalCodeIds(Arrays.asList(firstCodeId, secondCodeId))
+      .create();
+  }
+
+  private void verifyStatisticalCodeValidationError(Response createdItem, UUID nonExistentStatisticalCodeId) {
+    String expectedMessage = String.format(
+      "Cannot set item.statistical_code_id = %s because it does not exist in statistical_code.id.",
+      nonExistentStatisticalCodeId
+    );
+    assertThat(createdItem, hasValidationError(
+      expectedMessage,
+      "item.statistical_code_id",
+      nonExistentStatisticalCodeId.toString()
+    ));
+  }
+
+  private JsonObject createBasicItemJson(String itemId, UUID holdingsRecordId) {
+    JsonObject item = new JsonObject();
+    item.put("id", itemId);
+    item.put("status", new JsonObject().put("name", "Available"));
+    item.put("holdingsRecordId", holdingsRecordId.toString());
+    item.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    item.put("materialTypeId", bookMaterialTypeID);
+    item.put("hrid", "testHRID");
+    return item;
+  }
+
+  @SneakyThrows
+  private Response updateItemWithStatisticalCodes(String itemId, JsonObject item) {
+    CompletableFuture<Response> completed = new CompletableFuture<>();
+    getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID, ResponseHandler.empty(completed));
+    return completed.get(TIMEOUT, TimeUnit.SECONDS);
   }
 }
