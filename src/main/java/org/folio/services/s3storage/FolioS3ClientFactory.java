@@ -25,8 +25,8 @@ public class FolioS3ClientFactory {
       .endpoint(getValue(S3_URL_CONFIG, S3_URL_DEFAULT))
       .region(getValue(S3_REGION_CONFIG))
       .bucket(getValue(S3_BUCKET_CONFIG))
-      .accessKey(getValue(S3_ACCESS_KEY_ID_CONFIG))
-      .secretKey(getValue(S3_SECRET_ACCESS_KEY_CONFIG))
+      .accessKey(getValueOrEmpty(S3_ACCESS_KEY_ID_CONFIG))
+      .secretKey(getValueOrEmpty(S3_SECRET_ACCESS_KEY_CONFIG))
       .awsSdk(Boolean.parseBoolean(getValue(S3_IS_AWS_CONFIG, S3_IS_AWS_DEFAULT)))
       .build();
   }
@@ -37,5 +37,9 @@ public class FolioS3ClientFactory {
 
   private String getValue(String key, String defaultValue) {
     return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
+  }
+
+  private String getValueOrEmpty(String key) {
+    return getValue(key, "");
   }
 }

@@ -41,6 +41,7 @@
 * Reset the order sequence to 1 if there are no more items for the holding ([MODINVSTOR-1472](https://folio-org.atlassian.net/browse/MODINVSTOR-1472))
 * Improve performance of get_items_and_holdings_view to avoid extra memory and space consumption ([MODINVSTOR-1474](https://folio-org.atlassian.net/browse/MODINVSTOR-1474))
 * Add source field to reference data and update existing loan types ([MODINVSTOR-1476](https://folio-org.atlassian.net/browse/MODINVSTOR-1476))
+* Add default empty values for S3_SECRET_ACCESS_KEY and S3_ACCESS_KEY_ID ([MODINVSTOR-1489](https://folio-org.atlassian.net/browse/MODINVSTOR-1489))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
@@ -54,7 +55,8 @@
 * Fix items not being updated on /holdings-storage/batch/synchronous ([MODINVSTOR-1368](https://folio-org.atlassian.net/browse/MODINVSTOR-1368))
 * Fix typo in Instance Notes type name. ([MODINVSTOR-1396](https://folio-org.atlassian.net/browse/MODINVSTOR-1396))
 * Fix item sorting by order as a number ([MODINVSTOR-1470](https://folio-org.atlassian.net/browse/MODINVSTOR-1470))
-* Fix POST /holdings-storage/batch/synchronous?upsert=true returns 500 error when holdings "id' is missing ([MODINVSTOR-1487](https://folio-org.atlassian.net/browse/MODINVSTOR-1487))
+* Fix POST /holdings-storage/batch/synchronous?upsert=true returns 500 error when holdings "id" is missing ([MODINVSTOR-1487](https://folio-org.atlassian.net/browse/MODINVSTOR-1487))
+* Fix POST /instance-storage/batch/synchronous instance creation with absent instance "id" ([MODINVSTOR-1488](https://folio-org.atlassian.net/browse/MODINVSTOR-1488))
 
 ### Tech Dept
 * Updates sample-data/instances JSON to include missing required fields that were introduced over the years.

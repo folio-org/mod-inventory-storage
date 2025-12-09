@@ -8,6 +8,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -39,6 +40,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
@@ -1669,7 +1671,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID,
       ResponseHandler.empty(createCompleted));
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HTTP_CREATED));
 
     var createdInstances = instancesArray.stream()
       .map(JsonObject.class::cast)
@@ -1691,7 +1693,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       assertFalse(instance.containsKey(METADATA_KEY)));
 
     final var createCompleted = createInstancesBatchSync(instanceCollection);
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HTTP_CREATED));
 
     toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(this::assertMetadataExists);
   }
@@ -1701,7 +1703,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instanceCollection = createRequestForMultipleInstances(3);
 
     final var createCompleted = createInstancesBatchSync(instanceCollection);
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HTTP_CREATED));
 
     toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(item ->
       assertThat(getById(item.getString("id")).getJson().getString(STATUS_UPDATED_DATE_PROPERTY),
@@ -1788,10 +1790,20 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     JsonObject instanceCollection = new JsonObject().put(INSTANCES_KEY, instancesArray);
 
     Response response = instancesStorageSyncClient.attemptToCreate("?upsert=true", instanceCollection);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(response, statusCodeIs(HTTP_CREATED));
 
     verifyBatchUpsertResults(instancesArray, duplicateId, existingInstance,
       firstInstanceToCreate, secondInstanceToCreate);
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
+    canPostSynchronousBatchWithoutIds("?upsert=true");
+  }
+
+  @Test
+  public void canPostSynchronousBatchWithoutIdsWithoutUpsert() {
+    canPostSynchronousBatchWithoutIds("");
   }
 
   @Test
@@ -1828,10 +1840,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     // insert
     JsonArray instances = new JsonArray().add(uprooted(UUID.randomUUID())).add(temeraire(UUID.randomUUID()));
-    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HTTP_CREATED));
     // unsafe update
     instances.getJsonObject(1).put("title", "surprise");
-    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(HTTP_CREATED));
     // safe update, env var should not influence the regular API
     instances.getJsonObject(1).put("title", "sunset");
     assertThat(postSynchronousBatch("?upsert=true", instances), statusCodeIs(409));
@@ -2087,7 +2099,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID,
       ResponseHandler.empty(createCompleted));
 
-    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HttpStatus.HTTP_CREATED));
+    assertThat(createCompleted.get(30, SECONDS), statusCodeIs(HTTP_CREATED));
 
     for (int i = 0; i < 3; i++) {
       final JsonObject instance = instancesArray.getJsonObject(i);
@@ -2482,6 +2494,25 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(2).getString("id")));
   }
 
+  private void canPostSynchronousBatchWithoutIds(String postBatchParams) {
+    var instancesArray = new JsonArray();
+    var instanceRecord = new JsonObject()
+      .put("source", "MARC")
+      .put("title", "Test-Instance")
+      .put("instanceTypeId", UUID_INSTANCE_TYPE.toString())
+      .put("_version", 1);
+    instancesArray.add(instanceRecord);
+    assertThat(postSynchronousBatch(postBatchParams, instancesArray), statusCodeIs(HTTP_CREATED));
+    var getCompleted = new CompletableFuture<Response>();
+    getClient().get(instancesStorageUrl("") + "?query=title=Test-Instance", TENANT_ID, json(getCompleted));
+    var response = TestBase.get(getCompleted);
+    assertThat(response, statusCodeIs(HTTP_OK));
+    var createdInstance = response.getJson().getJsonArray("instances").getJsonObject(0);
+    assertThat(createdInstance.getString("id"), notNullValue());
+    assertThat(createdInstance.getString("title"), equalTo("Test-Instance"));
+    instanceMessageChecks.createdMessagePublished(getById(createdInstance.getString("id")).getJson());
+  }
+
   private void createInstancesWithClassificationNumbers() throws InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -2719,13 +2750,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     natureOfContentIdsToRemoveAfterTest.add(natureOfContentTerm.getId());
     return response.getJson().mapTo(NatureOfContentTerm.class);
-  }
-
-  private void assertNotSuppressedFromDiscovery(JsonArray array) {
-    array.stream()
-      .map(JsonObject.class::cast)
-      .map(instance -> instance.getString("id"))
-      .forEach(this::assertNotSuppressedFromDiscovery);
   }
 
   private void assertNotSuppressedFromDiscovery(String id) {
