@@ -85,6 +85,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
+import org.folio.rest.jaxrs.model.AdditionalCallNumber;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -2924,9 +2925,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateItemWithMinimalAdditionalCallNumberObject() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
     String callNumber = "This is the only mandatory field";
-    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber));
+    additionalCallNumbers.add(new AdditionalCallNumber().withAdditionalCallNumber(callNumber));
 
     UUID id = UUID.randomUUID();
 
@@ -2988,13 +2989,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateAndUpdateItemWithAdditionalCallNumbers() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
     final String callNumber = "Test";
     final String prefix = "A";
     final String suffix = "Z";
     final String typeId = LC_CN_TYPE_ID;
-    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
-      .withSuffix(suffix).withTypeId(typeId));
+    additionalCallNumbers.add(new AdditionalCallNumber().withAdditionalCallNumber(callNumber)
+      .withAdditionalCallNumberPrefix(prefix).withAdditionalCallNumberSuffix(suffix)
+      .withAdditionalCallNumberTypeId(typeId));
 
     UUID id = UUID.randomUUID();
 
@@ -3022,22 +3024,24 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject itemFromPost = postResponse.getJson();
     JsonObject postResponseAdditionalCallNumbers = itemFromPost.getJsonArray("additionalCallNumbers")
       .getJsonObject(0);
-    final String itemLevelAdditionalCallNumber = postResponseAdditionalCallNumbers.getString("callNumber");
-    final String itemLevelAdditionalPrefix = postResponseAdditionalCallNumbers.getString("prefix");
-    final String itemLevelAdditionalSuffix = postResponseAdditionalCallNumbers.getString("suffix");
-    final String itemLevelTypeId = postResponseAdditionalCallNumbers.getString("typeId");
+    final String itemLevelAdditionalCallNumber = postResponseAdditionalCallNumbers.getString("additionalCallNumber");
+    final String itemLevelAdditionalPrefix = postResponseAdditionalCallNumbers.getString("additionalCallNumberPrefix");
+    final String itemLevelAdditionalSuffix = postResponseAdditionalCallNumbers.getString("additionalCallNumberSuffix");
+    final String itemLevelTypeId = postResponseAdditionalCallNumbers.getString("additionalCallNumberTypeId");
     assertThat(itemLevelAdditionalCallNumber, is(callNumber));
     assertThat(itemLevelAdditionalPrefix, is(prefix));
     assertThat(itemLevelAdditionalSuffix, is(suffix));
     assertThat(itemLevelTypeId, is(typeId));
 
-    List<EffectiveCallNumberComponents> additionalCallNumbersUpdated = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbersUpdated = new ArrayList<>();
     final String newCallNumber = "newCallNumber";
     additionalCallNumbersUpdated
-      .add(new EffectiveCallNumberComponents().withCallNumber(newCallNumber).withPrefix(prefix)
-        .withSuffix(suffix).withTypeId(typeId));
-    additionalCallNumbersUpdated.add(new EffectiveCallNumberComponents().withCallNumber("some")
-      .withPrefix("prefix").withSuffix("suffix").withTypeId(typeId));
+      .add(new AdditionalCallNumber().withAdditionalCallNumber(newCallNumber)
+      .withAdditionalCallNumberPrefix(prefix).withAdditionalCallNumberSuffix(suffix)
+      .withAdditionalCallNumberTypeId(typeId));
+    additionalCallNumbersUpdated.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber("some").withAdditionalCallNumberPrefix("prefix")
+      .withAdditionalCallNumberSuffix("suffix").withAdditionalCallNumberTypeId(typeId));
     itemToCreate.put("additionalCallNumbers", additionalCallNumbersUpdated);
     itemToCreate.put("_version", 1);
 
@@ -3062,10 +3066,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonArray additionalCallNumbers = new JsonArray();
     additionalCallNumbers.add(new JsonObject()
-      .put("callNumber", "Test")
-      .put("prefix", "A")
-      .put("suffix", "Z")
-      .put("typeId", LC_CN_TYPE_ID));
+      .put("additionalCallNumber", "Test")
+      .put("additionalCallNumberPrefix", "A")
+      .put("additionalCallNumberSuffix", "Z")
+      .put("additionalCallNumberTypeId", LC_CN_TYPE_ID));
 
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = new JsonObject()
@@ -3105,7 +3109,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateItemWithEmptyAdditionalCallNumbers() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
     UUID id = UUID.randomUUID();
 
     JsonObject itemToCreate = new JsonObject()
@@ -3133,13 +3137,14 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
     String callNumber = "Test";
     String prefix = "A";
     String suffix = "Z";
     String typeId = "non-uuid";
-    additionalCallNumbers.add(new EffectiveCallNumberComponents().withCallNumber(callNumber).withPrefix(prefix)
-      .withSuffix(suffix).withTypeId(typeId));
+    additionalCallNumbers.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber(callNumber).withAdditionalCallNumberPrefix(prefix)
+      .withAdditionalCallNumberSuffix(suffix).withAdditionalCallNumberTypeId(typeId));
 
     UUID id = UUID.randomUUID();
 

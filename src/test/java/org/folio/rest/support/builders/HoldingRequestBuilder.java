@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.AdditionalCallNumber;
 
 public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder {
 
@@ -21,7 +21,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
   private final String callNumberPrefix;
   private final String callNumberSuffix;
   private final String callNumberTypeId;
-  private final List<EffectiveCallNumberComponents> additionalCallNumbers;
+  private final List<AdditionalCallNumber> additionalCallNumbers;
   private final JsonArray holdingsStatements;
   private final JsonArray holdingsStatementsForIndexes;
   private final JsonArray holdingsStatementsForSupplements;
@@ -64,7 +64,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     String callNumberTypeId,
     String hrid,
     Boolean discoverySuppress,
-    List<EffectiveCallNumberComponents> additionalCallNumbers,
+    List<AdditionalCallNumber> additionalCallNumbers,
     JsonArray holdingsStatements,
     JsonArray holdingsStatementsForIndexes,
     JsonArray holdingsStatementsForSupplements,
@@ -374,7 +374,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.administrativeNotes);
   }
 
-  public HoldingRequestBuilder withAdditionalCallNumbers(List<EffectiveCallNumberComponents> additionalCallNumbers) {
+  public HoldingRequestBuilder withAdditionalCallNumbers(List<AdditionalCallNumber> additionalCallNumbers) {
     return new HoldingRequestBuilder(
       this.id,
       this.instanceId,

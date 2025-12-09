@@ -76,7 +76,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
+import org.folio.rest.jaxrs.model.AdditionalCallNumber;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.persist.PostgresClient;
@@ -3338,7 +3338,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = List.of(new EffectiveCallNumberComponents());
+    List<AdditionalCallNumber> additionalCallNumbers = List.of(new AdditionalCallNumber());
 
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3365,8 +3365,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = List.of(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789"));
+    List<AdditionalCallNumber> additionalCallNumbers = List.of(new AdditionalCallNumber()
+      .withAdditionalCallNumber("123456789"));
 
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3388,12 +3388,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789")
-      .withPrefix("A")
-      .withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber("123456789")
+      .withAdditionalCallNumberPrefix("A")
+      .withAdditionalCallNumberSuffix("Z")
+      .withAdditionalCallNumberTypeId(LC_CN_TYPE_ID));
 
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3409,10 +3409,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     JsonObject additionalCallNumbersRespone = response.getJson()
       .getJsonArray("additionalCallNumbers")
       .getJsonObject(0);
-    assertThat(additionalCallNumbersRespone.getString("callNumber"), is("123456789"));
-    assertThat(additionalCallNumbersRespone.getString("prefix"), is("A"));
-    assertThat(additionalCallNumbersRespone.getString("suffix"), is("Z"));
-    assertThat(additionalCallNumbersRespone.getString("typeId"), is(LC_CN_TYPE_ID));
+    assertThat(additionalCallNumbersRespone.getString("additionalCallNumber"), is("123456789"));
+    assertThat(additionalCallNumbersRespone.getString("additionalCallNumberPrefix"), is("A"));
+    assertThat(additionalCallNumbersRespone.getString("additionalCallNumberSuffix"), is("Z"));
+    assertThat(additionalCallNumbersRespone.getString("additionalCallNumberTypeId"), is(LC_CN_TYPE_ID));
   }
 
   @Test
@@ -3422,7 +3422,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
 
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3444,12 +3444,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789")
-      .withPrefix("A")
-      .withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber("123456789")
+      .withAdditionalCallNumberPrefix("A")
+      .withAdditionalCallNumberSuffix("Z")
+      .withAdditionalCallNumberTypeId(LC_CN_TYPE_ID));
     String hrid = "hrid";
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3484,9 +3484,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(smallAngryPlanet(instanceId));
 
     UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789").withPrefix("A").withSuffix("Z").withTypeId(LC_CN_TYPE_ID));
+    List<AdditionalCallNumber> additionalCallNumbers = new ArrayList<>();
+    additionalCallNumbers.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber("123456789").withAdditionalCallNumberPrefix("A")
+      .withAdditionalCallNumberSuffix("Z").withAdditionalCallNumberTypeId(LC_CN_TYPE_ID));
     String hrid = "hrid";
     final JsonObject request = new HoldingRequestBuilder()
       .withId(holdingId)
@@ -3501,10 +3502,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("secondCallNumber")
-      .withPrefix("A").withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
+    additionalCallNumbers.add(new AdditionalCallNumber()
+      .withAdditionalCallNumber("secondCallNumber")
+      .withAdditionalCallNumberPrefix("A").withAdditionalCallNumberSuffix("Z")
+      .withAdditionalCallNumberTypeId(LC_CN_TYPE_ID));
     request.put("additionalCallNumbers", additionalCallNumbers);
     request.put("_version", 1);
 
@@ -3525,7 +3526,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final JsonObject holding = getResponse.getJson();
     assertThat(holding.getJsonArray("additionalCallNumbers").size(), is(2));
     final JsonObject additionalCallNumber = holding.getJsonArray("additionalCallNumbers").getJsonObject(1);
-    assertThat(additionalCallNumber.getString("callNumber"), is("secondCallNumber"));
+    assertThat(additionalCallNumber.getString("additionalCallNumber"), is("secondCallNumber"));
   }
 
   @Test
