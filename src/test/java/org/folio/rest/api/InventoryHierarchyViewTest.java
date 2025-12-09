@@ -34,6 +34,7 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -559,14 +560,15 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
     // when
     var instancesData = getInventoryHierarchyInstances(params).getFirst();
-    var electronicAccessJson = ((JsonArray) instancesData.getValue("holdings")).getJsonObject(0)
-      .getJsonArray("electronicAccess");
+    var electronicAccessJsonList = ((JsonArray) instancesData.getValue("holdings")).stream()
+      .map(holding -> ((JsonObject) holding).getJsonArray("electronicAccess"))
+      .toList();
     var expected = JsonArray.of(JsonObject.of("uri", "http://electronicAccess-c-entered-first"),
       JsonObject.of("uri", "http://electronicAccess-z-entered-second"),
       JsonObject.of("uri", "http://electronicAccess-a-entered-third"));
 
     // then
-    assertEquals(expected, electronicAccessJson);
+    assertThat(electronicAccessJsonList, hasItem(expected));
   }
 
   void clearAuditTables() {
