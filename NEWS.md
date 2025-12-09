@@ -1,3 +1,7 @@
+## v29.0.14 2025-12-09
+### Features
+* Add default empty values for S3_SECRET_ACCESS_KEY and S3_ACCESS_KEY_ID ([MODINVSTOR-1489](https://folio-org.atlassian.net/browse/MODINVSTOR-1489))
+
 ## v29.0.13 2025-11-20
 ### New APIs versions
 * Provides `instance-storage v11.2`

@@ -185,8 +185,8 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_URL` (default value - `http://127.0.0.1:9000`)
 * `S3_REGION`
 * `S3_BUCKET` (default value - `marc-migrations`)
-* `S3_ACCESS_KEY_ID`
-* `S3_SECRET_ACCESS_KEY`
+* `S3_ACCESS_KEY_ID` (default value is an empty string - "")
+* `S3_SECRET_ACCESS_KEY` (default value is an empty string - "")
 * `S3_IS_AWS` (default value - `false`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
