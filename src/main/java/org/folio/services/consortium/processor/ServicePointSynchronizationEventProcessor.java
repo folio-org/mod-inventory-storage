@@ -33,10 +33,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
 
   public Future<String> process(String eventKey, SynchronizationContext context) {
     var future = succeededFuture(eventKey);
-    if (!isCentralTenant(domainEvent.getTenant(), context.consortiaData())
-      || !isEcsTlrFeatureEnabled()
-      || servicePointEventType.getPayloadType() != domainEvent.getType()) {
-
+    if (!shouldProcessEvent(context)) {
       log.info("process:: tenant: {}, event type: {}, ECS_TLR_FEATURE_ENABLED: {}",
         domainEvent.getTenant(), domainEvent.getType(), isEcsTlrFeatureEnabled());
       return future;
@@ -45,6 +42,17 @@ public abstract class ServicePointSynchronizationEventProcessor {
       log.warn("process:: validation event entity failed");
       return future;
     }
+    return processMemberTenants(eventKey, context, future);
+  }
+
+  private boolean shouldProcessEvent(SynchronizationContext context) {
+    return isCentralTenant(domainEvent.getTenant(), context.consortiaData())
+           && isEcsTlrFeatureEnabled()
+           && servicePointEventType.getPayloadType() == domainEvent.getType();
+  }
+
+  private Future<String> processMemberTenants(String eventKey, SynchronizationContext context,
+                                               Future<String> future) {
     var vertxContext = context.vertx().getOrCreateContext();
     var headers = context.headers();
     for (String memberTenant : context.consortiaData().memberTenants()) {

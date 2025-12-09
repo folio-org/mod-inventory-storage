@@ -5,6 +5,7 @@ import static org.folio.rest.jaxrs.resource.InventoryStorageBoundWiths.PutInvent
 import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -76,33 +77,48 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
 
     List<Future<Response>> createFutures = new ArrayList<>();
     BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
+
+    createIncomingParts(itemId, mainHoldingsId, incomingParts, existingParts, service, createFutures);
+    createMainHoldingsPart(itemId, mainHoldingsId, incomingParts, existingParts, service, createFutures);
+
+    return createFutures;
+  }
+
+  private static void createIncomingParts(String itemId, String mainHoldingsId,
+                                          Map<String, BoundWithContent> incomingParts,
+                                          Map<String, BoundWithPart> existingParts,
+                                          BoundWithPartService service,
+                                          List<Future<Response>> createFutures) {
     if (!incomingParts.containsKey(mainHoldingsId) || incomingParts.size() > 1) {
       for (String holdingsId : incomingParts.keySet()) {
         if (!existingParts.containsKey(holdingsId)) {
-          BoundWithPart part =
-            new BoundWithPart()
-              .withItemId(itemId)
-              .withHoldingsRecordId(holdingsId)
-              .withMetadata(new Metadata().withCreatedDate(new Date())
-                .withUpdatedDate(new Date()));
+          BoundWithPart part = new BoundWithPart()
+            .withItemId(itemId)
+            .withHoldingsRecordId(holdingsId)
+            .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
           createFutures.add(service.create(part));
         }
       }
     }
+  }
+
+  private static void createMainHoldingsPart(String itemId, String mainHoldingsId,
+                                              Map<String, BoundWithContent> incomingParts,
+                                              Map<String, BoundWithPart> existingParts,
+                                              BoundWithPartService service,
+                                              List<Future<Response>> createFutures) {
     // Add main holdings ID, but only if it doesn't exist already,
     // wasn't provided in the request (and thus added above),
     // and would not become the only part.
     if (!existingParts.containsKey(mainHoldingsId)
       && !incomingParts.containsKey(mainHoldingsId)
       && !incomingParts.isEmpty()) {
-      BoundWithPart part =
-        new BoundWithPart()
-          .withItemId(itemId)
-          .withHoldingsRecordId(mainHoldingsId)
-          .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
+      BoundWithPart part = new BoundWithPart()
+        .withItemId(itemId)
+        .withHoldingsRecordId(mainHoldingsId)
+        .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
       createFutures.add(service.create(part));
     }
-    return createFutures;
   }
 
   @Validate
@@ -149,27 +165,34 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
           addError(errors,
             "item.not-found", "Item not found.", "itemId", requestEntity.getItemId());
         }
-        HoldingsRepository holdings = new HoldingsRepository(vertxContext, okapiHeaders);
-        List<Future<HoldingsRecord>> holdingsFutures = new ArrayList<>();
-        for (BoundWithContent entry : requestEntity.getBoundWithContents()) {
-          holdingsFutures.add(holdings.getById(entry.getHoldingsRecordId()));
-        }
-        return Future.all(holdingsFutures);
+        return validateHoldings(requestEntity, vertxContext, okapiHeaders);
       })
-      .compose(holdingsFound -> {
-        for (int i = 0; i < holdingsFound.size(); i++) {
-          if (holdingsFound.resultAt(i) == null) {
-            var id = requestEntity.getBoundWithContents().get(i).getHoldingsRecordId();
-            addError(errors,
-              "holding.not-found", "Holdings record not found.", "holdingsRecordId", id);
-          }
-        }
-        if (errors.getErrors().isEmpty()) {
-          return Future.succeededFuture();
-        } else {
-          return Future.failedFuture(new ValidationException(errors));
-        }
-      });
+      .compose(holdingsFound -> validateHoldingsResults(holdingsFound, requestEntity, errors));
+  }
+
+  private Future<CompositeFuture> validateHoldings(BoundWith requestEntity, Context vertxContext,
+                                                    Map<String, String> okapiHeaders) {
+    HoldingsRepository holdings = new HoldingsRepository(vertxContext, okapiHeaders);
+    List<Future<HoldingsRecord>> holdingsFutures = new ArrayList<>();
+    for (BoundWithContent entry : requestEntity.getBoundWithContents()) {
+      holdingsFutures.add(holdings.getById(entry.getHoldingsRecordId()));
+    }
+    return Future.all(holdingsFutures);
+  }
+
+  private Future<Void> validateHoldingsResults(CompositeFuture holdingsFound, BoundWith requestEntity, Errors errors) {
+    for (int i = 0; i < holdingsFound.size(); i++) {
+      if (holdingsFound.resultAt(i) == null) {
+        var id = requestEntity.getBoundWithContents().get(i).getHoldingsRecordId();
+        addError(errors,
+          "holding.not-found", "Holdings record not found.", "holdingsRecordId", id);
+      }
+    }
+    if (errors.getErrors().isEmpty()) {
+      return Future.succeededFuture();
+    } else {
+      return Future.failedFuture(new ValidationException(errors));
+    }
   }
 
   void addError(Errors errors, String code, String message, String key, String value) {

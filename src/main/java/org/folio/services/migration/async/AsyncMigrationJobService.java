@@ -134,37 +134,44 @@ public final class AsyncMigrationJobService {
 
   public Future<AsyncMigrationJob> logJobProcessed(String migrationName, String jobId, Integer records) {
     return migrationJobRepository
-      .fetchAndUpdate(jobId, job -> {
-        job.getProcessed().stream()
-          .filter(p -> p.getMigrationName().equals(migrationName))
-          .findFirst()
-          .ifPresentOrElse(v -> v.setCount(v.getCount() + records),
-            () -> job.getProcessed().add(new Processed()
-              .withCount(records)
-              .withMigrationName(migrationName)));
-        if (ACCEPTABLE_STATUSES.contains(job.getJobStatus())) {
-          var totalPublished = job.getPublished()
-            .stream().map(Published::getCount)
-            .mapToInt(Integer::intValue).sum();
-          var totalProcessed = job.getProcessed()
-            .stream().map(Processed::getCount)
-            .mapToInt(Integer::intValue).sum();
-
-          job.setJobStatus(totalProcessed >= totalPublished
-                           ? AsyncMigrationJob.JobStatus.COMPLETED
-                           : AsyncMigrationJob.JobStatus.IN_PROGRESS);
-        }
-        if (job.getJobStatus().equals(AsyncMigrationJob.JobStatus.COMPLETED)) {
-          job.setFinishedDate(new Date());
-        }
-        return job;
-      })
+      .fetchAndUpdate(jobId, job -> updateJobProgress(job, migrationName, records))
       .map(job -> {
         if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");
         }
         return job;
       });
+  }
+
+  private AsyncMigrationJob updateJobProgress(AsyncMigrationJob job, String migrationName, Integer records) {
+    job.getProcessed().stream()
+      .filter(p -> p.getMigrationName().equals(migrationName))
+      .findFirst()
+      .ifPresentOrElse(v -> v.setCount(v.getCount() + records),
+        () -> job.getProcessed().add(new Processed()
+          .withCount(records)
+          .withMigrationName(migrationName)));
+
+    if (ACCEPTABLE_STATUSES.contains(job.getJobStatus())) {
+      updateJobStatus(job);
+    }
+    if (job.getJobStatus().equals(AsyncMigrationJob.JobStatus.COMPLETED)) {
+      job.setFinishedDate(new Date());
+    }
+    return job;
+  }
+
+  private void updateJobStatus(AsyncMigrationJob job) {
+    var totalPublished = job.getPublished()
+      .stream().map(Published::getCount)
+      .mapToInt(Integer::intValue).sum();
+    var totalProcessed = job.getProcessed()
+      .stream().map(Processed::getCount)
+      .mapToInt(Integer::intValue).sum();
+
+    job.setJobStatus(totalProcessed >= totalPublished
+                     ? AsyncMigrationJob.JobStatus.COMPLETED
+                     : AsyncMigrationJob.JobStatus.IN_PROGRESS);
   }
 
   private List<AsyncMigrationJobRunner> getMigrationJobRunnersByName(List<String> migrationNames) {

@@ -83,39 +83,44 @@ public class CommonDomainEventPublisher<T> {
     readStream.exceptionHandler(error -> {
       log.error("Unable to publish stream", error);
       promise.tryFail(error);
-    }).endHandler(notUsed -> promise.tryComplete(recordsProcessed.get())).handler(rec -> {
-      var producerRecord = mapper.apply(rec)
-        .topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders).build();
-
-      kafkaProducer.send(producerRecord)
-        .onFailure(error -> {
-          log.error("Unable to send event [{}]", producerRecord.value(), error);
-
-          failureHandler.handleFailure(error, producerRecord);
-          recordsProcessed.decrementAndGet();
-        });
-
-      progressHandler.apply(recordsProcessed.incrementAndGet())
-        .onFailure(error -> {
-          log.warn("Error occurred when progress tracked", error);
-
-          readStream.pause();
-          promise.tryFail(error);
-        });
-
-      if (kafkaProducer.writeQueueFull()) {
-        log.info("Producer write queue full...");
-        readStream.pause();
-
-        kafkaProducer.drainHandler(notUsed -> {
-          log.info("Producer write queue empty again...");
-          readStream.resume();
-        });
-      }
-    });
+    }).endHandler(notUsed -> promise.tryComplete(recordsProcessed.get()))
+      .handler(rec -> handleStreamRecord(rec, mapper, progressHandler, kafkaProducer,
+                                         readStream, promise, recordsProcessed));
 
     return promise.future()
       .onSuccess(records -> log.info("Total records published from stream {}", records));
+  }
+
+  private <R> void handleStreamRecord(R rec, Function<R, KafkaProducerRecordBuilder<String, Object>> mapper,
+                                       LongFunction<Future<?>> progressHandler,
+                                       KafkaProducer<String, String> kafkaProducer,
+                                       ReadStream<R> readStream, Promise<Long> promise,
+                                       AtomicLong recordsProcessed) {
+    var producerRecord = mapper.apply(rec)
+      .topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders).build();
+
+    kafkaProducer.send(producerRecord)
+      .onFailure(error -> {
+        log.error("Unable to send event [{}]", producerRecord.value(), error);
+        failureHandler.handleFailure(error, producerRecord);
+        recordsProcessed.decrementAndGet();
+      });
+
+    progressHandler.apply(recordsProcessed.incrementAndGet())
+      .onFailure(error -> {
+        log.warn("Error occurred when progress tracked", error);
+        readStream.pause();
+        promise.tryFail(error);
+      });
+
+    if (kafkaProducer.writeQueueFull()) {
+      log.info("Producer write queue full...");
+      readStream.pause();
+      kafkaProducer.drainHandler(notUsed -> {
+        log.info("Producer write queue empty again...");
+        readStream.resume();
+      });
+    }
   }
 
   Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {

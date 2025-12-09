@@ -2,6 +2,7 @@ package org.folio.services.migration.async;
 
 import static org.folio.services.migration.async.AbstractAsyncMigrationJobRunner.ASYNC_MIGRATION_JOB_NAME;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -11,6 +12,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecords;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -34,38 +36,49 @@ public final class AsyncMigrationsConsumerUtils {
     Context vertxContext) {
     return records -> {
       var eventsByTenant = buildTenantRecords(records);
-
-      eventsByTenant.entrySet().parallelStream().forEach(v -> {
-        var tenantId = v.getKey();
-        var headers = new CaseInsensitiveMap<String, String>();
-        headers.put(TENANT_HEADER, tenantId);
-
-        var availableMigrations = Set.of(
-          new ShelvingOrderAsyncMigrationService(vertxContext, headers),
-          new ItemOrderMigrationService(vertxContext, headers));
-        var jobService = new AsyncMigrationJobService(vertxContext, headers);
-
-        var migrationEvents = buildIdsForMigrations(v.getValue());
-        var migrations = migrationEvents.entrySet().stream()
-          .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
-          .map(entry -> {
-            var migrationJob = entry.getKey().job();
-            var migrationName = entry.getKey().migrationName();
-            var ids = entry.getValue();
-            var startedMigrations = availableMigrations.stream()
-              .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
-              .map(javaMigration -> javaMigration.runMigrationForIds(ids)
-                .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
-                .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
-              .toList();
-            return Future.all(new ArrayList<>(startedMigrations));
-          }).toList();
-
-        Future.all(new ArrayList<>(migrations))
-          .onSuccess(composite -> consumer.commit())
-          .onFailure(any -> log.error("Error persisting and committing messages", any));
-      });
+      eventsByTenant.entrySet().parallelStream()
+        .forEach(v -> processTenantMigrations(v, vertxContext, consumer));
     };
+  }
+
+  private static void processTenantMigrations(Map.Entry<String, Set<ConsumerRecord<String, JsonObject>>> tenantEntry,
+                                               Context vertxContext,
+                                               KafkaConsumer<String, JsonObject> consumer) {
+    var tenantId = tenantEntry.getKey();
+    var headers = new CaseInsensitiveMap<String, String>();
+    headers.put(TENANT_HEADER, tenantId);
+
+    var availableMigrations = Set.of(
+      new ShelvingOrderAsyncMigrationService(vertxContext, headers),
+      new ItemOrderMigrationService(vertxContext, headers));
+    var jobService = new AsyncMigrationJobService(vertxContext, headers);
+
+    var migrationEvents = buildIdsForMigrations(tenantEntry.getValue());
+    var migrations = processMigrationEvents(migrationEvents, availableMigrations, jobService);
+
+    Future.all(new ArrayList<>(migrations))
+      .onSuccess(composite -> consumer.commit())
+      .onFailure(any -> log.error("Error persisting and committing messages", any));
+  }
+
+  private static List<CompositeFuture> processMigrationEvents(
+    Map<MigrationContext, Set<String>> migrationEvents,
+    Set<AsyncBaseMigrationService> availableMigrations,
+    AsyncMigrationJobService jobService) {
+    return migrationEvents.entrySet().stream()
+      .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
+      .map(entry -> {
+        var migrationJob = entry.getKey().job();
+        var migrationName = entry.getKey().migrationName();
+        var ids = entry.getValue();
+        var startedMigrations = availableMigrations.stream()
+          .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
+          .map(javaMigration -> javaMigration.runMigrationForIds(ids)
+            .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
+            .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
+          .toList();
+        return Future.all(new ArrayList<>(startedMigrations));
+      }).toList();
   }
 
   private static boolean shouldProcessIdsForJob(AsyncBaseMigrationService javaMigration,

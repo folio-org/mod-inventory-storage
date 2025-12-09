@@ -40,27 +40,31 @@ public class ServicePointSynchronizationUpdateEventProcessor
     try {
       var oldServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getOldEntity())
         .mapTo(Servicepoint.class);
-      Servicepoint newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+      var newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
         .mapTo(Servicepoint.class);
 
-      if (oldServicePoint == null || newServicePoint == null) {
-        log.warn("validateEventEntity:: failed due to oldServicePoint {} newServicePoint {}",
-          oldServicePoint, newServicePoint);
-        return false;
-      }
-      if (newServicePoint.equals(oldServicePoint)) {
-        log.warn("validateEventEntity:: old/new service points are identical");
-        return false;
-      }
-      String validationMessage = ServicePointApi.validateServicePoint(newServicePoint);
-      if (validationMessage != null) {
-        log.warn("validateEventEntity:: {}", validationMessage);
-        return false;
-      }
-      return true;
+      return validateServicePoints(oldServicePoint, newServicePoint);
     } catch (Exception e) {
       log.error("validateEventEntity:: failed to {}", e.getMessage(), e);
     }
     return false;
+  }
+
+  private boolean validateServicePoints(Servicepoint oldServicePoint, Servicepoint newServicePoint) {
+    if (oldServicePoint == null || newServicePoint == null) {
+      log.warn("validateEventEntity:: failed due to oldServicePoint {} newServicePoint {}",
+        oldServicePoint, newServicePoint);
+      return false;
+    }
+    if (newServicePoint.equals(oldServicePoint)) {
+      log.warn("validateEventEntity:: old/new service points are identical");
+      return false;
+    }
+    var validationMessage = ServicePointApi.validateServicePoint(newServicePoint);
+    if (validationMessage != null) {
+      log.warn("validateEventEntity:: {}", validationMessage);
+      return false;
+    }
+    return true;
   }
 }

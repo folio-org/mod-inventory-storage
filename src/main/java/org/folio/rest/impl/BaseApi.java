@@ -137,28 +137,32 @@ public abstract class BaseApi<E, C> {
                                     Context vertxContext, Class<? extends ResponseDelegate> responseType) {
     PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
       .getById(getReferenceTable(), id, getEntityClass(),
-        reply -> {
-          if (!reply.succeeded()) {
-            log.error("Failed to fetch entity for deletion: {}", reply.cause().getMessage(), reply.cause());
-            respond400WithTextPlain(responseHandler, "Failed to fetch entity: " + reply.cause().getMessage());
-            return;
-          }
-          E entity = reply.result();
-          if (entity == null) {
-            var msg = "Entity with id '%s' not found for deletion".formatted(id);
-            log.warn(msg);
-            respond404WithTextPlain(responseHandler, msg);
-            return;
-          }
-          for (var predicateEntry : deleteValidationPredicates().entrySet()) {
-            if (!predicateEntry.getValue().test(entity)) {
-              log.warn("Delete validation failed for id {}: {}", id, predicateEntry.getKey());
-              respond400WithTextPlain(responseHandler, predicateEntry.getKey());
-              return;
-            }
-          }
-          PgUtil.deleteById(getReferenceTable(), id, okapiHeaders, vertxContext, responseType, responseHandler);
-        });
+        reply -> handleDeleteValidation(id, reply, okapiHeaders, responseHandler, vertxContext, responseType));
+  }
+
+  private void handleDeleteValidation(String id, AsyncResult<E> reply, Map<String, String> okapiHeaders,
+                                       Handler<AsyncResult<Response>> responseHandler,
+                                       Context vertxContext, Class<? extends ResponseDelegate> responseType) {
+    if (!reply.succeeded()) {
+      log.error("Failed to fetch entity for deletion: {}", reply.cause().getMessage(), reply.cause());
+      respond400WithTextPlain(responseHandler, "Failed to fetch entity: " + reply.cause().getMessage());
+      return;
+    }
+    E entity = reply.result();
+    if (entity == null) {
+      var msg = "Entity with id '%s' not found for deletion".formatted(id);
+      log.warn(msg);
+      respond404WithTextPlain(responseHandler, msg);
+      return;
+    }
+    for (var predicateEntry : deleteValidationPredicates().entrySet()) {
+      if (!predicateEntry.getValue().test(entity)) {
+        log.warn("Delete validation failed for id {}: {}", id, predicateEntry.getKey());
+        respond400WithTextPlain(responseHandler, predicateEntry.getKey());
+        return;
+      }
+    }
+    PgUtil.deleteById(getReferenceTable(), id, okapiHeaders, vertxContext, responseType, responseHandler);
   }
 
   private void respond400WithTextPlain(Handler<AsyncResult<Response>> responseHandler, String message) {

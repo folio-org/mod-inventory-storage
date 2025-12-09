@@ -81,15 +81,11 @@ public class ItemRepository extends AbstractRepository<Item> {
 
   public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatch> items) {
     try {
-      if (items.size() > MAX_ENTITIES) {
-        var message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, items.size());
-        var errors = new Errors().withErrors(List.of(
-          new Error()
-            .withMessage(message)
-            .withType("1")
-            .withCode("VALIDATION_ERROR")));
-        return Future.failedFuture(new ValidationException(errors));
+      Future<Void> validation = validateItemsSize(items);
+      if (validation.failed()) {
+        return validation.mapEmpty();
       }
+
       OptimisticLockingUtil.unsetVersionIfMinusOne(items);
 
       var tuples = items.stream()
@@ -98,22 +94,39 @@ public class ItemRepository extends AbstractRepository<Item> {
       var sql = "UPDATE %s SET jsonb = jsonb || $1 WHERE id = $2 RETURNING jsonb::text"
         .formatted(getFullTableName(ITEM_TABLE));
 
-      return conn.preparedQuery(sql).executeBatch(tuples)
-        .map(rowSet -> {
-          List<Item> updatedItems = new LinkedList<>();
-          for (Row row : rowSet) {
-            updatedItems.add(readValue(row.getString(0), Item.class));
-          }
-          return updatedItems;
-        })
-        .recover(throwable -> {
-          logger.error("Failed to update items batch", throwable);
-          return Future.failedFuture(throwable);
-        });
+      return executeBatchUpdate(conn, sql, tuples);
     } catch (Exception e) {
       logger.error("Failed to update items batch", e);
       return Future.failedFuture(e);
     }
+  }
+
+  private Future<Void> validateItemsSize(List<ItemPatch> items) {
+    if (items.size() > MAX_ENTITIES) {
+      var message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, items.size());
+      var errors = new Errors().withErrors(List.of(
+        new Error()
+          .withMessage(message)
+          .withType("1")
+          .withCode("VALIDATION_ERROR")));
+      return Future.failedFuture(new ValidationException(errors));
+    }
+    return Future.succeededFuture();
+  }
+
+  private Future<List<Item>> executeBatchUpdate(PgConnection conn, String sql, List<Tuple> tuples) {
+    return conn.preparedQuery(sql).executeBatch(tuples)
+      .map(rowSet -> {
+        List<Item> updatedItems = new LinkedList<>();
+        for (Row row : rowSet) {
+          updatedItems.add(readValue(row.getString(0), Item.class));
+        }
+        return updatedItems;
+      })
+      .recover(throwable -> {
+        logger.error("Failed to update items batch", throwable);
+        return Future.failedFuture(throwable);
+      });
   }
 
   public Future<RowSet<Row>> getItemsWithCurrentHoldings(List<String> itemIds) {

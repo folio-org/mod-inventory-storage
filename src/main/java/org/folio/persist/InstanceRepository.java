@@ -171,59 +171,81 @@ public class InstanceRepository extends AbstractRepository<Instance> {
                                          int offset, int limit, String query) {
 
     try {
-      StringBuilder sql = new StringBuilder(200);
-      sql.append("SELECT jsonb_build_object('id', id");
-      if (instance) {
-        sql.append(", 'instance', jsonb");
-      }
-      if (holdingsRecords) {
-        sql.append(", 'holdingsRecords', holdings_records");
-      }
-      if (items) {
-        sql.append(", 'items', items");
-      }
-      if (precedingTitles) {
-        sql.append(", 'precedingTitles', preceding_titles");
-      }
-      if (succeedingTitles) {
-        sql.append(", 'succeedingTitles', succeeding_titles");
-      }
-      if (superInstanceRelationships) {
-        sql.append(", 'superInstanceRelationships', super_instance_relationships");
-      }
-      if (subInstanceRelationships) {
-        sql.append(", 'subInstanceRelationships', sub_instance_relationships");
-      }
-      sql.append(")::text FROM ")
-        .append(getFullTableName(INSTANCE_SET_VIEW))
-        .append(" JOIN ")
-        .append(getFullTableName(INSTANCE_TABLE))
-        .append(" USING (id) ");
+      var sql = buildInstanceSetQuery(instance, holdingsRecords, items, precedingTitles,
+        succeedingTitles, superInstanceRelationships, subInstanceRelationships, offset, limit, query);
 
-      var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
-      var cqlWrapper = new CQLWrapper(field, query, limit, offset, "none");
-      sql.append(cqlWrapper);
-
-      return postgresClient.select(sql.toString())
-        .map(rowSet -> {
-          StringBuilder json = new StringBuilder("{\"instanceSets\":[\n");
-          boolean first = true;
-          for (Row row : rowSet) {
-            if (first) {
-              first = false;
-            } else {
-              json.append(",\n");
-            }
-            json.append(row.getString(0));
-          }
-          json.append("\n]}");
-          return Response.ok(json.toString(), MediaType.APPLICATION_JSON_TYPE).build();
-        });
+      return postgresClient.select(sql)
+        .map(this::buildInstanceSetResponse);
     } catch (CQLQueryValidationException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
+  }
+
+  private String buildInstanceSetQuery(boolean instance, boolean holdingsRecords, boolean items,
+                                        boolean precedingTitles, boolean succeedingTitles,
+                                        boolean superInstanceRelationships, boolean subInstanceRelationships,
+                                        int offset, int limit, String query) throws FieldException {
+    var sql = new StringBuilder(200);
+    sql.append("SELECT jsonb_build_object('id', id");
+
+    appendInstanceSetFields(sql, instance, holdingsRecords, items, precedingTitles,
+      succeedingTitles, superInstanceRelationships, subInstanceRelationships);
+
+    sql.append(")::text FROM ")
+      .append(getFullTableName(INSTANCE_SET_VIEW))
+      .append(" JOIN ")
+      .append(getFullTableName(INSTANCE_TABLE))
+      .append(" USING (id) ");
+
+    var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
+    var cqlWrapper = new CQLWrapper(field, query, limit, offset, "none");
+    sql.append(cqlWrapper);
+
+    return sql.toString();
+  }
+
+  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
+  private void appendInstanceSetFields(StringBuilder sql, boolean instance, boolean holdingsRecords,
+                                        boolean items, boolean precedingTitles, boolean succeedingTitles,
+                                        boolean superInstanceRelationships, boolean subInstanceRelationships) {
+    if (instance) {
+      sql.append(", 'instance', jsonb");
+    }
+    if (holdingsRecords) {
+      sql.append(", 'holdingsRecords', holdings_records");
+    }
+    if (items) {
+      sql.append(", 'items', items");
+    }
+    if (precedingTitles) {
+      sql.append(", 'precedingTitles', preceding_titles");
+    }
+    if (succeedingTitles) {
+      sql.append(", 'succeedingTitles', succeeding_titles");
+    }
+    if (superInstanceRelationships) {
+      sql.append(", 'superInstanceRelationships', super_instance_relationships");
+    }
+    if (subInstanceRelationships) {
+      sql.append(", 'subInstanceRelationships', sub_instance_relationships");
+    }
+  }
+
+  private Response buildInstanceSetResponse(RowSet<Row> rowSet) {
+    StringBuilder json = new StringBuilder("{\"instanceSets\":[\n");
+    boolean first = true;
+    for (Row row : rowSet) {
+      if (first) {
+        first = false;
+      } else {
+        json.append(",\n");
+      }
+      json.append(row.getString(0));
+    }
+    json.append("\n]}");
+    return Response.ok(json.toString(), MediaType.APPLICATION_JSON_TYPE).build();
   }
 
   public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,

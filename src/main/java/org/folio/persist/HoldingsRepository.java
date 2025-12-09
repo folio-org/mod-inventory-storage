@@ -27,6 +27,19 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
    * {@code total_records} column is the exact totalRecords count.
    */
   public Future<Row> getByInstanceId(String instanceId, String[] sortBys, int offset, int limit) {
+    Future<String> orderByFuture = buildOrderByClause(sortBys);
+    if (orderByFuture.failed()) {
+      return orderByFuture.mapEmpty();
+    }
+
+    String orderBy = orderByFuture.result();
+    String sql = buildHoldingsQuerySql(orderBy);
+
+    return postgresClient.withReadConn(conn -> conn.execute(sql, Tuple.of(instanceId, offset, limit)))
+        .map(rowSet -> rowSet.iterator().next());
+  }
+
+  private Future<String> buildOrderByClause(String[] sortBys) {
     var orderBy = new StringBuilder();
     for (var sortBy : sortBys) {
       if (sortBy.isEmpty()) {
@@ -47,7 +60,11 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
       }
       orderBy.append(s);
     }
-    var sql = "WITH data AS NOT MATERIALIZED ("
+    return Future.succeededFuture(orderBy.toString());
+  }
+
+  private String buildHoldingsQuerySql(String orderBy) {
+    return "WITH data AS NOT MATERIALIZED ("
         + " SELECT h.jsonb AS jsonb, l.jsonb->>'name' AS name"
         + " FROM " + HOLDINGS_RECORD_TABLE + " h"
         + " LEFT JOIN " + LOCATION_TABLE + " l"
@@ -65,8 +82,6 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
         + "   FROM " + HOLDINGS_RECORD_TABLE
         + "   WHERE instanceId=$1"
         + ")";
-    return postgresClient.withReadConn(conn -> conn.execute(sql, Tuple.of(instanceId, offset, limit)))
-        .map(rowSet -> rowSet.iterator().next());
   }
 
   /**

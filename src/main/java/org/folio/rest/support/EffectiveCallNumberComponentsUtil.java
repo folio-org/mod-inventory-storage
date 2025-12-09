@@ -29,25 +29,9 @@ public final class EffectiveCallNumberComponentsUtil {
 
   public static Item calculateAndSetEffectiveShelvingOrder(Item item) {
     if (isNotBlank(item.getEffectiveCallNumberComponents().getCallNumber())) {
-      Optional<String> shelfKey
-        = CallNumberUtils.getShelfKeyFromCallNumber(
-          item.getEffectiveCallNumberComponents().getTypeId(),
-        Stream.of(
-            item.getEffectiveCallNumberComponents().getCallNumber(),
-            item.getVolume(),
-            item.getEnumeration(),
-            item.getChronology(),
-            item.getCopyNumber()
-          ).filter(StringUtils::isNotBlank)
-          .map(StringUtils::trim)
-          .collect(Collectors.joining(" "))
-      );
-      String suffixValue =
-        Objects.toString(Optional.ofNullable(item.getEffectiveCallNumberComponents())
-            .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
-          .trim();
-
-      String nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
+      var shelfKey = calculateShelfKey(item);
+      var suffixValue = extractSuffixValue(item);
+      var nonNullableSuffixValue = suffixValue.isEmpty() ? "" : " " + suffixValue;
 
       item.setEffectiveShelvingOrder(
         shelfKey.map(shelfKeyValue -> shelfKeyValue + nonNullableSuffixValue)
@@ -59,29 +43,35 @@ public final class EffectiveCallNumberComponentsUtil {
     return item;
   }
 
+  private static Optional<String> calculateShelfKey(Item item) {
+    return CallNumberUtils.getShelfKeyFromCallNumber(
+      item.getEffectiveCallNumberComponents().getTypeId(),
+      Stream.of(
+          item.getEffectiveCallNumberComponents().getCallNumber(),
+          item.getVolume(),
+          item.getEnumeration(),
+          item.getChronology(),
+          item.getCopyNumber()
+        ).filter(StringUtils::isNotBlank)
+        .map(StringUtils::trim)
+        .collect(Collectors.joining(" "))
+    );
+  }
+
+  private static String extractSuffixValue(Item item) {
+    return Objects.toString(Optional.ofNullable(item.getEffectiveCallNumberComponents())
+        .orElse(new EffectiveCallNumberComponents()).getSuffix(), "")
+      .trim();
+  }
+
   private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {
-    String updatedCallNumber = null;
-    if (isNotBlank(item.getItemLevelCallNumber())) {
-      updatedCallNumber = item.getItemLevelCallNumber();
-    } else if (isNotBlank(holdings.getCallNumber())) {
-      updatedCallNumber = holdings.getCallNumber();
-    }
-
-    String updatedCallNumberPrefix = null;
-    if (isNotBlank(item.getItemLevelCallNumberPrefix())) {
-      updatedCallNumberPrefix = item.getItemLevelCallNumberPrefix();
-    } else if (isNotBlank(holdings.getCallNumberPrefix())) {
-      updatedCallNumberPrefix = holdings.getCallNumberPrefix();
-    }
-
-    String updatedCallNumberSuffix = null;
-    if (isNotBlank(item.getItemLevelCallNumberSuffix())) {
-      updatedCallNumberSuffix = item.getItemLevelCallNumberSuffix();
-    } else if (isNotBlank(holdings.getCallNumberSuffix())) {
-      updatedCallNumberSuffix = holdings.getCallNumberSuffix();
-    }
-
-    String updatedCallNumberTypeId = StringUtils.firstNonBlank(
+    var updatedCallNumber = resolveCallNumberField(
+      item.getItemLevelCallNumber(), holdings.getCallNumber());
+    var updatedCallNumberPrefix = resolveCallNumberField(
+      item.getItemLevelCallNumberPrefix(), holdings.getCallNumberPrefix());
+    var updatedCallNumberSuffix = resolveCallNumberField(
+      item.getItemLevelCallNumberSuffix(), holdings.getCallNumberSuffix());
+    var updatedCallNumberTypeId = StringUtils.firstNonBlank(
       item.getItemLevelCallNumberTypeId(),
       holdings != null ? holdings.getCallNumberTypeId() : null);
 
@@ -97,35 +87,28 @@ public final class EffectiveCallNumberComponentsUtil {
     var itemPatchFields = patchData.getPatchRequest().getAdditionalProperties();
     var oldCallNumberComponents = patchData.getOldItem().getEffectiveCallNumberComponents();
 
-    var callNumber = getFieldValue(
-      itemPatchFields, "itemLevelCallNumber",
-      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getCallNumber() : null,
-      holdings::getCallNumber
-    );
-
-    var prefix = getFieldValue(
-      itemPatchFields, "itemLevelCallNumberPrefix",
-      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getPrefix() : null,
-      holdings::getCallNumberPrefix
-    );
-
-    var suffix = getFieldValue(
-      itemPatchFields, "itemLevelCallNumberSuffix",
-      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getSuffix() : null,
-      holdings::getCallNumberSuffix
-    );
-
-    var typeId = getFieldValue(
-      itemPatchFields, "itemLevelCallNumberTypeId",
-      () -> oldCallNumberComponents != null ? oldCallNumberComponents.getTypeId() : null,
-      holdings::getCallNumberTypeId
-    );
-
     return new EffectiveCallNumberComponents()
-      .withCallNumber(callNumber)
-      .withPrefix(prefix)
-      .withSuffix(suffix)
-      .withTypeId(typeId);
+      .withCallNumber(getFieldValue(itemPatchFields, "itemLevelCallNumber",
+        () -> oldCallNumberComponents != null ? oldCallNumberComponents.getCallNumber() : null,
+        holdings::getCallNumber))
+      .withPrefix(getFieldValue(itemPatchFields, "itemLevelCallNumberPrefix",
+        () -> oldCallNumberComponents != null ? oldCallNumberComponents.getPrefix() : null,
+        holdings::getCallNumberPrefix))
+      .withSuffix(getFieldValue(itemPatchFields, "itemLevelCallNumberSuffix",
+        () -> oldCallNumberComponents != null ? oldCallNumberComponents.getSuffix() : null,
+        holdings::getCallNumberSuffix))
+      .withTypeId(getFieldValue(itemPatchFields, "itemLevelCallNumberTypeId",
+        () -> oldCallNumberComponents != null ? oldCallNumberComponents.getTypeId() : null,
+        holdings::getCallNumberTypeId));
+  }
+
+  private static String resolveCallNumberField(String itemLevelValue, String holdingsValue) {
+    if (isNotBlank(itemLevelValue)) {
+      return itemLevelValue;
+    } else if (isNotBlank(holdingsValue)) {
+      return holdingsValue;
+    }
+    return null;
   }
 
   private static String getFieldValue(Map<String, Object> fields, String key, Supplier<String> oldComponentSupplier,

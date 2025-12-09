@@ -79,22 +79,12 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
                                               Handler<AsyncResult<Response>> asyncResultHandler,
                                               Context vertxContext) {
 
-    List<DereferencedItem> mappedResults = new ArrayList<>();
-    String whereClause;
-
-    if (query != null) {
-      try {
-        CQLWrapper wrapper = new CQLWrapper(
-          new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
-        whereClause = wrapper.toString();
-      } catch (Exception e) {
-        respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);
-        return;
-      }
-    } else {
-      whereClause = "LIMIT " + limit + " OFFSET " + offset;
+    String whereClause = buildWhereClause(query, limit, offset, asyncResultHandler);
+    if (whereClause == null) {
+      return;
     }
 
+    List<DereferencedItem> mappedResults = new ArrayList<>();
     PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
       .select(sqlQuery + whereClause, asyncResult -> {
         if (Boolean.TRUE.equals(handleSelectFailure(asyncResult, asyncResultHandler))) {
@@ -110,6 +100,22 @@ public class ItemStorageDereferencedApi implements ItemStorageDereferenced {
         asyncResultHandler.handle(Future.succeededFuture(
           GetItemStorageDereferencedItemsResponse.respond200WithApplicationJson(itemCollection)));
       });
+  }
+
+  private String buildWhereClause(String query, int limit, int offset,
+                                   Handler<AsyncResult<Response>> asyncResultHandler) {
+    if (query != null) {
+      try {
+        CQLWrapper wrapper = new CQLWrapper(
+          new CQL2PgJSON(ITEM_TABLE + "." + JSON_COLUMN), query, limit, offset);
+        return wrapper.toString();
+      } catch (Exception e) {
+        respondWith400Error("Invalid CQL query: " + e.getMessage(), asyncResultHandler);
+        return null;
+      }
+    } else {
+      return "LIMIT " + limit + " OFFSET " + offset;
+    }
   }
 
   @Validate

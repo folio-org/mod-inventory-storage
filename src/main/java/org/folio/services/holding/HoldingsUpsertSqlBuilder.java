@@ -21,23 +21,11 @@ class HoldingsUpsertSqlBuilder {
   Pair<Pair<String, Tuple>, Exception> buildUpsertSqlWithParams(List<HoldingsRecord> holdings) {
     var sqlBuilder = new StringBuilder();
     var params = new ArrayList<>();
-    var paramIndex = 1;
 
     sqlBuilder.append("WITH upsert_data AS (");
-    for (int i = 0; i < holdings.size(); i++) {
-      if (i > 0) {
-        sqlBuilder.append(" UNION ALL ");
-      }
-      sqlBuilder.append("SELECT $").append(paramIndex++).append("::uuid as id, $")
-        .append(paramIndex++).append("::jsonb as data");
-
-      var holding = holdings.get(i);
-      params.add(holding.getId());
-      try {
-        params.add(PostgresClient.pojo2JsonObject(holding));
-      } catch (Exception e) {
-        return Pair.of(null, e);
-      }
+    var buildError = buildUpsertDataClause(holdings, sqlBuilder, params);
+    if (buildError != null) {
+      return Pair.of(null, buildError);
     }
 
     var holdingsTableName = holdingsRepository.getFullTableName();
@@ -51,6 +39,27 @@ class HoldingsUpsertSqlBuilder {
 
     var sqlAndParams = Pair.of(sqlBuilder.toString(), Tuple.from(params));
     return Pair.of(sqlAndParams, null);
+  }
+
+  private Exception buildUpsertDataClause(List<HoldingsRecord> holdings, StringBuilder sqlBuilder,
+                                           List<Object> params) {
+    var paramIndex = 1;
+    for (int i = 0; i < holdings.size(); i++) {
+      if (i > 0) {
+        sqlBuilder.append(" UNION ALL ");
+      }
+      sqlBuilder.append("SELECT $").append(paramIndex++).append("::uuid as id, $")
+        .append(paramIndex++).append("::jsonb as data");
+
+      var holding = holdings.get(i);
+      params.add(holding.getId());
+      try {
+        params.add(PostgresClient.pojo2JsonObject(holding));
+      } catch (Exception e) {
+        return e;
+      }
+    }
+    return null;
   }
 
   private String buildOldDataQueries(String holdingsTableName, String itemsTableName) {
