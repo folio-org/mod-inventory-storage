@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
+import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.junit5.VertxExtension;
@@ -18,6 +21,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Loccamp;
@@ -31,6 +36,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitLibraryIT
@@ -122,6 +130,48 @@ class LocationUnitLibraryIT
       .onComplete(event -> ctx.completeNow());
   }
 
+  @MethodSource("queryStringAndParam")
+  @ParameterizedTest
+  void getCollection_shouldReturnRecordCollectionBasedOnQueryStringAndParam(String queryStringAndParam, int total,
+                                                                            List<String> codes, Vertx vertx,
+                                                                            VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    var nonShadowLibrary1 = sampleRecord().withName("test-library1").withCode("code1");
+    var nonShadowLibrary2 = sampleRecord().withName("test-library2").withCode("code2");
+    var shadowLibrary = sampleRecord()
+      .withIsShadow(true)
+      .withName("test-shadow-library")
+      .withCode("shadow");
+
+    Future.all(
+        postgresClient.save(referenceTable(), nonShadowLibrary1),
+        postgresClient.save(referenceTable(), nonShadowLibrary2),
+        postgresClient.save(referenceTable(), shadowLibrary)
+      )
+      .compose(s ->
+        doGet(client, resourceUrl() + queryStringAndParam)
+          .onComplete(verifyStatus(ctx, HTTP_OK))
+          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
+            var collectionUnits = response.bodyAsClass(Loclibs.class);
+            assertThat(collectionUnits)
+              .as("verify collection for query and param: " + queryStringAndParam)
+              .isNotNull()
+              .hasFieldOrPropertyWithValue("totalRecords", total)
+              .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+              .hasSize(total);
+
+            assertThat(collectionUnits.getLoclibs())
+              .hasSize(total)
+              .extracting(Loclib::getCode)
+              .containsAll(codes);
+          })))
+      )
+      .onFailure(ctx::failNow)
+      .onSuccess(event -> ctx.completeNow());
+  }
+
   @Test
   void post_shouldReturn422_whenObjectIsDuplicate(Vertx vertx,
                                                   VertxTestContext ctx) {
@@ -204,5 +254,17 @@ class LocationUnitLibraryIT
           .contains("Not found");
         ctx.completeNow();
       })));
+  }
+
+  private static Stream<Arguments> queryStringAndParam() {
+    return Stream.of(
+      arguments("", 2, List.of("code1", "code2")),
+      arguments("?query=code=code1", 1, List.of("code1")),
+      arguments("?includeShadow=false", 2, List.of("code1", "code2")),
+      arguments("?includeShadow=true", 3, List.of("code1", "code2", "shadow")),
+      arguments("?query=code=shadow", 0, List.of()),
+      arguments("?includeShadow=true&query=code=shadow", 1, List.of("shadow")),
+      arguments("?includeShadow=true&query=code1=code1", 0, List.of())
+    );
   }
 }

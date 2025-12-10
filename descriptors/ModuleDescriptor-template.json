@@ -365,7 +365,7 @@
     },
     {
       "id": "location-units",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -434,7 +434,7 @@
     },
     {
       "id": "locations",
-      "version": "3.1",
+      "version": "3.2",
       "handlers": [
         {
           "methods": ["GET"],

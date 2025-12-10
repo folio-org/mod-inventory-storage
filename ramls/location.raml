@@ -37,6 +37,12 @@ resourceTypes:
       pageable
     ]
     description: Return a list of locations
+    queryParameters:
+      includeShadowLocations:
+        description: Whether to include shadow locations in the response or not.
+        type: boolean
+        required: false
+        default: false
   post:
     description: Create a new location
     is: [validate]

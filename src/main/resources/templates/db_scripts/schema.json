@@ -1267,6 +1267,26 @@
       "run": "after",
       "snippetPath": "oaipmh/createDeletedIndex.sql",
       "fromModuleVersion": "29.0.8"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocations.sql",
+      "fromModuleVersion": "29.0.15"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationInstitution.sql",
+      "fromModuleVersion": "29.0.15"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationCampus.sql",
+      "fromModuleVersion": "29.0.15"
+    },
+    {
+      "run": "after",
+      "snippetPath": "populateIsShadowIfNotSetForExistingLocationLibrary.sql",
+      "fromModuleVersion": "29.0.15"
     }
   ]
 }

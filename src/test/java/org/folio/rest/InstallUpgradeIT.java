@@ -175,7 +175,7 @@ public class InstallUpgradeIT {
       .header(XOkapiHeaders.REQUEST_ID, "987654321")
       .header(XOkapiHeaders.USER_ID, "itsme")
       .when()
-      .get("/location-units/libraries")
+      .get("/inventory-view/instances")
       .then()
       .statusCode(400);  // tenant hasn't been created
 
