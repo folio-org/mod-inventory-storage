@@ -27,16 +27,11 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
    * {@code total_records} column is the exact totalRecords count.
    */
   public Future<Row> getByInstanceId(String instanceId, String[] sortBys, int offset, int limit) {
-    Future<String> orderByFuture = buildOrderByClause(sortBys);
-    if (orderByFuture.failed()) {
-      return orderByFuture.mapEmpty();
-    }
-
-    String orderBy = orderByFuture.result();
-    String sql = buildHoldingsQuerySql(orderBy);
-
-    return postgresClient.withReadConn(conn -> conn.execute(sql, Tuple.of(instanceId, offset, limit)))
-        .map(rowSet -> rowSet.iterator().next());
+    return buildOrderByClause(sortBys)
+        .map(this::buildHoldingsQuerySql)
+        .compose(sql -> postgresClient
+            .withReadConn(conn -> conn.execute(sql, Tuple.of(instanceId, offset, limit)))
+            .map(rowSet -> rowSet.iterator().next()));
   }
 
   private Future<String> buildOrderByClause(String[] sortBys) {
