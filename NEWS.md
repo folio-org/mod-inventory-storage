@@ -1,3 +1,15 @@
+## v29.0.15 2025-12-10
+### New APIs versions
+* Provides `location-units v2.1`
+* Provides `locations v3.2`
+
+### Features
+* Add new `isShadow` property to location schema ([MODINVNSTOR-1436](https://folio-org.atlassian.net/browse/MODINVSTOR-1436))
+* Add new `isShadow` property to location units (institution, campus, library) schemas ([MODINVNSTOR-1455](https://folio-org.atlassian.net/browse/MODINVSTOR-1455))
+* Adjust behavior for `includeShadowLocations` and `includeShadow` query params of location and location units respectively ([MODINVNSTOR-1459](https://folio-org.atlassian.net/browse/MODINVSTOR-1459))
+
+---
+
 ## v29.0.14 2025-12-09
 ### Features
 * Add default empty values for S3_SECRET_ACCESS_KEY and S3_ACCESS_KEY_ID ([MODINVSTOR-1489](https://folio-org.atlassian.net/browse/MODINVSTOR-1489))
