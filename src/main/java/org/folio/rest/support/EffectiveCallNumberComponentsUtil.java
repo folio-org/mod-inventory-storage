@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,14 +67,13 @@ public final class EffectiveCallNumberComponentsUtil {
 
   private static EffectiveCallNumberComponents buildComponents(Item item, HoldingsRecord holdings) {
     var updatedCallNumber = resolveCallNumberField(
-      item.getItemLevelCallNumber(), holdings.getCallNumber());
+      item.getItemLevelCallNumber(), holdings, HoldingsRecord::getCallNumber);
     var updatedCallNumberPrefix = resolveCallNumberField(
-      item.getItemLevelCallNumberPrefix(), holdings.getCallNumberPrefix());
+      item.getItemLevelCallNumberPrefix(), holdings, HoldingsRecord::getCallNumberPrefix);
     var updatedCallNumberSuffix = resolveCallNumberField(
-      item.getItemLevelCallNumberSuffix(), holdings.getCallNumberSuffix());
-    var updatedCallNumberTypeId = StringUtils.firstNonBlank(
-      item.getItemLevelCallNumberTypeId(),
-      holdings != null ? holdings.getCallNumberTypeId() : null);
+      item.getItemLevelCallNumberSuffix(), holdings, HoldingsRecord::getCallNumberSuffix);
+    var updatedCallNumberTypeId = resolveCallNumberField(
+      item.getItemLevelCallNumberTypeId(), holdings, HoldingsRecord::getCallNumberTypeId);
 
     return new EffectiveCallNumberComponents()
       .withCallNumber(updatedCallNumber)
@@ -102,13 +102,15 @@ public final class EffectiveCallNumberComponentsUtil {
         holdings::getCallNumberTypeId));
   }
 
-  private static String resolveCallNumberField(String itemLevelValue, String holdingsValue) {
+  private static String resolveCallNumberField(String itemLevelValue, HoldingsRecord holdings,
+                                               Function<HoldingsRecord, String> holdingsValueExtractor) {
     if (isNotBlank(itemLevelValue)) {
       return itemLevelValue;
-    } else if (isNotBlank(holdingsValue)) {
-      return holdingsValue;
     }
-    return null;
+    if (holdings == null) {
+      return null;
+    }
+    return StringUtils.getIfBlank(holdingsValueExtractor.apply(holdings), () -> null);
   }
 
   private static String getFieldValue(Map<String, Object> fields, String key, Supplier<String> oldComponentSupplier,

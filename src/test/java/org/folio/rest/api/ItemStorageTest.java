@@ -387,11 +387,11 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse1.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(postResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    var id3 = createThirdItemAndVerifyOrder(holdingsRecordId, id1, id2);
+    createThirdItemAndVerifyOrder(holdingsRecordId, id1, id2);
   }
 
   @SneakyThrows
-  private UUID createThirdItemAndVerifyOrder(UUID holdingsRecordId, UUID id1, UUID id2) {
+  private void createThirdItemAndVerifyOrder(UUID holdingsRecordId, UUID id1, UUID id2) {
     var id3 = UUID.randomUUID();
     var itemToCreate3 = minimalItem(id3, holdingsRecordId);
     var createCompleted3 = new CompletableFuture<Response>();
@@ -407,7 +407,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), is(1000));
     assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), is(10));
     assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
-    return id3;
   }
 
   @SneakyThrows
@@ -2528,7 +2527,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = postItemAndGetResponse(itemToCreate);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject itemUpdate = removeAdditionalCallNumbersAndUpdate(itemToCreate, id);
+    removeAdditionalCallNumbersAndUpdate(itemToCreate, id);
     JsonObject updatedItem = getById(id).getJson();
 
     assertThat(updatedItem.containsKey("additionalCallNumbers"), is(true));
@@ -3358,7 +3357,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(error.getParameters(), notNullValue());
     var parameter = error.getParameters().getFirst();
     assertThat(parameter, notNullValue());
-    assertThat(parameter.getKey(), is("hrid"));
+    assertThat(parameter.getKey(), is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(parameter.getValue(), is("it00000000001"));
   }
 
@@ -4154,7 +4153,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  private JsonObject removeAdditionalCallNumbersAndUpdate(JsonObject itemToCreate, UUID id) {
+  private void removeAdditionalCallNumbersAndUpdate(JsonObject itemToCreate, UUID id) {
     JsonObject itemUpdate = itemToCreate.copy();
     itemUpdate.remove("additionalCallNumbers");
     itemUpdate.put("_version", 1);
@@ -4163,7 +4162,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       itemUpdate, TENANT_ID, ResponseHandler.jsonErrors(updateCompleted));
     Response putResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    return itemUpdate;
   }
 
   private JsonObject createItemWithInvalidTypeId(UUID id, UUID holdingsRecordId) {

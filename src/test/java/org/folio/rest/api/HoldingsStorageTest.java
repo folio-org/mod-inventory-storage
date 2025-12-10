@@ -1272,9 +1272,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private String getItemMetadataUpdatedDate(String itemId)
       throws InterruptedException, ExecutionException, TimeoutException {
-    URL itemUrl = itemsStorageUrl(String.format("/%s", itemId));
-    Response response = get(itemUrl);
-    JsonObject item = response.getJson();
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
     assertThat(item.getString("id"), is(itemId));
     return item.getJsonObject("metadata").getString("updatedDate");
@@ -1598,9 +1598,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     if ("callNumberSuffix".equals(componentKey)) {
-      builder.withCallNumberSuffix(componentValue);
+      builder = builder.withCallNumberSuffix(componentValue);
     } else if ("callNumberPrefix".equals(componentKey)) {
-      builder.withCallNumberPrefix(componentValue);
+      builder = builder.withCallNumberPrefix(componentValue);
     }
 
     return createHoldingRecord(builder.create()).getJson();
@@ -1626,7 +1626,6 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("holdingsRecordId", holdingId.toString());
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
     return itemToCreate;
   }
@@ -2316,11 +2315,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withCallNumberPrefix(prefix)
-      .withCallNumber(callNumber);
-
-    if (suffix != null) {
-      builder.withCallNumberSuffix(suffix);
-    }
+      .withCallNumber(callNumber)
+      .withCallNumberSuffix(suffix);
 
     return createHoldingRecord(builder.create());
   }
@@ -2693,11 +2689,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .forInstance(instance.getId())
       .withSource(getPreparedHoldingSourceId())
       .withCallNumber(callNumber)
+      .withCallNumberSuffix(suffix)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
-
-    if (suffix != null) {
-      builder.withCallNumberSuffix(suffix);
-    }
 
     return createHoldingRecord(builder.create());
   }
