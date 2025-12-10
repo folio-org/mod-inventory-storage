@@ -611,9 +611,6 @@
           <logViolationsToConsole>true</logViolationsToConsole>
           <configLocation>folio-checkstyle/checkstyle.xml</configLocation>
           <cacheFile>${basedir}/target/cachefile</cacheFile>
-          <propertyExpansion>
-            checkstyle.method-length.max=150
-          </propertyExpansion>
         </configuration>
       </plugin>
 
