@@ -62,6 +62,8 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.sanitizer.Sanitizer;
+import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -82,19 +84,21 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
+  private final Sanitizer<Instance> sanitizer;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
     this.okapiHeaders = okapiHeaders;
 
-    postgresClient = postgresClient(vertxContext, okapiHeaders);
-    hridManager = new HridManager(postgresClient);
-    domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
-    instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
-    marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
-    relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
-    consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
+    this.postgresClient = postgresClient(vertxContext, okapiHeaders);
+    this.hridManager = new HridManager(postgresClient);
+    this.domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
+    this.instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
+    this.marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
+    this.relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
+    this.consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
       vertxContext.get(ConsortiumDataCache.class.getName()));
+    this.sanitizer = SanitizerFactory.getSanitizer(Instance.class);
   }
 
   public Future<Response> getInstance(String id) {
@@ -125,6 +129,7 @@ public class InstanceService {
 
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
+    sanitizer.sanitize(entity);
     return validateUuidFormat(entity.getStatisticalCodeIds())
       .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
@@ -175,7 +180,10 @@ public class InstanceService {
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
                                           boolean publishEvents, Function<Conn, Future<?>> additionalOperations) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
-    instances.forEach(instance -> instance.setStatusUpdatedDate(statusUpdatedDate));
+    instances.forEach(instance -> {
+      instance.setStatusUpdatedDate(statusUpdatedDate);
+      sanitizer.sanitize(instance);
+    });
     setMissingInstanceIds(instances);
 
     return hridManager.populateHridForInstances(instances)
@@ -192,6 +200,7 @@ public class InstanceService {
   }
 
   public Future<Response> updateInstance(String id, Instance newInstance) {
+    sanitizer.sanitize(newInstance);
     return refuseLongNotes(newInstance)
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)

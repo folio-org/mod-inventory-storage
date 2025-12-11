@@ -56,6 +56,8 @@ import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.item.ItemService;
+import org.folio.services.sanitizer.Sanitizer;
+import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -83,6 +85,7 @@ public class HoldingsService {
   private final ItemEffectiveValuesService effectiveValuesService;
   private final HoldingsUpsertSqlBuilder upsertSqlBuilder;
   private final HoldingsEventPublisher eventPublisher;
+  private final Sanitizer<HoldingsRecord> sanitizer;
 
   public HoldingsService(Context context, Map<String, String> okapiHeaders) {
     this.vertxContext = context;
@@ -98,6 +101,7 @@ public class HoldingsService {
     this.effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
     this.upsertSqlBuilder = new HoldingsUpsertSqlBuilder(holdingsRepository, new ItemRepository(context, okapiHeaders));
     this.eventPublisher = new HoldingsEventPublisher(context, okapiHeaders);
+    this.sanitizer = SanitizerFactory.getSanitizer(HoldingsRecord.class);
   }
 
   /**
@@ -140,6 +144,7 @@ public class HoldingsService {
   }
 
   public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
+    sanitizer.sanitize(holdingsRecord);
     return holdingsRepository.getById(holdingId)
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
@@ -152,6 +157,7 @@ public class HoldingsService {
 
   public Future<Response> createHolding(HoldingsRecord entity) {
     entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
+    sanitizer.sanitize(entity);
 
     return validateUuidFormat(entity.getStatisticalCodeIds())
       .compose(v -> createShadowInstancesIfNeeded(List.of(entity)))
@@ -201,6 +207,7 @@ public class HoldingsService {
   public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
     for (var holdingsRecord : holdings) {
       holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
+      sanitizer.sanitize(holdingsRecord);
     }
 
     return validateUuidFormatForList(holdings, HoldingsRecord::getStatisticalCodeIds)
