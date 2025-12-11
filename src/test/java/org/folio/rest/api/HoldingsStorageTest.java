@@ -189,47 +189,52 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canCreateHolding() {
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
-
     setHoldingsSequence(1);
 
-    UUID holdingId = UUID.randomUUID();
-    String adminNote = "An admin note";
+    var holdingId = UUID.randomUUID();
+    var adminNote = "An admin note";
 
-    JsonObject holdingToCreate = new HoldingRequestBuilder()
+    var holdingToCreate = buildHoldingWithAdminNote(holdingId, instanceId, adminNote);
+    var holding = createHoldingRecord(holdingToCreate).getJson();
+
+    assertCreatedHolding(holding, holdingId, instanceId, adminNote);
+
+    var getResponse = holdingsClient.getById(holdingId);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    assertRetrievedHolding(getResponse.getJson(), holdingId, instanceId, adminNote);
+  }
+
+  private JsonObject buildHoldingWithAdminNote(UUID holdingId, UUID instanceId, String adminNote) {
+    var holdingToCreate = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create();
-
     holdingToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
+    return holdingToCreate;
+  }
 
-    JsonObject holding = createHoldingRecord(holdingToCreate).getJson();
-
+  private void assertCreatedHolding(JsonObject holding, UUID holdingId, UUID instanceId, String adminNote) {
     assertThat(holding.getString("id"), is(holdingId.toString()));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
     assertThat(holding.getString("hrid"), is("ho00000000001"));
     assertThat(holding.getString("effectiveLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
     assertThat(holding.getJsonArray("administrativeNotes").contains(adminNote), is(true));
+  }
 
-    Response getResponse = holdingsClient.getById(holdingId);
+  private void assertRetrievedHolding(JsonObject holding, UUID holdingId, UUID instanceId, String adminNote) {
+    assertThat(holding.getString("id"), is(holdingId.toString()));
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
+    assertThat(holding.getString("hrid"), is("ho00000000001"));
+    assertThat(holding.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject holdingFromGet = getResponse.getJson();
-
-    assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
-    assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(holdingFromGet.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
-    assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
-    assertThat(holdingFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
-
-    List<String> tags = getTags(holdingFromGet);
-
+    var tags = getTags(holding);
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(TAG_VALUE));
   }
@@ -342,14 +347,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canReplaceHoldingAtSpecificLocation() {
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     String adminNote = "an admin note";
     setHoldingsSequence(1);
 
-    UUID sourceId = getPreparedHoldingSourceId();
-    IndividualResource holdingResource = createHoldingRecord(new HoldingRequestBuilder()
+    var sourceId = getPreparedHoldingSourceId();
+    var holdingResource = createHoldingRecord(new HoldingRequestBuilder()
       .forInstance(instanceId)
       .withSource(sourceId)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
@@ -361,78 +365,70 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     // properly resolved.
     removeAllEvents();
 
-    UUID holdingId = holdingResource.getId();
+    var holdingId = holdingResource.getId();
+    var replacement = buildReplacementHolding(holdingResource, sourceId, adminNote);
+    updateHoldingRecord(holdingId, replacement);
 
-    JsonObject replacement = holdingResource.copyJson()
+    var getResponse = holdingsClient.getById(holdingId);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    assertReplacedHolding(getResponse.getJson(), holdingId, instanceId, sourceId, adminNote);
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), getResponse.getJson());
+  }
+
+  private JsonObject buildReplacementHolding(IndividualResource holdingResource, UUID sourceId, String adminNote) {
+    return holdingResource.copyJson()
       .put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString())
       .put("sourceId", sourceId.toString())
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(NEW_TEST_TAG)))
       .put("administrativeNotes", new JsonArray().add(adminNote));
+  }
 
-    updateHoldingRecord(holdingId, replacement);
+  private void assertReplacedHolding(JsonObject holding, UUID holdingId, UUID instanceId,
+                                      UUID sourceId, String adminNote) {
+    assertThat(holding.getString("id"), is(holdingId.toString()));
+    assertThat(holding.getString("instanceId"), is(instanceId.toString()));
+    assertThat(holding.getString("sourceId"), is(sourceId.toString()));
+    assertThat(holding.getString("permanentLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+    assertThat(holding.getString("hrid"), is("ho00000000001"));
+    assertThat(holding.getJsonArray("administrativeNotes").contains(adminNote), is(true));
 
-    Response getResponse = holdingsClient.getById(holdingId);
-
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject holdingFromGet = getResponse.getJson();
-
-    assertThat(holdingFromGet.getString("id"), is(holdingId.toString()));
-    assertThat(holdingFromGet.getString("instanceId"), is(instanceId.toString()));
-    assertThat(holdingFromGet.getString("sourceId"), is(sourceId.toString()));
-    assertThat(holdingFromGet.getString("permanentLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
-    assertThat(holdingFromGet.getString("hrid"), is("ho00000000001"));
-    assertThat(holdingFromGet.getJsonArray("administrativeNotes").contains(adminNote), is(true));
-
-    List<String> tags = getTags(holdingFromGet);
-
+    var tags = getTags(holding);
     assertThat(tags.size(), is(1));
     assertThat(tags, hasItem(NEW_TEST_TAG));
-    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
   }
 
   @Test
   public void canMoveHoldingsToNewInstance() throws ExecutionException, InterruptedException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
-    UUID newInstanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
+    var newInstanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
     instancesClient.create(smallAngryPlanet(newInstanceId));
     setHoldingsSequence(1);
 
-    JsonObject holdingToCreate = new HoldingRequestBuilder()
+    var holdingResource = createHoldingRecord(new HoldingRequestBuilder()
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .create();
+      .create());
 
-    IndividualResource holdingResource = createHoldingRecord(holdingToCreate);
+    var holdingId = holdingResource.getId();
+    final var item = createItemForHolding(holdingId);
 
-    UUID holdingId = holdingResource.getId();
-
-    final JsonObject item = create(itemsStorageUrl(""), new ItemRequestBuilder()
-      .forHolding(holdingId)
-      .withPermanentLoanType(canCirculateLoanTypeId)
-      .withMaterialType(bookMaterialTypeId)
-      .create())
-      .getJson();
-
-    final JsonObject replacement = holdingResource.copyJson()
+    var replacement = holdingResource.copyJson()
       .put("instanceId", newInstanceId.toString());
-
     updateHoldingRecord(holdingId, replacement);
 
-    Response getResponse = holdingsClient.getById(holdingId);
-
+    var getResponse = holdingsClient.getById(holdingId);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
 
-    JsonObject holdingFromGet = getResponse.getJson();
-
+    var holdingFromGet = getResponse.getJson();
     assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
 
     holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
-    JsonObject newItem = item.copy()
+    var newItem = item.copy()
       .put("_version", 2);
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
@@ -524,6 +520,16 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Test
   public void canGetAllHoldings() {
+    var holdingIds = createThreeHoldingsForInstances();
+
+    var getCompleted = new CompletableFuture<Response>();
+    getClient().get(holdingsStorageUrl(""), TENANT_ID, ResponseHandler.json(getCompleted));
+    var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    assertAllHoldingsResponse(response, holdingIds);
+  }
+
+  private UUID[] createThreeHoldingsForInstances() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     UUID thirdInstanceId = UUID.randomUUID();
@@ -548,68 +554,32 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getId();
 
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().get(holdingsStorageUrl(""), TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    Response response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    JsonObject responseBody = response.getJson();
-
-    List<JsonObject> allHoldings = JsonArrayHelper.toList(
-      responseBody.getJsonArray("holdingsRecords"));
-
-    assertThat(allHoldings.size(), is(3));
-    assertThat(responseBody.getInteger("totalRecords"), is(3));
-
-    assertThat(allHoldings.stream().anyMatch(filterById(firstHoldingId)), is(true));
-    assertThat(allHoldings.stream().anyMatch(filterById(secondHoldingId)), is(true));
-    assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
+    return new UUID[] { firstHoldingId, secondHoldingId, thirdHoldingId };
   }
 
-  @SneakyThrows
-  @Test
-  public void canRetrieveAllHoldings() {
-    var firstInstanceId = UUID.randomUUID();
-    var secondInstanceId = UUID.randomUUID();
-    var thirdInstanceId = UUID.randomUUID();
-
-    instancesClient.create(smallAngryPlanet(firstInstanceId));
-    instancesClient.create(nod(secondInstanceId));
-    instancesClient.create(uprooted(thirdInstanceId));
-
-    CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    final var firstHoldingId = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(firstInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create()).getId();
-
-    final var secondHoldingId = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(secondInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID).create()).getId();
-
-    final var thirdHoldingId = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(thirdInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getId();
-
-    getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
-      ResponseHandler.json(getCompleted));
-
-    var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  private void assertAllHoldingsResponse(Response response, UUID[] holdingIds) {
     var responseBody = response.getJson();
     var allHoldings = JsonArrayHelper.toList(responseBody.getJsonArray("holdingsRecords"));
 
     assertThat(allHoldings.size(), is(3));
     assertThat(responseBody.getInteger("totalRecords"), is(3));
 
-    assertThat(allHoldings.stream().anyMatch(filterById(firstHoldingId)), is(true));
-    assertThat(allHoldings.stream().anyMatch(filterById(secondHoldingId)), is(true));
-    assertThat(allHoldings.stream().anyMatch(filterById(thirdHoldingId)), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(holdingIds[0])), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(holdingIds[1])), is(true));
+    assertThat(allHoldings.stream().anyMatch(filterById(holdingIds[2])), is(true));
+  }
+
+  @SneakyThrows
+  @Test
+  public void canRetrieveAllHoldings() {
+    var holdingIds = createThreeHoldingsForInstances();
+
+    var getCompleted = new CompletableFuture<Response>();
+    getClient().post(holdingsStorageUrl("/retrieve"), new JsonObject(), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+
+    var response = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertAllHoldingsResponse(response, holdingIds);
   }
 
   @Test
@@ -665,6 +635,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     ExecutionException,
     TimeoutException {
 
+    createFiveHoldingsForPagingTest();
+
+    var pages = fetchTwoPages();
+
+    assertThat(pages[0].getStatusCode(), is(200));
+    assertThat(pages[1].getStatusCode(), is(200));
+
+    assertPageContents(pages[0].getJson(), 3, 5);
+    assertPageContents(pages[1].getJson(), 2, 5);
+  }
+
+  private void createFiveHoldingsForPagingTest() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     UUID thirdInstanceId = UUID.randomUUID();
@@ -673,67 +655,67 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     instancesClient.create(nod(secondInstanceId));
     instancesClient.create(uprooted(thirdInstanceId));
 
-    createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(firstInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create()).getId();
+    createSimpleHolding(firstInstanceId, MAIN_LIBRARY_LOCATION_ID);
+    createSimpleHolding(secondInstanceId, ANNEX_LIBRARY_LOCATION_ID);
+    createSimpleHolding(thirdInstanceId, MAIN_LIBRARY_LOCATION_ID);
+    createSimpleHolding(secondInstanceId, MAIN_LIBRARY_LOCATION_ID);
+    createSimpleHolding(firstInstanceId, ANNEX_LIBRARY_LOCATION_ID);
+  }
 
+  private void createSimpleHolding(UUID instanceId, UUID locationId) {
     createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(secondInstanceId)
+      .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID).create()).getId();
+      .withPermanentLocation(locationId).create());
+  }
 
-    createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(thirdInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create()).getId();
-
-    createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(secondInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create()).getId();
-
-    createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(firstInstanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID).create()).getId();
-
-    CompletableFuture<Response> firstPageCompleted = new CompletableFuture<>();
-    CompletableFuture<Response> secondPageCompleted = new CompletableFuture<>();
+  private Response[] fetchTwoPages()
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var firstPageCompleted = new CompletableFuture<Response>();
+    var secondPageCompleted = new CompletableFuture<Response>();
 
     getClient().get(holdingsStorageUrl("") + "?limit=3", TENANT_ID,
       ResponseHandler.json(firstPageCompleted));
-
     getClient().get(holdingsStorageUrl("") + "?limit=3&offset=3", TENANT_ID,
       ResponseHandler.json(secondPageCompleted));
 
-    Response firstPageResponse = firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    Response secondPageResponse = secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    return new Response[] {
+      firstPageCompleted.get(TIMEOUT, TimeUnit.SECONDS),
+      secondPageCompleted.get(TIMEOUT, TimeUnit.SECONDS)
+    };
+  }
 
-    assertThat(firstPageResponse.getStatusCode(), is(200));
-    assertThat(secondPageResponse.getStatusCode(), is(200));
-
-    JsonObject firstPage = firstPageResponse.getJson();
-    JsonObject secondPage = secondPageResponse.getJson();
-
-    List<JsonObject> firstPageHoldings = JsonArrayHelper.toList(
-      firstPage.getJsonArray("holdingsRecords"));
-
-    List<JsonObject> secondPageHoldings = JsonArrayHelper.toList(
-      secondPage.getJsonArray("holdingsRecords"));
-
-    assertThat(firstPageHoldings.size(), is(3));
-    assertThat(firstPage.getInteger("totalRecords"), is(5));
-
-    assertThat(secondPageHoldings.size(), is(2));
-    assertThat(secondPage.getInteger("totalRecords"), is(5));
+  private void assertPageContents(JsonObject page, int expectedSize, int expectedTotal) {
+    var holdings = JsonArrayHelper.toList(page.getJsonArray("holdingsRecords"));
+    assertThat(holdings.size(), is(expectedSize));
+    assertThat(page.getInteger("totalRecords"), is(expectedTotal));
   }
 
   @Test
   @SneakyThrows
   public void canGetByInstanceId() {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(nod(instanceId));
+
+    var holdingIds = createEightHoldingsForSorting(instanceId);
+    Function<String, List<String>> getHoldingsIds = query -> holdingsClient.getByQuery(query).stream()
+      .map(holding -> holding.getString("id")).toList();
+
+    var query = buildSortQuery(instanceId, "effectiveLocation.name callNumberPrefix callNumber callNumberSuffix");
+    var ids = getHoldingsIds.apply(query);
+    assertThat(ids, is(List.of(holdingIds[0], holdingIds[1], holdingIds[2], holdingIds[3],
+                                holdingIds[4], holdingIds[5], holdingIds[6], holdingIds[7])));
+
+    ids = getHoldingsIds.apply(query + "&offset=2&limit=4");
+    assertThat(ids, is(List.of(holdingIds[2], holdingIds[3], holdingIds[4], holdingIds[5])));
+
+    query = buildSortQuery(instanceId, "callNumberSuffix callNumber callNumberPrefix effectiveLocation.name");
+    ids = getHoldingsIds.apply(query);
+    assertThat(ids, is(List.of(holdingIds[3], holdingIds[1], holdingIds[7], holdingIds[2],
+                                holdingIds[6], holdingIds[0], holdingIds[5], holdingIds[4])));
+  }
+
+  private String[] createEightHoldingsForSorting(UUID instanceId) {
     Function4<UUID, String, String, String, String> createHolding =
       (location, prefix, callNumber, suffix) -> createHoldingRecord(new HoldingRequestBuilder()
         .forInstance(instanceId)
@@ -743,38 +725,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         .withCallNumber(callNumber)
         .withCallNumberSuffix(suffix).create())
         .getId().toString();
-    final var h7 = createHolding.invoke(SECOND_FLOOR_LOCATION_ID, "b", "k", "p");
-    final var h6 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "c", "j", "q");
-    final var h5 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "b", "k", "q");
-    final var h4 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "l", "r");
-    final var h3 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "k", "o");
-    final var h2 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "q");
-    final var h1 = createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "p");
-    final var h0 = createHolding.invoke(ANNEX_LIBRARY_LOCATION_ID, "b", "k", "q");
-    Function<String, List<String>> getHoldingsIds = query -> holdingsClient.getByQuery(query).stream()
-      .map(holding -> holding.getString("id")).toList();
 
-    var query = "instanceId==" + instanceId
-                + " sortBy effectiveLocation.name callNumberPrefix callNumber callNumberSuffix";
-    query = "?query=" + PercentCodec.encode(query);
-    var ids = getHoldingsIds.apply(query);
-    assertThat(ids, is(List.of(h0, h1, h2, h3, h4, h5, h6, h7)));
+    return new String[] {
+      createHolding.invoke(ANNEX_LIBRARY_LOCATION_ID, "b", "k", "q"),  // h0
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "p"),   // h1
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "j", "q"),   // h2
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "k", "o"),   // h3
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "a", "l", "r"),   // h4
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "b", "k", "q"),   // h5
+      createHolding.invoke(MAIN_LIBRARY_LOCATION_ID, "c", "j", "q"),   // h6
+      createHolding.invoke(SECOND_FLOOR_LOCATION_ID, "b", "k", "p")    // h7
+    };
+  }
 
-    ids = getHoldingsIds.apply(query + "&offset=2&limit=4");
-    assertThat(ids, is(List.of(h2, h3, h4, h5)));
-
-    query = "instanceId==" + instanceId + " sortBy callNumberSuffix callNumber callNumberPrefix effectiveLocation.name";
-    query = "?query=" + PercentCodec.encode(query);
-    ids = getHoldingsIds.apply(query);
-    // h3 M a k o
-    // h1 M a j p
-    // h7 S b k p
-    // h2 M a j q
-    // h6 M c j q
-    // h0 A b k q
-    // h5 M b k q
-    // h4 M a l r
-    assertThat(ids, is(List.of(h3, h1, h7, h2, h6, h0, h5, h4)));
+  private String buildSortQuery(UUID instanceId, String sortFields) {
+    var query = "instanceId==" + instanceId + " sortBy " + sortFields;
+    return "?query=" + PercentCodec.encode(query);
   }
 
   @Test
@@ -814,53 +780,41 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   @Test
   public void canDeleteHoldingsByCql() {
-    UUID instanceId1 = UUID.randomUUID();
-    UUID instanceId2 = UUID.randomUUID();
+    var instanceId1 = UUID.randomUUID();
+    var instanceId2 = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId1));
     instancesClient.create(nod(instanceId2));
 
-    final var h1 = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(instanceId1)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("1234")
-      .create()).getJson();
-    final var h2 = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(instanceId1)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("21234")
-      .create()).getJson();
-    final var h3 = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("12")
-      .create()).getJson();
-    final var h4 = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("3123")
-      .create()).getJson();
-    final var h5 = createHoldingRecord(new HoldingRequestBuilder()
-      .forInstance(instanceId2)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withHrid("123")
-      .create()).getJson();
+    var holdings = createFiveHoldingsWithHrids(instanceId1, instanceId2);
 
     holdingsClient.deleteByQuery("hrid==12*", Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
 
-    assertExists(h2);
-    assertExists(h4);
-    assertNotExists(h1);
-    assertNotExists(h3);
-    assertNotExists(h5);
+    assertHoldingsExistence(holdings);
+    assertDeletedMessagesPublished(holdings[0], holdings[2], holdings[4]);
+  }
 
-    holdingsMessageChecks.deletedMessagePublished(h1);
-    holdingsMessageChecks.deletedMessagePublished(h3);
-    holdingsMessageChecks.deletedMessagePublished(h5);
+  private JsonObject[] createFiveHoldingsWithHrids(UUID instanceId1, UUID instanceId2) {
+    return new JsonObject[] {
+      createHoldingWithHrid(instanceId1, "1234"),
+      createHoldingWithHrid(instanceId1, "21234"),
+      createHoldingWithHrid(instanceId2, "12"),
+      createHoldingWithHrid(instanceId2, "3123"),
+      createHoldingWithHrid(instanceId2, "123")
+    };
+  }
+
+  private void assertHoldingsExistence(JsonObject[] holdings) {
+    assertExists(holdings[1]);  // h2
+    assertExists(holdings[3]);  // h4
+    assertNotExists(holdings[0]); // h1
+    assertNotExists(holdings[2]); // h3
+    assertNotExists(holdings[4]); // h5
+  }
+
+  private void assertDeletedMessagesPublished(JsonObject... deletedHoldings) {
+    for (var holding : deletedHoldings) {
+      holdingsMessageChecks.deletedMessagePublished(holding);
+    }
   }
 
   @SneakyThrows
@@ -1078,13 +1032,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
 
-    UUID holdingId = UUID.randomUUID();
-    JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
+    var holdingId = UUID.randomUUID();
+    var holding = createHoldingRecord(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
@@ -1094,21 +1047,32 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(holding.getString("effectiveLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
 
-    holding.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-    update(holdingsUrl, holding);
-    holding = holdingsClient.getById(holdingId).getJson();
-    assertThat(holding.getString("effectiveLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+    holding = updateAndVerifyEffectiveLocation(holdingId, holding, "temporaryLocationId",
+      ANNEX_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
+    holding = updateAndVerifyEffectiveLocation(holdingId, holding, "temporaryLocationId",
+      SECOND_FLOOR_LOCATION_ID, SECOND_FLOOR_LOCATION_ID);
+    updateRemoveAndVerifyEffectiveLocation(holdingId, holding, "temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
+  }
 
-    holding.put("temporaryLocationId", SECOND_FLOOR_LOCATION_ID.toString());
+  private JsonObject updateAndVerifyEffectiveLocation(UUID holdingId, JsonObject holding,
+      String fieldKey, UUID fieldValue, UUID expectedEffectiveLocation)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    holding.put(fieldKey, fieldValue.toString());
     update(holdingsUrl, holding);
-    holding = holdingsClient.getById(holdingId).getJson();
-    assertThat(holding.getString("effectiveLocationId"), is(SECOND_FLOOR_LOCATION_ID.toString()));
+    var updatedHolding = holdingsClient.getById(holdingId).getJson();
+    assertThat(updatedHolding.getString("effectiveLocationId"), is(expectedEffectiveLocation.toString()));
+    return updatedHolding;
+  }
 
-    holding.remove("temporaryLocationId");
+  private void updateRemoveAndVerifyEffectiveLocation(UUID holdingId, JsonObject holding,
+      String fieldKey, UUID expectedEffectiveLocation)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    holding.remove(fieldKey);
     update(holdingsUrl, holding);
-    holding = holdingsClient.getById(holdingId).getJson();
-    assertThat(holding.getString("effectiveLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
+    var updatedHolding = holdingsClient.getById(holdingId).getJson();
+    assertThat(updatedHolding.getString("effectiveLocationId"), is(expectedEffectiveLocation.toString()));
   }
 
   @Parameters({
@@ -1144,512 +1108,262 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String copy,
     String suffix
   ) throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumber(instanceId, holdingId, "testCallNumber");
+    var itemIds = createTwoComplexItems(holdingId, prefix, suffix, volume, enumeration, chronology, copy);
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("testCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    assertItemsHaveCallNumber(itemIds, holdingId, "testCallNumber");
 
-    JsonObject itemToCreate = new JsonObject();
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", callNumber);
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-    itemToCreate.put("itemLevelCallNumberSuffix", suffix);
-    itemToCreate.put("itemLevelCallNumberPrefix", prefix);
-    itemToCreate.put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
-    itemToCreate.put("volume", volume);
-    itemToCreate.put("enumeration", enumeration);
-    itemToCreate.put("chronology", chronology);
-    itemToCreate.put("copyNumber", copy);
+    assertItemsHaveCallNumber(itemIds, holdingId, callNumber);
+  }
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
-    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
+  private String[] createTwoComplexItems(UUID holdingId, String prefix, String suffix,
+      String volume, String enumeration, String chronology, String copy)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemToCreate = buildComplexItemRequest(holdingId, prefix, suffix, volume,
+      enumeration, chronology, copy);
 
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    var first = create(itemsStorageUrl(""), itemToCreate);
+    var second = create(itemsStorageUrl(""), itemToCreate);
 
-    JsonObject firstItem = postFirstItemResponse.getJson();
-    JsonObject secondItem = postSecondItemResponse.getJson();
+    assertThat(first.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(second.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    String firstItemId = firstItem.getString("id");
-    String secondItemId = secondItem.getString("id");
+    return new String[] { first.getJson().getString("id"), second.getJson().getString("id") };
+  }
 
-    assertThat(firstItemId, is(notNullValue()));
-    assertThat(secondItemId, is(notNullValue()));
+  private JsonObject buildComplexItemRequest(UUID holdingId, String prefix, String suffix,
+      String volume, String enumeration, String chronology, String copy) {
+    var item = buildItemRequest(holdingId);
+    item.put("itemLevelCallNumberSuffix", suffix);
+    item.put("itemLevelCallNumberPrefix", prefix);
+    item.put("itemLevelCallNumberTypeId", LC_CALL_NUMBER_TYPE);
+    item.put("volume", volume);
+    item.put("enumeration", enumeration);
+    item.put("chronology", chronology);
+    item.put("copyNumber", copy);
+    return item;
+  }
 
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
+  private void assertItemsHaveCallNumber(String[] itemIds, UUID holdingId, String expectedCallNumber)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    for (String itemId : itemIds) {
+      URL itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+      Response response = get(itemUrl);
+      JsonObject item = response.getJson();
 
-    Response getFirstItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("testCallNumber"));
-
-    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
-    Response getSecondItemResponse = get(getSecondItemUrl);
-    JsonObject secondItemFromGet = getSecondItemResponse.getJson();
-    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("testCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumber", callNumber);
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.getString("callNumber"), is(callNumber));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is(callNumber));
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
-    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
-    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is(callNumber));
+      assertThat(item.getString("id"), is(itemId));
+      assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
+      assertThat(
+        item.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+        is(expectedCallNumber));
+    }
   }
 
   @Test
   public void updatingHoldingsUpdatesItemEffectiveCallNumber()
     throws InterruptedException, ExecutionException, TimeoutException {
 
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumber(instanceId, holdingId, "testCallNumber");
+    var itemIds = createTwoItemsForHolding(holdingId);
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("testCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    assertItemsHaveCallNumber(itemIds, holdingId, "testCallNumber");
 
-    JsonObject itemToCreate = new JsonObject();
-
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
-    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject firstItem = postFirstItemResponse.getJson();
-    JsonObject secondItem = postSecondItemResponse.getJson();
-
-    String firstItemId = firstItem.getString("id");
-    String secondItemId = secondItem.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-    assertThat(secondItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-    Response getSecondItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-    final JsonObject secondItemFromGet = getSecondItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("testCallNumber"));
-    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("testCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumber", "updatedCallNumber");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.getString("callNumber"), is("updatedCallNumber"));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-    final JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("updatedCallNumber"));
-    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("updatedCallNumber"));
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", "updatedCallNumber");
+    assertItemsHaveCallNumber(itemIds, holdingId, "updatedCallNumber");
   }
 
   @Test
   public void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final JsonObject holding = createHoldingWithCallNumber(instanceId, holdingId, "testCallNumber");
+    String itemId = createSingleItemForHolding(holdingId);
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("testCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    assertItemHasCallNumberAndShelvingOrder(itemId, holdingId, "testCallNumber");
 
-    JsonObject itemToCreate = new JsonObject();
+    removeHoldingCallNumberComponent(holding, holdingId, "callNumber");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    assertItemMissingCallNumberAndShelvingOrder(itemId);
+  }
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+  private void assertItemHasCallNumberAndShelvingOrder(String itemId, UUID holdingId, String expectedCallNumber)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
-
-    String firstItemId = firstItemFromPost.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(item.getString("id"), is(itemId));
+    assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
     assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("testCallNumber"));
+      item.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is(expectedCallNumber));
+    assertThat(item.getString("effectiveShelvingOrder"), is(expectedCallNumber));
+  }
+
+  private void assertItemMissingCallNumberAndShelvingOrder(String itemId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(item.getString("id"), is(itemId));
     assertThat(
-      firstItemFromGet.getString("effectiveShelvingOrder"), is("testCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.remove("callNumber");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.containsKey("callNumber"), is(false));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("callNumber"),
+      item.getJsonObject("effectiveCallNumberComponents").containsKey("callNumber"),
       is(false));
-    assertThat(
-      firstUpdatedItemFromGet.containsKey("effectiveShelvingOrder"),
-      is(false));
+    assertThat(item.containsKey("effectiveShelvingOrder"), is(false));
   }
 
   @Test
   public void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumber(instanceId, holdingId, "holdingsCallNumber");
+    var itemId = createItemWithCallNumberComponent(holdingId, "itemLevelCallNumber", "itemLevelCallNumber");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("holdingsCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    assertItemHasCallNumberComponent(itemId, holdingId, "callNumber", "itemLevelCallNumber");
 
-    JsonObject itemToCreate = new JsonObject();
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", "updatedHoldingCallNumber");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-    itemToCreate.put("itemLevelCallNumber", "itemLevelCallNumber");
-
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("itemLevelCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumber", "updatedHoldingCallNumber");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getUpdatedItemResponse = get(getItemUrl);
-
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertThat(
-      updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("itemLevelCallNumber"));
+    assertItemHasCallNumberComponent(itemId, holdingId, "callNumber", "itemLevelCallNumber");
   }
 
   @Test
   public void updateHoldingsCallNumberUpdatesItemLevelMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithoutCallNumber(instanceId, holdingId);
+    var itemId = createSingleItemForHolding(holdingId);
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
+    var originalUpdatedDate = getItemMetadataUpdatedDate(itemId);
+
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", "updatedHoldingCallNumber");
+
+    assertItemMetadataChanged(itemId, originalUpdatedDate);
+  }
+
+  private JsonObject createHoldingWithoutCallNumber(UUID instanceId, UUID holdingId) {
+    return createHoldingRecord(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+  }
 
-    JsonObject itemToCreate = new JsonObject();
+  private String getItemMetadataUpdatedDate(String itemId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    assertThat(item.getString("id"), is(itemId));
+    return item.getJsonObject("metadata").getString("updatedDate");
+  }
 
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
+  private void assertItemMetadataChanged(String itemId, String originalUpdatedDate)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumber", "updatedHoldingCallNumber");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getUpdatedItemResponse = get(getItemUrl);
-
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(item.getString("id"), is(itemId));
     assertNotEquals(
-      updatedItemFromGet.getJsonObject("metadata").getString("updatedDate"),
-      itemFromGet.getJsonObject("metadata").getString("updatedDate"));
+      item.getJsonObject("metadata").getString("updatedDate"),
+      originalUpdatedDate);
   }
 
   @Test
   public void updateHoldingsLocationUpdatesItemLevelMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumber(instanceId, holdingId, "holdingsCallNumber");
+    var itemId = createItemWithCallNumberComponent(holdingId, "itemLevelCallNumber", "itemLevelCallNumber");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("holdingsCallNumber")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var originalUpdatedDate = getItemMetadataUpdatedDate(itemId);
 
-    JsonObject itemToCreate = new JsonObject();
+    updateHoldingLocation(holding, holdingId);
+    assertItemMetadataChanged(itemId, originalUpdatedDate);
+  }
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-    itemToCreate.put("itemLevelCallNumber", "itemLevelCallNumber");
-
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("itemLevelCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
+  private void updateHoldingLocation(JsonObject holding, UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
     holding.put("temporaryLocationId", ONLINE_LOCATION_ID.toString());
-
-    Response putResponse = update(holdingsUrl, holding);
-
+    var putResponse = update(holdingsUrl, holding);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getUpdatedItemResponse = get(getItemUrl);
-
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertNotEquals(
-      updatedItemFromGet.getJsonObject("metadata").getString("updatedDate"),
-      itemFromGet.getJsonObject("metadata").getString("updatedDate"));
   }
 
   @Test
   public void updateHoldingsFieldsNotRelatedToItemShouldNotChangeItemMetadata()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumber(instanceId, holdingId, "holdingsCallNumber");
+    var itemId = createItemWithPermanentLocation(holdingId);
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("holdingsCallNumber").create()).getJson();
+    var originalUpdatedDate = getItemMetadataUpdatedDate(itemId);
 
-    JsonObject itemToCreate = new JsonObject();
+    updateHoldingTags(holding, holdingId);
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    assertItemMetadataUnchanged(itemId, originalUpdatedDate);
+  }
+
+  private String createItemWithPermanentLocation(UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemToCreate = buildItemRequest(holdingId);
     itemToCreate.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
     itemToCreate.put("itemLevelCallNumber", "itemLevelCallNumber");
 
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
+    var response = create(itemsStorageUrl(""), itemToCreate);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    return response.getJson().getString("id");
+  }
 
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("itemLevelCallNumber"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
+  private void updateHoldingTags(JsonObject holding, UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
     holding.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
-    Response putResponse = update(holdingsUrl, holding);
-
+    var putResponse = update(holdingsUrl, holding);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
 
-    Response getUpdatedItemResponse = get(getItemUrl);
+  private void assertItemMetadataUnchanged(String itemId, String originalUpdatedDate)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(item.getString("id"), is(itemId));
     assertEquals(
-      updatedItemFromGet.getJsonObject("metadata").getString("updatedDate"),
-      itemFromGet.getJsonObject("metadata").getString("updatedDate"));
+      item.getJsonObject("metadata").getString("updatedDate"),
+      originalUpdatedDate);
   }
 
   @Test
@@ -1758,39 +1472,53 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     throws ExecutionException,
     InterruptedException, TimeoutException {
 
-    UUID instanceId = UUID.randomUUID();
-
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    UUID firstHoldings = UUID.randomUUID();
-    UUID secondHoldings = UUID.randomUUID();
+    var firstHoldings = UUID.randomUUID();
+    var secondHoldings = UUID.randomUUID();
 
-    final JsonObject firstHolding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(firstHoldings)
+    final var firstHolding = createHoldingWithAllCallNumberComponents(instanceId, firstHoldings,
+      "firstTestCallNumber", "firstTestCallNumberPrefix", "firstTestCallNumberSuffix");
+    createHoldingWithAllCallNumberComponents(instanceId, secondHoldings,
+      "secondTestCallNumber", "secondTestCallNumberPrefix", "secondTestCallNumberSuffix");
+
+    var itemIds = createItemsForTwoHoldings(firstHoldings, secondHoldings);
+
+    assertItemsHaveExpectedCallNumbers(itemIds[0],
+      "firstTestCallNumber", "firstTestCallNumberPrefix", "firstTestCallNumberSuffix");
+    assertItemsHaveExpectedCallNumbers(itemIds[1],
+      "secondTestCallNumber", "secondTestCallNumberPrefix", "secondTestCallNumberSuffix");
+
+    updateFirstHoldingCallNumbers(firstHolding, firstHoldings);
+
+    assertItemsHaveExpectedCallNumbers(itemIds[0],
+      "updatedFirstCallNumber", "updatedFirstCallNumberPrefix", "updatedFirstCallNumberSuffix");
+    assertItemsHaveExpectedCallNumbers(itemIds[1],
+      "secondTestCallNumber", "secondTestCallNumberPrefix", "secondTestCallNumberSuffix");
+  }
+
+  private JsonObject createHoldingWithAllCallNumberComponents(UUID instanceId, UUID holdingId,
+                                                               String callNumber, String prefix, String suffix) {
+    return createHoldingRecord(new HoldingRequestBuilder()
+      .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("firstTestCallNumber")
-      .withCallNumberPrefix("firstTestCallNumberPrefix")
-      .withCallNumberSuffix("firstTestCallNumberSuffix")
+      .withCallNumber(callNumber)
+      .withCallNumberPrefix(prefix)
+      .withCallNumberSuffix(suffix)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+  }
 
-    createHoldingRecord(new HoldingRequestBuilder()
-      .withId(secondHoldings)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumber("secondTestCallNumber")
-      .withCallNumberPrefix("secondTestCallNumberPrefix")
-      .withCallNumberSuffix("secondTestCallNumberSuffix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
-
-    Response firstItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
+  private String[] createItemsForTwoHoldings(UUID firstHoldings, UUID secondHoldings)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var firstItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
       .forHolding(firstHoldings)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withMaterialType(bookMaterialTypeId)
       .create());
-    Response secondItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
+    var secondItemResponse = create(itemsStorageUrl(""), new ItemRequestBuilder()
       .forHolding(secondHoldings)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withMaterialType(bookMaterialTypeId)
@@ -1799,77 +1527,44 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(firstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     assertThat(secondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    JsonObject firstItem = firstItemResponse.getJson();
-    final JsonObject secondItem = secondItemResponse.getJson();
+    return new String[] {
+      firstItemResponse.getJson().getString("id"),
+      secondItemResponse.getJson().getString("id")
+    };
+  }
 
-    assertThat(
-      firstItem.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("firstTestCallNumber"));
-    assertThat(
-      firstItem.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("firstTestCallNumberPrefix"));
-    assertThat(
-      firstItem.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("firstTestCallNumberSuffix"));
-    assertThat(
-      secondItem.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("secondTestCallNumber"));
-    assertThat(
-      secondItem.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("secondTestCallNumberPrefix"));
-    assertThat(
-      secondItem.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("secondTestCallNumberSuffix"));
+  private void assertItemsHaveExpectedCallNumbers(String itemId, String callNumber, String prefix, String suffix)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    URL firstHoldingsUrl = holdingsStorageUrl(String.format("/%s", firstHoldings));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(item.getString("id"), is(itemId));
+    assertThat(
+      item.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
+      is(callNumber));
+    assertThat(
+      item.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+      is(prefix));
+    assertThat(
+      item.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
+      is(suffix));
+  }
 
+  private void updateFirstHoldingCallNumbers(JsonObject firstHolding, UUID firstHoldings)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var firstHoldingsUrl = holdingsStorageUrl(String.format("/%s", firstHoldings));
     firstHolding.put("callNumber", "updatedFirstCallNumber");
     firstHolding.put("callNumberPrefix", "updatedFirstCallNumberPrefix");
     firstHolding.put("callNumberSuffix", "updatedFirstCallNumberSuffix");
 
-    Response putResponse = update(firstHoldingsUrl, firstHolding);
-
-    Response updatedFirstHoldingResponse = get(firstHoldingsUrl);
-
-    JsonObject updatedFirstHolding = updatedFirstHoldingResponse.getJson();
-
+    var putResponse = update(firstHoldingsUrl, firstHolding);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+
+    var updatedFirstHoldingResponse = get(firstHoldingsUrl);
+    var updatedFirstHolding = updatedFirstHoldingResponse.getJson();
     assertThat(updatedFirstHolding.getString("callNumber"), is("updatedFirstCallNumber"));
-
-    String firstItemId = firstItem.getString("id");
-    String secondItemId = secondItem.getString("id");
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-    final JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("updatedFirstCallNumber"));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("updatedFirstCallNumberPrefix"));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("updatedFirstCallNumberSuffix"));
-    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("callNumber"),
-      is("secondTestCallNumber"));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("secondTestCallNumberPrefix"));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("secondTestCallNumberSuffix"));
   }
 
   @Test
@@ -1877,219 +1572,180 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     throws InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberSuffix", "testCallNumberSuffix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
+    var itemIds = createTwoItemsForHolding(holdingId);
+
+    assertItemsHaveCallNumberComponent(itemIds, holdingId, "suffix", "testCallNumberSuffix");
+
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberSuffix", "updatedCallNumberSuffix");
+
+    assertItemsHaveCallNumberComponent(itemIds, holdingId, "suffix", "updatedCallNumberSuffix");
+  }
+
+  private JsonObject createHoldingWithCallNumberComponent(UUID instanceId, UUID holdingId,
+                                                           String componentKey, String componentValue) {
+    var builder = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberSuffix("testCallNumberSuffix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
-    JsonObject itemToCreate = new JsonObject();
+    if ("callNumberSuffix".equals(componentKey)) {
+      builder = builder.withCallNumberSuffix(componentValue);
+    } else if ("callNumberPrefix".equals(componentKey)) {
+      builder = builder.withCallNumberPrefix(componentValue);
+    }
 
+    return createHoldingRecord(builder.create()).getJson();
+  }
+
+  private String[] createTwoItemsForHolding(UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemToCreate = buildItemRequest(holdingId);
+    var firstResponse = create(itemsStorageUrl(""), itemToCreate);
+    var secondResponse = create(itemsStorageUrl(""), itemToCreate);
+
+    assertThat(firstResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(secondResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    return new String[] {
+      firstResponse.getJson().getString("id"),
+      secondResponse.getJson().getString("id")
+    };
+  }
+
+  private JsonObject buildItemRequest(UUID holdingId) {
+    var itemToCreate = new JsonObject();
     itemToCreate.put("holdingsRecordId", holdingId.toString());
     itemToCreate.put("status", new JsonObject().put("name", "Available"));
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    return itemToCreate;
+  }
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
-    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
+  private void assertItemsHaveCallNumberComponent(String[] itemIds, UUID holdingId,
+                                                   String componentName, String expectedValue)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    for (String itemId : itemIds) {
+      var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+      var response = get(itemUrl);
+      var item = response.getJson();
 
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+      assertThat(item.getString("id"), is(itemId));
+      assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
+      assertThat(
+        item.getJsonObject("effectiveCallNumberComponents").getString(componentName),
+        is(expectedValue));
+    }
+  }
 
-    JsonObject firstItem = postFirstItemResponse.getJson();
-    JsonObject secondItem = postSecondItemResponse.getJson();
-
-    String firstItemId = firstItem.getString("id");
-    String secondItemId = secondItem.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-    assertThat(secondItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-    Response getSecondItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-    final JsonObject secondItemFromGet = getSecondItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("testCallNumberSuffix"));
-    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("testCallNumberSuffix"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumberSuffix", "updatedCallNumberSuffix");
-
-    Response putResponse = update(holdingsUrl, holding);
+  private void updateHoldingCallNumberComponent(JsonObject holding, UUID holdingId,
+                                                 String componentKey, String newValue)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    holding.put(componentKey, newValue);
+    var putResponse = update(holdingsUrl, holding);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.getString("callNumberSuffix"), is("updatedCallNumberSuffix"));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-    final JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("updatedCallNumberSuffix"));
-    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("updatedCallNumberSuffix"));
+    assertThat(holding.getString(componentKey), is(newValue));
   }
 
   @Test
   public void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberSuffix", "testCallNumberSuffix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberSuffix("testCallNumberSuffix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var itemId = createSingleItemForHolding(holdingId);
 
-    JsonObject itemToCreate = new JsonObject();
+    assertItemHasCallNumberComponent(itemId, holdingId, "suffix", "testCallNumberSuffix");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    removeHoldingCallNumberComponent(holding, holdingId, "callNumberSuffix");
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
+    assertItemMissingCallNumberComponent(itemId, "suffix");
+  }
 
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+  private String createSingleItemForHolding(UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemToCreate = buildItemRequest(holdingId);
+    var response = create(itemsStorageUrl(""), itemToCreate);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    return response.getJson().getString("id");
+  }
 
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
+  private void assertItemHasCallNumberComponent(String itemId, UUID holdingId,
+                                                 String componentName, String expectedValue)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    String firstItemId = firstItemFromPost.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
+    assertThat(item.getString("id"), is(itemId));
+    assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
     assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("testCallNumberSuffix"));
+      item.getJsonObject("effectiveCallNumberComponents").getString(componentName),
+      is(expectedValue));
+  }
 
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.remove("callNumberSuffix");
-
-    Response putResponse = update(holdingsUrl, holding);
+  private void removeHoldingCallNumberComponent(JsonObject holding, UUID holdingId, String componentKey)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    holding.remove(componentKey);
+    var putResponse = update(holdingsUrl, holding);
 
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.containsKey("callNumberSuffix"), is(false));
+    assertThat(holding.containsKey(componentKey), is(false));
+  }
 
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
+  private void assertItemMissingCallNumberComponent(String itemId, String componentName)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemUrl = itemsStorageUrl(String.format("/%s", itemId));
+    var response = get(itemUrl);
+    var item = response.getJson();
 
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(item.getString("id"), is(itemId));
     assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("suffix"),
+      item.getJsonObject("effectiveCallNumberComponents").containsKey(componentName),
       is(false));
   }
 
   @Test
   public void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberSuffix", "holdingsCallNumberSuffix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberSuffix("holdingsCallNumberSuffix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var itemId = createItemWithCallNumberComponent(holdingId, "itemLevelCallNumberSuffix", "itemLevelCallNumberSuffix");
+    assertItemHasCallNumberComponent(itemId, holdingId, "suffix", "itemLevelCallNumberSuffix");
 
-    JsonObject itemToCreate = new JsonObject();
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberSuffix", "updatedHoldingCallNumberSuffix");
+    assertItemHasCallNumberComponent(itemId, holdingId, "suffix", "itemLevelCallNumberSuffix");
+  }
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-    itemToCreate.put("itemLevelCallNumberSuffix", "itemLevelCallNumberSuffix");
+  private String createItemWithCallNumberComponent(UUID holdingId, String componentKey, String componentValue)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var itemToCreate = buildItemRequest(holdingId);
+    itemToCreate.put(componentKey, componentValue);
 
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("itemLevelCallNumberSuffix"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.put("callNumberSuffix", "updatedHoldingCallNumberSuffix");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getUpdatedItemResponse = get(getItemUrl);
-
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertThat(
-      updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("suffix"),
-      is("itemLevelCallNumberSuffix"));
+    var response = create(itemsStorageUrl(""), itemToCreate);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    return response.getJson().getString("id");
   }
 
   @Test
@@ -2097,221 +1753,58 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     throws InterruptedException,
     ExecutionException, TimeoutException {
 
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberPrefix", "testCallNumberPrefix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberPrefix("testCallNumberPrefix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var itemIds = createTwoItemsForHolding(holdingId);
 
-    JsonObject itemToCreate = new JsonObject();
+    assertItemsHaveCallNumberComponent(itemIds, holdingId, "prefix", "testCallNumberPrefix");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberPrefix", "updatedCallNumberPrefix");
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
-    Response postSecondItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    assertThat(postSecondItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject firstItem = postFirstItemResponse.getJson();
-    JsonObject secondItem = postSecondItemResponse.getJson();
-
-    String firstItemId = firstItem.getString("id");
-    String secondItemId = secondItem.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-    assertThat(secondItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-    URL getSecondItemUrl = itemsStorageUrl(String.format("/%s", secondItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-    Response getSecondItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-    final JsonObject secondItemFromGet = getSecondItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("testCallNumberPrefix"));
-    assertThat(secondItemFromGet.getString("id"), is(secondItemId));
-    assertThat(secondItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      secondItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("testCallNumberPrefix"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.remove("callNumberPrefix");
-    holding.put("callNumberPrefix", "updatedCallNumberPrefix");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.getString("callNumberPrefix"), is("updatedCallNumberPrefix"));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-    Response getSecondUpdatedItemResponse = get(getSecondItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-    final JsonObject secondUpdatedItemFromGet = getSecondUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("updatedCallNumberPrefix"));
-    assertThat(getSecondUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(secondUpdatedItemFromGet.getString("id"), is(secondItemId));
-    assertThat(
-      secondUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("updatedCallNumberPrefix"));
+    assertItemsHaveCallNumberComponent(itemIds, holdingId, "prefix", "updatedCallNumberPrefix");
   }
 
   @Test
   public void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberPrefix", "testCallNumberPrefix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberPrefix("testCallNumberPrefix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var itemId = createSingleItemForHolding(holdingId);
 
-    JsonObject itemToCreate = new JsonObject();
+    assertItemHasCallNumberComponent(itemId, holdingId, "prefix", "testCallNumberPrefix");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
+    removeHoldingCallNumberComponent(holding, holdingId, "callNumberPrefix");
 
-    Response postFirstItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postFirstItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject firstItemFromPost = postFirstItemResponse.getJson();
-
-    String firstItemId = firstItemFromPost.getString("id");
-
-    assertThat(firstItemId, is(notNullValue()));
-
-    URL getFirstItemUrl = itemsStorageUrl(String.format("/%s", firstItemId));
-
-    Response getFirstItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstItemFromGet = getFirstItemResponse.getJson();
-
-    assertThat(firstItemFromGet.getString("id"), is(firstItemId));
-    assertThat(firstItemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      firstItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("testCallNumberPrefix"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.remove("callNumberPrefix");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-    assertThat(holding.containsKey("callNumberPrefix"), is(false));
-
-    Response getFirstUpdatedItemResponse = get(getFirstItemUrl);
-
-    JsonObject firstUpdatedItemFromGet = getFirstUpdatedItemResponse.getJson();
-
-    assertThat(getFirstUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(firstUpdatedItemFromGet.getString("id"), is(firstItemId));
-    assertThat(
-      firstUpdatedItemFromGet.getJsonObject("effectiveCallNumberComponents").containsKey("prefix"),
-      is(false));
+    assertItemMissingCallNumberComponent(itemId, "prefix");
   }
 
   @Test
   public void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
     throws InterruptedException, TimeoutException, ExecutionException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
 
-    UUID holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithCallNumberComponent(instanceId, holdingId,
+      "callNumberPrefix", "holdingsCallNumberPrefix");
 
-    final JsonObject holding = createHoldingRecord(new HoldingRequestBuilder()
-      .withId(holdingId)
-      .forInstance(instanceId)
-      .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-      .withCallNumberPrefix("holdingsCallNumberPrefix")
-      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+    var itemId = createItemWithCallNumberComponent(holdingId, "itemLevelCallNumberPrefix", "itemLevelCallNumberPrefix");
 
-    JsonObject itemToCreate = new JsonObject();
+    assertItemHasCallNumberComponent(itemId, holdingId, "prefix", "itemLevelCallNumberPrefix");
 
-    itemToCreate.put("holdingsRecordId", holdingId.toString());
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("materialTypeId", bookMaterialTypeID);
-    itemToCreate.put("itemLevelCallNumberPrefix", "itemLevelCallNumberPrefix");
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberPrefix", "updatedHoldingCallNumberPrefix");
 
-    Response postItemResponse = create(itemsStorageUrl(""), itemToCreate);
-
-    assertThat(postItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    JsonObject itemFromPost = postItemResponse.getJson();
-
-    String itemId = itemFromPost.getString("id");
-
-    assertThat(itemId, is(notNullValue()));
-
-    URL getItemUrl = itemsStorageUrl(String.format("/%s", itemId));
-
-    Response getItemResponse = get(getItemUrl);
-
-    JsonObject itemFromGet = getItemResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(itemId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingId.toString()));
-    assertThat(
-      itemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("itemLevelCallNumberPrefix"));
-
-    URL holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-
-    holding.remove("callNumberPrefix");
-    holding.put("callNumberPrefix", "updatedHoldingCallNumberPrefix");
-
-    Response putResponse = update(holdingsUrl, holding);
-
-    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
-
-    Response getUpdatedItemResponse = get(getItemUrl);
-
-    JsonObject updatedItemFromGet = getUpdatedItemResponse.getJson();
-
-    assertThat(getUpdatedItemResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    assertThat(updatedItemFromGet.getString("id"), is(itemId));
-    assertThat(
-      updatedItemFromGet.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
-      is("itemLevelCallNumberPrefix"));
+    assertItemHasCallNumberComponent(itemId, holdingId, "prefix", "itemLevelCallNumberPrefix");
   }
 
   @Test
@@ -2378,61 +1871,77 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     TimeoutException {
     log.info("Starting cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
 
-    final UUID instanceId = UUID.randomUUID();
-
+    final var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
-
-    final UUID holdingsId = UUID.randomUUID();
-
+    final var holdingsId = UUID.randomUUID();
     setHoldingsSequence(1);
-    UUID sourceId = getPreparedHoldingSourceId();
-    final JsonObject holdings = createHoldingRecord(new HoldingRequestBuilder()
+
+    final var sourceId = getPreparedHoldingSourceId();
+    final var holdings = createHoldingWithHrid(instanceId, holdingsId, sourceId);
+
+    assertThat(holdings.getString("hrid"), is("ho00000000001"));
+    assertHoldingExistsWithHrid(holdingsId, "ho00000000001");
+
+    final var duplicateHoldings = buildDuplicateHoldingRequest(instanceId, sourceId, "ho00000000001");
+    final var duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
+
+    assertDuplicateHridError(duplicateResponse, "ho00000000001");
+
+    log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
+  }
+
+  private JsonObject createHoldingWithHrid(UUID instanceId, String hrid) {
+    return createHoldingRecord(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withHrid(hrid)
+      .create()).getJson();
+  }
+
+  private JsonObject createHoldingWithHrid(UUID instanceId, UUID holdingsId, UUID sourceId) {
+    return createHoldingRecord(new HoldingRequestBuilder()
       .withId(holdingsId)
       .forInstance(instanceId)
       .withSource(sourceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+  }
 
-    assertThat(holdings.getString("hrid"), is("ho00000000001"));
-
-    final Response getResponse = holdingsClient.getById(holdingsId);
-
+  private void assertHoldingExistsWithHrid(UUID holdingsId, String expectedHrid) {
+    final var getResponse = holdingsClient.getById(holdingsId);
     assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    final var holdingsFromGet = getResponse.getJson();
+    assertThat(holdingsFromGet.getString("hrid"), is(expectedHrid));
+  }
 
-    final JsonObject holdingsFromGet = getResponse.getJson();
-
-    assertThat(holdingsFromGet.getString("hrid"), is("ho00000000001"));
-
-    final JsonObject duplicateHoldings = new HoldingRequestBuilder()
+  private JsonObject buildDuplicateHoldingRequest(UUID instanceId, UUID sourceId, String hrid) {
+    return new HoldingRequestBuilder()
       .withId(UUID.randomUUID())
       .forInstance(instanceId)
       .withSource(sourceId)
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
-      .withHrid("ho00000000001")
+      .withHrid(hrid)
       .create();
+  }
 
-    final Response duplicateResponse = create(holdingsStorageUrl(""), duplicateHoldings);
-
-    assertThat(duplicateResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
-
-    final Errors errors = duplicateResponse.getJson().mapTo(Errors.class);
-
+  private void assertDuplicateHridError(Response response, String hrid) {
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+    final var errors = response.getJson().mapTo(Errors.class);
     assertThat(errors, notNullValue());
     assertThat(errors.getErrors(), notNullValue());
     assertThat(errors.getErrors().size(), is(1));
     assertThat(errors.getErrors().getFirst(), notNullValue());
     assertThat(errors.getErrors().getFirst().getMessage(),
-      containsString("HRID value already exists in table holdings_record: ho00000000001"));
+      containsString("HRID value already exists in table holdings_record: " + hrid));
     assertThat(errors.getErrors().getFirst().getParameters(), notNullValue());
     assertThat(errors.getErrors().getFirst().getParameters().size(), is(1));
     assertThat(errors.getErrors().getFirst().getParameters().getFirst(), notNullValue());
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getValue(),
-      is("ho00000000001"));
-
-    log.info("Finished cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
+      is(hrid));
   }
 
   @Test
@@ -2487,8 +1996,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   public void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
-    final UUID instanceId = UUID.randomUUID();
-
+    final var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
     setHoldingsSequence(1000L);
@@ -2501,35 +2009,36 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     // Allocate the HRID
     final var firstAllocation = createHoldingRecord(holdingsRequest).getJson();
-
     assertThat(firstAllocation.getString("hrid"), is("ho00000001000"));
 
-    // Reset the sequence
+    // Reset the sequence and attempt second allocation
     setHoldingsSequence(1000L);
+    final var response = attemptToCreateHolding(holdingsRequest);
 
-    // Attempt second allocation
-    final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+    assertHridAllocationError(response, "ho00000001000");
+  }
 
-    getClient().post(holdingsStorageUrl(""), holdingsRequest, TENANT_ID,
-      json(createCompleted));
+  private Response attemptToCreateHolding(JsonObject holdingsRequest)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    final var createCompleted = new CompletableFuture<Response>();
+    getClient().post(holdingsStorageUrl(""), holdingsRequest, TENANT_ID, json(createCompleted));
+    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
 
-    final Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+  private void assertHridAllocationError(Response response, String hrid) {
     assertThat(response.getStatusCode(), is(422));
-
-    final Errors errors = response.getJson().mapTo(Errors.class);
-
+    final var errors = response.getJson().mapTo(Errors.class);
     assertThat(errors, notNullValue());
     assertThat(errors.getErrors(), notNullValue());
     assertThat(errors.getErrors().getFirst(), notNullValue());
     assertThat(errors.getErrors().getFirst().getMessage(),
-      is("HRID value already exists in table holdings_record: ho00000001000"));
+      is("HRID value already exists in table holdings_record: " + hrid));
     assertThat(errors.getErrors().getFirst().getParameters(), notNullValue());
     assertThat(errors.getErrors().getFirst().getParameters().getFirst(), notNullValue());
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getValue(),
-      is("ho00000001000"));
+      is(hrid));
   }
 
   @Test
@@ -2725,34 +2234,40 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     setHoldingsSequence(1);
 
-    final JsonArray holdingsArray = threeHoldings();
-    final String duplicateHrid = "ho00000000001";
+    final var holdingsArray = threeHoldings();
+    final var duplicateHrid = "ho00000000001";
     holdingsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
-    Response response = postSynchronousBatch(holdingsArray);
+    var response = postSynchronousBatch(holdingsArray);
+
+    assertBatchDuplicateHridError(response, duplicateHrid);
+    assertAllHoldingsNotCreated(holdingsArray);
+
+    log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
+  }
+
+  private void assertBatchDuplicateHridError(Response response, String hrid) {
     assertThat(response.getStatusCode(), is(422));
-
-    final Errors errors = response.getJson().mapTo(Errors.class);
-
+    final var errors = response.getJson().mapTo(Errors.class);
     assertThat(errors, notNullValue());
     assertThat(errors.getErrors(), notNullValue());
     var error = errors.getErrors().getFirst();
     assertThat(error, notNullValue());
     assertThat(error.getMessage(),
-      is("HRID value already exists in table holdings_record: ho00000000001"));
+      is("HRID value already exists in table holdings_record: " + hrid));
     assertThat(error.getParameters(), notNullValue());
     var parameter = error.getParameters().getFirst();
     assertThat(parameter, notNullValue());
     assertThat(parameter.getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(parameter.getValue(),
-      is("ho00000000001"));
+      is(hrid));
+  }
 
+  private void assertAllHoldingsNotCreated(JsonArray holdingsArray) {
     for (int i = 0; i < holdingsArray.size(); i++) {
       assertGetNotFound(holdingsStorageUrl("/" + holdingsArray.getJsonObject(i).getString("id")));
     }
-
-    log.info("Finished cannotPostSynchronousBatchWithDuplicateHRIDs");
   }
 
   @Test
@@ -2778,73 +2293,46 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canFilterByFullCallNumber() {
-    IndividualResource instance = instancesClient
+    var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
-    final IndividualResource wholeCallNumberHolding = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withCallNumberPrefix("prefix")
-        .withCallNumber("callNumber")
-        .withCallNumberSuffix("suffix").create());
+    final var wholeCallNumberHolding =
+      createHoldingWithCallNumberComponents(instance, "prefix", "callNumber", "suffix");
+    createHoldingWithCallNumberComponents(instance, "prefix", "callNumber", null);
+    createHoldingWithCallNumberComponents(instance, "prefix", "differentCallNumber", "suffix");
 
-    createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withCallNumberPrefix("prefix")
-        .withCallNumber("callNumber").create());
-
-    createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withCallNumberPrefix("prefix")
-        .withCallNumber("differentCallNumber")
-        .withCallNumberSuffix("suffix").create());
-
-    final List<IndividualResource> foundHoldings = holdingsClient
+    final var foundHoldings = holdingsClient
       .getMany("fullCallNumber == \"%s\"", "prefix callNumber suffix");
 
     assertThat(foundHoldings.size(), is(1));
     assertThat(foundHoldings.getFirst().getId(), is(wholeCallNumberHolding.getId()));
   }
 
+  private IndividualResource createHoldingWithCallNumberComponents(
+      IndividualResource instance, String prefix, String callNumber, String suffix) {
+    var builder = new HoldingRequestBuilder()
+      .forInstance(instance.getId())
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix(prefix)
+      .withCallNumber(callNumber)
+      .withCallNumberSuffix(suffix);
+
+    return createHoldingRecord(builder.create());
+  }
+
   @Test
   public void canFilterByCallNumberAndSuffix() {
-    IndividualResource instance = instancesClient
+    var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
-    IndividualResource wholeCallNumberHolding = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumberPrefix("prefix")
-        .withCallNumber("callNumber")
-        .withCallNumberSuffix("suffix").create());
+    var wholeCallNumberHolding =
+      createHoldingWithCallNumberComponents(instance, "prefix", "callNumber", "suffix");
+    createHoldingWithCallNumberComponents(instance, "prefix", "callNumber", null);
+    var noPrefixHolding =
+      createHoldingWithCallNumberComponents(instance, null, "callNumber", "suffix");
 
-    createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withCallNumberPrefix("prefix")
-        .withCallNumber("callNumber").create());
-
-    IndividualResource noPrefixHolding = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withCallNumber("callNumber")
-        .withCallNumberSuffix("suffix").create());
-
-    final List<IndividualResource> foundHoldings = holdingsClient
+    final var foundHoldings = holdingsClient
       .getMany("callNumberAndSuffix == \"%s\"", "callNumber suffix");
 
     assertThat(foundHoldings.size(), is(2));
@@ -3048,30 +2536,40 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final var holdingsArray2 = threeHoldings();
 
     holdingsArray1.getJsonObject(1).put("id", existingHrId);
-    //verify that holdings could be created with upsert=true and no version
     final var holdingIdWithoutVersion = holdingsArray1.getJsonObject(0).getString("id");
     holdingsArray1.getJsonObject(0).remove("_version");
 
-    //create 3 holdings
+    // Create 3 holdings
     final var firstResponse = postSynchronousBatch("?upsert=true", holdingsArray1);
     assertThat(firstResponse, statusCodeIs(HTTP_CREATED));
 
     final var createdHolding = getById(existingHrId).getJson();
     holdingsArray2.set(1, createdHolding);
 
-    //create item for existing holding
-    final var itemForExistingHolding = create(itemsStorageUrl(""), new ItemRequestBuilder()
-      .forHolding(UUID.fromString(existingHrId))
+    // Create item and update holdings
+    final var itemForExistingHolding = createItemForHolding(UUID.fromString(existingHrId));
+    updateHoldingsAndVerifyMessages(holdingsArray2, createdHolding, existingHrId, holdingIdWithoutVersion,
+      holdingsArray1);
+
+    // Update holding location and verify item update
+    updateHoldingLocationAndVerifyItemUpdate(createdHolding, existingHrId, itemForExistingHolding);
+  }
+
+  private JsonObject createItemForHolding(UUID holdingId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    return create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(holdingId)
       .withPermanentLoanType(canCirculateLoanTypeId)
       .withMaterialType(bookMaterialTypeId)
-      .create())
-      .getJson();
+      .create()).getJson();
+  }
 
-    //update 1 holding, create 2 new holdings. Item is not updated since no changes to updated holding
+  private void updateHoldingsAndVerifyMessages(JsonArray holdingsArray2, JsonObject createdHolding,
+      String existingHrId, String holdingIdWithoutVersion, JsonArray holdingsArray1) {
     final var secondResponse = postSynchronousBatch("?upsert=true", holdingsArray2);
     assertThat(secondResponse, statusCodeIs(HTTP_CREATED));
-    var updatedHolding = createdHolding.copy()
-      .put("_version", 2);
+
+    var updatedHolding = createdHolding.copy().put("_version", 2);
     holdingsMessageChecks.updatedMessagePublished(createdHolding, updatedHolding, mockServer.baseUrl());
 
     //verify all holdings create messages
@@ -3088,17 +2586,22 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         return holding;
       })
       .forEach(holding -> holdingsMessageChecks.createdMessagePublished(holding, TENANT_ID, mockServer.baseUrl()));
+  }
 
-    //update 1 holding with changed location
+  private void updateHoldingLocationAndVerifyItemUpdate(JsonObject createdHolding, String existingHrId,
+      JsonObject itemForExistingHolding) {
+    var updatedHolding = createdHolding.copy().put("_version", 2);
     var holdingsArray3 = new JsonArray().add(
       updatedHolding.copy().put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID.toString()));
-    final Response thirdResponse = postSynchronousBatch("?upsert=true", holdingsArray3);
+
+    final var thirdResponse = postSynchronousBatch("?upsert=true", holdingsArray3);
     assertThat(thirdResponse, statusCodeIs(HTTP_CREATED));
+
     var updatedHolding2 = getById(existingHrId).getJson();
     holdingsMessageChecks.updatedMessagePublished(updatedHolding, updatedHolding2, mockServer.baseUrl());
 
     //Verify item is updated since holding's effective location is changed
-    JsonObject expectedUpdatedItem = itemForExistingHolding.copy()
+    var expectedUpdatedItem = itemForExistingHolding.copy()
       .put("_version", 2)
       .put("effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
     itemMessageChecks.updatedMessagePublished(itemForExistingHolding, expectedUpdatedItem,
@@ -3107,32 +2610,39 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canSearchByDiscoverySuppressProperty() {
-    final IndividualResource instance = instancesClient
+    final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
-    final IndividualResource suppressedHolding = createHoldingRecord(
+    final var suppressedHolding = createHoldingWithDiscoverySuppress(instance, true);
+    final var notSuppressedHolding = createHoldingWithDiscoverySuppress(instance, false);
+    final var notSuppressedHoldingDefault = createHoldingWithoutDiscoverySuppress(instance);
+
+    assertDiscoverySuppressSearch(suppressedHolding, notSuppressedHolding, notSuppressedHoldingDefault);
+  }
+
+  private IndividualResource createHoldingWithDiscoverySuppress(IndividualResource instance, boolean suppressValue) {
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
         .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withDiscoverySuppress(true).create());
+        .withDiscoverySuppress(suppressValue).create());
+  }
 
-    final IndividualResource notSuppressedHolding = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
-        .withDiscoverySuppress(false).create());
-
-    final IndividualResource notSuppressedHoldingDefault = createHoldingRecord(
+  private IndividualResource createHoldingWithoutDiscoverySuppress(IndividualResource instance) {
+    return createHoldingRecord(
       new HoldingRequestBuilder()
         .forInstance(instance.getId())
         .withSource(getPreparedHoldingSourceId())
         .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
+  }
 
-    final List<IndividualResource> suppressedHoldings = holdingsClient
+  private void assertDiscoverySuppressSearch(IndividualResource suppressedHolding,
+                                             IndividualResource notSuppressedHolding,
+                                             IndividualResource notSuppressedHoldingDefault) {
+    final var suppressedHoldings = holdingsClient
       .getMany("discoverySuppress==true");
-    final List<IndividualResource> notSuppressedHoldings = holdingsClient
+    final var notSuppressedHoldings = holdingsClient
       .getMany("cql.allRecords=1 not discoverySuppress==true");
 
     assertThat(suppressedHoldings.size(), is(1));
@@ -3147,31 +2657,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldFindHoldingByCallNumberWhenThereIsSuffix() {
-    final IndividualResource instance = instancesClient
+    final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
-    final IndividualResource firstHoldingsToMatch = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 2014")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
-
-    final IndividualResource secondHoldingsToMatch = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 2014")
-        .withCallNumberSuffix("Curriculum Materials Collection")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
-
-    createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 ")
-        .withCallNumberSuffix("2014 Curriculum Materials Collection")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
+    final var firstHoldingsToMatch =
+      createHoldingWithCallNumber(instance, "GE77 .F73 2014", null);
+    final var secondHoldingsToMatch =
+      createHoldingWithCallNumber(instance, "GE77 .F73 2014", "Curriculum Materials Collection");
+    createHoldingWithCallNumber(instance, "GE77 .F73 ", "2014 Curriculum Materials Collection");
 
     final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73 2014");
 
@@ -3180,43 +2673,42 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       secondHoldingsToMatch.getId()));
   }
 
+  private JsonObject createHoldingWithCallNumber(UUID instanceId, UUID holdingId, String callNumber) {
+    return createHoldingRecord(new HoldingRequestBuilder()
+      .withId(holdingId)
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumber(callNumber)
+      .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
+  }
+
+  private IndividualResource createHoldingWithCallNumber(IndividualResource instance,
+                                                         String callNumber, String suffix) {
+    var builder = new HoldingRequestBuilder()
+      .forInstance(instance.getId())
+      .withSource(getPreparedHoldingSourceId())
+      .withCallNumber(callNumber)
+      .withCallNumberSuffix(suffix)
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID);
+
+    return createHoldingRecord(builder.create());
+  }
+
   @Test
   public void explicitRightTruncationCanBeApplied() {
-    final IndividualResource instance = instancesClient
+    final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
-    final IndividualResource firstHoldingsToMatch = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 2014")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
+    final var firstHoldingsToMatch =
+      createHoldingWithCallNumber(instance, "GE77 .F73 2014", null);
+    final var secondHoldingsToMatch =
+      createHoldingWithCallNumber(instance, "GE77 .F73 2014", "Curriculum Materials Collection");
+    final var thirdHoldingsToMatch =
+      createHoldingWithCallNumber(instance, "GE77 .F73 ", "2014 Curriculum Materials Collection");
+    createHoldingWithCallNumber(instance, "GE77 .F74 ", "2014 Curriculum Materials Collection");
 
-    final IndividualResource secondHoldingsToMatch = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 2014")
-        .withCallNumberSuffix("Curriculum Materials Collection")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
-
-    final IndividualResource thirdHoldingsToMatch = createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F73 ")
-        .withCallNumberSuffix("2014 Curriculum Materials Collection")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
-
-    createHoldingRecord(
-      new HoldingRequestBuilder()
-        .forInstance(instance.getId())
-        .withSource(getPreparedHoldingSourceId())
-        .withCallNumber("GE77 .F74 ")
-        .withCallNumberSuffix("2014 Curriculum Materials Collection")
-        .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
-
-    final List<UUID> foundHoldings = searchByCallNumberEyeReadable("GE77 .F73*");
+    final var foundHoldings = searchByCallNumberEyeReadable("GE77 .F73*");
 
     assertThat(foundHoldings.size(), is(3));
     assertThat(foundHoldings, hasItems(firstHoldingsToMatch.getId(),
@@ -3384,35 +2876,53 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canCreateHoldingWithAdditionalCallNumbers()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789")
-      .withPrefix("A")
-      .withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
+    var holdingId = UUID.randomUUID();
+    final var additionalCallNumbers = createAdditionalCallNumber("123456789", "A", "Z", LC_CN_TYPE_ID);
 
-    final JsonObject request = new HoldingRequestBuilder()
+    final var request = new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withAdditionalCallNumbers(additionalCallNumbers).create();
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
+
+    var response = createHoldingAndGetResponse(request);
+
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertAdditionalCallNumberInResponse(response, "123456789", "A", "Z", LC_CN_TYPE_ID);
+  }
+
+  private List<EffectiveCallNumberComponents> createAdditionalCallNumber(String callNumber,
+                                                                          String prefix, String suffix, String typeId) {
+    var additionalCallNumbers = new ArrayList<EffectiveCallNumberComponents>();
+    additionalCallNumbers.add(new EffectiveCallNumberComponents()
+      .withCallNumber(callNumber)
+      .withPrefix(prefix)
+      .withSuffix(suffix)
+      .withTypeId(typeId));
+    return additionalCallNumbers;
+  }
+
+  private Response createHoldingAndGetResponse(JsonObject request)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    var createCompleted = new CompletableFuture<Response>();
     getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
       ResponseHandler.json(createCompleted));
-    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-    JsonObject additionalCallNumbersRespone = response.getJson()
+    return createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  private void assertAdditionalCallNumberInResponse(Response response, String callNumber,
+                                                     String prefix, String suffix, String typeId) {
+    var additionalCallNumbersResponse = response.getJson()
       .getJsonArray("additionalCallNumbers")
       .getJsonObject(0);
-    assertThat(additionalCallNumbersRespone.getString("callNumber"), is("123456789"));
-    assertThat(additionalCallNumbersRespone.getString("prefix"), is("A"));
-    assertThat(additionalCallNumbersRespone.getString("suffix"), is("Z"));
-    assertThat(additionalCallNumbersRespone.getString("typeId"), is(LC_CN_TYPE_ID));
+    assertThat(additionalCallNumbersResponse.getString("callNumber"), is(callNumber));
+    assertThat(additionalCallNumbersResponse.getString("prefix"), is(prefix));
+    assertThat(additionalCallNumbersResponse.getString("suffix"), is(suffix));
+    assertThat(additionalCallNumbersResponse.getString("typeId"), is(typeId));
   }
 
   @Test
@@ -3440,83 +2950,71 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   public void canDeleteAdditionalCallNumberFromHolding()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789")
-      .withPrefix("A")
-      .withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
-    String hrid = "hrid";
-    final JsonObject request = new HoldingRequestBuilder()
+    var holdingId = UUID.randomUUID();
+    final var additionalCallNumbers = createAdditionalCallNumber("123456789", "A", "Z", LC_CN_TYPE_ID);
+
+    final var request = new HoldingRequestBuilder()
       .withId(holdingId)
-      .withHrid(hrid)
+      .withHrid("hrid")
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withAdditionalCallNumbers(additionalCallNumbers).create();
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    var response = createHoldingAndGetResponse(request);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     request.remove("additionalCallNumbers");
     request.put("_version", 1);
 
-    final CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
+    final var updateResponse = updateHoldingAndGetResponse(holdingId, request);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
 
+  private JsonErrorResponse updateHoldingAndGetResponse(UUID holdingId, JsonObject request)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    final var updateCompleted = new CompletableFuture<JsonErrorResponse>();
     getClient().put(holdingsStorageUrl(String.format("/%s", holdingId)), request, TENANT_ID,
       jsonErrors(updateCompleted));
-
-    final JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
-    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    return updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
   @Test
   public void canUpdateHoldingsAdditionalCallNumbers()
     throws InterruptedException, ExecutionException, TimeoutException {
-    UUID instanceId = UUID.randomUUID();
+    var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
-    UUID holdingId = UUID.randomUUID();
-    List<EffectiveCallNumberComponents> additionalCallNumbers = new ArrayList<>();
-    additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("123456789").withPrefix("A").withSuffix("Z").withTypeId(LC_CN_TYPE_ID));
-    String hrid = "hrid";
-    final JsonObject request = new HoldingRequestBuilder()
+    var holdingId = UUID.randomUUID();
+    final var additionalCallNumbers = createAdditionalCallNumber("123456789", "A", "Z", LC_CN_TYPE_ID);
+
+    final var request = new HoldingRequestBuilder()
       .withId(holdingId)
-      .withHrid(hrid)
+      .withHrid("hrid")
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .withAdditionalCallNumbers(additionalCallNumbers).create();
-    CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(holdingsStorageUrl(""), request, TENANT_ID,
-      ResponseHandler.json(createCompleted));
-    Response response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+
+    var response = createHoldingAndGetResponse(request);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     additionalCallNumbers.add(new EffectiveCallNumberComponents()
-      .withCallNumber("secondCallNumber")
-      .withPrefix("A").withSuffix("Z")
-      .withTypeId(LC_CN_TYPE_ID));
+      .withCallNumber("secondCallNumber").withPrefix("A").withSuffix("Z").withTypeId(LC_CN_TYPE_ID));
     request.put("additionalCallNumbers", additionalCallNumbers);
     request.put("_version", 1);
 
-    final CompletableFuture<JsonErrorResponse> updateCompleted = new CompletableFuture<>();
-
-    getClient().put(holdingsStorageUrl(String.format("/%s", holdingId)), request, TENANT_ID,
-      jsonErrors(updateCompleted));
-
-    final JsonErrorResponse updateResponse = updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-
+    final var updateResponse = updateHoldingAndGetResponse(holdingId, request);
     assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
+    assertSecondCallNumberAdded(holdingId);
+  }
+
+  private void assertSecondCallNumberAdded(UUID holdingId)
+      throws InterruptedException, ExecutionException, TimeoutException {
     final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     getClient().get(holdingsStorageUrl(String.format("/%s", holdingId)), TENANT_ID,
       ResponseHandler.json(getCompleted));

@@ -252,125 +252,107 @@ class ItemUtilsTest {
 
   private static Stream<Arguments> provideValidRequiredFieldsCases() {
     return Stream.of(
-      Arguments.of(
-        "Empty list of items",
-        List.<ItemPatch>of()
-      ),
-      Arguments.of(
-        "Item with no additional properties",
-        List.of(new ItemPatch())
-      ),
-      Arguments.of(
-        "Item with valid materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "valid-material-type"))
-      ),
-      Arguments.of(
-        "Item with valid permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "valid-loan-type"))
-      ),
-      Arguments.of(
-        "Item with valid holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "valid-holdings-id"))
-      ),
-      Arguments.of(
-        "Item with valid status",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")))
-      ),
-      Arguments.of(
-        "Item with all valid required fields",
-        List.of(new ItemPatch()
-          .withAdditionalProperty("materialTypeId", "material-type")
-          .withAdditionalProperty("permanentLoanTypeId", "loan-type")
-          .withAdditionalProperty("holdingsRecordId", "holdings-id")
-          .withAdditionalProperty("status", Map.of("name", "Available")))
-      ),
-      Arguments.of(
-        "Multiple items with valid fields",
-        List.of(
-          new ItemPatch().withAdditionalProperty("materialTypeId", "material-type-1"),
-          new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-2")
-        )
-      )
+      Arguments.of("Empty list of items", List.<ItemPatch>of()),
+      Arguments.of("Item with no additional properties", List.of(new ItemPatch())),
+      Arguments.of("Item with valid materialTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "valid-material-type"))),
+      Arguments.of("Item with valid permanentLoanTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "valid-loan-type"))),
+      Arguments.of("Item with valid holdingsRecordId",
+        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "valid-holdings-id"))),
+      Arguments.of("Item with valid status",
+        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")))),
+      Arguments.of("Item with all valid required fields", List.of(createItemWithAllValidFields())),
+      Arguments.of("Multiple items with valid fields", createMultipleItemsWithValidFields())
+    );
+  }
+
+  private static ItemPatch createItemWithAllValidFields() {
+    return new ItemPatch()
+      .withAdditionalProperty("materialTypeId", "material-type")
+      .withAdditionalProperty("permanentLoanTypeId", "loan-type")
+      .withAdditionalProperty("holdingsRecordId", "holdings-id")
+      .withAdditionalProperty("status", Map.of("name", "Available"));
+  }
+
+  private static List<ItemPatch> createMultipleItemsWithValidFields() {
+    return List.of(
+      new ItemPatch().withAdditionalProperty("materialTypeId", "material-type-1"),
+      new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-2")
     );
   }
 
   private static Stream<Arguments> provideInvalidRequiredFieldsCases() {
+    return Stream.concat(
+      Stream.concat(
+        Stream.concat(provideMaterialTypeIdInvalidCases(), provideLoanTypeIdInvalidCases()),
+        Stream.concat(provideHoldingsRecordIdInvalidCases(), provideStatusInvalidCases())
+      ),
+      provideMultipleFieldsInvalidCases()
+    );
+  }
+
+  private static Stream<Arguments> provideMaterialTypeIdInvalidCases() {
+    return Stream.of(
+      Arguments.of("Item with null materialTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", null)), 1),
+      Arguments.of("Item with empty materialTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "")), 1),
+      Arguments.of("Item with blank materialTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "   ")), 1)
+    );
+  }
+
+  private static Stream<Arguments> provideLoanTypeIdInvalidCases() {
+    return Stream.of(
+      Arguments.of("Item with null permanentLoanTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", null)), 1),
+      Arguments.of("Item with empty permanentLoanTypeId",
+        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "")), 1)
+    );
+  }
+
+  private static Stream<Arguments> provideHoldingsRecordIdInvalidCases() {
+    return Stream.of(
+      Arguments.of("Item with null holdingsRecordId",
+        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", null)), 1),
+      Arguments.of("Item with empty holdingsRecordId",
+        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "")), 1)
+    );
+  }
+
+  private static Stream<Arguments> provideStatusInvalidCases() {
     var statusWithNullName = new HashMap<String, Object>();
     statusWithNullName.put("name", null);
 
     return Stream.of(
-      Arguments.of(
-        "Item with null materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", null)),
-        1
-      ),
-      Arguments.of(
-        "Item with empty materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "")),
-        1
-      ),
-      Arguments.of(
-        "Item with blank materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "   ")),
-        1
-      ),
-      Arguments.of(
-        "Item with null permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", null)),
-        1
-      ),
-      Arguments.of(
-        "Item with empty permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "")),
-        1
-      ),
-      Arguments.of(
-        "Item with null holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", null)),
-        1
-      ),
-      Arguments.of(
-        "Item with empty holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "")),
-        1
-      ),
-      Arguments.of(
-        "Item with null status",
-        List.of(new ItemPatch().withAdditionalProperty("status", null)),
-        1
-      ),
-      Arguments.of(
-        "Item with status having null name",
-        List.of(new ItemPatch().withAdditionalProperty("status", statusWithNullName)),
-        1
-      ),
-      Arguments.of(
-        "Item with status having empty name",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", ""))),
-        1
-      ),
-      Arguments.of(
-        "Item with status having blank name",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "   "))),
-        1
-      ),
-      Arguments.of(
-        "Item with multiple missing required fields",
+      Arguments.of("Item with null status",
+        List.of(new ItemPatch().withAdditionalProperty("status", null)), 1),
+      Arguments.of("Item with status having null name",
+        List.of(new ItemPatch().withAdditionalProperty("status", statusWithNullName)), 1),
+      Arguments.of("Item with status having empty name",
+        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", ""))), 1),
+      Arguments.of("Item with status having blank name",
+        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "   "))), 1)
+    );
+  }
+
+  private static Stream<Arguments> provideMultipleFieldsInvalidCases() {
+    var statusWithNullName = new HashMap<String, Object>();
+    statusWithNullName.put("name", null);
+
+    return Stream.of(
+      Arguments.of("Item with multiple missing required fields",
         List.of(new ItemPatch()
           .withAdditionalProperty("materialTypeId", null)
           .withAdditionalProperty("permanentLoanTypeId", "")
           .withAdditionalProperty("holdingsRecordId", "   ")
-          .withAdditionalProperty("status", statusWithNullName)),
-        1 // One error per item, but multiple field parameters
-      ),
-      Arguments.of(
-        "Multiple items with missing fields",
+          .withAdditionalProperty("status", statusWithNullName)), 1),
+      Arguments.of("Multiple items with missing fields",
         List.of(
           new ItemPatch().withAdditionalProperty("materialTypeId", null),
           new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "")
-        ),
-        2
-      )
+        ), 2)
     );
   }
 

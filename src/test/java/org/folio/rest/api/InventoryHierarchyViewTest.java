@@ -456,25 +456,33 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
       var items = response.getJson().getJsonArray("items");
       var holdings = response.getJson().getJsonArray("holdings");
-      items.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
-        .forEach(location -> {
-          assertTrue(ofNullable(location.getJsonObject("location"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-          assertTrue(ofNullable(location.getJsonObject("permanentLocation"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-          assertTrue(ofNullable(location.getJsonObject("temporaryLocation"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-        });
-      holdings.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
-        .forEach(location -> {
-          assertTrue(ofNullable(location.getJsonObject("effectiveLocation"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-          assertTrue(ofNullable(location.getJsonObject("permanentLocation"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-          assertTrue(ofNullable(location.getJsonObject("temporaryLocation"))
-            .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
-        });
+      verifyItemsLocationNames(items);
+      verifyHoldingsLocationNames(holdings);
     });
+  }
+
+  private void verifyItemsLocationNames(JsonArray items) {
+    items.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
+      .forEach(location -> {
+        assertTrue(ofNullable(location.getJsonObject("location"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        assertTrue(ofNullable(location.getJsonObject("permanentLocation"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        assertTrue(ofNullable(location.getJsonObject("temporaryLocation"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+      });
+  }
+
+  private void verifyHoldingsLocationNames(JsonArray holdings) {
+    holdings.stream().map(JsonObject.class::cast).map(item -> item.getJsonObject("location"))
+      .forEach(location -> {
+        assertTrue(ofNullable(location.getJsonObject("effectiveLocation"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        assertTrue(ofNullable(location.getJsonObject("permanentLocation"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+        assertTrue(ofNullable(location.getJsonObject("temporaryLocation"))
+          .map(loc -> loc.isEmpty() || loc.containsKey("locationName")).orElse(true));
+      });
   }
 
   /**
@@ -712,58 +720,66 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     // then
-    assertThat(instancesData.getFirst(),
+    verifyInstanceHasExpectedItems(instancesData.getFirst());
+
+    // when - test with future end date
+    verifyWithFutureEndDate();
+
+    // when - test with future start date (no results expected)
+    verifyWithFutureStartDate();
+
+    // when - test with past end date (no results expected)
+    verifyWithPastEndDate();
+
+    // when - test with valid date range
+    verifyWithValidDateRange();
+
+    // when - test with narrow date range (no results expected)
+    verifyWithNarrowDateRange();
+  }
+
+  private void verifyInstanceHasExpectedItems(JsonObject instanceData) {
+    assertThat(instanceData,
       allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
         hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+  }
 
-    // when
+  private void verifyWithFutureEndDate() throws InterruptedException, ExecutionException, TimeoutException {
     LocalDateTime endDate = LocalDateTime.of(2500, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.getFirst(),
-      allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC).toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    verifyInstanceHasExpectedItems(instancesData.getFirst());
+  }
 
-    // when
+  private void verifyWithFutureStartDate() throws InterruptedException, ExecutionException, TimeoutException {
     LocalDateTime startDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC).toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     assertThat(instancesData.size(), is(0));
+  }
 
-    // when
-    endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
+  private void verifyWithPastEndDate() throws InterruptedException, ExecutionException, TimeoutException {
+    LocalDateTime endDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC).toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     assertThat(instancesData.size(), is(0));
+  }
 
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
-    assertThat(instancesData.getFirst(),
-      allOf(hasCallNumberForItems("item effective call number 1", "item effective call number 2"),
-        hasAggregatedNumberOfItems(2), hasEffectiveLocationInstitutionNameForItems("Primary Institution")));
+  private void verifyWithValidDateRange() throws InterruptedException, ExecutionException, TimeoutException {
+    LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    LocalDateTime endDate = LocalDateTime.of(2050, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC).toString());
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC).toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
+    verifyInstanceHasExpectedItems(instancesData.getFirst());
+  }
 
-    // when
-    startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-    endDate = LocalDateTime.of(2001, 1, 1, 0, 0, 0);
-    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC)
-      .toString());
-    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC)
-      .toString());
-    instancesData = getInventoryHierarchyInstances(params);
-    // then
+  private void verifyWithNarrowDateRange() throws InterruptedException, ExecutionException, TimeoutException {
+    LocalDateTime startDate = LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+    LocalDateTime endDate = LocalDateTime.of(2001, 1, 1, 0, 0, 0);
+    params.put("startDate", OffsetDateTime.of(startDate, ZoneOffset.UTC).toString());
+    params.put("endDate", OffsetDateTime.of(endDate, ZoneOffset.UTC).toString());
+    List<JsonObject> instancesData = getInventoryHierarchyInstances(params);
     assertThat(instancesData.size(), is(0));
   }
 }

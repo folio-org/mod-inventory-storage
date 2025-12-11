@@ -279,41 +279,57 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
-    IndividualResource instance1Resource = createInstance("Title One");
-    String instanceId = instance1Resource.getId().toString();
+    var instance1Resource = createInstance("Title One");
+    var instanceId = instance1Resource.getId().toString();
 
-    PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
-      instanceId, null, null, null, null);
+    var precedingSucceedingTitle1 = createPrecedingSucceedingTitle(instanceId);
+    var precedingSucceedingTitle2 = createPrecedingSucceedingTitle(instanceId);
 
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle1.getJson());
+    updateTitlesWithSucceedingInstanceId(precedingSucceedingTitle1, precedingSucceedingTitle2, instanceId);
 
-    PrecedingSucceedingTitle precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
-      instanceId, null, null, null, null);
+    var titles = new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
+    updatePrecedingSucceedingTitles(instanceId, titles);
 
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
+    var existedTitles = precedingSucceedingTitleClient
+      .getByQuery(String.format("?query=succeedingInstanceId==(%s)+or+precedingInstanceId==(%s)",
+        instanceId, instanceId));
 
-    precedingSucceedingTitle1.put(PRECEDING_INSTANCE_ID_KEY, null);
-    precedingSucceedingTitle1.put(SUCCEEDING_INSTANCE_ID_KEY, instanceId);
+    assertTitlesUpdatedCorrectly(existedTitles, instanceId);
+    cleanupTitles(existedTitles);
+  }
 
-    precedingSucceedingTitle2.put(PRECEDING_INSTANCE_ID_KEY, null);
-    precedingSucceedingTitle2.put(SUCCEEDING_INSTANCE_ID_KEY, instanceId);
+  private PrecedingSucceedingTitle createPrecedingSucceedingTitle(String instanceId) throws Exception {
+    var title = new PrecedingSucceedingTitle(instanceId, null, null, null, null);
+    precedingSucceedingTitleClient.create(title.getJson());
+    return title;
+  }
 
-    var titles =
-      new PrecedingSucceedingTitles(List.of(precedingSucceedingTitle1, precedingSucceedingTitle2));
-    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+  private void updateTitlesWithSucceedingInstanceId(PrecedingSucceedingTitle title1,
+                                                      PrecedingSucceedingTitle title2, String instanceId) {
+    title1.put(PRECEDING_INSTANCE_ID_KEY, null);
+    title1.put(SUCCEEDING_INSTANCE_ID_KEY, instanceId);
+    title2.put(PRECEDING_INSTANCE_ID_KEY, null);
+    title2.put(SUCCEEDING_INSTANCE_ID_KEY, instanceId);
+  }
+
+  private void updatePrecedingSucceedingTitles(String instanceId, PrecedingSucceedingTitles titles) throws Exception {
+    var putCompleted = new CompletableFuture<Response>();
     getClient().put(precedingSucceedingTitleUrl("/instances/" + instanceId), titles.getJson(),
       TENANT_ID, ResponseHandler.empty(putCompleted));
-    Response response = putCompleted.get(10, SECONDS);
+    var response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(204));
-    var existedTitles = precedingSucceedingTitleClient
-      .getByQuery(
-        String.format("?query=succeedingInstanceId==(%s)+or+precedingInstanceId==(%s)", instanceId, instanceId));
+  }
+
+  private void assertTitlesUpdatedCorrectly(List<JsonObject> existedTitles, String instanceId) {
     existedTitles.forEach(entry -> {
       assertThat(entry.getString("succeedingInstanceId"), equalTo(instanceId));
       assertThat(entry.getString("precedingInstanceId"), nullValue());
     });
-    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(0).getString("id")));
-    precedingSucceedingTitleClient.delete(UUID.fromString(existedTitles.get(1).getString("id")));
+  }
+
+  private void cleanupTitles(List<JsonObject> titles) {
+    titles.forEach(title ->
+      precedingSucceedingTitleClient.delete(UUID.fromString(title.getString("id"))));
   }
 
   @Test

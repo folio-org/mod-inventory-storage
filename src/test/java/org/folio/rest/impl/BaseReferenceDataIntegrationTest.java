@@ -112,31 +112,37 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
     var newRecord = sampleRecord();
 
     postgresClient.save(referenceTable(), newRecord)
-      .compose(s -> {
-        List<Future<TestResponse>> futures = new ArrayList<>();
-        for (String query : queries()) {
-          var testResponseFuture = doGet(client, resourceUrl() + "?query=" + query + "&limit=500")
-            .onComplete(verifyStatus(ctx, HTTP_OK))
-            .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-              var collection = response.bodyAsClass(collectionClass());
-              assertThat(collection)
-                .as("verify collection for query: %s", query)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("totalRecords", 1)
-                .extracting(collectionRecordsExtractor()).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-                .hasSize(1);
-
-              var collectionRecord = collectionRecordsExtractor().apply(collection).getFirst();
-
-              verifyRecordFields(collectionRecord, newRecord, recordFieldExtractors(),
-                String.format("verify collection's record for query: %s", query));
-            })));
-          futures.add(testResponseFuture);
-        }
-        return Future.all(futures);
-      })
+      .compose(s -> executeQueriesAndVerifyResults(client, ctx, newRecord))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
+  }
+
+  private Future<?> executeQueriesAndVerifyResults(
+    io.vertx.core.http.HttpClient client, VertxTestContext ctx, T newRecord) {
+    List<Future<TestResponse>> futures = new ArrayList<>();
+    for (String query : queries()) {
+      var testResponseFuture = doGet(client, resourceUrl() + "?query=" + query + "&limit=500")
+        .onComplete(verifyStatus(ctx, HTTP_OK))
+        .andThen(ctx.succeeding(response -> ctx.verify(() ->
+          verifyCollectionQueryResponse(response, newRecord, query))));
+      futures.add(testResponseFuture);
+    }
+    return Future.all(futures);
+  }
+
+  private void verifyCollectionQueryResponse(TestResponse response, T newRecord, String query) {
+    var collection = response.bodyAsClass(collectionClass());
+    assertThat(collection)
+      .as("verify collection for query: %s", query)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue("totalRecords", 1)
+      .extracting(collectionRecordsExtractor()).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .hasSize(1);
+
+    var collectionRecord = collectionRecordsExtractor().apply(collection).getFirst();
+
+    verifyRecordFields(collectionRecord, newRecord, recordFieldExtractors(),
+      String.format("verify collection's record for query: %s", query));
   }
 
   @Test
@@ -168,23 +174,8 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
     doPost(client, resourceUrl(), pojo2JsonObject(newRecord))
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
-      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
-        var createdRecord = response.bodyAsClass(targetClass());
-
-        assertNotNull(createdRecord);
-        assertNotNull(getRecordId(createdRecord));
-
-        assertThat(getMetadata(createdRecord))
-          .as("Verify created record metadata")
-          .isNotNull()
-          .hasNoNullFieldsOrPropertiesExcept("createdByUsername", "updatedByUsername")
-          .extracting(Metadata::getCreatedByUserId, Metadata::getUpdatedByUserId)
-          .containsExactly(USER_ID, USER_ID);
-
-        for (Function<T, Object> method : recordFieldExtractors()) {
-          assertEquals(method.apply(newRecord), method.apply(createdRecord));
-        }
-      })))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() ->
+        verifyCreatedRecordInResponse(response, newRecord))))
       .compose(testResponse -> postgresClient.getById(referenceTable(), getRecordId(testResponse), targetClass())
         .onComplete(ctx.succeeding(dbRecord -> ctx.verify(() -> {
           var recordFromResponse = testResponse.bodyAsClass(targetClass());
@@ -194,6 +185,24 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
             recordFieldExtractors(), "Verify created record in database has same values as in response");
           ctx.completeNow();
         }))));
+  }
+
+  private void verifyCreatedRecordInResponse(TestResponse response, T newRecord) {
+    var createdRecord = response.bodyAsClass(targetClass());
+
+    assertNotNull(createdRecord);
+    assertNotNull(getRecordId(createdRecord));
+
+    assertThat(getMetadata(createdRecord))
+      .as("Verify created record metadata")
+      .isNotNull()
+      .hasNoNullFieldsOrPropertiesExcept("createdByUsername", "updatedByUsername")
+      .extracting(Metadata::getCreatedByUserId, Metadata::getUpdatedByUserId)
+      .containsExactly(USER_ID, USER_ID);
+
+    for (Function<T, Object> method : recordFieldExtractors()) {
+      assertEquals(method.apply(newRecord), method.apply(createdRecord));
+    }
   }
 
   @Test

@@ -144,21 +144,8 @@ class LocationUnitInstitutionIT
       .compose(s ->
         doGet(client, resourceUrl() + queryStringAndParam)
           .onComplete(verifyStatus(ctx, HTTP_OK))
-          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-            var collectionUnits = response.bodyAsClass(Locinsts.class);
-            assertThat(collectionUnits)
-              .as("verify collection for query and param: " + queryStringAndParam)
-              .isNotNull()
-              .hasFieldOrPropertyWithValue("totalRecords", total)
-              .extracting(Locinsts::getLocinsts).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-              .hasSize(total);
-
-            assertThat(collectionUnits.getLocinsts())
-              .hasSize(total)
-              .extracting(Locinst::getCode)
-              .containsAll(codes);
-          })))
-      )
+          .andThen(ctx.succeeding(response -> ctx.verify(() ->
+            verifyInstitutionCollection(response, queryStringAndParam, total, codes)))))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -360,6 +347,22 @@ class LocationUnitInstitutionIT
     doGet(client, resourceUrl() + "/" + UUID.randomUUID())
       .onComplete(verifyStatus(ctx, HTTP_NOT_FOUND))
       .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
+  }
+
+  private void verifyInstitutionCollection(TestResponse response, String queryStringAndParam,
+                                           int total, List<String> codes) {
+    var collectionUnits = response.bodyAsClass(Locinsts.class);
+    assertThat(collectionUnits)
+      .as("verify collection for query and param: " + queryStringAndParam)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue("totalRecords", total)
+      .extracting(Locinsts::getLocinsts).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .hasSize(total);
+
+    assertThat(collectionUnits.getLocinsts())
+      .hasSize(total)
+      .extracting(Locinst::getCode)
+      .containsAll(codes);
   }
 
   private static Stream<Arguments> queryStringAndParam() {

@@ -48,31 +48,48 @@ public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
     if (StringUtils.isEmpty(startDate) && StringUtils.isEmpty(endDate)) {
-      String sql = SQL_INITIAL_LOAD;
-      if (skipSuppressedFromDiscoveryRecords) {
-        sql += " AND " + SUPPRESSED_TRUE_FILTER;
-      }
-      if (deletedRecordSupport) {
-        sql += SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART;
-      }
-      Tuple tuple = new ArrayTuple(1).addValue(source);
-      fetchRecordsByQuery(sql, () -> tuple,
-        routingContext, okapiHeaders, asyncResultHandler, vertxContext
-      );
+      handleInitialLoad(deletedRecordSupport, skipSuppressedFromDiscoveryRecords, source,
+        routingContext, okapiHeaders, asyncResultHandler, vertxContext);
     } else {
-      fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
-        () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords,
-          tuple -> {
-            tuple.addBoolean(onlyInstanceUpdateDate);
-            if (Objects.nonNull(source)) {
-              tuple.addString(source);
-            } else {
-              tuple.addValue(null);
-            }
-          }),
-        routingContext, okapiHeaders, asyncResultHandler, vertxContext
-      );
+      handleUpdatedInstances(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords,
+        onlyInstanceUpdateDate, source, routingContext, okapiHeaders, asyncResultHandler, vertxContext);
     }
+  }
+
+  private void handleInitialLoad(boolean deletedRecordSupport, boolean skipSuppressedFromDiscoveryRecords,
+                                  String source, RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    String sql = buildInitialLoadSql(skipSuppressedFromDiscoveryRecords, deletedRecordSupport);
+    Tuple tuple = new ArrayTuple(1).addValue(source);
+    fetchRecordsByQuery(sql, () -> tuple, routingContext, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
+  private void handleUpdatedInstances(String startDate, String endDate, boolean deletedRecordSupport,
+                                       boolean skipSuppressedFromDiscoveryRecords, boolean onlyInstanceUpdateDate,
+                                       String source, RoutingContext routingContext, Map<String, String> okapiHeaders,
+                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    fetchRecordsByQuery(SQL_UPDATED_INSTANCES_IDS,
+      () -> createPostgresParams(startDate, endDate, deletedRecordSupport, skipSuppressedFromDiscoveryRecords,
+        tuple -> {
+          tuple.addBoolean(onlyInstanceUpdateDate);
+          if (Objects.nonNull(source)) {
+            tuple.addString(source);
+          } else {
+            tuple.addValue(null);
+          }
+        }),
+      routingContext, okapiHeaders, asyncResultHandler, vertxContext);
+  }
+
+  private String buildInitialLoadSql(boolean skipSuppressedFromDiscoveryRecords, boolean deletedRecordSupport) {
+    String sql = SQL_INITIAL_LOAD;
+    if (skipSuppressedFromDiscoveryRecords) {
+      sql += " AND " + SUPPRESSED_TRUE_FILTER;
+    }
+    if (deletedRecordSupport) {
+      sql += SQL_INITIAL_LOAD_DELETED_RECORDS_SUPPORT_PART;
+    }
+    return sql;
   }
 
   @Validate

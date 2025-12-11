@@ -27,26 +27,42 @@ public class ItemEffectiveLocationTestDataProvider {
 
   @SuppressWarnings("unused")
   public static List<PermTemp[]> canCalculateEffectiveLocationOnHoldingUpdateParams() {
-    List<PermTemp[]> params = new ArrayList<>();
+    PermTemp[] itemLocationsList = createItemLocationsList();
+    PermTemp[] holdingsStartLocationsList = createHoldingsStartLocationsList();
+    PermTemp[] holdingsEndLocationsList = createHoldingsEndLocationsList();
 
-    PermTemp[] itemLocationsList = {
+    return generateHoldingsUpdateParams(itemLocationsList, holdingsStartLocationsList, holdingsEndLocationsList);
+  }
+
+  private static PermTemp[] createItemLocationsList() {
+    return new PermTemp[] {
       new PermTemp(null, null),
       new PermTemp(null, MAIN_LIBRARY_LOCATION_ID),
       new PermTemp(MAIN_LIBRARY_LOCATION_ID, null),
-      new PermTemp(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID),
-      };
+      new PermTemp(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
+    };
+  }
 
-    PermTemp[] holdingsStartLocationsList = {
+  private static PermTemp[] createHoldingsStartLocationsList() {
+    return new PermTemp[] {
       new PermTemp(ONLINE_LOCATION_ID, null),
-      new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID),
-      };
-    PermTemp[] holdingsEndLocationsList = {
+      new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID)
+    };
+  }
+
+  private static PermTemp[] createHoldingsEndLocationsList() {
+    return new PermTemp[] {
       new PermTemp(ONLINE_LOCATION_ID, null),
       new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID),
       new PermTemp(THIRD_FLOOR_LOCATION_ID, null),
-      new PermTemp(THIRD_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION_ID),
-      };
+      new PermTemp(THIRD_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION_ID)
+    };
+  }
 
+  private static List<PermTemp[]> generateHoldingsUpdateParams(PermTemp[] itemLocationsList,
+                                                                PermTemp[] holdingsStartLocationsList,
+                                                                PermTemp[] holdingsEndLocationsList) {
+    List<PermTemp[]> params = new ArrayList<>();
     for (PermTemp itemLocations : itemLocationsList) {
       for (PermTemp holdingStartLocations : holdingsStartLocationsList) {
         for (PermTemp holdingEndLocations : holdingsEndLocationsList) {
@@ -59,27 +75,45 @@ public class ItemEffectiveLocationTestDataProvider {
 
   @SuppressWarnings("unused")
   public static List<PermTemp[]> canCalculateEffectiveLocationOnItemUpdateParams() {
-    List<PermTemp[]> parameters = new ArrayList<>();
-    PermTemp[] holdingsLocationsList = {
+    PermTemp[] holdingsLocationsList = createHoldingsLocationsList();
+    PermTemp[] itemStartLocationsList = createItemStartLocationsList();
+    PermTemp[] itemEndLocationsList = createItemEndLocationsList();
+
+    return generateItemUpdateParams(holdingsLocationsList, itemStartLocationsList, itemEndLocationsList);
+  }
+
+  private static PermTemp[] createHoldingsLocationsList() {
+    return new PermTemp[] {
       new PermTemp(MAIN_LIBRARY_LOCATION_ID, null),
-      new PermTemp(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID),
-      };
-    PermTemp[] itemStartLocationsList = {
+      new PermTemp(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID)
+    };
+  }
+
+  private static PermTemp[] createItemStartLocationsList() {
+    return new PermTemp[] {
       new PermTemp(null, null),
       new PermTemp(null, ONLINE_LOCATION_ID),
       new PermTemp(ONLINE_LOCATION_ID, null),
-      new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID),
-      };
-    PermTemp[] itemEndLocationsList = {
+      new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID)
+    };
+  }
+
+  private static PermTemp[] createItemEndLocationsList() {
+    return new PermTemp[] {
       new PermTemp(null, null),
       new PermTemp(null, ONLINE_LOCATION_ID),
       new PermTemp(ONLINE_LOCATION_ID, null),
       new PermTemp(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID),
       new PermTemp(null, THIRD_FLOOR_LOCATION_ID),
       new PermTemp(THIRD_FLOOR_LOCATION_ID, null),
-      new PermTemp(THIRD_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION_ID),
-      };
+      new PermTemp(THIRD_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION_ID)
+    };
+  }
 
+  private static List<PermTemp[]> generateItemUpdateParams(PermTemp[] holdingsLocationsList,
+                                                            PermTemp[] itemStartLocationsList,
+                                                            PermTemp[] itemEndLocationsList) {
+    List<PermTemp[]> parameters = new ArrayList<>();
     for (PermTemp holdingLocations : holdingsLocationsList) {
       for (PermTemp itemStartLocations : itemStartLocationsList) {
         for (PermTemp itemEndLocations : itemEndLocationsList) {

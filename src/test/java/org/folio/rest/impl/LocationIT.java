@@ -167,20 +167,8 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
       .compose(s ->
         doGet(client, resourceUrl() + queryStringAndParam)
           .onComplete(verifyStatus(ctx, HTTP_OK))
-          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-            var locationsCollection = response.bodyAsClass(Locations.class);
-            assertThat(locationsCollection)
-              .as("verify collection for query and param: " + queryStringAndParam)
-              .isNotNull()
-              .hasFieldOrPropertyWithValue("totalRecords", total)
-              .extracting(Locations::getLocations).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-              .hasSize(total);
-
-            assertThat(locationsCollection.getLocations())
-              .hasSize(total)
-              .extracting(Location::getCode)
-              .containsAll(codes);
-          }))))
+          .andThen(ctx.succeeding(response -> ctx.verify(() ->
+            verifyLocationCollection(response, queryStringAndParam, total, codes)))))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -317,6 +305,22 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
           .containsOnly("id value already exists in table location: " + sampleRecord.getId());
         ctx.completeNow();
       })));
+  }
+
+  private void verifyLocationCollection(TestResponse response, String queryStringAndParam,
+                                        int total, List<String> codes) {
+    var locationsCollection = response.bodyAsClass(Locations.class);
+    assertThat(locationsCollection)
+      .as("verify collection for query and param: " + queryStringAndParam)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue("totalRecords", total)
+      .extracting(Locations::getLocations).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .hasSize(total);
+
+    assertThat(locationsCollection.getLocations())
+      .hasSize(total)
+      .extracting(Location::getCode)
+      .containsAll(codes);
   }
 
   private static Stream<Arguments> queryStringAndParam() {

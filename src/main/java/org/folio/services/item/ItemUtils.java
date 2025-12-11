@@ -44,33 +44,7 @@ public final class ItemUtils {
         continue; // No additional properties to validate
       }
 
-      var missingFields = new ArrayList<String>();
-
-      if (additionalProperties.containsKey("materialTypeId")
-          && isNullOrBlank(additionalProperties.get("materialTypeId"))) {
-        missingFields.add("materialTypeId");
-      }
-
-      if (additionalProperties.containsKey("permanentLoanTypeId")
-          && isNullOrBlank(additionalProperties.get("permanentLoanTypeId"))) {
-        missingFields.add("permanentLoanTypeId");
-      }
-
-      if (additionalProperties.containsKey("holdingsRecordId")
-          && isNullOrBlank(additionalProperties.get("holdingsRecordId"))) {
-        missingFields.add("holdingsRecordId");
-      }
-
-      // Check status object and its required name field
-      if (additionalProperties.containsKey("status")) {
-        var status = additionalProperties.get("status");
-        if (status == null) {
-          missingFields.add("status");
-        } else if (status instanceof Map<?, ?> statusMap
-            && isNullOrBlank(statusMap.get("name"))) {
-          missingFields.add("status.name");
-        }
-      }
+      var missingFields = collectMissingFields(additionalProperties);
 
       if (!missingFields.isEmpty()) {
         errors.add(requiredFieldsError(itemPatch.getId(), missingFields));
@@ -82,6 +56,38 @@ public final class ItemUtils {
     }
 
     return Future.succeededFuture();
+  }
+
+  private static List<String> collectMissingFields(Map<String, Object> additionalProperties) {
+    var missingFields = new ArrayList<String>();
+
+    if (additionalProperties.containsKey("materialTypeId")
+        && isNullOrBlank(additionalProperties.get("materialTypeId"))) {
+      missingFields.add("materialTypeId");
+    }
+
+    if (additionalProperties.containsKey("permanentLoanTypeId")
+        && isNullOrBlank(additionalProperties.get("permanentLoanTypeId"))) {
+      missingFields.add("permanentLoanTypeId");
+    }
+
+    if (additionalProperties.containsKey("holdingsRecordId")
+        && isNullOrBlank(additionalProperties.get("holdingsRecordId"))) {
+      missingFields.add("holdingsRecordId");
+    }
+
+    // Check status object and its required name field
+    if (additionalProperties.containsKey("status")) {
+      var status = additionalProperties.get("status");
+      if (status == null) {
+        missingFields.add("status");
+      } else if (status instanceof Map<?, ?> statusMap
+          && isNullOrBlank(statusMap.get("name"))) {
+        missingFields.add("status.name");
+      }
+    }
+
+    return missingFields;
   }
 
   public static boolean isNullOrBlank(Object value) {

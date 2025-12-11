@@ -25,25 +25,12 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldReturnInstanceWithRecords() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
-    var holdingsForOne = List.of(
-      createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null),
-      createHolding(instanceOne.getId(), SECOND_FLOOR_LOCATION_ID, null)
-    );
-    var itemsForOne = List.of(
-      createItem(nodWithNoBarcode(holdingsForOne.get(0))).getString("id"),
-      createItem(nodWithNoBarcode(holdingsForOne.get(1))).getString("id")
-    );
+    var holdingsForOne = createTwoHoldingsForInstance(instanceOne.getId());
+    var itemsForOne = createItemsForHoldings(holdingsForOne);
 
     var instanceTwo = instancesClient.create(instance(randomUUID()));
-    var holdingsForTwo = List.of(
-      createHolding(instanceTwo.getId(), MAIN_LIBRARY_LOCATION_ID, null),
-      createHolding(instanceTwo.getId(), SECOND_FLOOR_LOCATION_ID, null),
-      createHolding(instanceTwo.getId(), FOURTH_FLOOR_LOCATION_ID, null));
-    final var itemsForTwo = List.of(
-      createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
-      createItem(nodWithNoBarcode(holdingsForTwo.get(0))).getString("id"),
-      createItem(nodWithNoBarcode(holdingsForTwo.get(1))).getString("id"),
-      createItem(nodWithNoBarcode(holdingsForTwo.get(2))).getString("id"));
+    final var holdingsForTwo = createThreeHoldingsForInstance(instanceTwo.getId());
+    final var itemsForTwo = createItemsForHoldings(holdingsForTwo);
 
     var instances = inventoryViewClient.getMany("id==(%s or %s)",
       instanceTwo.getId(), instanceOne.getId());
@@ -58,6 +45,27 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
 
     assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
     assertThat(getItemIds(secondInstance), matchesInAnyOrder(itemsForTwo));
+  }
+
+  private List<UUID> createTwoHoldingsForInstance(UUID instanceId) {
+    return List.of(
+      createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(instanceId, SECOND_FLOOR_LOCATION_ID, null)
+    );
+  }
+
+  private List<UUID> createThreeHoldingsForInstance(UUID instanceId) {
+    return List.of(
+      createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(instanceId, SECOND_FLOOR_LOCATION_ID, null),
+      createHolding(instanceId, FOURTH_FLOOR_LOCATION_ID, null)
+    );
+  }
+
+  private List<String> createItemsForHoldings(List<UUID> holdingIds) {
+    return holdingIds.stream()
+      .map(holdingId -> createItem(nodWithNoBarcode(holdingId)).getString("id"))
+      .toList();
   }
 
   @Test
@@ -112,6 +120,29 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   @Test
   public void shouldReturnInstanceWithBoundedItemsRecords_whenWithBoundedItemsTrue() {
     //given
+    var testData = createTestDataWithBoundedItems();
+
+    //when
+    var query = getQueryWithBoundedItems(testData.instanceOne(), testData.instanceTwo(), "id==(%s or %s)");
+    var instances = inventoryViewClient.getByQuery(query)
+      .stream()
+      .map(IndividualResource::new)
+      .toList();
+
+    //then
+    assertThat(instances.size(), is(2));
+
+    var firstInstance = getInstanceById(instances, testData.instanceOne().getId());
+    var secondInstance = getInstanceById(instances, testData.instanceTwo().getId());
+
+    assertThat(getHoldingIds(firstInstance), matchesInAnyOrder(testData.holdingsForOne()));
+    assertThat(getItemIds(firstInstance), matchesInAnyOrder(testData.itemsForOne()));
+
+    assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(testData.holdingsForTwo()));
+    assertThat(getItemIds(secondInstance), matchesInAnyOrder(testData.itemsForTwo()));
+  }
+
+  private TestDataWithBoundedItems createTestDataWithBoundedItems() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var holdingsForOne = List.of(
       createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null),
@@ -132,24 +163,8 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     boundWithClient.create(
       createBoundWithPartJson(holdingsForTwo.getFirst().toString(), itemsForOne.get(1)));
 
-    //when
-    String query = getQueryWithBoundedItems(instanceOne, instanceTwo, "id==(%s or %s)");
-    var instances = inventoryViewClient.getByQuery(query)
-      .stream()
-      .map(IndividualResource::new)
-      .toList();
-
-    //then
-    assertThat(instances.size(), is(2));
-
-    var firstInstance = getInstanceById(instances, instanceOne.getId());
-    var secondInstance = getInstanceById(instances, instanceTwo.getId());
-
-    assertThat(getHoldingIds(firstInstance), matchesInAnyOrder(holdingsForOne));
-    assertThat(getItemIds(firstInstance), matchesInAnyOrder(itemsForOne));
-
-    assertThat(getHoldingIds(secondInstance), matchesInAnyOrder(holdingsForTwo));
-    assertThat(getItemIds(secondInstance), matchesInAnyOrder(itemsForTwo));
+    return new TestDataWithBoundedItems(instanceOne, instanceTwo,
+      holdingsForOne, holdingsForTwo, itemsForOne, itemsForTwo);
   }
 
   @Test
@@ -291,5 +306,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     var encodedCqlParams = StringUtil.urlEncode(
       String.format(cqlParams, instanceTwo.getId(), instanceOne.getId()));
     return String.format("?withBoundedItems=true&query=%s", encodedCqlParams);
+  }
+
+  private record TestDataWithBoundedItems(IndividualResource instanceOne, IndividualResource instanceTwo,
+                                          List<UUID> holdingsForOne, List<UUID> holdingsForTwo,
+                                          List<String> itemsForOne, List<String> itemsForTwo) {
   }
 }

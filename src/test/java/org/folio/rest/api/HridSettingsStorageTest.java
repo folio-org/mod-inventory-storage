@@ -139,45 +139,16 @@ public class HridSettingsStorageTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting canUpdateHridSettings()");
 
-    final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-
     final HridSettings newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix("inst").withStartNumber(100L))
       .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
       .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
-    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
-      empty(putCompleted));
-
-    final Response putResponse = putCompleted.get(10, SECONDS);
-
+    final Response putResponse = updateHridSettings(newHridSettings);
     assertThat(putResponse.getStatusCode(), is(204));
 
-    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
-
-    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
-
-    final Response getResponse = getCompleted.get(10, SECONDS);
-
-    final HridSettings actualHridSettings = getResponse.getJson().mapTo(HridSettings.class);
-
-    assertThat(actualHridSettings.getInstances(), is(notNullValue()));
-    assertThat(actualHridSettings.getInstances().getPrefix(),
-      is(newHridSettings.getInstances().getPrefix()));
-    assertThat(actualHridSettings.getInstances().getStartNumber(),
-      is(newHridSettings.getInstances().getStartNumber()));
-
-    assertThat(actualHridSettings.getHoldings(), is(notNullValue()));
-    assertThat(actualHridSettings.getHoldings().getPrefix(),
-      is(newHridSettings.getHoldings().getPrefix()));
-    assertThat(actualHridSettings.getHoldings().getStartNumber(),
-      is(newHridSettings.getHoldings().getStartNumber()));
-
-    assertThat(actualHridSettings.getItems(), is(notNullValue()));
-    assertThat(actualHridSettings.getItems().getPrefix(),
-      is(newHridSettings.getItems().getPrefix()));
-    assertThat(actualHridSettings.getItems().getStartNumber(),
-      is(newHridSettings.getItems().getStartNumber()));
+    final HridSettings actualHridSettings = getHridSettings();
+    verifyHridSettingsMatch(actualHridSettings, newHridSettings);
 
     log.info("Finished canUpdateHridSettings()");
   }
@@ -209,17 +180,7 @@ public class HridSettingsStorageTest extends TestBase {
     throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting cannotUpdateHridSettingsID()");
 
-    final CompletableFuture<Response> originalGetCompleted = new CompletableFuture<>();
-
-    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(originalGetCompleted));
-
-    final Response originalGetResponse = originalGetCompleted.get(10, SECONDS);
-
-    assertThat(originalGetResponse.getStatusCode(), is(200));
-
-    final HridSettings originalHridSettings =
-      originalGetResponse.getJson().mapTo(HridSettings.class);
-
+    final HridSettings originalHridSettings = getHridSettings();
     final String uuid = UUID.randomUUID().toString();
 
     final HridSettings newHridSettings = new HridSettings()
@@ -228,44 +189,12 @@ public class HridSettingsStorageTest extends TestBase {
       .withHoldings(new HridSetting().withPrefix("hold").withStartNumber(200L))
       .withItems(new HridSetting().withPrefix("item").withStartNumber(500L));
 
-    final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
-
-    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), newHridSettings, TENANT_ID,
-      empty(putCompleted));
-
-    final Response putResponse = putCompleted.get(10, SECONDS);
-
+    final Response putResponse = updateHridSettings(newHridSettings);
     assertThat(putResponse.getStatusCode(), is(204));
 
-    final CompletableFuture<Response> getAfterUpdateCompleted = new CompletableFuture<>();
-
-    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getAfterUpdateCompleted));
-
-    final Response getAfterUpdateResponse = getAfterUpdateCompleted.get(10, SECONDS);
-
-    final HridSettings actualHridSettings =
-      getAfterUpdateResponse.getJson().mapTo(HridSettings.class);
-
-    assertThat(actualHridSettings.getId(), not(uuid));
-    assertThat(actualHridSettings.getId(), is(originalHridSettings.getId()));
-
-    assertThat(actualHridSettings.getInstances(), is(notNullValue()));
-    assertThat(actualHridSettings.getInstances().getPrefix(),
-      is(newHridSettings.getInstances().getPrefix()));
-    assertThat(actualHridSettings.getInstances().getStartNumber(),
-      is(newHridSettings.getInstances().getStartNumber()));
-
-    assertThat(actualHridSettings.getHoldings(), is(notNullValue()));
-    assertThat(actualHridSettings.getHoldings().getPrefix(),
-      is(newHridSettings.getHoldings().getPrefix()));
-    assertThat(actualHridSettings.getHoldings().getStartNumber(),
-      is(newHridSettings.getHoldings().getStartNumber()));
-
-    assertThat(actualHridSettings.getItems(), is(notNullValue()));
-    assertThat(actualHridSettings.getItems().getPrefix(),
-      is(newHridSettings.getItems().getPrefix()));
-    assertThat(actualHridSettings.getItems().getStartNumber(),
-      is(newHridSettings.getItems().getStartNumber()));
+    final HridSettings actualHridSettings = getHridSettings();
+    verifyIdNotChanged(actualHridSettings, originalHridSettings, uuid);
+    verifyHridSettingsMatch(actualHridSettings, newHridSettings);
 
     log.info("Finished cannotUpdateHridSettingsID()");
   }
@@ -455,31 +384,7 @@ public class HridSettingsStorageTest extends TestBase {
       .withItems(new HridSetting().withStartNumber(999_999_999_999L));
 
     hridManager.getHridSettings()
-      .compose(originalHridSettings -> {
-        Promise<HridSettings> promise = Promise.promise();
-        hridManager.updateHridSettings(newHridSettings).onComplete(ar -> {
-          assertTrue(ar.failed());
-          hridManager.getHridSettings()
-            .compose(currentHridSettings -> {
-              assertThat(currentHridSettings.getId(), is(originalHridSettings.getId()));
-              assertThat(currentHridSettings.getInstances().getPrefix(),
-                is(originalHridSettings.getInstances().getPrefix()));
-              assertThat(currentHridSettings.getInstances().getStartNumber(),
-                is(originalHridSettings.getInstances().getStartNumber()));
-              assertThat(currentHridSettings.getHoldings().getPrefix(),
-                is(originalHridSettings.getHoldings().getPrefix()));
-              assertThat(currentHridSettings.getHoldings().getStartNumber(),
-                is(originalHridSettings.getHoldings().getStartNumber()));
-              assertThat(currentHridSettings.getItems().getPrefix(),
-                is(originalHridSettings.getItems().getPrefix()));
-              assertThat(currentHridSettings.getItems().getStartNumber(),
-                is(originalHridSettings.getItems().getStartNumber()));
-              return Future.succeededFuture(currentHridSettings);
-            })
-            .onComplete(promise);
-        });
-        return promise.future();
-      })
+      .compose(originalHridSettings -> verifyRollbackOnFailure(newHridSettings, originalHridSettings))
       .onComplete(testContext.asyncAssertSuccess(
         v1 -> log.info("Finished canRollbackFailedTransaction()")));
   }
@@ -537,5 +442,74 @@ public class HridSettingsStorageTest extends TestBase {
   private Future<String> validateHrid(String hrid, String expectedValue, TestContext testContext) {
     testContext.assertEquals(expectedValue, hrid);
     return Future.succeededFuture(hrid);
+  }
+
+  private Response updateHridSettings(HridSettings hridSettings)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    final CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    getClient().put(InterfaceUrls.hridSettingsStorageUrl(""), hridSettings, TENANT_ID,
+      empty(putCompleted));
+    return putCompleted.get(10, SECONDS);
+  }
+
+  private HridSettings getHridSettings()
+    throws InterruptedException, ExecutionException, TimeoutException {
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(InterfaceUrls.hridSettingsStorageUrl(""), TENANT_ID, json(getCompleted));
+    final Response getResponse = getCompleted.get(10, SECONDS);
+    assertThat(getResponse.getStatusCode(), is(200));
+    return getResponse.getJson().mapTo(HridSettings.class);
+  }
+
+  private void verifyHridSettingsMatch(HridSettings actualHridSettings, HridSettings expectedHridSettings) {
+    assertThat(actualHridSettings.getInstances(), is(notNullValue()));
+    assertThat(actualHridSettings.getInstances().getPrefix(),
+      is(expectedHridSettings.getInstances().getPrefix()));
+    assertThat(actualHridSettings.getInstances().getStartNumber(),
+      is(expectedHridSettings.getInstances().getStartNumber()));
+
+    assertThat(actualHridSettings.getHoldings(), is(notNullValue()));
+    assertThat(actualHridSettings.getHoldings().getPrefix(),
+      is(expectedHridSettings.getHoldings().getPrefix()));
+    assertThat(actualHridSettings.getHoldings().getStartNumber(),
+      is(expectedHridSettings.getHoldings().getStartNumber()));
+
+    assertThat(actualHridSettings.getItems(), is(notNullValue()));
+    assertThat(actualHridSettings.getItems().getPrefix(),
+      is(expectedHridSettings.getItems().getPrefix()));
+    assertThat(actualHridSettings.getItems().getStartNumber(),
+      is(expectedHridSettings.getItems().getStartNumber()));
+  }
+
+  private void verifyIdNotChanged(HridSettings actualHridSettings, HridSettings originalHridSettings, String uuid) {
+    assertThat(actualHridSettings.getId(), not(uuid));
+    assertThat(actualHridSettings.getId(), is(originalHridSettings.getId()));
+  }
+
+  private Future<HridSettings> verifyRollbackOnFailure(HridSettings newHridSettings,
+                                                       HridSettings originalHridSettings) {
+    Promise<HridSettings> promise = Promise.promise();
+    hridManager.updateHridSettings(newHridSettings).onComplete(ar -> {
+      assertTrue(ar.failed());
+      hridManager.getHridSettings()
+        .compose(currentHridSettings -> {
+          assertThat(currentHridSettings.getId(), is(originalHridSettings.getId()));
+          assertThat(currentHridSettings.getInstances().getPrefix(),
+            is(originalHridSettings.getInstances().getPrefix()));
+          assertThat(currentHridSettings.getInstances().getStartNumber(),
+            is(originalHridSettings.getInstances().getStartNumber()));
+          assertThat(currentHridSettings.getHoldings().getPrefix(),
+            is(originalHridSettings.getHoldings().getPrefix()));
+          assertThat(currentHridSettings.getHoldings().getStartNumber(),
+            is(originalHridSettings.getHoldings().getStartNumber()));
+          assertThat(currentHridSettings.getItems().getPrefix(),
+            is(originalHridSettings.getItems().getPrefix()));
+          assertThat(currentHridSettings.getItems().getStartNumber(),
+            is(originalHridSettings.getItems().getStartNumber()));
+          return Future.succeededFuture(currentHridSettings);
+        })
+        .onComplete(promise);
+    });
+    return promise.future();
   }
 }

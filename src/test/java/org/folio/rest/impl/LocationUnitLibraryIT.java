@@ -153,21 +153,8 @@ class LocationUnitLibraryIT
       .compose(s ->
         doGet(client, resourceUrl() + queryStringAndParam)
           .onComplete(verifyStatus(ctx, HTTP_OK))
-          .andThen(ctx.succeeding(response -> ctx.verify(() -> {
-            var collectionUnits = response.bodyAsClass(Loclibs.class);
-            assertThat(collectionUnits)
-              .as("verify collection for query and param: " + queryStringAndParam)
-              .isNotNull()
-              .hasFieldOrPropertyWithValue("totalRecords", total)
-              .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
-              .hasSize(total);
-
-            assertThat(collectionUnits.getLoclibs())
-              .hasSize(total)
-              .extracting(Loclib::getCode)
-              .containsAll(codes);
-          })))
-      )
+          .andThen(ctx.succeeding(response -> ctx.verify(() ->
+            verifyLibraryCollection(response, queryStringAndParam, total, codes)))))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
@@ -288,6 +275,22 @@ class LocationUnitLibraryIT
           .contains("Not found");
         ctx.completeNow();
       })));
+  }
+
+  private void verifyLibraryCollection(TestResponse response, String queryStringAndParam, 
+                                        int total, List<String> codes) {
+    var collectionUnits = response.bodyAsClass(Loclibs.class);
+    assertThat(collectionUnits)
+      .as("verify collection for query and param: " + queryStringAndParam)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue("totalRecords", total)
+      .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .hasSize(total);
+
+    assertThat(collectionUnits.getLoclibs())
+      .hasSize(total)
+      .extracting(Loclib::getCode)
+      .containsAll(codes);
   }
 
   private static Stream<Arguments> queryStringAndParam() {

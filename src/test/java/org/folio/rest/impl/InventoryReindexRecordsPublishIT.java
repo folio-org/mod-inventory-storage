@@ -74,14 +74,26 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
   @SneakyThrows
   void post_shouldReturn201_whenPublishingInstancesForReindex(Vertx vertx,
                                                               VertxTestContext ctx) {
-    //prepare data for instances, holdings, items and boundWith
     mockUserTenantsForNonConsortiumMember();
     var client = vertx.createHttpClient();
+
+    var testData = prepareInstanceReindexTestData();
+    var publishRequestBody = createPublishRequestBody(testData);
+
+    saveTestDataAndTriggerPublish(vertx, client, testData, publishRequestBody)
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> assertEquals(HTTP_CREATED.toInt(), response.status()))))
+      .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+
+    verifyKafkaEventForInstanceReindex(testData);
+  }
+
+  private InstanceReindexTestData prepareInstanceReindexTestData() {
     var mainInstanceId = UUID.randomUUID();
     var holdingsId = UUID.randomUUID();
     var itemId = UUID.randomUUID();
     var anotherInstanceId = UUID.randomUUID();
     var consortiumInstanceId = UUID.randomUUID();
+    var rangeId = UUID.randomUUID().toString();
 
     var mainInstance = createInstanceRequest(mainInstanceId, "TEST", "mm", new JsonArray(), new JsonArray(),
       null, new JsonArray());
@@ -98,40 +110,44 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
     var consortiumInstance = createInstanceRequest(consortiumInstanceId, "CONSORTIUM-TEST", "cm", new JsonArray(),
       new JsonArray(), null, new JsonArray());
 
-    //prepare request
-    var rangeId = UUID.randomUUID().toString();
-    //sort created instance ids to have all three falling into request range
-    var instanceIds = Stream.of(mainInstanceId, consortiumInstanceId, anotherInstanceId)
+    return new InstanceReindexTestData(mainInstanceId, holdingsId, itemId, anotherInstanceId, consortiumInstanceId,
+      rangeId, mainInstance, holding, item, boundWith, anotherInstance, consortiumInstance);
+  }
+
+  private PublishReindexRecords createPublishRequestBody(InstanceReindexTestData testData) {
+    var instanceIds = Stream.of(testData.mainInstanceId, testData.consortiumInstanceId, testData.anotherInstanceId)
       .map(UUID::toString).sorted().toList();
-    var publishRequestBody = new PublishReindexRecords()
-      .withId(rangeId)
+    return new PublishReindexRecords()
+      .withId(testData.rangeId)
       .withRecordType(PublishReindexRecords.RecordType.INSTANCE)
       .withRecordIdsRange(
         new RecordIdsRange().withFrom(instanceIds.get(0)).withTo(instanceIds.get(2)));
+  }
 
+  private io.vertx.core.Future<TestResponse> saveTestDataAndTriggerPublish(Vertx vertx,
+                                                                            io.vertx.core.http.HttpClient client,
+                                                                            InstanceReindexTestData testData,
+                                                                            PublishReindexRecords publishRequestBody) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    //save entities sequentially
-    postgresClient.save(INSTANCE_TABLE, mainInstanceId.toString(), mainInstance)
-      //holdings, item, boundWith entities are all needed to fill the isBoundWith flag in kafka event
-      .compose(r -> postgresClient.save(HOLDING_TABLE, holdingsId.toString(), holding))
-      .compose(r -> postgresClient.save(ITEM_TABLE, itemId.toString(), item))
-      .compose(r -> postgresClient.save(INSTANCE_TABLE, anotherInstanceId.toString(), anotherInstance))
-      //create instance with consortium source to verify it's ignored
-      .compose(r -> postgresClient.save(INSTANCE_TABLE, consortiumInstanceId.toString(), consortiumInstance))
-      .compose(r -> postgresClient.save(BOUND_WITH_TABLE, boundWith))
-      //trigger records publishing
-      .compose(r -> doPost(client, "/inventory-reindex-records/publish", pojo2JsonObject(publishRequestBody)))
-      .onComplete(ctx.succeeding(response -> ctx.verify(() -> assertEquals(HTTP_CREATED.toInt(), response.status()))))
-      .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+    return postgresClient.save(INSTANCE_TABLE, testData.mainInstanceId.toString(), testData.mainInstance)
+      .compose(r -> postgresClient.save(HOLDING_TABLE, testData.holdingsId.toString(), testData.holding))
+      .compose(r -> postgresClient.save(ITEM_TABLE, testData.itemId.toString(), testData.item))
+      .compose(r -> postgresClient.save(
+        INSTANCE_TABLE, testData.anotherInstanceId.toString(), testData.anotherInstance))
+      .compose(r -> postgresClient.save(
+        INSTANCE_TABLE, testData.consortiumInstanceId.toString(), testData.consortiumInstance))
+      .compose(r -> postgresClient.save(BOUND_WITH_TABLE, testData.boundWith))
+      .compose(r -> doPost(client, "/inventory-reindex-records/publish", pojo2JsonObject(publishRequestBody)));
+  }
 
-    //verify kafka event
-    awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForReindexRecord(rangeId),
+  private void verifyKafkaEventForInstanceReindex(InstanceReindexTestData testData) {
+    awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForReindexRecord(testData.rangeId),
       hasSize(1));
 
-    mainInstance.put("isBoundWith", true);
-    anotherInstance.put("isBoundWith", false);
+    testData.mainInstance.put("isBoundWith", true);
+    testData.anotherInstance.put("isBoundWith", false);
 
-    var kafkaMessages = KAFKA_CONSUMER.getMessagesForReindexRecord(rangeId);
+    var kafkaMessages = KAFKA_CONSUMER.getMessagesForReindexRecord(testData.rangeId);
 
     assertThat(kafkaMessages,
       EVENT_MESSAGE_MATCHERS.hasReindexEventMessageFor());
@@ -140,7 +156,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       .map(JsonObject::mapFrom)
       .toList();
     Assertions.assertThat(event.getString("recordType")).isEqualTo(PublishReindexRecords.RecordType.INSTANCE.value());
-    Assertions.assertThat(records).contains(mainInstance, anotherInstance);
+    Assertions.assertThat(records).contains(testData.mainInstance, testData.anotherInstance);
   }
 
   private static Stream<Arguments> reindexTypesProvider() {
@@ -154,5 +170,12 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
         PublishReindexRecords.RecordType.HOLDINGS,
         List.of(new HoldingsRecord().withId(RECORD1_ID), new HoldingsRecord().withId(RECORD2_ID)))
     );
+  }
+
+  private record InstanceReindexTestData(UUID mainInstanceId, UUID holdingsId, UUID itemId,
+                                         UUID anotherInstanceId, UUID consortiumInstanceId, String rangeId,
+                                         JsonObject mainInstance, JsonObject holding, JsonObject item,
+                                         JsonObject boundWith, JsonObject anotherInstance,
+                                         JsonObject consortiumInstance) {
   }
 }

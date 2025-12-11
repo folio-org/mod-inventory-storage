@@ -73,17 +73,8 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
     instanceReindex.postReindexJob(reindexJob);
-    var postgresClient = spy(getPostgresClient());
-    var connection = mock(Conn.class);
 
-    when(postgresClient.withTrans(any()))
-      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
-        .apply(connection));
-
-    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
-      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
-      return succeededFuture();
-    });
+    var postgresClient = createMockPostgresClient(rowStream);
 
     get(repository.save(reindexJob.getId(), reindexJob).toCompletionStage()
       .toCompletableFuture());
@@ -104,6 +95,22 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     // greater than the number of records-no one has been able to figure out why.
     instanceMessageChecks.countOfAllPublishedInstancesIs(
       greaterThanOrEqualTo(numberOfRecords));
+  }
+
+  private PostgresClient createMockPostgresClient(TestRowStream rowStream) {
+    var postgresClient = spy(getPostgresClient());
+    var connection = mock(Conn.class);
+
+    when(postgresClient.withTrans(any()))
+      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
+        .apply(connection));
+
+    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
+      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
+      return succeededFuture();
+    });
+
+    return postgresClient;
   }
 
   @Test

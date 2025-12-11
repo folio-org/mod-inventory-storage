@@ -88,44 +88,44 @@ class PatchDataTest {
   }
 
   private static Stream<Arguments> provideTrueTestCases() {
+    return Stream.concat(
+      provideHoldingsRecordIdChangeTestCases(),
+      Stream.concat(
+        provideOtherPropertiesTestCases(),
+        provideEmptyStringToValueTestCases()
+      )
+    );
+  }
+
+  private static Stream<Arguments> provideHoldingsRecordIdChangeTestCases() {
     return Stream.of(
-      Arguments.of(
-        "Only holdingsRecordId is present and changed",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", "different-holdings-id"),
-        null
-      ),
-      Arguments.of(
-        "HoldingsRecordId changes from non-null to null",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", null),
-        null
-      ),
-      Arguments.of(
-        "Other properties are present",
-        new ItemPatch().withAdditionalProperty("materialTypeId", "some-material-type-id"),
-        null
-      ),
-      Arguments.of(
-        "Multiple properties including holdingsRecordId are present",
+      Arguments.of("Only holdingsRecordId is present and changed",
+        new ItemPatch().withAdditionalProperty("holdingsRecordId", "different-holdings-id"), null),
+      Arguments.of("HoldingsRecordId changes from non-null to null",
+        new ItemPatch().withAdditionalProperty("holdingsRecordId", null), null)
+    );
+  }
+
+  private static Stream<Arguments> provideOtherPropertiesTestCases() {
+    return Stream.of(
+      Arguments.of("Other properties are present",
+        new ItemPatch().withAdditionalProperty("materialTypeId", "some-material-type-id"), null),
+      Arguments.of("Multiple properties including holdingsRecordId are present",
         new ItemPatch()
           .withAdditionalProperty("holdingsRecordId", "old-holdings-id")
-          .withAdditionalProperty("materialTypeId", "some-material-type-id"),
-        null
-      ),
-      Arguments.of(
-        "Status property is present",
-        new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")),
-        null
-      ),
-      Arguments.of(
-        "PermanentLoanTypeId property is present",
-        new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-id"),
-        null
-      ),
-      Arguments.of(
-        "HoldingsRecordId changes from empty string to actual value",
+          .withAdditionalProperty("materialTypeId", "some-material-type-id"), null),
+      Arguments.of("Status property is present",
+        new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")), null),
+      Arguments.of("PermanentLoanTypeId property is present",
+        new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-id"), null)
+    );
+  }
+
+  private static Stream<Arguments> provideEmptyStringToValueTestCases() {
+    return Stream.of(
+      Arguments.of("HoldingsRecordId changes from empty string to actual value",
         new ItemPatch().withAdditionalProperty("holdingsRecordId", "new-holdings-id"),
-        new Item().withId("old-item-id").withHoldingsRecordId("")
-      )
+        new Item().withId("old-item-id").withHoldingsRecordId(""))
     );
   }
 }

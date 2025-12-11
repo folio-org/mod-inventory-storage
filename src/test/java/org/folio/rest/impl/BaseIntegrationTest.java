@@ -154,29 +154,14 @@ public abstract class BaseIntegrationTest {
 
   @BeforeAll
   static void beforeAll(Vertx vertx, VertxTestContext ctx, @Tenants List<String> tenants) throws Throwable {
-    port = NetworkUtils.nextFreePort();
-    System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
-    System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
-    System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
-    KAFKA_CONTAINER.start();
+    setupContainersAndEnvironment();
 
-    Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
-      POSTGRESQL_CONTAINER.getFirstMappedPort(),
-      POSTGRESQL_CONTAINER.getUsername(),
-      POSTGRESQL_CONTAINER.getPassword(),
-      POSTGRESQL_CONTAINER.getDatabaseName());
     DeploymentOptions options = new DeploymentOptions();
     options.setConfig(new JsonObject().put("http.port", port));
     HttpClient client = vertx.createHttpClient();
 
     vertx.deployVerticle(RestVerticle.class, options)
-      .compose(s -> {
-        var future = Future.succeededFuture();
-        for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
-          future = future.eventually(() -> enableTenant(tenant, ctx, client));
-        }
-        return future.onComplete(event -> ctx.completeNow());
-      });
+      .compose(s -> enableTenantsSequentially(tenants, ctx, client));
 
     assertTrue(ctx.awaitCompletion(65, TimeUnit.SECONDS));
     if (ctx.failed()) {
@@ -191,6 +176,29 @@ public abstract class BaseIntegrationTest {
 
   public static JsonObject pojo2JsonObject(Object entity) {
     return TestBase.pojo2JsonObject(entity);
+  }
+
+  private static void setupContainersAndEnvironment() {
+    port = NetworkUtils.nextFreePort();
+    System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
+    System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
+    System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
+    KAFKA_CONTAINER.start();
+
+    Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
+      POSTGRESQL_CONTAINER.getFirstMappedPort(),
+      POSTGRESQL_CONTAINER.getUsername(),
+      POSTGRESQL_CONTAINER.getPassword(),
+      POSTGRESQL_CONTAINER.getDatabaseName());
+  }
+
+  private static Future<?> enableTenantsSequentially(List<String> tenants, VertxTestContext ctx,
+                                                      HttpClient client) {
+    var future = Future.succeededFuture();
+    for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
+      future = future.eventually(() -> enableTenant(tenant, ctx, client));
+    }
+    return future.onComplete(event -> ctx.completeNow());
   }
 
   private static Future<TestResponse> enableTenant(String tenant, VertxTestContext ctx, HttpClient client) {

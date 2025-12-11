@@ -51,6 +51,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.okapi.common.XOkapiHeaders;
@@ -151,24 +152,17 @@ public class ItemService {
         ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain("Expected at least one item to update"));
     }
 
-    List<PatchData> patchDataList;
-    var itemList = new ArrayList<Item>(items.size());
+    Pair<List<PatchData>, List<Item>> conversionResult;
     try {
-      patchDataList = items.stream()
-        .map(itemPatch -> {
-          removeReadOnlyFields(itemPatch);
-          var patchData = new PatchData();
-          patchData.setPatchRequest(itemPatch);
-          patchData.setNewItem(OBJECT_MAPPER.convertValue(itemPatch, Item.class));
-          itemList.add(patchData.getNewItem());  // Add to itemList during mapping
-          return patchData;
-        })
-        .toList();
+      conversionResult = convertItemPatchesToPatchData(items);
     } catch (IllegalArgumentException e) {
       log.error("updateItems:: Failed to convert items", e);
       return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
         "Invalid item format: " + e.getMessage()));
     }
+
+    var patchDataList = conversionResult.getLeft();
+    var itemList = conversionResult.getRight();
 
     return ItemUtils.validateRequiredFields(items)
       .compose(v -> validateUuidFormatForList(itemList, Item::getStatisticalCodeIds))
@@ -176,33 +170,52 @@ public class ItemService {
       .compose(v -> populateCirculationNoteId(itemList))
       .compose(v -> validateMultiplePatchItemsAndHoldings(patchDataList))
       .compose(this::filterUnchangedPatchData)
-      .compose(patchDataToUpdate -> {
-        if (patchDataToUpdate.isEmpty()) {
-          return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
+      .compose(patchDataToUpdate -> executeItemsUpdate(items, patchDataToUpdate));
+  }
+
+  private Pair<List<PatchData>, List<Item>> convertItemPatchesToPatchData(List<ItemPatch> items) {
+    var itemList = new ArrayList<Item>(items.size());
+    var patchDataList = items.stream()
+      .map(itemPatch -> {
+        removeReadOnlyFields(itemPatch);
+        var patchData = new PatchData();
+        patchData.setPatchRequest(itemPatch);
+        patchData.setNewItem(OBJECT_MAPPER.convertValue(itemPatch, Item.class));
+        itemList.add(patchData.getNewItem());
+        return patchData;
+      })
+      .toList();
+    return Pair.of(patchDataList, itemList);
+  }
+
+  private Future<Response> executeItemsUpdate(List<ItemPatch> items, List<PatchData> patchDataToUpdate) {
+    if (patchDataToUpdate.isEmpty()) {
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
+    }
+    try {
+      normalizeItemFields(items);
+    } catch (Exception e) {
+      log.warn("executeItemsUpdate:: Unable to normalize fields", e);
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+        "Unable to normalize fields: " + e.getMessage()));
+    }
+    return postgresClient.withTransaction(conn ->
+        itemRepository.updateItems(conn, items)
+          .<Response>compose(updatedItems -> publishItemUpdateEvents(updatedItems, patchDataToUpdate)))
+      .recover(ItemUtils::handleUpdateItemsError);
+  }
+
+  private Future<Response> publishItemUpdateEvents(List<Item> updatedItems, List<PatchData> patchDataToUpdate) {
+    for (var updatedItem : updatedItems) {
+      for (var patchData : patchDataToUpdate) {
+        if (updatedItem.getId().equals(patchData.getPatchRequest().getId())) {
+          domainEventService.publishUpdated(
+            updatedItem, patchData.getOldItem(), patchData.getNewHoldings(), patchData.getOldHoldings());
+          break;
         }
-        try {
-          normalizeItemFields(items);
-        } catch (Exception e) {
-          log.warn("updateItems:: Unable to normalize fields", e);
-          return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
-            "Unable to normalize fields: " + e.getMessage()));
-        }
-        return postgresClient.withTransaction(conn ->
-            itemRepository.updateItems(conn, items)
-              .<Response>compose(updatedItems -> {
-                for (var updatedItem : updatedItems) {
-                  for (var patchData : patchDataToUpdate) {
-                    if (updatedItem.getId().equals(patchData.getPatchRequest().getId())) {
-                      domainEventService.publishUpdated(
-                        updatedItem, patchData.getOldItem(), patchData.getNewHoldings(), patchData.getOldHoldings());
-                      break;
-                    }
-                  }
-                }
-                return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
-              }))
-          .recover(ItemUtils::handleUpdateItemsError);
-      });
+      }
+    }
+    return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
   }
 
   public Future<Response> updateItem(String itemId, Item newItem) {
@@ -214,29 +227,34 @@ public class ItemService {
       .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
       .onSuccess(putData::set)
       .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
-      .compose(x -> {
-        if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
-          return Future.succeededFuture(putData.newHoldings);
-        }
-        return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
-      })
-      .compose(oldHoldings -> {
-        putData.oldHoldings = oldHoldings;
-        effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        try {
-          var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
-          if (noChanges) {
-            return Future.succeededFuture();
-          } else {
-            return doUpdateItem(newItem)
-              .onSuccess(finalItem -> domainEventService.publishUpdated(
-                finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings));
-          }
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
-      })
+      .compose(x -> retrieveOldHoldingsIfNeeded(newItem, putData))
+      .compose(oldHoldings -> performItemUpdate(newItem, putData, oldHoldings))
       .map(x -> PutItemStorageItemsByItemIdResponse.respond204());
+  }
+
+  private Future<HoldingsRecord> retrieveOldHoldingsIfNeeded(Item newItem, PutData putData) {
+    if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
+      return Future.succeededFuture(putData.newHoldings);
+    }
+    return holdingsRepository.getById(putData.oldItem.getHoldingsRecordId());
+  }
+
+  private Future<Void> performItemUpdate(Item newItem, PutData putData, HoldingsRecord oldHoldings) {
+    putData.oldHoldings = oldHoldings;
+    effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
+    try {
+      var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
+      if (noChanges) {
+        return Future.succeededFuture();
+      } else {
+        return doUpdateItem(newItem)
+          .onSuccess(finalItem -> domainEventService.publishUpdated(
+            finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
+          .mapEmpty();
+      }
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> deleteItem(String itemId) {
@@ -260,21 +278,21 @@ public class ItemService {
     // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
     return itemRepository.delete(cql)
       .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row -> {
-            try {
-              var instanceIdAndItemRaw = INSTANCE_ID_WITH_ITEM_JSON.formatted(
-                row.getString(0), row.getString(1).substring(1));
-              var itemId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
-
-              domainEventService.publishRemoved(itemId, instanceIdAndItemRaw);
-            } catch (JsonProcessingException ex) {
-              log.error("deleteItems:: Failed to parse json : {}", ex.getMessage(), ex);
-              throw new IllegalArgumentException(ex.getCause());
-            }
-          }
-        )
-      ))
+        rowSet.iterator().forEachRemaining(this::processDeletedItemRow)))
       .map(Response.noContent().build());
+  }
+
+  private void processDeletedItemRow(Row row) {
+    try {
+      var instanceIdAndItemRaw = INSTANCE_ID_WITH_ITEM_JSON.formatted(
+        row.getString(0), row.getString(1).substring(1));
+      var itemId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
+
+      domainEventService.publishRemoved(itemId, instanceIdAndItemRaw);
+    } catch (JsonProcessingException ex) {
+      log.error("processDeletedItemRow:: Failed to parse json : {}", ex.getMessage(), ex);
+      throw new IllegalArgumentException(ex.getCause());
+    }
   }
 
   /**
@@ -450,33 +468,41 @@ public class ItemService {
 
     // Populate old items and current holdings from database results
     for (var row : itemsRowSet) {
-      var itemId = row.getString(0);
-      var itemJson = row.getString(1);
-      var currentHoldingsJson = row.getString(2);
-      var currentHoldingsId = row.getString(3);
-
-      var patchData = patchDataMap.get(itemId);
-      if (patchData != null) {
-        patchData.setOldItem(readValue(itemJson, Item.class));
-
-        // Cache current holdings if present
-        if (currentHoldingsJson != null) {
-          holdingsCache.putIfAbsent(currentHoldingsId,
-            readValue(currentHoldingsJson, HoldingsRecord.class));
-          patchData.setOldHoldings(holdingsCache.get(currentHoldingsId));
-
-          // Set new holdings if it's the same as current
-          var newHoldingsId = patchData.getNewItem().getHoldingsRecordId();
-          if (newHoldingsId == null || newHoldingsId.equals(currentHoldingsId)) {
-            patchData.setNewHoldings(patchData.getOldHoldings());
-          }
-        }
-
-        foundItemIds.add(itemId);
-      }
+      processItemRow(row, patchDataMap, holdingsCache, foundItemIds);
     }
 
-    // Validate all items were found and provide specific missing item IDs
+    validateAllItemsFound(foundItemIds, patchDataList);
+  }
+
+  private void processItemRow(Row row, Map<String, PatchData> patchDataMap,
+                               Map<String, HoldingsRecord> holdingsCache, List<String> foundItemIds) {
+    var itemId = row.getString(0);
+    var itemJson = row.getString(1);
+    var currentHoldingsJson = row.getString(2);
+    var currentHoldingsId = row.getString(3);
+
+    var patchData = patchDataMap.get(itemId);
+    if (patchData != null) {
+      patchData.setOldItem(readValue(itemJson, Item.class));
+
+      // Cache current holdings if present
+      if (currentHoldingsJson != null) {
+        holdingsCache.putIfAbsent(currentHoldingsId,
+          readValue(currentHoldingsJson, HoldingsRecord.class));
+        patchData.setOldHoldings(holdingsCache.get(currentHoldingsId));
+
+        // Set new holdings if it's the same as current
+        var newHoldingsId = patchData.getNewItem().getHoldingsRecordId();
+        if (newHoldingsId == null || newHoldingsId.equals(currentHoldingsId)) {
+          patchData.setNewHoldings(patchData.getOldHoldings());
+        }
+      }
+
+      foundItemIds.add(itemId);
+    }
+  }
+
+  private void validateAllItemsFound(List<String> foundItemIds, List<PatchData> patchDataList) {
     if (foundItemIds.size() != patchDataList.size()) {
       var requestedItemIds = patchDataList.stream()
         .map(patchData -> patchData.getNewItem().getId())
@@ -505,27 +531,29 @@ public class ItemService {
     }
 
     return holdingsRepository.getHoldingsByIds(missingHoldingsIds)
-      .compose(holdingsRowSet -> {
-        var holdingsMap = new HashMap<String, HoldingsRecord>();
-        for (var row : holdingsRowSet) {
-          var holdingsId = row.getString(0);
-          var holdingsJson = row.getString(1);
-          holdingsMap.put(holdingsId, readValue(holdingsJson, HoldingsRecord.class));
-        }
+      .compose(holdingsRowSet -> assignMissingHoldings(patchDataList, holdingsRowSet));
+  }
 
-        // Set missing holdings
-        for (var patchData : patchDataList) {
-          if (patchData.getNewHoldings() == null) {
-            var newHoldingsId = patchData.getNewItem().getHoldingsRecordId();
-            patchData.setNewHoldings(holdingsMap.get(newHoldingsId));
-            if (patchData.getNewHoldings() == null) {
-              return Future.failedFuture(new NotFoundException("Holdings not found: " + newHoldingsId));
-            }
-          }
-        }
+  private Future<List<PatchData>> assignMissingHoldings(List<PatchData> patchDataList, RowSet<Row> holdingsRowSet) {
+    var holdingsMap = new HashMap<String, HoldingsRecord>();
+    for (var row : holdingsRowSet) {
+      var holdingsId = row.getString(0);
+      var holdingsJson = row.getString(1);
+      holdingsMap.put(holdingsId, readValue(holdingsJson, HoldingsRecord.class));
+    }
 
-        return Future.succeededFuture(patchDataList);
-      });
+    // Set missing holdings
+    for (var patchData : patchDataList) {
+      if (patchData.getNewHoldings() == null) {
+        var newHoldingsId = patchData.getNewItem().getHoldingsRecordId();
+        patchData.setNewHoldings(holdingsMap.get(newHoldingsId));
+        if (patchData.getNewHoldings() == null) {
+          return Future.failedFuture(new NotFoundException("Holdings not found: " + newHoldingsId));
+        }
+      }
+    }
+
+    return Future.succeededFuture(patchDataList);
   }
 
   private Future<List<PatchData>> validateAndPopulatePatchData(List<PatchData> patchDataList) {

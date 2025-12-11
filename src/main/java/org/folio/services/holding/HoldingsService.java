@@ -232,44 +232,45 @@ public class HoldingsService {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
     return createShadowInstancesIfNeeded(List.of(newHoldings))
-      .compose(v -> {
-        try {
-          var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
-          if (noChanges) {
-            return Future.succeededFuture()
-              .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
-          }
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
+      .compose(v -> checkAndPerformUpdate(oldHoldings, newHoldings));
+  }
 
-        if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-          newHoldings.setVersion(null);  // enforce optimistic locking
-        }
+  private Future<Response> checkAndPerformUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    try {
+      var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
+      if (noChanges) {
+        return Future.succeededFuture()
+          .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+      }
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
 
-        return refuseWhenHridChanged(oldHoldings, newHoldings)
-          .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-          .compose(notUsed -> postgresClient
-            .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
-              .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
-            .onSuccess(itemsBeforeUpdate ->
-              eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
-            .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-            .onSuccess(eventPublisher.publishUpdated(oldHoldings)));
-      });
+    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
+      newHoldings.setVersion(null);  // enforce optimistic locking
+    }
+
+    return refuseWhenHridChanged(oldHoldings, newHoldings)
+      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+      .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+  }
+
+  private Future<Response> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    return postgresClient
+      .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
+        .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
+      .onSuccess(itemsBeforeUpdate ->
+        eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
+      .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+      .onSuccess(eventPublisher.publishUpdated(oldHoldings));
   }
 
   private Future<Response> performUpsertWithItemUpdates(List<HoldingsRecord> holdings, boolean optimisticLocking) {
-    if (optimisticLocking) {
-      holdings.stream().filter(holding -> Objects.equals(-1, holding.getVersion()))
-        .forEach(holding -> holding.setVersion(null));
-    } else {
-      if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
-        return Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse.respond413WithTextPlain(
-          "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking"));
-      }
-      holdings.forEach(holding -> holding.setVersion(-1));
+    Future<Response> validationResult = handleOptimisticLocking(holdings, optimisticLocking);
+    if (validationResult != null) {
+      return validationResult;
     }
+
     try {
       MetadataUtil.populateMetadata(holdings, okapiHeaders);
     } catch (ReflectiveOperationException e) {
@@ -277,10 +278,7 @@ public class HoldingsService {
       return Future.failedFuture(e.getMessage());
     }
 
-    // Set id if missing
-    holdings.forEach(holding -> holding.setId(holding.getId() == null
-                                              ? UUID.randomUUID().toString()
-                                              : holding.getId()));
+    ensureHoldingsHaveIds(holdings);
 
     return postgresClient.withTrans(conn -> upsertHoldingsAndGetOldContent(conn, holdings)
         .compose(upsertResult -> updateItemsForHoldingsChange(conn, holdings, upsertResult)
@@ -288,6 +286,27 @@ public class HoldingsService {
       .onSuccess(oldData ->
         eventPublisher.publishHoldingsAndItemEvents(holdings, oldData.getLeft(), oldData.getRight()))
       .map(v -> PostHoldingsStorageBatchSynchronousResponse.respond201());
+  }
+
+  private Future<Response> handleOptimisticLocking(List<HoldingsRecord> holdings, boolean optimisticLocking) {
+    if (optimisticLocking) {
+      holdings.stream().filter(holding -> Objects.equals(-1, holding.getVersion()))
+        .forEach(holding -> holding.setVersion(null));
+      return null;
+    } else {
+      if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
+        return Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse.respond413WithTextPlain(
+          "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking"));
+      }
+      holdings.forEach(holding -> holding.setVersion(-1));
+      return null;
+    }
+  }
+
+  private void ensureHoldingsHaveIds(List<HoldingsRecord> holdings) {
+    holdings.forEach(holding -> holding.setId(holding.getId() == null
+                                              ? UUID.randomUUID().toString()
+                                              : holding.getId()));
   }
 
   private Future<Pair<Map<String, HoldingsRecord>, Map<String, List<Item>>>> upsertHoldingsAndGetOldContent(
@@ -320,30 +339,11 @@ public class HoldingsService {
     var itemsBeforeUpdate = new HashMap<String, List<Item>>();
     var allItemsToUpdate = new ArrayList<Item>();
 
-    for (var entry : oldItemsMap.entrySet()) {
-      var holdingsId = entry.getKey();
-      var items = entry.getValue();
-      var newHolding = holdingsMap.get(holdingsId);
-      var oldHolding = oldHoldingsMap.get(holdingsId);
-
-      if (newHolding != null) {
-        // Deep copy items for event publishing
-
-        // Only update items if holdings actually changed
-        try {
-          var holdingsChanged = oldHolding == null || !equalsIgnoringMetadata(oldHolding, newHolding);
-          if (holdingsChanged) {
-            var itemsCopy = (List<Item>) deepCopy(items, Item.class);
-            itemsBeforeUpdate.put(holdingsId, itemsCopy);
-            for (var item : items) {
-              itemService.populateItemFromHoldings(item, newHolding, effectiveValuesService);
-              allItemsToUpdate.add(item);
-            }
-          }
-        } catch (JsonProcessingException ex) {
-          return Future.failedFuture(ex);
-        }
-      }
+    try {
+      processItemsForHoldingsUpdate(oldItemsMap, holdingsMap, oldHoldingsMap,
+                                     itemsBeforeUpdate, allItemsToUpdate);
+    } catch (JsonProcessingException ex) {
+      return Future.failedFuture(ex);
     }
 
     if (allItemsToUpdate.isEmpty()) {
@@ -352,6 +352,31 @@ public class HoldingsService {
 
     return itemService.updateBatch(conn, allItemsToUpdate)
       .map(notUsed -> itemsBeforeUpdate);
+  }
+
+  private void processItemsForHoldingsUpdate(Map<String, List<Item>> oldItemsMap,
+                                              Map<String, HoldingsRecord> holdingsMap,
+                                              Map<String, HoldingsRecord> oldHoldingsMap,
+                                              Map<String, List<Item>> itemsBeforeUpdate,
+                                              List<Item> allItemsToUpdate) throws JsonProcessingException {
+    for (var entry : oldItemsMap.entrySet()) {
+      var holdingsId = entry.getKey();
+      var items = entry.getValue();
+      var newHolding = holdingsMap.get(holdingsId);
+      var oldHolding = oldHoldingsMap.get(holdingsId);
+
+      if (newHolding != null) {
+        var holdingsChanged = oldHolding == null || !equalsIgnoringMetadata(oldHolding, newHolding);
+        if (holdingsChanged) {
+          var itemsCopy = (List<Item>) deepCopy(items, Item.class);
+          itemsBeforeUpdate.put(holdingsId, itemsCopy);
+          for (var item : items) {
+            itemService.populateItemFromHoldings(item, newHolding, effectiveValuesService);
+            allItemsToUpdate.add(item);
+          }
+        }
+      }
+    }
   }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {

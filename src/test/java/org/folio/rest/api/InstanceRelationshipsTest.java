@@ -43,34 +43,16 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
     JsonObject instance2Response = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
     JsonObject instance3Response = createInstance("Title Three", INSTANCE_TYPE_ID_TEXT);
-    CompletableFuture<Response> createRelationshipCompleted = new CompletableFuture<>();
 
-    InstanceRelationship instanceRelationshipRequestObject = new InstanceRelationship(
+    createAndVerifyInstanceRelationship(
       instance1Response.getString(Instance.ID_KEY),
       instance2Response.getString(Instance.ID_KEY),
       INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
-    getClient().post(
-      instanceRelationshipsUrl(""),
-      instanceRelationshipRequestObject.getJson(),
-      TENANT_ID,
-      ResponseHandler.json(createRelationshipCompleted)
-    );
-    Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
-    CompletableFuture<Response> createRelationshipCompleted2 = new CompletableFuture<>();
-    InstanceRelationship instanceRelationshipRequestObject2 = new InstanceRelationship(
+    createAndVerifyInstanceRelationship(
       instance1Response.getString(Instance.ID_KEY),
       instance3Response.getString(Instance.ID_KEY),
       INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH);
-    getClient().post(
-      instanceRelationshipsUrl(""),
-      instanceRelationshipRequestObject2.getJson(),
-      TENANT_ID,
-      ResponseHandler.json(createRelationshipCompleted2)
-    );
-    Response relationshipPostResponse2 = createRelationshipCompleted2.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(relationshipPostResponse2.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 
   @Test
@@ -132,5 +114,23 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
     return postResponse.getJson();
+  }
+
+  private void createAndVerifyInstanceRelationship(String superInstanceId, String subInstanceId,
+                                                    String relationshipTypeId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Response> createRelationshipCompleted = new CompletableFuture<>();
+    InstanceRelationship instanceRelationshipRequestObject = new InstanceRelationship(
+      superInstanceId,
+      subInstanceId,
+      relationshipTypeId);
+    getClient().post(
+      instanceRelationshipsUrl(""),
+      instanceRelationshipRequestObject.getJson(),
+      TENANT_ID,
+      ResponseHandler.json(createRelationshipCompleted)
+    );
+    Response relationshipPostResponse = createRelationshipCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(relationshipPostResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
   }
 }

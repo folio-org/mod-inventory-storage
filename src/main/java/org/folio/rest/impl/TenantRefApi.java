@@ -109,66 +109,91 @@ public class TenantRefApi extends TenantAPI {
       .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
 
     if (isNew(attributes, "20.0.0")) {
-      List<JsonObject> servicePoints = new LinkedList<>();
-      try {
-        List<URL> urls = TenantLoading.getURLsFromClassPathDir(
-          REFERENCE_LEAD + "/service-points");
-        for (URL url : urls) {
-          InputStream stream = url.openStream();
-          String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
-          stream.close();
-          servicePoints.add(new JsonObject(content));
-        }
-      } catch (URISyntaxException | IOException ex) {
-        return Future.failedFuture(ex);
-      }
-      TenantLoading tl = new TenantLoading();
-
-      tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
-      tl.withIdContent();
-      for (String p : refPaths) {
-        tl.add(p);
-      }
-
-      tl.withPostIgnore();  // System call number type couldn't be updated
-      tl.add("call-number-types");
-
-      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-      tl.withIdContent();
-      tl.add("location-units/institutions");
-      tl.add("location-units/campuses");
-      tl.add("location-units/libraries");
-      tl.add("locations");
-      tl.add("holdings-sources");
-      tl.add("instances", INSTANCES);
-      tl.add("holdingsrecords", HOLDINGS);
-      tl.add("items", ITEMS);
-      tl.add("bound-with/instances", INSTANCES);
-      tl.add("bound-with/holdingsrecords", HOLDINGS);
-      tl.add("bound-with/items", ITEMS);
-      tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
-      tl.withPostIgnore();
-      tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
-      tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
-        .withPostOnly()
-        .withAcceptStatus(422)
-        .add("users", SERVICE_POINTS_USERS);
-      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+      future = loadDataForVersion20(attributes, headers, vertxContext, future);
     }
 
     if (isNew(attributes, "25.1.0")) {
-      TenantLoading tl = new TenantLoading();
-      tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-      tl.withIdContent();
-      tl.add("bound-with/instances-25.1", INSTANCES);
-      tl.add("bound-with/holdingsrecords-25.1", HOLDINGS);
-      tl.add("bound-with/items-25.1", ITEMS);
-      tl.add("bound-with/bound-with-parts-25.1", BOUND_WITH_PARTS);
-      future = future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+      future = loadDataForVersion25(attributes, headers, vertxContext, future);
     }
 
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
       .map(result));
+  }
+
+  private Future<Integer> loadDataForVersion20(TenantAttributes attributes, Map<String, String> headers,
+                                                Context vertxContext, Future<Integer> future) {
+    List<JsonObject> servicePoints = loadServicePoints();
+    if (servicePoints == null) {
+      return Future.failedFuture(new IOException("Failed to load service points"));
+    }
+
+    TenantLoading tl = new TenantLoading();
+    configureReferenceData(tl);
+    configureSampleData(tl, servicePoints);
+
+    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+  }
+
+  private void configureReferenceData(TenantLoading tl) {
+    tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
+    tl.withIdContent();
+    for (String p : refPaths) {
+      tl.add(p);
+    }
+    tl.withPostIgnore();  // System call number type couldn't be updated
+    tl.add("call-number-types");
+  }
+
+  private void configureSampleData(TenantLoading tl, List<JsonObject> servicePoints) {
+    tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+    tl.withIdContent();
+    tl.add("location-units/institutions");
+    tl.add("location-units/campuses");
+    tl.add("location-units/libraries");
+    tl.add("locations");
+    tl.add("holdings-sources");
+    tl.add("instances", INSTANCES);
+    tl.add("holdingsrecords", HOLDINGS);
+    tl.add("items", ITEMS);
+    tl.add("bound-with/instances", INSTANCES);
+    tl.add("bound-with/holdingsrecords", HOLDINGS);
+    tl.add("bound-with/items", ITEMS);
+    tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
+    tl.withPostIgnore();
+    tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
+    tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
+      .withPostOnly()
+      .withAcceptStatus(422)
+      .add("users", SERVICE_POINTS_USERS);
+  }
+
+  private List<JsonObject> loadServicePoints() {
+    List<JsonObject> servicePoints = new LinkedList<>();
+    try {
+      List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+        REFERENCE_LEAD + "/service-points");
+      for (URL url : urls) {
+        InputStream stream = url.openStream();
+        String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
+        stream.close();
+        servicePoints.add(new JsonObject(content));
+      }
+      return servicePoints;
+    } catch (URISyntaxException | IOException ex) {
+      return null;
+    }
+  }
+
+  private Future<Integer> loadDataForVersion25(TenantAttributes attributes, Map<String, String> headers,
+                                                Context vertxContext, Future<Integer> future) {
+    TenantLoading tl = new TenantLoading();
+    tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
+    tl.withIdContent();
+    tl.add("bound-with/instances-25.1", INSTANCES);
+    tl.add("bound-with/holdingsrecords-25.1", HOLDINGS);
+    tl.add("bound-with/items-25.1", ITEMS);
+    tl.add("bound-with/bound-with-parts-25.1", BOUND_WITH_PARTS);
+    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,

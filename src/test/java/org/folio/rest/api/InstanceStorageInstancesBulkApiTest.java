@@ -194,28 +194,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     assertThat(bulkResponse.getErrorRecordsFileName(), is(expectedErrorRecordsFileName));
     assertThat(bulkResponse.getErrorsFileName(), is(expectedErrorsFileName));
 
-    List<String> filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
-    assertThat(filesList.size(), is(3));
-    assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
-    List<String> errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
-    assertThat(errors.size(), is(2));
-    errors.forEach(error -> {
-      assertFalse(error.contains("optimistic locking"));
-      assertTrue(error.contains("violates foreign key constraint \"precedinginstanceid_instance_fkey\""));
-    });
-
-    JsonObject instance1 = getInstanceById(existingInstance1.getId().toString());
-    JsonObject instance2 = getInstanceById(existingInstance2.getId().toString());
-    assertEquals(1, instance1.getInteger("_version").intValue());
-    assertEquals(1, instance2.getInteger("_version").intValue());
-
-    List<JsonObject> titles1 = getPrecedingSucceedingTitlesByInstanceId(existingInstance1.getId());
-    List<JsonObject> titles2 = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
-    assertEquals(0, titles1.size());
-    assertEquals(0, titles2.size());
-
-    instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
-    instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+    verifyErrorFilesAndContent(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName);
+    verifyInstancesNotUpdated(existingInstance1, existingInstance2);
   }
 
   @Test
@@ -236,12 +216,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     final IndividualResource existingInstance1 = createInstance(buildInstance(instancesIds.get(0), INSTANCE_TITLE_1));
     final IndividualResource existingInstance2 = createInstance(buildInstance(instancesIds.get(1), INSTANCE_TITLE_2));
 
-    PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
-      existingInstance2.getId().toString(), null, "Houston oil directory", null, null);
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle1.getJson());
-    PrecedingSucceedingTitle precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
-      existingInstance2.getId().toString(), null, "International trade statistics", null, null);
-    precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
+    createPrecedingSucceedingTitles(existingInstance2);
 
     // when
     BulkUpsertResponse bulkResponse = postInstancesBulk(new BulkUpsertRequest()
@@ -254,25 +229,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     assertThat(bulkResponse.getErrorRecordsFileName(), nullValue());
     assertThat(bulkResponse.getErrorsFileName(), nullValue());
 
-    JsonObject updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
-    JsonObject updatedInstance2 = getInstanceById(existingInstance2.getId().toString());
-    assertNotControlledByMarcFields(existingInstance1.getJson(), updatedInstance1);
-    assertNotControlledByMarcFields(existingInstance2.getJson(), updatedInstance2);
-
-    List<JsonObject> updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
-    updatedTitles.forEach(titleJson -> {
-      assertThat(titleJson.getString("succeedingInstanceId"), equalTo(existingInstance2.getId().toString()));
-      assertThat(titleJson.getString("precedingInstanceId"), nullValue());
-      assertThat(titleJson.getString("title"), notNullValue());
-    });
-
-    if (publishEvents) {
-      instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
-      instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
-    } else {
-      instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
-      instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
-    }
+    verifyUpdatedInstancesAndTitles(existingInstance1, existingInstance2, publishEvents);
   }
 
   private List<String> extractInstancesIdsFromFile(String bulkInstancesFilePath) throws IOException {
@@ -333,5 +290,67 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
       return bufferedReader.lines().toList();
     }
+  }
+
+  private void verifyErrorFilesAndContent(String bulkFilePath, String expectedErrorRecordsFileName,
+                                          String expectedErrorsFileName) throws IOException {
+    var filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
+    assertThat(filesList.size(), is(3));
+    assertThat(filesList, containsInAnyOrder(bulkFilePath, expectedErrorRecordsFileName, expectedErrorsFileName));
+    var errors = readLinesFromInputStream(s3Client.read(expectedErrorsFileName));
+    assertThat(errors.size(), is(2));
+    errors.forEach(error -> {
+      assertFalse(error.contains("optimistic locking"));
+      assertTrue(error.contains("violates foreign key constraint \"precedinginstanceid_instance_fkey\""));
+    });
+  }
+
+  private void createPrecedingSucceedingTitles(IndividualResource existingInstance) {
+    var precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
+      existingInstance.getId().toString(), null, "Houston oil directory", null, null);
+    precedingSucceedingTitleClient.create(precedingSucceedingTitle1.getJson());
+    var precedingSucceedingTitle2 = new PrecedingSucceedingTitle(
+      existingInstance.getId().toString(), null, "International trade statistics", null, null);
+    precedingSucceedingTitleClient.create(precedingSucceedingTitle2.getJson());
+  }
+
+  private void verifyUpdatedInstancesAndTitles(IndividualResource existingInstance1,
+                                                IndividualResource existingInstance2,
+                                                boolean publishEvents) {
+    var updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
+    var updatedInstance2 = getInstanceById(existingInstance2.getId().toString());
+    assertNotControlledByMarcFields(existingInstance1.getJson(), updatedInstance1);
+    assertNotControlledByMarcFields(existingInstance2.getJson(), updatedInstance2);
+
+    var updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
+    updatedTitles.forEach(titleJson -> {
+      assertThat(titleJson.getString("succeedingInstanceId"), equalTo(existingInstance2.getId().toString()));
+      assertThat(titleJson.getString("precedingInstanceId"), nullValue());
+      assertThat(titleJson.getString("title"), notNullValue());
+    });
+
+    if (publishEvents) {
+      instanceMessageChecks.updatedMessagePublished(existingInstance1.getJson(), updatedInstance1);
+      instanceMessageChecks.updatedMessagePublished(existingInstance2.getJson(), updatedInstance2);
+    } else {
+      instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
+      instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
+    }
+  }
+
+  private void verifyInstancesNotUpdated(IndividualResource existingInstance1,
+                                          IndividualResource existingInstance2) {
+    var instance1 = getInstanceById(existingInstance1.getId().toString());
+    var instance2 = getInstanceById(existingInstance2.getId().toString());
+    assertEquals(1, instance1.getInteger("_version").intValue());
+    assertEquals(1, instance2.getInteger("_version").intValue());
+
+    var titles1 = getPrecedingSucceedingTitlesByInstanceId(existingInstance1.getId());
+    var titles2 = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
+    assertEquals(0, titles1.size());
+    assertEquals(0, titles2.size());
+
+    instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getId().toString());
+    instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getId().toString());
   }
 }

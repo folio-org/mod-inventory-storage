@@ -128,39 +128,43 @@ public class InstanceService {
     return validateUuidFormat(entity.getStatisticalCodeIds())
       .compose(v -> hridManager.populateHrid(entity))
       .compose(NotesValidators::refuseLongNotes)
-      .compose(instance -> {
-        final Promise<Response> postResponse = promise();
-
-        postgresClient.withTrans(conn ->
-          instanceRepository.createInstance(conn, instance)
-            .compose(response -> {
-              if (response.getEntity() instanceof Instance instanceResp) {
-                return batchLinkSubjects(conn, instanceResp.getId(), instance.getSubjects())
-                  .map(v -> response);
-              } else {
-                return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
-              }
-            })
-        )
-          .onSuccess(postResponse::complete)
-          .onFailure(throwable -> {
-            if (throwable instanceof PgException pgException) {
-              postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
-            } else {
-              postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
-            }
-          });
-
-        return postResponse.future()
-            // Return the response without waiting for a domain event publish
-            // to complete. Units of work performed by this service is the same
-            // but the ordering of the units of work provides a benefit to the
-            // api client invoking this endpoint. The response is returned
-            // a little earlier so the api client can continue its processing
-            // while the domain event publish is satisfied.
-            .onSuccess(domainEventPublisher.publishCreated());
-      })
+      .compose(this::performInstanceCreation)
       .map(ResponseHandlerUtil::handleHridErrorInInstance);
+  }
+
+  private Future<Response> performInstanceCreation(Instance instance) {
+    final Promise<Response> postResponse = promise();
+
+    postgresClient.withTrans(conn ->
+      instanceRepository.createInstance(conn, instance)
+        .compose(response -> {
+          if (response.getEntity() instanceof Instance instanceResp) {
+            return batchLinkSubjects(conn, instanceResp.getId(), instance.getSubjects())
+              .map(v -> response);
+          } else {
+            return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
+          }
+        })
+    )
+      .onSuccess(postResponse::complete)
+      .onFailure(throwable -> handleInstanceCreationFailure(throwable, postResponse));
+
+    return postResponse.future()
+        // Return the response without waiting for a domain event publish
+        // to complete. Units of work performed by this service is the same
+        // but the ordering of the units of work provides a benefit to the
+        // api client invoking this endpoint. The response is returned
+        // a little earlier so the api client can continue its processing
+        // while the domain event publish is satisfied.
+        .onSuccess(domainEventPublisher.publishCreated());
+  }
+
+  private void handleInstanceCreationFailure(Throwable throwable, Promise<Response> postResponse) {
+    if (throwable instanceof PgException pgException) {
+      postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
+    } else {
+      postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
+    }
   }
 
   public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
@@ -191,79 +195,104 @@ public class InstanceService {
     return refuseLongNotes(newInstance)
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldInstance -> {
-        if (!newInstance.getSource().startsWith("CONSORTIUM-")) {
-          return refuseWhenHridChanged(oldInstance, newInstance);
-        }
-        return Future.succeededFuture(oldInstance);
-      })
-      .compose(oldInstance -> {
-        try {
-          var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
-          if (noChanges) {
-            return Future.succeededFuture()
-              .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
-          }
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
+      .compose(oldInstance -> validateHridChange(oldInstance, newInstance))
+      .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance));
+  }
 
-        final Promise<Response> putResult = promise();
-        return postgresClient.withTrans(conn -> {
-          Promise<Response> putPromise = putInstance(newInstance, id);
-          return putPromise.future()
-            .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-              .map(v -> response));
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            putResult.complete(transactionResult.result());
-          } else {
-            putResult.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-      });
+  private Future<Instance> validateHridChange(Instance oldInstance, Instance newInstance) {
+    if (!newInstance.getSource().startsWith("CONSORTIUM-")) {
+      return refuseWhenHridChanged(oldInstance, newInstance);
+    }
+    return Future.succeededFuture(oldInstance);
+  }
+
+  private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
+    try {
+      var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
+      if (noChanges) {
+        return Future.succeededFuture()
+          .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+      }
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+
+    final Promise<Response> putResult = promise();
+    return postgresClient.withTrans(conn -> {
+      Promise<Response> putPromise = putInstance(newInstance, id);
+      return putPromise.future()
+        .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+          .map(v -> response));
+    }).onComplete(transactionResult -> {
+      if (transactionResult.succeeded()) {
+        putResult.complete(transactionResult.result());
+      } else {
+        putResult.fail(transactionResult.cause());
+      }
+    }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
                                             boolean optimisticLocking) {
     try {
-      if (instances != null && instances.size() > MAX_ENTITIES) {
-        String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
-        logger.warn("postSyncInstance:: {}", message);
-        return Future.succeededFuture(respond413WithTextPlain(message));
+      var sizeValidation = validateInstancesSize(instances);
+      if (sizeValidation != null) {
+        return sizeValidation;
       }
 
-      if (optimisticLocking) {
-        logger.debug("postSyncInstance:: Unsetting version to -1 for instances");
-        OptimisticLockingUtil.unsetVersionIfMinusOne(instances);
-      } else {
-        if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
-          logger.warn("postSyncInstance:: {}", DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING);
-          return Future.succeededFuture(respond413WithTextPlain(DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING));
-        }
-        logger.debug("postSyncInstance:: Setting version to -1 for instances");
-        OptimisticLockingUtil.setVersionToMinusOne(instances);
+      var lockingValidation = handleInstanceOptimisticLocking(instances, optimisticLocking);
+      if (lockingValidation != null) {
+        return lockingValidation;
       }
+
       MetadataUtil.populateMetadata(instances, okapiHeaders);
-
-      var result = upsert
-        ? conn.upsertBatch(INSTANCE_TABLE, instances)
-        : conn.saveBatch(INSTANCE_TABLE, instances);
-
-      return result
-        .map((Response) respond201())
-        .recover(throwable ->
-          respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
-            .compose(response -> {
-              if (response.getEntity() instanceof Errors errors) {
-                return Future.failedFuture(new ValidationException(errors));
-              }
-              return Future.failedFuture(throwable);
-            }));
+      return executeBatchOperation(conn, instances, upsert);
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
       return Future.failedFuture(e.getMessage());
     }
+  }
+
+  private Future<Response> executeBatchOperation(Conn conn, List<Instance> instances, boolean upsert) {
+    var result = upsert
+      ? conn.upsertBatch(INSTANCE_TABLE, instances)
+      : conn.saveBatch(INSTANCE_TABLE, instances);
+
+    return result
+      .map((Response) respond201())
+      .recover(throwable ->
+        respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
+          .compose(response -> {
+            if (response.getEntity() instanceof Errors errors) {
+              return Future.failedFuture(new ValidationException(errors));
+            }
+            return Future.failedFuture(throwable);
+          }));
+  }
+
+  private Future<Response> validateInstancesSize(List<Instance> instances) {
+    if (instances != null && instances.size() > MAX_ENTITIES) {
+      String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
+      logger.warn("validateInstancesSize:: {}", message);
+      return Future.succeededFuture(respond413WithTextPlain(message));
+    }
+    return null;
+  }
+
+  private Future<Response> handleInstanceOptimisticLocking(List<Instance> instances, boolean optimisticLocking)
+    throws ReflectiveOperationException {
+    if (optimisticLocking) {
+      logger.debug("handleInstanceOptimisticLocking:: Unsetting version to -1 for instances");
+      OptimisticLockingUtil.unsetVersionIfMinusOne(instances);
+    } else {
+      if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
+        logger.warn("handleInstanceOptimisticLocking:: {}", DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING);
+        return Future.succeededFuture(respond413WithTextPlain(DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING));
+      }
+      logger.debug("handleInstanceOptimisticLocking:: Setting version to -1 for instances");
+      OptimisticLockingUtil.setVersionToMinusOne(instances);
+    }
+    return null;
   }
 
   private void setMissingInstanceIds(List<Instance> instances) {

@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
@@ -163,60 +164,23 @@ class ServicePointsUsersIT extends BaseReferenceDataIntegrationTest<ServicePoint
     var spId1 = UUID.randomUUID();
     var spId2 = UUID.randomUUID();
     var spId3 = UUID.randomUUID();
-    var sp1 = new JsonObject()
-      .put("id", spId1.toString())
-      .put("name", "Circ Desk 2")
-      .put("code", "cd2")
-      .put("discoveryDisplayName", "Circulation Desk -- Hallway1")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", createHoldShelfExpiryPeriod());
-    var sp2 = new JsonObject()
-      .put("id", spId2.toString())
-      .put("name", "Circ Desk 3")
-      .put("code", "cd3")
-      .put("discoveryDisplayName", "Circulation Desk -- Stairs")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", createHoldShelfExpiryPeriod());
-    var sp3 = new JsonObject()
-      .put("id", spId3.toString())
-      .put("name", "Circ Desk 4")
-      .put("code", "cd4")
-      .put("discoveryDisplayName", "Circulation Desk -- Basement")
-      .put("pickupLocation", true)
-      .put("holdShelfExpiryPeriod", createHoldShelfExpiryPeriod());
+    var sp1 = createServicePointJson(spId1, "Circ Desk 2", "cd2", "Circulation Desk -- Hallway1");
+    var sp2 = createServicePointJson(spId2, "Circ Desk 3", "cd3", "Circulation Desk -- Stairs");
+    var sp3 = createServicePointJson(spId3, "Circ Desk 4", "cd4", "Circulation Desk -- Basement");
 
     var expectedSpuIdRef = new AtomicReference<String>();
     doPost(client, "/service-points", sp1)
       .compose(r -> doPost(client, "/service-points", sp2))
       .compose(r -> doPost(client, "/service-points", sp3))
-      .compose(r -> {
-        var spuPayload = new JsonObject()
-          .put("id", UUID.randomUUID().toString())
-          .put("userId", UUID.randomUUID().toString())
-          .put("servicePointsIds", List.of(spId1.toString(), spId2.toString()))
-          .put("defaultServicePointId", spId1.toString());
-        return doPost(client, resourceUrl(), spuPayload);
-      })
+      .compose(r -> createAndPostSpu(client, List.of(spId1.toString(), spId2.toString()), spId1.toString()))
       .compose(r -> {
         var spuId = UUID.randomUUID().toString();
         expectedSpuIdRef.set(spuId);
-        var spuPayload = new JsonObject()
-          .put("id", spuId)
-          .put("userId", UUID.randomUUID().toString())
-          .put("servicePointsIds", List.of(spId2.toString(), spId3.toString()))
-          .put("defaultServicePointId", spId2.toString());
-        return doPost(client, resourceUrl(), spuPayload);
+        return createAndPostSpuWithId(client, spuId, List.of(spId2.toString(), spId3.toString()), spId2.toString());
       })
       .compose(r -> doGet(client, resourceUrl() + "?query=servicePointsIds=" + spId3))
-      .onComplete(ctx.succeeding(response -> {
-        ctx.verify(() -> {
-          assertThat(response.jsonBody().getInteger("totalRecords"), is(1));
-          String returnedId = response.jsonBody().getJsonArray("servicePointsUsers")
-            .getJsonObject(0).getString("id");
-          assertThat(returnedId, is(expectedSpuIdRef.get()));
-          ctx.completeNow();
-        });
-      }));
+      .onComplete(ctx.succeeding(response -> ctx.verify(() ->
+        verifySpuQueryResult(response, expectedSpuIdRef.get(), ctx))));
   }
 
   @Test
@@ -237,5 +201,43 @@ class ServicePointsUsersIT extends BaseReferenceDataIntegrationTest<ServicePoint
       })
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  private JsonObject createServicePointJson(UUID id, String name, String code, String displayName) {
+    return new JsonObject()
+      .put("id", id.toString())
+      .put("name", name)
+      .put("code", code)
+      .put("discoveryDisplayName", displayName)
+      .put("pickupLocation", true)
+      .put("holdShelfExpiryPeriod", createHoldShelfExpiryPeriod());
+  }
+
+  private io.vertx.core.Future<TestResponse> createAndPostSpu(HttpClient client,
+                                                              List<String> servicePointsIds, String defaultSpId) {
+    var spuPayload = new JsonObject()
+      .put("id", UUID.randomUUID().toString())
+      .put("userId", UUID.randomUUID().toString())
+      .put("servicePointsIds", servicePointsIds)
+      .put("defaultServicePointId", defaultSpId);
+    return doPost(client, resourceUrl(), spuPayload);
+  }
+
+  private io.vertx.core.Future<TestResponse> createAndPostSpuWithId(HttpClient client, String spuId,
+                                                                    List<String> servicePointsIds, String defaultSpId) {
+    var spuPayload = new JsonObject()
+      .put("id", spuId)
+      .put("userId", UUID.randomUUID().toString())
+      .put("servicePointsIds", servicePointsIds)
+      .put("defaultServicePointId", defaultSpId);
+    return doPost(client, resourceUrl(), spuPayload);
+  }
+
+  private void verifySpuQueryResult(TestResponse response, String expectedId, VertxTestContext ctx) {
+    assertThat(response.jsonBody().getInteger("totalRecords"), is(1));
+    String returnedId = response.jsonBody().getJsonArray("servicePointsUsers")
+      .getJsonObject(0).getString("id");
+    assertThat(returnedId, is(expectedId));
+    ctx.completeNow();
   }
 }
