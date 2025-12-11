@@ -73,6 +73,8 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.sanitizer.Sanitizer;
+import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -99,6 +101,7 @@ public class ItemService {
   private final ItemRepository itemRepository;
   private final PostgresClient postgresClient;
   private final HoldingsRepository holdingsRepository;
+  private final Sanitizer<Item> sanitizer;
 
   public ItemService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -109,10 +112,12 @@ public class ItemService {
     this.domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
     this.itemRepository = new ItemRepository(vertxContext, okapiHeaders);
     this.holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
+    this.sanitizer = SanitizerFactory.getSanitizer(Item.class);
   }
 
   public Future<Response> createItem(Item entity) {
     entity.getStatus().setDate(new Date());
+    sanitizer.sanitize(entity);
 
     return validateUuidFormat(entity.getStatisticalCodeIds())
       .compose(v -> hridManager.populateHrid(entity))
@@ -126,9 +131,12 @@ public class ItemService {
 
   public Future<Response> createItems(List<Item> items, boolean upsert, boolean optimisticLocking) {
     final var itemStatusDate = new Date();
-    items.stream()
-      .filter(item -> item.getStatus().getDate() == null)
-      .forEach(item -> item.getStatus().setDate(itemStatusDate));
+    for (Item item : items) {
+      if (item.getStatus().getDate() == null) {
+        item.getStatus().setDate(itemStatusDate);
+      }
+      sanitizer.sanitize(item);
+    }
 
     return validateUuidFormatForList(items, Item::getStatisticalCodeIds)
       .compose(v -> hridManager.populateHridForItems(items))
@@ -143,6 +151,7 @@ public class ItemService {
   }
 
   public Future<RowSet<Row>> updateBatch(Conn conn, List<Item> allItemsToUpdate) {
+    allItemsToUpdate.forEach(sanitizer::sanitize);
     return itemRepository.updateBatch(allItemsToUpdate, conn);
   }
 
@@ -163,6 +172,7 @@ public class ItemService {
 
     var patchDataList = conversionResult.getLeft();
     var itemList = conversionResult.getRight();
+    itemList.forEach(sanitizer::sanitize);
 
     return ItemUtils.validateRequiredFields(items)
       .compose(v -> validateUuidFormatForList(itemList, Item::getStatisticalCodeIds))
@@ -220,6 +230,7 @@ public class ItemService {
 
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
+    sanitizer.sanitize(newItem);
     var putData = new PutData();
     return validateUuidFormat(newItem.getStatisticalCodeIds())
       .compose(v -> refuseLongNotes(newItem))

@@ -42,6 +42,7 @@
 * Improve performance of get_items_and_holdings_view to avoid extra memory and space consumption ([MODINVSTOR-1474](https://folio-org.atlassian.net/browse/MODINVSTOR-1474))
 * Add source field to reference data and update existing loan types ([MODINVSTOR-1476](https://folio-org.atlassian.net/browse/MODINVSTOR-1476))
 * Add default empty values for S3_SECRET_ACCESS_KEY and S3_ACCESS_KEY_ID ([MODINVSTOR-1489](https://folio-org.atlassian.net/browse/MODINVSTOR-1489))
+* Implement sanitizers for HoldingsRecord, Instance, and Item ([MODINVSTOR-1497](https://folio-org.atlassian.net/browse/MODINVSTOR-1497))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
