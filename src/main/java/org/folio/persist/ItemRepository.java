@@ -81,9 +81,8 @@ public class ItemRepository extends AbstractRepository<Item> {
 
   public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatch> items) {
     try {
-      Future<Void> validation = validateItemsSize(items);
-      if (validation.failed()) {
-        return validation.mapEmpty();
+      if (items.size() > MAX_ENTITIES) {
+        return Future.failedFuture(buildItemsSizeException(items.size()));
       }
 
       OptimisticLockingUtil.unsetVersionIfMinusOne(items);
@@ -101,17 +100,14 @@ public class ItemRepository extends AbstractRepository<Item> {
     }
   }
 
-  private Future<Void> validateItemsSize(List<ItemPatch> items) {
-    if (items.size() > MAX_ENTITIES) {
-      var message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, items.size());
-      var errors = new Errors().withErrors(List.of(
-        new Error()
-          .withMessage(message)
-          .withType("1")
-          .withCode("VALIDATION_ERROR")));
-      return Future.failedFuture(new ValidationException(errors));
-    }
-    return Future.succeededFuture();
+  private ValidationException buildItemsSizeException(int actualSize) {
+    var message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, actualSize);
+    var errors = new Errors().withErrors(List.of(
+      new Error()
+        .withMessage(message)
+        .withType("1")
+        .withCode("VALIDATION_ERROR")));
+    return new ValidationException(errors);
   }
 
   private Future<List<Item>> executeBatchUpdate(PgConnection conn, String sql, List<Tuple> tuples) {
