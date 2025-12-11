@@ -1,3 +1,10 @@
+## v29.0.16 2025-12-11
+### Dependencies
+* Bump `RMB` from `35.4.0` to `35.4.1` ([MODINVSTOR-1495](https://folio-org.atlassian.net/browse/MODINVSTOR-1495))
+* Bump `Vertx` from `4.5.13` to `4.5.22`
+
+---
+
 ## v29.0.15 2025-12-10
 ### New APIs versions
 * Provides `location-units v2.1`
