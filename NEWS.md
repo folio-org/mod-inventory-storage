@@ -1,3 +1,8 @@
+## v28.0.14 2025-12-11
+### Dependencies
+* Bump `RMB` from `35.3.0` to Ramsons version `35.3.1`. ([MODINVSTOR-1494](https://folio-org.atlassian.net/browse/MODINVSTOR-1494))
+* Bump `Vertx` from `4.5.10` to Ramsons version `4.5.22`.
+
 ## v28.0.14 2025-06-11
 * Sysop SQL script to show how many holdings records need sourceId migration ((MODINVSTOR-1423)[https://folio-org.atlassian.net/browse/MODINVSTOR-1423])
 * Fixed random "`Cannot set holdings_record.instanceid = [...] because it does not exist in instance.id.`" errors when opening orders ([MODINVSTOR-1427](https://folio-org.atlassian.net/browse/MODINVSTOR-1427))
