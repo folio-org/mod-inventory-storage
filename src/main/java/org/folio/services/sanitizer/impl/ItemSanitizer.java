@@ -13,5 +13,6 @@ public final class ItemSanitizer implements Sanitizer<Item> {
     }
     item.setAdministrativeNotes(cleanList(item.getAdministrativeNotes()));
     item.setStatisticalCodeIds(cleanSet(item.getStatisticalCodeIds()));
+    item.setYearCaption(cleanSet(item.getYearCaption()));
   }
 }

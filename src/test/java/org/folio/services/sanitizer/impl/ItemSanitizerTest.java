@@ -118,10 +118,57 @@ class ItemSanitizerTest {
   }
 
   @Test
-  void sanitizeShouldCleanBothFieldsSimultaneously() {
+  void sanitizeShouldCleanYearCaption() {
+    var item = new Item();
+    item.setYearCaption(new LinkedHashSet<>(Arrays.asList("code1", "", "code2", "  ", "code3")));
+
+    sanitizer.sanitize(item);
+
+    assertEquals(3, item.getYearCaption().size());
+    assertTrue(item.getYearCaption().contains("code1"));
+    assertTrue(item.getYearCaption().contains("code2"));
+    assertTrue(item.getYearCaption().contains("code3"));
+  }
+
+  @Test
+  void sanitizeShouldHandleNullYearCaption() {
+    var item = new Item();
+    item.setYearCaption(null);
+
+    sanitizer.sanitize(item);
+
+    assertNotNull(item.getYearCaption());
+    assertTrue(item.getYearCaption().isEmpty());
+  }
+
+  @Test
+  void sanitizeShouldHandleEmptyYearCaption() {
+    var item = new Item();
+    item.setYearCaption(new LinkedHashSet<>());
+
+    sanitizer.sanitize(item);
+
+    assertNotNull(item.getYearCaption());
+    assertTrue(item.getYearCaption().isEmpty());
+  }
+
+  @Test
+  void sanitizeShouldFilterOutWhitespaceOnlyYearCaption() {
+    Item item = new Item();
+    item.setYearCaption(new LinkedHashSet<>(Arrays.asList("valid-code", "   ", "\t", "\n")));
+
+    sanitizer.sanitize(item);
+
+    assertEquals(1, item.getYearCaption().size());
+    assertTrue(item.getYearCaption().contains("valid-code"));
+  }
+
+  @Test
+  void sanitizeShouldCleanAllFieldsSimultaneously() {
     var item = new Item();
     item.setAdministrativeNotes(Arrays.asList("note1", "", "note2", "  "));
     item.setStatisticalCodeIds(new LinkedHashSet<>(Arrays.asList("code1", "", "code2")));
+    item.setYearCaption(new LinkedHashSet<>(Arrays.asList("code1", "", "code2")));
 
     sanitizer.sanitize(item);
 
@@ -130,6 +177,9 @@ class ItemSanitizerTest {
     assertEquals(2, item.getStatisticalCodeIds().size());
     assertTrue(item.getStatisticalCodeIds().contains("code1"));
     assertTrue(item.getStatisticalCodeIds().contains("code2"));
+    assertEquals(2, item.getYearCaption().size());
+    assertTrue(item.getYearCaption().contains("code1"));
+    assertTrue(item.getYearCaption().contains("code2"));
   }
 
   @Test
