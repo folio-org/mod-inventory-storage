@@ -104,6 +104,7 @@ import org.folio.rest.support.builders.StatisticalCodeBuilder;
 import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.hamcrest.CoreMatchers;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.After;
@@ -194,35 +195,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
   }
 
-  private JsonObject buildItemWithCallNumberComponents(UUID holdingsRecordId, String prefix, String callNumber,
-                                                        String volume, String enumeration, String chronology,
-                                                        String copy, String suffix) {
-    UUID id = randomUUID();
-    final String inTransitServicePointId = randomUUID().toString();
-
-    JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("id", id.toString());
-    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("materialTypeId", journalMaterialTypeID);
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-
-    itemToCreate.put("itemLevelCallNumber", callNumber);
-    itemToCreate.put("itemLevelCallNumberSuffix", suffix);
-    itemToCreate.put("itemLevelCallNumberPrefix", prefix);
-    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
-    itemToCreate.put("volume", volume);
-    itemToCreate.put("enumeration", enumeration);
-    itemToCreate.put("chronology", chronology);
-    itemToCreate.put("copyNumber", copy);
-    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
-
-    return itemToCreate;
-  }
-
   @Test
   public void shouldCreateAnItemViaCollectionResource() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
@@ -246,54 +218,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     verifyItemCreatedAndRetrieved(id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
       statisticalCodeId);
-  }
-
-  private UUID createStatisticalCode() {
-    return createStatisticalCode("stcone", "Statistical code 1");
-  }
-
-  private UUID createStatisticalCode(String code, String name) {
-    final var statisticalCode = statisticalCodeFixture
-      .createSerialManagementCode(new StatisticalCodeBuilder()
-        .withCode(code)
-        .withName(name));
-    return UUID.fromString(statisticalCode.getJson().getString("id"));
-  }
-
-  private JsonObject buildDetailedItem(UUID id, UUID holdingsRecordId, String adminNote, String displaySummary,
-                                        String inTransitServicePointId, UUID statisticalCodeId) {
-    JsonObject itemToCreate = new JsonObject();
-    itemToCreate.put("id", id.toString());
-    itemToCreate.put(ORDER_FIELD, 100);
-    itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
-    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
-    itemToCreate.put("barcode", "565578437802");
-    itemToCreate.put("status", new JsonObject().put("name", "Available"));
-    itemToCreate.put("displaySummary", displaySummary);
-    itemToCreate.put("materialTypeId", journalMaterialTypeID);
-    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
-    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
-    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
-    itemToCreate.put("copyNumber", "copy1");
-    itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
-    itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
-    itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
-    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
-    itemToCreate.put("statisticalCodeIds", List.of(statisticalCodeId));
-    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
-    return itemToCreate;
-  }
-
-  private void verifyItemCreatedAndRetrieved(UUID id, String adminNote, UUID holdingsRecordId,
-                                              String displaySummary, String inTransitServicePointId,
-                                              UUID statisticalCodeId) {
-    Response getResponse = getById(id);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-    JsonObject itemFromGet = getResponse.getJson();
-
-    assertItem(itemFromGet, id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
-      statisticalCodeId);
-    itemMessageChecks.createdMessagePublished(itemFromGet);
   }
 
   @Test
@@ -391,25 +315,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  private void createThirdItemAndVerifyOrder(UUID holdingsRecordId, UUID id1, UUID id2) {
-    var id3 = UUID.randomUUID();
-    var itemToCreate3 = minimalItem(id3, holdingsRecordId);
-    var createCompleted3 = new CompletableFuture<Response>();
-    getClient().post(itemsStorageUrl(""), itemToCreate3, TENANT_ID,
-      ResponseHandler.json(createCompleted3));
-    var postResponse3 = createCompleted3.get(TIMEOUT, TimeUnit.SECONDS);
-    assertThat(postResponse3.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
-    var getResponse1 = getById(id1);
-    var getResponse2 = getById(id2);
-    var getResponse3 = getById(id3);
-
-    assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), is(1000));
-    assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), is(10));
-    assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
-  }
-
-  @SneakyThrows
   @Test
   public void cannotCreateAnItemWithInvalidStatisticalCodeIds() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
@@ -465,7 +370,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(422));
     assertThat(postResponse.getBody(),
       containsString(("Cannot set item.itemlevelcallnumbertypeid = %s "
-        + "because it does not exist in call_number_type.id.").formatted(notExistedTypeId)));
+                      + "because it does not exist in call_number_type.id.").formatted(notExistedTypeId)));
   }
 
   @Test
@@ -486,52 +391,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(itemFromPost.getString("id"), is(itemId.toString()));
 
     verifyCirculationNotesPopulated(itemId, circulationNoteId);
-  }
-
-  private JsonObject buildItemWithCirculationNotes(UUID holdingsRecordId, UUID itemId, UUID circulationNoteId) {
-    JsonObject checkInNoteWithoutId = new JsonObject()
-      .put("noteType", "Check in")
-      .put("note", "Check in note")
-      .put("staffOnly", false);
-
-    JsonObject checkOutNoteWithId = new JsonObject()
-      .put("id", circulationNoteId)
-      .put("noteType", "Check out")
-      .put("note", "Check out note")
-      .put("staffOnly", false);
-
-    return new JsonObject()
-      .put("id", itemId.toString())
-      .put("status", new JsonObject().put("name", "Available"))
-      .put("holdingsRecordId", holdingsRecordId.toString())
-      .put("materialTypeId", journalMaterialTypeID)
-      .put("permanentLoanTypeId", canCirculateLoanTypeID)
-      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
-      .put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
-  }
-
-  private void verifyCirculationNotesPopulated(UUID itemId, UUID circulationNoteId) {
-    Response getResponse = getById(itemId);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject itemFromGet = getResponse.getJson();
-    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
-
-    JsonArray savedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
-
-    assertThat(savedCirculationNotes.size(), is(2));
-
-    JsonObject firstCirculationNote = savedCirculationNotes.getJsonObject(0);
-    assertNotNull(firstCirculationNote.getString("id"));
-    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
-      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
-    }
-
-    JsonObject secondCirculationNote = savedCirculationNotes.getJsonObject(1);
-    assertNotNull(secondCirculationNote.getString("id"));
-    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
-      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
-    }
   }
 
   @Test
@@ -667,26 +526,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     verifyCreatedItemWithoutProvidedId(newId, holdingsRecordId);
   }
 
-  private void verifyCreatedItemWithoutProvidedId(String newId, UUID holdingsRecordId) {
-    Response getResponse = getById(UUID.fromString(newId));
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject itemFromGet = getResponse.getJson();
-
-    assertThat(itemFromGet.getString("id"), is(newId));
-    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
-    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
-    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
-    assertThat(itemFromGet.getString("materialTypeId"), is(journalMaterialTypeID));
-    assertThat(itemFromGet.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
-    assertThat(itemFromGet.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
-
-    List<String> tags = getTags(itemFromGet);
-
-    assertThat(tags.size(), is(1));
-    assertThat(tags, hasItem(TAG_VALUE));
-  }
-
   @Test
   public void shouldCreateAnItemWithHridSupplied() throws InterruptedException, ExecutionException, TimeoutException {
     log.info("Starting canCreateAnItemWithHRIDSupplied");
@@ -769,49 +608,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     updateItemWithCirculationNotes(itemToUpdate, circulationNoteId);
 
     verifyUpdatedCirculationNotes(itemId, circulationNoteId);
-  }
-
-  private void updateItemWithCirculationNotes(JsonObject itemToUpdate, UUID circulationNoteId) {
-    JsonObject checkInNoteWithoutId = new JsonObject()
-      .put("noteType", "Check in")
-      .put("note", "Check in note")
-      .put("staffOnly", false);
-
-    JsonObject checkOutNoteWithId = new JsonObject()
-      .put("id", circulationNoteId)
-      .put("noteType", "Check out")
-      .put("note", "Check out note")
-      .put("staffOnly", false);
-
-    itemToUpdate.put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
-    itemToUpdate.put("hrid", "it00000000001");
-    itemToUpdate.put("_version", "1");
-
-    update(itemToUpdate);
-  }
-
-  private void verifyUpdatedCirculationNotes(UUID itemId, UUID circulationNoteId) {
-    Response getResponse = getById(itemId);
-    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
-
-    JsonObject itemFromGet = getResponse.getJson();
-    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
-
-    JsonArray updatedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
-
-    assertThat(updatedCirculationNotes.size(), is(2));
-
-    JsonObject firstCirculationNote = updatedCirculationNotes.getJsonObject(0);
-    assertNotNull(firstCirculationNote.getString("id"));
-    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
-      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
-    }
-
-    JsonObject secondCirculationNote = updatedCirculationNotes.getJsonObject(1);
-    assertNotNull(secondCirculationNote.getString("id"));
-    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
-      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
-    }
   }
 
   @Test
@@ -1328,6 +1124,28 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .map(JsonObject.class::cast)
       .map(obj -> getById(obj.getString("id")).getJson())
       .forEach(itemMessageChecks::createdMessagePublished);
+  }
+
+  @Test
+  public void shouldCreateItemsWithPostSynchronousBatchWithoutIdsWithUpsertTrue() {
+    var itemArray = new JsonArray();
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var item = minimalItem(holdingsRecordId);
+    var barcodeValue = "item1";
+    item.put("barcode", barcodeValue);
+    itemArray.add(item);
+
+    var postResponse = postSynchronousBatch("?upsert=true", itemArray);
+
+    assertThat(postResponse, statusCodeIs(HTTP_CREATED));
+
+    var getCompleted = new CompletableFuture<Response>();
+    getClient().get(itemsStorageUrl("?query=barcode=item1"), TENANT_ID, json(getCompleted));
+    var getResponse = TestBase.get(getCompleted);
+    assertThat(getResponse, statusCodeIs(HttpStatus.HTTP_OK));
+    var createdItem = getResponse.getJson().getJsonArray("items").getJsonObject(0);
+    assertThat(createdItem.getString("id"), CoreMatchers.notNullValue());
+    assertThat(createdItem.getString("barcode"), equalTo(barcodeValue));
   }
 
   @Test
@@ -2369,9 +2187,9 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     // StackOverflowError in java.util.regex.Pattern https://issues.folio.org/browse/CIRC-119
     String url = itemsStorageUrl("") + "?query="
-      + urlEncode("barcode==("
-      + "a or b or c or d or e or f or g or h or j or k or l or m or n or o or p or q or s "
-      + "or t or u or v or w or x or y or z or 673274826203)");
+                 + urlEncode("barcode==("
+                             + "a or b or c or d or e or f or g or h or j or k or l or m or n or o or p or q or s "
+                             + "or t or u or v or w or x or y or z or 673274826203)");
 
     getClient().get(url,
       TENANT_ID, ResponseHandler.json(searchCompleted));
@@ -2497,12 +2315,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAndUpdateItemWithAdditionalCallNumbers() throws Exception {
+  public void canCreateAndUpdateItemWithAdditionalCallNumbers() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
-    final String callNumber = "Test";
-    final String prefix = "A";
-    final String suffix = "Z";
-    final String typeId = LC_CN_TYPE_ID;
 
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = createItemWithAdditionalCallNumbers(id, holdingsRecordId);
@@ -2518,7 +2332,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAdditionalCallNumbersFromItem() throws Exception {
+  public void canDeleteAdditionalCallNumbersFromItem() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonArray additionalCallNumbers = createAdditionalCallNumbersArray();
     UUID id = UUID.randomUUID();
@@ -2563,7 +2377,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() throws Exception {
+  public void cannotCreateItemWithNonUuidAdditionalCallNumberTypeId() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     UUID id = UUID.randomUUID();
     JsonObject itemToCreate = createItemWithInvalidTypeId(id, holdingsRecordId);
@@ -3063,7 +2877,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldUpdateItemWithStatisticalCodeId() throws Exception {
+  public void shouldUpdateItemWithStatisticalCodeId() {
     final UUID statisticalCodeId = createStatisticalCode("stcone", "Statistical code 1");
     final UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     String itemId = randomUUID().toString();
@@ -3263,19 +3077,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(deleteResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
   }
 
-  private JsonObject buildRequiredFieldsError(String itemId, List<String> fieldNames) {
-    var parameters = fieldNames.stream()
-      .map(fieldName -> new org.folio.rest.jaxrs.model.Parameter()
-        .withKey("field")
-        .withValue(fieldName))
-      .toList();
-
-    return JsonObject.mapFrom(new Error()
-      .withMessage("Required fields cannot be removed. ItemId: " + itemId)
-      .withCode("field.required")
-      .withParameters(parameters));
-  }
-
   static JsonObject nod(UUID itemId, UUID holdingsRecordId) {
     return createItemRequest(itemId, holdingsRecordId, "565578437802");
   }
@@ -3293,14 +3094,240 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     return item;
   }
 
-  private JsonObject minimalItem(UUID id, UUID holdingsRecordId) {
+  private JsonObject buildItemWithCallNumberComponents(UUID holdingsRecordId, String prefix, String callNumber,
+                                                       String volume, String enumeration, String chronology,
+                                                       String copy, String suffix) {
+    UUID id = randomUUID();
+    final String inTransitServicePointId = randomUUID().toString();
+
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    itemToCreate.put("itemLevelCallNumber", callNumber);
+    itemToCreate.put("itemLevelCallNumberSuffix", suffix);
+    itemToCreate.put("itemLevelCallNumberPrefix", prefix);
+    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
+    itemToCreate.put("volume", volume);
+    itemToCreate.put("enumeration", enumeration);
+    itemToCreate.put("chronology", chronology);
+    itemToCreate.put("copyNumber", copy);
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+
+    return itemToCreate;
+  }
+
+  private UUID createStatisticalCode() {
+    return createStatisticalCode("stcone", "Statistical code 1");
+  }
+
+  private UUID createStatisticalCode(String code, String name) {
+    final var statisticalCode = statisticalCodeFixture
+      .createSerialManagementCode(new StatisticalCodeBuilder()
+        .withCode(code)
+        .withName(name));
+    return UUID.fromString(statisticalCode.getJson().getString("id"));
+  }
+
+  private JsonObject buildDetailedItem(UUID id, UUID holdingsRecordId, String adminNote, String displaySummary,
+                                       String inTransitServicePointId, UUID statisticalCodeId) {
+    JsonObject itemToCreate = new JsonObject();
+    itemToCreate.put("id", id.toString());
+    itemToCreate.put(ORDER_FIELD, 100);
+    itemToCreate.put("administrativeNotes", new JsonArray().add(adminNote));
+    itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
+    itemToCreate.put("barcode", "565578437802");
+    itemToCreate.put("status", new JsonObject().put("name", "Available"));
+    itemToCreate.put("displaySummary", displaySummary);
+    itemToCreate.put("materialTypeId", journalMaterialTypeID);
+    itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
+    itemToCreate.put("temporaryLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+    itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+    itemToCreate.put("copyNumber", "copy1");
+    itemToCreate.put("itemLevelCallNumber", "PS3623.R534 P37 2005");
+    itemToCreate.put("itemLevelCallNumberSuffix", "allOwnComponentsCNS");
+    itemToCreate.put("itemLevelCallNumberPrefix", "allOwnComponentsCNP");
+    itemToCreate.put("itemLevelCallNumberTypeId", LC_CN_TYPE_ID);
+    itemToCreate.put("statisticalCodeIds", List.of(statisticalCodeId));
+    itemToCreate.put("inTransitDestinationServicePointId", inTransitServicePointId);
+    return itemToCreate;
+  }
+
+  private void verifyItemCreatedAndRetrieved(UUID id, String adminNote, UUID holdingsRecordId,
+                                             String displaySummary, String inTransitServicePointId,
+                                             UUID statisticalCodeId) {
+    Response getResponse = getById(id);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertItem(itemFromGet, id, adminNote, holdingsRecordId, displaySummary, inTransitServicePointId,
+      statisticalCodeId);
+    itemMessageChecks.createdMessagePublished(itemFromGet);
+  }
+
+  @SneakyThrows
+  private void createThirdItemAndVerifyOrder(UUID holdingsRecordId, UUID id1, UUID id2) {
+    var id3 = UUID.randomUUID();
+    var itemToCreate3 = minimalItem(id3, holdingsRecordId);
+    var createCompleted3 = new CompletableFuture<Response>();
+    getClient().post(itemsStorageUrl(""), itemToCreate3, TENANT_ID,
+      ResponseHandler.json(createCompleted3));
+    var postResponse3 = createCompleted3.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(postResponse3.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var getResponse1 = getById(id1);
+    var getResponse2 = getById(id2);
+    var getResponse3 = getById(id3);
+
+    assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), is(1000));
+    assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), is(10));
+    assertThat(getResponse3.getJson().getInteger(ORDER_FIELD), is(1001));
+  }
+
+  private JsonObject buildItemWithCirculationNotes(UUID holdingsRecordId, UUID itemId, UUID circulationNoteId) {
+    JsonObject checkInNoteWithoutId = new JsonObject()
+      .put("noteType", "Check in")
+      .put("note", "Check in note")
+      .put("staffOnly", false);
+
+    JsonObject checkOutNoteWithId = new JsonObject()
+      .put("id", circulationNoteId)
+      .put("noteType", "Check out")
+      .put("note", "Check out note")
+      .put("staffOnly", false);
+
     return new JsonObject()
-      .put("id", id.toString())
+      .put("id", itemId.toString())
+      .put("status", new JsonObject().put("name", "Available"))
+      .put("holdingsRecordId", holdingsRecordId.toString())
+      .put("materialTypeId", journalMaterialTypeID)
+      .put("permanentLoanTypeId", canCirculateLoanTypeID)
+      .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)))
+      .put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+  }
+
+  private void verifyCirculationNotesPopulated(UUID itemId, UUID circulationNoteId) {
+    Response getResponse = getById(itemId);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
+
+    JsonArray savedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
+
+    assertThat(savedCirculationNotes.size(), is(2));
+
+    JsonObject firstCirculationNote = savedCirculationNotes.getJsonObject(0);
+    assertNotNull(firstCirculationNote.getString("id"));
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+
+    JsonObject secondCirculationNote = savedCirculationNotes.getJsonObject(1);
+    assertNotNull(secondCirculationNote.getString("id"));
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+  }
+
+  private void verifyCreatedItemWithoutProvidedId(String newId, UUID holdingsRecordId) {
+    Response getResponse = getById(UUID.fromString(newId));
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+
+    assertThat(itemFromGet.getString("id"), is(newId));
+    assertThat(itemFromGet.getString("holdingsRecordId"), is(holdingsRecordId.toString()));
+    assertThat(itemFromGet.getString("barcode"), is("565578437802"));
+    assertThat(itemFromGet.getJsonObject("status").getString("name"), is("Available"));
+    assertThat(itemFromGet.getString("materialTypeId"), is(journalMaterialTypeID));
+    assertThat(itemFromGet.getString("permanentLoanTypeId"), is(canCirculateLoanTypeID));
+    assertThat(itemFromGet.getString("temporaryLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+
+    List<String> tags = getTags(itemFromGet);
+
+    assertThat(tags.size(), is(1));
+    assertThat(tags, hasItem(TAG_VALUE));
+  }
+
+  private void updateItemWithCirculationNotes(JsonObject itemToUpdate, UUID circulationNoteId) {
+    JsonObject checkInNoteWithoutId = new JsonObject()
+      .put("noteType", "Check in")
+      .put("note", "Check in note")
+      .put("staffOnly", false);
+
+    JsonObject checkOutNoteWithId = new JsonObject()
+      .put("id", circulationNoteId)
+      .put("noteType", "Check out")
+      .put("note", "Check out note")
+      .put("staffOnly", false);
+
+    itemToUpdate.put("circulationNotes", new JsonArray().add(checkInNoteWithoutId).add(checkOutNoteWithId));
+    itemToUpdate.put("hrid", "it00000000001");
+    itemToUpdate.put("_version", "1");
+
+    update(itemToUpdate);
+  }
+
+  private void verifyUpdatedCirculationNotes(UUID itemId, UUID circulationNoteId) {
+    Response getResponse = getById(itemId);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    JsonObject itemFromGet = getResponse.getJson();
+    assertThat(itemFromGet.getString("id"), is(itemId.toString()));
+
+    JsonArray updatedCirculationNotes = itemFromGet.getJsonArray("circulationNotes");
+
+    assertThat(updatedCirculationNotes.size(), is(2));
+
+    JsonObject firstCirculationNote = updatedCirculationNotes.getJsonObject(0);
+    assertNotNull(firstCirculationNote.getString("id"));
+    if (Objects.equals(firstCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(firstCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+
+    JsonObject secondCirculationNote = updatedCirculationNotes.getJsonObject(1);
+    assertNotNull(secondCirculationNote.getString("id"));
+    if (Objects.equals(secondCirculationNote.getString("noteType"), "Check out")) {
+      assertThat(secondCirculationNote.getString("id"), is(circulationNoteId.toString()));
+    }
+  }
+
+  private JsonObject buildRequiredFieldsError(String itemId, List<String> fieldNames) {
+    var parameters = fieldNames.stream()
+      .map(fieldName -> new org.folio.rest.jaxrs.model.Parameter()
+        .withKey("field")
+        .withValue(fieldName))
+      .toList();
+
+    return JsonObject.mapFrom(new Error()
+      .withMessage("Required fields cannot be removed. ItemId: " + itemId)
+      .withCode("field.required")
+      .withParameters(parameters));
+  }
+
+  private JsonObject minimalItem(UUID holdingsRecordId) {
+    return minimalItem(null, holdingsRecordId);
+  }
+
+  private JsonObject minimalItem(UUID id, UUID holdingsRecordId) {
+    var item = new JsonObject()
       .put("status", new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingsRecordId.toString())
       .put("materialTypeId", journalMaterialTypeID)
       .put("permanentLoanTypeId", canCirculateLoanTypeID)
       .put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
+
+    if (id != null) {
+      item.put("id", id.toString());
+    }
+    return item;
   }
 
   private Response postSynchronousBatchWithExistingId(String subPath) {
@@ -3610,7 +3637,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private List<UUID> searchByCallNumberEyeReadable(String searchTerm) {
     return itemsClient
       .getMany("fullCallNumber==\"%1$s\" OR callNumberAndSuffix==\"%1$s\" OR "
-        + "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
+               + "effectiveCallNumberComponents.callNumber==\"%1$s\"", searchTerm)
       .stream()
       .map(IndividualResource::getId)
       .toList();
@@ -4059,7 +4086,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Item itemWithPermLocation = buildItem(holdingsWithTempLocation, null, SECOND_FLOOR_LOCATION_ID);
     Item itemWithAllLocation = buildItem(holdingsWithTempLocation, SECOND_FLOOR_LOCATION_ID, ONLINE_LOCATION_ID);
     Item[] itemsToCreate = {itemWithHoldingPermLocation, itemWithHoldingTempLocation,
-      itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
+                            itemWithTempLocation, itemWithPermLocation, itemWithAllLocation};
     for (Item item : itemsToCreate) {
       IndividualResource createdItem = createItem(item);
       assertTrue(createdItem.getJson().containsKey("effectiveLocationId"));
@@ -4068,7 +4095,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void verifyEffectiveLocationSearchResults(Items mainLibraryItems, Items annexLibraryItems,
-      Items onlineLibraryItems, Items secondFloorLibraryItems, Item[] testItems) {
+                                                    Items onlineLibraryItems, Items secondFloorLibraryItems,
+                                                    Item[] testItems) {
     assertEquals(1, mainLibraryItems.getTotalRecords().intValue());
     assertThat(mainLibraryItems.getItems().getFirst().getId(), is(testItems[0].getId()));
     assertEquals(1, annexLibraryItems.getTotalRecords().intValue());
