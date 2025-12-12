@@ -137,6 +137,7 @@ public class ItemService {
       }
       sanitizer.sanitize(item);
     }
+    ensureItemsHaveIds(items);
 
     return validateUuidFormatForList(items, Item::getStatisticalCodeIds)
       .compose(v -> hridManager.populateHridForItems(items))
@@ -181,6 +182,83 @@ public class ItemService {
       .compose(v -> validateMultiplePatchItemsAndHoldings(patchDataList))
       .compose(this::filterUnchangedPatchData)
       .compose(patchDataToUpdate -> executeItemsUpdate(items, patchDataToUpdate));
+  }
+
+  public Future<Response> updateItem(String itemId, Item newItem) {
+    newItem.setId(itemId);
+    sanitizer.sanitize(newItem);
+    var putData = new PutData();
+    return validateUuidFormat(newItem.getStatisticalCodeIds())
+      .compose(v -> refuseLongNotes(newItem))
+      .compose(this::populateCirculationNoteId)
+      .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
+      .onSuccess(putData::set)
+      .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
+      .compose(x -> retrieveOldHoldingsIfNeeded(newItem, putData))
+      .compose(oldHoldings -> performItemUpdate(newItem, putData, oldHoldings))
+      .map(x -> PutItemStorageItemsByItemIdResponse.respond204());
+  }
+
+  public Future<Response> deleteItem(String itemId) {
+    return itemRepository.getById(itemId)
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(item -> deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
+        DeleteItemStorageItemsByItemIdResponse.class)
+        .onSuccess(domainEventService.publishRemoved(item)));
+  }
+
+  public Future<Response> deleteItems(String cql) {
+    if (isBlank(cql)) {
+      return Future.succeededFuture(
+        DeleteItemStorageItemsResponse.respond400WithTextPlain(
+          "Expected CQL but query parameter is empty"));
+    }
+    if (new CqlQuery(cql).isMatchingAll()) {
+      return deleteAllItems();  // faster: sends only one domain event (Kafka) message
+    }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
+    return itemRepository.delete(cql)
+      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
+        rowSet.iterator().forEachRemaining(this::processDeletedItemRow)))
+      .map(Response.noContent().build());
+  }
+
+  /**
+   * Deletes all items but sends only a single domain event (Kafka) message "all records removed",
+   * this is much faster than sending one message for each deleted item.
+   */
+  public Future<Response> deleteAllItems() {
+    return itemRepository.deleteAll()
+      .onSuccess(notUsed -> domainEventService.publishAllRemoved())
+      .map(Response.noContent().build());
+  }
+
+  /**
+   * Return items before update.
+   */
+  public Future<List<Item>> updateItemsOnHoldingChanged(Conn connection,
+                                                        HoldingsRecord holdingsRecord) {
+
+    return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
+      .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
+        // have to make deep clone of the items because the items are stateful
+        // so that domain events will have proper 'old' item state.
+        deepCopy(items, Item.class), holdingsRecord)
+        .map(items));
+  }
+
+  public Future<Void> publishReindexItemRecords(String rangeId, String fromId, String toId) {
+    return itemRepository.getReindexItemRecords(fromId, toId)
+      .compose(items -> domainEventService.publishReindexItems(rangeId, items));
+  }
+
+  public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,
+                                       org.folio.services.ItemEffectiveValuesService effectiveValuesService) {
+    effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
+    if (isItemFieldsAffected(holdingsRecord, item)) {
+      populateMetadata(item, holdingsRecord.getMetadata());
+    }
   }
 
   private Pair<List<PatchData>, List<Item>> convertItemPatchesToPatchData(List<ItemPatch> items) {
@@ -228,21 +306,6 @@ public class ItemService {
     return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
   }
 
-  public Future<Response> updateItem(String itemId, Item newItem) {
-    newItem.setId(itemId);
-    sanitizer.sanitize(newItem);
-    var putData = new PutData();
-    return validateUuidFormat(newItem.getStatisticalCodeIds())
-      .compose(v -> refuseLongNotes(newItem))
-      .compose(this::populateCirculationNoteId)
-      .compose(notUsed -> getItemAndHolding(itemId, newItem.getHoldingsRecordId()))
-      .onSuccess(putData::set)
-      .compose(x -> refuseWhenHridChanged(putData.oldItem, newItem))
-      .compose(x -> retrieveOldHoldingsIfNeeded(newItem, putData))
-      .compose(oldHoldings -> performItemUpdate(newItem, putData, oldHoldings))
-      .map(x -> PutItemStorageItemsByItemIdResponse.respond204());
-  }
-
   private Future<HoldingsRecord> retrieveOldHoldingsIfNeeded(Item newItem, PutData putData) {
     if (newItem.getHoldingsRecordId().equals(putData.oldItem.getHoldingsRecordId())) {
       return Future.succeededFuture(putData.newHoldings);
@@ -268,31 +331,6 @@ public class ItemService {
     }
   }
 
-  public Future<Response> deleteItem(String itemId) {
-    return itemRepository.getById(itemId)
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(item -> deleteById(ITEM_TABLE, itemId, okapiHeaders, vertxContext,
-        DeleteItemStorageItemsByItemIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(item)));
-  }
-
-  public Future<Response> deleteItems(String cql) {
-    if (isBlank(cql)) {
-      return Future.succeededFuture(
-        DeleteItemStorageItemsResponse.respond400WithTextPlain(
-          "Expected CQL but query parameter is empty"));
-    }
-    if (new CqlQuery(cql).isMatchingAll()) {
-      return deleteAllItems();  // faster: sends only one domain event (Kafka) message
-    }
-    // do not add curly braces for readability, this is to comply with
-    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
-    return itemRepository.delete(cql)
-      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(this::processDeletedItemRow)))
-      .map(Response.noContent().build());
-  }
-
   private void processDeletedItemRow(Row row) {
     try {
       var instanceIdAndItemRaw = INSTANCE_ID_WITH_ITEM_JSON.formatted(
@@ -303,43 +341,6 @@ public class ItemService {
     } catch (JsonProcessingException ex) {
       log.error("processDeletedItemRow:: Failed to parse json : {}", ex.getMessage(), ex);
       throw new IllegalArgumentException(ex.getCause());
-    }
-  }
-
-  /**
-   * Deletes all items but sends only a single domain event (Kafka) message "all records removed",
-   * this is much faster than sending one message for each deleted item.
-   */
-  public Future<Response> deleteAllItems() {
-    return itemRepository.deleteAll()
-      .onSuccess(notUsed -> domainEventService.publishAllRemoved())
-      .map(Response.noContent().build());
-  }
-
-  /**
-   * Return items before update.
-   */
-  public Future<List<Item>> updateItemsOnHoldingChanged(Conn connection,
-                                                        HoldingsRecord holdingsRecord) {
-
-    return itemRepository.getItemsForHoldingRecord(connection, holdingsRecord.getId())
-      .compose(items -> updateEffectiveCallNumbersAndLocation(connection,
-        // have to make deep clone of the items because the items are stateful
-        // so that domain events will have proper 'old' item state.
-        deepCopy(items, Item.class), holdingsRecord)
-        .map(items));
-  }
-
-  public Future<Void> publishReindexItemRecords(String rangeId, String fromId, String toId) {
-    return itemRepository.getReindexItemRecords(fromId, toId)
-      .compose(items -> domainEventService.publishReindexItems(rangeId, items));
-  }
-
-  public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,
-                                       org.folio.services.ItemEffectiveValuesService effectiveValuesService) {
-    effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
-    if (isItemFieldsAffected(holdingsRecord, item)) {
-      populateMetadata(item, holdingsRecord.getMetadata());
     }
   }
 
@@ -486,7 +487,7 @@ public class ItemService {
   }
 
   private void processItemRow(Row row, Map<String, PatchData> patchDataMap,
-                               Map<String, HoldingsRecord> holdingsCache, List<String> foundItemIds) {
+                              Map<String, HoldingsRecord> holdingsCache, List<String> foundItemIds) {
     var itemId = row.getString(0);
     var itemJson = row.getString(1);
     var currentHoldingsJson = row.getString(2);
@@ -523,7 +524,7 @@ public class ItemService {
         .toList();
 
       var errorMessage = missingItemIds.size() == 1
-                         ? "Item not found in database: " + missingItemIds.get(0)
+                         ? "Item not found in database: " + missingItemIds.getFirst()
                          : "Items not found in database: " + String.join(", ", missingItemIds);
 
       throw new NotFoundException(errorMessage);
@@ -642,6 +643,12 @@ public class ItemService {
     if (additionalProperties != null) {
       READ_ONLY_FIELDS.forEach(additionalProperties::remove);
     }
+  }
+
+  private void ensureItemsHaveIds(List<Item> items) {
+    items.forEach(item -> item.setId(item.getId() == null
+                                     ? UUID.randomUUID().toString()
+                                     : item.getId()));
   }
 
   private static final class PutData {

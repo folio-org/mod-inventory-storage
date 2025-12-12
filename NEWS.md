@@ -58,6 +58,7 @@
 * Fix item sorting by order as a number ([MODINVSTOR-1470](https://folio-org.atlassian.net/browse/MODINVSTOR-1470))
 * Fix POST /holdings-storage/batch/synchronous?upsert=true returns 500 error when holdings "id" is missing ([MODINVSTOR-1487](https://folio-org.atlassian.net/browse/MODINVSTOR-1487))
 * Fix POST /instance-storage/batch/synchronous instance creation with absent instance "id" ([MODINVSTOR-1488](https://folio-org.atlassian.net/browse/MODINVSTOR-1488))
+* Fix POST /item-storage/batch/synchronous item creation with absent instance "id" ([MODINVSTOR-1491](https://folio-org.atlassian.net/browse/MODINVSTOR-1491))
 
 ### Tech Dept
 * Updates sample-data/instances JSON to include missing required fields that were introduced over the years.
