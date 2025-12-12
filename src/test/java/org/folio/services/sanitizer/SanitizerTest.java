@@ -10,42 +10,42 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 
 class SanitizerTest {
 
   private static final Sanitizer<String> TEST_SANITIZER = entity -> { };
 
-  @Test
-  void cleanListShouldReturnEmptyListWhenInputIsNull() {
-    List<String> result = TEST_SANITIZER.cleanList(null);
+  @ParameterizedTest
+  @NullSource
+  @MethodSource("emptyListProvider")
+  void cleanListShouldReturnEmptyListWhenInputIsNullOrEmpty(List<String> input) {
+    List<String> result = TEST_SANITIZER.cleanList(input);
     assertNotNull(result);
     assertTrue(result.isEmpty());
   }
 
-  @Test
-  void cleanListShouldReturnEmptyListWhenInputIsEmpty() {
-    List<String> result = TEST_SANITIZER.cleanList(new ArrayList<>());
-    assertNotNull(result);
-    assertTrue(result.isEmpty());
+  private static Stream<List<String>> emptyListProvider() {
+    return Stream.of(new ArrayList<>());
   }
 
-  @Test
-  void cleanListShouldFilterOutBlankStrings() {
-    List<String> input = Arrays.asList("valid", "", "  ", null, "another");
+  @ParameterizedTest
+  @MethodSource("listFilteringProvider")
+  void cleanListShouldFilterOutBlankAndWhitespaceStrings(List<String> input, List<String> expected) {
     List<String> result = TEST_SANITIZER.cleanList(input);
-    assertEquals(2, result.size());
-    assertEquals("valid", result.get(0));
-    assertEquals("another", result.get(1));
+    assertEquals(expected, result);
   }
 
-  @Test
-  void cleanListShouldFilterOutWhitespaceOnlyStrings() {
-    List<String> input = Arrays.asList("value1", "   ", "\t", "\n", "value2");
-    List<String> result = TEST_SANITIZER.cleanList(input);
-    assertEquals(2, result.size());
-    assertEquals("value1", result.get(0));
-    assertEquals("value2", result.get(1));
+  private static Stream<Arguments> listFilteringProvider() {
+    return Stream.of(
+      Arguments.of(Arrays.asList("valid", "", "  ", null, "another"), Arrays.asList("valid", "another")),
+      Arguments.of(Arrays.asList("value1", "   ", "\t", "\n", "value2"), Arrays.asList("value1", "value2"))
+    );
   }
 
   @Test
@@ -55,38 +55,45 @@ class SanitizerTest {
     assertEquals(Arrays.asList("first", "second", "third"), result);
   }
 
-  @Test
-  void cleanSetShouldReturnEmptySetWhenInputIsNull() {
-    Set<String> result = TEST_SANITIZER.cleanSet(null);
+  @ParameterizedTest
+  @NullSource
+  @MethodSource("emptySetProvider")
+  void cleanSetShouldReturnEmptySetWhenInputIsNullOrEmpty(Set<String> input) {
+    Set<String> result = TEST_SANITIZER.cleanSet(input);
     assertNotNull(result);
     assertTrue(result.isEmpty());
     assertInstanceOf(LinkedHashSet.class, result);
   }
 
-  @Test
-  void cleanSetShouldReturnEmptySetWhenInputIsEmpty() {
-    Set<String> result = TEST_SANITIZER.cleanSet(new LinkedHashSet<>());
-    assertNotNull(result);
-    assertTrue(result.isEmpty());
-    assertInstanceOf(LinkedHashSet.class, result);
+  private static Stream<Set<String>> emptySetProvider() {
+    return Stream.of(new LinkedHashSet<>());
   }
 
-  @Test
-  void cleanSetShouldFilterOutBlankStrings() {
-    Set<String> input = new LinkedHashSet<>(Arrays.asList("valid", "", "  ", "another"));
+  @ParameterizedTest
+  @MethodSource("setFilteringProvider")
+  void cleanSetShouldFilterOutBlankAndWhitespaceStrings(
+    Set<String> input,
+    int expectedSize,
+    List<String> expectedValues
+  ) {
     Set<String> result = TEST_SANITIZER.cleanSet(input);
-    assertEquals(2, result.size());
-    assertTrue(result.contains("valid"));
-    assertTrue(result.contains("another"));
+    assertEquals(expectedSize, result.size());
+    expectedValues.forEach(value -> assertTrue(result.contains(value)));
   }
 
-  @Test
-  void cleanSetShouldFilterOutWhitespaceOnlyStrings() {
-    Set<String> input = new LinkedHashSet<>(Arrays.asList("value1", "   ", "\t", "\n", "value2"));
-    Set<String> result = TEST_SANITIZER.cleanSet(input);
-    assertEquals(2, result.size());
-    assertTrue(result.contains("value1"));
-    assertTrue(result.contains("value2"));
+  private static Stream<Arguments> setFilteringProvider() {
+    return Stream.of(
+      Arguments.of(
+        new LinkedHashSet<>(Arrays.asList("valid", "", "  ", "another")),
+        2,
+        Arrays.asList("valid", "another")
+      ),
+      Arguments.of(
+        new LinkedHashSet<>(Arrays.asList("value1", "   ", "\t", "\n", "value2")),
+        2,
+        Arrays.asList("value1", "value2")
+      )
+    );
   }
 
   @Test

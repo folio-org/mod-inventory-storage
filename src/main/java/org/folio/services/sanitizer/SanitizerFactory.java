@@ -5,9 +5,11 @@ import java.util.Map;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Tags;
 import org.folio.services.sanitizer.impl.HoldingsRecordSanitizer;
 import org.folio.services.sanitizer.impl.InstanceSanitizer;
 import org.folio.services.sanitizer.impl.ItemSanitizer;
+import org.folio.services.sanitizer.impl.TagsSanitizer;
 
 public final class SanitizerFactory {
 
@@ -22,6 +24,7 @@ public final class SanitizerFactory {
     map.put(Instance.class, new InstanceSanitizer());
     map.put(Item.class, new ItemSanitizer());
     map.put(HoldingsRecord.class, new HoldingsRecordSanitizer());
+    map.put(Tags.class, new TagsSanitizer());
     return Map.copyOf(map);
   }
 
