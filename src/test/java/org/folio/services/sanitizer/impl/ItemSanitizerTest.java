@@ -203,7 +203,10 @@ class ItemSanitizerTest {
       statisticalCodeIdsArg3(),
       yearCaptionArg1(),
       yearCaptionArg2(),
-      yearCaptionArg3()
+      yearCaptionArg3(),
+      formerIdsArg1(),
+      formerIdsArg2(),
+      formerIdsArg3()
     );
   }
 
@@ -256,6 +259,33 @@ class ItemSanitizerTest {
     return Arguments.of(
       (BiConsumer<Item, Set<String>>) Item::setYearCaption,
       (Function<Item, Set<String>>) Item::getYearCaption,
+      new LinkedHashSet<>(List.of("valid-code", "   ", "\t", "\n")),
+      List.of("valid-code")
+    );
+  }
+
+  private static Arguments formerIdsArg1() {
+    return Arguments.of(
+      (BiConsumer<Item, Set<String>>) Item::setFormerIds,
+      (Function<Item, Set<String>>) Item::getFormerIds,
+      new LinkedHashSet<>(List.of("code1", "", "code2", "  ", "code3")),
+      List.of("code1", "code2", "code3")
+    );
+  }
+
+  private static Arguments formerIdsArg2() {
+    return Arguments.of(
+      (BiConsumer<Item, Set<String>>) Item::setFormerIds,
+      (Function<Item, Set<String>>) Item::getFormerIds,
+      new LinkedHashSet<>(),
+      List.of()
+    );
+  }
+
+  private static Arguments formerIdsArg3() {
+    return Arguments.of(
+      (BiConsumer<Item, Set<String>>) Item::setFormerIds,
+      (Function<Item, Set<String>>) Item::getFormerIds,
       new LinkedHashSet<>(List.of("valid-code", "   ", "\t", "\n")),
       List.of("valid-code")
     );
