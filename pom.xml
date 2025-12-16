@@ -33,7 +33,7 @@
     <mockito.version>5.2.0</mockito.version>
     <JUnitParams.version>1.1.1</JUnitParams.version>
     <wiremock.version>3.13.2</wiremock.version>
-    <rest-assured.version>5.5.6</rest-assured.version>
+    <rest-assured.version>6.0.0</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <assertj.version>3.27.6</assertj.version>
     <system-stubs-junit4.version>2.1.8</system-stubs-junit4.version>
