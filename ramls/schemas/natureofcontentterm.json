@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A term describing the nature of content for an instance",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "unique ID of the nature-of-content term",
+      "$ref": "uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "term for the nature of content"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the term originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "source"
+  ]
+}

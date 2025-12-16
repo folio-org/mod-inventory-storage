@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The resource type of an Instance",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the resource type",
+      "type": "string"
+    },
+    "code": {
+      "description": "distinct code for the resource type",
+      "type": "string"
+    },
+    "source": {
+      "description": "origin of a resource type record",
+      "source": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name",
+    "code",
+    "source"
+  ]
+}

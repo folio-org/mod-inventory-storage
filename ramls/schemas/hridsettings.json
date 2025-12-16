@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The HRID settings",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.HridSettings",
+  "properties": {
+    "id": {
+      "description": "The ID of the one and only HRID settings record",
+      "type": "string",
+      "readonly": true,
+      "$ref": "uuid.json"
+    },
+    "instances": {
+      "description": "The HRID settings for instances",
+      "type": "object",
+      "$ref": "hridsetting.json"
+    },
+    "holdings": {
+      "description": "The HRID settings for holdings",
+      "type": "object",
+      "$ref": "hridsetting.json"
+    },
+    "items": {
+      "description": "The HRID settings for items",
+      "type": "object",
+      "$ref": "hridsetting.json"
+    },
+    "commonRetainLeadingZeroes" : {
+      "type": "boolean",
+      "description": "If true, leading zeros should be applied for HRIDs",
+      "default": true
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instances",
+    "holdings",
+    "items"
+  ]
+}

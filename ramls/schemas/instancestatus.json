@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Cataloging status for Instance records",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "code": {
+      "description": "distinct code for an instance status",
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the instance status",
+      "type": "string"
+    },
+    "source": {
+      "description": "origin of an instance status record",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "code",
+    "name",
+    "source"
+  ]
+}

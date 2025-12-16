@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A holdings records source",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique ID of the holdings records source; UUID",
+      "$ref": "../uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the holdings records source"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "folio",
+        "local",
+        "consortium"
+      ],
+      "description": "The holdings records source"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

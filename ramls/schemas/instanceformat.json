@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The format of an Instance",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the Instance format",
+      "type": "string"
+    },
+    "code": {
+      "description": "distinct code for the Instance format",
+      "type": "string"
+    },
+    "source": {
+      "description": "origin of the Instance format record",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name",
+    "code",
+    "source"
+  ]
+}

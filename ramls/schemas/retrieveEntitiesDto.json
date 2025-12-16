@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "DTO for fetching records by POST request",
+  "type": "object",
+  "properties": {
+    "offset": {
+      "description": "Skip over a number of elements by specifying an offset value for the query",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647,
+      "default": 0
+    },
+    "limit": {
+      "description": "Limit the number of elements returned in the response",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647,
+      "default": 10
+    },
+    "query": {
+      "description": "A query expressed as a CQL string",
+      "type": "string"
+    }
+  }
+}

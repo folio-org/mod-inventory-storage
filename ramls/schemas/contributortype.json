@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A contributor type",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the contributor type",
+      "type": "string"
+    },
+    "code": {
+      "description": "distinct code for the contributor type",
+      "type": "string"
+    },
+    "source": {
+      "description": "origin of the contributor type record",
+      "source": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../raml-util/schemas/metadata.schema",
+      "readonly": true
+     }
+  },
+  "required": [
+    "name",
+    "code",
+    "source"
+  ]
+}
