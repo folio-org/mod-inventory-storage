@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.Tags;
 import org.junit.jupiter.api.Test;
 
 class SanitizerFactoryTest {
@@ -27,6 +28,12 @@ class SanitizerFactoryTest {
   @Test
   void getSanitizerShouldReturnHoldingsRecordSanitizer() {
     Sanitizer<HoldingsRecord> sanitizer = SanitizerFactory.getSanitizer(HoldingsRecord.class);
+    assertNotNull(sanitizer);
+  }
+
+  @Test
+  void getSanitizerShouldReturnTagsSanitizer() {
+    Sanitizer<Tags> sanitizer = SanitizerFactory.getSanitizer(Tags.class);
     assertNotNull(sanitizer);
   }
 
