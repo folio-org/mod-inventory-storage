@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,6 +32,16 @@ public class SampleDataIdRandomizer {
 
   // Mapping of old instance IDs to new randomized IDs
   private final Map<String, String> instanceIdMapping = new HashMap<>();
+
+  // Random 4-character suffix for this tenant (same for all HRIDs in this dataset)
+  // Max sample data prefix is 6 chars ("bwinst"), so 6 + 4 = 10 chars (within limit)
+  private final String hridSuffix;
+
+  public SampleDataIdRandomizer() {
+    // Generate a random 4-character lowercase alphabetic suffix using secure random
+    // Using 4 chars gives us 456,976 unique combinations (26^4)
+    hridSuffix = RandomStringUtils.secure().nextAlphabetic(4).toLowerCase();
+  }
 
   /**
    * Randomizes the instance ID in the given JSON content.
@@ -140,6 +152,49 @@ public class SampleDataIdRandomizer {
    */
   private String getOrCreateMapping(String oldInstanceId) {
     return instanceIdMapping.computeIfAbsent(oldInstanceId, k -> UUID.randomUUID().toString());
+  }
+
+  /**
+   * Randomizes the HRID in the given JSON content by adding a random suffix to the prefix.
+   * This ensures HRIDs are unique across tenants while preserving the numeric sequence.
+   * Only randomizes the top-level "hrid" field.
+   *
+   * @param jsonContent the JSON content as a string
+   * @return the JSON content with randomized HRID
+   */
+  public String randomizeHrid(String jsonContent) {
+    try {
+      var jsonObject = new JsonObject(jsonContent);
+      if (jsonObject.containsKey("hrid")) {
+        var hrid = jsonObject.getString("hrid");
+        if (hrid != null && !hrid.isEmpty()) {
+          jsonObject.put("hrid", addRandomSuffixToHridPrefix(hrid));
+        }
+      }
+      return jsonObject.encodePrettily();
+    } catch (Exception e) {
+      log.warn("Failed to randomize HRID in JSON content: {}", e.getMessage());
+      return jsonContent;
+    }
+  }
+
+  /**
+   * Adds a 4-character suffix to the HRID prefix.
+   * For example: "inst000000000001" becomes "instabcd000000000001"
+   * The suffix is the same for all HRIDs in this tenant.
+   *
+   * @param hrid the original HRID
+   * @return the HRID with suffix added to prefix
+   */
+  private String addRandomSuffixToHridPrefix(String hrid) {
+    // Find where the first digit starts
+    var indexOfFirstDigit = StringUtils.indexOfAny(hrid, "0123456789");
+
+    // Insert suffix between prefix and numeric part
+    var prefix = hrid.substring(0, indexOfFirstDigit);
+    var numericPart = hrid.substring(indexOfFirstDigit);
+
+    return prefix + hridSuffix + numericPart;
   }
 
   /**

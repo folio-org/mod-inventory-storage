@@ -153,9 +153,10 @@ public class TenantRefApi extends TenantAPI {
     tl.add("locations");
     tl.add("holdings-sources");
 
-    // Randomize instance IDs when loading instances
     var idRandomizer = new SampleDataIdRandomizer();
-    tl.withFilter(idRandomizer::randomizeInstanceId);
+
+    // Randomize instance IDs and HRIDs
+    tl.withFilter(json -> randomizeInstance(idRandomizer, json));
     tl.add("instances", INSTANCES);
     tl.add("bound-with/instances", INSTANCES);
 
@@ -200,8 +201,8 @@ public class TenantRefApi extends TenantAPI {
     tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
     tl.withIdContent();
 
-    // Randomize instance IDs for version 25.1 instances
-    tl.withFilter(idRandomizer::randomizeInstanceId);
+    // Randomize instance IDs and HRIDs for version 25.1 instances
+    tl.withFilter(json -> randomizeInstance(idRandomizer, json));
     tl.add("bound-with/instances-25.1", INSTANCES);
 
     // Update references in version 25.1 related entities
@@ -230,6 +231,11 @@ public class TenantRefApi extends TenantAPI {
       .onSuccess(notUsed -> log.info("Java migrations has been completed"))
       .onFailure(error -> log.error("Some java migrations failed", error))
       .mapEmpty();
+  }
+
+  private String randomizeInstance(SampleDataIdRandomizer idRandomizer, String json) {
+    var randomizedIdJson = idRandomizer.randomizeInstanceId(json);
+    return idRandomizer.randomizeHrid(randomizedIdJson);
   }
 
   private String servicePointUserFilter(String service, List<JsonObject> servicePoints) {

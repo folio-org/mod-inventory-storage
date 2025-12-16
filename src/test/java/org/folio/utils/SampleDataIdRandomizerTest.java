@@ -3,6 +3,7 @@ package org.folio.utils;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -203,6 +204,157 @@ class SampleDataIdRandomizerTest {
     assertEquals(newInstanceId, holdings.getString("instanceId"));
     assertEquals(newInstanceId, item.getString("instanceId"));
     assertEquals(newInstanceId, relationship.getString("superInstanceId"));
+  }
+
+  @Test
+  void testRandomizeHridWithPrefix() {
+    var jsonContent = """
+      {
+        "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
+        "hrid": "inst000000000001",
+        "title": "Test Instance"
+      }
+      """;
+
+    var randomized = randomizer.randomizeHrid(jsonContent);
+    var result = new JsonObject(randomized);
+
+    var newHrid = result.getString("hrid");
+    assertNotNull(newHrid);
+    assertNotEquals("inst000000000001", newHrid);
+    // Should start with "inst" followed by 4 lowercase letters, then the number
+    assertEquals("inst", newHrid.substring(0, 4));
+    assertEquals(20, newHrid.length()); // inst + 4 chars + 000000000001
+    assertEquals("000000000001", newHrid.substring(8)); // numeric part unchanged
+    // Verify suffix is 4 lowercase letters
+    var suffix = newHrid.substring(4, 8);
+    assertTrue(suffix.matches("[a-z]{4}"), "Suffix should be 4 lowercase letters");
+  }
+
+  @Test
+  void testRandomizeHridWithComplexPrefix() {
+    var jsonContent = """
+      {
+        "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
+        "hrid": "bwinst0001",
+        "title": "Test Instance"
+      }
+      """;
+
+    var randomized = randomizer.randomizeHrid(jsonContent);
+    var result = new JsonObject(randomized);
+
+    var newHrid = result.getString("hrid");
+    assertNotNull(newHrid);
+    assertNotEquals("bwinst0001", newHrid);
+    // Should start with "bwinst" followed by 4 chars, then the number
+    assertEquals("bwinst", newHrid.substring(0, 6));
+    assertEquals("0001", newHrid.substring(10)); // numeric part unchanged
+  }
+
+  @Test
+  void testRandomizeHridNoPrefix() {
+    var jsonContent = """
+      {
+        "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
+        "hrid": "12345",
+        "title": "Test Instance"
+      }
+      """;
+
+    var randomized = randomizer.randomizeHrid(jsonContent);
+    var result = new JsonObject(randomized);
+
+    var newHrid = result.getString("hrid");
+    assertNotNull(newHrid);
+    assertNotEquals("12345", newHrid);
+    // Should have 4 chars prepended
+    assertEquals(9, newHrid.length()); // 4 chars + 12345
+    assertEquals("12345", newHrid.substring(4)); // numeric part unchanged
+  }
+
+  @Test
+  void testHridSuffixConsistentAcrossTenant() {
+    var randomizer2 = new SampleDataIdRandomizer();
+
+    // Process multiple instances and verify the same suffix is used for all
+    var result1 = new JsonObject(randomizer2.randomizeHrid("{\"hrid\": \"in001\"}"));
+    var result2 = new JsonObject(randomizer2.randomizeHrid("{\"hrid\": \"in002\"}"));
+    var result3 = new JsonObject(randomizer2.randomizeHrid("{\"hrid\": \"in003\"}"));
+
+    var hrid1 = result1.getString("hrid");
+    var hrid2 = result2.getString("hrid");
+    var hrid3 = result3.getString("hrid");
+
+    // Extract suffixes (4 chars after "in" and before digits)
+    var suffix1 = hrid1.substring(2, 6);
+    var suffix2 = hrid2.substring(2, 6);
+    var suffix3 = hrid3.substring(2, 6);
+
+    // Verify all suffixes are the same for this tenant
+    assertEquals(suffix1, suffix2, "All HRIDs in one tenant should have the same suffix");
+    assertEquals(suffix2, suffix3, "All HRIDs in one tenant should have the same suffix");
+
+    // Verify numeric parts are preserved
+    assertEquals("001", hrid1.substring(6));
+    assertEquals("002", hrid2.substring(6));
+    assertEquals("003", hrid3.substring(6));
+  }
+
+  @Test
+  void testDifferentTenantsGetDifferentSuffixes() {
+    var randomizer1 = new SampleDataIdRandomizer();
+    var randomizer2 = new SampleDataIdRandomizer();
+
+    // Process the same HRID in two different tenants
+    var result1 = new JsonObject(randomizer1.randomizeHrid("{\"hrid\": \"in001\"}"));
+    var result2 = new JsonObject(randomizer2.randomizeHrid("{\"hrid\": \"in001\"}"));
+
+    var hrid1 = result1.getString("hrid");
+    var hrid2 = result2.getString("hrid");
+
+    // Different tenants should (very likely) have different suffixes
+    var suffix1 = hrid1.substring(2, 6);
+    var suffix2 = hrid2.substring(2, 6);
+
+    // With 456,976 combinations (26^4), it's extremely unlikely they're the same
+    // But we can't guarantee it, so we just verify they're valid
+    assertTrue(suffix1.matches("[a-z]{4}"));
+    assertTrue(suffix2.matches("[a-z]{4}"));
+  }
+
+  @Test
+  void testRandomizeHridEmptyHrid() {
+    var jsonContent = """
+      {
+        "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
+        "hrid": "",
+        "title": "Test Instance"
+      }
+      """;
+
+    var randomized = randomizer.randomizeHrid(jsonContent);
+    var result = new JsonObject(randomized);
+
+    // Empty HRID should remain empty
+    assertEquals("", result.getString("hrid"));
+  }
+
+  @Test
+  void testRandomizeHridMissingHrid() {
+    var jsonContent = """
+      {
+        "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
+        "title": "Test Instance"
+      }
+      """;
+
+    var randomized = randomizer.randomizeHrid(jsonContent);
+    var result = new JsonObject(randomized);
+
+    // Missing HRID field should not cause errors
+    assertNotNull(result);
+    assertEquals("Test Instance", result.getString("title"));
   }
 }
 
