@@ -9,10 +9,9 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +27,7 @@ import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.services.migration.BaseMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
+import org.folio.utils.SampleDataIdRandomizer;
 
 public class TenantRefApi extends TenantAPI {
 
@@ -91,7 +91,7 @@ public class TenantRefApi extends TenantAPI {
   public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers,
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
-    Future<Void> result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
+    var result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
                           ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(InventoryKafkaTopic.values(),
       tenantId(headers))
                           : Future.succeededFuture();
@@ -104,7 +104,7 @@ public class TenantRefApi extends TenantAPI {
                            Map<String, String> headers, Context vertxContext) {
 
     // create topics before loading data
-    Future<Integer> future = new KafkaAdminClientService(vertxContext.owner())
+    var future = new KafkaAdminClientService(vertxContext.owner())
       .createKafkaTopics(InventoryKafkaTopic.values(), tenantId)
       .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
 
@@ -122,15 +122,15 @@ public class TenantRefApi extends TenantAPI {
 
   private Future<Integer> loadDataForVersion20(TenantAttributes attributes, Map<String, String> headers,
                                                 Context vertxContext, Future<Integer> future) {
-    List<JsonObject> servicePoints = loadServicePoints();
-    if (servicePoints == null) {
+    var servicePoints = loadServicePoints();
+    if (servicePoints.isEmpty()) {
       return Future.failedFuture(new IOException("Failed to load service points"));
     }
 
-    TenantLoading tl = new TenantLoading();
+    var tl = new TenantLoading();
     configureReferenceData(tl);
     configureSampleData(tl, servicePoints);
-
+    
     return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
@@ -152,15 +152,23 @@ public class TenantRefApi extends TenantAPI {
     tl.add("location-units/libraries");
     tl.add("locations");
     tl.add("holdings-sources");
+
+    // Randomize instance IDs when loading instances
+    var idRandomizer = new SampleDataIdRandomizer();
+    tl.withFilter(idRandomizer::randomizeInstanceId);
     tl.add("instances", INSTANCES);
+    tl.add("bound-with/instances", INSTANCES);
+
+    // Update instanceId references in related entities
+    tl.withFilter(idRandomizer::updateInstanceIdReferences);
     tl.add("holdingsrecords", HOLDINGS);
     tl.add("items", ITEMS);
-    tl.add("bound-with/instances", INSTANCES);
     tl.add("bound-with/holdingsrecords", HOLDINGS);
     tl.add("bound-with/items", ITEMS);
     tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
     tl.withPostIgnore();
     tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
+
     tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
       .withPostOnly()
       .withAcceptStatus(422)
@@ -168,31 +176,40 @@ public class TenantRefApi extends TenantAPI {
   }
 
   private List<JsonObject> loadServicePoints() {
-    List<JsonObject> servicePoints = new LinkedList<>();
+    var servicePoints = new LinkedList<JsonObject>();
     try {
-      List<URL> urls = TenantLoading.getURLsFromClassPathDir(
+      var urls = TenantLoading.getURLsFromClassPathDir(
         REFERENCE_LEAD + "/service-points");
-      for (URL url : urls) {
-        InputStream stream = url.openStream();
-        String content = IOUtils.toString(stream, StandardCharsets.UTF_8);
+      for (var url : urls) {
+        var stream = url.openStream();
+        var content = IOUtils.toString(stream, StandardCharsets.UTF_8);
         stream.close();
         servicePoints.add(new JsonObject(content));
       }
       return servicePoints;
     } catch (URISyntaxException | IOException ex) {
-      return null;
+      return Collections.emptyList();
     }
   }
 
   private Future<Integer> loadDataForVersion25(TenantAttributes attributes, Map<String, String> headers,
                                                 Context vertxContext, Future<Integer> future) {
-    TenantLoading tl = new TenantLoading();
+    var idRandomizer = new SampleDataIdRandomizer();
+
+    var tl = new TenantLoading();
     tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
     tl.withIdContent();
+
+    // Randomize instance IDs for version 25.1 instances
+    tl.withFilter(idRandomizer::randomizeInstanceId);
     tl.add("bound-with/instances-25.1", INSTANCES);
+
+    // Update references in version 25.1 related entities
+    tl.withFilter(idRandomizer::updateInstanceIdReferences);
     tl.add("bound-with/holdingsrecords-25.1", HOLDINGS);
     tl.add("bound-with/items-25.1", ITEMS);
     tl.add("bound-with/bound-with-parts-25.1", BOUND_WITH_PARTS);
+
     return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
@@ -201,7 +218,7 @@ public class TenantRefApi extends TenantAPI {
 
     log.info("About to start java migrations...");
 
-    List<BaseMigrationService> javaMigrations = List.of(
+    var javaMigrations = List.of(
       new ItemShelvingOrderMigrationService(context, okapiHeaders));
 
     var startedMigrations = javaMigrations.stream()
@@ -216,16 +233,16 @@ public class TenantRefApi extends TenantAPI {
   }
 
   private String servicePointUserFilter(String service, List<JsonObject> servicePoints) {
-    JsonObject jsonInput = new JsonObject(service);
-    JsonObject jsonOutput = new JsonObject();
+    var jsonInput = new JsonObject(service);
+    var jsonOutput = new JsonObject();
     jsonOutput.put("userId", jsonInput.getString("id"));
-    JsonArray ar = new JsonArray();
-    for (JsonObject pt : servicePoints) {
+    var ar = new JsonArray();
+    for (var pt : servicePoints) {
       ar.add(pt.getString("id"));
     }
     jsonOutput.put("servicePointsIds", ar);
     jsonOutput.put("defaultServicePointId", ar.getString(0));
-    String res = jsonOutput.encodePrettily();
+    var res = jsonOutput.encodePrettily();
     log.info("servicePointUser result : {}", res);
     return res;
   }
