@@ -48,7 +48,9 @@ import org.testcontainers.kafka.KafkaContainer;
  * <p>mvn verify -B -Dtest=none -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=InstallUpgradeIT 2>&1 | tee /tmp/out
  */
 public class InstallUpgradeIT {
-  /** set true for debugging. */
+  /**
+   * set true for debugging.
+   */
   public static final boolean IS_LOG_ENABLED = false;
 
   public static final Network NETWORK = Network.newNetwork();
@@ -79,8 +81,8 @@ public class InstallUpgradeIT {
 
   @ClassRule(order = 3)
   public static final GenericContainer<?> MOD_MIS =
-    new GenericContainer<>(
-      new ImageFromDockerfile("mod-inventory-storage").withFileFromPath(".", Path.of(".")))
+    new GenericContainer<>(new ImageFromDockerfile("mod-inventory-storage")
+      .withFileFromPath(".", Path.of("..").toAbsolutePath()))
       .withNetwork(NETWORK)
       .withExposedPorts(8081)
       .withAccessToHost(true)
@@ -134,7 +136,7 @@ public class InstallUpgradeIT {
       .then()
       .statusCode(200)
       .body(is("\"OK\""));
-    
+
     setTenant("latest");
 
     JsonObject body = new JsonObject()
@@ -210,7 +212,7 @@ public class InstallUpgradeIT {
 
     given()
       .body("{'instances':{'startNumber':9}, 'holdings':{'startNumber':7}, 'items':{'startNumber':5}}"
-          .replace('\'', '"'))
+        .replace('\'', '"'))
       .when()
       .put("/hrid-settings-storage/hrid-settings")
       .then()
