@@ -5,10 +5,10 @@ USER root
 RUN apk upgrade --no-cache
 USER folio
 
-ENV VERTICLE_FILE mod-inventory-storage-server-fat.jar
+ENV VERTICLE_FILE=mod-inventory-storage-server-fat.jar
 
 # Set the location of the verticles
-ENV VERTICLE_HOME /usr/verticles
+ENV VERTICLE_HOME=/usr/verticles
 
 # Copy your fat jar to the container
 COPY mod-inventory-storage-server/target/${VERTICLE_FILE} ${VERTICLE_HOME}/${VERTICLE_FILE}
