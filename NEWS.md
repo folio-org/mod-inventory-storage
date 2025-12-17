@@ -43,6 +43,7 @@
 * Add source field to reference data and update existing loan types ([MODINVSTOR-1476](https://folio-org.atlassian.net/browse/MODINVSTOR-1476))
 * Add default empty values for S3_SECRET_ACCESS_KEY and S3_ACCESS_KEY_ID ([MODINVSTOR-1489](https://folio-org.atlassian.net/browse/MODINVSTOR-1489))
 * Implement sanitizers for HoldingsRecord, Instance, and Item ([MODINVSTOR-1497](https://folio-org.atlassian.net/browse/MODINVSTOR-1497))
+* Create a submodule with generated DTOs ([MODINVSTOR-1499](https://folio-org.atlassian.net/browse/MODINVSTOR-1499))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
