@@ -11,9 +11,10 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstitutionRepository;
-import org.folio.rest.jaxrs.model.Locinst;
+import org.folio.rest.jaxrs.model.LocationInstitution;
 
-public class InstitutionDomainEventPublisher extends AbstractDomainEventPublisher<Locinst, Locinst> {
+public class InstitutionDomainEventPublisher
+  extends AbstractDomainEventPublisher<LocationInstitution, LocationInstitution> {
 
   public InstitutionDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new InstitutionRepository(context, okapiHeaders),
@@ -21,7 +22,7 @@ public class InstitutionDomainEventPublisher extends AbstractDomainEventPublishe
   }
 
   @Override
-  protected Future<List<Pair<String, Locinst>>> getRecordIds(Collection<Locinst> institutions) {
+  protected Future<List<Pair<String, LocationInstitution>>> getRecordIds(Collection<LocationInstitution> institutions) {
     return succeededFuture(institutions.stream()
       .map(institution -> pair(institution.getId(), institution))
       .toList()
@@ -29,12 +30,12 @@ public class InstitutionDomainEventPublisher extends AbstractDomainEventPublishe
   }
 
   @Override
-  protected Locinst convertDomainToEvent(String id, Locinst institution) {
+  protected LocationInstitution convertDomainToEvent(String id, LocationInstitution institution) {
     return institution;
   }
 
   @Override
-  protected String getId(Locinst institution) {
+  protected String getId(LocationInstitution institution) {
     return institution.getId();
   }
 }

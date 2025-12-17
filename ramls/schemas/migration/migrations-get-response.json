@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Post migration job request",
+  "javaType": "org.folio.rest.jaxrs.model.AsyncMigrations",
   "type": "object",
   "properties": {
     "asyncMigrations": {

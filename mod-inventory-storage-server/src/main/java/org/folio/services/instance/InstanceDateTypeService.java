@@ -11,7 +11,7 @@ import javax.ws.rs.core.Response;
 import org.folio.persist.InstanceDateTypeRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.InstanceDateType;
-import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
+import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.rest.jaxrs.model.InstanceDateTypes;
 import org.folio.rest.jaxrs.resource.InstanceDateTypes.GetInstanceDateTypesResponse;
 import org.folio.rest.persist.PgUtil;
@@ -43,7 +43,7 @@ public class InstanceDateTypeService {
       "exact", offset, limit, okapiHeaders, vertxContext, GetInstanceDateTypesResponse.class);
   }
 
-  public Future<Response> patchInstanceDateTypes(String id, InstanceDateTypePatch entity) {
+  public Future<Response> patchInstanceDateTypes(String id, InstanceDateTypePatchRequest entity) {
     return consortiumDataCache.getConsortiumData(okapiHeaders)
       .compose(consortiumData -> {
         if (consortiumData.isEmpty() || ConsortiumUtils.isCentralTenant(okapiHeaders, consortiumData.get())) {
@@ -67,7 +67,7 @@ public class InstanceDateTypeService {
       });
   }
 
-  private Future<Response> doUpdate(String id, InstanceDateTypePatch entity) {
+  private Future<Response> doUpdate(String id, InstanceDateTypePatchRequest entity) {
     return repository.getById(id)
       .compose(oldDateType -> {
         final Promise<Response> putResult = promise();

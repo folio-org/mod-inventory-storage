@@ -22,7 +22,7 @@ import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
+import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitle;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.InstanceBulkProcessingUtil;
@@ -65,17 +65,17 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
       .toList();
   }
 
-  private List<PrecedingSucceedingTitle> extractPrecedingSucceedingTitles(JsonObject instanceJson) {
-    List<PrecedingSucceedingTitle> titles = new ArrayList<>();
+  private List<InstancePrecedingSucceedingTitle> extractPrecedingSucceedingTitles(JsonObject instanceJson) {
+    List<InstancePrecedingSucceedingTitle> titles = new ArrayList<>();
     instanceJson.getJsonArray(PRECEDING_TITLES_FIELD).stream()
       .map(JsonObject.class::cast)
-      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
+      .map(title -> title.mapTo(InstancePrecedingSucceedingTitle.class))
       .map(title -> title.withSucceedingInstanceId(instanceJson.getString(ID_FIELD)))
       .forEach(titles::add);
 
     instanceJson.getJsonArray(SUCCEEDING_TITLES_FIELD).stream()
       .map(JsonObject.class::cast)
-      .map(title -> title.mapTo(PrecedingSucceedingTitle.class))
+      .map(title -> title.mapTo(InstancePrecedingSucceedingTitle.class))
       .map(title -> title.withPrecedingInstanceId(instanceJson.getString(ID_FIELD)))
       .forEach(titles::add);
     return titles;
@@ -112,7 +112,7 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   }
 
   private Future<Void> updatePrecedingSucceedingTitles(Conn conn, List<InstanceWrapper> instances) {
-    List<PrecedingSucceedingTitle> precedingSucceedingTitles = instances.stream()
+    List<InstancePrecedingSucceedingTitle> precedingSucceedingTitles = instances.stream()
       .map(InstanceWrapper::precedingSucceedingTitles)
       .flatMap(Collection::stream)
       .toList();
@@ -152,5 +152,5 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     return instance.getId();
   }
 
-  record InstanceWrapper(Instance instance, List<PrecedingSucceedingTitle> precedingSucceedingTitles) {}
+  record InstanceWrapper(Instance instance, List<InstancePrecedingSucceedingTitle> precedingSucceedingTitles) {}
 }

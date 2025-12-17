@@ -11,8 +11,8 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemsPatch;
-import org.folio.rest.jaxrs.model.RetrieveDto;
+import org.folio.rest.jaxrs.model.ItemsPatchRequest;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
@@ -37,7 +37,7 @@ public class ItemStorageApi implements ItemStorage {
 
   @Validate
   @Override
-  public void postItemStorageItemsRetrieve(RetrieveDto entity, RoutingContext routingContext,
+  public void postItemStorageItemsRetrieve(RetrieveEntitiesDto entity, RoutingContext routingContext,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String query = entity.getQuery();
@@ -62,8 +62,10 @@ public class ItemStorageApi implements ItemStorage {
   }
 
   @Override
-  public void patchItemStorageItems(ItemsPatch entity, RoutingContext routingContext, Map<String, String> okapiHeaders,
-                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void patchItemStorageItems(ItemsPatchRequest entity, RoutingContext routingContext,
+                                    Map<String, String> okapiHeaders,
+                                    Handler<AsyncResult<Response>> asyncResultHandler,
+                                    Context vertxContext) {
     new ItemService(vertxContext, okapiHeaders).updateItems(entity.getItems())
       .onFailure(handleFailure(asyncResultHandler))
       .onComplete(asyncResultHandler);

@@ -8,7 +8,7 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 types:
-  publishReindexRecords: !include schemas/reindex-records/publishReindexRecords.json
+  publishReindexRecordsRequest: !include schemas/reindex-records/publishReindexRecords.json
   errors: !include raml-util/schemas/errors.schema
 
 /inventory-reindex-records/publish:
@@ -18,7 +18,7 @@ types:
     is: [ validate ]
     body:
       application/json:
-        type: publishReindexRecords
+        type: publishReindexRecordsRequest
         example:
           strict: false
           value: ../examples/reindex-records/publishReindexRecords.json

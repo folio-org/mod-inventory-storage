@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Note to be displayed in circulation processes",
+  "javaType": "org.folio.rest.jaxrs.model.CirculationNote",
   "type": "object",
   "additionalProperties": false,
   "properties": {

@@ -9,7 +9,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.folio.rest.jaxrs.model.PublishReindexRecords;
+import org.folio.rest.jaxrs.model.PublishReindexRecordsRequest;
 import org.folio.rest.jaxrs.resource.InventoryReindexRecordsPublish;
 import org.folio.services.holding.HoldingsService;
 import org.folio.services.instance.InstanceService;
@@ -18,7 +18,7 @@ import org.folio.services.item.ItemService;
 public class InventoryReindexRecordsPublishApi implements InventoryReindexRecordsPublish {
 
   @Override
-  public void postInventoryReindexRecordsPublish(PublishReindexRecords entity,
+  public void postInventoryReindexRecordsPublish(PublishReindexRecordsRequest entity,
                                                  Map<String, String> okapiHeaders,
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                                  Context vertxContext) {

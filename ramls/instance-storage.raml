@@ -9,12 +9,12 @@ documentation:
     content: <b>Storage for instances in the inventory</b>
 
 types:
-  instance: !include schemas/instance.json
-  instances: !include schemas/instances.json
-  marcJson: !include schemas/marc.json
-  instanceRelationship: !include schemas/instancerelationship.json
-  instanceRelationships: !include schemas/instancerelationships.json
-  retrieveDto: !include schemas/retrieveEntitiesDto.json
+  instance: !include schemas/instance-storage/instance.json
+  instances: !include schemas/instance-storage/instances.json
+  marcJson: !include schemas/instance-storage/marc.json
+  instanceRelationship: !include schemas/instance-storage/instancerelationship.json
+  instanceRelationships: !include schemas/instance-storage/instancerelationships.json
+  retrieveEntitiesDto: !include schemas/common/retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -152,7 +152,7 @@ resourceTypes:
         is: [ validate ]
         body:
           application/json:
-            type: retrieveDto
+            type: retrieveEntitiesDto
             example:
               strict: false
               value: !include examples/retrieveEntitiesDto.json

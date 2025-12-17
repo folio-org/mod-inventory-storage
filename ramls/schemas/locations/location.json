@@ -85,7 +85,8 @@
     "primaryServicePointObject": {
       "type": "object",
       "description": "Dereferenced object for primary service point. This should really just be called 'primaryServicePoint', but the field containing the ID of this object has that name -- it should really be called 'primaryServicePointId' -- so we need something different for this one.",
-      "$ref": "../servicepoint.json",
+      "$ref": "../service-points/servicepoint.json",
+      "javaType": "org.folio.rest.jaxrs.model.ServicePointVirtual",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "service-points",
@@ -114,7 +115,7 @@
       "description": "List of dereferenced service points",
       "items": {
         "type": "object",
-        "$ref": "../servicepoint.json"
+        "$ref": "../service-points/servicepoint.json"
       },
       "readonly": true,
       "folio:isVirtual": true,

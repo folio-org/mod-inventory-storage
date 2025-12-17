@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage material types of the system
 
 types:
-  mtype: !include schemas/materialtype.json
-  mtypes: !include schemas/materialtypes.json
+  materialType: !include schemas/material-types/materialtype.json
+  materialTypes: !include schemas/material-types/materialtypes.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -27,8 +27,8 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/materialtypes.json
       exampleItem: !include examples/materialtype.json
-      schemaCollection: mtypes
-      schemaItem: mtype
+      schemaCollection: materialTypes
+      schemaItem: materialType
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -53,5 +53,5 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/materialtype.json
-        schema: mtype
+        schema: materialType
 

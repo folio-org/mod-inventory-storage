@@ -24,7 +24,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.MarcJson;
-import org.folio.rest.jaxrs.model.RetrieveDto;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PgUtil;
@@ -382,7 +382,7 @@ public class InstanceStorageApi implements InstanceStorage {
 
   @Validate
   @Override
-  public void postInstanceStorageInstancesRetrieve(RetrieveDto entity,
+  public void postInstanceStorageInstancesRetrieve(RetrieveEntitiesDto entity,
                                                    RoutingContext routingContext,
                                                    Map<String, String> okapiHeaders,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,

@@ -14,8 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.persist.LibraryRepository;
 import org.folio.rest.exceptions.BadRequestException;
-import org.folio.rest.jaxrs.model.Loclib;
-import org.folio.rest.jaxrs.model.Loclibs;
+import org.folio.rest.jaxrs.model.LocationLibraries;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsLibrariesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsLibrariesByIdResponse;
@@ -47,7 +47,7 @@ public class LibraryService {
     try {
       return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
         .map(results -> {
-          var collection = new Loclibs();
+          var collection = new LocationLibraries();
           collection.setLoclibs(results.getResults());
           collection.setTotalRecords(results.getResultInfo().getTotalRecords());
           return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
@@ -60,17 +60,17 @@ public class LibraryService {
   }
 
   public Future<Response> getById(String id) {
-    return PgUtil.getById(LIBRARY_TABLE, Loclib.class, id, okapiHeaders, context,
+    return PgUtil.getById(LIBRARY_TABLE, LocationLibrary.class, id, okapiHeaders, context,
       GetLocationUnitsLibrariesByIdResponse.class);
   }
 
-  public Future<Response> create(Loclib loclib) {
+  public Future<Response> create(LocationLibrary loclib) {
     return PgUtil.post(LIBRARY_TABLE, loclib, okapiHeaders, context,
         PostLocationUnitsLibrariesResponse.class)
       .onSuccess(domainEventService.publishCreated());
   }
 
-  public Future<Response> update(String id, Loclib loclib) {
+  public Future<Response> update(String id, LocationLibrary loclib) {
     if (loclib.getId() != null && !loclib.getId().equals(id)) {
       return succeededFuture(
         PutLocationUnitsLibrariesByIdResponse.respond400WithTextPlain(

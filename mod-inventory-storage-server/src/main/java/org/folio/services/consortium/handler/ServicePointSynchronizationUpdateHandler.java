@@ -2,7 +2,7 @@ package org.folio.services.consortium.handler;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.processor.ServicePointSynchronizationEventProcessor;
 import org.folio.services.consortium.processor.ServicePointSynchronizationUpdateEventProcessor;
@@ -18,7 +18,7 @@ public class ServicePointSynchronizationUpdateHandler extends ServicePointSynchr
 
   @Override
   protected ServicePointSynchronizationEventProcessor getServicePointSynchronizationProcessor(
-    DomainEvent<Servicepoint> domainEvent) {
+    DomainEvent<ServicePoint> domainEvent) {
 
     return new ServicePointSynchronizationUpdateEventProcessor(domainEvent);
   }

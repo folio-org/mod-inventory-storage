@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Response schema for oai-pmh view",
+  "javaType": "org.folio.rest.jaxrs.model.OaiPmhInstances",
   "type": "object",
   "properties": {
     "instance": {

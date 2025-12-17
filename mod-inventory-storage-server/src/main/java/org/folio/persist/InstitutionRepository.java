@@ -7,17 +7,17 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
 import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.jaxrs.model.Locinst;
+import org.folio.rest.jaxrs.model.LocationInstitution;
 import org.folio.rest.persist.interfaces.Results;
 
-public class InstitutionRepository extends AbstractRepository<Locinst> {
+public class InstitutionRepository extends AbstractRepository<LocationInstitution> {
 
   public InstitutionRepository(Context context,
                                Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), INSTITUTION_TABLE, Locinst.class);
+    super(postgresClient(context, okapiHeaders), INSTITUTION_TABLE, LocationInstitution.class);
   }
 
-  public Future<Results<Locinst>> getByQuery(String cql, int offset, int limit, String totalRecords,
+  public Future<Results<LocationInstitution>> getByQuery(String cql, int offset, int limit, String totalRecords,
                                              boolean includeShadow) throws FieldException {
     var cqlForIsShadowField = Boolean.FALSE.equals(includeShadow) ? "isShadow=false" : null;
     var cqlWrapper = getFetchCqlWrapper(cql, offset, limit, totalRecords, cqlForIsShadowField);

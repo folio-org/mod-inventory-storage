@@ -57,6 +57,7 @@
               <useLongIntegers>true</useLongIntegers>
               <includeJsr303Annotations>false</includeJsr303Annotations>
               <sourceType>jsonschema</sourceType>
+              <removeOldOutput>true</removeOldOutput>
             </configuration>
           </execution>
         </executions>

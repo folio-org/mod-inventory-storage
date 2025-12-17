@@ -10,12 +10,12 @@ documentation:
       location units like institutions, campuses, and libraries
 
 types:
-  locinst: !include schemas/locinst.json
-  locinsts: !include schemas/locinsts.json
-  loccamp: !include schemas/loccamp.json
-  loccamps: !include schemas/loccamps.json
-  loclib: !include schemas/loclib.json
-  loclibs: !include schemas/loclibs.json
+  locationInstitution: !include schemas/location-units/locinst.json
+  locationInstitutions: !include schemas/location-units/locinsts.json
+  locationCampus: !include schemas/location-units/loccamp.json
+  locationCampuses: !include schemas/location-units/loccamps.json
+  locationLibrary: !include schemas/location-units/loclib.json
+  locationLibraries: !include schemas/location-units/loclibs.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -34,8 +34,8 @@ resourceTypes:
       collection:
         exampleCollection: !include examples/locinsts.json
         exampleItem: !include examples/locinst.json
-        schemaCollection: locinsts
-        schemaItem: locinst
+        schemaCollection: locationInstitutions
+        schemaItem: locationInstitution
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -66,7 +66,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/locinst.json
-          schema: locinst
+          schema: locationInstitution
       get:
       put:
       delete:
@@ -75,8 +75,8 @@ resourceTypes:
       collection:
         exampleCollection: !include examples/loccamps.json
         exampleItem: !include examples/loccamp.json
-        schemaCollection: loccamps
-        schemaItem: loccamp
+        schemaCollection: locationCampuses
+        schemaItem: locationCampus
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -107,7 +107,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loccamp.json
-          schema: loccamp
+          schema: locationCampus
       get:
       put:
       delete:
@@ -116,8 +116,8 @@ resourceTypes:
       collection:
         exampleCollection: !include examples/loclibs.json
         exampleItem: !include examples/loclib.json
-        schemaCollection: loclibs
-        schemaItem: loclib
+        schemaCollection: locationLibraries
+        schemaItem: locationLibrary
     get:
       is: [
         searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -148,7 +148,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/loclib.json
-          schema: loclib
+          schema: locationLibrary
       get:
       put:
       delete:

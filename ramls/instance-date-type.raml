@@ -11,7 +11,7 @@ traits:
 
 types:
   instanceDateTypes: !include schemas/instance-date-types/instanceDateTypes.json
-  instanceDateTypePatch: !include schemas/instance-date-types/instanceDateTypePatch.json
+  instanceDateTypePatchRequest: !include schemas/instance-date-types/instanceDateTypePatch.json
   errors: !include raml-util/schemas/errors.schema
 
 /instance-date-types:
@@ -52,7 +52,7 @@ types:
         is: [ validate ]
         body:
           application/json:
-            type: instanceDateTypePatch
+            type: instanceDateTypePatchRequest
             example:
               strict: false
               value: examples/instance-date-types/instanceDateTypePatch.json

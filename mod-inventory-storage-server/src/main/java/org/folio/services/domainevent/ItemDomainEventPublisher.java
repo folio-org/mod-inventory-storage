@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
+import static org.folio.rest.jaxrs.model.PublishReindexRecordsRequest.RecordType;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
@@ -24,7 +25,6 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.PublishReindexRecords;
 import org.folio.rest.support.CollectionUtil;
 
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
@@ -69,7 +69,7 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
       return succeededFuture();
     }
 
-    return itemReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.ITEM, items);
+    return itemReindexPublisher.publishReindexRecords(key, RecordType.ITEM, items);
   }
 
   @Override
@@ -101,6 +101,11 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
+  protected String getId(Item item) {
+    return item.getId();
+  }
+
+  @Override
   protected List<Triple<String, ItemWithInstanceId, ItemWithInstanceId>> mapOldRecordsToNew(
     List<Pair<String, Item>> oldRecords, List<Pair<String, Item>> newRecords) {
 
@@ -112,11 +117,6 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
           oldRecordPair.getKey(), oldRecordPair.getValue()),
         convertDomainToEvent(newRecordPair.getKey(), newRecordPair.getValue()));
     }).toList();
-  }
-
-  @Override
-  protected String getId(Item item) {
-    return item.getId();
   }
 
   @Override

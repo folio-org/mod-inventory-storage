@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A relationship of a given type between a super-instance and a sub-instance",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceRelationship",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "superInstanceId": {
+      "description": "ID (a UUID) of the super-instance. References an Instance record",
+      "type": "string"
+    },
+    "subInstanceId": {
+      "description": "ID (a UUID) of the sub-instance. References an Instance record",
+      "type": "string"
+    },
+    "instanceRelationshipTypeId": {
+      "description": "ID (a UUID) of the InstanceRelationshipType. References controlled vocabulary InstanceRelationshipTypes. Indicates the type of relationship between two Instance records.",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "superInstanceId",
+    "subInstanceId",
+    "instanceRelationshipTypeId"
+  ]
+}
+

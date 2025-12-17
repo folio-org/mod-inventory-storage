@@ -29,7 +29,7 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.SimpleKafkaProducerManager;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.jaxrs.model.PublishReindexRecords;
+import org.folio.rest.jaxrs.model.PublishReindexRecordsRequest;
 import org.folio.rest.tools.utils.TenantTool;
 
 public class CommonDomainEventPublisher<T> {
@@ -158,7 +158,7 @@ public class CommonDomainEventPublisher<T> {
   }
 
   public Future<Void> publishReindexRecords(String key,
-                                            PublishReindexRecords.RecordType recordType,
+                                            PublishReindexRecordsRequest.RecordType recordType,
                                             List<T> records) {
     var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(okapiHeaders), recordType, records);
     return publish(reindexKafkaTopic(), key, domainEvent);

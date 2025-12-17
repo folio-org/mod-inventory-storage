@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Response schema for Inventory updated instances ids view",
+  "javaType": "org.folio.rest.jaxrs.model.InventoryHierarchyUpdatedInstanceIds",
   "type": "object",
   "properties": {
     "instanceId": {
       "description": "Inventory updated instances ids",
       "type": "string",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "source": {
       "description": "Source of metadata and format of the underlying record to the instance record",

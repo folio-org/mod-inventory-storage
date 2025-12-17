@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A collection of item records",
+  "javaType": "org.folio.rest.jaxrs.model.Items",
   "type": "object",
   "properties": {
     "items": {

@@ -9,9 +9,9 @@ documentation:
     content: This documents the streaming API for the data needed for Inventory Storage, RTAC and other modules
 
 types:
-  inventoryUpdatedInstanceIds: !include schemas/inventory-hierarchy/inventory-updated-instance-ids.json
-  inventoryInstanceIds: !include schemas/inventory-hierarchy/inventory-instance-ids.json
-  inventoryItemsAndHoldings: !include schemas/inventory-hierarchy/inventory-instance-records.json
+  inventoryHierarchyUpdatedInstanceIds: !include schemas/inventory-hierarchy/inventory-updated-instance-ids.json
+  inventoryHierarchyInstanceIds: !include schemas/inventory-hierarchy/inventory-instance-ids.json
+  inventoryHierarchyInstanceRecords: !include schemas/inventory-hierarchy/inventory-instance-records.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -25,7 +25,7 @@ resourceTypes:
     displayName: Stream API to get instances ids of updated oai records in Inventory
     type:
       collection-get:
-       schemaCollection: inventoryUpdatedInstanceIds
+       schemaCollection: inventoryHierarchyUpdatedInstanceIds
        exampleCollection: !include examples/inventory-updated-instance-ids.json
     get:
       description: Stream updated instances ids for Inventory
@@ -68,11 +68,11 @@ resourceTypes:
       body:
         application/json:
           description: List of instances Ids with skip suppressed from discovery configuration parameter
-          type: inventoryInstanceIds
+          type: inventoryHierarchyInstanceIds
           example: !include examples/inventory-instance-ids.json
       responses:
         200:
           body:
             application/json:
-              type: inventoryItemsAndHoldings
+              type: inventoryHierarchyInstanceRecords
               example: !include examples/inventory-items-and-holdings.json

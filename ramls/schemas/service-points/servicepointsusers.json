@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of service points users",
+  "javaType": "org.folio.rest.jaxrs.model.ServicePointsUsers",
+  "type": "object",
+  "properties": {
+    "servicePointsUsers": {
+      "description": "List of service points users",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "servicepointsuser.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "servicePointsUsers",
+    "totalRecords"
+  ]
+}

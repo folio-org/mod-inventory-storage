@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A collection of holdings note types",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsNoteTypes",
   "type": "object",
   "properties": {
     "holdingsNoteTypes": {

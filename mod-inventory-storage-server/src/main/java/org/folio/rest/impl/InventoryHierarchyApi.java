@@ -12,7 +12,7 @@ import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.InventoryInstanceIds;
+import org.folio.rest.jaxrs.model.InventoryHierarchyInstanceIds;
 import org.folio.rest.jaxrs.resource.InventoryHierarchy;
 
 public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements InventoryHierarchy {
@@ -94,7 +94,8 @@ public class InventoryHierarchyApi extends AbstractInstanceRecordsApi implements
 
   @Validate
   @Override
-  public void postInventoryHierarchyItemsAndHoldings(InventoryInstanceIds entity, RoutingContext routingContext,
+  public void postInventoryHierarchyItemsAndHoldings(InventoryHierarchyInstanceIds entity,
+                                                     RoutingContext routingContext,
                                                      Map<String, String> okapiHeaders,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "An item record",
+  "javaType": "org.folio.rest.jaxrs.model.Item",
   "type": "object",
   "properties": {
     "id": {
@@ -76,10 +77,11 @@
     "itemLevelCallNumberTypeId": {
       "type": "string",
       "description": "Identifies the source of the call number, e.g., LCC, Dewey, NLM, etc.",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "effectiveCallNumberComponents": {
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.EffectiveCallNumberComponents",
       "description": "Elements of a full call number generated from the item or holding",
       "readonly": true,
       "properties": {
@@ -101,7 +103,7 @@
         "typeId": {
           "type": "string",
           "description": "Effective Call Number Type Id is the call number type id of the item, if available, otherwise that of the holding.",
-          "$ref": "../uuid.json",
+          "$ref": "../common/uuid.json",
           "readonly": true
         }
       },
@@ -200,7 +202,7 @@
       "description": "Item's material type",
       "type": "object",
       "folio:$ref": "materialtype.json",
-      "javaType": "org.folio.rest.jaxrs.model.materialTypeVirtual",
+      "javaType": "org.folio.rest.jaxrs.model.MaterialTypeVirtual",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "material-types",
@@ -223,6 +225,7 @@
     "permanentLocation": {
       "description": "The permanent shelving location in which an item resides",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.PermanentLocationVirtual",
       "folio:$ref": "location.json",
       "readonly": true,
       "folio:isVirtual": true,
@@ -238,6 +241,7 @@
     "temporaryLocation": {
       "description": "Temporary location, shelving location, or holding which is a physical place where items are stored, or an Online location",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.TemporaryLocationVirtual",
       "folio:$ref": "location.json",
       "readonly": true,
       "folio:isVirtual": true,
@@ -249,7 +253,7 @@
     "effectiveLocationId": {
       "type": "string",
       "description": "Read only current home location for the item.",
-      "$ref": "../uuid.json",
+      "$ref": "../common/uuid.json",
       "readonly": true
     },
     "electronicAccess": {
@@ -263,14 +267,14 @@
     "inTransitDestinationServicePointId": {
       "description": "Service point an item is intended to be transited to (should only be present when in transit)",
       "type": "string",
-      "$ref" : "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "statisticalCodeIds": {
       "type": "array",
       "description": "List of statistical code IDs",
       "items": {
         "type": "string",
-        "$ref" : "../uuid.json"
+        "$ref": "../common/uuid.json"
       },
       "uniqueItems": true
     },
@@ -293,6 +297,7 @@
       "type": "object",
       "description": "Fake property for mod-graphql to determine record relationships.",
       "folio:$ref": "holdingsrecord.json",
+      "javaType": "org.folio.rest.jaxrs.model.HoldingsRecord2Virtual",
       "readonly": true,
       "folio:isVirtual": true,
       "folio:linkBase": "holdings-storage/holdings",

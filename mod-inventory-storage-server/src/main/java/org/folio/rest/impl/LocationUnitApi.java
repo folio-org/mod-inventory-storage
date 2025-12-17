@@ -9,9 +9,9 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Loclib;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.resource.LocationUnits;
 import org.folio.services.locationunit.CampusService;
 import org.folio.services.locationunit.InstitutionService;
@@ -35,7 +35,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsInstitutions(Locinst entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsInstitutions(LocationInstitution entity, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
     new InstitutionService(vertxContext, okapiHeaders)
@@ -68,7 +68,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsInstitutionsById(String id, Locinst entity, Map<String, String> okapiHeaders,
+  public void putLocationUnitsInstitutionsById(String id, LocationInstitution entity, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
     new InstitutionService(vertxContext, okapiHeaders)
@@ -103,7 +103,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsCampuses(Loccamp entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsCampuses(LocationCampus entity, Map<String, String> okapiHeaders,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
     new CampusService(vertxContext, okapiHeaders)
@@ -136,7 +136,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsCampusesById(String id, Loccamp entity, Map<String, String> okapiHeaders,
+  public void putLocationUnitsCampusesById(String id, LocationCampus entity, Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
     new CampusService(vertxContext, okapiHeaders)
@@ -169,7 +169,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void postLocationUnitsLibraries(Loclib entity, Map<String, String> okapiHeaders,
+  public void postLocationUnitsLibraries(LocationLibrary entity, Map<String, String> okapiHeaders,
                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                          Context vertxContext) {
     new LibraryService(vertxContext, okapiHeaders)
@@ -202,7 +202,7 @@ public class LocationUnitApi implements LocationUnits {
 
   @Validate
   @Override
-  public void putLocationUnitsLibrariesById(String id, Loclib entity, Map<String, String> okapiHeaders,
+  public void putLocationUnitsLibrariesById(String id, LocationLibrary entity, Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
     new LibraryService(vertxContext, okapiHeaders)

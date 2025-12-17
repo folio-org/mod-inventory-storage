@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Get job by id response",
+  "javaType": "org.folio.rest.jaxrs.model.ReindexJob",
   "type": "object",
   "properties": {
     "id": {
       "description": "Job id",
       "type": "string",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "published": {
       "description": "Number of records that was published so far",

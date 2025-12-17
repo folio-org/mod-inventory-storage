@@ -9,8 +9,8 @@ documentation:
     content: <b>Storage for preceding/succeeding titles in the inventory</b>
 
 types:
-  precedingSucceedingTitle: !include schemas/instanceprecedingsucceedingtitle.json
-  precedingSucceedingTitles: !include schemas/instanceprecedingsucceedingtitles.json
+  instancePrecedingSucceedingTitle: !include schemas/instance-preceding-succeeding-titles/instanceprecedingsucceedingtitle.json
+  instancePrecedingSucceedingTitles: !include schemas/instance-preceding-succeeding-titles/instanceprecedingsucceedingtitles.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -27,8 +27,8 @@ resourceTypes:
     type:
       collection:
         exampleCollection: !include  examples/precedingsucceedingtitles_get.json
-        schemaCollection: precedingSucceedingTitles
-        schemaItem: precedingSucceedingTitle
+        schemaCollection: instancePrecedingSucceedingTitles
+        schemaItem: instancePrecedingSucceedingTitle
         exampleItem: !include  examples/precedingsucceedingtitle_get.json
     get:
       is: [pageable,
@@ -70,7 +70,7 @@ resourceTypes:
       type:
         collection-item:
           exampleItem: !include examples/precedingsucceedingtitle_get.json
-          schema: precedingSucceedingTitle
+          schema: instancePrecedingSucceedingTitle
       get:
         description: Get a preceding/succeeding title by id
         responses:
@@ -120,7 +120,7 @@ resourceTypes:
         is: [validate]
         body:
           application/json:
-            type: precedingSucceedingTitles
+            type: instancePrecedingSucceedingTitles
             example:
               strict: false
               value: !include examples/precedingsucceedingtitles_get.json

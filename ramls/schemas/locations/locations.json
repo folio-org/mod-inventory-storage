@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "List of (shelf) locations.",
+  "javaType": "org.folio.rest.jaxrs.model.Locations",
   "type": "object",
   "properties": {
     "locations": {

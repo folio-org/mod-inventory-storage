@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of contributor types",
+  "javaType": "org.folio.rest.jaxrs.model.ContributorTypes",
+  "type": "object",
+  "properties": {
+    "contributorTypes": {
+      "description": "List of contributor types",
+      "id": "contributorType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "contributortype.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "contributorTypes",
+    "totalRecords"
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.OaiPmhInstance",
   "description": "Oai pmh view response schema",
   "properties": {
     "items": {
@@ -9,6 +10,7 @@
       "items": [
         {
           "type": "object",
+          "javaType": "org.folio.rest.jaxrs.model.OaiPmhInstanceItem",
           "properties": {
             "id": {
               "description": "itemId",
@@ -20,10 +22,12 @@
             },
             "location": {
               "description": "Item effective location",
+              "javaType": "org.folio.rest.jaxrs.model.OaiPmhLocation",
               "type": "object",
               "properties": {
                 "location": {
                   "type": "object",
+                  "javaType": "org.folio.rest.jaxrs.model.OaiPmhLocationLocation",
                   "description": "location",
                   "properties": {
                     "campusId": {
@@ -67,6 +71,7 @@
             },
             "callNumber": {
               "description": "Item call number components",
+              "javaType": "org.folio.rest.jaxrs.model.OaiPmhCallNumber",
               "type": "object",
               "properties": {
                 "prefix": {
@@ -107,6 +112,7 @@
               "items": [
                 {
                   "type": "object",
+                  "javaType": "org.folio.rest.jaxrs.model.OaiPmhElectronicAccessItem",
                   "properties": {
                     "uri": {
                       "description": "electronic access URI",

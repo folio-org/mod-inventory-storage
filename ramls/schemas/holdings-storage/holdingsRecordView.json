@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A holdings record with virtual fields",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecordView",
   "type": "object",
   "extends" : {
     "$ref" : "holdingsRecord.json"
@@ -9,6 +10,7 @@
     "permanentLocation": {
       "description": "The permanent shelving location in which an item resides. This is a virtual field, accessible only when using mod-graphql.",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.PermanentLocationVirtual",
       "folio:$ref": "location.json",
       "readonly": true,
       "folio:isVirtual": true,
@@ -20,7 +22,7 @@
     "illPolicy": {
       "type": "object",
       "description": "expanded ILL Policy object corresponding to illPolicyId. This is a virtual field, accessible only when using mod-graphql.",
-      "javaType": "org.folio.rest.jaxrs.model.IllPolicyVirtual",
+      "javaType": "org.folio.rest.jaxrs.model.TemporaryLocationVirtual",
       "folio:$ref": "illpolicy.json",
       "readonly": true,
       "folio:isVirtual": true,
@@ -60,6 +62,7 @@
     "holdingsInstance": {
       "description": "Instance of holding record. This is a virtual field, accessible only when using mod-graphql.",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.InstanceVirtual",
       "folio:$ref": "instance.json",
       "readonly": true,
       "folio:isVirtual": true,

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of InstanceRelationship records",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceRelationships",
+  "type": "object",
+  "properties": {
+    "instanceRelationships": {
+      "description": "List of instance relationships",
+      "id": "instanceRelationships",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instancerelationship.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instanceRelationships",
+    "totalRecords"
+  ]
+}
+

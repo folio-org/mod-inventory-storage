@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.folio.persist.AsyncMigrationJobRepository;
-import org.folio.rest.jaxrs.model.AsyncMigration;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
@@ -47,7 +46,7 @@ public final class AsyncMigrationJobService {
   public static AsyncMigrations getAvailableMigrations() {
     AsyncMigrations migrations = new AsyncMigrations();
     MIGRATION_JOB_RUNNERS.stream()
-      .map(jobs -> new AsyncMigration()
+      .map(jobs -> new AsyncMigrationJobRequest()
         .withMigrations(Collections.singletonList(jobs.getMigrationName()))
         .withAffectedEntities(jobs.getAffectedEntities()))
       .forEach(migration -> {

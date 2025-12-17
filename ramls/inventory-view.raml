@@ -9,7 +9,7 @@ documentation:
     content: Inventory view endpoints
 
 types:
-  inventoryViewInstance: !include schemas/inventory-view-instance.json
+  instanceView: !include schemas/instance-storage/instance-view.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -23,7 +23,7 @@ resourceTypes:
 /inventory-view/instances:
   type:
     collection-stream:
-     schemaCollection: inventoryViewInstance
+     schemaCollection: instanceView
      exampleCollection: !include examples/inventory-view-instances.json
   get:
     description: Get instances by id with their holdings and items

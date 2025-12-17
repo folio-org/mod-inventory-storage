@@ -10,14 +10,14 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  holdingsrecords_post: !include schemas/holdings-storage/holdingsRecords_post.json
+  holdingsRecordsPostRequest: !include schemas/holdings-storage/holdingsRecords_post.json
 /holdings-storage/batch/synchronous-unsafe:
   displayName: Holdings Batch Upload Sync API With Optimistic Locking Disabled
   post:
     description: "Create or update a collection of holdings in a single synchronous request; if any holding fails the complete batch will be rejected (all or nothing). Environment variable DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is required, see https://github.com/folio-org/raml-module-builder#environment-variables for details. The _version property is ignored, optimistic locking is disabled - this is known to lead to data loss in some cases, don't use in production, you have been warned!"
     body:
       application/json:
-        type: holdingsrecords_post
+        type: holdingsRecordsPostRequest
         example: !include examples/holdings-storage/holdingsRecords_post.json
     responses:
       201:

@@ -6,10 +6,10 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Mtype;
-import org.folio.rest.jaxrs.model.Mtypes;
+import org.folio.rest.jaxrs.model.MaterialType;
+import org.folio.rest.jaxrs.model.MaterialTypes;
 
-public class MaterialTypeApi extends BaseApi<Mtype, Mtypes>
+public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
   implements org.folio.rest.jaxrs.resource.MaterialTypes {
 
   public static final String MATERIAL_TYPE_TABLE = "material_type";
@@ -25,7 +25,7 @@ public class MaterialTypeApi extends BaseApi<Mtype, Mtypes>
 
   @Validate
   @Override
-  public void postMaterialTypes(Mtype entity, Map<String, String> okapiHeaders,
+  public void postMaterialTypes(MaterialType entity, Map<String, String> okapiHeaders,
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostMaterialTypesResponse.class);
   }
@@ -58,7 +58,7 @@ public class MaterialTypeApi extends BaseApi<Mtype, Mtypes>
 
   @Validate
   @Override
-  public void putMaterialTypesByMaterialtypeId(String id, Mtype entity,
+  public void putMaterialTypesByMaterialtypeId(String id, MaterialType entity,
                                                Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
@@ -72,12 +72,12 @@ public class MaterialTypeApi extends BaseApi<Mtype, Mtypes>
   }
 
   @Override
-  protected Class<Mtype> getEntityClass() {
-    return Mtype.class;
+  protected Class<MaterialType> getEntityClass() {
+    return MaterialType.class;
   }
 
   @Override
-  protected Class<Mtypes> getEntityCollectionClass() {
-    return Mtypes.class;
+  protected Class<MaterialTypes> getEntityCollectionClass() {
+    return MaterialTypes.class;
   }
 }

@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage service points in the system
 
 types:
-  servicepoint: !include schemas/servicepoint.json
-  servicepoints: !include schemas/servicepoints.json
+  servicePoint: !include schemas/service-points/servicepoint.json
+  servicePoints: !include schemas/service-points/servicepoints.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -27,8 +27,8 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/servicepoints.json
       exampleItem: !include examples/servicepoint.json
-      schemaCollection: servicepoints
-      schemaItem: servicepoint
+      schemaCollection: servicePoints
+      schemaItem: servicePoint
   get:
     is: [
       searchable: { description: "with valid searchable fields", example: "name=aaa"},
@@ -65,7 +65,7 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/servicepoint.json
-        schema: servicepoint
+        schema: servicePoint
     put:
         description: Update a service point
         is: [validate]

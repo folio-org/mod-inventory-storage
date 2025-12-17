@@ -9,8 +9,8 @@ documentation:
     content: This documents the API calls that can be made to query and manage loan types of the system
 
 types:
-  loantype: !include schemas/loantype.json
-  loantypes: !include schemas/loantypes.json
+  loanType: !include schemas/loan-types/loantype.json
+  loanTypes: !include schemas/loan-types/loantypes.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -28,8 +28,8 @@ resourceTypes:
     collection:
       exampleCollection: !include examples/loantypes.json
       exampleItem: !include examples/loantype.json
-      schemaCollection: loantypes
-      schemaItem: loantype
+      schemaCollection: loanTypes
+      schemaItem: loanType
   get:
     is: [
       searchable: {description: "with valid searchable fields", example: "name=aaa"},
@@ -54,4 +54,4 @@ resourceTypes:
     type:
       collection-item:
         exampleItem: !include examples/loantype.json
-        schema: loantype
+        schema: loanType

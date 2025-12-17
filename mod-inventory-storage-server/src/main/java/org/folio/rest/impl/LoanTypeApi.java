@@ -6,11 +6,11 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Loantype;
-import org.folio.rest.jaxrs.model.Loantypes;
+import org.folio.rest.jaxrs.model.LoanType;
+import org.folio.rest.jaxrs.model.LoanTypes;
 import org.folio.rest.persist.PgUtil;
 
-public class LoanTypeApi extends BaseApi<Loantype, Loantypes>
+public class LoanTypeApi extends BaseApi<LoanType, LoanTypes>
   implements org.folio.rest.jaxrs.resource.LoanTypes {
 
   public static final String LOAN_TYPE_TABLE = "loan_type";
@@ -33,7 +33,7 @@ public class LoanTypeApi extends BaseApi<Loantype, Loantypes>
 
   @Validate
   @Override
-  public void postLoanTypes(Loantype entity, Map<String, String> okapiHeaders,
+  public void postLoanTypes(LoanType entity, Map<String, String> okapiHeaders,
                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostLoanTypesResponse.class);
   }
@@ -44,7 +44,7 @@ public class LoanTypeApi extends BaseApi<Loantype, Loantypes>
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
-    PgUtil.getById(LOAN_TYPE_TABLE, Loantype.class, loantypeId, okapiHeaders, vertxContext,
+    PgUtil.getById(LOAN_TYPE_TABLE, LoanType.class, loantypeId, okapiHeaders, vertxContext,
       GetLoanTypesByLoantypeIdResponse.class, asyncResultHandler);
   }
 
@@ -60,7 +60,7 @@ public class LoanTypeApi extends BaseApi<Loantype, Loantypes>
 
   @Validate
   @Override
-  public void putLoanTypesByLoantypeId(String loantypeId, Loantype entity,
+  public void putLoanTypesByLoantypeId(String loantypeId, LoanType entity,
                                        Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                        Context vertxContext) {
@@ -74,12 +74,12 @@ public class LoanTypeApi extends BaseApi<Loantype, Loantypes>
   }
 
   @Override
-  protected Class<Loantype> getEntityClass() {
-    return Loantype.class;
+  protected Class<LoanType> getEntityClass() {
+    return LoanType.class;
   }
 
   @Override
-  protected Class<Loantypes> getEntityCollectionClass() {
-    return Loantypes.class;
+  protected Class<LoanTypes> getEntityCollectionClass() {
+    return LoanTypes.class;
   }
 }

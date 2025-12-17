@@ -16,8 +16,8 @@ import javax.ws.rs.core.Response;
 import lombok.extern.log4j.Log4j2;
 import org.folio.persist.InstitutionRepository;
 import org.folio.rest.exceptions.BadRequestException;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Locinsts;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationInstitutions;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsInstitutionsResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsInstitutionsByIdResponse;
@@ -52,7 +52,7 @@ public class InstitutionService {
     try {
       return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
         .map(results -> {
-          var collection = new Locinsts();
+          var collection = new LocationInstitutions();
           collection.setLocinsts(results.getResults());
           collection.setTotalRecords(results.getResultInfo().getTotalRecords());
           return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
@@ -65,17 +65,17 @@ public class InstitutionService {
   }
 
   public Future<Response> getById(String id) {
-    return PgUtil.getById(INSTITUTION_TABLE, Locinst.class, id, okapiHeaders,
+    return PgUtil.getById(INSTITUTION_TABLE, LocationInstitution.class, id, okapiHeaders,
       vertxContext, GetLocationUnitsInstitutionsByIdResponse.class);
   }
 
-  public Future<Response> create(Locinst institution) {
+  public Future<Response> create(LocationInstitution institution) {
     return PgUtil.post(INSTITUTION_TABLE, institution, okapiHeaders,
         vertxContext, PostLocationUnitsInstitutionsResponse.class)
       .onSuccess(domainEventService.publishCreated());
   }
 
-  public Future<Response> update(String id, Locinst institution) {
+  public Future<Response> update(String id, LocationInstitution institution) {
     if (Objects.nonNull(institution.getId()) && !institution.getId().equals(id)) {
       return succeededFuture(
         PutLocationUnitsInstitutionsByIdResponse.respond400WithTextPlain(

@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Inventory Storage records for reindex",
+  "javaType": "org.folio.rest.jaxrs.model.PublishReindexRecordsRequest",
   "type": "object",
   "properties": {
     "id": {
       "type": "string",
       "description": "UUID representing this range of records",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "recordType": {
       "description": "Inventory storage record type (e.g. instance, item, holding)",
@@ -16,6 +17,7 @@
     "recordIdsRange": {
       "description": "Range of records IDs",
       "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.RecordIdsRange",
       "properties": {
         "from": {
           "type": "string",

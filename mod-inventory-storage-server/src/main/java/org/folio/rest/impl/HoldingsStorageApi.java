@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecordView;
-import org.folio.rest.jaxrs.model.RetrieveDto;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
@@ -96,7 +96,7 @@ public class HoldingsStorageApi implements HoldingsStorage {
 
   @Validate
   @Override
-  public void postHoldingsStorageHoldingsRetrieve(RetrieveDto entity,
+  public void postHoldingsStorageHoldingsRetrieve(RetrieveEntitiesDto entity,
                                                   RoutingContext routingContext,
                                                   Map<String, String> okapiHeaders,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,

@@ -11,7 +11,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.ServicePointRepository;
 import org.folio.rest.exceptions.NotFoundException;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.services.domainevent.ServicePointDomainEventPublisher;
 import org.slf4j.Logger;
@@ -28,9 +28,9 @@ public class ServicePointService {
     this.servicePointDomainEventPublisher = new ServicePointDomainEventPublisher(vertxContext, okapiHeaders);
   }
 
-  public Future<Response> updateServicePoint(String servicePointId, Servicepoint entity) {
+  public Future<Response> updateServicePoint(String servicePointId, ServicePoint entity) {
     log.debug("updateServicePoint:: parameters servicePointId: {}, entity: "
-      + "Servicepoint(id={}, name={})", servicePointId, entity.getId(), entity.getName());
+      + "ServicePoint(id={}, name={})", servicePointId, entity.getId(), entity.getName());
     entity.setId(servicePointId);
 
     return servicePointRepository.getById(servicePointId)
@@ -48,7 +48,7 @@ public class ServicePointService {
       .map(x -> ItemStorage.PutItemStorageItemsByItemIdResponse.respond204());
   }
 
-  public Future<Response> createServicePoint(String servicePointId, Servicepoint servicePoint) {
+  public Future<Response> createServicePoint(String servicePointId, ServicePoint servicePoint) {
     servicePoint.setId(servicePointId);
     return servicePointRepository.save(servicePointId, servicePoint)
       .compose(notUsed ->
@@ -64,7 +64,7 @@ public class ServicePointService {
       .compose(this::deleteServicePoint);
   }
 
-  private Future<Boolean> deleteServicePoint(Servicepoint servicePoint) {
+  private Future<Boolean> deleteServicePoint(ServicePoint servicePoint) {
     if (servicePoint == null) {
       log.error("deleteServicePoint:: service point was not found");
       return succeededFuture(false);

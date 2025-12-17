@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Get collection of async jobs",
+  "javaType": "org.folio.rest.jaxrs.model.AsyncMigrationJobCollection",
   "type": "object",
   "properties": {
     "jobs": {

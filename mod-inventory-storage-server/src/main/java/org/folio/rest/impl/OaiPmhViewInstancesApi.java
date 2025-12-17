@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.OaipmhInstanceIds;
+import org.folio.rest.jaxrs.model.OaiPmhInstanceIds;
 import org.folio.rest.jaxrs.resource.OaiPmhView;
 
 public class OaiPmhViewInstancesApi extends AbstractInstanceRecordsApi implements OaiPmhView {
@@ -46,7 +46,7 @@ public class OaiPmhViewInstancesApi extends AbstractInstanceRecordsApi implement
 
   @Validate
   @Override
-  public void postOaiPmhViewEnrichedInstances(OaipmhInstanceIds entity, RoutingContext routingContext,
+  public void postOaiPmhViewEnrichedInstances(OaiPmhInstanceIds entity, RoutingContext routingContext,
                                               Map<String, String> okapiHeaders,
                                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 

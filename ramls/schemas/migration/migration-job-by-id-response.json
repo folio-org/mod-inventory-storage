@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Get job by id response",
+  "javaType": "org.folio.rest.jaxrs.model.AsyncMigrationJob",
   "type": "object",
   "properties": {
     "id": {
       "description": "Job id",
       "type": "string",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "migrations": {
       "description": "Name of migration procedure",

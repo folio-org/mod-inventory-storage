@@ -9,7 +9,7 @@ import io.vertx.core.Handler;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
+import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.rest.jaxrs.resource.InstanceDateTypes;
 import org.folio.services.instance.InstanceDateTypeService;
 
@@ -28,8 +28,10 @@ public class InstanceDateTypeApi implements InstanceDateTypes {
 
   @Validate
   @Override
-  public void patchInstanceDateTypesById(String id, InstanceDateTypePatch entity, Map<String, String> okapiHeaders,
-                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void patchInstanceDateTypesById(String id, InstanceDateTypePatchRequest entity,
+                                         Map<String, String> okapiHeaders,
+                                         Handler<AsyncResult<Response>> asyncResultHandler,
+                                         Context vertxContext) {
     new InstanceDateTypeService(vertxContext, okapiHeaders)
       .patchInstanceDateTypes(id, entity)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))

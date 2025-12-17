@@ -15,8 +15,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.persist.CampusRepository;
 import org.folio.rest.exceptions.BadRequestException;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Loccamps;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationCampuses;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesByIdResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesResponse;
 import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsCampusesByIdResponse;
@@ -46,7 +46,7 @@ public class CampusService {
     try {
       return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
         .map(results -> {
-          var collection = new Loccamps();
+          var collection = new LocationCampuses();
           collection.setLoccamps(results.getResults());
           collection.setTotalRecords(results.getResultInfo().getTotalRecords());
           return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
@@ -59,17 +59,17 @@ public class CampusService {
   }
 
   public Future<Response> getById(String id) {
-    return PgUtil.getById(CAMPUS_TABLE, Loccamp.class, id, okapiHeaders, context,
+    return PgUtil.getById(CAMPUS_TABLE, LocationCampus.class, id, okapiHeaders, context,
       GetLocationUnitsCampusesByIdResponse.class);
   }
 
-  public Future<Response> create(Loccamp loccamp) {
+  public Future<Response> create(LocationCampus loccamp) {
     return PgUtil.post(CAMPUS_TABLE, loccamp, okapiHeaders, context,
         PostLocationUnitsCampusesResponse.class)
       .onSuccess(domainEventService.publishCreated());
   }
 
-  public Future<Response> update(String id, Loccamp loccamp) {
+  public Future<Response> update(String id, LocationCampus loccamp) {
     if (loccamp.getId() != null && !loccamp.getId().equals(id)) {
       return succeededFuture(
         PutLocationUnitsCampusesByIdResponse.respond400WithTextPlain(

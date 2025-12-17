@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "The status of the item",
+  "javaType": "org.folio.rest.jaxrs.model.ItemStatus",
   "type": "object",
   "additionalProperties": false,
   "properties": {

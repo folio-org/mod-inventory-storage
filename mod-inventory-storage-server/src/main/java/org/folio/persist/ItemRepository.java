@@ -23,7 +23,7 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -79,7 +79,7 @@ public class ItemRepository extends AbstractRepository<Item> {
     });
   }
 
-  public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatch> items) {
+  public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatchRequest> items) {
     try {
       if (items.size() > MAX_ENTITIES) {
         return Future.failedFuture(buildItemsSizeException(items.size()));

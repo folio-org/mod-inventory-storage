@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A collection of reindex jobs",
+  "javaType": "org.folio.rest.jaxrs.model.ReindexJobs",
   "type": "object",
   "properties": {
     "reindexJobs": {

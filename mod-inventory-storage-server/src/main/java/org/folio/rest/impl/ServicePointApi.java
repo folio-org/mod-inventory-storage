@@ -15,9 +15,8 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
-import org.folio.rest.jaxrs.model.Servicepoint;
-import org.folio.rest.jaxrs.model.Servicepoints;
+import org.folio.rest.jaxrs.model.ServicePoint;
+import org.folio.rest.jaxrs.model.ServicePoints;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.PostgresClientFactory;
@@ -34,9 +33,9 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   private static final String ECS_ROUTING_QUERY_FILTER = "cql.allRecords=1 NOT ecsRequestRouting=true";
   private static final Logger logger = LogManager.getLogger();
 
-  public static String validateServicePoint(Servicepoint svcpt) {
+  public static String validateServicePoint(ServicePoint svcpt) {
 
-    HoldShelfExpiryPeriod holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
+    var holdShelfExpiryPeriod = svcpt.getHoldShelfExpiryPeriod();
     boolean pickupLocation = svcpt.getPickupLocation() == null ? Boolean.FALSE : svcpt.getPickupLocation();
 
     if (!pickupLocation && holdShelfExpiryPeriod != null) {
@@ -56,13 +55,13 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                Context vertxContext) {
 
     query = updateGetServicePointsQuery(query, includeRoutingServicePoints);
-    PgUtil.get(SERVICE_POINT_TABLE, Servicepoint.class, Servicepoints.class,
+    PgUtil.get(SERVICE_POINT_TABLE, ServicePoint.class, ServicePoints.class,
       query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postServicePoints(Servicepoint entity,
+  public void postServicePoints(ServicePoint entity,
                                 Map<String, String> okapiHeaders,
                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                 Context vertxContext) {
@@ -85,7 +84,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
-  private boolean validateAndPrepareEntity(Servicepoint entity,
+  private boolean validateAndPrepareEntity(ServicePoint entity,
                                            Handler<AsyncResult<Response>> asyncResultHandler) {
     String validateSvcptResult = validateServicePoint(entity);
     if (validateSvcptResult != null) {
@@ -102,7 +101,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     return true;
   }
 
-  private void handlePostServicePointFailure(Throwable throwable, Servicepoint entity,
+  private void handlePostServicePointFailure(Throwable throwable, ServicePoint entity,
                                               Handler<AsyncResult<Response>> asyncResultHandler) {
     String message = logAndSaveError(throwable);
     if (isDuplicate(message)) {
@@ -146,7 +145,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Validate
   @Override
   public void putServicePointsByServicepointId(String servicepointId,
-                                               Servicepoint entity, Map<String, String> okapiHeaders,
+                                               ServicePoint entity, Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
 
@@ -180,7 +179,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
 
-    PgUtil.getById(SERVICE_POINT_TABLE, Servicepoint.class, servicepointId, okapiHeaders, vertxContext,
+    PgUtil.getById(SERVICE_POINT_TABLE, ServicePoint.class, servicepointId, okapiHeaders, vertxContext,
       GetServicePointsByServicepointIdResponse.class, asyncResultHandler);
   }
 

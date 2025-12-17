@@ -3,14 +3,14 @@ package org.folio.services.item;
 import java.util.Objects;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 
 public class PatchData {
   private Item oldItem;
   private Item newItem;
   private HoldingsRecord oldHoldings;
   private HoldingsRecord newHoldings;
-  private ItemPatch patchRequest;
+  private ItemPatchRequest patchRequest;
 
   public Item getOldItem() {
     return oldItem;
@@ -28,7 +28,7 @@ public class PatchData {
     return newHoldings;
   }
 
-  public ItemPatch getPatchRequest() {
+  public ItemPatchRequest getPatchRequest() {
     return patchRequest;
   }
 
@@ -48,7 +48,7 @@ public class PatchData {
     this.newHoldings = newHoldings;
   }
 
-  public void setPatchRequest(ItemPatch patchRequest) {
+  public void setPatchRequest(ItemPatchRequest patchRequest) {
     this.patchRequest = patchRequest;
   }
 

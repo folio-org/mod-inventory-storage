@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of statistical codes",
+  "javaType": "org.folio.rest.jaxrs.model.StatisticalCodes",
+  "type": "object",
+  "properties": {
+    "statisticalCodes": {
+      "description": "List of statistical codes",
+      "id": "statisticalCode",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "statisticalcode.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "statisticalCode",
+    "totalRecords"
+  ]
+}
+
+

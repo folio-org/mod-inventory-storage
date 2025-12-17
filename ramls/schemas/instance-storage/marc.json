@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "MARC record representation, compatible with MarcEdit's JSON export and import",
+  "javaType": "org.folio.rest.jaxrs.model.MarcJson",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "id (UUID) of this MARC record, equals to the id of the instance record",
+      "type": "string"
+    },
+    "leader": {
+      "description": "The first field of a MARC record. Fixed length (24 characters). Data elements that primarily provide information for the processing of the record.",
+      "type": "string",
+      "minLength": 24,
+      "maxLength": 24
+    },
+    "fields": {
+      "description": "The variable fields of a MARC record, each identified by a three-character numeric tag.",
+      "type": "array",
+      "minItems": 2
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "leader",
+    "fields"
+  ]
+}
+

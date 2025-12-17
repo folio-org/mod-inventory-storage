@@ -3,6 +3,7 @@ package org.folio.services.domainevent;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
+import static org.folio.rest.jaxrs.model.PublishReindexRecordsRequest.RecordType;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
 
@@ -15,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.PublishReindexRecords;
 
 public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<Instance, Instance> {
 
@@ -34,7 +34,7 @@ public class InstanceDomainEventPublisher extends AbstractDomainEventPublisher<I
       return succeededFuture();
     }
 
-    return instanceReindexPublisher.publishReindexRecords(key, PublishReindexRecords.RecordType.INSTANCE, instances);
+    return instanceReindexPublisher.publishReindexRecords(key, RecordType.INSTANCE, instances);
   }
 
   @Override

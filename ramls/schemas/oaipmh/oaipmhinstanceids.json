@@ -1,13 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Define format of request data with instances ids",
+  "javaType": "org.folio.rest.jaxrs.model.OaiPmhInstanceIds",
   "type": "object",
   "properties": {
     "instanceIds": {
       "description": "OAI-PMH instances identifiers",
       "type": "array",
       "items": {
-        "$ref": "../uuid.json"
+        "$ref": "../common/uuid.json"
       }
     },
     "skipSuppressedFromDiscoveryRecords": {

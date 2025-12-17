@@ -9,7 +9,7 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.InventoryViewInstance;
+import org.folio.rest.jaxrs.model.InstanceView;
 import org.folio.rest.jaxrs.resource.InventoryViewInstances;
 import org.folio.rest.support.EndpointHandler;
 import org.folio.services.instance.InstanceService;
@@ -28,7 +28,7 @@ public class InventoryViewApi implements InventoryViewInstances {
         .getInventoryViewInstancesWithBoundedItems(offset, limit, query)
         .onComplete(EndpointHandler.handle(asyncResultHandler));
     } else {
-      streamGet("instance_holdings_item_view", InventoryViewInstance.class, query,
+      streamGet("instance_holdings_item_view", InstanceView.class, query,
         offset, limit, null, "instances", routingContext, okapiHeaders, vertxContext);
     }
   }

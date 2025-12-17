@@ -10,7 +10,7 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  holdingsrecords_post: !include schemas/holdings-storage/holdingsRecords_post.json
+  holdingsRecordsPostRequest: !include schemas/holdings-storage/holdingsRecords_post.json
 /holdings-storage/batch/synchronous:
   displayName: Holdings Batch Upload Sync API
   post:
@@ -23,7 +23,7 @@ types:
         default: false
     body:
       application/json:
-        type: holdingsrecords_post
+        type: holdingsRecordsPostRequest
         example: !include examples/holdings-storage/holdingsRecords_post.json
     responses:
       201:

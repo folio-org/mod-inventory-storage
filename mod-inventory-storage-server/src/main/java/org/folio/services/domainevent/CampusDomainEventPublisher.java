@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.CampusRepository;
-import org.folio.rest.jaxrs.model.Loccamp;
+import org.folio.rest.jaxrs.model.LocationCampus;
 
-public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<Loccamp, Loccamp> {
+public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<LocationCampus, LocationCampus> {
 
   public CampusDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
     super(new CampusRepository(context, okapiHeaders),
@@ -20,7 +20,7 @@ public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<Loc
   }
 
   @Override
-  protected Future<List<Pair<String, Loccamp>>> getRecordIds(Collection<Loccamp> campuses) {
+  protected Future<List<Pair<String, LocationCampus>>> getRecordIds(Collection<LocationCampus> campuses) {
     return Future.succeededFuture(campuses.stream()
       .map(campus -> pair(campus.getId(), campus))
       .toList()
@@ -28,12 +28,12 @@ public class CampusDomainEventPublisher extends AbstractDomainEventPublisher<Loc
   }
 
   @Override
-  protected Loccamp convertDomainToEvent(String id, Loccamp campus) {
+  protected LocationCampus convertDomainToEvent(String id, LocationCampus campus) {
     return campus;
   }
 
   @Override
-  protected String getId(Loccamp campus) {
+  protected String getId(LocationCampus campus) {
     return campus.getId();
   }
 }

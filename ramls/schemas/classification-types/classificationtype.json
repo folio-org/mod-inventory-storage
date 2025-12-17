@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A classification type",
+  "javaType": "org.folio.rest.jaxrs.model.ClassificationType",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "label for the classification type",
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "description": "label indicating where the classification type entry originates from, i.e. 'folio' or 'local'"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

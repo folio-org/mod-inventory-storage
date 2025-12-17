@@ -6,7 +6,7 @@ import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.impl.ServicePointApi;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.ServicePointEventType;
@@ -18,15 +18,14 @@ public class ServicePointSynchronizationCreateEventProcessor
   private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationCreateEventProcessor.class);
 
-  public ServicePointSynchronizationCreateEventProcessor(DomainEvent<Servicepoint> domainEvent) {
+  public ServicePointSynchronizationCreateEventProcessor(DomainEvent<ServicePoint> domainEvent) {
     super(ServicePointEventType.SERVICE_POINT_CREATED, domainEvent);
   }
 
   @Override
   protected Future<String> processEvent(ServicePointService servicePointService, String servicePointId) {
     try {
-      Servicepoint servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
-        .mapTo(Servicepoint.class);
+      var servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity()).mapTo(ServicePoint.class);
 
       return servicePointService.createServicePoint(servicePointId, servicePoint)
         .map(servicePointId);
@@ -39,8 +38,8 @@ public class ServicePointSynchronizationCreateEventProcessor
   @Override
   protected boolean validateEventEntity() {
     try {
-      Servicepoint servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
-        .mapTo(Servicepoint.class);
+      ServicePoint servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+        .mapTo(ServicePoint.class);
       if (servicePoint == null) {
         log.warn("validateEventEntity:: failed to find new service point entity");
         return false;

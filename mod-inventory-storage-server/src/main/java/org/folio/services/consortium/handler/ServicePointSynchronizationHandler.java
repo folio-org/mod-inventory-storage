@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.SynchronizationContext;
@@ -68,5 +68,5 @@ public abstract class ServicePointSynchronizationHandler
   }
 
   protected abstract ServicePointSynchronizationEventProcessor getServicePointSynchronizationProcessor(
-    DomainEvent<Servicepoint> domainEvent);
+    DomainEvent<ServicePoint> domainEvent);
 }

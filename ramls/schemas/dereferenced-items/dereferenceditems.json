@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of dereferenced item records",
+  "javaType": "org.folio.rest.jaxrs.model.DereferencedItems",
+  "type": "object",
+  "properties": {
+    "dereferencedItems": {
+      "description": "List of dereferenced item records. Dereferenced means that related record data is added (instanceRecord, holdingsRecord, materialType, permanentLoanType, temporaryLoanType, permanentLocation, temporaryLocation, effectiveLocation) and id fields are removed (holdingsRecordId, instanceId, materialTypeId, permanentLocationId, temporaryLocationId, effectiveLocationId, permanentLoanTypeId, temporaryLoanTypeId).",
+      "id": "items",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "dereferenceditem.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "dereferencedItems",
+    "totalRecords"
+  ]
+}

@@ -61,7 +61,7 @@ import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.Conn;
@@ -156,7 +156,7 @@ public class ItemService {
     return itemRepository.updateBatch(allItemsToUpdate, conn);
   }
 
-  public Future<Response> updateItems(List<ItemPatch> items) {
+  public Future<Response> updateItems(List<ItemPatchRequest> items) {
     if (CollectionUtils.isEmpty(items)) {
       return Future.succeededFuture(
         ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain("Expected at least one item to update"));
@@ -261,7 +261,7 @@ public class ItemService {
     }
   }
 
-  private Pair<List<PatchData>, List<Item>> convertItemPatchesToPatchData(List<ItemPatch> items) {
+  private Pair<List<PatchData>, List<Item>> convertItemPatchesToPatchData(List<ItemPatchRequest> items) {
     var itemList = new ArrayList<Item>(items.size());
     var patchDataList = items.stream()
       .map(itemPatch -> {
@@ -276,7 +276,7 @@ public class ItemService {
     return Pair.of(patchDataList, itemList);
   }
 
-  private Future<Response> executeItemsUpdate(List<ItemPatch> items, List<PatchData> patchDataToUpdate) {
+  private Future<Response> executeItemsUpdate(List<ItemPatchRequest> items, List<PatchData> patchDataToUpdate) {
     if (patchDataToUpdate.isEmpty()) {
       return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
     }
@@ -638,7 +638,7 @@ public class ItemService {
       .toList());
   }
 
-  private void removeReadOnlyFields(ItemPatch itemPatch) {
+  private void removeReadOnlyFields(ItemPatchRequest itemPatch) {
     var additionalProperties = itemPatch.getAdditionalProperties();
     if (additionalProperties != null) {
       READ_ONLY_FIELDS.forEach(additionalProperties::remove);

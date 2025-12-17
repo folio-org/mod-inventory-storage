@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.services.consortium.SynchronizationContext;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.ServicePointEventType;
@@ -22,11 +22,11 @@ public abstract class ServicePointSynchronizationEventProcessor {
   private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationEventProcessor.class);
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
-  protected final DomainEvent<Servicepoint> domainEvent;
+  protected final DomainEvent<ServicePoint> domainEvent;
   private final ServicePointEventType servicePointEventType;
 
   protected ServicePointSynchronizationEventProcessor(ServicePointEventType eventType,
-    DomainEvent<Servicepoint> domainEvent) {
+                                                      DomainEvent<ServicePoint> domainEvent) {
     this.servicePointEventType = eventType;
     this.domainEvent = domainEvent;
   }
@@ -45,6 +45,11 @@ public abstract class ServicePointSynchronizationEventProcessor {
     return processMemberTenants(eventKey, context, future);
   }
 
+  protected abstract Future<String> processEvent(ServicePointService servicePointService,
+                                                 String servicePointId);
+
+  protected abstract boolean validateEventEntity();
+
   private boolean shouldProcessEvent(SynchronizationContext context) {
     return isCentralTenant(domainEvent.getTenant(), context.consortiaData())
            && isEcsTlrFeatureEnabled()
@@ -52,7 +57,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
   }
 
   private Future<String> processMemberTenants(String eventKey, SynchronizationContext context,
-                                               Future<String> future) {
+                                              Future<String> future) {
     var vertxContext = context.vertx().getOrCreateContext();
     var headers = context.headers();
     for (String memberTenant : context.consortiaData().memberTenants()) {
@@ -68,17 +73,12 @@ public abstract class ServicePointSynchronizationEventProcessor {
     return future;
   }
 
-  protected abstract Future<String> processEvent(ServicePointService servicePointService,
-    String servicePointId);
-
-  protected abstract boolean validateEventEntity();
-
   private boolean isEcsTlrFeatureEnabled() {
     return Boolean.parseBoolean(Environment.getEnvVar(ECS_TLR_FEATURE_ENABLED, FALSE.toString()));
   }
 
   private Future<Map<String, String>> prepareHeaders(Map<String, String> headers,
-    String memberTenant) {
+                                                     String memberTenant) {
 
     var map = new HashMap<>(headers);
     map.put(TENANT, memberTenant);

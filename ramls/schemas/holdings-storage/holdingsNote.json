@@ -8,7 +8,7 @@
     "holdingsNoteTypeId": {
       "type": "string",
       "description": "ID of the type of note",
-      "$ref" : "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "note": {
       "type": "string",

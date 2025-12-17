@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A holdings records source",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecordsSource",
   "type": "object",
   "properties": {
     "id": {
       "type": "string",
       "description": "The unique ID of the holdings records source; UUID",
-      "$ref": "../uuid.json"
+      "$ref": "../common/uuid.json"
     },
     "name": {
       "type": "string",

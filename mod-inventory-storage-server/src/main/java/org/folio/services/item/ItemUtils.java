@@ -17,7 +17,7 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 
@@ -35,7 +35,7 @@ public final class ItemUtils {
     throw new UnsupportedOperationException("Utility class");
   }
 
-  public static Future<Void> validateRequiredFields(List<ItemPatch> items) {
+  public static Future<Void> validateRequiredFields(List<ItemPatchRequest> items) {
     var errors = new ArrayList<Error>();
 
     for (var itemPatch : items) {
@@ -107,7 +107,7 @@ public final class ItemUtils {
       .withParameters(parameters);
   }
 
-  public static void transferEffectiveValuesToPatch(Item item, ItemPatch itemPatch) {
+  public static void transferEffectiveValuesToPatch(Item item, ItemPatchRequest itemPatch) {
     var additionalProperties = itemPatch.getAdditionalProperties();
 
     if (item.getEffectiveLocationId() != null) {
@@ -140,9 +140,9 @@ public final class ItemUtils {
     }
   }
 
-  public static void normalizeItemFields(List<ItemPatch> items) {
+  public static void normalizeItemFields(List<ItemPatchRequest> items) {
     items.stream()
-      .map(ItemPatch::getAdditionalProperties)
+      .map(ItemPatchRequest::getAdditionalProperties)
       .filter(props -> Objects.nonNull(props) && !props.isEmpty())
       .forEach(props -> {
         normalizeProperty(props, ORDER, Integer::valueOf);

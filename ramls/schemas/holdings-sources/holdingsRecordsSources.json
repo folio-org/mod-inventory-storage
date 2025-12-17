@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "A collection of holdings records sources",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecordsSources",
   "type": "object",
   "properties": {
     "holdingsRecordsSources": {

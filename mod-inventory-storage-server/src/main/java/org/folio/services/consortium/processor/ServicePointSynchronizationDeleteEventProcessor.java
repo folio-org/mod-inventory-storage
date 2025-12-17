@@ -3,7 +3,7 @@ package org.folio.services.consortium.processor;
 import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.ServicePointEventType;
@@ -15,7 +15,7 @@ public class ServicePointSynchronizationDeleteEventProcessor
   private static final Logger log = LogManager.getLogger(
     ServicePointSynchronizationDeleteEventProcessor.class);
 
-  public ServicePointSynchronizationDeleteEventProcessor(DomainEvent<Servicepoint> domainEvent) {
+  public ServicePointSynchronizationDeleteEventProcessor(DomainEvent<ServicePoint> domainEvent) {
     super(ServicePointEventType.SERVICE_POINT_DELETED, domainEvent);
   }
 
@@ -28,7 +28,7 @@ public class ServicePointSynchronizationDeleteEventProcessor
   protected boolean validateEventEntity() {
     try {
       var servicePoint = PostgresClient.pojo2JsonObject(domainEvent.getOldEntity())
-        .mapTo(Servicepoint.class);
+        .mapTo(ServicePoint.class);
       if (servicePoint == null) {
         log.warn("validateEventEntity:: service point is null");
         return false;

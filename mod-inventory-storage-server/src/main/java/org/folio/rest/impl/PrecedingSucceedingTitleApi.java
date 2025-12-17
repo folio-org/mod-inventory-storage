@@ -12,8 +12,8 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.PrecedingSucceedingTitle;
-import org.folio.rest.jaxrs.model.PrecedingSucceedingTitles;
+import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitle;
+import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitles;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.tools.utils.ValidationHelper;
@@ -27,14 +27,14 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
   public void getPrecedingSucceedingTitles(String totalRecords, int offset, int limit, String query,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.get(PRECEDING_SUCCEEDING_TITLE_TABLE, PrecedingSucceedingTitle.class, PrecedingSucceedingTitles.class, query,
-      offset, limit,
+    PgUtil.get(PRECEDING_SUCCEEDING_TITLE_TABLE, InstancePrecedingSucceedingTitle.class,
+      InstancePrecedingSucceedingTitles.class, query,      offset, limit,
       okapiHeaders, vertxContext, GetPrecedingSucceedingTitlesResponse.class, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postPrecedingSucceedingTitles(PrecedingSucceedingTitle entity,
+  public void postPrecedingSucceedingTitles(InstancePrecedingSucceedingTitle entity,
                                             Map<String, String> okapiHeaders,
                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -52,7 +52,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
                                                                        Map<String, String> okapiHeaders,
                                                                        Handler<AsyncResult<Response>> resultHandler,
                                                                        Context vertxContext) {
-    PgUtil.getById(PRECEDING_SUCCEEDING_TITLE_TABLE, PrecedingSucceedingTitle.class, precedingSucceedingTitleId,
+    PgUtil.getById(PRECEDING_SUCCEEDING_TITLE_TABLE, InstancePrecedingSucceedingTitle.class, precedingSucceedingTitleId,
       okapiHeaders, vertxContext, GetPrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.class,
       resultHandler);
   }
@@ -60,7 +60,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
   @Validate
   @Override
   public void putPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
-                                                                       PrecedingSucceedingTitle entity,
+                                                                       InstancePrecedingSucceedingTitle entity,
                                                                        Map<String, String> okapiHeaders,
                                                                        Handler<AsyncResult<Response>> resultHandler,
                                                                        Context vertxContext) {
@@ -85,7 +85,8 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
 
   @Validate
   @Override
-  public void putPrecedingSucceedingTitlesInstancesByInstanceId(String instanceId, PrecedingSucceedingTitles entity,
+  public void putPrecedingSucceedingTitlesInstancesByInstanceId(String instanceId,
+                                                                InstancePrecedingSucceedingTitles entity,
                                                                 Map<String, String> okapiHeaders,
                                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                                 Context vertxContext) {
@@ -100,10 +101,10 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
     }
   }
 
-  private boolean validatePrecedingSucceedingTitles(List<PrecedingSucceedingTitle> precedingSucceedingTitles,
+  private boolean validatePrecedingSucceedingTitles(List<InstancePrecedingSucceedingTitle> precedingSucceedingTitles,
                                                     String instanceId,
                                                     Handler<AsyncResult<Response>> asyncResultHandler) {
-    for (PrecedingSucceedingTitle precedingSucceedingTitle : precedingSucceedingTitles) {
+    for (var precedingSucceedingTitle : precedingSucceedingTitles) {
       if (!titleIsLinkedToInstanceId(precedingSucceedingTitle, instanceId)) {
         var validationErrorMessage =
           createValidationErrorMessage("precedingInstanceId or succeedingInstanceId", "",
@@ -117,12 +118,14 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
     return true;
   }
 
-  private boolean titleIsLinkedToInstanceId(PrecedingSucceedingTitle precedingSucceedingTitle, String instanceId) {
+  private boolean titleIsLinkedToInstanceId(InstancePrecedingSucceedingTitle precedingSucceedingTitle,
+                                            String instanceId) {
     return instanceId.equals(precedingSucceedingTitle.getPrecedingInstanceId())
       || instanceId.equals(precedingSucceedingTitle.getSucceedingInstanceId());
   }
 
-  private Future<Response> saveCollection(List<PrecedingSucceedingTitle> entities, Map<String, String> okapiHeaders,
+  private Future<Response> saveCollection(List<InstancePrecedingSucceedingTitle> entities,
+                                          Map<String, String> okapiHeaders,
                                           Context vertxContext) {
     try {
       MetadataUtil.populateMetadata(entities, okapiHeaders);
@@ -144,7 +147,7 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
     }
   }
 
-  private boolean precedingAndSucceedingInstanceEmpty(PrecedingSucceedingTitle entity) {
+  private boolean precedingAndSucceedingInstanceEmpty(InstancePrecedingSucceedingTitle entity) {
     return ObjectUtils.isEmpty(entity.getPrecedingInstanceId()) && ObjectUtils.isEmpty(
       entity.getSucceedingInstanceId());
   }
