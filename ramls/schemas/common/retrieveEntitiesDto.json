@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "DTO for fetching records by POST request",
-  "javaType": "org.folio.rest.jaxrs.model.RetrieveEntitiesDto",
+  "javaType": "org.folio.rest.jaxrs.model.RetrieveEntitiesRequest",
   "type": "object",
   "properties": {
     "offset": {

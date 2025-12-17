@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemsPatchRequest;
-import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesRequest;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.support.EndpointFailureHandler;
@@ -37,7 +37,7 @@ public class ItemStorageApi implements ItemStorage {
 
   @Validate
   @Override
-  public void postItemStorageItemsRetrieve(RetrieveEntitiesDto entity, RoutingContext routingContext,
+  public void postItemStorageItemsRetrieve(RetrieveEntitiesRequest entity, RoutingContext routingContext,
                                            Map<String, String> okapiHeaders,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     String query = entity.getQuery();

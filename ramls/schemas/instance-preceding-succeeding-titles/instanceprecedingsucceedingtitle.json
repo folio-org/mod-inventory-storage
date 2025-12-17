@@ -33,22 +33,7 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "properties": {
-          "value": {
-            "type": "string",
-            "description": "Resource identifier value"
-          },
-          "identifierTypeId": {
-            "type": "string",
-            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
-            "$ref": "../common/uuid.json"
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "value",
-          "identifierTypeId"
-        ]
+        "$ref": "../common/identifier.json"
       }
     },
     "metadata": {

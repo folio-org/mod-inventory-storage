@@ -13,7 +13,7 @@ types:
   holdingsRecords: !include schemas/holdings-storage/holdingsRecords.json
   holdingsRecordView: !include schemas/holdings-storage/holdingsRecordView.json
   holdingsRecordViews: !include schemas/holdings-storage/holdingsRecordViews.json
-  retrieveEntitiesDto: !include schemas/common/retrieveEntitiesDto.json
+  retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -93,7 +93,7 @@ resourceTypes:
         is: [ validate ]
         body:
           application/json:
-            type: retrieveEntitiesDto
+            type: retrieveEntitiesRequest
             example:
               strict: false
               value: !include examples/retrieveEntitiesDto.json

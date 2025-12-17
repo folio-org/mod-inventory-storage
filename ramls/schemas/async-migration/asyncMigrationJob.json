@@ -27,36 +27,16 @@
       "description": "Number of records that was published so far",
       "type": "array",
       "items": {
-        "properties": {
-          "migrationName": {
-            "description": "Name of migration procedure",
-            "type": "string"
-          },
-          "count": {
-            "description": "Number of records that was published so far",
-            "type": "integer",
-            "minimum": 0,
-            "default": 0
-          }
-        }
+        "type": "object",
+        "$ref": "asyncMigrationJobCounts.json"
       }
     },
     "processed": {
       "description": "Number of records that was processed",
       "type": "array",
       "items": {
-        "properties": {
-          "migrationName": {
-            "description": "Name of migration procedure",
-            "type": "string"
-          },
-          "count": {
-            "description": "Number of records that was processed",
-            "type": "integer",
-            "minimum": 0,
-            "default": 0
-          }
-        }
+        "type": "object",
+        "$ref": "asyncMigrationJobCounts.json"
       }
     },
     "jobStatus": {

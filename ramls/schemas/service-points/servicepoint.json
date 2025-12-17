@@ -64,6 +64,7 @@
       "description": "List of staff slips for this service point",
       "items": {
         "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.ServicePointStaffSlip",
         "properties": {
           "id": {
             "type": "string",

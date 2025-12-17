@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
-import org.folio.rest.jaxrs.model.StaffSlip;
+import org.folio.rest.jaxrs.model.ServicePointStaffSlip;
 import org.folio.rest.jaxrs.model.TimePeriod;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -191,7 +191,7 @@ public final class LocationUtility {
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
                                             Boolean pickupLocation, TimePeriod shelfExpiryPeriod,
-                                            List<StaffSlip> slips)
+                                            List<ServicePointStaffSlip> slips)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description, shelvingLagTime, pickupLocation,
@@ -201,7 +201,8 @@ public final class LocationUtility {
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
                                             Boolean pickupLocation, TimePeriod shelfExpiryPeriod,
-                                            List<StaffSlip> slips, Boolean ecsRequestRouting, String tenantId)
+                                            List<ServicePointStaffSlip> slips, Boolean ecsRequestRouting,
+                                            String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     final CompletableFuture<Response> createServicePoint = new CompletableFuture<>();
@@ -214,11 +215,31 @@ public final class LocationUtility {
     return createServicePoint.get(TIMEOUT, TimeUnit.SECONDS);
   }
 
+  public static UUID getInstitutionId() {
+    return institutionID;
+  }
+
+  public static UUID getCampusId() {
+    return campusID;
+  }
+
+  public static UUID getLibraryId() {
+    return libraryID;
+  }
+
+  public static List<UUID> getServicePointIds() {
+    return SERVICE_POINT_IDS;
+  }
+
+  public static void clearServicePointIds() {
+    SERVICE_POINT_IDS.clear();
+  }
+
   private static JsonObject buildServicePointRequest(UUID id, String name, String code,
-                                                      String discoveryDisplayName, String description,
-                                                      Integer shelvingLagTime, Boolean pickupLocation,
-                                                      TimePeriod shelfExpiryPeriod,
-                                                      List<StaffSlip> slips, Boolean ecsRequestRouting) {
+                                                     String discoveryDisplayName, String description,
+                                                     Integer shelvingLagTime, Boolean pickupLocation,
+                                                     TimePeriod shelfExpiryPeriod,
+                                                     List<ServicePointStaffSlip> slips, Boolean ecsRequestRouting) {
     JsonObject request = new JsonObject()
       .put("name", name)
       .put("code", code)
@@ -231,10 +252,10 @@ public final class LocationUtility {
   }
 
   private static void addOptionalServicePointFields(JsonObject request, UUID id, String description,
-                                                     Integer shelvingLagTime, Boolean pickupLocation,
-                                                     Boolean ecsRequestRouting,
-                                                     TimePeriod shelfExpiryPeriod,
-                                                     List<StaffSlip> slips) {
+                                                    Integer shelvingLagTime, Boolean pickupLocation,
+                                                    Boolean ecsRequestRouting,
+                                                    TimePeriod shelfExpiryPeriod,
+                                                    List<ServicePointStaffSlip> slips) {
     if (ecsRequestRouting != null) {
       request.put("ecsRequestRouting", ecsRequestRouting);
     }
@@ -258,35 +279,15 @@ public final class LocationUtility {
     }
   }
 
-  private static JsonArray buildStaffSlipsArray(List<StaffSlip> slips) {
+  private static JsonArray buildStaffSlipsArray(List<ServicePointStaffSlip> slips) {
     JsonArray staffSlips = new JsonArray();
-    for (StaffSlip ss : slips) {
+    for (var ss : slips) {
       JsonObject staffSlip = new JsonObject();
       staffSlip.put("id", ss.getId());
       staffSlip.put("printByDefault", ss.getPrintByDefault());
       staffSlips.add(staffSlip);
     }
     return staffSlips;
-  }
-
-  public static UUID getInstitutionId() {
-    return institutionID;
-  }
-
-  public static UUID getCampusId() {
-    return campusID;
-  }
-
-  public static UUID getLibraryId() {
-    return libraryID;
-  }
-
-  public static List<UUID> getServicePointIds() {
-    return SERVICE_POINT_IDS;
-  }
-
-  public static void clearServicePointIds() {
-    SERVICE_POINT_IDS.clear();
   }
 
   private static void putIfNotNull(JsonObject js, String key, String value) {

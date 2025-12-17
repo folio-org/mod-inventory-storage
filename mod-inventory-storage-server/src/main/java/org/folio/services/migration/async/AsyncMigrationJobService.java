@@ -20,17 +20,16 @@ import java.util.stream.Stream;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCounts;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
-import org.folio.rest.jaxrs.model.Processed;
-import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.support.PostgresClientFactory;
 
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> MIGRATION_JOB_RUNNERS = List
     .of(new ShelvingOrderMigrationJobRunner(),
-        new ItemOrderMigrationJobRunner());
+      new ItemOrderMigrationJobRunner());
   private static final List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
     .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
@@ -101,7 +100,7 @@ public final class AsyncMigrationJobService {
         job.getPublished().stream()
           .filter(p -> migrationName.equals(p.getMigrationName()))
           .findFirst().ifPresentOrElse(p -> p.setCount(recordsPublished.intValue()),
-            () -> job.getPublished().add(new Published()
+            () -> job.getPublished().add(new AsyncMigrationJobCounts()
               .withMigrationName(migrationName)
               .withCount(recordsPublished.intValue())));
         job.withJobStatus(IDS_PUBLISHED);
@@ -118,7 +117,7 @@ public final class AsyncMigrationJobService {
         job.getPublished().stream()
           .filter(p -> migrationName.equals(p.getMigrationName()))
           .findFirst().ifPresentOrElse(p -> p.setCount(records.intValue()),
-            () -> job.getPublished().add(new Published()
+            () -> job.getPublished().add(new AsyncMigrationJobCounts()
               .withMigrationName(migrationName)
               .withCount(records.intValue())));
         return job;
@@ -147,7 +146,7 @@ public final class AsyncMigrationJobService {
       .filter(p -> p.getMigrationName().equals(migrationName))
       .findFirst()
       .ifPresentOrElse(v -> v.setCount(v.getCount() + records),
-        () -> job.getProcessed().add(new Processed()
+        () -> job.getProcessed().add(new AsyncMigrationJobCounts()
           .withCount(records)
           .withMigrationName(migrationName)));
 
@@ -162,10 +161,10 @@ public final class AsyncMigrationJobService {
 
   private void updateJobStatus(AsyncMigrationJob job) {
     var totalPublished = job.getPublished()
-      .stream().map(Published::getCount)
+      .stream().map(AsyncMigrationJobCounts::getCount)
       .mapToInt(Integer::intValue).sum();
     var totalProcessed = job.getProcessed()
-      .stream().map(Processed::getCount)
+      .stream().map(AsyncMigrationJobCounts::getCount)
       .mapToInt(Integer::intValue).sum();
 
     job.setJobStatus(totalProcessed >= totalPublished

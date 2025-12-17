@@ -14,6 +14,7 @@
       "description": "Collection of references to the holdings records that make up the bound-with.",
       "items": {
         "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.BoundWithContent",
         "properties": {
           "holdingsRecordId": {
             "type": "string",

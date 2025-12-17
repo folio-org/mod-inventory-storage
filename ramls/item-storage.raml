@@ -13,7 +13,7 @@ types:
   items: !include schemas/item-storage/items.json
   itemsPatchRequest: !include schemas/item-storage/itemsPatch.json
   errors: !include raml-util/schemas/errors.schema
-  retrieveEntitiesDto: !include schemas/common/retrieveEntitiesDto.json
+  retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -103,7 +103,7 @@ resourceTypes:
         is: [validate]
         body:
           application/json:
-            type: retrieveEntitiesDto
+            type: retrieveEntitiesRequest
             example:
               strict: false
               value: !include examples/retrieveEntitiesDto.json

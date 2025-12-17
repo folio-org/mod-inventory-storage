@@ -100,35 +100,7 @@
       "minItems": 0,
       "items": {
         "type": "object",
-        "javaType": "org.folio.rest.jaxrs.model.Identifier",
-        "properties": {
-          "value": {
-            "type": "string",
-            "description": "Resource identifier value"
-          },
-          "identifierTypeId": {
-            "type": "string",
-            "description": "UUID of resource identifier type (e.g. ISBN, ISSN, LCCN, CODEN, Locally defined identifiers)",
-            "$ref": "../common/uuid.json"
-          },
-          "identifierTypeObject": {
-            "type": "object",
-            "description": "Information about identifier type, looked up from identifierTypeId",
-            "javaType": "org.folio.rest.jaxrs.model.IdentifierTypeVirtual",
-            "folio:$ref": "illpolicy.json",
-            "readonly": true,
-            "folio:isVirtual": true,
-            "folio:linkBase": "identifier-types",
-            "folio:linkFromField": "identifierTypeId",
-            "folio:linkToField": "id",
-            "folio:includedElement": "identifierTypes.0"
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "value",
-          "identifierTypeId"
-        ]
+        "$ref": "../common/identifier.json"
       }
     },
     "contributors": {
@@ -262,7 +234,7 @@
       "description": "List of publication items",
       "items": {
         "type": "object",
-        "javaType": "org.folio.rest.jaxrs.model.PublicationItem",
+        "javaType": "org.folio.rest.jaxrs.model.Publication",
         "properties": {
           "publisher": {
             "type": "string",

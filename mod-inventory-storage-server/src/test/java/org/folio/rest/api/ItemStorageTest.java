@@ -92,7 +92,7 @@ import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemLastCheckIn;
 import org.folio.rest.jaxrs.model.ItemNote;
 import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesRequest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -1598,7 +1598,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     }
 
     String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIds) + ")";
-    var retrieveDto = new RetrieveEntitiesDto();
+    var retrieveDto = new RetrieveEntitiesRequest();
     retrieveDto.setQuery(idzWithOrDelimiter);
     retrieveDto.setLimit(2000);
 
@@ -4072,7 +4072,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private Response retrieveItemsPage(int limit, int offset) {
     CompletableFuture<Response> completed = new CompletableFuture<>();
-    var retrieveDto = new RetrieveEntitiesDto();
+    var retrieveDto = new RetrieveEntitiesRequest();
     retrieveDto.setLimit(limit);
     retrieveDto.setOffset(offset);
     getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID, ResponseHandler.json(completed));

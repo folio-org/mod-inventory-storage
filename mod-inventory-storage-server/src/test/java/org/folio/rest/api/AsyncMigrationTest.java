@@ -46,11 +46,10 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
+import org.folio.rest.jaxrs.model.AsyncMigrationJobCounts;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
-import org.folio.rest.jaxrs.model.Processed;
-import org.folio.rest.jaxrs.model.Published;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.sql.TestRowStream;
@@ -151,9 +150,9 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
-    assertThat(job.getPublished().stream().map(Published::getCount)
+    assertThat(job.getPublished().stream().map(AsyncMigrationJobCounts::getCount)
       .mapToInt(Integer::intValue).sum(), is(expectedCount));
-    assertThat(job.getProcessed().stream().map(Processed::getCount)
+    assertThat(job.getProcessed().stream().map(AsyncMigrationJobCounts::getCount)
       .mapToInt(Integer::intValue).sum(), is(expectedCount));
     assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
     assertThat(job.getSubmittedDate(), notNullValue());

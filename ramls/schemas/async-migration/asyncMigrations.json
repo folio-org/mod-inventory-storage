@@ -10,7 +10,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "migration-job-post-request.json"
+        "$ref": "asyncMigrationJobRequest.json"
       }
     },
     "totalRecords": {
