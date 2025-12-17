@@ -3,208 +3,92 @@ package org.folio.services.sanitizer.impl;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.Instance;
-import org.junit.jupiter.api.BeforeEach;
+import org.folio.rest.jaxrs.model.Tags;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class InstanceSanitizerTest {
 
-  private InstanceSanitizer sanitizer;
-
-  @BeforeEach
-  void setUp() {
-    sanitizer = new InstanceSanitizer();
-  }
+  private final InstanceSanitizer sanitizer = new InstanceSanitizer();
 
   @Test
   void sanitizeShouldHandleNullInstance() {
     assertDoesNotThrow(() -> sanitizer.sanitize(null));
   }
 
-  @Test
-  void sanitizeShouldCleanInstanceFormatIds() {
+  @ParameterizedTest
+  @MethodSource("listFieldsProvider")
+  void sanitizeShouldCleanListFields(BiConsumer<Instance, List<String>> setter,
+                                     Function<Instance, List<String>> getter,
+                                     List<String> input,
+                                     List<String> expected) {
     var instance = new Instance();
-    instance.setInstanceFormatIds(Arrays.asList("id1", "", "id2", "  ", "id3"));
+    setter.accept(instance, input);
     sanitizer.sanitize(instance);
-    assertEquals(3, instance.getInstanceFormatIds().size());
-    assertEquals(Arrays.asList("id1", "id2", "id3"), instance.getInstanceFormatIds());
+    assertEquals(expected.size(), getter.apply(instance).size());
+    assertEquals(expected, getter.apply(instance));
   }
 
-  @Test
-  void sanitizeShouldHandleNullInstanceFormatIds() {
+  @ParameterizedTest
+  @MethodSource("listFieldsNullProvider")
+  void sanitizeShouldHandleNullListFields(BiConsumer<Instance, List<String>> setter,
+                                          Function<Instance, List<String>> getter) {
     var instance = new Instance();
-    instance.setInstanceFormatIds(null);
+    setter.accept(instance, null);
     sanitizer.sanitize(instance);
-    assertNotNull(instance.getInstanceFormatIds());
-    assertTrue(instance.getInstanceFormatIds().isEmpty());
+    assertNotNull(getter.apply(instance));
+    assertTrue(getter.apply(instance).isEmpty());
   }
 
-  @Test
-  void sanitizeShouldCleanPhysicalDescriptions() {
+  @ParameterizedTest
+  @MethodSource("setFieldsProvider")
+  void sanitizeShouldCleanSetFields(BiConsumer<Instance, Set<String>> setter,
+                                    Function<Instance, Set<String>> getter,
+                                    Set<String> input,
+                                    List<String> expectedValues) {
     var instance = new Instance();
-    instance.setPhysicalDescriptions(Arrays.asList("desc1", "", "desc2", "   "));
+    setter.accept(instance, input);
     sanitizer.sanitize(instance);
-    assertEquals(2, instance.getPhysicalDescriptions().size());
-    assertEquals(Arrays.asList("desc1", "desc2"), instance.getPhysicalDescriptions());
+    assertEquals(expectedValues.size(), getter.apply(instance).size());
+    expectedValues.forEach(value -> assertTrue(getter.apply(instance).contains(value)));
   }
 
-  @Test
-  void sanitizeShouldHandleNullPhysicalDescriptions() {
+  @ParameterizedTest
+  @MethodSource("setFieldsNullProvider")
+  void sanitizeShouldHandleNullSetFields(BiConsumer<Instance, Set<String>> setter,
+                                         Function<Instance, Set<String>> getter) {
     var instance = new Instance();
-    instance.setPhysicalDescriptions(null);
+    setter.accept(instance, null);
     sanitizer.sanitize(instance);
-    assertNotNull(instance.getPhysicalDescriptions());
-    assertTrue(instance.getPhysicalDescriptions().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanLanguages() {
-    var instance = new Instance();
-    instance.setLanguages(Arrays.asList("eng", "", "spa", "\t"));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getLanguages().size());
-    assertEquals(Arrays.asList("eng", "spa"), instance.getLanguages());
-  }
-
-  @Test
-  void sanitizeShouldHandleNullLanguages() {
-    var instance = new Instance();
-    instance.setLanguages(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getLanguages());
-    assertTrue(instance.getLanguages().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanAdministrativeNotes() {
-    var instance = new Instance();
-    instance.setAdministrativeNotes(Arrays.asList("note1", "", "note2"));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getAdministrativeNotes().size());
-    assertEquals(Arrays.asList("note1", "note2"), instance.getAdministrativeNotes());
-  }
-
-  @Test
-  void sanitizeShouldHandleNullAdministrativeNotes() {
-    var instance = new Instance();
-    instance.setAdministrativeNotes(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getAdministrativeNotes());
-    assertTrue(instance.getAdministrativeNotes().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanEditions() {
-    var instance = new Instance();
-    instance.setEditions(new LinkedHashSet<>(Arrays.asList("1st ed.", "", "2nd ed.", "  ")));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getEditions().size());
-    assertTrue(instance.getEditions().contains("1st ed."));
-    assertTrue(instance.getEditions().contains("2nd ed."));
-  }
-
-  @Test
-  void sanitizeShouldHandleNullEditions() {
-    var instance = new Instance();
-    instance.setEditions(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getEditions());
-    assertTrue(instance.getEditions().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanPublicationRange() {
-    var instance = new Instance();
-    instance.setPublicationRange(new LinkedHashSet<>(Arrays.asList("2000-2010", "", "2011-2020")));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getPublicationRange().size());
-    assertTrue(instance.getPublicationRange().contains("2000-2010"));
-    assertTrue(instance.getPublicationRange().contains("2011-2020"));
-  }
-
-  @Test
-  void sanitizeShouldHandleNullPublicationRange() {
-    var instance = new Instance();
-    instance.setPublicationRange(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getPublicationRange());
-    assertTrue(instance.getPublicationRange().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanPublicationFrequency() {
-    var instance = new Instance();
-    instance.setPublicationFrequency(new LinkedHashSet<>(Arrays.asList("monthly", "", "quarterly")));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getPublicationFrequency().size());
-    assertTrue(instance.getPublicationFrequency().contains("monthly"));
-    assertTrue(instance.getPublicationFrequency().contains("quarterly"));
-  }
-
-  @Test
-  void sanitizeShouldHandleNullPublicationFrequency() {
-    var instance = new Instance();
-    instance.setPublicationFrequency(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getPublicationFrequency());
-    assertTrue(instance.getPublicationFrequency().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanNatureOfContentTermIds() {
-    var instance = new Instance();
-    instance.setNatureOfContentTermIds(new LinkedHashSet<>(Arrays.asList("term1", "", "term2")));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getNatureOfContentTermIds().size());
-    assertTrue(instance.getNatureOfContentTermIds().contains("term1"));
-    assertTrue(instance.getNatureOfContentTermIds().contains("term2"));
-  }
-
-  @Test
-  void sanitizeShouldHandleNullNatureOfContentTermIds() {
-    var instance = new Instance();
-    instance.setNatureOfContentTermIds(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getNatureOfContentTermIds());
-    assertTrue(instance.getNatureOfContentTermIds().isEmpty());
-  }
-
-  @Test
-  void sanitizeShouldCleanStatisticalCodeIds() {
-    var instance = new Instance();
-    instance.setStatisticalCodeIds(new LinkedHashSet<>(Arrays.asList("code1", "", "code2")));
-    sanitizer.sanitize(instance);
-    assertEquals(2, instance.getStatisticalCodeIds().size());
-    assertTrue(instance.getStatisticalCodeIds().contains("code1"));
-    assertTrue(instance.getStatisticalCodeIds().contains("code2"));
-  }
-
-  @Test
-  void sanitizeShouldHandleNullStatisticalCodeIds() {
-    var instance = new Instance();
-    instance.setStatisticalCodeIds(null);
-    sanitizer.sanitize(instance);
-    assertNotNull(instance.getStatisticalCodeIds());
-    assertTrue(instance.getStatisticalCodeIds().isEmpty());
+    assertNotNull(getter.apply(instance));
+    assertTrue(getter.apply(instance).isEmpty());
   }
 
   @Test
   void sanitizeShouldCleanAllFieldsSimultaneously() {
     var instance = new Instance();
-    instance.setInstanceFormatIds(Arrays.asList("format1", "", "format2"));
-    instance.setPhysicalDescriptions(Arrays.asList("desc1", "  "));
-    instance.setLanguages(Arrays.asList("", "eng"));
-    instance.setAdministrativeNotes(Arrays.asList("note1", ""));
-    instance.setEditions(new LinkedHashSet<>(Arrays.asList("ed1", "")));
-    instance.setPublicationRange(new LinkedHashSet<>(Arrays.asList("", "2020")));
-    instance.setPublicationFrequency(new LinkedHashSet<>(Arrays.asList("monthly", "")));
-    instance.setNatureOfContentTermIds(new LinkedHashSet<>(Arrays.asList("", "term1")));
-    instance.setStatisticalCodeIds(new LinkedHashSet<>(Arrays.asList("code1", "")));
+    instance.setInstanceFormatIds(List.of("format1", "", "format2"));
+    instance.setPhysicalDescriptions(List.of("desc1", "  "));
+    instance.setLanguages(List.of("", "eng"));
+    instance.setAdministrativeNotes(List.of("note1", ""));
+    instance.setEditions(new LinkedHashSet<>(List.of("ed1", "")));
+    instance.setPublicationRange(new LinkedHashSet<>(List.of("", "2020")));
+    instance.setPublicationFrequency(new LinkedHashSet<>(List.of("monthly", "")));
+    instance.setNatureOfContentTermIds(new LinkedHashSet<>(List.of("", "term1")));
+    instance.setStatisticalCodeIds(new LinkedHashSet<>(List.of("code1", "")));
 
     sanitizer.sanitize(instance);
 
@@ -222,16 +106,16 @@ class InstanceSanitizerTest {
   @Test
   void sanitizeShouldPreserveOrderInLists() {
     var instance = new Instance();
-    var languages = new ArrayList<>(Arrays.asList("eng", "", "spa", "  ", "fra"));
+    var languages = new ArrayList<>(List.of("eng", "", "spa", "  ", "fra"));
     instance.setLanguages(languages);
     sanitizer.sanitize(instance);
-    assertEquals(Arrays.asList("eng", "spa", "fra"), instance.getLanguages());
+    assertEquals(List.of("eng", "spa", "fra"), instance.getLanguages());
   }
 
   @Test
   void sanitizeShouldPreserveOrderInSets() {
     var instance = new Instance();
-    var editions = new LinkedHashSet<>(Arrays.asList("1st", "", "2nd", "  ", "3rd"));
+    var editions = new LinkedHashSet<>(List.of("1st", "", "2nd", "  ", "3rd"));
     instance.setEditions(editions);
     sanitizer.sanitize(instance);
     var editionsList = new ArrayList<>(instance.getEditions());
@@ -239,5 +123,212 @@ class InstanceSanitizerTest {
     assertEquals("1st", editionsList.get(0));
     assertEquals("2nd", editionsList.get(1));
     assertEquals("3rd", editionsList.get(2));
+  }
+
+  @ParameterizedTest
+  @MethodSource("tagsProvider")
+  void sanitizeShouldHandleTags(Tags tags, Integer expectedSize, List<String> expectedValues) {
+    var instance = new Instance();
+    instance.setTags(tags);
+
+    sanitizer.sanitize(instance);
+
+    if (expectedSize == null) {
+      assertNull(instance.getTags());
+    } else {
+      assertNotNull(instance.getTags());
+      if (expectedSize == 0) {
+        assertTrue(instance.getTags().getTagList().isEmpty());
+      } else {
+        assertEquals(expectedSize, instance.getTags().getTagList().size());
+        assertEquals(expectedValues, instance.getTags().getTagList());
+      }
+    }
+  }
+
+  @Test
+  void sanitizeShouldCleanAllFieldsIncludingTags() {
+    var instance = new Instance();
+    instance.setInstanceFormatIds(List.of("format1", "", "format2"));
+    instance.setStatisticalCodeIds(new LinkedHashSet<>(List.of("code1", "", "code2")));
+
+    var tags = new Tags();
+    tags.setTagList(List.of("tag1", "", "tag2", "  "));
+    instance.setTags(tags);
+
+    sanitizer.sanitize(instance);
+
+    assertEquals(2, instance.getInstanceFormatIds().size());
+    assertEquals(2, instance.getStatisticalCodeIds().size());
+    assertEquals(2, instance.getTags().getTagList().size());
+    assertEquals(List.of("tag1", "tag2"), instance.getTags().getTagList());
+  }
+
+  private static Stream<Arguments> listFieldsProvider() {
+    return Stream.of(
+      instanceFormatIdsArg(),
+      physicalDescriptionsArg(),
+      languagesArg(),
+      administrativeNotesArg()
+    );
+  }
+
+  private static Arguments instanceFormatIdsArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, List<String>>) Instance::setInstanceFormatIds,
+      (Function<Instance, List<String>>) Instance::getInstanceFormatIds,
+      List.of("id1", "", "id2", "  ", "id3"),
+      List.of("id1", "id2", "id3")
+    );
+  }
+
+  private static Arguments physicalDescriptionsArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, List<String>>) Instance::setPhysicalDescriptions,
+      (Function<Instance, List<String>>) Instance::getPhysicalDescriptions,
+      List.of("desc1", "", "desc2", "   "),
+      List.of("desc1", "desc2")
+    );
+  }
+
+  private static Arguments languagesArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, List<String>>) Instance::setLanguages,
+      (Function<Instance, List<String>>) Instance::getLanguages,
+      List.of("eng", "", "spa", "\t"),
+      List.of("eng", "spa")
+    );
+  }
+
+  private static Arguments administrativeNotesArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, List<String>>) Instance::setAdministrativeNotes,
+      (Function<Instance, List<String>>) Instance::getAdministrativeNotes,
+      List.of("note1", "", "note2"),
+      List.of("note1", "note2")
+    );
+  }
+
+  private static Stream<Arguments> listFieldsNullProvider() {
+    return Stream.of(
+      Arguments.of(
+        (BiConsumer<Instance, List<String>>) Instance::setInstanceFormatIds,
+        (Function<Instance, List<String>>) Instance::getInstanceFormatIds
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, List<String>>) Instance::setPhysicalDescriptions,
+        (Function<Instance, List<String>>) Instance::getPhysicalDescriptions
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, List<String>>) Instance::setLanguages,
+        (Function<Instance, List<String>>) Instance::getLanguages
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, List<String>>) Instance::setAdministrativeNotes,
+        (Function<Instance, List<String>>) Instance::getAdministrativeNotes
+      )
+    );
+  }
+
+  private static Stream<Arguments> setFieldsProvider() {
+    return Stream.of(
+      editionsArg(),
+      publicationRangeArg(),
+      publicationFrequencyArg(),
+      natureOfContentTermIdsArg(),
+      statisticalCodeIdsArg()
+    );
+  }
+
+  private static Arguments editionsArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, Set<String>>) Instance::setEditions,
+      (Function<Instance, Set<String>>) Instance::getEditions,
+      new LinkedHashSet<>(List.of("1st ed.", "", "2nd ed.", "  ")),
+      List.of("1st ed.", "2nd ed.")
+    );
+  }
+
+  private static Arguments publicationRangeArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, Set<String>>) Instance::setPublicationRange,
+      (Function<Instance, Set<String>>) Instance::getPublicationRange,
+      new LinkedHashSet<>(List.of("2000-2010", "", "2011-2020")),
+      List.of("2000-2010", "2011-2020")
+    );
+  }
+
+  private static Arguments publicationFrequencyArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, Set<String>>) Instance::setPublicationFrequency,
+      (Function<Instance, Set<String>>) Instance::getPublicationFrequency,
+      new LinkedHashSet<>(List.of("monthly", "", "quarterly")),
+      List.of("monthly", "quarterly")
+    );
+  }
+
+  private static Arguments natureOfContentTermIdsArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, Set<String>>) Instance::setNatureOfContentTermIds,
+      (Function<Instance, Set<String>>) Instance::getNatureOfContentTermIds,
+      new LinkedHashSet<>(List.of("term1", "", "term2")),
+      List.of("term1", "term2")
+    );
+  }
+
+  private static Arguments statisticalCodeIdsArg() {
+    return Arguments.of(
+      (BiConsumer<Instance, Set<String>>) Instance::setStatisticalCodeIds,
+      (Function<Instance, Set<String>>) Instance::getStatisticalCodeIds,
+      new LinkedHashSet<>(List.of("code1", "", "code2")),
+      List.of("code1", "code2")
+    );
+  }
+
+  private static Stream<Arguments> setFieldsNullProvider() {
+    return Stream.of(
+      Arguments.of(
+        (BiConsumer<Instance, Set<String>>) Instance::setEditions,
+        (Function<Instance, Set<String>>) Instance::getEditions
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, Set<String>>) Instance::setPublicationRange,
+        (Function<Instance, Set<String>>) Instance::getPublicationRange
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, Set<String>>) Instance::setPublicationFrequency,
+        (Function<Instance, Set<String>>) Instance::getPublicationFrequency
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, Set<String>>) Instance::setNatureOfContentTermIds,
+        (Function<Instance, Set<String>>) Instance::getNatureOfContentTermIds
+      ),
+      Arguments.of(
+        (BiConsumer<Instance, Set<String>>) Instance::setStatisticalCodeIds,
+        (Function<Instance, Set<String>>) Instance::getStatisticalCodeIds
+      )
+    );
+  }
+
+  private static Stream<Arguments> tagsProvider() {
+    var tags1 = new Tags();
+    tags1.setTagList(List.of("tag1", "", "tag2", "  ", "tag3"));
+
+    var tags2 = new Tags();
+    tags2.setTagList(null);
+
+    var tags3 = new Tags();
+    tags3.setTagList(new ArrayList<>());
+
+    var tags4 = new Tags();
+    tags4.setTagList(List.of("valid tag", "\t", "\n", "   "));
+
+    return Stream.of(
+      Arguments.of(tags1, 3, List.of("tag1", "tag2", "tag3")),
+      Arguments.of(null, null, null),
+      Arguments.of(tags2, 0, null),
+      Arguments.of(tags3, 0, null),
+      Arguments.of(tags4, 1, List.of("valid tag"))
+    );
   }
 }

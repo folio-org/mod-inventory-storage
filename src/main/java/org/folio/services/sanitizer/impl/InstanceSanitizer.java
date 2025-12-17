@@ -1,10 +1,14 @@
 package org.folio.services.sanitizer.impl;
 
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.Tags;
 import org.folio.services.sanitizer.Sanitizer;
+import org.folio.services.sanitizer.SanitizerFactory;
 import org.jspecify.annotations.Nullable;
 
 public final class InstanceSanitizer implements Sanitizer<Instance> {
+
+  private Sanitizer<Tags> tagsSanitizer;
 
   @Override
   public void sanitize(@Nullable Instance instance) {
@@ -20,5 +24,16 @@ public final class InstanceSanitizer implements Sanitizer<Instance> {
     instance.setPublicationFrequency(cleanSet(instance.getPublicationFrequency()));
     instance.setNatureOfContentTermIds(cleanSet(instance.getNatureOfContentTermIds()));
     instance.setStatisticalCodeIds(cleanSet(instance.getStatisticalCodeIds()));
+
+    var tags = instance.getTags();
+    getTagsSanitizer().sanitize(tags);
+    instance.setTags(tags);
+  }
+
+  private Sanitizer<Tags> getTagsSanitizer() {
+    if (tagsSanitizer == null) {
+      tagsSanitizer = SanitizerFactory.getSanitizer(Tags.class);
+    }
+    return tagsSanitizer;
   }
 }
