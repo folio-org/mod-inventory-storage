@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,7 +42,7 @@ class ItemUtilsTest {
   @MethodSource("provideValidRequiredFieldsCases")
   @DisplayName("Should succeed validation when all required fields are valid")
   void validateRequiredFields_shouldSucceedValidationWhenRequiredFieldsAreValid(String description,
-                                                                                List<ItemPatch> items) {
+                                                                                List<ItemPatchRequest> items) {
     // When
     var result = ItemUtils.validateRequiredFields(items);
 
@@ -55,7 +55,7 @@ class ItemUtilsTest {
   @MethodSource("provideInvalidRequiredFieldsCases")
   @DisplayName("Should fail validation when required fields are missing or invalid")
   void validateRequiredFields_shouldFailValidationWhenRequiredFieldsAreInvalid(String description,
-                                                                               List<ItemPatch> items,
+                                                                               List<ItemPatchRequest> items,
                                                                                int expectedErrorCount) {
     // When
     var result = ItemUtils.validateRequiredFields(items);
@@ -110,7 +110,7 @@ class ItemUtilsTest {
     item.setEffectiveCallNumberComponents(callNumberComponents);
     item.setEffectiveShelvingOrder("shelving-order");
 
-    var itemPatch = new ItemPatch()
+    var itemPatch = new ItemPatchRequest()
       .withAdditionalProperty("someProperty", "value"); // Initialize with some property
 
     // When
@@ -132,7 +132,7 @@ class ItemUtilsTest {
     item.setEffectiveCallNumberComponents(null);
     item.setEffectiveShelvingOrder(null);
 
-    var itemPatch = new ItemPatch()
+    var itemPatch = new ItemPatchRequest()
       .withAdditionalProperty("someProperty", "value"); // Initialize with some property
 
     // When
@@ -154,7 +154,7 @@ class ItemUtilsTest {
     item.setEffectiveCallNumberComponents(null);
     item.setEffectiveShelvingOrder("shelving-order");
 
-    var itemPatch = new ItemPatch()
+    var itemPatch = new ItemPatchRequest()
       .withAdditionalProperty("someProperty", "value"); // Initialize with some property
 
     // When
@@ -196,7 +196,7 @@ class ItemUtilsTest {
       new HashMap<>(Map.of("staffOnly", "false"))
     ));
 
-    var itemPatch = new ItemPatch();
+    var itemPatch = new ItemPatchRequest();
     props.forEach(itemPatch::withAdditionalProperty);
 
     // When
@@ -221,7 +221,7 @@ class ItemUtilsTest {
   @DisplayName("Should not fail when properties are missing")
   void normalizeItemFields_shouldHandleMissingProperties() {
     // Given
-    var itemPatch = new ItemPatch();
+    var itemPatch = new ItemPatchRequest();
 
     // When
     ItemUtils.normalizeItemFields(List.of(itemPatch));
@@ -237,7 +237,7 @@ class ItemUtilsTest {
     var props = new HashMap<String, Object>();
     props.put("order", 5);
     props.put("discoverySuppress", true);
-    var itemPatch = new ItemPatch();
+    var itemPatch = new ItemPatchRequest();
     props.forEach(itemPatch::withAdditionalProperty);
     var items = List.of(itemPatch);
 
@@ -252,33 +252,33 @@ class ItemUtilsTest {
 
   private static Stream<Arguments> provideValidRequiredFieldsCases() {
     return Stream.of(
-      Arguments.of("Empty list of items", List.<ItemPatch>of()),
-      Arguments.of("Item with no additional properties", List.of(new ItemPatch())),
+      Arguments.of("Empty list of items", List.<ItemPatchRequest>of()),
+      Arguments.of("Item with no additional properties", List.of(new ItemPatchRequest())),
       Arguments.of("Item with valid materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "valid-material-type"))),
+        List.of(new ItemPatchRequest().withAdditionalProperty("materialTypeId", "valid-material-type"))),
       Arguments.of("Item with valid permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "valid-loan-type"))),
+        List.of(new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", "valid-loan-type"))),
       Arguments.of("Item with valid holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "valid-holdings-id"))),
+        List.of(new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", "valid-holdings-id"))),
       Arguments.of("Item with valid status",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")))),
+        List.of(new ItemPatchRequest().withAdditionalProperty("status", Map.of("name", "Available")))),
       Arguments.of("Item with all valid required fields", List.of(createItemWithAllValidFields())),
       Arguments.of("Multiple items with valid fields", createMultipleItemsWithValidFields())
     );
   }
 
-  private static ItemPatch createItemWithAllValidFields() {
-    return new ItemPatch()
+  private static ItemPatchRequest createItemWithAllValidFields() {
+    return new ItemPatchRequest()
       .withAdditionalProperty("materialTypeId", "material-type")
       .withAdditionalProperty("permanentLoanTypeId", "loan-type")
       .withAdditionalProperty("holdingsRecordId", "holdings-id")
       .withAdditionalProperty("status", Map.of("name", "Available"));
   }
 
-  private static List<ItemPatch> createMultipleItemsWithValidFields() {
+  private static List<ItemPatchRequest> createMultipleItemsWithValidFields() {
     return List.of(
-      new ItemPatch().withAdditionalProperty("materialTypeId", "material-type-1"),
-      new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-2")
+      new ItemPatchRequest().withAdditionalProperty("materialTypeId", "material-type-1"),
+      new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", "loan-type-2")
     );
   }
 
@@ -295,29 +295,29 @@ class ItemUtilsTest {
   private static Stream<Arguments> provideMaterialTypeIdInvalidCases() {
     return Stream.of(
       Arguments.of("Item with null materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", null)), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("materialTypeId", null)), 1),
       Arguments.of("Item with empty materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "")), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("materialTypeId", "")), 1),
       Arguments.of("Item with blank materialTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("materialTypeId", "   ")), 1)
+        List.of(new ItemPatchRequest().withAdditionalProperty("materialTypeId", "   ")), 1)
     );
   }
 
   private static Stream<Arguments> provideLoanTypeIdInvalidCases() {
     return Stream.of(
       Arguments.of("Item with null permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", null)), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", null)), 1),
       Arguments.of("Item with empty permanentLoanTypeId",
-        List.of(new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "")), 1)
+        List.of(new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", "")), 1)
     );
   }
 
   private static Stream<Arguments> provideHoldingsRecordIdInvalidCases() {
     return Stream.of(
       Arguments.of("Item with null holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", null)), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", null)), 1),
       Arguments.of("Item with empty holdingsRecordId",
-        List.of(new ItemPatch().withAdditionalProperty("holdingsRecordId", "")), 1)
+        List.of(new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", "")), 1)
     );
   }
 
@@ -327,13 +327,13 @@ class ItemUtilsTest {
 
     return Stream.of(
       Arguments.of("Item with null status",
-        List.of(new ItemPatch().withAdditionalProperty("status", null)), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("status", null)), 1),
       Arguments.of("Item with status having null name",
-        List.of(new ItemPatch().withAdditionalProperty("status", statusWithNullName)), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("status", statusWithNullName)), 1),
       Arguments.of("Item with status having empty name",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", ""))), 1),
+        List.of(new ItemPatchRequest().withAdditionalProperty("status", Map.of("name", ""))), 1),
       Arguments.of("Item with status having blank name",
-        List.of(new ItemPatch().withAdditionalProperty("status", Map.of("name", "   "))), 1)
+        List.of(new ItemPatchRequest().withAdditionalProperty("status", Map.of("name", "   "))), 1)
     );
   }
 
@@ -343,15 +343,15 @@ class ItemUtilsTest {
 
     return Stream.of(
       Arguments.of("Item with multiple missing required fields",
-        List.of(new ItemPatch()
+        List.of(new ItemPatchRequest()
           .withAdditionalProperty("materialTypeId", null)
           .withAdditionalProperty("permanentLoanTypeId", "")
           .withAdditionalProperty("holdingsRecordId", "   ")
           .withAdditionalProperty("status", statusWithNullName)), 1),
       Arguments.of("Multiple items with missing fields",
         List.of(
-          new ItemPatch().withAdditionalProperty("materialTypeId", null),
-          new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "")
+          new ItemPatchRequest().withAdditionalProperty("materialTypeId", null),
+          new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", "")
         ), 2)
     );
   }

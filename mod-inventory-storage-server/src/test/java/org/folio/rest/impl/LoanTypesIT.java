@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import org.folio.rest.jaxrs.model.Loantype;
-import org.folio.rest.jaxrs.model.Loantypes;
+import org.folio.rest.jaxrs.model.LoanType;
+import org.folio.rest.jaxrs.model.LoanTypes;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-class LoanTypesIT extends BaseReferenceDataIntegrationTest<Loantype, Loantypes> {
+class LoanTypesIT extends BaseReferenceDataIntegrationTest<LoanType, LoanTypes> {
 
   @Override
   protected String referenceTable() {
@@ -33,47 +33,47 @@ class LoanTypesIT extends BaseReferenceDataIntegrationTest<Loantype, Loantypes> 
   }
 
   @Override
-  protected Class<Loantype> targetClass() {
-    return Loantype.class;
+  protected Class<LoanType> targetClass() {
+    return LoanType.class;
   }
 
   @Override
-  protected Class<Loantypes> collectionClass() {
-    return Loantypes.class;
+  protected Class<LoanTypes> collectionClass() {
+    return LoanTypes.class;
   }
 
   @Override
-  protected Loantype sampleRecord() {
-    return new Loantype()
+  protected LoanType sampleRecord() {
+    return new LoanType()
       .withName("Sample-Loan-Type")
       .withSource("Sample-Source");
   }
 
   @Override
-  protected Function<Loantypes, List<Loantype>> collectionRecordsExtractor() {
-    return Loantypes::getLoantypes;
+  protected Function<LoanTypes, List<LoanType>> collectionRecordsExtractor() {
+    return LoanTypes::getLoantypes;
   }
 
   @Override
-  protected List<Function<Loantype, Object>> recordFieldExtractors() {
+  protected List<Function<LoanType, Object>> recordFieldExtractors() {
     return List.of(
-      Loantype::getName,
-      Loantype::getSource
+      LoanType::getName,
+      LoanType::getSource
     );
   }
 
   @Override
-  protected Function<Loantype, String> idExtractor() {
-    return Loantype::getId;
+  protected Function<LoanType, String> idExtractor() {
+    return LoanType::getId;
   }
 
   @Override
-  protected Function<Loantype, Metadata> metadataExtractor() {
-    return Loantype::getMetadata;
+  protected Function<LoanType, Metadata> metadataExtractor() {
+    return LoanType::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Loantype> recordModifyingFunction() {
+  protected UnaryOperator<LoanType> recordModifyingFunction() {
     return loanType -> loanType.withName(loanType.getName() + "-Updated");
   }
 

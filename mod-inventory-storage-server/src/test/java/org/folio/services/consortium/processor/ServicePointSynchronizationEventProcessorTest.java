@@ -11,8 +11,8 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.UUID;
 import java.util.stream.Stream;
-import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
+import org.folio.rest.jaxrs.model.TimePeriod;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,20 +26,20 @@ class ServicePointSynchronizationEventProcessorTest {
   @Test
   void shouldFailToUpdateEventDueToProcessEventException(VertxTestContext testContext) {
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(updateEvent(
-      new Servicepoint(), new Servicepoint(), TENANT));
+      new ServicePoint(), new ServicePoint(), TENANT));
     processEventToThrowException(updateEventProcessor, testContext);
   }
 
   @Test
   void shouldFailToCreateEventDueToProcessEventException(VertxTestContext testContext) {
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(createEvent(
-      new Servicepoint(), TENANT));
+      new ServicePoint(), TENANT));
     processEventToThrowException(createEventProcessor, testContext);
   }
 
   @ParameterizedTest
   @MethodSource("servicePointProvider")
-  void shouldReturnFalseIfServicePointsAreNull(Servicepoint oldServicepoint, Servicepoint newServicepoint) {
+  void shouldReturnFalseIfServicePointsAreNull(ServicePoint oldServicepoint, ServicePoint newServicepoint) {
     String tenant = "tenant";
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(oldServicepoint, newServicepoint, tenant));
@@ -50,8 +50,8 @@ class ServicePointSynchronizationEventProcessorTest {
   static Stream<Arguments> servicePointProvider() {
     return Stream.of(
       Arguments.of(null, null),
-      Arguments.of(null, new Servicepoint()),
-      Arguments.of(new Servicepoint(), null));
+      Arguments.of(null, new ServicePoint()),
+      Arguments.of(new ServicePoint(), null));
   }
 
   @Test
@@ -67,7 +67,7 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldReturnFalseIfServicePointsAreIdentical() {
-    var servicepoint = new Servicepoint();
+    var servicepoint = new ServicePoint();
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(servicepoint, servicepoint, TENANT));
 
@@ -76,8 +76,8 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldReturnTrueForUpdateIfNewServicePointIsValid() {
-    var oldServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
-    var newServicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    var oldServicepoint = new ServicePoint().withId(UUID.randomUUID().toString());
+    var newServicepoint = new ServicePoint().withId(UUID.randomUUID().toString());
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(oldServicepoint, newServicepoint, TENANT));
@@ -87,7 +87,7 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldReturnTrueForCreateAndDeleteIfServicePointIsValid() {
-    var servicepoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    var servicepoint = new ServicePoint().withId(UUID.randomUUID().toString());
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
       createEvent(servicepoint, TENANT));
     var deleteEventProcessor = new ServicePointSynchronizationDeleteEventProcessor(
@@ -99,9 +99,9 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldReturnFalseIfValidationMessageIsNotNull() {
-    Servicepoint oldServicepoint = new Servicepoint();
-    Servicepoint newServicepoint = new Servicepoint()
-      .withHoldShelfExpiryPeriod(new HoldShelfExpiryPeriod());
+    var oldServicepoint = new ServicePoint();
+    var newServicepoint = new ServicePoint()
+      .withHoldShelfExpiryPeriod(new TimePeriod());
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
       updateEvent(oldServicepoint, newServicepoint, TENANT));

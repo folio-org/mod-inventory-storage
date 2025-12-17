@@ -89,10 +89,10 @@ import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.ItemLastCheckIn;
+import org.folio.rest.jaxrs.model.ItemNote;
 import org.folio.rest.jaxrs.model.Items;
-import org.folio.rest.jaxrs.model.LastCheckIn;
-import org.folio.rest.jaxrs.model.Note;
-import org.folio.rest.jaxrs.model.RetrieveDto;
+import org.folio.rest.jaxrs.model.RetrieveEntitiesDto;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -759,7 +759,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     itemToCreate.put("holdingsRecordId", holdingsRecordId.toString());
     itemToCreate.put("permanentLoanTypeId", canCirculateLoanTypeID);
     itemToCreate.put("materialTypeId", randomUUID().toString());
-    itemToCreate.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    itemToCreate.put("notes", new JsonArray().add(new ItemNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -828,7 +828,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
     createItem(itemToCreate);
     JsonObject item = getById(id).getJson();
-    item.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    item.put("notes", new JsonArray().add(new ItemNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
     assertThat(update(item).getStatusCode(), is(422));
   }
 
@@ -1598,7 +1598,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     }
 
     String idzWithOrDelimiter = "id==(" + String.join(" or ", itemIds) + ")";
-    RetrieveDto retrieveDto = new RetrieveDto();
+    var retrieveDto = new RetrieveEntitiesDto();
     retrieveDto.setQuery(idzWithOrDelimiter);
     retrieveDto.setLimit(2000);
 
@@ -2482,7 +2482,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("hrid", "testHRID");
     createItem(itemData);
 
-    LastCheckIn expected = new LastCheckIn();
+    var expected = new ItemLastCheckIn();
     expected.setStaffMemberId(userId.toString());
     expected.setServicePointId(servicePointId.toString());
     expected.setDateTime(new Date());
@@ -2493,7 +2493,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     JsonObject actualItem = itemsClient.getById(itemId).getJson();
     JsonObject actualLastCheckin = actualItem.getJsonObject("lastCheckIn");
 
-    LastCheckIn actual = actualLastCheckin.mapTo(LastCheckIn.class);
+    var actual = actualLastCheckin.mapTo(ItemLastCheckIn.class);
 
     assertThat(expected.getDateTime(), is(actual.getDateTime()));
     assertThat(expected.getServicePointId(), is(actual.getServicePointId()));
@@ -4072,7 +4072,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   @SneakyThrows
   private Response retrieveItemsPage(int limit, int offset) {
     CompletableFuture<Response> completed = new CompletableFuture<>();
-    RetrieveDto retrieveDto = new RetrieveDto();
+    var retrieveDto = new RetrieveEntitiesDto();
     retrieveDto.setLimit(limit);
     retrieveDto.setOffset(offset);
     getClient().post(itemsStorageUrl("/retrieve"), retrieveDto, TENANT_ID, ResponseHandler.json(completed));

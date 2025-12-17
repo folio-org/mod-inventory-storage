@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.model.InventoryViewInstance;
+import org.folio.rest.jaxrs.model.InstanceView;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.support.IndividualResource;
 import org.folio.util.StringUtil;
@@ -105,10 +105,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(2));
 
     var returnedInstances = instances.stream()
-      .map(resource -> resource.getJson().mapTo(InventoryViewInstance.class))
+      .map(resource -> resource.getJson().mapTo(InstanceView.class))
       .toList();
 
-    for (InventoryViewInstance returnedInstance : returnedInstances) {
+    for (var returnedInstance : returnedInstances) {
       isNonNullEmpty(returnedInstance.getHoldingsRecords());
       isNonNullEmpty(returnedInstance.getItems());
 
@@ -216,10 +216,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(2));
 
     var returnedInstances = instances.stream()
-      .map(resource -> resource.getJson().mapTo(InventoryViewInstance.class))
+      .map(resource -> resource.getJson().mapTo(InstanceView.class))
       .toList();
 
-    for (InventoryViewInstance returnedInstance : returnedInstances) {
+    for (var returnedInstance : returnedInstances) {
       isNonNullEmpty(returnedInstance.getHoldingsRecords());
       isNonNullEmpty(returnedInstance.getItems());
 
@@ -246,10 +246,10 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     assertThat(instances.size(), is(2));
 
     var returnedInstances = instances.stream()
-      .map(resource -> resource.getJson().mapTo(InventoryViewInstance.class))
+      .map(resource -> resource.getJson().mapTo(InstanceView.class))
       .toList();
 
-    for (InventoryViewInstance returnedInstance : returnedInstances) {
+    for (InstanceView returnedInstance : returnedInstances) {
       isNonNullEmpty(returnedInstance.getHoldingsRecords());
       isNonNullEmpty(returnedInstance.getItems());
 
@@ -258,14 +258,14 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     }
   }
 
-  private List<UUID> getHoldingIds(InventoryViewInstance instance) {
+  private List<UUID> getHoldingIds(InstanceView instance) {
     return instance.getHoldingsRecords().stream()
       .map(HoldingsRecord::getId)
       .map(UUID::fromString)
       .toList();
   }
 
-  private List<String> getItemIds(InventoryViewInstance instance) {
+  private List<String> getItemIds(InstanceView instance) {
     return instance.getItems().stream()
       .map(Item::getId)
       .toList();
@@ -282,9 +282,9 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
     assertThat(list.size(), is(0));
   }
 
-  private InventoryViewInstance getInstanceById(List<IndividualResource> instances, UUID id) {
+  private InstanceView getInstanceById(List<IndividualResource> instances, UUID id) {
     final var instance = instances.stream()
-      .map(r -> r.getJson().mapTo(InventoryViewInstance.class))
+      .map(r -> r.getJson().mapTo(InstanceView.class))
       .filter(r -> r.getInstanceId().equals(id.toString()))
       .findFirst()
       .orElse(null);

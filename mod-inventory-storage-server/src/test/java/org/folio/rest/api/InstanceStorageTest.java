@@ -81,12 +81,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.rest.jaxrs.model.Dates;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstanceDates;
+import org.folio.rest.jaxrs.model.InstanceNote;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
-import org.folio.rest.jaxrs.model.Note;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
@@ -437,7 +437,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     throws ExecutionException, InterruptedException, TimeoutException {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    instanceToCreate.put("notes", new JsonArray().add(new InstanceNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -482,7 +482,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
-    instance.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    instance.put("notes", new JsonArray().add(new InstanceNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
     assertThat(update(instance).getStatusCode(), is(422));
   }
 
@@ -2777,7 +2777,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private JsonObject createInstanceWithAllFields(UUID id, String[] natureOfContentIds, String adminNote) {
-    var dates = new Dates()
+    var dates = new InstanceDates()
       .withDateTypeId(UUID_INSTANCE_DATE_TYPE.toString())
       .withDate1("2023")
       .withDate2("2024");
@@ -2833,7 +2833,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   private void verifyInstanceDatesAndSubjects(JsonObject instance) {
     var storedDates = instance.getJsonObject(DATES_KEY)
-      .mapTo(Dates.class);
+      .mapTo(InstanceDates.class);
 
     assertThat(storedDates.getDateTypeId(), is(UUID_INSTANCE_DATE_TYPE.toString()));
     assertThat(storedDates.getDate1(), is("2023"));

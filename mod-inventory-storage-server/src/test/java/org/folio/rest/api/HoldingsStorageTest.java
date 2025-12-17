@@ -78,7 +78,7 @@ import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Note;
+import org.folio.rest.jaxrs.model.HoldingsNote;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.JsonArrayHelper;
@@ -1410,7 +1410,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
 
-    invalidHolding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    invalidHolding.put("notes", new JsonArray().add(new HoldingsNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
 
     final CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
@@ -1461,7 +1461,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create()).getJson();
 
-    holding.put("notes", new JsonArray().add(new Note().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
+    holding.put("notes", new JsonArray().add(new HoldingsNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
     Response response = update(holdingsUrl, holding);
 
     assertThat(response.getStatusCode(), is(422));

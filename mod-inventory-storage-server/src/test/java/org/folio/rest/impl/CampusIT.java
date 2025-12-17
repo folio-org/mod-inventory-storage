@@ -19,9 +19,9 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Loccamps;
-import org.folio.rest.jaxrs.model.Locinst;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationCampuses;
+import org.folio.rest.jaxrs.model.LocationInstitution;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-class CampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
+class CampusIT extends BaseReferenceDataIntegrationTest<LocationCampus, LocationCampuses> {
 
   private String institutionId;
 
@@ -46,45 +46,45 @@ class CampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
   }
 
   @Override
-  protected Class<Loccamp> targetClass() {
-    return Loccamp.class;
+  protected Class<LocationCampus> targetClass() {
+    return LocationCampus.class;
   }
 
   @Override
-  protected Class<Loccamps> collectionClass() {
-    return Loccamps.class;
+  protected Class<LocationCampuses> collectionClass() {
+    return LocationCampuses.class;
   }
 
   @Override
-  protected Loccamp sampleRecord() {
-    return new Loccamp()
+  protected LocationCampus sampleRecord() {
+    return new LocationCampus()
       .withName("test-campus")
       .withCode("code")
       .withInstitutionId(institutionId);
   }
 
   @Override
-  protected Function<Loccamps, List<Loccamp>> collectionRecordsExtractor() {
-    return Loccamps::getLoccamps;
+  protected Function<LocationCampuses, List<LocationCampus>> collectionRecordsExtractor() {
+    return LocationCampuses::getLoccamps;
   }
 
   @Override
-  protected List<Function<Loccamp, Object>> recordFieldExtractors() {
-    return List.of(Loccamp::getName);
+  protected List<Function<LocationCampus, Object>> recordFieldExtractors() {
+    return List.of(LocationCampus::getName);
   }
 
   @Override
-  protected Function<Loccamp, String> idExtractor() {
-    return Loccamp::getId;
+  protected Function<LocationCampus, String> idExtractor() {
+    return LocationCampus::getId;
   }
 
   @Override
-  protected Function<Loccamp, Metadata> metadataExtractor() {
-    return Loccamp::getMetadata;
+  protected Function<LocationCampus, Metadata> metadataExtractor() {
+    return LocationCampus::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Loccamp> recordModifyingFunction() {
+  protected UnaryOperator<LocationCampus> recordModifyingFunction() {
     return classificationType -> classificationType.withName("name-updated");
   }
 
@@ -96,7 +96,7 @@ class CampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
   @BeforeEach
   void beforeEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
     postgresClient.save(INSTITUTION_TABLE, institution)
       .onFailure(ctx::failNow)
       .onSuccess(id -> {
@@ -175,7 +175,7 @@ class CampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
           .hasSize(1)
           .extracting(Error::getMessage)
           .containsExactly("Cannot set loccampus.institutionid = "
-            + invalidInstitutionId + " because it does not exist in locinstitution.id.");
+                           + invalidInstitutionId + " because it does not exist in locinstitution.id.");
         ctx.completeNow();
       })));
   }

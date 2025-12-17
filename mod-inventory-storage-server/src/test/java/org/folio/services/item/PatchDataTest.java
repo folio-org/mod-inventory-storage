@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.ItemPatch;
+import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +31,7 @@ class PatchDataTest {
   @ParameterizedTest
   @MethodSource("provideFalseTestCases")
   @DisplayName("Should return false when hasChanges conditions are not met")
-  void hasChanges_shouldReturnFalse(String description, ItemPatch itemPatch, Item oldItemOverride) {
+  void hasChanges_shouldReturnFalse(String description, ItemPatchRequest itemPatch, Item oldItemOverride) {
     // Given
     if (oldItemOverride != null) {
       patchData.setOldItem(oldItemOverride);
@@ -48,7 +48,7 @@ class PatchDataTest {
   @ParameterizedTest
   @MethodSource("provideTrueTestCases")
   @DisplayName("Should return true when hasChanges conditions are met")
-  void hasChanges_shouldReturnTrue(String description, ItemPatch itemPatch, Item oldItemOverride) {
+  void hasChanges_shouldReturnTrue(String description, ItemPatchRequest itemPatch, Item oldItemOverride) {
     // Given
     if (oldItemOverride != null) {
       patchData.setOldItem(oldItemOverride);
@@ -66,22 +66,22 @@ class PatchDataTest {
     return Stream.of(
       Arguments.of(
         "No additional properties exist",
-        new ItemPatch(),
+        new ItemPatchRequest(),
         null
       ),
       Arguments.of(
         "Only holdingsRecordId is present and unchanged",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", "old-holdings-id"),
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", "old-holdings-id"),
         null
       ),
       Arguments.of(
         "HoldingsRecordId is null in both old and patch",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", null),
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", null),
         new Item().withId("old-item-id").withHoldingsRecordId(null)
       ),
       Arguments.of(
         "Empty string holdingsRecordId in both old and patch",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", ""),
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", ""),
         new Item().withId("old-item-id").withHoldingsRecordId("")
       )
     );
@@ -100,31 +100,31 @@ class PatchDataTest {
   private static Stream<Arguments> provideHoldingsRecordIdChangeTestCases() {
     return Stream.of(
       Arguments.of("Only holdingsRecordId is present and changed",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", "different-holdings-id"), null),
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", "different-holdings-id"), null),
       Arguments.of("HoldingsRecordId changes from non-null to null",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", null), null)
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", null), null)
     );
   }
 
   private static Stream<Arguments> provideOtherPropertiesTestCases() {
     return Stream.of(
       Arguments.of("Other properties are present",
-        new ItemPatch().withAdditionalProperty("materialTypeId", "some-material-type-id"), null),
+        new ItemPatchRequest().withAdditionalProperty("materialTypeId", "some-material-type-id"), null),
       Arguments.of("Multiple properties including holdingsRecordId are present",
-        new ItemPatch()
+        new ItemPatchRequest()
           .withAdditionalProperty("holdingsRecordId", "old-holdings-id")
           .withAdditionalProperty("materialTypeId", "some-material-type-id"), null),
       Arguments.of("Status property is present",
-        new ItemPatch().withAdditionalProperty("status", Map.of("name", "Available")), null),
+        new ItemPatchRequest().withAdditionalProperty("status", Map.of("name", "Available")), null),
       Arguments.of("PermanentLoanTypeId property is present",
-        new ItemPatch().withAdditionalProperty("permanentLoanTypeId", "loan-type-id"), null)
+        new ItemPatchRequest().withAdditionalProperty("permanentLoanTypeId", "loan-type-id"), null)
     );
   }
 
   private static Stream<Arguments> provideEmptyStringToValueTestCases() {
     return Stream.of(
       Arguments.of("HoldingsRecordId changes from empty string to actual value",
-        new ItemPatch().withAdditionalProperty("holdingsRecordId", "new-holdings-id"),
+        new ItemPatchRequest().withAdditionalProperty("holdingsRecordId", "new-holdings-id"),
         new Item().withId("old-item-id").withHoldingsRecordId(""))
     );
   }

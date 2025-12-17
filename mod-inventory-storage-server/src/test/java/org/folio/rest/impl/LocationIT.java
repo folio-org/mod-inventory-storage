@@ -24,10 +24,10 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Location;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.model.Locations;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Loclib;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -114,9 +114,9 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
   void beforeEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     primaryServicePointId = UUID.randomUUID();
-    var institution = new Locinst().withName("institution").withCode("ic");
-    var campus = new Loccamp().withName("campus").withCode("cc");
-    var library = new Loclib().withName("library").withCode("lc");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
+    var campus = new LocationCampus().withName("campus").withCode("cc");
+    var library = new LocationLibrary().withName("library").withCode("lc");
     postgresClient.save(INSTITUTION_TABLE, institution)
       .compose(id -> {
         institutionId = id;
@@ -160,10 +160,10 @@ class LocationIT extends BaseReferenceDataIntegrationTest<Location, Locations> {
       .withCode("shadow");
 
     Future.all(
-      postgresClient.save(referenceTable(), nonShadowLocation1),
-      postgresClient.save(referenceTable(), nonShadowLocation2),
-      postgresClient.save(referenceTable(), shadowLocation)
-    )
+        postgresClient.save(referenceTable(), nonShadowLocation1),
+        postgresClient.save(referenceTable(), nonShadowLocation2),
+        postgresClient.save(referenceTable(), shadowLocation)
+      )
       .compose(s ->
         doGet(client, resourceUrl() + queryStringAndParam)
           .onComplete(verifyStatus(ctx, HTTP_OK))

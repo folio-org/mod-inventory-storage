@@ -25,10 +25,10 @@ import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Loclib;
-import org.folio.rest.jaxrs.model.Loclibs;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationLibraries;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -42,7 +42,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitLibraryIT
-  extends BaseReferenceDataIntegrationTest<Loclib, Loclibs> {
+  extends BaseReferenceDataIntegrationTest<LocationLibrary, LocationLibraries> {
 
   private String campusId;
 
@@ -57,45 +57,45 @@ class LocationUnitLibraryIT
   }
 
   @Override
-  protected Class<Loclib> targetClass() {
-    return Loclib.class;
+  protected Class<LocationLibrary> targetClass() {
+    return LocationLibrary.class;
   }
 
   @Override
-  protected Class<Loclibs> collectionClass() {
-    return Loclibs.class;
+  protected Class<LocationLibraries> collectionClass() {
+    return LocationLibraries.class;
   }
 
   @Override
-  protected Loclib sampleRecord() {
-    return new Loclib()
+  protected LocationLibrary sampleRecord() {
+    return new LocationLibrary()
       .withName("test-library")
       .withCode("code")
       .withCampusId(campusId);
   }
 
   @Override
-  protected Function<Loclibs, List<Loclib>> collectionRecordsExtractor() {
-    return Loclibs::getLoclibs;
+  protected Function<LocationLibraries, List<LocationLibrary>> collectionRecordsExtractor() {
+    return LocationLibraries::getLoclibs;
   }
 
   @Override
-  protected List<Function<Loclib, Object>> recordFieldExtractors() {
-    return List.of(Loclib::getName);
+  protected List<Function<LocationLibrary, Object>> recordFieldExtractors() {
+    return List.of(LocationLibrary::getName);
   }
 
   @Override
-  protected Function<Loclib, String> idExtractor() {
-    return Loclib::getId;
+  protected Function<LocationLibrary, String> idExtractor() {
+    return LocationLibrary::getId;
   }
 
   @Override
-  protected Function<Loclib, Metadata> metadataExtractor() {
-    return Loclib::getMetadata;
+  protected Function<LocationLibrary, Metadata> metadataExtractor() {
+    return LocationLibrary::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Loclib> recordModifyingFunction() {
+  protected UnaryOperator<LocationLibrary> recordModifyingFunction() {
     return classificationType -> classificationType.withName("name-updated");
   }
 
@@ -107,8 +107,8 @@ class LocationUnitLibraryIT
   @BeforeEach
   void beforeEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
-    var campus = new Loccamp().withName("campus").withCode("cc");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
+    var campus = new LocationCampus().withName("campus").withCode("cc");
     postgresClient.save(INSTITUTION_TABLE, institution)
       .compose(
         id -> postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(id)))
@@ -227,7 +227,7 @@ class LocationUnitLibraryIT
           .hasSize(1)
           .extracting(Error::getMessage)
           .containsExactly("Cannot set loclibrary.campusid = "
-            + invalidCampusId + " because it does not exist in loccampus.id.");
+                           + invalidCampusId + " because it does not exist in loccampus.id.");
         ctx.completeNow();
       })));
   }
@@ -277,19 +277,19 @@ class LocationUnitLibraryIT
       })));
   }
 
-  private void verifyLibraryCollection(TestResponse response, String queryStringAndParam, 
-                                        int total, List<String> codes) {
-    var collectionUnits = response.bodyAsClass(Loclibs.class);
+  private void verifyLibraryCollection(TestResponse response, String queryStringAndParam,
+                                       int total, List<String> codes) {
+    var collectionUnits = response.bodyAsClass(LocationLibraries.class);
     assertThat(collectionUnits)
       .as("verify collection for query and param: " + queryStringAndParam)
       .isNotNull()
       .hasFieldOrPropertyWithValue("totalRecords", total)
-      .extracting(Loclibs::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .extracting(LocationLibraries::getLoclibs).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
       .hasSize(total);
 
     assertThat(collectionUnits.getLoclibs())
       .hasSize(total)
-      .extracting(Loclib::getCode)
+      .extracting(LocationLibrary::getCode)
       .containsAll(codes);
   }
 

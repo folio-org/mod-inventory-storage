@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.folio.rest.jaxrs.model.DisplayFormat;
 import org.folio.rest.jaxrs.model.InstanceDateType;
-import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
+import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.extension.EnableTenant;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,7 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
                                                                 PostgresClient postgresCenterClient,
                                                                 String id, VertxTestContext ctx,
                                                                 io.vertx.junit5.Checkpoint checkpoint) {
-    var updatedRecord = new InstanceDateTypePatch().withName("Updated");
+    var updatedRecord = new InstanceDateTypePatchRequest().withName("Updated");
     return doPatch(client, "/instance-date-types/" + id, CONSORTIUM_CENTRAL_TENANT, pojo2JsonObject(updatedRecord))
       .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
       .compose(r -> postgresCenterClient.getById(INSTANCE_DATE_TYPE_TABLE, id, InstanceDateType.class)

@@ -68,7 +68,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.awaitility.Awaitility;
 import org.folio.HttpStatus;
-import org.folio.rest.jaxrs.model.InventoryInstanceIds;
+import org.folio.rest.jaxrs.model.InventoryHierarchyInstanceIds;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.Response;
@@ -648,7 +648,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> future = new CompletableFuture<>();
     final List<JsonObject> results = new ArrayList<>();
 
-    InventoryInstanceIds instanceIdsPayload = new InventoryInstanceIds();
+    var instanceIdsPayload = new InventoryHierarchyInstanceIds();
     instanceIdsPayload.setInstanceIds(Arrays.stream(instanceIds).map(UUID::toString).toList());
     instanceIdsPayload.setSkipSuppressedFromDiscoveryRecords(skipSuppressedFromDiscovery);
 

@@ -24,10 +24,10 @@ import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Loccamps;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Loclib;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationCampuses;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -40,7 +40,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
-class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loccamps> {
+class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<LocationCampus, LocationCampuses> {
 
   private String institutionId;
 
@@ -55,42 +55,42 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
   }
 
   @Override
-  protected Class<Loccamp> targetClass() {
-    return Loccamp.class;
+  protected Class<LocationCampus> targetClass() {
+    return LocationCampus.class;
   }
 
   @Override
-  protected Class<Loccamps> collectionClass() {
-    return Loccamps.class;
+  protected Class<LocationCampuses> collectionClass() {
+    return LocationCampuses.class;
   }
 
   @Override
-  protected Loccamp sampleRecord() {
-    return new Loccamp().withName("test-campus").withCode("code").withInstitutionId(institutionId);
+  protected LocationCampus sampleRecord() {
+    return new LocationCampus().withName("test-campus").withCode("code").withInstitutionId(institutionId);
   }
 
   @Override
-  protected Function<Loccamps, List<Loccamp>> collectionRecordsExtractor() {
-    return Loccamps::getLoccamps;
+  protected Function<LocationCampuses, List<LocationCampus>> collectionRecordsExtractor() {
+    return LocationCampuses::getLoccamps;
   }
 
   @Override
-  protected List<Function<Loccamp, Object>> recordFieldExtractors() {
-    return List.of(Loccamp::getName);
+  protected List<Function<LocationCampus, Object>> recordFieldExtractors() {
+    return List.of(LocationCampus::getName);
   }
 
   @Override
-  protected Function<Loccamp, String> idExtractor() {
-    return Loccamp::getId;
+  protected Function<LocationCampus, String> idExtractor() {
+    return LocationCampus::getId;
   }
 
   @Override
-  protected Function<Loccamp, Metadata> metadataExtractor() {
-    return Loccamp::getMetadata;
+  protected Function<LocationCampus, Metadata> metadataExtractor() {
+    return LocationCampus::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Loccamp> recordModifyingFunction() {
+  protected UnaryOperator<LocationCampus> recordModifyingFunction() {
     return loccamp -> loccamp.withName("name-updated");
   }
 
@@ -102,7 +102,7 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
   @BeforeEach
   void beforeEach(Vertx vertx, VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
     postgresClient.save(INSTITUTION_TABLE, institution)
       .onFailure(ctx::failNow)
       .onSuccess(id -> {
@@ -246,8 +246,8 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
   void delete_shouldReturn400_whenCampusHasFks(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var campus = new Loccamp().withName("campus").withCode("cc");
-    var library = new Loclib().withName("library").withCode("lc");
+    var campus = new LocationCampus().withName("campus").withCode("cc");
+    var library = new LocationLibrary().withName("library").withCode("lc");
 
     postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(institutionId))
       .compose(campusId -> postgresClient.save(LIBRARY_TABLE, library.withCampusId(campusId))
@@ -258,17 +258,17 @@ class LocationUnitCampusIT extends BaseReferenceDataIntegrationTest<Loccamp, Loc
 
   private void verifyCampusCollection(TestResponse response, String queryStringAndParam,
                                       int total, List<String> codes) {
-    var collectionUnits = response.bodyAsClass(Loccamps.class);
+    var collectionUnits = response.bodyAsClass(LocationCampuses.class);
     assertThat(collectionUnits)
       .as("verify collection for query param: " + queryStringAndParam)
       .isNotNull()
       .hasFieldOrPropertyWithValue("totalRecords", total)
-      .extracting(Loccamps::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .extracting(LocationCampuses::getLoccamps).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
       .hasSize(total);
 
     assertThat(collectionUnits.getLoccamps())
       .hasSize(total)
-      .extracting(Loccamp::getCode)
+      .extracting(LocationCampus::getCode)
       .containsAll(codes);
   }
 

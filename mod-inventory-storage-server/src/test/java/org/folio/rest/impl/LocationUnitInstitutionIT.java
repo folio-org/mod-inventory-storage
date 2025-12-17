@@ -27,10 +27,10 @@ import java.util.stream.Stream;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Loccamp;
-import org.folio.rest.jaxrs.model.Locinst;
-import org.folio.rest.jaxrs.model.Locinsts;
-import org.folio.rest.jaxrs.model.Loclib;
+import org.folio.rest.jaxrs.model.LocationCampus;
+import org.folio.rest.jaxrs.model.LocationInstitution;
+import org.folio.rest.jaxrs.model.LocationInstitutions;
+import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
@@ -44,7 +44,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 @ExtendWith(VertxExtension.class)
 class LocationUnitInstitutionIT
-  extends BaseReferenceDataIntegrationTest<Locinst, Locinsts> {
+  extends BaseReferenceDataIntegrationTest<LocationInstitution, LocationInstitutions> {
 
   @Override
   protected String referenceTable() {
@@ -57,42 +57,42 @@ class LocationUnitInstitutionIT
   }
 
   @Override
-  protected Class<Locinst> targetClass() {
-    return Locinst.class;
+  protected Class<LocationInstitution> targetClass() {
+    return LocationInstitution.class;
   }
 
   @Override
-  protected Class<Locinsts> collectionClass() {
-    return Locinsts.class;
+  protected Class<LocationInstitutions> collectionClass() {
+    return LocationInstitutions.class;
   }
 
   @Override
-  protected Locinst sampleRecord() {
-    return new Locinst().withName("test-institution").withCode("code");
+  protected LocationInstitution sampleRecord() {
+    return new LocationInstitution().withName("test-institution").withCode("code");
   }
 
   @Override
-  protected Function<Locinsts, List<Locinst>> collectionRecordsExtractor() {
-    return Locinsts::getLocinsts;
+  protected Function<LocationInstitutions, List<LocationInstitution>> collectionRecordsExtractor() {
+    return LocationInstitutions::getLocinsts;
   }
 
   @Override
-  protected List<Function<Locinst, Object>> recordFieldExtractors() {
-    return List.of(Locinst::getName);
+  protected List<Function<LocationInstitution, Object>> recordFieldExtractors() {
+    return List.of(LocationInstitution::getName);
   }
 
   @Override
-  protected Function<Locinst, String> idExtractor() {
-    return Locinst::getId;
+  protected Function<LocationInstitution, String> idExtractor() {
+    return LocationInstitution::getId;
   }
 
   @Override
-  protected Function<Locinst, Metadata> metadataExtractor() {
-    return Locinst::getMetadata;
+  protected Function<LocationInstitution, Metadata> metadataExtractor() {
+    return LocationInstitution::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Locinst> recordModifyingFunction() {
+  protected UnaryOperator<LocationInstitution> recordModifyingFunction() {
     return classificationType -> classificationType.withName("name-updated");
   }
 
@@ -111,16 +111,6 @@ class LocationUnitInstitutionIT
     deleteAllLocationData(vertx, ctx);
   }
 
-  private static void deleteAllLocationData(Vertx vertx, VertxTestContext ctx) {
-    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-
-    postgresClient.delete(LIBRARY_TABLE, (CQLWrapper) null)
-      .compose(rows -> postgresClient.delete(CAMPUS_TABLE, (CQLWrapper) null))
-      .compose(rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
-      .onFailure(ctx::failNow)
-      .onComplete(event -> ctx.completeNow());
-  }
-
   @MethodSource("queryStringAndParam")
   @ParameterizedTest
   void getCollection_shouldReturnRecordCollectionBasedOnQueryStringAndParam(String queryStringAndParam, int total,
@@ -129,8 +119,8 @@ class LocationUnitInstitutionIT
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
-    var nonShadowInstitution1 = new Locinst().withName("test-institution1").withCode("code1");
-    var nonShadowInstitution2 = new Locinst().withName("test-institution2").withCode("code2");
+    var nonShadowInstitution1 = new LocationInstitution().withName("test-institution1").withCode("code1");
+    var nonShadowInstitution2 = new LocationInstitution().withName("test-institution2").withCode("code2");
     var shadowInstitution = sampleRecord()
       .withIsShadow(true)
       .withName("test-shadow-institution")
@@ -151,7 +141,7 @@ class LocationUnitInstitutionIT
   }
 
   @Test
-    void post_shouldReturn500_whenObjectIsDuplicate(Vertx vertx,
+  void post_shouldReturn500_whenObjectIsDuplicate(Vertx vertx,
                                                   VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var id = UUID.randomUUID().toString();
@@ -305,9 +295,9 @@ class LocationUnitInstitutionIT
   void deleteAll_shouldReturn500_whenInstitutionHasFks(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
-    var campus = new Loccamp().withName("campus").withCode("cc");
-    var library = new Loclib().withName("library").withCode("lc");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
+    var campus = new LocationCampus().withName("campus").withCode("cc");
+    var library = new LocationLibrary().withName("library").withCode("lc");
 
     postgresClient.save(INSTITUTION_TABLE, institution)
       .compose(id -> postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(id)))
@@ -323,8 +313,8 @@ class LocationUnitInstitutionIT
   void delete_shouldReturn400_whenInstitutionHasFks(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    var institution = new Locinst().withName("institution").withCode("ic");
-    var campus = new Loccamp().withName("campus").withCode("cc");
+    var institution = new LocationInstitution().withName("institution").withCode("ic");
+    var campus = new LocationCampus().withName("campus").withCode("cc");
 
     postgresClient.save(INSTITUTION_TABLE, institution)
       .compose(institutionId -> postgresClient.save(CAMPUS_TABLE, campus.withInstitutionId(institutionId))
@@ -349,19 +339,29 @@ class LocationUnitInstitutionIT
       .onComplete(ctx.succeeding(response -> ctx.verify(ctx::completeNow)));
   }
 
+  private static void deleteAllLocationData(Vertx vertx, VertxTestContext ctx) {
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    postgresClient.delete(LIBRARY_TABLE, (CQLWrapper) null)
+      .compose(rows -> postgresClient.delete(CAMPUS_TABLE, (CQLWrapper) null))
+      .compose(rows -> postgresClient.delete(INSTITUTION_TABLE, (CQLWrapper) null))
+      .onFailure(ctx::failNow)
+      .onComplete(event -> ctx.completeNow());
+  }
+
   private void verifyInstitutionCollection(TestResponse response, String queryStringAndParam,
                                            int total, List<String> codes) {
-    var collectionUnits = response.bodyAsClass(Locinsts.class);
+    var collectionUnits = response.bodyAsClass(LocationInstitutions.class);
     assertThat(collectionUnits)
       .as("verify collection for query and param: " + queryStringAndParam)
       .isNotNull()
       .hasFieldOrPropertyWithValue("totalRecords", total)
-      .extracting(Locinsts::getLocinsts).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
+      .extracting(LocationInstitutions::getLocinsts).asInstanceOf(InstanceOfAssertFactories.COLLECTION)
       .hasSize(total);
 
     assertThat(collectionUnits.getLocinsts())
       .hasSize(total)
-      .extracting(Locinst::getCode)
+      .extracting(LocationInstitution::getCode)
       .containsAll(codes);
   }
 

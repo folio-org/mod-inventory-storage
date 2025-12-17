@@ -7,8 +7,8 @@ import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_BEING_PICKUP_LOC;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_CREATE_ERR_MSG_WITHOUT_HOLD_EXPIRY;
 import static org.folio.rest.impl.ServicePointApi.SERVICE_POINT_TABLE;
-import static org.folio.rest.jaxrs.model.Servicepoint.DefaultCheckInActionForUseAtLocation.KEEP_ON_HOLD_SHELF;
-import static org.folio.rest.jaxrs.model.Servicepoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS;
+import static org.folio.rest.jaxrs.model.ServicePoint.DefaultCheckInActionForUseAtLocation.KEEP_ON_HOLD_SHELF;
+import static org.folio.rest.jaxrs.model.ServicePoint.HoldShelfClosedLibraryDateManagement.MOVE_TO_BEGINNING_OF_NEXT_OPEN_SERVICE_POINT_HOURS;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,17 +26,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
-import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod.IntervalId;
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.jaxrs.model.Servicepoint;
-import org.folio.rest.jaxrs.model.Servicepoints;
+import org.folio.rest.jaxrs.model.ServicePoint;
+import org.folio.rest.jaxrs.model.ServicePoints;
+import org.folio.rest.jaxrs.model.TimePeriod;
+import org.folio.rest.jaxrs.model.TimePeriod.IntervalId;
 import org.folio.rest.support.messages.ServicePointEventMessageChecks;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoint, Servicepoints> {
+public class ServicePointsIT extends BaseReferenceDataIntegrationTest<ServicePoint, ServicePoints> {
 
   private final ServicePointEventMessageChecks servicePointEventMessageChecks =
     new ServicePointEventMessageChecks(KAFKA_CONSUMER);
@@ -52,18 +52,18 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
   }
 
   @Override
-  protected Class<Servicepoint> targetClass() {
-    return Servicepoint.class;
+  protected Class<ServicePoint> targetClass() {
+    return ServicePoint.class;
   }
 
   @Override
-  protected Class<Servicepoints> collectionClass() {
-    return Servicepoints.class;
+  protected Class<ServicePoints> collectionClass() {
+    return ServicePoints.class;
   }
 
   @Override
-  protected Servicepoint sampleRecord() {
-    return new Servicepoint()
+  protected ServicePoint sampleRecord() {
+    return new ServicePoint()
       .withName("Sample-Service-Point")
       .withDiscoveryDisplayName("Sample-Discovery-Display-Name")
       .withCode("SP001")
@@ -71,31 +71,31 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
   }
 
   @Override
-  protected Function<Servicepoints, List<Servicepoint>> collectionRecordsExtractor() {
-    return Servicepoints::getServicepoints;
+  protected Function<ServicePoints, List<ServicePoint>> collectionRecordsExtractor() {
+    return ServicePoints::getServicepoints;
   }
 
   @Override
-  protected List<Function<Servicepoint, Object>> recordFieldExtractors() {
+  protected List<Function<ServicePoint, Object>> recordFieldExtractors() {
     return List.of(
-      Servicepoint::getName,
-      Servicepoint::getCode,
-      Servicepoint::getDescription
+      ServicePoint::getName,
+      ServicePoint::getCode,
+      ServicePoint::getDescription
     );
   }
 
   @Override
-  protected Function<Servicepoint, String> idExtractor() {
-    return Servicepoint::getId;
+  protected Function<ServicePoint, String> idExtractor() {
+    return ServicePoint::getId;
   }
 
   @Override
-  protected Function<Servicepoint, Metadata> metadataExtractor() {
-    return Servicepoint::getMetadata;
+  protected Function<ServicePoint, Metadata> metadataExtractor() {
+    return ServicePoint::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Servicepoint> recordModifyingFunction() {
+  protected UnaryOperator<ServicePoint> recordModifyingFunction() {
     return servicePoint -> servicePoint.withName("Updated");
   }
 
@@ -625,7 +625,7 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
   }
 
   private JsonObject createServicePoint(UUID id, String name, String code, String displayName,
-                                        boolean pickupLocation, HoldShelfExpiryPeriod holdShelfExpiryPeriod) {
+                                        boolean pickupLocation, TimePeriod holdShelfExpiryPeriod) {
     var sp = new JsonObject()
       .put("id", id.toString())
       .put("name", name)
@@ -775,13 +775,13 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<Servicepoi
     ctx.completeNow();
   }
 
-  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod(int duration, IntervalId intervalId) {
-    return new HoldShelfExpiryPeriod()
+  public static TimePeriod createHoldShelfExpiryPeriod(int duration, IntervalId intervalId) {
+    return new TimePeriod()
       .withDuration(duration)
       .withIntervalId(intervalId);
   }
 
-  public static HoldShelfExpiryPeriod createHoldShelfExpiryPeriod() {
+  public static TimePeriod createHoldShelfExpiryPeriod() {
     return createHoldShelfExpiryPeriod(2, IntervalId.DAYS);
   }
 }

@@ -23,8 +23,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
-import org.folio.rest.jaxrs.model.HoldShelfExpiryPeriod;
 import org.folio.rest.jaxrs.model.StaffSlip;
+import org.folio.rest.jaxrs.model.TimePeriod;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 
@@ -171,7 +171,7 @@ public final class LocationUtility {
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod)
+                                            Boolean pickupLocation, TimePeriod shelfExpiryPeriod)
     throws InterruptedException, ExecutionException, TimeoutException {
 
     return createServicePoint(id, name, code, discoveryDisplayName, description,
@@ -180,7 +180,7 @@ public final class LocationUtility {
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                            Boolean pickupLocation, TimePeriod shelfExpiryPeriod,
                                             String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -190,7 +190,7 @@ public final class LocationUtility {
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                            Boolean pickupLocation, TimePeriod shelfExpiryPeriod,
                                             List<StaffSlip> slips)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -200,7 +200,7 @@ public final class LocationUtility {
 
   public static Response createServicePoint(UUID id, String name, String code,
                                             String discoveryDisplayName, String description, Integer shelvingLagTime,
-                                            Boolean pickupLocation, HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                            Boolean pickupLocation, TimePeriod shelfExpiryPeriod,
                                             List<StaffSlip> slips, Boolean ecsRequestRouting, String tenantId)
     throws InterruptedException, ExecutionException, TimeoutException {
 
@@ -217,7 +217,7 @@ public final class LocationUtility {
   private static JsonObject buildServicePointRequest(UUID id, String name, String code,
                                                       String discoveryDisplayName, String description,
                                                       Integer shelvingLagTime, Boolean pickupLocation,
-                                                      HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                                      TimePeriod shelfExpiryPeriod,
                                                       List<StaffSlip> slips, Boolean ecsRequestRouting) {
     JsonObject request = new JsonObject()
       .put("name", name)
@@ -233,7 +233,7 @@ public final class LocationUtility {
   private static void addOptionalServicePointFields(JsonObject request, UUID id, String description,
                                                      Integer shelvingLagTime, Boolean pickupLocation,
                                                      Boolean ecsRequestRouting,
-                                                     HoldShelfExpiryPeriod shelfExpiryPeriod,
+                                                     TimePeriod shelfExpiryPeriod,
                                                      List<StaffSlip> slips) {
     if (ecsRequestRouting != null) {
       request.put("ecsRequestRouting", ecsRequestRouting);

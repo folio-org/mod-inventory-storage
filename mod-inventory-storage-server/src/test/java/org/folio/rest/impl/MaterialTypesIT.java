@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import org.folio.rest.jaxrs.model.MaterialType;
+import org.folio.rest.jaxrs.model.MaterialTypes;
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.jaxrs.model.Mtype;
-import org.folio.rest.jaxrs.model.Mtypes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-class MaterialTypesIT extends BaseReferenceDataIntegrationTest<Mtype, Mtypes> {
+class MaterialTypesIT extends BaseReferenceDataIntegrationTest<MaterialType, MaterialTypes> {
 
   @Override
   protected String referenceTable() {
@@ -32,45 +32,45 @@ class MaterialTypesIT extends BaseReferenceDataIntegrationTest<Mtype, Mtypes> {
   }
 
   @Override
-  protected Class<Mtype> targetClass() {
-    return Mtype.class;
+  protected Class<MaterialType> targetClass() {
+    return MaterialType.class;
   }
 
   @Override
-  protected Class<Mtypes> collectionClass() {
-    return Mtypes.class;
+  protected Class<MaterialTypes> collectionClass() {
+    return MaterialTypes.class;
   }
 
   @Override
-  protected Mtype sampleRecord() {
-    return new Mtype()
+  protected MaterialType sampleRecord() {
+    return new MaterialType()
       .withName("Sample-Material-Type");
   }
 
   @Override
-  protected Function<Mtypes, List<Mtype>> collectionRecordsExtractor() {
-    return Mtypes::getMtypes;
+  protected Function<MaterialTypes, List<MaterialType>> collectionRecordsExtractor() {
+    return MaterialTypes::getMtypes;
   }
 
   @Override
-  protected List<Function<Mtype, Object>> recordFieldExtractors() {
+  protected List<Function<MaterialType, Object>> recordFieldExtractors() {
     return List.of(
-      Mtype::getName
+      MaterialType::getName
     );
   }
 
   @Override
-  protected Function<Mtype, String> idExtractor() {
-    return Mtype::getId;
+  protected Function<MaterialType, String> idExtractor() {
+    return MaterialType::getId;
   }
 
   @Override
-  protected Function<Mtype, Metadata> metadataExtractor() {
-    return Mtype::getMetadata;
+  protected Function<MaterialType, Metadata> metadataExtractor() {
+    return MaterialType::getMetadata;
   }
 
   @Override
-  protected UnaryOperator<Mtype> recordModifyingFunction() {
+  protected UnaryOperator<MaterialType> recordModifyingFunction() {
     return materialType -> materialType.withName(materialType.getName() + "-Updated");
   }
 

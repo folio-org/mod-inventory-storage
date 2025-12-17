@@ -19,7 +19,7 @@ import java.util.function.UnaryOperator;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.DisplayFormat;
 import org.folio.rest.jaxrs.model.InstanceDateType;
-import org.folio.rest.jaxrs.model.InstanceDateTypePatch;
+import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.rest.jaxrs.model.InstanceDateTypes;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.persist.PostgresClient;
@@ -134,7 +134,7 @@ class InstanceDateTypesIT extends BaseReferenceDataIntegrationTest<InstanceDateT
 
     postgresClient.save(referenceTable(), newRecord)
       .compose(id -> {
-        var updatedRecord = new InstanceDateTypePatch().withName("Updated");
+        var updatedRecord = new InstanceDateTypePatchRequest().withName("Updated");
         return doPatch(client, resourceUrlById(id), pojo2JsonObject(updatedRecord))
           .onComplete(verifyStatus(ctx, HTTP_NO_CONTENT))
           .compose(r -> postgresClient.getById(referenceTable(), id, targetClass())

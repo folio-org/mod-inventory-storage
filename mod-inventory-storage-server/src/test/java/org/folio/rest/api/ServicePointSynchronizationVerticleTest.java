@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.rest.jaxrs.model.Servicepoint;
+import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.utility.ModuleUtility;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
@@ -161,7 +161,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
 
   @Test
   public void shouldHandleUpdateEventForNonExistingServicePoint(TestContext context) {
-    Servicepoint nonExistingServicePoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    ServicePoint nonExistingServicePoint = new ServicePoint().withId(UUID.randomUUID().toString());
     publishServicePointUpdateEvent(nonExistingServicePoint, nonExistingServicePoint);
 
     getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
@@ -171,7 +171,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
 
   @Test
   public void shouldHandleDeleteEventForNonExistingServicePoint(TestContext context) {
-    Servicepoint nonExistingServicePoint = new Servicepoint().withId(UUID.randomUUID().toString());
+    ServicePoint nonExistingServicePoint = new ServicePoint().withId(UUID.randomUUID().toString());
     publishServicePointDeleteEvent(nonExistingServicePoint);
 
     getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
@@ -190,12 +190,12 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
     return waitFor(future, 10);
   }
 
-  private Future<Servicepoint> getServicePointById(String tenantId) {
+  private Future<ServicePoint> getServicePointById(String tenantId) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
     getClient().get(servicePointsUrl("/" + SERVICE_POINT_ID), tenantId, promise::complete);
     return promise.future().map(resp -> {
       MatcherAssert.assertThat(resp.statusCode(), CoreMatchers.is(HTTP_OK));
-      return resp.bodyAsJson(Servicepoint.class);
+      return resp.bodyAsJson(ServicePoint.class);
     });
   }
 
@@ -206,12 +206,12 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   }
 
   @SneakyThrows(Exception.class)
-  private static Servicepoint createServicePointAgainstTenant(String tenantId, boolean updated) {
+  private static ServicePoint createServicePointAgainstTenant(String tenantId, boolean updated) {
     String discoveryDisplayName = "Circulation Desk -- Basement" + (updated ? "(updated)" : "");
     return createServicePoint(UUID.fromString(SERVICE_POINT_ID), "Circ Desk 2522", "cd2522",
       discoveryDisplayName, null, 20,
       true, createHoldShelfExpiryPeriod(), tenantId)
-      .getJson().mapTo(Servicepoint.class);
+      .getJson().mapTo(ServicePoint.class);
   }
 
   private static int waitUntilValueIsIncreased(int previousValue, Callable<Integer> valueSupplier) {
@@ -219,14 +219,14 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
       .until(valueSupplier, newValue -> newValue > previousValue);
   }
 
-  private static JsonObject buildCreateEvent(Servicepoint newVersion) {
+  private static JsonObject buildCreateEvent(ServicePoint newVersion) {
     return new JsonObject()
       .put("tenant", CENTRAL_TENANT_ID)
       .put("type", "CREATE")
       .put("new", newVersion);
   }
 
-  private static JsonObject buildUpdateEvent(Servicepoint oldVersion, Servicepoint newVersion) {
+  private static JsonObject buildUpdateEvent(ServicePoint oldVersion, ServicePoint newVersion) {
     return new JsonObject()
       .put("tenant", CENTRAL_TENANT_ID)
       .put("type", "UPDATE")
@@ -234,7 +234,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
       .put("new", newVersion);
   }
 
-  private static JsonObject buildDeleteEvent(Servicepoint object) {
+  private static JsonObject buildDeleteEvent(ServicePoint object) {
     return new JsonObject()
       .put("tenant", CENTRAL_TENANT_ID)
       .put("type", "DELETE")
@@ -242,18 +242,17 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   }
 
   private void publishServicePointCreateEvent(
-    Servicepoint newServicePoint) {
+    ServicePoint newServicePoint) {
 
     publishEvent(buildCreateEvent(newServicePoint));
   }
 
-  private void publishServicePointUpdateEvent(Servicepoint oldServicePoint,
-    Servicepoint newServicePoint) {
+  private void publishServicePointUpdateEvent(ServicePoint oldServicePoint,    ServicePoint newServicePoint) {
 
     publishEvent(buildUpdateEvent(oldServicePoint, newServicePoint));
   }
 
-  private void publishServicePointDeleteEvent(Servicepoint servicePoint) {
+  private void publishServicePointDeleteEvent(ServicePoint servicePoint) {
     publishEvent(buildDeleteEvent(servicePoint));
   }
 
