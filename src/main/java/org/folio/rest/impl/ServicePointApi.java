@@ -85,7 +85,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     });
   }
 
-  private boolean validateAndPrepareEntity(Servicepoint entity,
+  private boolean validateAndPrepareEntity(Servicepoint entity, 
                                            Handler<AsyncResult<Response>> asyncResultHandler) {
     String validateSvcptResult = validateServicePoint(entity);
     if (validateSvcptResult != null) {

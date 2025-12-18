@@ -81,25 +81,27 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void instanceChessPlayer() {
-    JsonObject instance = get(instancesStorageUrl("/3c4ae3f3-b460-4a89-a2f9-78ce3145e4fc"));
-    assertThat(instance.getString("title"), is("The chess player’s mating guide Computer Datei Robert Ris"));
-    assertMetadata(instance);
-  }
-
-  @Test
   public void holdingsRecordTransparentWater() {
-    JsonObject holdingsRecord = get(holdingsStorageUrl("/e9285a1c-1dfc-4380-868c-e74073003f43"));
-    assertThat(holdingsRecord.getString("instanceId"), is("e54b1f4d-7d05-4b1a-9368-3c36b75d8ac6"));
+    var holdingsRecord = get(holdingsStorageUrl("/e9285a1c-1dfc-4380-868c-e74073003f43"));
+    assertThat(holdingsRecord.getString("instanceId"), notNullValue());
     assertThat(holdingsRecord.getString("callNumber"), is("M1366.S67 T73 2017"));
     assertThat(holdingsRecord.getString("permanentLocationId"), is("fcd64ce1-6995-48f0-840e-89ffa2288371"));
     assertMetadata(holdingsRecord);
   }
 
   @Test
+  public void instanceTransparentWater() {
+    var holdingsRecord = get(holdingsStorageUrl("/e9285a1c-1dfc-4380-868c-e74073003f43"));
+    var instanceId = holdingsRecord.getString("instanceId");
+    var instance = get(instancesStorageUrl("/" + instanceId));
+    assertThat(instance.getString("title"), is("Transparent water"));
+    assertMetadata(instance);
+  }
+
+  @Test
   public void itemSemanticWebPrimer() {
-    JsonObject item = get(itemsStorageUrl("/7212ba6a-8dcf-45a1-be9a-ffaa847c4423"));
-    JsonObject status = item.getJsonObject("status");
+    var item = get(itemsStorageUrl("/7212ba6a-8dcf-45a1-be9a-ffaa847c4423"));
+    var status = item.getJsonObject("status");
     assertThat(status.getString("name"), is("Available"));
     assertThat(item.getString("holdingsRecordId"), is("e3ff6133-b9a2-4d4c-a1c9-dc1867d4df19"));
     assertThat(item.getString("barcode"), is("10101"));
@@ -108,14 +110,23 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void instanceRelationshipGlobalAfrica2() {
-    JsonObject ir = getInstanceRelationship("e5cea7b1-3c48-428c-bc5e-2efc9ead1924");
+    var ir = getInstanceRelationship("e5cea7b1-3c48-428c-bc5e-2efc9ead1924");
 
     assertThat("Instance relationship could not be found", ir, notNullValue());
 
-    assertThat(ir.getString("superInstanceId"), is("f7e82a1e-fc06-4b82-bb1d-da326cb378ce"));
-    assertThat(ir.getString("subInstanceId"), is("04489a01-f3cd-4f9e-9be4-d9c198703f45"));
+    assertThat(ir.getString("superInstanceId"), notNullValue());
+    assertThat(ir.getString("subInstanceId"), notNullValue());
     assertThat(ir.getString("instanceRelationshipTypeId"), is("30773a27-b485-4dab-aeb6-b8c04fa3cb17"));
     assertMetadata(ir);
+
+    var superInstanceId = ir.getString("superInstanceId");
+    var superInstance = get(instancesStorageUrl("/" + superInstanceId));
+    assertThat(superInstance.getString("title"), is("Global Africa"));
+
+    var subInstanceId = ir.getString("subInstanceId");
+    var subInstance = get(instancesStorageUrl("/" + subInstanceId));
+    assertThat(subInstance.getString("title"), is(
+      "Environment and identity politics in colonial Africa Fulani migrations and land conflict by Emmanuel M. Mbah"));
   }
 
   /**
@@ -123,7 +134,7 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
    * and createdByUserId and updatedByUserId are null.
    */
   private void assertMetadata(JsonObject entity) {
-    JsonObject metadata = entity.getJsonObject("metadata");
+    var metadata = entity.getJsonObject("metadata");
     assertThat(metadata, is(notNullValue()));
     assertThat(metadata.getString("createdDate"), is(notNullValue()));
     assertThat(metadata.getString("createdByUserId"), is(nullValue()));
