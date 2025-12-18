@@ -149,7 +149,7 @@ public final class AsyncMigrationJobService {
         () -> job.getProcessed().add(new AsyncMigrationJobCounts()
           .withCount(records)
           .withMigrationName(migrationName)));
-
+    
     if (ACCEPTABLE_STATUSES.contains(job.getJobStatus())) {
       updateJobStatus(job);
     }

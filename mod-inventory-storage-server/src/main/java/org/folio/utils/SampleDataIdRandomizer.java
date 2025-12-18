@@ -1,0 +1,208 @@
+package org.folio.utils;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+/**
+ * Utility class to randomize instance IDs in sample data JSON files.
+ * This ensures that different tenants don't have instances with the same IDs,
+ * preventing them from being treated as copies.
+ *
+ * <p>
+ * The randomizer maintains a mapping of old instance IDs to new randomized IDs,
+ * ensuring that all references to an instance (via instanceId field) are updated
+ * consistently across holdings, items, and instance relationships.
+ */
+public class SampleDataIdRandomizer {
+
+  private static final Logger log = LogManager.getLogger();
+
+  // Pattern to match UUID format
+  private static final Pattern UUID_PATTERN = Pattern.compile(
+    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+  );
+
+  // Mapping of old instance IDs to new randomized IDs
+  private final Map<String, String> instanceIdMapping = new HashMap<>();
+
+  // Random 4-character suffix for this tenant (same for all HRIDs in this dataset)
+  // Max sample data prefix is 6 chars ("bwinst"), so 6 + 4 = 10 chars (within limit)
+  private final String hridSuffix;
+
+  public SampleDataIdRandomizer() {
+    // Generate a random 4-character lowercase alphabetic suffix using secure random
+    // Using 4 chars gives us 456,976 unique combinations (26^4)
+    hridSuffix = RandomStringUtils.secure().nextAlphabetic(4).toLowerCase();
+  }
+
+  /**
+   * Randomizes the instance ID in the given JSON content.
+   * Only randomizes the top-level "id" field. Use this when loading instance records.
+   *
+   * @param jsonContent the JSON content as a string
+   * @return the JSON content with randomized instance ID
+   */
+  public String randomizeInstanceId(String jsonContent) {
+    try {
+      var jsonObject = new JsonObject(jsonContent);
+      if (jsonObject.containsKey("id")) {
+        var value = jsonObject.getValue("id");
+        if (value instanceof String strValue && isUuid(strValue)) {
+          jsonObject.put("id", getOrCreateMapping(strValue));
+        }
+      }
+      return jsonObject.encodePrettily();
+    } catch (Exception e) {
+      log.warn("Failed to randomize instance ID in JSON content: {}", e.getMessage());
+      return jsonContent;
+    }
+  }
+
+  /**
+   * Updates instance ID references in the given JSON content.
+   * Traverses the JSON and updates any field containing "instanceId" in its name.
+   * Use this when loading entities that reference instances (holdings, items, relationships).
+   *
+   * @param jsonContent the JSON content as a string
+   * @return the JSON content with updated instance ID references
+   */
+  public String updateInstanceIdReferences(String jsonContent) {
+    try {
+      var jsonObject = new JsonObject(jsonContent);
+      updateInstanceIdFields(jsonObject);
+      processNestedObjects(jsonObject);
+      return jsonObject.encodePrettily();
+    } catch (Exception e) {
+      log.warn("Failed to update instance ID references in JSON content: {}", e.getMessage());
+      return jsonContent;
+    }
+  }
+
+  /**
+   * Updates fields containing "instanceId" in their name with mapped values.
+   */
+  private void updateInstanceIdFields(JsonObject jsonObject) {
+    for (var fieldName : jsonObject.fieldNames()) {
+      if (fieldName.contains("instanceId") || fieldName.contains("InstanceId")) {
+        var value = jsonObject.getValue(fieldName);
+        if (value instanceof String strValue && isUuid(strValue)) {
+          var newId = instanceIdMapping.get(strValue);
+          if (newId != null) {
+            jsonObject.put(fieldName, newId);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Processes nested objects and arrays to update instance ID references.
+   */
+  private void processNestedObjects(JsonObject jsonObject) {
+    for (var key : jsonObject.fieldNames()) {
+      var value = jsonObject.getValue(key);
+      if (value instanceof JsonObject nestedObject) {
+        updateInstanceIdFields(nestedObject);
+        processNestedObjects(nestedObject);
+      } else if (value instanceof JsonArray nestedArray) {
+        processNestedArray(nestedArray);
+      }
+    }
+  }
+
+  /**
+   * Processes a JsonArray recursively to update instance ID references.
+   */
+  private void processNestedArray(JsonArray jsonArray) {
+    for (var i = 0; i < jsonArray.size(); i++) {
+      var item = jsonArray.getValue(i);
+      if (item instanceof JsonObject jsonObject) {
+        updateInstanceIdFields(jsonObject);
+        processNestedObjects(jsonObject);
+      } else if (item instanceof JsonArray nestedArray) {
+        processNestedArray(nestedArray);
+      }
+    }
+  }
+
+  /**
+   * Checks if a string is a valid UUID.
+   *
+   * @param value the string to check
+   * @return true if the string is a valid UUID, false otherwise
+   */
+  private boolean isUuid(String value) {
+    return value != null && UUID_PATTERN.matcher(value).matches();
+  }
+
+  /**
+   * Gets an existing instance ID mapping or creates a new one.
+   * This ensures consistency across related entities.
+   *
+   * @param oldInstanceId the original instance ID
+   * @return the mapped new instance ID
+   */
+  private String getOrCreateMapping(String oldInstanceId) {
+    return instanceIdMapping.computeIfAbsent(oldInstanceId, k -> UUID.randomUUID().toString());
+  }
+
+  /**
+   * Randomizes the HRID in the given JSON content by adding a random suffix to the prefix.
+   * This ensures HRIDs are unique across tenants while preserving the numeric sequence.
+   * Only randomizes the top-level "hrid" field.
+   *
+   * @param jsonContent the JSON content as a string
+   * @return the JSON content with randomized HRID
+   */
+  public String randomizeHrid(String jsonContent) {
+    try {
+      var jsonObject = new JsonObject(jsonContent);
+      if (jsonObject.containsKey("hrid")) {
+        var hrid = jsonObject.getString("hrid");
+        if (hrid != null && !hrid.isEmpty()) {
+          jsonObject.put("hrid", addRandomSuffixToHridPrefix(hrid));
+        }
+      }
+      return jsonObject.encodePrettily();
+    } catch (Exception e) {
+      log.warn("Failed to randomize HRID in JSON content: {}", e.getMessage());
+      return jsonContent;
+    }
+  }
+
+  /**
+   * Adds a 4-character suffix to the HRID prefix.
+   * For example: "inst000000000001" becomes "instabcd000000000001"
+   * The suffix is the same for all HRIDs in this tenant.
+   *
+   * @param hrid the original HRID
+   * @return the HRID with suffix added to prefix
+   */
+  private String addRandomSuffixToHridPrefix(String hrid) {
+    // Find where the first digit starts
+    var indexOfFirstDigit = StringUtils.indexOfAny(hrid, "0123456789");
+
+    // Insert suffix between prefix and numeric part
+    var prefix = hrid.substring(0, indexOfFirstDigit);
+    var numericPart = hrid.substring(indexOfFirstDigit);
+
+    return prefix + hridSuffix + numericPart;
+  }
+
+  /**
+   * Clears the instance ID mapping cache.
+   * Useful when processing a new independent dataset.
+   */
+  public void clearMappings() {
+    instanceIdMapping.clear();
+  }
+}
+
