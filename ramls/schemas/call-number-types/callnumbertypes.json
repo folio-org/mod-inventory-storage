@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of call number types",
+  "javaType": "org.folio.rest.jaxrs.model.CallNumberTypes",
+  "type": "object",
+  "properties": {
+    "callNumberTypes": {
+      "description": "List of call number types",
+      "id": "callNumberType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "callnumbertype.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "callNumberTypes",
+    "totalRecords"
+  ]
+}
+

@@ -1,3 +1,3 @@
 # Only the fat jar file is needed for the Docker container
 *
-!target/mod-inventory-storage-fat.jar
+!mod-inventory-storage-server/target/mod-inventory-storage-server-fat.jar

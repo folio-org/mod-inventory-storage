@@ -9,8 +9,8 @@ documentation:
     content: Get dereferenced items data from inventory. Dereferenced means that related record data is added (instanceRecord, holdingsRecord, materialType, permanentLoanType, temporaryLoanType, permanentLocation, temporaryLocation, effectiveLocation) and id fields are removed (holdingsRecordId, instanceId, materialTypeId, permanentLocationId, temporaryLocationId, effectiveLocationId, permanentLoanTypeId, temporaryLoanTypeId).
 
 types:
-  dereferencedItem: !include dereferenceditem.json
-  dereferencedItems: !include dereferenceditems.json
+  dereferencedItem: !include schemas/dereferenced-items/dereferenceditem.json
+  dereferencedItems: !include schemas/dereferenced-items/dereferenceditems.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:

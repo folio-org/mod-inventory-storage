@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Information about when an item was last scanned in the Inventory app.",
+  "javaType": "org.folio.rest.jaxrs.model.ItemLastCheckIn",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "dateTime": {
+      "type": "string",
+      "description": "Date and time of the last check in of the item.",
+      "format": "date-time"
+    },
+    "servicePointId": {
+      "type": "string",
+      "description": "Service point ID being used by a staff member when item was scanned in Check in app.",
+      "$ref": "../common/uuid.json"
+    },
+    "staffMemberId": {
+      "type": "string",
+      "description": "ID a staff member who scanned the item",
+      "$ref": "../common/uuid.json"
+    }
+  }
+}

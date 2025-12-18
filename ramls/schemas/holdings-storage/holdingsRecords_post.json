@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of holdings records",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecordsPostRequest",
+  "type": "object",
+  "properties": {
+    "holdingsRecords": {
+      "description": "List of holdings records",
+      "id": "holdingsRecord",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsRecord.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "holdingsRecords"
+  ]
+}

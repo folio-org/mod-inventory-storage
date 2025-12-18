@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance date types",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceDateTypes",
+  "type": "object",
+  "properties": {
+    "instanceDateTypes": {
+      "description": "List of instance date types",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instanceDateType.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  }
+}

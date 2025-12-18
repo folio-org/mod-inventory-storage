@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A (shelf) location, the forth-level location unit below institution, campus, and library.",
+  "javaType": "org.folio.rest.jaxrs.model.Location",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "id of this (shelf) location record as UUID.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Name of the (shelf) location",
+      "type": "string"
+    },
+    "code": {
+      "description": "Code of the (shelf) location, usually an abbreviation of the name.",
+      "type": "string"
+    },
+    "description": {
+      "description": "Description of the (shelf) location.",
+      "type": "string"
+    },
+    "discoveryDisplayName": {
+      "description": "Name of the (shelf) location to be shown in the discovery.",
+      "type": "string"
+    },
+    "isActive": {
+      "description": "Whether this (shelf) location is active. Inactive (shelf) locations can no longer been used.",
+      "type": "boolean"
+    },
+    "institutionId": {
+      "description": "The UUID of the institution, the first-level location unit, this (shelf) location belongs to.",
+      "type": "string"
+    },
+    "institution": {
+      "description": "The institution, the first-level location unit, this (shelf) location belongs to.",
+      "type": "object",
+      "folio:$ref": "locinst.json",
+      "javaType": "org.folio.rest.jaxrs.model.InstitutionVirtual",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "location-units/institutions",
+      "folio:linkFromField": "institutionId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "locinsts.0"
+    },
+    "campusId": {
+      "description": "The UUID of the campus, the second-level location unit, this (shelf) location belongs to.",
+      "type": "string"
+    },
+    "campus": {
+      "description": "The campus, the second-level location unit, this (shelf) location belongs to",
+      "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.CampusVirtual",
+      "folio:$ref": "loccamp.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "location-units/campuses",
+      "folio:linkFromField": "campusId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "loccamps.0"
+    },
+    "libraryId": {
+      "description": "The UUID of the library, the third-level location unit, this (shelf) location belongs to.",
+      "type": "string"
+    },
+    "library": {
+      "description": "The library, the third-level location unit, this (shelf) location belongs to.",
+      "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.LibraryVirtual",
+      "folio:$ref": "locinst.json",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "location-units/libraries",
+      "folio:linkFromField": "libraryId",
+      "folio:linkToField": "id",
+      "folio:includedElement": "loclibs.0"
+    },
+    "details": {
+      "description": "Details about this (shelf) location.",
+      "type": "object",
+      "javaType": "org.folio.rest.jaxrs.model.LocationDetails"
+    },
+    "primaryServicePoint": {
+      "description": "The UUID of the primary service point of this (shelf) location.",
+      "format": "uuid",
+      "type": "string"
+    },
+    "primaryServicePointObject": {
+      "type": "object",
+      "description": "Dereferenced object for primary service point. This should really just be called 'primaryServicePoint', but the field containing the ID of this object has that name -- it should really be called 'primaryServicePointId' -- so we need something different for this one.",
+      "$ref": "../service-points/servicepoint.json",
+      "javaType": "org.folio.rest.jaxrs.model.ServicePointVirtual",
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "service-points",
+      "folio:linkFromField": "primaryServicePoint",
+      "folio:linkToField": "id",
+      "folio:includedElement": "servicepoints.0"
+    },
+    "servicePointIds": {
+      "description": "All service points that this (shelf) location has.",
+      "type": "array",
+      "items": {
+        "description": "The UUID of a service point that belongs to this (shelf) location.",
+        "type": "string",
+        "format": "uuid",
+        "not": {
+          "type": "null"
+        }
+      }
+    },
+    "isFloatingCollection": {
+      "description": "Items checked in/out from this location can be checked in/out to other locations with the same flag.",
+      "type": "boolean"
+    },
+    "servicePoints": {
+      "type": "array",
+      "description": "List of dereferenced service points",
+      "items": {
+        "type": "object",
+        "$ref": "../service-points/servicepoint.json"
+      },
+      "readonly": true,
+      "folio:isVirtual": true,
+      "folio:linkBase": "service-points",
+      "folio:linkFromField": "servicePointIds",
+      "folio:linkToField": "id",
+      "folio:includedElement": "servicepoints"
+    },
+    "isShadow": {
+      "description": "Whether this location is a shadow location. Shadow locations are used to represent virtual locations that no items are assignable to them. They only relate to external libraries and virtual items.",
+      "type": "boolean",
+      "default": false
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "code",
+    "institutionId",
+    "campusId",
+    "libraryId",
+    "primaryServicePoint"
+  ]
+}

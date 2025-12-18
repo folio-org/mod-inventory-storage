@@ -10,14 +10,14 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  instances_post: !include instances_post.json
+  instancesPostRequest: !include schemas/instance-storage/instances_post.json
 /instance-storage/batch/synchronous-unsafe:
   displayName: Instances Batch Upload Sync API With Optimistic Locking Disabled
   post:
     description: "Create or update a collection of instances in a single synchronous request; if any instance fails the complete batch will be rejected (all or nothing). Environment variable DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is required, see https://github.com/folio-org/raml-module-builder#environment-variables for details. The _version property is ignored, optimistic locking is disabled - this is known to lead to data loss in some cases, don't use in production, you have been warned!"
     body:
       application/json:
-        type: instances_post
+        type: instancesPostRequest
         example: !include examples/instances_post.json
     responses:
       201:

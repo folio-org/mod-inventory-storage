@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance records",
+  "javaType": "org.folio.rest.jaxrs.model.InstancesPostRequest",
+  "type": "object",
+  "properties": {
+    "instances": {
+      "description": "List of instance records",
+      "id": "instances",
+      "type": "array",
+      "items": {
+        "$ref": "instance.json",
+        "type" : "object"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instances"
+  ]
+}

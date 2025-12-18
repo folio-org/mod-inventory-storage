@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of InstanceRelationship records",
+  "javaType": "org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitles",
+  "type": "object",
+  "properties": {
+    "precedingSucceedingTitles": {
+      "description": "List of instance relationships",
+      "id": "precedingSucceedingTitles",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instanceprecedingsucceedingtitle.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "precedingSucceedingTitles",
+    "totalRecords"
+  ]
+}

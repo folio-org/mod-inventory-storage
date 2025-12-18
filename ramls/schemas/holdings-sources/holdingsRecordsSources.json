@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of holdings records sources",
+  "javaType": "org.folio.rest.jaxrs.model.HoldingsRecordsSources",
+  "type": "object",
+  "properties": {
+    "holdingsRecordsSources": {
+      "description": "List of holdings records sources",
+      "id": "holdingsRecordsSources",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "holdingsRecordsSource.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "holdingsRecordsSources",
+    "totalRecords"
+  ]
+}

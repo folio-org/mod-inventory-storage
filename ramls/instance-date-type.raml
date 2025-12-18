@@ -10,8 +10,8 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 types:
-  instanceDateTypes: !include instance-date-types/instanceDateTypes.json
-  instanceDateTypePatch: !include instance-date-types/instanceDateTypePatch.json
+  instanceDateTypes: !include schemas/instance-date-types/instanceDateTypes.json
+  instanceDateTypePatchRequest: !include schemas/instance-date-types/instanceDateTypePatch.json
   errors: !include raml-util/schemas/errors.schema
 
 /instance-date-types:
@@ -52,7 +52,7 @@ types:
         is: [ validate ]
         body:
           application/json:
-            type: instanceDateTypePatch
+            type: instanceDateTypePatchRequest
             example:
               strict: false
               value: examples/instance-date-types/instanceDateTypePatch.json

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of second-level location units",
+  "javaType": "org.folio.rest.jaxrs.model.LocationCampuses",
+  "type": "object",
+  "properties": {
+    "loccamps": {
+      "description": "List of second-level location units",
+      "id": "loccamps",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "loccamp.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "loccamps",
+    "totalRecords"
+  ]
+}

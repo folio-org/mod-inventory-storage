@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of instance statuses (controlled vocabulary)",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceStatuses",
+  "type": "object",
+  "properties": {
+    "instanceStatuses": {
+      "description": "List of instance statuses",
+      "id": "instanceStatus",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instancestatus.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instanceStatuses",
+    "totalRecords"
+  ]
+}

@@ -10,7 +10,7 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  items_post: !include items_post.json
+  itemsPostRequest: !include schemas/item-storage/items_post.json
 /item-storage/batch/synchronous:
   displayName: Item Batch Upload Sync API
   post:
@@ -23,7 +23,7 @@ types:
         default: false
     body:
       application/json:
-        type: items_post
+        type: itemsPostRequest
         example: !include examples/items_post.json
     responses:
       201:

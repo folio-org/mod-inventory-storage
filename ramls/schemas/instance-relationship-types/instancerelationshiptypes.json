@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of InstanceRelationshipType records (controlled vocabulary)",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceRelationshipTypes",
+  "type": "object",
+  "properties": {
+    "instanceRelationshipTypes": {
+      "description": "List of instance relationship types",
+      "id": "instanceRelationshipType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instancerelationshiptype.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instanceRelationshipTypes",
+    "totalRecords"
+  ]
+}

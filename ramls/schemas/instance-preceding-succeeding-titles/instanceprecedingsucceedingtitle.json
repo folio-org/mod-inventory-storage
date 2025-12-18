@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A relationship of a given type between a super-instance and a sub-instance",
+  "javaType": "org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitle",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "unique ID of the preceding-succeeding title",
+      "type": "string",
+      "$ref": "../common/uuid.json"
+    },
+    "precedingInstanceId": {
+      "description": "ID (a UUID) of the preceding instance",
+      "type": "string",
+      "$ref": "../common/uuid.json"
+    },
+    "succeedingInstanceId": {
+      "description": "ID (a UUID) of the succeeding instance",
+      "type": "string",
+      "$ref": "../common/uuid.json"
+    },
+    "title": {
+      "type": "string",
+      "description": "The primary title (or label) associated with the resource"
+    },
+    "hrid": {
+      "type": "string",
+      "description": "The human readable ID, also called eye readable ID. A system-assigned sequential ID which maps to the Instance ID"
+    },
+    "identifiers": {
+      "type": "array",
+      "description": "An extensible set of name-value pairs of identifiers associated with the resource",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "$ref": "../common/identifier.json"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false
+}

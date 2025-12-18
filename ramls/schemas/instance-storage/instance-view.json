@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Instance with holdings and items",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceView",
+  "type": "object",
+  "properties": {
+    "instanceId": {
+      "description": "Instance id",
+      "$ref": "../common/uuid.json"
+    },
+    "isBoundWith": {
+      "description": "Records the relationship between a part of a bound-with (a holdings-record) and the bound-with as a whole (the circulatable item)",
+      "type": "boolean"
+    },
+    "instance": {
+      "description": "Instance record",
+      "$ref": "instance.json"
+    },
+    "holdingsRecords": {
+      "type": "array",
+      "description": "Holdings records for the instance",
+      "items": {
+        "$ref": "../holdings-storage/holdingsRecord.json"
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "Items for the instance",
+      "items": {
+        "$ref": "../item-storage/item.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instanceId",
+    "instance"
+  ]
+}

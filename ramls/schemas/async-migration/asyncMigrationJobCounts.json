@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Get job by id response",
+  "javaType": "org.folio.rest.jaxrs.model.AsyncMigrationJobCounts",
+  "type": "object",
+  "properties": {
+    "migrationName": {
+      "description": "Name of migration procedure",
+      "type": "string"
+    },
+    "count": {
+      "description": "Number of records",
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A call number",
+  "javaType": "org.folio.rest.jaxrs.model.CallNumberComponents",
+  "type": "object",
+  "properties": {
+    "typeId": {
+      "type": "string",
+      "description": "unique ID for the type of call number on a holdings record, a UUID",
+      "$ref": "../common/uuid.json"
+    },
+    "prefix": {
+      "type": "string",
+      "description": "Prefix of the call number on the holding level."
+    },
+    "callNumber": {
+      "type": "string",
+      "description": "Call Number is an identifier assigned to an item, usually printed on a label attached to the item."
+    },
+    "suffix": {
+      "type": "string",
+      "description": "Suffix of the call number on the holding level."
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "callNumber"
+  ]
+}
+
+
+

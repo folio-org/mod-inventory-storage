@@ -9,11 +9,11 @@ documentation:
     content: <b>Storage for items in the inventory</b>
 
 types:
-  item: !include item-storage/item.json
-  items: !include item-storage/items.json
-  itemsPatch: !include itemspatch.json
+  item: !include schemas/item-storage/item.json
+  items: !include schemas/item-storage/items.json
+  itemsPatchRequest: !include schemas/item-storage/itemsPatch.json
   errors: !include raml-util/schemas/errors.schema
-  retrieveDto: !include retrieveEntitiesDto.json
+  retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -45,7 +45,7 @@ resourceTypes:
       is: [validate]
       body:
         application/json:
-          type: itemsPatch
+          type: itemsPatchRequest
           example:
             strict: false
             value: !include examples/items_patch.json
@@ -103,7 +103,7 @@ resourceTypes:
         is: [validate]
         body:
           application/json:
-            type: retrieveDto
+            type: retrieveEntitiesRequest
             example:
               strict: false
               value: !include examples/retrieveEntitiesDto.json

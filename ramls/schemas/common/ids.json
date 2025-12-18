@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of IDs",
+  "javaType": "org.folio.rest.jaxrs.model.Ids",
+  "type": "object",
+  "properties": {
+    "ids": {
+      "description": "List of IDs",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    },
+    "resultInfo": {
+      "$ref": "../../raml-util/schemas/resultInfo.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "ids",
+    "totalRecords"
+  ]
+}

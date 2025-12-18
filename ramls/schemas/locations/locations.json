@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "List of (shelf) locations.",
+  "javaType": "org.folio.rest.jaxrs.model.Locations",
+  "type": "object",
+  "properties": {
+    "locations": {
+      "id": "locations",
+      "description": "List of (shelf) locations.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "location.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "locations",
+    "totalRecords"
+  ]
+}

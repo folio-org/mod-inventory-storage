@@ -9,10 +9,10 @@ documentation:
     content: This documents the streaming API for the data needed for OAI-PMH
 
 types:
-  oaipmhInstances: !include oaipmh/oaipmhinstances.json
-  oaipmhUpdatedInstanceIds: !include oaipmh/oaipmhupdatedinstanceids.json
-  oaipmhEnrichedInstances: !include oaipmh/oaipmhenrichedinstances.json
-  oaipmhInstanceIds: !include oaipmh/oaipmhinstanceids.json
+  oaiPmhInstances: !include schemas/oaipmh/oaipmhinstances.json
+  oaiPmhUpdatedInstanceIds: !include schemas/oaipmh/oaipmhupdatedinstanceids.json
+  oaiPmhEnrichedInstances: !include schemas/oaipmh/oaipmhenrichedinstances.json
+  oaiPmhInstanceIds: !include schemas/oaipmh/oaipmhinstanceids.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:
@@ -26,7 +26,7 @@ resourceTypes:
     displayName: Stream API to get data for OAI-PMH
     type:
       collection-get:
-       schemaCollection: oaipmhInstances
+       schemaCollection: oaiPmhInstances
        exampleCollection: !include examples/oaipmhinstances.json
     get:
       description: Stream data for oai-pmh
@@ -55,7 +55,7 @@ resourceTypes:
     displayName: Stream API to get instances ids of updated oai records for OAI-PMH
     type:
       collection-get:
-       schemaCollection: oaipmhUpdatedInstanceIds
+       schemaCollection: oaiPmhUpdatedInstanceIds
        exampleCollection: !include examples/oaipmhupdatedinstanceids.json
     get:
       description: Stream updated instances ids for oai-pmh
@@ -89,11 +89,11 @@ resourceTypes:
       body:
         application/json:
           description: List of instances Ids with skip suppressed from discovery configuration parameter
-          type: oaipmhInstanceIds
+          type: oaiPmhInstanceIds
           example: !include examples/oaipmhinstanceids.json
       responses:
         200:
           body:
             application/json:
-              type: oaipmhEnrichedInstances
+              type: oaiPmhEnrichedInstances
               example: !include examples/oaipmhenrichedinstances.json

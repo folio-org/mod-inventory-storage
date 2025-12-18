@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of Instance note types",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceNoteTypes",
+  "type": "object",
+  "properties": {
+    "instanceNoteTypes": {
+      "description": "List of Instance note types",
+      "id": "instanceNoteType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "instancenotetype.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "instanceNoteTypes",
+    "totalRecords"
+  ]
+}
+

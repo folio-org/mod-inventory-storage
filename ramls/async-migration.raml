@@ -9,10 +9,10 @@ documentation:
     content: Running async migrations proceses for inventory enteties
 
 types:
-  asyncMigrationJob: !include migration/migration-job-by-id-response.json
-  asyncMigrationJobCollection: !include migration/migration-job-collection-response.json
-  asyncMigrations: !include migration/migrations-get-response.json
-  asyncMigrationJobRequest: !include migration/migration-job-post-request.json
+  asyncMigrationJob: !include schemas/async-migration/asyncMigrationJob.json
+  asyncMigrationJobCollection: !include schemas/async-migration/asyncMigrationJobCollection.json
+  asyncMigrations: !include schemas/async-migration/asyncMigrations.json
+  asyncMigrationJobRequest: !include schemas/async-migration/asyncMigrationJobRequest.json
   errors: !include raml-util/schemas/errors.schema
 
 traits:

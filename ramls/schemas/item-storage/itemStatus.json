@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The status of the item",
+  "javaType": "org.folio.rest.jaxrs.model.ItemStatus",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "description": "Name of the status e.g. Available, Checked out, In transit",
+      "type": "string",
+      "enum": [
+        "Aged to lost",
+        "Available",
+        "Awaiting pickup",
+        "Awaiting delivery",
+        "Checked out",
+        "Claimed returned",
+        "Declared lost",
+        "In process",
+        "In process (non-requestable)",
+        "In transit",
+        "Intellectual item",
+        "Long missing",
+        "Lost and paid",
+        "Missing",
+        "On order",
+        "Paged",
+        "Restricted",
+        "Order closed",
+        "Unavailable",
+        "Unknown",
+        "Withdrawn"
+      ]
+    },
+    "date": {
+      "description": "Date and time when the status was last changed",
+      "type": "string",
+      "format": "date-time",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

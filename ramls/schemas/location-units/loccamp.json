@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "javaType": "org.folio.rest.jaxrs.model.LocationCampus",
+  "description": "second-level location unit",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "description": "name of the location",
+      "type": "string"
+    },
+    "code": {
+      "description": "distinct code for the location",
+      "type": "string"
+    },
+    "institutionId": {
+      "description": "ID of the first-level location unit that the second-level unit belongs to",
+      "type": "string"
+    },
+    "isShadow": {
+      "description": "Whether this is a shadow location. Shadow locations are used to represent virtual locations that no items are assignable to them. They only relate to external libraries and virtual items.",
+      "type": "boolean",
+      "default": false
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name", "institutionId", "code"
+  ]
+}

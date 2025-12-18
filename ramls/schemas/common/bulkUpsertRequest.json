@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk entities upsert request",
+  "javaType": "org.folio.rest.jaxrs.model.BulkUpsertRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recordsFileName": {
+      "description": "File name of entities records",
+      "type": "string"
+    },
+    "publishEvents": {
+      "description": "A flag that indicates whether domain events should be published.",
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "recordsFileName"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Composite entity that records the ID of a bound-with item as well as all the holdings that make up the bound-with.",
+  "javaType": "org.folio.rest.jaxrs.model.BoundWith",
+  "type": "object",
+  "properties": {
+    "itemId": {
+      "type": "string",
+      "description": "Unique ID (UUID) of the item representing the collection of titles.",
+      "$ref": "../common/uuid.json"
+    },
+    "boundWithContents": {
+      "type": "array",
+      "description": "Collection of references to the holdings records that make up the bound-with.",
+      "items": {
+        "type": "object",
+        "javaType": "org.folio.rest.jaxrs.model.BoundWithContent",
+        "properties": {
+          "holdingsRecordId": {
+            "type": "string",
+            "description": "The ID (UUID) of a holdings record included in this bound-with"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["itemId", "boundWithContents"]
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of alternative title types",
+  "javaType": "org.folio.rest.jaxrs.model.AlternativeTitleTypes",
+  "type": "object",
+  "properties": {
+    "alternativeTitleTypes": {
+      "description": "List of alternative title types",
+      "id": "alternativeTitleType",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "alternativetitletype.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "alternativeTitleTypes",
+    "totalRecords"
+  ]
+}
+

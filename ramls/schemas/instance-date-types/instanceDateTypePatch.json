@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Object that represents patch operation for instance date type",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the instance date type"
+    }
+  },
+  "additionalProperties": false
+}
+

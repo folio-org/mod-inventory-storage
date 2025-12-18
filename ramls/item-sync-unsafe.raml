@@ -10,14 +10,14 @@ documentation:
 
 types:
   errors: !include raml-util/schemas/errors.schema
-  items_post: !include items_post.json
+  itemsPostRequest: !include schemas/item-storage/items_post.json
 /item-storage/batch/synchronous-unsafe:
   displayName: Item Batch Upload Sync API With Optimistic Locking Disabled
   post:
     description: "Create or update (upsert) a collection of items in a single synchronous request; if any item fails the complete batch will be rejected (all or nothing). Environment variable DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is required, see https://github.com/folio-org/raml-module-builder#environment-variables for details. The _version property is ignored, optimistic locking is disabled - this is known to lead to data loss in some cases, don't use in production, you have been warned!"
     body:
       application/json:
-        type: items_post
+        type: itemsPostRequest
         example: !include examples/items_post.json
     responses:
       201:

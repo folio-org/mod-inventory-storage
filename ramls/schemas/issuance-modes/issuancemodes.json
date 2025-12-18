@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of modes of issuance (controlled vocabulary)",
+  "javaType": "org.folio.rest.jaxrs.model.IssuanceModes",
+  "type": "object",
+  "properties": {
+    "issuanceModes": {
+      "description": "List of modes of issuance",
+      "id": "modeOfIssuance",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "modeofissuance.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Estimated or exact total number of records",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "issuanceModes",
+    "totalRecords"
+  ]
+}
+

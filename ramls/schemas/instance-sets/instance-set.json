@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Instance with holdings, items, preceding titles, succeeding titles, super instances, sub instances",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceSet",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Instance id",
+      "$ref": "../common/uuid.json"
+    },
+    "instance": {
+      "description": "Instance record",
+      "$ref": "../instance-storage/instance.json"
+    },
+    "holdingsRecords": {
+      "type": "array",
+      "description": "Holdings records of the instance",
+      "items": {
+        "$ref": "../holdings-storage/holdingsRecord.json"
+      }
+    },
+    "items": {
+      "type": "array",
+      "description": "Items of the instance",
+      "items": {
+        "$ref": "../item-storage/item.json"
+      }
+    },
+    "precedingTitles": {
+      "type": "array",
+      "description": "Instances that are preceding titles of the instance",
+      "items": {
+        "$ref": "../instance-preceding-succeeding-titles/instanceprecedingsucceedingtitle.json"
+      }
+    },
+    "succeedingTitles": {
+      "type": "array",
+      "description": "Instances that are succeeding titles of the instance",
+      "items": {
+        "$ref": "../instance-preceding-succeeding-titles/instanceprecedingsucceedingtitle.json"
+      }
+    },
+    "superInstanceRelationships": {
+      "type": "array",
+      "description": "Instances that are super instances of the instance",
+      "items": {
+        "$ref": "../instance-storage/instancerelationship.json"
+      }
+    },
+    "subInstanceRelationships": {
+      "type": "array",
+      "description": "Instances that are sub instances of the instance",
+      "items": {
+        "$ref": "../instance-storage/instancerelationship.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": ["id"]
+}
