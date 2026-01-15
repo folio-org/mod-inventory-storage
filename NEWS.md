@@ -1,3 +1,9 @@
+## v29.0.17 2026-01-15
+### Bug fixes
+* Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382), [MODINVSTOR-1502](https://folio-org.atlassian.net/browse/MODINVSTOR-1502))
+
+---
+
 ## v29.0.16 2025-12-11
 ### Dependencies
 * Bump `RMB` from `35.4.0` to `35.4.1` ([MODINVSTOR-1495](https://folio-org.atlassian.net/browse/MODINVSTOR-1495))
@@ -57,7 +63,6 @@
 ## v29.0.9 2025-05-16
 ### Bug fixes
 * Fix changes propagation to shadow instances after shared instance update ([MODINVSTOR-1393](https://folio-org.atlassian.net/browse/MODINVSTOR-1393))
-* Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382))
 
 ---
 
