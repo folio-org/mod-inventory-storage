@@ -12,8 +12,8 @@
     <generate_routing_context>/instance-storage/instances,/instance-storage/instances/retrieve,/holdings-storage/holdings,/holdings-storage/holdings/retrieve,/item-storage/items,/item-storage/items/retrieve,/record-bulk/ids,/oai-pmh-view/instances,/oai-pmh-view/updatedInstanceIds,/oai-pmh-view/enrichedInstances,/inventory-hierarchy/updated-instance-ids,/inventory-hierarchy/items-and-holdings,/inventory-view/instances</generate_routing_context>
     <argLine />
 
-    <raml-module-builder-version>35.4.1</raml-module-builder-version> <!-- also update vertx.version -->
-    <vertx.version>4.5.22</vertx.version>
+    <raml-module-builder-version>35.4.2</raml-module-builder-version> <!-- also update vertx.version -->
+    <vertx.version>4.5.23</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.22.1</aspectj.version>
     <folio-kafka-wrapper.version>3.3.1</folio-kafka-wrapper.version>
@@ -22,7 +22,7 @@
     <snappy-java.version>1.1.10.7</snappy-java.version>
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <log4j.version>2.24.3</log4j.version>
-    <folio-s3-client.version>2.3.0</folio-s3-client.version>
+    <folio-s3-client.version>2.3.1</folio-s3-client.version>
 
     <okapi-testing.version>6.2.1</okapi-testing.version>
     <junit.version>5.12.0</junit.version>
