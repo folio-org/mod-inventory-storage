@@ -1,3 +1,9 @@
+## v29.0.17 2026-01-16
+### Dependencies
+* Bump `RMB` from `35.4.1` to `35.4.2` fixing Netty vuln ([MODINVSTOR-1505](https://folio-org.atlassian.net/browse/MODINVSTOR-1505))
+* Bump `Vertx` from `4.5.22` to `4.5.23` fixing Netty vuln ([MODINVSTOR-1505](https://folio-org.atlassian.net/browse/MODINVSTOR-1505))
+* Bump `folio-s3-client` from `2.3.0` to `2.3.1` fixing minio vuln ([MODINVSTOR-1505](https://folio-org.atlassian.net/browse/MODINVSTOR-1505))
+
 ## v29.0.16 2025-12-11
 ### Dependencies
 * Bump `RMB` from `35.4.0` to `35.4.1` ([MODINVSTOR-1495](https://folio-org.atlassian.net/browse/MODINVSTOR-1495))
