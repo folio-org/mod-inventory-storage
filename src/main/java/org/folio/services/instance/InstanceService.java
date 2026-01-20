@@ -241,9 +241,8 @@ public class InstanceService {
         }
         logger.debug("postSyncInstance:: Setting version to -1 for instances");
         OptimisticLockingUtil.setVersionToMinusOne(instances);
-
-        MetadataUtil.populateMetadata(instances, okapiHeaders);
       }
+      MetadataUtil.populateMetadata(instances, okapiHeaders);
       Future<RowSet<Row>> result = upsert
         ? conn.upsertBatch(INSTANCE_TABLE, instances)
         : conn.saveBatch(INSTANCE_TABLE, instances);
