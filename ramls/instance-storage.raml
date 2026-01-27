@@ -102,6 +102,36 @@ resourceTypes:
           Instances are stored and accessed by a hash of key properties. The rules which govern
           how instance hashes are computed are business rules and defined in the service layer.
           the storage layer only knows how to insert or retrieve instance records by ID.
+      patch:
+        description: Partial update of instance with given ID
+        body:
+          application/json:
+            type: string
+            example: !include examples/instance-patch.json
+        responses:
+          204:
+            description: "Instance successfully updated"
+          404:
+            description: "Instance with a given ID not found"
+            body:
+              text/plain:
+                example: Not found
+          400:
+            description: "Bad request, e.g. malformed request body or query parameter."
+            body:
+              text/plain:
+                example: "unable to update instance - malformed JSON"
+          409:
+            description: "Optimistic locking version conflict"
+            body:
+              text/plain:
+                example: "version conflict"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "internal server error, contact administrator"
+
       /source-record:
         delete:
           responses:

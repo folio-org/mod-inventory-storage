@@ -5,6 +5,7 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 import java.util.Objects;
 import java.util.function.Function;
 import org.folio.rest.exceptions.BadRequestException;
@@ -17,6 +18,10 @@ public final class HridValidators {
 
   public static Future<Instance> refuseWhenHridChanged(Instance oldEntity, Instance newEntity) {
     return refuseWhenHridChanged(oldEntity, newEntity, Instance::getHrid);
+  }
+
+  public static Future<Instance> refuseWhenHridChanged(Instance oldEntity, JsonObject patchJson) {
+    return refuseWhenHridChanged(oldEntity, patchJson, Instance::getHrid);
   }
 
   public static Future<HoldingsRecord> refuseWhenHridChanged(
@@ -34,6 +39,20 @@ public final class HridValidators {
 
     var oldHrid = getHrid.apply(oldEntity);
     var newHrid = getHrid.apply(newEntity);
+
+    if (Objects.equals(oldHrid, newHrid)) {
+      return succeededFuture(oldEntity);
+    } else {
+      return failedFuture(new BadRequestException(format(
+        "The hrid field cannot be changed: new=%s, old=%s", newHrid, oldHrid)));
+    }
+  }
+
+  private static <T> Future<T> refuseWhenHridChanged(
+    T oldEntity, JsonObject patchJson, Function<T, String> getHrid) {
+
+    var oldHrid = getHrid.apply(oldEntity);
+    var newHrid = patchJson.getString("hrid");
 
     if (Objects.equals(oldHrid, newHrid)) {
       return succeededFuture(oldEntity);

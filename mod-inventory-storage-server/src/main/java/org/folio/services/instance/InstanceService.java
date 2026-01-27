@@ -1,5 +1,6 @@
 package org.folio.services.instance;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Promise.promise;
 import static javax.ws.rs.core.Response.noContent;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
@@ -24,6 +25,8 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -43,6 +46,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
@@ -50,6 +54,7 @@ import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Conn;
+import org.folio.rest.persist.Criteria.UpdateSection;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -65,6 +70,7 @@ import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
+import org.folio.utils.PatchPgUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -215,6 +221,13 @@ public class InstanceService {
     return Future.succeededFuture(oldInstance);
   }
 
+  private Future<Instance> validateHridChange(Instance oldInstance, JsonObject patchJson) {
+    if (!oldInstance.getSource().startsWith("CONSORTIUM-")) {
+      return refuseWhenHridChanged(oldInstance, patchJson);
+    }
+    return Future.succeededFuture(oldInstance);
+  }
+
   private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
     try {
       var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
@@ -223,7 +236,7 @@ public class InstanceService {
           .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
       }
     } catch (Exception e) {
-      return Future.failedFuture(e);
+      return failedFuture(e);
     }
 
     final Promise<Response> putResult = promise();
@@ -240,6 +253,38 @@ public class InstanceService {
       }
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
+
+  public Future<Response> patchInstance(String id, String patch) {
+    JsonObject patchJson;
+    try {
+      patchJson = new JsonObject(patch);
+    } catch (DecodeException de) {
+      return failedFuture(new BadRequestException("Invalid JSON object"));
+    }
+    return NotesValidators.refuseLongNotes(patchJson)
+      .compose(notUsed -> instanceRepository.getById(id))
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
+      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchJson));
+  }
+
+  private Future<Response> performInstancePatch(String id, Instance oldInstance, JsonObject patchJson) {
+    final Promise<Response> patchResult = promise();
+    return postgresClient.withTrans(conn -> {
+      Promise<Response> patchPromise = patch(id, patchJson);
+      return patchPromise.future()
+        .compose(response -> instanceRepository.getById(id)
+        .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+          .map(v -> response)));
+    }).onComplete(transactionResult -> {
+      if (transactionResult.succeeded()) {
+        patchResult.complete(transactionResult.result());
+      } else {
+        patchResult.fail(transactionResult.cause());
+      }
+    }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+  }
+
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
                                             boolean optimisticLocking) {
@@ -258,7 +303,7 @@ public class InstanceService {
       return executeBatchOperation(conn, instances, upsert);
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
-      return Future.failedFuture(e.getMessage());
+      return failedFuture(e.getMessage());
     }
   }
 
@@ -273,9 +318,9 @@ public class InstanceService {
         respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
           .compose(response -> {
             if (response.getEntity() instanceof Errors errors) {
-              return Future.failedFuture(new ValidationException(errors));
+              return failedFuture(new ValidationException(errors));
             }
-            return Future.failedFuture(throwable);
+            return failedFuture(throwable);
           }));
   }
 
@@ -318,6 +363,22 @@ public class InstanceService {
     Promise<Response> promise = Promise.promise();
     put(INSTANCE_TABLE, newInstance, instanceId, okapiHeaders, vertxContext,
       InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
+        if (reply.succeeded()) {
+          promise.complete(reply.result());
+        } else {
+          promise.fail(reply.cause());
+        }
+      });
+    return promise;
+  }
+
+  private Promise<Response> patch(String instanceId, JsonObject patchJson) {
+    UpdateSection updateSection = new UpdateSection();
+    patchJson.stream()
+      .forEach(entry -> updateSection.addField(entry.getKey()).setValue(entry.getValue()));
+    Promise<Response> promise = Promise.promise();
+    PatchPgUtil.patch(INSTANCE_TABLE, updateSection, instanceId, okapiHeaders, vertxContext,
+      InstanceStorage.PatchInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
         if (reply.succeeded()) {
           promise.complete(reply.result());
         } else {
@@ -497,7 +558,7 @@ public class InstanceService {
       return PgUtil.response(table, "", throwable, responseClass, respond500, respond500);
     } catch (Exception e) {
       logger.debug("respondFailure:: Error during respond", e);
-      return Future.failedFuture(e.getMessage());
+      return failedFuture(e.getMessage());
     }
   }
 }

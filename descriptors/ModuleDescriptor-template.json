@@ -203,6 +203,15 @@
             "consortia.sharing-instances.collection.get"
           ]
         }, {
+          "methods": ["patch"],
+          "pathPattern": "/instance-storage/instances/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.patch"],
+          "modulePermissions": [
+            "inventory-storage.instances.item.get",
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.collection.get"
+          ]
+        }, {
           "methods": ["DELETE"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.delete"]
@@ -1581,6 +1590,11 @@
       "permissionName": "inventory-storage.instances.item.put",
       "displayName": "inventory storage - modify instance",
       "description": "modify instance in storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.item.patch",
+      "displayName": "inventory storage - partially modify instance",
+      "description": "partially modify instance in storage"
     },
     {
       "permissionName": "inventory-storage.instances.item.delete",
