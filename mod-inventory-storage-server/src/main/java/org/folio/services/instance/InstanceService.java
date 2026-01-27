@@ -285,7 +285,6 @@ public class InstanceService {
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
-
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
                                             boolean optimisticLocking) {
     try {

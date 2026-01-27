@@ -34,7 +34,9 @@ public class PatchPgUtil {
 
   /**
    * Patch entity in the table.
+   *
    * <p>To enforce optimistic locking the version of entity is set to null if it is -1.
+   *
    * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
    * @param table  table name
@@ -58,6 +60,7 @@ public class PatchPgUtil {
    * Put entity to table.
    *
    * <p>To enforce optimistic locking the version of entity is set to null if it is -1.
+   *
    * <p>All exceptions are caught and reported via the asyncResultHandler.
    *
    * @param table  table name
@@ -70,6 +73,7 @@ public class PatchPgUtil {
    *               respond409WithTextPlain(Object), respond500WithTextPlain(Object).
    * @return   where to return the result created by clazz
    */
+  @SuppressWarnings("checkstyle:methodlength")
   public static Future<Response> patch(String table, UpdateSection updateSection, String id,
     Map<String, String> okapiHeaders, Context vertxContext,
     Class<? extends ResponseDelegate> clazz) {
@@ -137,5 +141,4 @@ public class PatchPgUtil {
     }
     return respond409;
   }
-
 }
