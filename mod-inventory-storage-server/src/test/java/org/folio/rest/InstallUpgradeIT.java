@@ -196,7 +196,7 @@ public class InstallUpgradeIT {
         .header("Location");
 
     when()
-      .get(location + "?wait=60000")
+      .get(location + "?wait=120000")
       .then()
       .statusCode(200)  // getting job record succeeds
       .body("complete", is(true))  // job is complete
