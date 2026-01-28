@@ -203,7 +203,7 @@
             "consortia.sharing-instances.collection.get"
           ]
         }, {
-          "methods": ["patch"],
+          "methods": ["PATCH"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.patch"],
           "modulePermissions": [
