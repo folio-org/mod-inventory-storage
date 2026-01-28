@@ -2658,6 +2658,7 @@
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
+        "inventory-storage.instances.item.patch",
         "inventory-storage.instances.item.delete",
         "inventory-storage.instances.preceding-succeeding-titles.collection.put",
         "inventory-storage.instances.source-record.delete",
