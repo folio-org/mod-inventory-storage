@@ -3077,7 +3077,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public void cannotPatchAnInstanceOnOptimisticLock() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
-    instanceToCreate.put("_version", 2);
 
     var newId = createInstanceRecord(instanceToCreate);
 
@@ -3087,6 +3086,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
+    // increase instance version
     var patchJson = new JsonObject();
     patchJson.put("title", "new title");
     var updatedResponse = patch(newId.toString(), patchJson);
@@ -3097,6 +3097,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_CONFLICT));
+  }
+
+  @Test
+  public void cannotPatchWhenInstanceNotFound() {
+    UUID id = UUID.randomUUID();
+
+    var patchJson = new JsonObject();
+    patchJson.put("title", "new title");
+
+    var updatedResponse = patch(id.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
   }
 
   private Response patch(String id, JsonObject patchJson) {
