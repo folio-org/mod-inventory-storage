@@ -86,8 +86,8 @@ public final class NotesValidators {
     return patch -> isNull(patch.getJsonArray("notes"))
       ? Collections.emptyList()
       : patch.getJsonArray("notes").stream()
-        .map(obj -> (InstanceNote) obj)
-        .map(InstanceNote::getNote).toList();
+        .map(obj -> (JsonObject) obj)
+        .map(obj -> obj.getString("note")).toList();
   }
 
   private static Function<Item, List<String>> itemNotesFunction() {

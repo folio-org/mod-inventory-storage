@@ -10,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -78,6 +79,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -3108,6 +3110,49 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var updatedResponse = patch(id.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongAdministrativeNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("administrativeNotes", List.of(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1)));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var longNote = new InstanceNote()
+      .withInstanceNoteTypeId(UUID.randomUUID().toString())
+      .withNote(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1));
+    var patchJson = new JsonObject();
+    patchJson.put("notes", List.of(longNote));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   private Response patch(String id, JsonObject patchJson) {

@@ -57,7 +57,7 @@ public class PatchPgUtil {
   }
 
   /**
-   * Put entity to table.
+   * Patch entity in the table.
    *
    * <p>To enforce optimistic locking the version of entity is set to null if it is -1.
    *
