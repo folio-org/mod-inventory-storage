@@ -60,6 +60,7 @@ public class InstallUpgradeIT {
     new KafkaContainer(KafkaUtility.getImageName())
       .withNetwork(NETWORK)
       .withNetworkAliases("mykafka")
+      .withListener("mykafka:19092")
       .withStartupAttempts(3);
 
   @ClassRule(order = 1)
@@ -92,7 +93,7 @@ public class InstallUpgradeIT {
       .withEnv("DB_PASSWORD", "password")
       .withEnv("DB_DATABASE", "postgres")
       .withEnv("KAFKA_HOST", "mykafka")
-      .withEnv("KAFKA_PORT", "9092");
+      .withEnv("KAFKA_PORT", "19092");
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
@@ -196,7 +197,7 @@ public class InstallUpgradeIT {
         .header("Location");
 
     when()
-      .get(location + "?wait=60000")
+      .get(location + "?wait=120000")
       .then()
       .statusCode(200)  // getting job record succeeds
       .body("complete", is(true))  // job is complete
