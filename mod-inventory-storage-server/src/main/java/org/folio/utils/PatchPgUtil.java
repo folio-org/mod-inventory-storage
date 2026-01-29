@@ -22,7 +22,7 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.util.UuidUtil;
 
-public class PatchPgUtil {
+public final class PatchPgUtil {
   private static final String RESPOND_204                       = "respond204";
   private static final String RESPOND_400_WITH_TEXT_PLAIN       = "respond400WithTextPlain";
   private static final String RESPOND_404_WITH_TEXT_PLAIN       = "respond404WithTextPlain";
