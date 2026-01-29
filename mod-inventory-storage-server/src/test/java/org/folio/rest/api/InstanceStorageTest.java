@@ -3004,9 +3004,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var patchJson = new JsonObject();
     patchJson.put("title", "New Title");
+    var expectedJson = getResponse.getJson().put("title", "New Title").remove("metadata");
 
     var updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    getResponse = getById(newId);
+    assertThat(getResponse.getJson().remove("metadata"), is(expectedJson));
   }
 
   private Response patch(String id, JsonObject patchJson) {

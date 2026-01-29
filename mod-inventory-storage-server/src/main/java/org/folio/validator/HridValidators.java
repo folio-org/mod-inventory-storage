@@ -54,7 +54,7 @@ public final class HridValidators {
     var oldHrid = getHrid.apply(oldEntity);
     var newHrid = patchJson.getString("hrid");
 
-    if (Objects.equals(oldHrid, newHrid)) {
+    if (newHrid == null || Objects.equals(oldHrid, newHrid)) {
       return succeededFuture(oldEntity);
     } else {
       return failedFuture(new BadRequestException(format(
