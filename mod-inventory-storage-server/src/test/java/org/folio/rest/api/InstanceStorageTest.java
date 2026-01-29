@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -3070,6 +3071,32 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceOnOptimisticLock() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put("_version", 2);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("title", "new title");
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    patchJson = new JsonObject();
+    patchJson.put("_version", 1);
+
+    updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_CONFLICT));
   }
 
   private Response patch(String id, JsonObject patchJson) {
