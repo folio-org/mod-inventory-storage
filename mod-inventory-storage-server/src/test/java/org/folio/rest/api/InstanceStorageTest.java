@@ -2982,7 +2982,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void canPatchAnInstanceUnlinkSubjectSourceAndType() {
-
     UUID id = UUID.randomUUID();
     var subject = new Subject()
       .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
@@ -3011,6 +3010,46 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     getResponse = getById(newId);
     assertThat(getResponse.getJson().remove("metadata"), is(expectedJson));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWhenHridIsChanged() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("hrid", "12345");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canPatchAnInstanceWhenHridIsNotChanged() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("hrid", getResponse.getJson().getString("hrid"));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
   private Response patch(String id, JsonObject patchJson) {
