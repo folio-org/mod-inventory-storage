@@ -175,7 +175,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.2",
+      "version": "11.3",
       "handlers": [
         {
           "methods": ["GET"],
