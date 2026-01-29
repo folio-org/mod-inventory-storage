@@ -116,12 +116,6 @@ public class PatchPgUtil {
           response(NOT_FOUND, respond404, respond500).onComplete(promise);
           return;
         }
-        if (updated != 1) {
-          String message = "Patched " + updated + " records in " + table + " for id: " + id;
-          logger.fatal(message);
-          response(message, respond500, respond500).onComplete(promise);
-          return;
-        }
         response(respond204, respond500).onComplete(promise);
       });
       return promise.future();
