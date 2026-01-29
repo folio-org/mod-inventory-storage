@@ -2979,4 +2979,46 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(parameter.getKey(), containsString("'hrid'"));
     assertThat(parameter.getValue(), is(expectedHrid));
   }
+
+  @Test
+  public void canPatchAnInstanceUnlinkSubjectSourceAndType() {
+
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    instanceFromGet.put(SUBJECTS_KEY, null);
+
+    var patchJson = new JsonObject();
+    patchJson.put("title", "New Title");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+  }
+
+  private Response patch(String id, JsonObject patchJson) {
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    getClient().patch(instancesStorageUrl(format("/%s", id)), patchJson,
+      TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    try {
+      return replaceCompleted.get(10, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }
