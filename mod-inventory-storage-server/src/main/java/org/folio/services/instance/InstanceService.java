@@ -73,6 +73,7 @@ import org.folio.util.StringUtil;
 import org.folio.utils.PatchPgUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
+import org.folio.validator.PatchValidators;
 
 public class InstanceService {
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
@@ -261,7 +262,8 @@ public class InstanceService {
     } catch (DecodeException de) {
       return failedFuture(new BadRequestException("Invalid JSON object"));
     }
-    return NotesValidators.refuseLongNotes(patchJson)
+    return PatchValidators.checkInstanceFields(patchJson)
+      .compose(NotesValidators::refuseLongNotes)
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> validateHridChange(oldInstance, patchJson))

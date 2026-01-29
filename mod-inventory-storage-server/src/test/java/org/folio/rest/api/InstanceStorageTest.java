@@ -3052,6 +3052,26 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
   }
 
+  @Test
+  public void cannotPatchAnInstanceWhenFieldNameIsWrong() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("notExistingField", "value");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
   private Response patch(String id, JsonObject patchJson) {
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
