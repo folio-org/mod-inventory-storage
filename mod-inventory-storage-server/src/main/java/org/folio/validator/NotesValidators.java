@@ -86,7 +86,7 @@ public final class NotesValidators {
     return patch -> isNull(patch.getJsonArray("notes"))
       ? Collections.emptyList()
       : patch.getJsonArray("notes").stream()
-        .map(obj -> (JsonObject) obj)
+        .map(JsonObject.class::cast)
         .map(obj -> obj.getString("note")).toList();
   }
 

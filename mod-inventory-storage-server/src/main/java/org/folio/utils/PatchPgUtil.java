@@ -32,6 +32,9 @@ public class PatchPgUtil {
 
   private static final Logger logger = LogManager.getLogger();
 
+  private PatchPgUtil() {
+  }
+
   /**
    * Patch entity in the table.
    *
