@@ -285,6 +285,20 @@ public class InstanceStorageApi implements InstanceStorage {
       .onFailure(handleFailure(asyncResultHandler));
   }
 
+  @Override
+  public void patchInstanceStorageInstancesByInstanceId(
+    String instanceId,
+    String entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new InstanceService(vertxContext, okapiHeaders)
+      .patchInstance(instanceId, entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
+  }
+
   @Validate
   @Override
   public void deleteInstanceStorageInstancesSourceRecordByInstanceId(

@@ -290,7 +290,8 @@
     },
     "lastCheckIn": {
       "type": "object",
-      "$ref": "../item-storage/itemLastCheckIn.json"
+      "$ref": "../item-storage/itemLastCheckIn.json",
+      "description": "The last check-in details for the item."
     }
   },
   "additionalProperties": false,

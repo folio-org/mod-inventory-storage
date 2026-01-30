@@ -2,11 +2,15 @@ package org.folio.validator;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Objects.isNull;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.exceptions.ValidationException;
@@ -29,6 +33,10 @@ public final class NotesValidators {
 
   public static Future<Instance> refuseLongNotes(Instance instance) {
     return checkNotes(instance, Instance::getAdministrativeNotes, instanceNotesFunction());
+  }
+
+  public static Future<JsonObject> refuseLongNotes(JsonObject json) {
+    return checkNotes(json, instancePatchAdministrativeNotesFunction(), instancePatchNotesFunction());
   }
 
   public static Future<Item> refuseLongNotes(Item item) {
@@ -67,6 +75,22 @@ public final class NotesValidators {
 
   private static Function<Instance, List<String>> instanceNotesFunction() {
     return instance -> instance.getNotes().stream().map(InstanceNote::getNote).toList();
+  }
+
+  private static Function<JsonObject, List<String>> instancePatchAdministrativeNotesFunction() {
+    return json -> isNull(json.getJsonArray("administrativeNotes"))
+      ? Collections.emptyList()
+      : json.getJsonArray("administrativeNotes").stream().map(Object::toString).toList();
+  }
+
+  private static Function<JsonObject, List<String>> instancePatchNotesFunction() {
+    return patch -> isNull(patch.getJsonArray("notes"))
+      ? Collections.emptyList()
+      : patch.getJsonArray("notes").stream()
+        .map(JsonObject.class::cast)
+        .map(obj -> obj.getString("note"))
+        .filter(Objects::nonNull)
+        .toList();
   }
 
   private static Function<Item, List<String>> itemNotesFunction() {
