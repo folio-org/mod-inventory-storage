@@ -114,9 +114,15 @@ public class ItemRepository extends AbstractRepository<Item> {
     return conn.preparedQuery(sql).executeBatch(tuples)
       .map(rowSet -> {
         List<Item> updatedItems = new LinkedList<>();
-        for (Row row : rowSet) {
-          updatedItems.add(readValue(row.getString(0), Item.class));
+
+        RowSet<Row> current = rowSet;
+        while (current != null) {
+          for (Row row : current) {
+            updatedItems.add(readValue(row.getString(0), Item.class));
+          }
+          current = current.next(); // Move to the result of the next tuple in the batch
         }
+
         return updatedItems;
       })
       .recover(throwable -> {
