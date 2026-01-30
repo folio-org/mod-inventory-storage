@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Function;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.exceptions.ValidationException;
@@ -87,7 +88,9 @@ public final class NotesValidators {
       ? Collections.emptyList()
       : patch.getJsonArray("notes").stream()
         .map(JsonObject.class::cast)
-        .map(obj -> obj.getString("note")).toList();
+        .map(obj -> obj.getString("note"))
+        .filter(Objects::isNull)
+        .toList();
   }
 
   private static Function<Item, List<String>> itemNotesFunction() {
