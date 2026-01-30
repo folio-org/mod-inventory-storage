@@ -89,7 +89,7 @@ public final class NotesValidators {
       : patch.getJsonArray("notes").stream()
         .map(JsonObject.class::cast)
         .map(obj -> obj.getString("note"))
-        .filter(Objects::isNull)
+        .filter(Objects::nonNull)
         .toList();
   }
 
