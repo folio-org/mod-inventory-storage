@@ -264,18 +264,17 @@ public class InstanceService {
 
   private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
     final Promise<Response> patchResult = promise();
-    return postgresClient.withTrans(conn -> {
-      return instanceRepository.patchInstance(conn, patchRequest)
+    return postgresClient.withTrans(conn ->
+      instanceRepository.patchInstance(conn, patchRequest)
         .compose(response -> instanceRepository.getById(id)
         .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-          .map(v -> response)));
-    }).onComplete(transactionResult -> {
-      if (transactionResult.succeeded()) {
-        patchResult.complete(transactionResult.result());
-      } else {
-        patchResult.fail(transactionResult.cause());
-      }
-    }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+        .map(v -> response)))).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            patchResult.complete(transactionResult.result());
+          } else {
+            patchResult.fail(transactionResult.cause());
+          }
+        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,

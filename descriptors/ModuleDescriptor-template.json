@@ -207,7 +207,6 @@
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.patch"],
           "modulePermissions": [
-            "inventory-storage.instances.item.get",
             "user-tenants.collection.get",
             "consortia.sharing-instances.collection.get"
           ]
