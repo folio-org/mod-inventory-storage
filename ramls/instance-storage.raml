@@ -16,6 +16,7 @@ types:
   instanceRelationships: !include schemas/instance-storage/instancerelationships.json
   retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
+  instancePatchRequest: !include schemas/instance-storage/instancePatch.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -103,10 +104,11 @@ resourceTypes:
           how instance hashes are computed are business rules and defined in the service layer.
           the storage layer only knows how to insert or retrieve instance records by ID.
       patch:
+        is: [ validate ]
         description: Partial update of instance with given ID
         body:
           application/json:
-            type: string
+            type: instancePatchRequest
             example: !include examples/instance-patch.json
         responses:
           204:

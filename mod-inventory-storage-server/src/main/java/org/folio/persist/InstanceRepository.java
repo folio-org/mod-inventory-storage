@@ -16,6 +16,7 @@ import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,13 @@ import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.ResultInfo;
+import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utils.DatabaseUtils;
 
 public class InstanceRepository extends AbstractRepository<Instance> {
@@ -382,5 +386,20 @@ public class InstanceRepository extends AbstractRepository<Instance> {
           JsonObject::new
         )
       );
+  }
+
+  public Future<Response> patchInstance(Conn conn, InstancePatchRequest patchRequest) {
+    try {
+      OptimisticLockingUtil.unsetVersionIfMinusOne(patchRequest.getVersion());
+
+      var sql = "UPDATE %s SET jsonb = jsonb || $1 WHERE id = $2 RETURNING jsonb::text"
+        .formatted(getFullTableName(INSTANCE_TABLE));
+      var tuple = Tuple.of(JsonObject.mapFrom(patchRequest), patchRequest.getId());
+
+      return conn.getPgConnection().preparedQuery(sql).execute(tuple)
+        .map(InstanceStorage.PatchInstanceStorageInstancesByInstanceIdResponse.respond204());
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
   }
 }

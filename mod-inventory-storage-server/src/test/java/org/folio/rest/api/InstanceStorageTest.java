@@ -3005,6 +3005,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     instanceFromGet.put(SUBJECTS_KEY, null);
 
     var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
     patchJson.put("title", "New Title");
     var expectedJson = getResponse.getJson().put("title", "New Title").remove("metadata");
 
@@ -3029,6 +3031,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
     var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
     patchJson.put("hrid", "12345");
 
     var updatedResponse = patch(newId.toString(), patchJson);
@@ -3049,6 +3053,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
     var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
     patchJson.put("hrid", getResponse.getJson().getString("hrid"));
 
     var updatedResponse = patch(newId.toString(), patchJson);
@@ -3069,6 +3075,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(HTTP_OK));
 
     var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
     patchJson.put("notExistingField", "value");
 
     var updatedResponse = patch(newId.toString(), patchJson);
@@ -3090,12 +3098,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     // increase instance version
     var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
     patchJson.put("title", "new title");
     var updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
 
     patchJson = new JsonObject();
+    patchJson.put("id", newId);
     patchJson.put("_version", 1);
+    patchJson.put("title", "new title");
 
     updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_CONFLICT));
@@ -3106,6 +3118,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     UUID id = UUID.randomUUID();
 
     var patchJson = new JsonObject();
+    patchJson.put("id", id);
+    patchJson.put("_version", 1);
     patchJson.put("title", "new title");
 
     var updatedResponse = patch(id.toString(), patchJson);

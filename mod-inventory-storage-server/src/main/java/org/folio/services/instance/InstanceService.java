@@ -25,7 +25,6 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
@@ -46,15 +45,14 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
-import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.Criteria.UpdateSection;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -70,7 +68,6 @@ import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
-import org.folio.utils.PatchPgUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 import org.folio.validator.PatchValidators;
@@ -255,26 +252,20 @@ public class InstanceService {
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
-  public Future<Response> patchInstance(String id, String patch) {
-    JsonObject patchJson;
-    try {
-      patchJson = new JsonObject(patch);
-    } catch (DecodeException de) {
-      return failedFuture(new BadRequestException("Invalid JSON object"));
-    }
-    return PatchValidators.checkInstanceFields(patchJson)
+  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+    var patchJson = JsonObject.mapFrom(patchRequest);
+    return PatchValidators.checkInstanceFields(patchRequest)
       .compose(NotesValidators::refuseLongNotes)
       .compose(notUsed -> instanceRepository.getById(id))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
-      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchJson));
+      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
   }
 
-  private Future<Response> performInstancePatch(String id, Instance oldInstance, JsonObject patchJson) {
+  private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
     final Promise<Response> patchResult = promise();
     return postgresClient.withTrans(conn -> {
-      Promise<Response> patchPromise = patch(id, patchJson);
-      return patchPromise.future()
+      return instanceRepository.patchInstance(conn, patchRequest)
         .compose(response -> instanceRepository.getById(id)
         .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
           .map(v -> response)));
@@ -364,22 +355,6 @@ public class InstanceService {
     Promise<Response> promise = Promise.promise();
     put(INSTANCE_TABLE, newInstance, instanceId, okapiHeaders, vertxContext,
       InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
-        if (reply.succeeded()) {
-          promise.complete(reply.result());
-        } else {
-          promise.fail(reply.cause());
-        }
-      });
-    return promise;
-  }
-
-  private Promise<Response> patch(String instanceId, JsonObject patchJson) {
-    UpdateSection updateSection = new UpdateSection();
-    patchJson.stream()
-      .forEach(entry -> updateSection.addField(entry.getKey()).setValue(entry.getValue()));
-    Promise<Response> promise = Promise.promise();
-    PatchPgUtil.patch(INSTANCE_TABLE, updateSection, instanceId, okapiHeaders, vertxContext,
-      InstanceStorage.PatchInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
         if (reply.succeeded()) {
           promise.complete(reply.result());
         } else {

@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
 import org.folio.rest.jaxrs.model.MarcJson;
@@ -288,13 +289,13 @@ public class InstanceStorageApi implements InstanceStorage {
   @Override
   public void patchInstanceStorageInstancesByInstanceId(
     String instanceId,
-    String entity,
+    InstancePatchRequest request,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     new InstanceService(vertxContext, okapiHeaders)
-      .patchInstance(instanceId, entity)
+      .patchInstance(instanceId, request)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
