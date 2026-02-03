@@ -1,5 +1,6 @@
 package org.folio.rest;
 
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,8 +10,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -19,20 +19,21 @@ import io.vertx.core.json.JsonObject;
 import java.nio.file.Path;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.utility.KafkaUtility;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Check the shaded fat uber jar and Dockerfile.
@@ -47,25 +48,26 @@ import org.testcontainers.kafka.KafkaContainer;
  *
  * <p>mvn verify -B -Dtest=none -Dsurefire.failIfNoSpecifiedTests=false -Dit.test=InstallUpgradeIT 2>&1 | tee /tmp/out
  */
-public class InstallUpgradeIT {
+@Testcontainers
+class InstallUpgradeIT {
   /**
    * set true for debugging.
    */
-  public static final boolean IS_LOG_ENABLED = false;
+  private static final boolean IS_LOG_ENABLED = true;
 
-  public static final Network NETWORK = Network.newNetwork();
+  private static final Network NETWORK = Network.newNetwork();
 
-  @ClassRule(order = 0)
-  public static final KafkaContainer KAFKA =
+  @Container
+  private static final KafkaContainer KAFKA =
     new KafkaContainer(KafkaUtility.getImageName())
       .withNetwork(NETWORK)
       .withNetworkAliases("mykafka")
       .withListener("mykafka:19092")
       .withStartupAttempts(3);
 
-  @ClassRule(order = 1)
-  public static final PostgreSQLContainer<?> POSTGRES =
-    new PostgreSQLContainer<>("postgres:16-alpine")
+  @Container
+  private static final PostgreSQLContainer POSTGRES =
+    new PostgreSQLContainer("postgres:16-alpine")
       .withClasspathResourceMapping("lotus-23.0.0.sql", "/lotus-23.0.0.sql", BindMode.READ_ONLY)
       .withNetwork(NETWORK)
       .withNetworkAliases("mypostgres")
@@ -74,14 +76,14 @@ public class InstallUpgradeIT {
       .withPassword("password")
       .withDatabaseName("postgres");
 
-  @ClassRule(order = 2)
-  public static final WireMockRule OKAPI_MOCK =
-    new WireMockRule(WireMockConfiguration.wireMockConfig()
-      .notifier(new ConsoleNotifier(IS_LOG_ENABLED))
-      .dynamicPort());
+  @RegisterExtension
+  protected static WireMockExtension okapiMock = WireMockExtension.newInstance()
+    .options(wireMockConfig().dynamicPort()
+      .notifier(new ConsoleNotifier(IS_LOG_ENABLED)))
+    .build();
 
-  @ClassRule(order = 3)
-  public static final GenericContainer<?> MOD_MIS =
+  @Container
+  private static final GenericContainer<?> MOD_MIS =
     new GenericContainer<>(new ImageFromDockerfile("mod-inventory-storage")
       .withFileFromPath(".", Path.of("..").toAbsolutePath()))
       .withNetwork(NETWORK)
@@ -99,9 +101,9 @@ public class InstallUpgradeIT {
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private static final String USER_TENANTS_FIELD = "userTenants";
 
-  @BeforeClass
-  public static void beforeClass() {
-    Testcontainers.exposeHostPorts(OKAPI_MOCK.port());
+  @BeforeAll
+  static void beforeClass() {
+    org.testcontainers.Testcontainers.exposeHostPorts(okapiMock.getPort());
     RestAssured.reset();
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     RestAssured.baseURI = "http://" + MOD_MIS.getHost() + ":" + MOD_MIS.getFirstMappedPort();
@@ -111,17 +113,17 @@ public class InstallUpgradeIT {
       MOD_MIS.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("mis"));
     }
 
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
+    okapiMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .willReturn(WireMock.ok().withBody(new JsonObject().put(USER_TENANTS_FIELD, JsonArray.of()).encode())));
   }
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     RestAssured.requestSpecification = null;
   }
 
   @Test
-  public void health() {
+  void health() {
     // request without X-Okapi-Tenant
     when()
       .get("/admin/health")
@@ -131,7 +133,7 @@ public class InstallUpgradeIT {
   }
 
   @Test
-  public void installAndUpgrade() {
+  void installAndUpgrade() {
     when()
       .get("/admin/health")
       .then()
@@ -161,7 +163,7 @@ public class InstallUpgradeIT {
    * <a href="https://issues.folio.org/browse/CIRCSTORE-263">https://issues.folio.org/browse/CIRCSTORE-263</a>
    */
   @Test
-  public void canLog() {
+  void canLog() {
     setTenant("logtenant");
 
     given()
@@ -178,7 +180,7 @@ public class InstallUpgradeIT {
   private void setTenant(String tenant) {
     RestAssured.requestSpecification = new RequestSpecBuilder()
       .addHeader(XOkapiHeaders.URL_TO, "http://localhost:8081")
-      .addHeader(XOkapiHeaders.URL, String.format("http://host.testcontainers.internal:%d", OKAPI_MOCK.port()))
+      .addHeader(XOkapiHeaders.URL, okapiMock.baseUrl())
       .addHeader(XOkapiHeaders.TENANT, tenant)
       .addHeader(XOkapiHeaders.USER_ID, "67e1ce93-e358-46ea-aed8-96e2fa73520f")
       .setContentType(ContentType.JSON)

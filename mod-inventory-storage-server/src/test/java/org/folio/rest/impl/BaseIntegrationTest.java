@@ -48,10 +48,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @EnableTenant
 @Testcontainers(parallel = true)
@@ -67,8 +67,8 @@ public abstract class BaseIntegrationTest {
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @Container
-  private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
-    new PostgreSQLContainer<>(PostgresTesterContainer.getImageName())
+  private static final PostgreSQLContainer POSTGRESQL_CONTAINER =
+    new PostgreSQLContainer(PostgresTesterContainer.getImageName())
       .withDatabaseName("folio")
       .withUsername("admin_user")
       .withPassword("admin_password");
