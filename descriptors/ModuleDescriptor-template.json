@@ -175,7 +175,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.2",
+      "version": "11.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -198,6 +198,14 @@
           "methods": ["PUT"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.put"],
+          "modulePermissions": [
+            "user-tenants.collection.get",
+            "consortia.sharing-instances.collection.get"
+          ]
+        }, {
+          "methods": ["PATCH"],
+          "pathPattern": "/instance-storage/instances/{id}",
+          "permissionsRequired": ["inventory-storage.instances.item.patch"],
           "modulePermissions": [
             "user-tenants.collection.get",
             "consortia.sharing-instances.collection.get"
@@ -1583,6 +1591,11 @@
       "description": "modify instance in storage"
     },
     {
+      "permissionName": "inventory-storage.instances.item.patch",
+      "displayName": "inventory storage - partially modify instance",
+      "description": "partially modify instance in storage"
+    },
+    {
       "permissionName": "inventory-storage.instances.item.delete",
       "displayName": "inventory storage - delete individual instance",
       "description": "delete individual instance from storage"
@@ -2644,6 +2657,7 @@
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
+        "inventory-storage.instances.item.patch",
         "inventory-storage.instances.item.delete",
         "inventory-storage.instances.preceding-succeeding-titles.collection.put",
         "inventory-storage.instances.source-record.delete",

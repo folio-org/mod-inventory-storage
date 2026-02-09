@@ -1,5 +1,6 @@
 package org.folio.services.instance;
 
+import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Promise.promise;
 import static javax.ws.rs.core.Response.noContent;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
@@ -24,6 +25,7 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -46,6 +48,7 @@ import org.folio.persist.InstanceRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
@@ -67,6 +70,7 @@ import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
+import org.folio.validator.PatchValidators;
 
 public class InstanceService {
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
@@ -215,6 +219,13 @@ public class InstanceService {
     return Future.succeededFuture(oldInstance);
   }
 
+  private Future<Instance> validateHridChange(Instance oldInstance, JsonObject patchJson) {
+    if (!oldInstance.getSource().startsWith("CONSORTIUM-")) {
+      return refuseWhenHridChanged(oldInstance, patchJson);
+    }
+    return Future.succeededFuture(oldInstance);
+  }
+
   private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
     try {
       var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
@@ -223,7 +234,7 @@ public class InstanceService {
           .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
       }
     } catch (Exception e) {
-      return Future.failedFuture(e);
+      return failedFuture(e);
     }
 
     final Promise<Response> putResult = promise();
@@ -239,6 +250,31 @@ public class InstanceService {
         putResult.fail(transactionResult.cause());
       }
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+  }
+
+  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+    var patchJson = JsonObject.mapFrom(patchRequest);
+    return PatchValidators.checkInstanceFields(patchRequest)
+      .compose(NotesValidators::refuseLongNotes)
+      .compose(notUsed -> instanceRepository.getById(id))
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
+      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
+  }
+
+  private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
+    final Promise<Response> patchResult = promise();
+    return postgresClient.withTrans(conn ->
+      instanceRepository.patchInstance(conn, patchRequest)
+        .compose(response -> instanceRepository.getById(id)
+        .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+        .map(v -> response)))).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            patchResult.complete(transactionResult.result());
+          } else {
+            patchResult.fail(transactionResult.cause());
+          }
+        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
@@ -258,7 +294,7 @@ public class InstanceService {
       return executeBatchOperation(conn, instances, upsert);
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
-      return Future.failedFuture(e.getMessage());
+      return failedFuture(e.getMessage());
     }
   }
 
@@ -273,9 +309,9 @@ public class InstanceService {
         respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
           .compose(response -> {
             if (response.getEntity() instanceof Errors errors) {
-              return Future.failedFuture(new ValidationException(errors));
+              return failedFuture(new ValidationException(errors));
             }
-            return Future.failedFuture(throwable);
+            return failedFuture(throwable);
           }));
   }
 
@@ -497,7 +533,7 @@ public class InstanceService {
       return PgUtil.response(table, "", throwable, responseClass, respond500, respond500);
     } catch (Exception e) {
       logger.debug("respondFailure:: Error during respond", e);
-      return Future.failedFuture(e.getMessage());
+      return failedFuture(e.getMessage());
     }
   }
 }

@@ -2,6 +2,7 @@ package org.folio.rest.api;
 
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -9,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -77,6 +79,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -2978,5 +2981,204 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(parameter, notNullValue());
     assertThat(parameter.getKey(), containsString("'hrid'"));
     assertThat(parameter.getValue(), is(expectedHrid));
+  }
+
+  @Test
+  public void canPatchAnInstanceUnlinkSubjectSourceAndType() {
+    UUID id = UUID.randomUUID();
+    var subject = new Subject()
+      .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
+      .withTypeId(UUID_INSTANCE_SUBJECT_TYPE_ID.toString())
+      .withValue("subject");
+    var subjects = new JsonArray().add(subject);
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+    instanceToCreate.put(SUBJECTS_KEY, subjects);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+    var instanceFromGet = getResponse.getJson();
+    instanceFromGet.put(SUBJECTS_KEY, null);
+
+    var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("title", "New Title");
+    var expectedJson = getResponse.getJson().put("title", "New Title").remove("metadata");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    getResponse = getById(newId);
+    assertThat(getResponse.getJson().remove("metadata"), is(expectedJson));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWhenHridIsChanged() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("hrid", "12345");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void canPatchAnInstanceWhenHridIsNotChanged() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("hrid", getResponse.getJson().getString("hrid"));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWhenFieldNameIsWrong() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("notExistingField", "value");
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceOnOptimisticLock() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    // increase instance version
+    var patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("title", "new title");
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
+
+    patchJson = new JsonObject();
+    patchJson.put("id", newId);
+    patchJson.put("_version", 1);
+    patchJson.put("title", "new title");
+
+    updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_CONFLICT));
+  }
+
+  @Test
+  public void cannotPatchWhenInstanceNotFound() {
+    UUID id = UUID.randomUUID();
+
+    var patchJson = new JsonObject();
+    patchJson.put("id", id);
+    patchJson.put("_version", 1);
+    patchJson.put("title", "new title");
+
+    var updatedResponse = patch(id.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongAdministrativeNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("administrativeNotes", List.of(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1)));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var longNote = new InstanceNote()
+      .withInstanceNoteTypeId(UUID.randomUUID().toString())
+      .withNote(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1));
+    var patchJson = new JsonObject();
+    patchJson.put("notes", List.of(longNote));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  private Response patch(String id, JsonObject patchJson) {
+    CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
+
+    getClient().patch(instancesStorageUrl(format("/%s", id)), patchJson,
+      TENANT_ID, ResponseHandler.empty(replaceCompleted));
+
+    try {
+      return replaceCompleted.get(10, SECONDS);
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
