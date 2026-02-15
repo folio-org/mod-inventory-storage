@@ -1287,6 +1287,11 @@
       "run": "after",
       "snippetPath": "populateIsShadowIfNotSetForExistingLocationLibrary.sql",
       "fromModuleVersion": "29.0.15"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createIndexInstanceStatusId.sql",
+      "fromModuleVersion": "29.0.18"
     }
   ]
 }
