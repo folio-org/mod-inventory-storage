@@ -3,7 +3,7 @@
 
   <artifactId>mod-inventory-storage</artifactId>
   <groupId>org.folio</groupId>
-  <version>29.0.18-SNAPSHOT</version>
+  <version>29.0.19-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

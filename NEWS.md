@@ -1,3 +1,7 @@
+## v29.0.18 2026-02-16
+### Bug fixes
+* Fix org.folio.processing.exceptions.MatchingException: `Failed to load records cause: 504 Gateway Time-out`([MODINVSTOR-1515](https://folio-org.atlassian.net/browse/MODINVSTOR-1515))
+
 ## v29.0.17 2026-01-20
 ### Bug fixes
 * Fix metadata not filled for records created via `POST /instance-storage/batch/synchronous`([MODINVSTOR-1382](https://folio-org.atlassian.net/browse/MODINVSTOR-1382), [MODINVSTOR-1502](https://folio-org.atlassian.net/browse/MODINVSTOR-1502))
