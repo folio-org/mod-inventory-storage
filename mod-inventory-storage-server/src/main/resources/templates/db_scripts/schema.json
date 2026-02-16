@@ -1292,6 +1292,51 @@
       "run": "after",
       "snippetPath": "loan-types/updateLoanTypeSources.sql",
       "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createToTimestampFunction.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "createJsonbArrayIndexFunctions.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceClassificationNumberIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceCreationDateIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceIdentifierIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstancePublicationDateIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceSubjectValueIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceCatalogedDateIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceFormatIdsIndex.sql",
+      "fromModuleVersion": "30.0.0"
     }
   ]
 }
