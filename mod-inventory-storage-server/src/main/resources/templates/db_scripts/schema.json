@@ -1295,7 +1295,7 @@
     },
     {
       "run": "after",
-      "snippetPath": "addApplyJsonbPatch.sql",
+      "snippetPath": "addApplyJsonbPatchFunction.sql",
       "fromModuleVersion": "30.0.0"
     }
   ]
