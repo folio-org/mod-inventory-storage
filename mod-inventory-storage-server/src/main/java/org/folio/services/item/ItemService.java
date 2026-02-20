@@ -199,8 +199,7 @@ public class ItemService {
     var item = conversionResult.getRight();
     sanitizer.sanitize(item);
 
-    return ItemUtils.validateRequiredFields(singletonList(patchRequest))
-      .compose(v -> validateUuidFormatForList(singletonList(item), Item::getStatisticalCodeIds))
+    return validateUuidFormatForList(singletonList(item), Item::getStatisticalCodeIds)
       .compose(v -> NotesValidators.refuseItemLongNotes(singletonList(item)))
       .compose(v -> populateCirculationNoteId(singletonList(item)))
       .compose(v -> validateMultiplePatchItemsAndHoldings(singletonList(patchData)))
