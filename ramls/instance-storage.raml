@@ -16,7 +16,7 @@ types:
   instanceRelationships: !include schemas/instance-storage/instancerelationships.json
   retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
-  instancePatchRequest: !include schemas/instance-storage/instancePatch.json
+  instancePatchRequest: !include schemas/common/patchRequest.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -109,7 +109,7 @@ resourceTypes:
         body:
           application/json:
             type: instancePatchRequest
-            example: !include examples/instance-patch.json
+            example: !include examples/patchRequest.json
         responses:
           204:
             description: "Instance successfully updated"

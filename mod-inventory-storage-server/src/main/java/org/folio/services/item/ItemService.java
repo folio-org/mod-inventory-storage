@@ -2,6 +2,7 @@ package org.folio.services.item;
 
 import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -184,6 +185,29 @@ public class ItemService {
       .compose(patchDataToUpdate -> executeItemsUpdate(items, patchDataToUpdate));
   }
 
+  public Future<Response> patchItem(ItemPatchRequest patchRequest) {
+    Pair<PatchData, Item> conversionResult;
+    try {
+      conversionResult = convertItemPatchToPatchData(patchRequest);
+    } catch (IllegalArgumentException e) {
+      log.error("updateItems:: Failed to convert items", e);
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+        "Invalid item format: " + e.getMessage()));
+    }
+
+    var patchData = conversionResult.getLeft();
+    var item = conversionResult.getRight();
+    sanitizer.sanitize(item);
+
+    return ItemUtils.validateRequiredFields(singletonList(patchRequest))
+      .compose(v -> validateUuidFormatForList(singletonList(item), Item::getStatisticalCodeIds))
+      .compose(v -> NotesValidators.refuseItemLongNotes(singletonList(item)))
+      .compose(v -> populateCirculationNoteId(singletonList(item)))
+      .compose(v -> validateMultiplePatchItemsAndHoldings(singletonList(patchData)))
+      .compose(this::filterUnchangedPatchData)
+      .compose(patchDataList -> executeItemPatch(patchRequest, patchDataList));
+  }
+
   public Future<Response> updateItem(String itemId, Item newItem) {
     newItem.setId(itemId);
     sanitizer.sanitize(newItem);
@@ -276,6 +300,14 @@ public class ItemService {
     return Pair.of(patchDataList, itemList);
   }
 
+  Pair<PatchData, Item> convertItemPatchToPatchData(ItemPatchRequest patchRequest) {
+    removeReadOnlyFields(patchRequest);
+    var patchData = new PatchData();
+    patchData.setPatchRequest(patchRequest);
+    patchData.setNewItem(OBJECT_MAPPER.convertValue(patchRequest, Item.class));
+    return Pair.of(patchData, patchData.getNewItem());
+  }
+
   private Future<Response> executeItemsUpdate(List<ItemPatchRequest> items, List<PatchData> patchDataToUpdate) {
     if (patchDataToUpdate.isEmpty()) {
       return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
@@ -291,6 +323,23 @@ public class ItemService {
         itemRepository.updateItems(conn, items)
           .<Response>compose(updatedItems -> publishItemUpdateEvents(updatedItems, patchDataToUpdate)))
       .recover(ItemUtils::handleUpdateItemsError);
+  }
+
+  private Future<Response> executeItemPatch(ItemPatchRequest patchRequest, List<PatchData> patchDataToUpdate) {
+    if (patchDataToUpdate.isEmpty()) {
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond204());
+    }
+    try {
+      normalizeItemFields(patchRequest);
+    } catch (Exception e) {
+      log.warn("executeItemsUpdate:: Unable to normalize fields", e);
+      return Future.succeededFuture(ItemStorage.PatchItemStorageItemsResponse.respond400WithTextPlain(
+        "Unable to normalize fields: " + e.getMessage()));
+    }
+    return postgresClient.withTransaction(conn ->
+        itemRepository.patchItem(conn, patchRequest)
+        .compose(updatedItems -> publishItemUpdateEvents(updatedItems, patchDataToUpdate)))
+        .recover(ItemUtils::handleUpdateItemsError);
   }
 
   private Future<Response> publishItemUpdateEvents(List<Item> updatedItems, List<PatchData> patchDataToUpdate) {
