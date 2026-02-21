@@ -1636,6 +1636,24 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
+  public void shouldPatchItem_positive() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemId = randomUUID();
+    createItem(smallAngryPlanet(itemId, holdingsRecordId));
+
+    var response = getItemResponse(itemId);
+    var itemJson = modifyItemForUpdate(response.getJson());
+
+    var patchResponse = patchItem(itemJson);
+    assertThat(patchResponse.getStatusCode(), is(204));
+
+    var itemResponseJson = getById(itemId).getJson();
+    verifyUpdatedItem(itemResponseJson);
+    itemMessageChecks.updatedMessagePublished(response.getJson(), itemResponseJson);
+  }
+
+  @Test
+  @SneakyThrows
   public void shouldResetItemOrderWhenAllItemsAreDeletedAndNewOneIsCreated() {
     var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemId1 = randomUUID();
@@ -3922,6 +3940,15 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   private Response patchItems(JsonObject itemsJson) {
     var patchCompleted = new CompletableFuture<Response>();
     getClient().patch(itemsStorageUrl(""), new JsonObject().put("items", new JsonArray().add(itemsJson)),
+      TENANT_ID, ResponseHandler.empty(patchCompleted));
+    return patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  private Response patchItem(JsonObject itemJson) {
+    var itemId = itemJson.getString("id");
+    var patchCompleted = new CompletableFuture<Response>();
+    getClient().patch(itemsStorageUrl("/" + itemId), itemJson,
       TENANT_ID, ResponseHandler.empty(patchCompleted));
     return patchCompleted.get(TIMEOUT, TimeUnit.SECONDS);
   }

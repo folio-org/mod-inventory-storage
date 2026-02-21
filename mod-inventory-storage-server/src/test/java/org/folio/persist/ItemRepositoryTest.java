@@ -24,6 +24,7 @@ import io.vertx.sqlclient.PreparedQuery;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -284,6 +285,79 @@ class ItemRepositoryTest {
     return (PreparedQuery<RowSet<Row>>) mock(PreparedQuery.class);
   }
 
+  @Test
+  void patchItem_shouldSuccessfullyPatchItem() {
+    // Given
+    var pgConnection = mock(PgConnection.class);
+    var preparedQuery = getRowSetPreparedQuery();
+    var patchRequest = createItemPatchRequest();
+    var mockRowSet = createMockRowSet(1);
+
+    when(pgConnection.preparedQuery(anyString())).thenReturn(preparedQuery);
+    when(preparedQuery.execute(any())).thenReturn(Future.succeededFuture(mockRowSet));
+
+    // When
+    var result = itemRepository.patchItem(pgConnection, patchRequest);
+
+    // Then
+    assertTrue(result.succeeded());
+    assertNotNull(result.result());
+    assertEquals(1, result.result().size());
+
+    for (var updatedItem : result.result()) {
+      assertNotNull(updatedItem.getId());
+      assertNotNull(updatedItem.getBarcode());
+      assertTrue(updatedItem.getBarcode().startsWith("barcode-"));
+    }
+
+    verifyPatchSql(pgConnection);
+    verify(preparedQuery).execute(any(Tuple.class));
+  }
+
+  private ItemPatchRequest createItemPatchRequest() {
+    return new ItemPatchRequest()
+      .withId(UUID.randomUUID().toString())
+      .withAdditionalProperty("barcode", "barcode-1")
+      .withAdditionalProperty("status", Map.of("name", "Available"));
+  }
+
+  @Test
+  void patchItem_shouldHandleDatabaseError() {
+    // Given
+    var pgConnection = mock(PgConnection.class);
+    var preparedQuery = getRowSetPreparedQuery();
+    var patchRequest = createItemPatchRequest();
+    var dbError = new RuntimeException("Database connection failed");
+
+    when(pgConnection.preparedQuery(anyString())).thenReturn(preparedQuery);
+    when(preparedQuery.execute(any(Tuple.class))).thenReturn(Future.failedFuture(dbError));
+
+    // When
+    var result = itemRepository.patchItem(pgConnection, patchRequest);
+
+    // Then
+    assertTrue(result.failed());
+    assertEquals(dbError, result.cause());
+  }
+
+  @Test
+  void patchItem_shouldHandleUnexpectedExceptionInUpdateProcess() {
+    // Given
+    var pgConnection = mock(PgConnection.class);
+    var patchRequest = createItemPatchRequest();
+
+    // Trigger exception during preparedQuery call
+    when(pgConnection.preparedQuery(anyString())).thenThrow(new RuntimeException("Unexpected error"));
+
+    // When
+    var result = itemRepository.patchItem(pgConnection, patchRequest);
+
+    // Then
+    assertTrue(result.failed());
+    assertInstanceOf(RuntimeException.class, result.cause());
+    assertEquals("Unexpected error", result.cause().getMessage());
+  }
+
   private List<ItemPatchRequest> createItemPatchRequests(int count) {
     var items = new ArrayList<ItemPatchRequest>();
     for (int i = 0; i < count; i++) {
@@ -447,5 +521,15 @@ class ItemRepositoryTest {
       && sql.contains("SET jsonb = jsonb || $1")
       && sql.contains("WHERE id = $2")
       && sql.contains("RETURNING jsonb::text")));
+  }
+
+  private void verifyPatchSql(PgConnection pgConnection) {
+    verify(pgConnection).preparedQuery(argThat(sql ->
+      sql != null
+        && sql.contains("UPDATE")
+        && sql.contains(".item")
+        && sql.contains("SET jsonb = apply_jsonb_patch(jsonb, $1)")
+        && sql.contains("WHERE id = $2")
+        && sql.contains("RETURNING jsonb::text")));
   }
 }

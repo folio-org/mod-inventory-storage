@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Item Storage
-version: v11.0
+version: v11.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -14,6 +14,7 @@ types:
   itemsPatchRequest: !include schemas/item-storage/itemsPatch.json
   errors: !include raml-util/schemas/errors.schema
   retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
+  itemPatchRequest: !include schemas/common/patchRequest.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -98,6 +99,36 @@ resourceTypes:
           exampleItem: !include examples/item-storage/item_get.json
           schema: item
       get:
+      patch:
+        is: [ validate ]
+        description: Partial update of item with given ID
+        body:
+          application/json:
+            type: itemPatchRequest
+            example: !include examples/patchRequest.json
+        responses:
+          204:
+            description: "Item successfully updated"
+          404:
+            description: "Item with a given ID not found"
+            body:
+              text/plain:
+                example: Not found
+          400:
+            description: "Bad request, e.g. malformed request body or query parameter."
+            body:
+              text/plain:
+                example: "unable to update instance - malformed JSON"
+          409:
+            description: "Optimistic locking version conflict"
+            body:
+              text/plain:
+                example: "version conflict"
+          500:
+            description: "Internal server error, e.g. due to misconfiguration"
+            body:
+              text/plain:
+                example: "internal server error, contact administrator"
     /retrieve:
       post:
         is: [validate]

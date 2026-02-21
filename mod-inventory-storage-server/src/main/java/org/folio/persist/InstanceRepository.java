@@ -392,7 +392,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     try {
       OptimisticLockingUtil.unsetVersionIfMinusOne(patchRequest.getVersion());
 
-      var sql = "UPDATE %s SET jsonb = jsonb || $1 WHERE id = $2"
+      var sql = "UPDATE %s SET jsonb = apply_jsonb_patch(jsonb, $1) WHERE id = $2"
         .formatted(getFullTableName(INSTANCE_TABLE));
       var tuple = Tuple.of(JsonObject.mapFrom(patchRequest), patchRequest.getId());
 

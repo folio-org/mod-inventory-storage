@@ -1,5 +1,6 @@
 package org.folio.services.item;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
@@ -9,7 +10,6 @@ import io.vertx.core.Future;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Stream;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.Logger;
@@ -141,16 +141,17 @@ public final class ItemUtils {
   }
 
   public static void normalizeItemFields(List<ItemPatchRequest> items) {
-    items.stream()
-      .map(ItemPatchRequest::getAdditionalProperties)
-      .filter(props -> Objects.nonNull(props) && !props.isEmpty())
-      .forEach(props -> {
-        normalizeProperty(props, ORDER, Integer::valueOf);
-        normalizeProperty(props, DISCOVERY_SUPPRESS, Boolean::valueOf);
+    items.forEach(ItemUtils::normalizeItemFields);
+  }
 
-        // normalize "staffOnly" property in notes and circulationNotes lists
-        normalizeStaffOnlyInNestedLists(props, NOTES, CIRCULATION_NOTES);
-      });
+  public static void normalizeItemFields(ItemPatchRequest patchRequest) {
+    var additionalProperties = patchRequest.getAdditionalProperties();
+    if (nonNull(additionalProperties) && !additionalProperties.isEmpty()) {
+      normalizeProperty(additionalProperties, ORDER, Integer::valueOf);
+      normalizeProperty(additionalProperties, DISCOVERY_SUPPRESS, Boolean::valueOf);
+      // normalize "staffOnly" property in notes and circulationNotes lists
+      normalizeStaffOnlyInNestedLists(additionalProperties, NOTES, CIRCULATION_NOTES);
+    }
   }
 
   private static void normalizeStaffOnlyInNestedLists(Map<String, Object> props, String... fields) {

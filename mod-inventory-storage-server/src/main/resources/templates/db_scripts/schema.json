@@ -1295,6 +1295,11 @@
     },
     {
       "run": "after",
+      "snippetPath": "addApplyJsonbPatchFunction.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
       "snippetPath": "createToTimestampFunction.sql",
       "fromModuleVersion": "30.0.0"
     },

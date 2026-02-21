@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Record patch request",
+  "javaType": "org.folio.rest.jaxrs.model.PatchRequest",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "Unique identifier for the record",
+      "$ref": "uuid.json"
+    },
+    "_version": {
+      "description": "Version of the record",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": true,
+  "required": [
+    "id",
+    "_version"
+  ]
+}
