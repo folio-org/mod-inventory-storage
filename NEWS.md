@@ -47,6 +47,7 @@
 * Implement of PATCH requests for instances ([MODINVSTOR-1456](https://folio-org.atlassian.net/browse/MODINVSTOR-1456))
 * Improve batch results of the PATCH /item-storage/items endpoint ([MODINVSTOR-1514](https://folio-org.atlassian.net/browse/MODINVSTOR-1514))
 * Implement of PATCH requests for items ([MODINVSTOR-1506](https://folio-org.atlassian.net/browse/MODINVSTOR-1506))
+* Add several new indexes to the instance table for use by FQM ([MODINVSTOR-1520](https://folio-org.atlassian.net/browse/MODINVSTOR-1520))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
