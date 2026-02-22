@@ -25,7 +25,7 @@
 
     <!-- Dependency versions -->
     <raml-module-builder-version>36.0.0-SNAPSHOT</raml-module-builder-version>
-    <vertx.version>5.0.7</vertx.version>
+    <vertx.version>5.0.8</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.25.1</aspectj.version>
     <folio-kafka-wrapper.version>4.0.0-SNAPSHOT</folio-kafka-wrapper.version>
@@ -39,7 +39,7 @@
 
     <!-- Test dependency versions -->
     <okapi-testing.version>7.0.2</okapi-testing.version>
-    <junit.version>6.0.2</junit.version>
+    <junit.version>6.0.3</junit.version>
     <testcontainers.version>2.0.3</testcontainers.version>
     <joda-time.version>2.14.0</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
