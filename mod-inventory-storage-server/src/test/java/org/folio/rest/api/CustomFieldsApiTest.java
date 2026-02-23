@@ -110,9 +110,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     // (textbox, singleselect, multiselect)
     // when
     // saving the custom fields in the database
-    saveCustomField(customFields.get(0));
-    saveCustomField(customFields.get(1));
-    saveCustomField(customFields.get(2));
+    saveCustomFields(List.of(customFields.get(0), customFields.get(1), customFields.get(2)));
     // adding references to the 3 custom fields and
     // corresponding values for each of the items
     JsonObject itemWithCustomField0 = itemAddCustomFields(0);
@@ -201,9 +199,7 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     // (textbox, singleselect, multiselect)
     // when
     // saving the custom fields in the database
-    saveCustomField(customFields.get(0));
-    saveCustomField(customFields.get(1));
-    saveCustomField(customFields.get(2));
+    saveCustomFields(List.of(customFields.get(0), customFields.get(1), customFields.get(2)));
     // adding references to the 3 custom fields and
     // corresponding values for each of the items
     // and saving the items with custom field values in the database
@@ -448,6 +444,21 @@ public class CustomFieldsApiTest extends TestBaseWithInventoryUtil {
     Response response = get(updateCompleted);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     return response;
+  }
+
+  /**
+   * Save the custom fields with the API.
+   * Assert the custom fields got created by checking the status code.
+   * Here we also need to add the mock to a user interface because custom fields
+   * still have dependencies on a user
+   *
+   * @param customFieldsObjects List of JsonObjects representing the custom fields
+   * @return List of Response objects from the creation requests
+   */
+  private List<Response> saveCustomFields(List<JsonObject> customFieldsObjects) {
+    return customFieldsObjects.stream()
+        .map(this::saveCustomField)
+        .toList();
   }
 
   /**
