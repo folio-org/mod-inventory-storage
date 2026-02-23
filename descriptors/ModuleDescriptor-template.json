@@ -2648,7 +2648,7 @@
         "inventory-storage.items.item.post",
         "inventory-storage.items.collection.patch",
         "inventory-storage.items.item.put",
-        "inventory-storage.items.item.patch",
+        "inventory-storage.items.item.patch.execute",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
