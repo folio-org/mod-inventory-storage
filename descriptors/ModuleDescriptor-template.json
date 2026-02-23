@@ -53,7 +53,7 @@
         }, {
           "methods": ["PATCH"],
           "pathPattern": "/item-storage/items/{id}",
-          "permissionsRequired": ["inventory-storage.items.item.patch"]
+          "permissionsRequired": ["inventory-storage.items.item.patch.execute"]
         },{
           "methods": ["DELETE"],
           "pathPattern": "/item-storage/items/{id}",
@@ -1505,7 +1505,7 @@
       "description": "modify item in storage"
     },
     {
-      "permissionName": "inventory-storage.items.item.patch",
+      "permissionName": "inventory-storage.items.item.patch.execute",
       "displayName": "inventory storage - patch item",
       "description": "partially modify item in storage"
     },
@@ -2648,7 +2648,7 @@
         "inventory-storage.items.item.post",
         "inventory-storage.items.collection.patch",
         "inventory-storage.items.item.put",
-        "inventory-storage.items.item.patch",
+        "inventory-storage.items.item.patch.execute",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
