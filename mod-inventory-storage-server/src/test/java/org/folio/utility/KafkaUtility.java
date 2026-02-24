@@ -12,7 +12,7 @@ public final class KafkaUtility {
   private static final Logger logger = LogManager.getLogger();
 
   private static final DockerImageName IMAGE_NAME
-    = DockerImageName.parse("apache/kafka-native:3.8.0");
+    = DockerImageName.parse("apache/kafka-native:4.2.0");
 
   private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(IMAGE_NAME)
       .withStartupAttempts(3);

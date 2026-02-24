@@ -27,7 +27,6 @@ import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
-import org.folio.services.s3storage.FolioS3ClientFactory;
 
 /**
  * The service that interacts with S3-compatible storage to perform upsert operations on instances retrieved
@@ -51,8 +50,8 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   private final InstanceService instanceService;
   private final InstanceRepository instanceRepository;
 
-  public InstanceS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx, Map<String, String> okapiHeaders) {
-    super(folioS3ClientFactory, vertx);
+  public InstanceS3Service(Vertx vertx, Map<String, String> okapiHeaders) {
+    super(vertx);
     this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
     this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
   }

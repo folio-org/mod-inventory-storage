@@ -3,7 +3,7 @@ package org.folio.services.domainevent;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import org.folio.rest.jaxrs.model.PublishReindexRecordsRequest.RecordType;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest.RecordType;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReindexRecordEvent<T> {

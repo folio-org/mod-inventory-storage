@@ -65,6 +65,7 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
@@ -521,6 +522,11 @@ public class InstanceService {
       .onSuccess(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances))
       .map(notUsed -> null);
   }
+
+  public Future<Void> exportReindexInstanceRecords(String rangeId, String fromId, String toId) {
+    var folioS3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.REINDEX);
+  }
+
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
     return tenantId.equals(consortiumData.centralTenantId());

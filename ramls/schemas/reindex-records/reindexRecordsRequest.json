@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Inventory Storage records for reindex",
-  "javaType": "org.folio.rest.jaxrs.model.PublishReindexRecordsRequest",
+  "javaType": "org.folio.rest.jaxrs.model.ReindexRecordsRequest",
   "type": "object",
   "properties": {
     "id": {

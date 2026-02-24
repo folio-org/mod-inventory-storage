@@ -1,45 +1,84 @@
 package org.folio.services.s3storage;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 
 public class FolioS3ClientFactory {
 
-  public static final String S3_URL_CONFIG = "S3_URL";
-  public static final String S3_REGION_CONFIG = "S3_REGION";
-  public static final String S3_BUCKET_CONFIG = "S3_BUCKET";
-  public static final String S3_ACCESS_KEY_ID_CONFIG = "S3_ACCESS_KEY_ID";
-  public static final String S3_SECRET_ACCESS_KEY_CONFIG = "S3_SECRET_ACCESS_KEY";
-  public static final String S3_IS_AWS_CONFIG = "S3_IS_AWS";
-  private static final String S3_URL_DEFAULT = "https://s3.amazonaws.com";
+  private static final Logger log = LogManager.getLogger(FolioS3ClientFactory.class);
+
+  private static final String S3_PREFIX = "S3_";
+  private static final String S3_URL_CONFIG = "URL";
+  private static final String S3_REGION_CONFIG = "REGION";
+  private static final String S3_BUCKET_CONFIG = "BUCKET";
+  private static final String S3_ACCESS_KEY_ID_CONFIG = "ACCESS_KEY_ID";
+  private static final String S3_SECRET_ACCESS_KEY_CONFIG = "SECRET_ACCESS_KEY";
+  private static final String S3_IS_AWS_CONFIG = "IS_AWS";
   private static final String S3_IS_AWS_DEFAULT = "false";
 
-  public FolioS3Client getFolioS3Client() {
-    return S3ClientFactory.getS3Client(getS3ClientProperties());
+  public static FolioS3Client getFolioS3Client(@NonNull S3ConfigType configType) {
+    return S3ClientFactory.getS3Client(getS3ClientProperties(configType));
   }
 
-  private S3ClientProperties getS3ClientProperties() {
+  private static S3ClientProperties getS3ClientProperties(@NonNull S3ConfigType configType) {
+    if (S3ConfigType.MARC_MIGRATION == configType
+        && getValue(getKey(S3_URL_CONFIG, configType)) == null) {
+      log.warn("S3 environment variables for {} config type not found, falling back to generic S3 configuration",
+        configType);
+      return buildS3ClientProperties(null);
+    }
+    return buildS3ClientProperties(configType);
+  }
+
+  private static S3ClientProperties buildS3ClientProperties(@Nullable S3ConfigType configType) {
+    var url = getValueOrFail(getKey(S3_URL_CONFIG, configType));
+    var region = getValueOrFail(getKey(S3_REGION_CONFIG, configType));
+    var bucket = getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
     return S3ClientProperties
       .builder()
-      .endpoint(getValue(S3_URL_CONFIG, S3_URL_DEFAULT))
-      .region(getValue(S3_REGION_CONFIG))
-      .bucket(getValue(S3_BUCKET_CONFIG))
-      .accessKey(getValueOrEmpty(S3_ACCESS_KEY_ID_CONFIG))
-      .secretKey(getValueOrEmpty(S3_SECRET_ACCESS_KEY_CONFIG))
-      .awsSdk(Boolean.parseBoolean(getValue(S3_IS_AWS_CONFIG, S3_IS_AWS_DEFAULT)))
+      .endpoint(url)
+      .region(region)
+      .bucket(bucket)
+      .accessKey(getValueOrEmpty(getKey(S3_ACCESS_KEY_ID_CONFIG, configType)))
+      .secretKey(getValueOrEmpty(getKey(S3_SECRET_ACCESS_KEY_CONFIG, configType)))
+      .awsSdk(Boolean.parseBoolean(getValue(getKey(S3_IS_AWS_CONFIG, configType), S3_IS_AWS_DEFAULT)))
       .build();
   }
 
-  private String getValue(String key) {
+  private static String getKey(@NonNull String configName, @Nullable S3ConfigType configType) {
+    if (configType == null) {
+      return S3_PREFIX + configName;
+    }
+    return S3_PREFIX + configType + "_" + configName;
+  }
+
+  private static String getValue(String key) {
     return getValue(key, null);
   }
 
-  private String getValue(String key, String defaultValue) {
+  private static String getValue(String key, String defaultValue) {
     return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
   }
 
-  private String getValueOrEmpty(String key) {
+  private static String getValueOrFail(String key) {
+    var value = getValue(key);
+    if (value == null || value.isBlank()) {
+      throw new IllegalStateException("Required S3 configuration property is missing: " + key);
+    }
+    return value;
+  }
+
+  private static String getValueOrEmpty(String key) {
     return getValue(key, "");
+  }
+
+  public enum S3ConfigType {
+    MARC_MIGRATION,
+    REINDEX
   }
 }
