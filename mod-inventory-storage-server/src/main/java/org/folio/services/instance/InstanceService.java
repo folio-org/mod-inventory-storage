@@ -49,6 +49,7 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
@@ -65,6 +66,7 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.reindex.ReindexS3ExportService;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
@@ -523,10 +525,27 @@ public class InstanceService {
       .map(notUsed -> null);
   }
 
-  public Future<Void> exportReindexInstanceRecords(String rangeId, String fromId, String toId) {
+  public Future<Void> exportReindexInstanceRecords(ReindexRecordsRequest request) {
     var folioS3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.REINDEX);
-  }
+    var tenantId = okapiHeaders.get(TENANT);
+    var traceId = StringUtils.isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
+    var s3Key = tenantId + "/instances/" + traceId + "/" + request.getId() + ".ndjson";
+    var exportService = new ReindexS3ExportService(vertxContext, folioS3Client);
 
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .map(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> isCentralTenantId(tenantId, consortiumData))
+        .orElse(false))
+      .compose(isCentralTenant -> {
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        var recordIdsRange = request.getRecordIdsRange();
+        var rangeFrom = recordIdsRange.getFrom();
+        var rangeTo = recordIdsRange.getTo();
+        return postgresClient.withTrans(conn ->
+          instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant)
+            .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)));
+      });
+  }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
     return tenantId.equals(consortiumData.centralTenantId());

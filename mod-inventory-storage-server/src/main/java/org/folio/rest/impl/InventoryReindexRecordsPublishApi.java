@@ -62,7 +62,7 @@ public class InventoryReindexRecordsPublishApi implements InventoryReindexRecord
     switch (entity.getRecordType()) {
       case INSTANCE ->
         publishFuture = new InstanceService(vertxContext, okapiHeaders)
-          .exportReindexInstanceRecords(rangeId, fromId, toId);
+          .exportReindexInstanceRecords(entity);
       case ITEM ->
         publishFuture = new ItemService(vertxContext, okapiHeaders)
           .publishReindexItemRecords(rangeId, fromId, toId);

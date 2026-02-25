@@ -9,6 +9,11 @@
       "description": "UUID representing this range of records",
       "$ref": "../common/uuid.json"
     },
+    "traceId": {
+      "type": "string",
+      "description": "UUID representing this range of records",
+      "$ref": "../common/uuid.json"
+    },
     "recordType": {
       "description": "Inventory storage record type (e.g. instance, item, holding)",
       "type": "string",

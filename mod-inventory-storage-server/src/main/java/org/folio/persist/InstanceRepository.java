@@ -254,6 +254,22 @@ public class InstanceRepository extends AbstractRepository<Instance> {
 
   public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,
                                                                boolean notConsortiumRecords) {
+    return postgresClient.select(buildReindexInstancesSql(fromId, toId, notConsortiumRecords))
+      .map(rows -> {
+        var resultList = new LinkedList<Map<String, Object>>();
+        for (var row : rows) {
+          resultList.add(row.getJsonObject(0).getMap());
+        }
+        return resultList;
+      });
+  }
+
+  public Future<RowStream<Row>> streamReindexInstances(Conn conn, String fromId, String toId,
+                                                       boolean notConsortiumRecords) {
+    return DatabaseUtils.selectStream(conn, buildReindexInstancesSql(fromId, toId, notConsortiumRecords));
+  }
+
+  private String buildReindexInstancesSql(String fromId, String toId, boolean notConsortiumRecords) {
     var sql = new StringBuilder("WITH bound_instances AS (");
     sql.append("SELECT DISTINCT hr.instanceId FROM ");
     sql.append(getFullTableName(BOUND_WITH_TABLE));
@@ -266,19 +282,11 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     sql.append(getFullTableName(INSTANCE_TABLE));
     sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
     sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
-
     if (notConsortiumRecords) {
       sql.append(" AND i.jsonb->>'source' NOT LIKE 'CONSORTIUM-%'");
     }
     sql.append(";");
-
-    return postgresClient.select(sql.toString()).map(rows -> {
-      var resultList = new LinkedList<Map<String, Object>>();
-      for (var row : rows) {
-        resultList.add(row.getJsonObject(0).getMap());
-      }
-      return resultList;
-    });
+    return sql.toString();
   }
 
   public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {
