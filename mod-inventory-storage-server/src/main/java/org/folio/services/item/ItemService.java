@@ -64,6 +64,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -74,6 +75,10 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.reindex.ReindexFileReadyEvent;
+import org.folio.services.reindex.ReindexFileReadyEventPublisher;
+import org.folio.services.reindex.ReindexS3ExportService;
+import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
@@ -274,6 +279,33 @@ public class ItemService {
   public Future<Void> publishReindexItemRecords(String rangeId, String fromId, String toId) {
     return itemRepository.getReindexItemRecords(fromId, toId)
       .compose(items -> domainEventService.publishReindexItems(rangeId, items));
+  }
+
+  public Future<Void> exportReindexItemRecords(ReindexRecordsRequest request) {
+    var s3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.REINDEX);
+    var tenantId = okapiHeaders.get(XOkapiHeaders.TENANT);
+    var traceId = isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
+    var s3Key = tenantId + "/items/" + traceId + "/" + request.getId() + ".ndjson";
+    var exportService = new ReindexS3ExportService(vertxContext, s3Client);
+    var eventPublisher = new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders);
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+
+    return postgresClient.withTrans(conn ->
+        itemRepository.streamReindexItemRecords(conn, rangeFrom, rangeTo)
+          .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)))
+      .compose(v -> {
+        var bucket = FolioS3ClientFactory.getBucketName(FolioS3ClientFactory.S3ConfigType.REINDEX);
+        var event = ReindexFileReadyEvent.builder()
+          .tenantId(tenantId)
+          .recordType(request.getRecordType().value())
+          .range(rangeFrom, rangeTo)
+          .jobId(traceId)
+          .bucket(bucket)
+          .objectKey(s3Key)
+          .build();
+        return eventPublisher.publish(event);
+      });
   }
 
   public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,

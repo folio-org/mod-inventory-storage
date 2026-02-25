@@ -54,10 +54,6 @@ public class InventoryReindexRecordsPublishApi implements InventoryReindexRecord
   public void postInventoryReindexRecordsExport(ReindexRecordsRequest entity, Map<String, String> okapiHeaders,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
-    var fromId = entity.getRecordIdsRange().getFrom();
-    var toId = entity.getRecordIdsRange().getTo();
-    var rangeId = entity.getId();
-
     Future<Void> publishFuture;
     switch (entity.getRecordType()) {
       case INSTANCE ->
@@ -65,10 +61,10 @@ public class InventoryReindexRecordsPublishApi implements InventoryReindexRecord
           .exportReindexInstanceRecords(entity);
       case ITEM ->
         publishFuture = new ItemService(vertxContext, okapiHeaders)
-          .publishReindexItemRecords(rangeId, fromId, toId);
+          .exportReindexItemRecords(entity);
       case HOLDINGS ->
         publishFuture = new HoldingsService(vertxContext, okapiHeaders)
-          .publishReindexHoldingsRecords(rangeId, fromId, toId);
+          .exportReindexHoldingsRecords(entity);
       default -> publishFuture = Future.failedFuture(
         "Not supported record type is provided: %s"
           .formatted(entity.getRecordType().value()));
