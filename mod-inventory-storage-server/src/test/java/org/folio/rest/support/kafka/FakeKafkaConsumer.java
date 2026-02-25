@@ -20,6 +20,7 @@ public final class FakeKafkaConsumer {
   static final String BOUND_WITH_TOPIC_NAME = "folio.test.inventory.bound-with";
   static final String SERVICE_POINT_TOPIC_NAME = "folio.test.inventory.service-point";
   static final String REINDEX_RECORDS_TOPIC_NAME = "folio.test.inventory.reindex-records";
+  static final String REINDEX_FILE_READY_TOPIC_NAME = "folio.test.inventory.reindex.file-ready";
 
   static final String HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT =
     "folio.consortium.inventory.holdings-record";
@@ -30,6 +31,7 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedServicePointMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexRecordsMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedReindexFileReadyMessages = new GroupedCollectedMessages();
 
   private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
 
@@ -62,6 +64,7 @@ public final class FakeKafkaConsumer {
     collectedBoundWithMessages.empty();
     collectedServicePointMessages.empty();
     collectedReindexRecordsMessages.empty();
+    collectedReindexFileReadyMessages.empty();
   }
 
   public int getAllPublishedInstanceIdsCount() {
@@ -74,6 +77,10 @@ public final class FakeKafkaConsumer {
 
   public Collection<EventMessage> getMessagesForReindexRecord(String id) {
     return collectedReindexRecordsMessages.messagesByGroupKey(id);
+  }
+
+  public Collection<EventMessage> getMessagesForReindexFileReady(String rangeId) {
+    return collectedReindexFileReadyMessages.messagesByGroupKey(rangeId);
   }
 
   public Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -112,7 +119,8 @@ public final class FakeKafkaConsumer {
       Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
         BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME,
         HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-        REINDEX_RECORDS_TOPIC_NAME),
+        REINDEX_RECORDS_TOPIC_NAME,
+        REINDEX_FILE_READY_TOPIC_NAME),
       new AggregateMessageCollector(
         filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
           KafkaConsumerRecord::key, collectedInstanceMessages),
@@ -127,7 +135,9 @@ public final class FakeKafkaConsumer {
         filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
           FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
         filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedReindexRecordsMessages)));
+          KafkaConsumerRecord::key, collectedReindexRecordsMessages),
+        filteredAndGroupedCollector(REINDEX_FILE_READY_TOPIC_NAME,
+          KafkaConsumerRecord::key, collectedReindexFileReadyMessages)));
   }
 
   @NotNull

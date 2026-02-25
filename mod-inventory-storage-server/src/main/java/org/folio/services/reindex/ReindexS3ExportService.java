@@ -35,10 +35,17 @@ public class ReindexS3ExportService {
 
   private final Context vertxContext;
   private final FolioS3Client s3Client;
+  private final long minimalPartSize;
 
   public ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client) {
+    this(vertxContext, s3Client, MINIMAL_PART_SIZE);
+  }
+
+  /** Package-private constructor for testing with a custom part-size threshold. */
+  ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client, long minimalPartSize) {
     this.vertxContext = vertxContext;
     this.s3Client = s3Client;
+    this.minimalPartSize = minimalPartSize;
   }
 
   /**
@@ -84,7 +91,7 @@ public class ReindexS3ExportService {
           abortAndFail(ctx, e, promise);
           return;
         }
-        if (ctx.currentFileSize() >= MINIMAL_PART_SIZE) {
+        if (ctx.currentFileSize() >= minimalPartSize) {
           vertxContext.executeBlocking(ctx::uploadCurrentPart)
             .onSuccess(v -> rowStream.resume())
             .onFailure(e -> abortAndFail(ctx, e, promise));

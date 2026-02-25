@@ -5,6 +5,8 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.services.s3storage.FolioS3ClientFactory;
+import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
 import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -42,6 +44,8 @@ public final class S3Utility {
     System.setProperty("S3_REINDEX_IS_AWS", Boolean.FALSE.toString());
 
     await().atMost(ofMinutes(1)).until(S3_CONTAINER::isRunning);
+
+    FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX).createBucketIfNotExists();
 
     logger.info("finished starting S3");
   }
