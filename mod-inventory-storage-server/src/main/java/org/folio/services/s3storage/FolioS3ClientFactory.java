@@ -25,6 +25,10 @@ public class FolioS3ClientFactory {
     return S3ClientFactory.getS3Client(getS3ClientProperties(configType));
   }
 
+  public static String getBucketName(@NonNull S3ConfigType configType) {
+    return getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
+  }
+
   private static S3ClientProperties getS3ClientProperties(@NonNull S3ConfigType configType) {
     if (S3ConfigType.MARC_MIGRATION == configType
         && getValue(getKey(S3_URL_CONFIG, configType)) == null) {

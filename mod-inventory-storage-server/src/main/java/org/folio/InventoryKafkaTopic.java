@@ -22,6 +22,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   LIBRARY("library"),
   LOCATION("location"),
   REINDEX_RECORDS("reindex-records"),
+  REINDEX_FILE_READY("reindex.file-ready"),
   SERVICE_POINT("service-point"),
   SUBJECT_SOURCE("subject-source"),
   SUBJECT_TYPE("subject-type");

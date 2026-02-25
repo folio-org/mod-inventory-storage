@@ -66,6 +66,8 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.reindex.ReindexFileReadyEvent;
+import org.folio.services.reindex.ReindexFileReadyEventPublisher;
 import org.folio.services.reindex.ReindexS3ExportService;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.sanitizer.Sanitizer;
@@ -531,6 +533,7 @@ public class InstanceService {
     var traceId = StringUtils.isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
     var s3Key = tenantId + "/instances/" + traceId + "/" + request.getId() + ".ndjson";
     var exportService = new ReindexS3ExportService(vertxContext, folioS3Client);
+    var eventPublisher = new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders);
 
     return consortiumService.getConsortiumData(okapiHeaders)
       .map(consortiumDataOptional -> consortiumDataOptional
@@ -543,7 +546,20 @@ public class InstanceService {
         var rangeTo = recordIdsRange.getTo();
         return postgresClient.withTrans(conn ->
           instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant)
-            .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)));
+            .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)))
+          .compose(v -> {
+            var bucket = FolioS3ClientFactory.getBucketName(FolioS3ClientFactory.S3ConfigType.REINDEX);
+            var event = ReindexFileReadyEvent.builder()
+              .tenantId(tenantId)
+              .recordType(request.getRecordType().value())
+              .range(rangeFrom, rangeTo)
+              .rangeId(request.getId())
+              .jobId(traceId)
+              .bucket(bucket)
+              .objectKey(s3Key)
+              .build();
+            return eventPublisher.publish(event);
+          });
       });
   }
 
