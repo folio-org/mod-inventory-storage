@@ -66,10 +66,7 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
-import org.folio.services.reindex.ReindexFileReadyEvent;
-import org.folio.services.reindex.ReindexFileReadyEventPublisher;
-import org.folio.services.reindex.ReindexS3ExportService;
-import org.folio.services.s3storage.FolioS3ClientFactory;
+import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
@@ -515,10 +512,7 @@ public class InstanceService {
   }
 
   public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .map(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
-        .orElse(false))
+    return isCentralTenant()
       .compose(isCentralTenant -> {
         var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
         return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
@@ -528,39 +522,23 @@ public class InstanceService {
   }
 
   public Future<Void> exportReindexInstanceRecords(ReindexRecordsRequest request) {
-    var folioS3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.REINDEX);
-    var tenantId = okapiHeaders.get(TENANT);
-    var traceId = StringUtils.isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
-    var s3Key = tenantId + "/instances/" + traceId + "/" + request.getId() + ".ndjson";
-    var exportService = new ReindexS3ExportService(vertxContext, folioS3Client);
-    var eventPublisher = new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders);
+    var orchestrator = new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient);
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
 
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .map(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> isCentralTenantId(tenantId, consortiumData))
-        .orElse(false))
+    return isCentralTenant()
       .compose(isCentralTenant -> {
         var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
-        var recordIdsRange = request.getRecordIdsRange();
-        var rangeFrom = recordIdsRange.getFrom();
-        var rangeTo = recordIdsRange.getTo();
-        return postgresClient.withTrans(conn ->
-          instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant)
-            .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)))
-          .compose(v -> {
-            var bucket = FolioS3ClientFactory.getBucketName(FolioS3ClientFactory.S3ConfigType.REINDEX);
-            var event = ReindexFileReadyEvent.builder()
-              .tenantId(tenantId)
-              .recordType(request.getRecordType().value())
-              .range(rangeFrom, rangeTo)
-              .rangeId(request.getId())
-              .jobId(traceId)
-              .bucket(bucket)
-              .objectKey(s3Key)
-              .build();
-            return eventPublisher.publish(event);
-          });
+        return orchestrator.export(request,
+          conn -> instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant));
       });
+  }
+
+  private Future<Boolean> isCentralTenant() {
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .map(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
+        .orElse(false));
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {

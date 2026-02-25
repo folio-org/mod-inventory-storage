@@ -37,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
@@ -58,10 +57,7 @@ import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.item.ItemService;
-import org.folio.services.reindex.ReindexFileReadyEvent;
-import org.folio.services.reindex.ReindexFileReadyEventPublisher;
-import org.folio.services.reindex.ReindexS3ExportService;
-import org.folio.services.s3storage.FolioS3ClientFactory;
+import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
@@ -242,30 +238,10 @@ public class HoldingsService {
   }
 
   public Future<Void> exportReindexHoldingsRecords(ReindexRecordsRequest request) {
-    var s3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.REINDEX);
-    var tenantId = okapiHeaders.get(XOkapiHeaders.TENANT);
-    var traceId = StringUtils.isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
-    var s3Key = tenantId + "/holdings/" + traceId + "/" + request.getId() + ".ndjson";
-    var exportService = new ReindexS3ExportService(vertxContext, s3Client);
-    var fileReadyPublisher = new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders);
     var rangeFrom = request.getRecordIdsRange().getFrom();
     var rangeTo = request.getRecordIdsRange().getTo();
-
-    return postgresClient.withTrans(conn ->
-        holdingsRepository.streamReindexHoldingsRecords(conn, rangeFrom, rangeTo)
-          .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)))
-      .compose(v -> {
-        var bucket = FolioS3ClientFactory.getBucketName(FolioS3ClientFactory.S3ConfigType.REINDEX);
-        var event = ReindexFileReadyEvent.builder()
-          .tenantId(tenantId)
-          .recordType(request.getRecordType().value())
-          .range(rangeFrom, rangeTo)
-          .jobId(traceId)
-          .bucket(bucket)
-          .objectKey(s3Key)
-          .build();
-        return fileReadyPublisher.publish(event);
-      });
+    return new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient)
+      .export(request, conn -> holdingsRepository.streamReindexHoldingsRecords(conn, rangeFrom, rangeTo));
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
