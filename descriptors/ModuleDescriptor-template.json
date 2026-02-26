@@ -209,7 +209,7 @@
         }, {
           "methods": ["PATCH"],
           "pathPattern": "/instance-storage/instances/{id}",
-          "permissionsRequired": ["inventory-storage.instances.item.patch"],
+          "permissionsRequired": ["inventory-storage.instances.item.patch.execute"],
           "modulePermissions": [
             "user-tenants.collection.get",
             "consortia.sharing-instances.collection.get"
@@ -1608,7 +1608,7 @@
       "description": "modify instance in storage"
     },
     {
-      "permissionName": "inventory-storage.instances.item.patch",
+      "permissionName": "inventory-storage.instances.item.patch.execute",
       "displayName": "inventory storage - partially modify instance",
       "description": "partially modify instance in storage"
     },
@@ -2680,7 +2680,7 @@
         "inventory-storage.instances.item.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
-        "inventory-storage.instances.item.patch",
+        "inventory-storage.instances.item.patch.execute",
         "inventory-storage.instances.item.delete",
         "inventory-storage.instances.preceding-succeeding-titles.collection.put",
         "inventory-storage.instances.source-record.delete",
