@@ -44,7 +44,9 @@ public class ReindexExportOrchestrator {
       new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders));
   }
 
-  /** Package-private constructor for testing with injected dependencies. */
+  /**
+   * Package-private constructor for testing with injected dependencies.
+   */
   ReindexExportOrchestrator(Context vertxContext, Map<String, String> okapiHeaders,
                             PostgresClient postgresClient, FolioS3Client s3Client,
                             String bucketName, ReindexFileReadyEventPublisher eventPublisher) {
@@ -57,6 +59,9 @@ public class ReindexExportOrchestrator {
   }
 
   /**
+   * Orchestrates the export of a range of records to S3 and the publication of the corresponding "file ready" event.
+   * The exported file will be named according to the pattern: {tenantId}/{recordType}/{traceId}/{rangeId}.ndjson.
+   *
    * @param request        the range/job details from the HTTP request
    * @param streamProvider function that, given a DB {@link Conn}, returns the row stream to export
    */

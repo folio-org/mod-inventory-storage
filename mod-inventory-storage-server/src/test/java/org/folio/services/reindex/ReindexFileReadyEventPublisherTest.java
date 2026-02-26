@@ -30,7 +30,7 @@ public class ReindexFileReadyEventPublisherTest {
 
   @Test
   public void publish_success_eventSentToKafka() {
-    var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
+    final var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
     when(producerManager.createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenReturn(succeededFuture());
     when(producer.flush()).thenReturn(succeededFuture());
@@ -43,7 +43,7 @@ public class ReindexFileReadyEventPublisherTest {
 
   @Test
   public void publish_kafkaSendFails_futureFailedWithCause() {
-    var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
+    final var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
     var cause = new RuntimeException("Kafka down");
     when(producerManager.createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenReturn(failedFuture(cause));

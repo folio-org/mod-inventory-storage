@@ -30,19 +30,13 @@ public class ReindexFileReadyEventPublisher {
     this(okapiHeaders, createProducerManager(vertxContext));
   }
 
-  /** Package-private constructor for testing with an injected {@link KafkaProducerManager}. */
+  /**
+   * Package-private constructor for testing with an injected {@link KafkaProducerManager}.
+   */
   ReindexFileReadyEventPublisher(Map<String, String> okapiHeaders,
                                  KafkaProducerManager producerManager) {
     this.okapiHeaders = okapiHeaders;
     this.producerManager = producerManager;
-  }
-
-  private static KafkaProducerManager createProducerManager(Context vertxContext) {
-    var kafkaConfig = KafkaConfig.builder()
-      .kafkaHost(KafkaEnvironmentProperties.host())
-      .kafkaPort(KafkaEnvironmentProperties.port())
-      .build();
-    return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
   }
 
   public Future<Void> publish(ReindexFileReadyEvent event) {
@@ -64,5 +58,13 @@ public class ReindexFileReadyEventPublisher {
         event.getJobId(), event.getObjectKey(), topic))
       .onFailure(e -> log.error("publish:: failed to send reindex.file-ready event jobId={} topic={}",
         event.getJobId(), topic, e));
+  }
+
+  private static KafkaProducerManager createProducerManager(Context vertxContext) {
+    var kafkaConfig = KafkaConfig.builder()
+      .kafkaHost(KafkaEnvironmentProperties.host())
+      .kafkaPort(KafkaEnvironmentProperties.port())
+      .build();
+    return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
   }
 }

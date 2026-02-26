@@ -29,10 +29,8 @@ import org.folio.s3.client.FolioS3Client;
  */
 public class ReindexS3ExportService {
 
-  private static final Logger log = LogManager.getLogger(ReindexS3ExportService.class);
-
   static final long MINIMAL_PART_SIZE = 5_242_880L; // 5 MB — S3 minimum part size
-
+  private static final Logger log = LogManager.getLogger(ReindexS3ExportService.class);
   private final Context vertxContext;
   private final FolioS3Client s3Client;
   private final long minimalPartSize;
@@ -41,7 +39,9 @@ public class ReindexS3ExportService {
     this(vertxContext, s3Client, MINIMAL_PART_SIZE);
   }
 
-  /** Package-private constructor for testing with a custom part-size threshold. */
+  /**
+   * Package-private constructor for testing with a custom part-size threshold.
+   */
   ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client, long minimalPartSize) {
     this.vertxContext = vertxContext;
     this.s3Client = s3Client;
@@ -61,6 +61,7 @@ public class ReindexS3ExportService {
       .compose(uploadId -> doExport(rowStream, s3Key, uploadId));
   }
 
+  @SuppressWarnings("checkstyle:MethodLength")
   private Future<Void> doExport(RowStream<Row> rowStream, String s3Key, String uploadId) {
     Promise<Void> promise = Promise.promise();
 
@@ -103,26 +104,28 @@ public class ReindexS3ExportService {
     return promise.future();
   }
 
+  @SuppressWarnings("checkstyle:MethodLength")
   private void completeUpload(UploadContext ctx, Promise<Void> promise) {
     if (promise.future().isComplete()) {
       return;
     }
-    vertxContext.executeBlocking(() -> {
-      ctx.flushAndClose();
-      if (ctx.currentFileSize() > 0) {
-        var eTag = s3Client.uploadMultipartPart(ctx.s3Key, ctx.uploadId, ctx.partNumber++, ctx.tempFile.toString());
-        ctx.partETags.add(eTag);
-      }
-      if (!ctx.partETags.isEmpty()) {
-        s3Client.completeMultipartUpload(ctx.s3Key, ctx.uploadId, ctx.partETags);
-      } else {
-        // No rows exported: abort multipart and write an empty NDJSON object
-        s3Client.abortMultipartUpload(ctx.s3Key, ctx.uploadId);
-        s3Client.write(ctx.s3Key, InputStream.nullInputStream(), 0L);
-      }
-      ctx.cleanup();
-      return null;
-    })
+    vertxContext.executeBlocking(
+        () -> {
+          ctx.flushAndClose();
+          if (ctx.currentFileSize() > 0) {
+            var etag = s3Client.uploadMultipartPart(ctx.s3Key, ctx.uploadId, ctx.partNumber++, ctx.tempFile.toString());
+            ctx.partEtags.add(etag);
+          }
+          if (!ctx.partEtags.isEmpty()) {
+            s3Client.completeMultipartUpload(ctx.s3Key, ctx.uploadId, ctx.partEtags);
+          } else {
+            // No rows exported: abort multipart and write an empty NDJSON object
+            s3Client.abortMultipartUpload(ctx.s3Key, ctx.uploadId);
+            s3Client.write(ctx.s3Key, InputStream.nullInputStream(), 0L);
+          }
+          ctx.cleanup();
+          return null;
+        })
       .onSuccess(v -> promise.complete())
       .onFailure(e -> {
         try {
@@ -167,7 +170,7 @@ public class ReindexS3ExportService {
 
     final String s3Key;
     final String uploadId;
-    final List<String> partETags = new ArrayList<>();
+    final List<String> partEtags = new ArrayList<>();
 
     Path tempFile;
     BufferedWriter writer;
@@ -193,8 +196,8 @@ public class ReindexS3ExportService {
     Void uploadCurrentPart() throws IOException {
       writer.flush();
       writer.close();
-      var eTag = s3Client.uploadMultipartPart(s3Key, uploadId, partNumber++, tempFile.toString());
-      partETags.add(eTag);
+      var etag = s3Client.uploadMultipartPart(s3Key, uploadId, partNumber++, tempFile.toString());
+      partEtags.add(etag);
       Files.deleteIfExists(tempFile);
       rotateTempFile();
       return null;
