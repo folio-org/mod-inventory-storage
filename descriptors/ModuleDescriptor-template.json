@@ -663,6 +663,14 @@
           "modulePermissions": [
             "user-tenants.collection.get"
           ]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-reindex-records/export",
+          "permissionsRequired": ["inventory-storage.reindex-records.export.post"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
         }
       ]
     },
@@ -1978,6 +1986,11 @@
       "permissionName": "inventory-storage.reindex-records.publish.post",
       "displayName": "inventory storage - publish inventory records for reindex",
       "description": "publish inventory storage reindex records"
+    },
+    {
+      "permissionName": "inventory-storage.reindex-records.export.post",
+      "displayName": "inventory storage - export inventory records for reindex",
+      "description": "export inventory storage reindex records"
     },
     {
       "permissionName": "inventory-storage.instance-formats.collection.get",
