@@ -174,7 +174,7 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 * `DB_QUERYTIMEOUT`
 * `DB_CHARSET`
 * `DB_MAXPOOLSIZE`
-* `DB_MAXSHAREDPOOLSIZE`
+* `DB_MAXSHAREDPOOLSIZE` (buggy, do not use [RMB-1030](https://folio-org.atlassian.net/browse/RMB-1030))
 * `DB_CONNECTIONRELEASEDELAY`
 * `DB_RECONNECTATTEMPTS`
 * `DB_RECONNECTINTERVAL`
