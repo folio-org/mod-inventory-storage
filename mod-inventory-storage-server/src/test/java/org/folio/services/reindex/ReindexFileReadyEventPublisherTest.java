@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Map;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.KafkaProducerManager;
@@ -25,8 +26,7 @@ public class ReindexFileReadyEventPublisherTest {
   @Mock
   private KafkaProducerManager producerManager;
   @Mock
-  @SuppressWarnings("unchecked")
-  private io.vertx.kafka.client.producer.KafkaProducer producer;
+  private KafkaProducer<Object, Object> producer;
 
   @Test
   public void publish_success_eventSentToKafka() {
@@ -50,7 +50,8 @@ public class ReindexFileReadyEventPublisherTest {
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.close()).thenReturn(succeededFuture());
 
-    assertThrows(RuntimeException.class, () -> get(publisher.publish(buildEvent())));
+    var publishResult = publisher.publish(buildEvent());
+    assertThrows(RuntimeException.class, () -> get(publishResult));
   }
 
   private static Map<String, String> okapiHeaders() {

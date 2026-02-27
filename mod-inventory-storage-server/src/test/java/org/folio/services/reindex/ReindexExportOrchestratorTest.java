@@ -111,8 +111,9 @@ public class ReindexExportOrchestratorTest {
 
   @Test
   public void export_streamProviderFails_futureFailedAndEventNotPublished() {
-    assertThrows(RuntimeException.class, () -> get(orchestrator.export(buildRequest(TRACE_ID),
-      c -> failedFuture("stream error"))));
+    var futureResult = orchestrator.export(buildRequest(TRACE_ID),
+      c -> failedFuture("stream error"));
+    assertThrows(RuntimeException.class, () -> get(futureResult));
 
     verify(eventPublisher, never()).publish(any());
   }

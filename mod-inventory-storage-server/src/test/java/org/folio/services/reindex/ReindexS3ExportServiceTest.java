@@ -85,8 +85,8 @@ public class ReindexS3ExportServiceTest {
     var cause = new RuntimeException("S3 unavailable");
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(cause);
 
-    assertThrows(RuntimeException.class,
-      () -> get(exportService.exportToS3(new TestRowStream(1), S3_KEY)));
+    var exportFuture = exportService.exportToS3(new TestRowStream(1), S3_KEY);
+    assertThrows(RuntimeException.class, () -> get(exportFuture));
 
     verify(s3Client, never()).abortMultipartUpload(any(), any());
   }
