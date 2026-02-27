@@ -7,13 +7,19 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.s3.client.FolioS3Client;
@@ -29,7 +35,11 @@ import org.folio.s3.client.FolioS3Client;
  */
 public class ReindexS3ExportService {
 
-  static final long MINIMAL_PART_SIZE = 5_242_880L; // 5 MB — S3 minimum part size
+  private static final long MINIMAL_PART_SIZE = 5_242_880L; // 5 MB — S3 minimum part size
+
+  private static final FileAttribute<Set<PosixFilePermission>> OWNER_ONLY_FILE_PERMISSIONS =
+    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"));
+
   private static final Logger log = LogManager.getLogger(ReindexS3ExportService.class);
   private final Context vertxContext;
   private final FolioS3Client s3Client;
@@ -222,9 +232,21 @@ public class ReindexS3ExportService {
     }
 
     private void rotateTempFile() throws IOException {
-      tempFile = Files.createTempFile("reindex-export-", ".ndjson");
+      tempFile = createSecureTempFile();
       writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8);
       fileSize = 0;
+    }
+
+    private static Path createSecureTempFile() throws IOException {
+      if (SystemUtils.IS_OS_UNIX) {
+        return Files.createTempFile("reindex-export-", ".ndjson", OWNER_ONLY_FILE_PERMISSIONS);
+      } else {
+        File file = File.createTempFile("prefix", "suffix", new File("mySecureDirectory"));
+        file.setReadable(true, true);
+        file.setWritable(true, true);
+        file.setExecutable(true, true);
+        return file.toPath();
+      }
     }
   }
 }
