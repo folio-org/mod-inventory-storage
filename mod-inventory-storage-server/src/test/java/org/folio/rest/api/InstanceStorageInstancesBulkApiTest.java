@@ -63,7 +63,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String ID_FIELD = "id";
   private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
-  private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "does not exist in instance_type.id.";
+  private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "invalid input syntax for type uuid";
 
   private final FolioS3Client s3Client = FolioS3ClientFactory.getFolioS3Client(MARC_MIGRATION);
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
