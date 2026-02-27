@@ -54,9 +54,9 @@ public class ReindexFileReadyEventPublisher {
       .<Void>mapEmpty()
       .eventually(producer::flush)
       .eventually(producer::close)
-      .onSuccess(v -> log.info("publish:: sent reindex.file-ready event jobId={} key={} topic={}",
+      .onSuccess(v -> log.info("publish:: sent reindex.file-ready event traceId={} key={} topic={}",
         event.getTraceId(), event.getObjectKey(), topic))
-      .onFailure(e -> log.error("publish:: failed to send reindex.file-ready event jobId={} topic={}",
+      .onFailure(e -> log.error("publish:: failed to send reindex.file-ready event traceId={} topic={}",
         event.getTraceId(), topic, e));
   }
 

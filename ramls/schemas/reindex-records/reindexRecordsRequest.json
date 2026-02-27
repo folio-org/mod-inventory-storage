@@ -11,7 +11,7 @@
     },
     "traceId": {
       "type": "string",
-      "description": "UUID representing this range of records",
+      "description": "UUID for tracing the request, used for debugging and logging",
       "$ref": "../common/uuid.json"
     },
     "recordType": {
