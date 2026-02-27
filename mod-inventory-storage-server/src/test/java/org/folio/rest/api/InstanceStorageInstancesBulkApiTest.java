@@ -8,6 +8,7 @@ import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -47,7 +48,6 @@ import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUtil {
@@ -65,15 +65,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
   private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "does not exist in instance_type.id.";
 
-  private static FolioS3Client s3Client;
-
+  private final FolioS3Client s3Client = FolioS3ClientFactory.getFolioS3Client(MARC_MIGRATION);
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
-
-  @BeforeClass
-  public static void setUpClass() {
-    s3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION);
-    s3Client.createBucketIfNotExists();
-  }
 
   @Before
   public void setUp() {

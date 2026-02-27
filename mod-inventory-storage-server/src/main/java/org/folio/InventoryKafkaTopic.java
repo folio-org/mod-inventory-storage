@@ -1,5 +1,7 @@
 package org.folio;
 
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
@@ -34,18 +36,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
    * Map where a key is {@link InventoryKafkaTopic} and value is a {@link Pair} of
    * environment variable name that specifies number of partitions for the topic and default value is not specified.
    */
-  private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_PARTITION_MAP = Map.of(
-    CLASSIFICATION_TYPE, Pair.of("KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "1"),
-    CALL_NUMBER_TYPE, Pair.of("KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", "1"),
-    LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"),
-    LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "1"),
-    CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "1"),
-    INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1"),
-    SUBJECT_TYPE, Pair.of("KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "1"),
-    REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "16"),
-    SUBJECT_SOURCE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1"),
-    INSTANCE_DATE_TYPE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1")
-  );
+  private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_PARTITION_MAP;
 
   private static final Map<InventoryKafkaTopic, Pair<String, String>> TOPIC_MESSAGE_RETENTION_MAP = Map.of(
     REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION", "86400000") // 1 day
@@ -55,10 +46,35 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE", "10485760") // 10 MB
   );
 
+  static {
+    var map = new EnumMap<InventoryKafkaTopic, Pair<String, String>>(InventoryKafkaTopic.class);
+    map.put(CLASSIFICATION_TYPE, Pair.of("KAFKA_CLASSIFICATION_TYPE_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(CALL_NUMBER_TYPE, Pair.of("KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(SUBJECT_TYPE, Pair.of("KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(REINDEX_RECORDS, Pair.of("KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "16"));
+    map.put(REINDEX_FILE_READY, Pair.of("KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS", "16"));
+    map.put(SUBJECT_SOURCE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1"));
+    map.put(INSTANCE_DATE_TYPE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "1"));
+    TOPIC_PARTITION_MAP = Collections.unmodifiableMap(map);
+  }
+
   private final String topic;
 
   InventoryKafkaTopic(String topic) {
     this.topic = topic;
+  }
+
+  public static InventoryKafkaTopic byTopic(String topic) {
+    for (InventoryKafkaTopic kafkaTopic : values()) {
+      if (kafkaTopic.topicName().equals(topic)) {
+        return kafkaTopic;
+      }
+    }
+    throw new IllegalArgumentException("Unknown topic " + topic);
   }
 
   @Override
@@ -90,15 +106,6 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     return Optional.ofNullable(TOPIC_MESSAGE_MAX_SIZE_MAP.get(this))
       .map(pair -> getPropertyValue(pair.getKey(), pair.getValue()))
       .orElse(null);
-  }
-
-  public static InventoryKafkaTopic byTopic(String topic) {
-    for (InventoryKafkaTopic kafkaTopic : values()) {
-      if (kafkaTopic.topicName().equals(topic)) {
-        return kafkaTopic;
-      }
-    }
-    throw new IllegalArgumentException("Unknown topic " + topic);
   }
 
   private int getPropertyValue(String propertyName, String defaultNumPartitions) {

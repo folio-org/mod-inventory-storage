@@ -1,7 +1,5 @@
 package org.folio.services.s3storage;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
@@ -9,8 +7,6 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public class FolioS3ClientFactory {
-
-  private static final Logger log = LogManager.getLogger(FolioS3ClientFactory.class);
 
   private static final String S3_PREFIX = "S3_";
   private static final String S3_URL_CONFIG = "URL";
@@ -22,24 +18,14 @@ public class FolioS3ClientFactory {
   private static final String S3_IS_AWS_DEFAULT = "false";
 
   public static FolioS3Client getFolioS3Client(@NonNull S3ConfigType configType) {
-    return S3ClientFactory.getS3Client(getS3ClientProperties(configType));
+    return S3ClientFactory.getS3Client(buildS3ClientProperties(configType));
   }
 
   public static String getBucketName(@NonNull S3ConfigType configType) {
     return getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
   }
 
-  private static S3ClientProperties getS3ClientProperties(@NonNull S3ConfigType configType) {
-    if (S3ConfigType.MARC_MIGRATION == configType
-        && getValue(getKey(S3_URL_CONFIG, configType)) == null) {
-      log.warn("S3 environment variables for {} config type not found, falling back to generic S3 configuration",
-        configType);
-      return buildS3ClientProperties(null);
-    }
-    return buildS3ClientProperties(configType);
-  }
-
-  private static S3ClientProperties buildS3ClientProperties(@Nullable S3ConfigType configType) {
+  private static S3ClientProperties buildS3ClientProperties(@NonNull S3ConfigType configType) {
     var url = getValueOrFail(getKey(S3_URL_CONFIG, configType));
     var region = getValueOrFail(getKey(S3_REGION_CONFIG, configType));
     var bucket = getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
@@ -54,22 +40,19 @@ public class FolioS3ClientFactory {
       .build();
   }
 
-  private static String getKey(@NonNull String configName, @Nullable S3ConfigType configType) {
-    if (configType == null) {
-      return S3_PREFIX + configName;
-    }
+  private static String getKey(@NonNull String configName, @NonNull S3ConfigType configType) {
     return S3_PREFIX + configType + "_" + configName;
   }
 
-  private static String getValue(String key) {
+  private static String getValue(@NonNull String key) {
     return getValue(key, null);
   }
 
-  private static String getValue(String key, String defaultValue) {
+  private static String getValue(@NonNull String key, @Nullable String defaultValue) {
     return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
   }
 
-  private static String getValueOrFail(String key) {
+  private static String getValueOrFail(@NonNull String key) {
     var value = getValue(key);
     if (value == null || value.isBlank()) {
       throw new IllegalStateException("Required S3 configuration property is missing: " + key);
@@ -77,7 +60,7 @@ public class FolioS3ClientFactory {
     return value;
   }
 
-  private static String getValueOrEmpty(String key) {
+  private static String getValueOrEmpty(@NonNull String key) {
     return getValue(key, "");
   }
 

@@ -44,7 +44,8 @@ public class InitApiImpl implements InitAPI {
   private Future<Void> validateS3Configurations() {
     try {
       for (S3ConfigType configType : S3ConfigType.values()) {
-        FolioS3ClientFactory.getFolioS3Client(configType);
+        var folioS3Client = FolioS3ClientFactory.getFolioS3Client(configType);
+        folioS3Client.createBucketIfNotExists();
         log.info("validateS3Configurations:: S3 client configured successfully for config type {}", configType);
       }
       return Future.succeededFuture();
