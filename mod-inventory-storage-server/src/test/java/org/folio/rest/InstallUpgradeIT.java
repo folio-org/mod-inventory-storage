@@ -79,7 +79,7 @@ class InstallUpgradeIT {
       .withDatabaseName("postgres");
 
   @Container
-  private static LocalStackContainer S3_CONTAINER =
+  private static LocalStackContainer LOCAL_STACK =
     new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
       .withServices("s3")
       .withNetwork(NETWORK)
@@ -99,7 +99,7 @@ class InstallUpgradeIT {
       .withNetwork(NETWORK)
       .withExposedPorts(8081)
       .withAccessToHost(true)
-      .dependsOn(KAFKA, POSTGRES, S3_CONTAINER)
+      .dependsOn(KAFKA, POSTGRES, LOCAL_STACK)
       .withEnv("DB_HOST", "mypostgres")
       .withEnv("DB_PORT", "5432")
       .withEnv("DB_USERNAME", "username")
@@ -131,7 +131,7 @@ class InstallUpgradeIT {
     if (IS_LOG_ENABLED) {
       KAFKA.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("Kafka"));
       POSTGRES.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("Postgres"));
-      S3_CONTAINER.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("S3"));
+      LOCAL_STACK.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("S3"));
       MOD_MIS.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("mis"));
     }
 
