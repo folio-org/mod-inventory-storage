@@ -63,7 +63,7 @@ public class ReindexFileReadyEventPublisherTest {
       .recordType("instance")
       .range("00000000-0000-0000-0000-000000000000", "ffffffff-ffff-ffff-ffff-ffffffffffff")
       .rangeId("range-id-1")
-      .jobId("job-id-1")
+      .traceId("job-id-1")
       .bucket("test-bucket")
       .objectKey("test-tenant/instance/job-id-1/range-id-1.ndjson")
       .build();

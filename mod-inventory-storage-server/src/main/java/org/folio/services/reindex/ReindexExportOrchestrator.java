@@ -83,7 +83,7 @@ public class ReindexExportOrchestrator {
           .recordType(recordType)
           .range(rangeFrom, rangeTo)
           .rangeId(request.getId())
-          .jobId(traceId)
+          .traceId(traceId)
           .bucket(bucketName)
           .objectKey(s3Key)
           .build();

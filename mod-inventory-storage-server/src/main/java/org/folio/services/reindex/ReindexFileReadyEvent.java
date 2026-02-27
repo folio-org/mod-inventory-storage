@@ -14,7 +14,7 @@ public final class ReindexFileReadyEvent {
   private final String recordType;
   private final Range range;
   private final String rangeId;
-  private final String jobId;
+  private final String traceId;
   private final String bucket;
   private final String objectKey;
   private final String createdDate;
@@ -24,7 +24,7 @@ public final class ReindexFileReadyEvent {
     this.recordType = builder.recordType;
     this.range = builder.range;
     this.rangeId = builder.rangeId;
-    this.jobId = builder.jobId;
+    this.traceId = builder.traceId;
     this.bucket = builder.bucket;
     this.objectKey = builder.objectKey;
     this.createdDate = builder.createdDate;
@@ -50,8 +50,8 @@ public final class ReindexFileReadyEvent {
     return rangeId;
   }
 
-  public String getJobId() {
-    return jobId;
+  public String getTraceId() {
+    return traceId;
   }
 
   public String getBucket() {
@@ -74,7 +74,7 @@ public final class ReindexFileReadyEvent {
     private String recordType;
     private Range range;
     private String rangeId;
-    private String jobId;
+    private String traceId;
     private String bucket;
     private String objectKey;
 
@@ -100,8 +100,8 @@ public final class ReindexFileReadyEvent {
       return this;
     }
 
-    public Builder jobId(String jobId) {
-      this.jobId = jobId;
+    public Builder traceId(String traceId) {
+      this.traceId = traceId;
       return this;
     }
 

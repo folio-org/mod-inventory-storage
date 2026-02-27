@@ -55,9 +55,9 @@ public class ReindexFileReadyEventPublisher {
       .eventually(producer::flush)
       .eventually(producer::close)
       .onSuccess(v -> log.info("publish:: sent reindex.file-ready event jobId={} key={} topic={}",
-        event.getJobId(), event.getObjectKey(), topic))
+        event.getTraceId(), event.getObjectKey(), topic))
       .onFailure(e -> log.error("publish:: failed to send reindex.file-ready event jobId={} topic={}",
-        event.getJobId(), topic, e));
+        event.getTraceId(), topic, e));
   }
 
   private static KafkaProducerManager createProducerManager(Context vertxContext) {
