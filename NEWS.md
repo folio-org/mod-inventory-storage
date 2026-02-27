@@ -48,6 +48,7 @@
 * Improve batch results of the PATCH /item-storage/items endpoint ([MODINVSTOR-1514](https://folio-org.atlassian.net/browse/MODINVSTOR-1514))
 * Implement of PATCH requests for items ([MODINVSTOR-1506](https://folio-org.atlassian.net/browse/MODINVSTOR-1506))
 * Add several new indexes to the instance table for use by FQM ([MODINVSTOR-1520](https://folio-org.atlassian.net/browse/MODINVSTOR-1520))
+* Add `/inventory-reindex-records/export` API to export reindex record ranges to S3 and publish `reindex.file-ready` events ([MODINVSTOR-1519](https://folio-org.atlassian.net/browse/MODINVSTOR-1519))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

@@ -2892,6 +2892,7 @@
         "inventory-storage.migration.job.collection.get",
         "inventory-storage.migration.item.get",
         "inventory-storage.reindex-records.publish.post",
+        "inventory-storage.reindex-records.export.post",
         "inventory-storage.instance-date-types.collection.get",
         "inventory-storage.instance-date-types.item.patch"
       ]
