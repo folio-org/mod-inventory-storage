@@ -42,6 +42,7 @@ import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.CqlQuery;
@@ -56,6 +57,7 @@ import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.item.ItemService;
+import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
@@ -233,6 +235,13 @@ public class HoldingsService {
   public Future<Void> publishReindexHoldingsRecords(String rangeId, String fromId, String toId) {
     return holdingsRepository.getReindexHoldingsRecords(fromId, toId)
       .compose(holdings -> eventPublisher.publishReindexHoldings(rangeId, holdings));
+  }
+
+  public Future<Void> exportReindexHoldingsRecords(ReindexRecordsRequest request) {
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+    return new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient)
+      .export(request, conn -> holdingsRepository.streamReindexHoldingsRecords(conn, rangeFrom, rangeTo));
   }
 
   private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

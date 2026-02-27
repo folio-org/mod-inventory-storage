@@ -33,7 +33,9 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * Check the shaded fat uber jar and Dockerfile.
@@ -76,6 +78,14 @@ class InstallUpgradeIT {
       .withPassword("password")
       .withDatabaseName("postgres");
 
+  @Container
+  private static LocalStackContainer LOCAL_STACK =
+    new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
+      .withServices("s3")
+      .withNetwork(NETWORK)
+      .withNetworkAliases("s3")
+      .withExposedPorts(4566);
+
   @RegisterExtension
   protected static WireMockExtension okapiMock = WireMockExtension.newInstance()
     .options(wireMockConfig().dynamicPort()
@@ -89,13 +99,24 @@ class InstallUpgradeIT {
       .withNetwork(NETWORK)
       .withExposedPorts(8081)
       .withAccessToHost(true)
+      .dependsOn(KAFKA, POSTGRES, LOCAL_STACK)
       .withEnv("DB_HOST", "mypostgres")
       .withEnv("DB_PORT", "5432")
       .withEnv("DB_USERNAME", "username")
       .withEnv("DB_PASSWORD", "password")
       .withEnv("DB_DATABASE", "postgres")
       .withEnv("KAFKA_HOST", "mykafka")
-      .withEnv("KAFKA_PORT", "19092");
+      .withEnv("KAFKA_PORT", "19092")
+      .withEnv("S3_MARC_MIGRATION_URL", "http://s3:4566")
+      .withEnv("S3_MARC_MIGRATION_REGION", "us-east-1")
+      .withEnv("S3_MARC_MIGRATION_BUCKET", "mod-inventory-storage-marc-migration-it")
+      .withEnv("S3_MARC_MIGRATION_ACCESS_KEY_ID", "test")
+      .withEnv("S3_MARC_MIGRATION_SECRET_ACCESS_KEY", "test")
+      .withEnv("S3_REINDEX_URL", "http://s3:4566")
+      .withEnv("S3_REINDEX_REGION", "us-east-1")
+      .withEnv("S3_REINDEX_BUCKET", "mod-inventory-storage-reindex-it")
+      .withEnv("S3_REINDEX_ACCESS_KEY_ID", "test")
+      .withEnv("S3_REINDEX_SECRET_ACCESS_KEY", "test");
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
@@ -110,6 +131,7 @@ class InstallUpgradeIT {
     if (IS_LOG_ENABLED) {
       KAFKA.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("Kafka"));
       POSTGRES.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("Postgres"));
+      LOCAL_STACK.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("S3"));
       MOD_MIS.followOutput(new Slf4jLogConsumer(LOG).withSeparateOutputStreams().withPrefix("mis"));
     }
 

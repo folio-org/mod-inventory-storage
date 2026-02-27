@@ -15,6 +15,8 @@ import org.folio.services.consortium.ServicePointSynchronizationVerticle;
 import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
 import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
+import org.folio.services.s3storage.FolioS3ClientFactory;
+import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
 
 public class InitApiImpl implements InitAPI {
 
@@ -22,13 +24,35 @@ public class InitApiImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
+    try {
+      validateS3Configurations();
+    } catch (Exception e) {
+      log.error("init:: S3 configuration validation failed", e);
+      handler.handle(Future.failedFuture(e));
+      return;
+    }
     initConsortiumDataCache(vertx, context);
-    initAsyncMigrationVerticle(vertx)
+    validateS3Configurations()
+      .compose(v -> initAsyncMigrationVerticle(vertx))
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .compose(v -> initSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .compose(v -> initServicePointSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .map(true)
       .onComplete(handler);
+  }
+
+  private Future<Void> validateS3Configurations() {
+    try {
+      for (S3ConfigType configType : S3ConfigType.values()) {
+        var folioS3Client = FolioS3ClientFactory.getFolioS3Client(configType);
+        folioS3Client.createBucketIfNotExists();
+        log.info("validateS3Configurations:: S3 client configured successfully for config type {}", configType);
+      }
+      return Future.succeededFuture();
+    } catch (Exception e) {
+      log.error("init:: S3 configuration validation failed", e);
+      return Future.failedFuture(e);
+    }
   }
 
   private Future<Void> initAsyncMigrationVerticle(Vertx vertx) {

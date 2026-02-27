@@ -8,12 +8,7 @@ import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.http.InterfaceUrls.instancesBulk;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_ACCESS_KEY_ID_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_BUCKET_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_IS_AWS_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_REGION_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_SECRET_ACCESS_KEY_CONFIG;
-import static org.folio.services.s3storage.FolioS3ClientFactory.S3_URL_CONFIG;
+import static org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -25,7 +20,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -52,14 +46,9 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.s3.client.FolioS3Client;
-import org.folio.s3.client.S3ClientFactory;
-import org.folio.s3.client.S3ClientProperties;
-import org.junit.AfterClass;
+import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testcontainers.containers.localstack.LocalStackContainer;
-import org.testcontainers.utility.DockerImageName;
 
 public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUtil {
 
@@ -68,51 +57,16 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
     "src/test/resources/instances/bulk/bulkInstancesWithInvalidInstanceType.ndjson";
   private static final String BULK_INSTANCES_WITH_INVALID_PRECEDING_TITLE_PATH =
     "src/test/resources/instances/bulk/bulkInstancesWithInvalidPrecedingTitle.ndjson";
-  private static final String MINIO_BUCKET = "test-bucket";
   private static final String BULK_FILE_TO_UPLOAD = "parentLocation/filePath/bulkInstances";
   private static final String INSTANCE_TITLE_1 = "Long Way to a Small Angry Planet";
   private static final String INSTANCE_TITLE_2 = "Novik, Naomi";
   private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
   private static final String ID_FIELD = "id";
   private static final String ADMINISTRATIVE_NOTES_FIELD = "administrativeNotes";
-  private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "does not exist in instance_type.id.";
+  private static final String INVALID_INSTANCE_TYPE_ID_ERROR_MSG = "invalid input syntax for type uuid";
 
-  private static LocalStackContainer localStackContainer;
-  private static FolioS3Client s3Client;
-
+  private final FolioS3Client s3Client = FolioS3ClientFactory.getFolioS3Client(MARC_MIGRATION);
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
-
-  @BeforeClass
-  public static void setUpClass() {
-    localStackContainer = new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
-      .withServices(S3);
-
-    localStackContainer.start();
-    System.setProperty(S3_URL_CONFIG, localStackContainer.getEndpoint().toString());
-    System.setProperty(S3_REGION_CONFIG, localStackContainer.getRegion());
-    System.setProperty(S3_ACCESS_KEY_ID_CONFIG, localStackContainer.getAccessKey());
-    System.setProperty(S3_SECRET_ACCESS_KEY_CONFIG, localStackContainer.getSecretKey());
-    System.setProperty(S3_BUCKET_CONFIG, MINIO_BUCKET);
-    System.setProperty(S3_IS_AWS_CONFIG, Boolean.FALSE.toString());
-
-    s3Client = S3ClientFactory.getS3Client(
-      S3ClientProperties
-        .builder()
-        .endpoint(localStackContainer.getEndpoint().toString())
-        .accessKey(localStackContainer.getAccessKey())
-        .secretKey(localStackContainer.getSecretKey())
-        .bucket(MINIO_BUCKET)
-        .awsSdk(false)
-        .region(localStackContainer.getRegion())
-        .build()
-    );
-    s3Client.createBucketIfNotExists();
-  }
-
-  @AfterClass
-  public static void tearDownClass() {
-    localStackContainer.close();
-  }
 
   @Before
   public void setUp() {
@@ -315,8 +269,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   private void verifyUpdatedInstancesAndTitles(IndividualResource existingInstance1,
-                                                IndividualResource existingInstance2,
-                                                boolean publishEvents) {
+                                               IndividualResource existingInstance2,
+                                               boolean publishEvents) {
     var updatedInstance1 = getInstanceById(existingInstance1.getId().toString());
     var updatedInstance2 = getInstanceById(existingInstance2.getId().toString());
     assertNotControlledByMarcFields(existingInstance1.getJson(), updatedInstance1);
@@ -339,7 +293,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   private void verifyInstancesNotUpdated(IndividualResource existingInstance1,
-                                          IndividualResource existingInstance2) {
+                                         IndividualResource existingInstance2) {
     var instance1 = getInstanceById(existingInstance1.getId().toString());
     var instance2 = getInstanceById(existingInstance2.getId().toString());
     assertEquals(1, instance1.getInteger("_version").intValue());

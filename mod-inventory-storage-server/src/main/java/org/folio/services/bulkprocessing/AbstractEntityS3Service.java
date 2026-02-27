@@ -41,11 +41,11 @@ public abstract class AbstractEntityS3Service<T, R> {
   protected final FolioS3Client s3Client;
   protected final int entitiesParallelUpsertLimit;
 
-  protected AbstractEntityS3Service(FolioS3ClientFactory folioS3ClientFactory, Vertx vertx) {
+  protected AbstractEntityS3Service(Vertx vertx) {
     this.entitiesParallelUpsertLimit = Integer.parseInt(
       System.getProperty(ENTITIES_PARALLEL_UPSERT_COUNT_PARAM, DEFAULT_ENTITIES_PARALLEL_UPSERT_COUNT));
     this.vertx = vertx;
-    this.s3Client = folioS3ClientFactory.getFolioS3Client();
+    this.s3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION);
   }
 
   /**

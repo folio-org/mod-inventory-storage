@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.utils.DatabaseUtils;
 
 public class ItemRepository extends AbstractRepository<Item> {
 
@@ -64,19 +66,25 @@ public class ItemRepository extends AbstractRepository<Item> {
   }
 
   public Future<List<Map<String, Object>>> getReindexItemRecords(String fromId, String toId) {
-    var sql = "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
-              + " FROM " + getFullTableName(ITEM_TABLE) + " i"
-              + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE)
-              + " hr ON i.holdingsrecordid = hr.id"
-              + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
-
-    return postgresClient.select(sql).map(rows -> {
+    return postgresClient.select(buildReindexItemsSql(fromId, toId)).map(rows -> {
       var resultList = new LinkedList<Map<String, Object>>();
       for (var row : rows) {
         resultList.add(row.getJsonObject(0).getMap());
       }
       return resultList;
     });
+  }
+
+  public Future<RowStream<Row>> streamReindexItemRecords(Conn conn, String fromId, String toId) {
+    return DatabaseUtils.selectStream(conn, buildReindexItemsSql(fromId, toId));
+  }
+
+  private String buildReindexItemsSql(String fromId, String toId) {
+    return "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
+      + " FROM " + getFullTableName(ITEM_TABLE) + " i"
+      + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE)
+      + " hr ON i.holdingsrecordid = hr.id"
+      + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
   }
 
   public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatchRequest> items) {

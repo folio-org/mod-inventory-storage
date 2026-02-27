@@ -112,6 +112,7 @@ These properties can be changed by setting env variable.
 * `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS` Default value - `1`
 * `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS` Default value - `1`
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS` Default value - `16`
+* `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS` Default value - `16`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS` Default value - `1`
 
 There is also possibility for customizing through properties the Kafka Topic
@@ -145,6 +146,7 @@ These environment variables configure Kafka, for details see [Kafka](#kafka):
 * `KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
+* `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
 
 
@@ -157,6 +159,7 @@ These environment variables configure Kafka topic for specific business-related 
 * `KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
+* `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION`
 * `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE`
@@ -182,12 +185,18 @@ for details see [RMB](https://github.com/folio-org/raml-module-builder#environme
 * `DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING`
 
 These environment variables configure the module interaction with S3-compatible storage (AWS S3, Minio Server):
-* `S3_URL` (default value - `https://s3.amazonaws.com`)
-* `S3_REGION` (default value - `us-west-2`)
-* `S3_BUCKET`
-* `S3_ACCESS_KEY_ID` (default value is an empty string - "")
-* `S3_SECRET_ACCESS_KEY` (default value is an empty string - "")
-* `S3_IS_AWS` (default value - `false`)
+* `S3_MARC_MIGRATION_URL`
+* `S3_MARC_MIGRATION_REGION`
+* `S3_MARC_MIGRATION_BUCKET`
+* `S3_MARC_MIGRATION_ACCESS_KEY_ID` (default value is an empty string - "")
+* `S3_MARC_MIGRATION_SECRET_ACCESS_KEY` (default value is an empty string - "")
+* `S3_MARC_MIGRATION_IS_AWS` (default value - `false`)
+* `S3_REINDEX_URL`
+* `S3_REINDEX_REGION`
+* `S3_REINDEX_BUCKET`
+* `S3_REINDEX_ACCESS_KEY_ID` (default value is an empty string - "")
+* `S3_REINDEX_SECRET_ACCESS_KEY` (default value is an empty string - "")
+* `S3_REINDEX_IS_AWS` (default value - `false`)
 * `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 

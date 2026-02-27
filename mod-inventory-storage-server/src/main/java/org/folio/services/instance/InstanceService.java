@@ -49,6 +49,7 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
 import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
@@ -65,6 +66,7 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
@@ -510,16 +512,33 @@ public class InstanceService {
   }
 
   public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
-    return consortiumService.getConsortiumData(okapiHeaders)
-      .map(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
-        .orElse(false))
+    return isCentralTenant()
       .compose(isCentralTenant -> {
         var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
         return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
       })
       .onSuccess(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances))
       .map(notUsed -> null);
+  }
+
+  public Future<Void> exportReindexInstanceRecords(ReindexRecordsRequest request) {
+    var orchestrator = new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient);
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+
+    return isCentralTenant()
+      .compose(isCentralTenant -> {
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        return orchestrator.export(request,
+          conn -> instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant));
+      });
+  }
+
+  private Future<Boolean> isCentralTenant() {
+    return consortiumService.getConsortiumData(okapiHeaders)
+      .map(consortiumDataOptional -> consortiumDataOptional
+        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
+        .orElse(false));
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
