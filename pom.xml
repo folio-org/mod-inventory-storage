@@ -64,7 +64,7 @@
     <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
-    <checkstyle.version>13.2.0</checkstyle.version>
+    <checkstyle.version>13.3.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
