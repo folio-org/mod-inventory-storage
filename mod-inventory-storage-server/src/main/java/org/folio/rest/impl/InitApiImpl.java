@@ -24,13 +24,6 @@ public class InitApiImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
-    try {
-      validateS3Configurations();
-    } catch (Exception e) {
-      log.error("init:: S3 configuration validation failed", e);
-      handler.handle(Future.failedFuture(e));
-      return;
-    }
     initConsortiumDataCache(vertx, context);
     validateS3Configurations()
       .compose(v -> initAsyncMigrationVerticle(vertx))
