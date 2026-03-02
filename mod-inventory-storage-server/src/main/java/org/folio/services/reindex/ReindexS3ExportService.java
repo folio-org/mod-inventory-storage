@@ -241,10 +241,16 @@ public class ReindexS3ExportService {
       if (SystemUtils.IS_OS_UNIX) {
         return Files.createTempFile("reindex-export-", ".ndjson", OWNER_ONLY_FILE_PERMISSIONS);
       } else {
-        File file = File.createTempFile("prefix", "suffix", new File("mySecureDirectory"));
-        file.setReadable(true, true);
-        file.setWritable(true, true);
-        file.setExecutable(true, true);
+        File file = File.createTempFile("reindex-export-", ".ndjson", new File("mySecureDirectory"));
+        if (!file.setReadable(true, true)) {
+          log.warn("createSecureTempFile:: failed to set readable permission for file {}", file.getAbsolutePath());
+        }
+        if (!file.setWritable(true, true)) {
+          log.warn("createSecureTempFile:: failed to set writable permission for file {}", file.getAbsolutePath());
+        }
+        if (!file.setExecutable(true, true)) {
+          log.warn("createSecureTempFile:: failed to set executable permission for file {}", file.getAbsolutePath());
+        }
         return file.toPath();
       }
     }
