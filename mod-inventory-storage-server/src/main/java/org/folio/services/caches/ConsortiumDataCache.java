@@ -27,12 +27,13 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.utils.Environment;
 
 public class ConsortiumDataCache {
 
   private static final Logger LOG = LogManager.getLogger(ConsortiumDataCache.class);
   private static final String EXPIRATION_TIME_PARAM = "cache.consortium-data.expiration.time.seconds";
-  private static final String DEFAULT_EXPIRATION_TIME_SECONDS = "300";
+  private static final int DEFAULT_EXPIRATION_TIME_SECONDS = 300;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
   private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants";
   private static final String USER_TENANTS_FIELD = "userTenants";
@@ -44,7 +45,7 @@ public class ConsortiumDataCache {
   private final AsyncCache<String, Optional<ConsortiumData>> cache;
 
   public ConsortiumDataCache(Vertx vertx, HttpClient httpClient) {
-    int expirationTime = Integer.parseInt(System.getProperty(EXPIRATION_TIME_PARAM, DEFAULT_EXPIRATION_TIME_SECONDS));
+    int expirationTime = Environment.getIntValue(EXPIRATION_TIME_PARAM, DEFAULT_EXPIRATION_TIME_SECONDS);
     this.httpClient = httpClient;
     this.cache = Caffeine.newBuilder()
       .expireAfterWrite(expirationTime, TimeUnit.SECONDS)

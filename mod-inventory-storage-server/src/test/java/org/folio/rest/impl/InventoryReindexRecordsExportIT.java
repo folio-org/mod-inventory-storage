@@ -27,14 +27,23 @@ import org.folio.rest.jaxrs.model.RecordIdsRange;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest.RecordType;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.s3.client.FolioS3Client;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
 
   private static final String ITEM_TABLE = "item";
   private static final String HOLDING_TABLE = "holdings_record";
+  private static FolioS3Client s3Client;
+
+  @BeforeAll
+  static void beforeAll() {
+    s3Client = FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX);
+    s3Client.createBucketIfNotExists();
+  }
 
   @Test
   void post_shouldReturn200_whenExportingItems(Vertx vertx, VertxTestContext ctx) {
@@ -150,7 +159,6 @@ class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
    * that every id in {@code expectedIds} appears as the {@code "id"} field in at least one line.
    */
   private static void verifyS3NdjsonContainsIds(String objectKey, List<String> expectedIds) {
-    var s3Client = FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX);
     try (var reader = new BufferedReader(
       new InputStreamReader(s3Client.read(objectKey), StandardCharsets.UTF_8))) {
 

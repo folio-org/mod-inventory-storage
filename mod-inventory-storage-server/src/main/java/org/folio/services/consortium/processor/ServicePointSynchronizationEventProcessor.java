@@ -74,7 +74,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
   }
 
   private boolean isEcsTlrFeatureEnabled() {
-    return Boolean.parseBoolean(Environment.getEnvVar(ECS_TLR_FEATURE_ENABLED, FALSE.toString()));
+    return Environment.getBoolValue(ECS_TLR_FEATURE_ENABLED, FALSE);
   }
 
   private Future<Map<String, String>> prepareHeaders(Map<String, String> headers,

@@ -17,10 +17,13 @@ import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
+import org.folio.utils.Environment;
 
 public class InitApiImpl implements InitAPI {
 
   private static final Logger log = LogManager.getLogger();
+
+  private static final String S3_CONFIG_REQUIRED_KEY = "S3_CONFIG_REQUIRED";
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
@@ -35,6 +38,10 @@ public class InitApiImpl implements InitAPI {
   }
 
   private Future<Void> validateS3Configurations() {
+    var isS3ConfigRequired = Environment.getBoolValue(S3_CONFIG_REQUIRED_KEY, Boolean.FALSE);
+    if (Boolean.FALSE.equals(isS3ConfigRequired)) {
+      return Future.succeededFuture();
+    }
     try {
       for (S3ConfigType configType : S3ConfigType.values()) {
         var folioS3Client = FolioS3ClientFactory.getFolioS3Client(configType);

@@ -1,8 +1,13 @@
 package org.folio.services.s3storage;
 
+import static org.folio.utils.Environment.getBoolValue;
+import static org.folio.utils.Environment.getValueOrEmpty;
+import static org.folio.utils.Environment.getValueOrFail;
+
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
+import org.folio.s3.exception.S3ClientException;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
@@ -15,17 +20,21 @@ public class FolioS3ClientFactory {
   private static final String S3_ACCESS_KEY_ID_CONFIG = "ACCESS_KEY_ID";
   private static final String S3_SECRET_ACCESS_KEY_CONFIG = "SECRET_ACCESS_KEY";
   private static final String S3_IS_AWS_CONFIG = "IS_AWS";
-  private static final String S3_IS_AWS_DEFAULT = "false";
+  private static final Boolean S3_IS_AWS_DEFAULT = Boolean.FALSE;
 
-  public static FolioS3Client getFolioS3Client(@NonNull S3ConfigType configType) {
-    return S3ClientFactory.getS3Client(buildS3ClientProperties(configType));
+  public static FolioS3Client getFolioS3Client(@Nullable S3ConfigType configType) {
+    try {
+      return S3ClientFactory.getS3Client(buildS3ClientProperties(configType));
+    } catch (IllegalStateException e) {
+      throw new S3ClientException(e.getMessage());
+    }
   }
 
   public static String getBucketName(@NonNull S3ConfigType configType) {
     return getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
   }
 
-  private static S3ClientProperties buildS3ClientProperties(@NonNull S3ConfigType configType) {
+  private static S3ClientProperties buildS3ClientProperties(@Nullable S3ConfigType configType) {
     var url = getValueOrFail(getKey(S3_URL_CONFIG, configType));
     var region = getValueOrFail(getKey(S3_REGION_CONFIG, configType));
     var bucket = getValueOrFail(getKey(S3_BUCKET_CONFIG, configType));
@@ -36,32 +45,15 @@ public class FolioS3ClientFactory {
       .bucket(bucket)
       .accessKey(getValueOrEmpty(getKey(S3_ACCESS_KEY_ID_CONFIG, configType)))
       .secretKey(getValueOrEmpty(getKey(S3_SECRET_ACCESS_KEY_CONFIG, configType)))
-      .awsSdk(Boolean.parseBoolean(getValue(getKey(S3_IS_AWS_CONFIG, configType), S3_IS_AWS_DEFAULT)))
+      .awsSdk(getBoolValue(getKey(S3_IS_AWS_CONFIG, configType), S3_IS_AWS_DEFAULT))
       .build();
   }
 
-  private static String getKey(@NonNull String configName, @NonNull S3ConfigType configType) {
-    return S3_PREFIX + configType + "_" + configName;
-  }
-
-  private static String getValue(@NonNull String key) {
-    return getValue(key, null);
-  }
-
-  private static String getValue(@NonNull String key, @Nullable String defaultValue) {
-    return System.getProperty(key, System.getenv().getOrDefault(key, defaultValue));
-  }
-
-  private static String getValueOrFail(@NonNull String key) {
-    var value = getValue(key);
-    if (value == null || value.isBlank()) {
-      throw new IllegalStateException("Required S3 configuration property is missing: " + key);
+  private static String getKey(@NonNull String configName, @Nullable S3ConfigType configType) {
+    if (configType == null) {
+      return S3_PREFIX + configName;
     }
-    return value;
-  }
-
-  private static String getValueOrEmpty(@NonNull String key) {
-    return getValue(key, "");
+    return S3_PREFIX + configType + "_" + configName;
   }
 
   public enum S3ConfigType {

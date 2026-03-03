@@ -70,6 +70,7 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
   @Before
   public void setUp() {
+    s3Client.createBucketIfNotExists();
     StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
     clearData();
     removeAllEvents();

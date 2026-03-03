@@ -18,8 +18,11 @@ import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.BulkUpsertResponse;
 import org.folio.rest.support.BulkProcessingErrorFileWriter;
 import org.folio.s3.client.FolioS3Client;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.services.BulkProcessingContext;
 import org.folio.services.s3storage.FolioS3ClientFactory;
+import org.folio.utils.Environment;
+import org.jspecify.annotations.NonNull;
 
 /**
  * The service that interacts with S3-compatible storage to perform upsert operations on entities retrieved
@@ -29,23 +32,23 @@ import org.folio.services.s3storage.FolioS3ClientFactory;
  *
  * @param <T> - the type of the entities to perform a bulk upsert on
  * @param <R> - the type of the entity representation that will be witten to file with failed entities
- *              if processing errors occur. Usually, it can be the same as {@code <T>} type
+ *            if processing errors occur. Usually, it can be the same as {@code <T>} type
  */
 public abstract class AbstractEntityS3Service<T, R> {
 
   private static final Logger log = LogManager.getLogger(AbstractEntityS3Service.class);
   private static final String ENTITIES_PARALLEL_UPSERT_COUNT_PARAM = "bulk-processing.parallel.processBulkUpsert.count";
-  private static final String DEFAULT_ENTITIES_PARALLEL_UPSERT_COUNT = "10";
+  private static final int DEFAULT_ENTITIES_PARALLEL_UPSERT_COUNT = 10;
 
   protected final Vertx vertx;
   protected final FolioS3Client s3Client;
   protected final int entitiesParallelUpsertLimit;
 
   protected AbstractEntityS3Service(Vertx vertx) {
-    this.entitiesParallelUpsertLimit = Integer.parseInt(
-      System.getProperty(ENTITIES_PARALLEL_UPSERT_COUNT_PARAM, DEFAULT_ENTITIES_PARALLEL_UPSERT_COUNT));
+    this.entitiesParallelUpsertLimit = Environment.getIntValue(ENTITIES_PARALLEL_UPSERT_COUNT_PARAM,
+      DEFAULT_ENTITIES_PARALLEL_UPSERT_COUNT);
     this.vertx = vertx;
-    this.s3Client = FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION);
+    this.s3Client = getFolioS3Client();
   }
 
   /**
@@ -65,6 +68,61 @@ public abstract class AbstractEntityS3Service<T, R> {
       .compose(entities -> upsertEntities(entities, bulkRequest))
       .onFailure(e -> log.warn("processBulkUpsert:: Failed to process bulk entities request, filename: '{}'",
         bulkRequest.getRecordsFileName(), e));
+  }
+
+  /**
+   * Maps a Stream of {@code lines} retrieved from external file to a list of entities of {@code <T>} type
+   * suitable for processing in bulk upsert operation.
+   *
+   * @param linesStream - Stream of lines from an external file to be mapped to entities
+   * @return a list of entities created from the provided lines
+   */
+  protected abstract List<T> mapToEntities(Stream<String> linesStream);
+
+  /**
+   * Ensures that the specified {@code entities} have their non-MARC controlled fields populated with data
+   * from existing entities in the database.
+   *
+   * @param entities - entities to be populated with data
+   * @return Future of Void
+   */
+  protected abstract Future<Void> ensureEntitiesWithNonMarcControlledFieldsData(List<T> entities);
+
+  /**
+   * Performs an upsert operation on specified list of {@code entities}.
+   * The implementation of the upsert operation depends on the specifics of the {@code <T>} type of entity.
+   *
+   * @param entities      - a list of entities to be updated or created
+   * @param publishEvents - a flag that indicates whether domain events should be published
+   * @return Future of Void, succeeded if the upsert operation is successful, otherwise failed
+   */
+  protected abstract Future<Void> upsert(List<T> entities, boolean publishEvents);
+
+  /**
+   * Provides a representation of the given {@code entity} to be written to error file containing entities
+   * that failed during processing. This method is intended to transform or extract the necessary information
+   * from the {@code entity} for error logging purposes. Usually, the method can return the specified
+   * {@code entity} itself, unless a different representation is required.
+   *
+   * @param entity - entity representation suitable for writing to file with failed entities
+   * @return a representation of the {@code entity} suitable for writing to the file with failed entities
+   */
+  protected abstract R provideEntityRepresentationForWritingErrors(T entity);
+
+  /**
+   * Retrieves ID from the specified {@code entity} representation to be written to errors files.
+   *
+   * @param entity - entity to extract ID from
+   * @return ID of the specified entity
+   */
+  protected abstract String extractEntityId(R entity);
+
+  private @NonNull FolioS3Client getFolioS3Client() {
+    try {
+      return FolioS3ClientFactory.getFolioS3Client(FolioS3ClientFactory.S3ConfigType.MARC_MIGRATION);
+    } catch (S3ClientException e) {
+      return FolioS3ClientFactory.getFolioS3Client(null);
+    }
   }
 
   private Future<List<T>> loadEntities(BulkUpsertRequest bulkRequest) {
@@ -130,64 +188,17 @@ public abstract class AbstractEntityS3Service<T, R> {
 
   private Future<Void> uploadErrorsFiles(BulkProcessingContext bulkContext) {
     return Future.join(
-      vertx.executeBlocking(() ->
-        s3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
-      vertx.executeBlocking(() ->
-        s3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
-    )
-    .compose(v -> Future.join(
-      vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
-      vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
-    ))
-    .onFailure(
-      e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
-    .mapEmpty();
+        vertx.executeBlocking(() ->
+          s3Client.upload(bulkContext.getErrorEntitiesFileLocalPath(), bulkContext.getErrorEntitiesFilePath())),
+        vertx.executeBlocking(() ->
+          s3Client.upload(bulkContext.getErrorsFileLocalPath(), bulkContext.getErrorsFilePath()))
+      )
+      .compose(v -> Future.join(
+        vertx.fileSystem().delete(bulkContext.getErrorEntitiesFileLocalPath()),
+        vertx.fileSystem().delete(bulkContext.getErrorsFileLocalPath())
+      ))
+      .onFailure(
+        e -> log.warn("uploadErrorsFiles:: Failed to upload bulk processing errors files to S3-like storage", e))
+      .mapEmpty();
   }
-
-  /**
-   * Maps a Stream of {@code lines} retrieved from external file to a list of entities of {@code <T>} type
-   * suitable for processing in bulk upsert operation.
-   *
-   * @param linesStream - Stream of lines from an external file to be mapped to entities
-   * @return a list of entities created from the provided lines
-   */
-  protected abstract List<T> mapToEntities(Stream<String> linesStream);
-
-  /**
-   * Ensures that the specified {@code entities} have their non-MARC controlled fields populated with data
-   * from existing entities in the database.
-   *
-   * @param entities - entities to be populated with data
-   * @return Future of Void
-   */
-  protected abstract Future<Void> ensureEntitiesWithNonMarcControlledFieldsData(List<T> entities);
-
-  /**
-   * Performs an upsert operation on specified list of {@code entities}.
-   * The implementation of the upsert operation depends on the specifics of the {@code <T>} type of entity.
-   *
-   * @param entities      - a list of entities to be updated or created
-   * @param publishEvents - a flag that indicates whether domain events should be published
-   * @return Future of Void, succeeded if the upsert operation is successful, otherwise failed
-   */
-  protected abstract Future<Void> upsert(List<T> entities, boolean publishEvents);
-
-  /**
-   * Provides a representation of the given {@code entity} to be written to error file containing entities
-   * that failed during processing. This method is intended to transform or extract the necessary information
-   * from the {@code entity} for error logging purposes. Usually, the method can return the specified
-   * {@code entity} itself, unless a different representation is required.
-   *
-   * @param entity - entity representation suitable for writing to file with failed entities
-   * @return a representation of the {@code entity} suitable for writing to the file with failed entities
-   */
-  protected abstract R provideEntityRepresentationForWritingErrors(T entity);
-
-  /**
-   * Retrieves ID from the specified {@code entity} representation to be written to errors files.
-   *
-   * @param entity - entity to extract ID from
-   * @return ID of the specified entity
-   */
-  protected abstract String extractEntityId(R entity);
 }
