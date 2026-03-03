@@ -35,15 +35,24 @@ import org.mockito.ArgumentCaptor;
 public class KafkaAdminClientServiceTest {
   private static final String STUB_TENANT = "foo-tenant";
 
-  private final Set<String> allExpectedTopics = Set.of("folio.foo-tenant.inventory.instance",
-    "folio.foo-tenant.inventory.holdings-record", "folio.foo-tenant.inventory.item",
+  private final Set<String> allExpectedTopics = Set.of(
+    "folio.foo-tenant.inventory.instance",
+    "folio.foo-tenant.inventory.holdings-record",
+    "folio.foo-tenant.inventory.item",
     "folio.foo-tenant.inventory.instance-contribution",
-    "folio.foo-tenant.inventory.bound-with", "folio.foo-tenant.inventory.async-migration",
-    "folio.foo-tenant.inventory.service-point", "folio.foo-tenant.inventory.classification-type",
-    "folio.foo-tenant.inventory.location", "folio.foo-tenant.inventory.library",
-    "folio.foo-tenant.inventory.campus", "folio.foo-tenant.inventory.subject-type",
-    "folio.foo-tenant.inventory.institution", "folio.foo-tenant.inventory.reindex-records",
-    "folio.foo-tenant.inventory.subject-source", "folio.foo-tenant.inventory.instance-date-type",
+    "folio.foo-tenant.inventory.bound-with",
+    "folio.foo-tenant.inventory.async-migration",
+    "folio.foo-tenant.inventory.service-point",
+    "folio.foo-tenant.inventory.classification-type",
+    "folio.foo-tenant.inventory.location",
+    "folio.foo-tenant.inventory.library",
+    "folio.foo-tenant.inventory.campus",
+    "folio.foo-tenant.inventory.subject-type",
+    "folio.foo-tenant.inventory.institution",
+    "folio.foo-tenant.inventory.reindex-records",
+    "folio.foo-tenant.inventory.reindex.file-ready",
+    "folio.foo-tenant.inventory.subject-source",
+    "folio.foo-tenant.inventory.instance-date-type",
     "folio.foo-tenant.inventory.call-number-type");
   private KafkaAdminClient mockClient;
   private Vertx vertx;

@@ -7,6 +7,7 @@ import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.utils.Environment;
 
 /**
  * Small helpers for mod-inventory-storage.
@@ -18,7 +19,7 @@ public final class StorageHelper {
   /**
    * Limit for PgUtil.postSync to avoid out-of-memory.
    */
-  public static final int MAX_ENTITIES = Integer.parseInt(System.getProperty(POST_SYNC_MAX_ENTITIES_PROPERTY, "10000"));
+  public static final int MAX_ENTITIES = Environment.getIntValue(POST_SYNC_MAX_ENTITIES_PROPERTY, 10000);
 
   private static final Logger logger = LogManager.getLogger();
 

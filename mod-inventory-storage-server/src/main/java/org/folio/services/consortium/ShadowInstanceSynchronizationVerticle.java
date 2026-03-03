@@ -15,13 +15,14 @@ import org.folio.kafka.KafkaConsumerWrapper;
 import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.utils.Environment;
 
 public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
 
   private static final Logger log = LogManager.getLogger(ShadowInstanceSynchronizationVerticle.class);
 
   private static final String LOAD_LIMIT_PARAM = "consumer.instance-synchronization.load-limit";
-  private static final String DEFAULT_LOAD_LIMIT = "5";
+  private static final int DEFAULT_LOAD_LIMIT = 5;
   private static final String TENANT_PATTERN = "\\w{1,}";
 
   private final ConsortiumDataCache consortiumDataCache;
@@ -43,7 +44,7 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
   private Future<Void> createKafkaConsumerWrapper(
     AsyncRecordHandler<String, String> recordHandler) {
 
-    int loadLimit = Integer.parseInt(System.getProperty(LOAD_LIMIT_PARAM, DEFAULT_LOAD_LIMIT));
+    int loadLimit = Environment.getIntValue(LOAD_LIMIT_PARAM, DEFAULT_LOAD_LIMIT);
     KafkaConfig kafkaConfig = getKafkaConfig();
     SubscriptionDefinition subscriptionDefinition = SubscriptionDefinition.builder()
       .eventType(INSTANCE.topicName())

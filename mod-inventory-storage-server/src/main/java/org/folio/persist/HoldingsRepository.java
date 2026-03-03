@@ -8,13 +8,16 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.utils.DatabaseUtils;
 
 public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   public HoldingsRepository(Context context, Map<String, String> okapiHeaders) {
@@ -96,16 +99,22 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
   }
 
   public Future<List<Map<String, Object>>> getReindexHoldingsRecords(String fromId, String toId) {
-    var sql = "SELECT jsonb FROM " + getFullTableName(HOLDINGS_RECORD_TABLE)
-                 + " i WHERE id >= '" + fromId + "' AND id <= '" + toId + "'"
-                 + ";";
-    return postgresClient.select(sql).map(rows -> {
+    return postgresClient.select(buildReindexHoldingsSql(fromId, toId)).map(rows -> {
       var resultList = new LinkedList<Map<String, Object>>();
       for (var row : rows) {
         resultList.add(row.getJsonObject(0).getMap());
       }
       return resultList;
     });
+  }
+
+  public Future<RowStream<Row>> streamReindexHoldingsRecords(Conn conn, String fromId, String toId) {
+    return DatabaseUtils.selectStream(conn, buildReindexHoldingsSql(fromId, toId));
+  }
+
+  private String buildReindexHoldingsSql(String fromId, String toId) {
+    return "SELECT jsonb FROM " + getFullTableName(HOLDINGS_RECORD_TABLE)
+      + " i WHERE id >= '" + fromId + "' AND id <= '" + toId + "';";
   }
 
   public Future<RowSet<Row>> getHoldingsByIds(List<String> holdingsIds) {

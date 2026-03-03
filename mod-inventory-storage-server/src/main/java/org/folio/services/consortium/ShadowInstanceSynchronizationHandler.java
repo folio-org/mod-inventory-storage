@@ -35,6 +35,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
+import org.folio.utils.Environment;
 
 public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<String, String> {
 
@@ -45,7 +46,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     "/consortia/%s/sharing/instances?status=COMPLETE&instanceIdentifier=%s";
   private static final String INSTANCES_PARALLEL_UPDATES_COUNT_PARAM =
     "instance-synchronization.parallel.updates.count";
-  private static final String DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT = "10";
+  private static final int DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT = 10;
   private static final String LIMIT_QUERY_PARAM = "limit";
   private static final String TENANT_IDS_LIMIT = "1000";
   private static final String CONSORTIUM_SOURCE_TEMPLATE = "CONSORTIUM-%s";
@@ -60,8 +61,8 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
 
   public ShadowInstanceSynchronizationHandler(ConsortiumDataCache consortiaDataCache,
                                               HttpClient httpClient, Vertx vertx) {
-    this.instancesParallelUpdatesLimit = Integer.parseInt(
-      System.getProperty(INSTANCES_PARALLEL_UPDATES_COUNT_PARAM, DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT));
+    this.instancesParallelUpdatesLimit = Environment.getIntValue(INSTANCES_PARALLEL_UPDATES_COUNT_PARAM,
+      DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT);
     this.consortiaDataCache = consortiaDataCache;
     this.vertx = vertx;
     this.httpClient = httpClient;

@@ -1,6 +1,6 @@
 package org.folio.services;
 
-import static org.folio.utils.Environment.getEnvVar;
+import static org.folio.utils.Environment.getValue;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
@@ -22,7 +22,7 @@ public class BulkProcessingContext {
   private final boolean publishEvents;
 
   public BulkProcessingContext(BulkUpsertRequest request) {
-    var s3LocalSubPath = "%s/".formatted(getEnvVar("S3_LOCAL_SUB_PATH", DEFAULT_S3_LOCAL_SUB_PATH));
+    var s3LocalSubPath = "%s/".formatted(getValue("S3_LOCAL_SUB_PATH", DEFAULT_S3_LOCAL_SUB_PATH));
     var initialFilePath =
       StringUtils.removeStart(request.getRecordsFileName(), '/');
     this.errorEntitiesFilePath = initialFilePath + FAILED_ENTITIES_FILE_SUFFIX;

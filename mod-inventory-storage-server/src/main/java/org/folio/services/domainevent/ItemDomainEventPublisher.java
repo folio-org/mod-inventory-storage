@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
-import static org.folio.rest.jaxrs.model.PublishReindexRecordsRequest.RecordType;
+import static org.folio.rest.jaxrs.model.ReindexRecordsRequest.RecordType;
 import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;

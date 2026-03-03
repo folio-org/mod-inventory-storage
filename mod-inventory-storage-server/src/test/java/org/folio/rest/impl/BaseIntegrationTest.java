@@ -44,6 +44,7 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.tools.utils.Envs;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.utility.KafkaUtility;
+import org.folio.utility.S3Utility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -184,6 +185,7 @@ public abstract class BaseIntegrationTest {
     System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
     System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
     KAFKA_CONTAINER.start();
+    S3Utility.startS3();
 
     Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
       POSTGRESQL_CONTAINER.getFirstMappedPort(),

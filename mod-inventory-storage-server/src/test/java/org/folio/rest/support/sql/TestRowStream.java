@@ -66,6 +66,7 @@ public class TestRowStream implements RowStream<Row> {
     var id = UUID.randomUUID();
     when(row.getUUID("id")).thenReturn(id);
     when(row.getValue("jsonb")).thenReturn(new JsonObject());
+    when(row.getJsonObject(0)).thenReturn(new JsonObject().put("id", id.toString()));
     handler.handle(row);
   }
 
