@@ -5,12 +5,16 @@ on:
     branches: ["**"]
     paths:
       - "ramls/**/*.json"
+      - "!ramls/examples/**"
+      - "!ramls/raml-util/**"
   pull_request:
     branches: ["**"]
     paths:
       - "ramls/**/*.json"
+      - "!ramls/examples/**"
+      - "!ramls/raml-util/**"
   release:
-    types: [created, published]
+    types: [published]
   workflow_dispatch:
     inputs:
       base:
@@ -41,7 +45,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: schema-diff-${{ inputs.repository || github.repository }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -62,20 +66,20 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          BASE_IN=""
-          HEAD_IN=""
+          BASE_IN="${{ inputs.base || '' }}"
+          HEAD_IN="${{ inputs.head || '' }}"
 
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            BASE_IN="${{ github.event.inputs.base || '' }}"
-            HEAD_IN="${{ github.event.inputs.head || '' }}"
-          elif [[ "${{ github.event_name }}" == "workflow_call" ]]; then
-            BASE_IN="${{ inputs.base || '' }}"
-            HEAD_IN="${{ inputs.head || '' }}"
-          fi
+          # Helper: first commit in repository (ultimate fallback)
+          root_commit() { git rev-list --max-parents=0 HEAD | tail -n1; }
 
           case "${{ github.event_name }}" in
             push)
-              BASE="${BASE_IN:-${{ github.event.before }}}"
+              BEFORE="${{ github.event.before }}"
+              # FIX: first push to a new branch sends all-zero SHA
+              if [[ "$BEFORE" =~ ^0+$ ]]; then
+                BEFORE="$(git rev-parse HEAD~1 2>/dev/null || root_commit)"
+              fi
+              BASE="${BASE_IN:-$BEFORE}"
               HEAD="${HEAD_IN:-${GITHUB_SHA}}"
               ;;
             pull_request)
@@ -85,49 +89,68 @@ jobs:
             release)
               CUR_TAG="${{ github.event.release.tag_name }}"
               HEAD="${HEAD_IN:-$CUR_TAG}"
-              PREV_TAG="$(git tag --sort=-creatordate | grep -A1 "^${CUR_TAG}$" | tail -n1 || true)"
-              [[ -z "$PREV_TAG" ]] && PREV_TAG="$(git tag --sort=creatordate | head -n1 || true)"
-              [[ -z "$PREV_TAG" ]] && PREV_TAG="$(git rev-list --max-parents=0 HEAD | tail -n1)"
+              # FIX: grep -A1 returns CUR_TAG itself when it is the last tag;
+              # awk prints the NEXT line after the match and exits
+              PREV_TAG="$(git tag --sort=-version:refname \
+                | awk -v cur="$CUR_TAG" 'found {print; exit} $0==cur {found=1}' || true)"
+              [[ -z "$PREV_TAG" ]] && PREV_TAG="$(git tag --sort=version:refname \
+                | head -n1 || true)"
+              # FIX: guard against PREV_TAG resolving to CUR_TAG (single-tag repo)
+              [[ -z "$PREV_TAG" || "$PREV_TAG" == "$CUR_TAG" ]] \
+                && PREV_TAG="$(root_commit)"
               BASE="${BASE_IN:-$PREV_TAG}"
               ;;
             workflow_dispatch|workflow_call)
               if [[ -n "$BASE_IN" || -n "$HEAD_IN" ]]; then
                 HEAD="${HEAD_IN:-${GITHUB_SHA}}"
-                BASE="${BASE_IN:-$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)}"
+                # FIX: derive BASE relative to provided HEAD, not checked-out HEAD
+                BASE="${BASE_IN:-$(git rev-parse "${HEAD}~1" 2>/dev/null || root_commit)}"
               else
-                CUR_TAG="$(git tag --sort=-creatordate | sed -n '1p' || true)"
-                PREV_TAG="$(git tag --sort=-creatordate | sed -n '2p' || true)"
+                CUR_TAG="$(git tag --sort=-version:refname | sed -n '1p' || true)"
+                PREV_TAG="$(git tag --sort=-version:refname | sed -n '2p' || true)"
                 if [[ -n "$CUR_TAG" && -n "$PREV_TAG" ]]; then
                   HEAD="$CUR_TAG"
                   BASE="$PREV_TAG"
                 else
                   HEAD="${GITHUB_SHA}"
-                  BASE="$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)"
+                  BASE="$(git rev-parse HEAD~1 2>/dev/null || root_commit)"
                 fi
               fi
               ;;
             *)
               HEAD="${HEAD_IN:-${GITHUB_SHA}}"
-              BASE="${BASE_IN:-$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | tail -n1)}"
+              BASE="${BASE_IN:-$(git rev-parse HEAD~1 2>/dev/null || root_commit)}"
               ;;
           esac
 
-          git rev-parse "$BASE" "$HEAD" >/dev/null
+          for REF_NAME in BASE HEAD; do
+            REF_VAL="${!REF_NAME}"
+            if ! git rev-parse --verify "$REF_VAL" >/dev/null 2>&1; then
+              echo "::error::${REF_NAME} ref '${REF_VAL}' does not exist in repository"
+              exit 1
+            fi
+          done
+
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+          echo "✓ BASE=$BASE"
+          echo "✓ HEAD=$HEAD"
 
-      - name: Install jq (quiet)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
-
-      - name: Build report (summary only, refactored)
+      - name: Build report
         shell: bash
         run: |
           set -Eeuo pipefail
+
           BASE="${{ steps.refs.outputs.base }}"
           HEAD="${{ steps.refs.outputs.head }}"
           MAX_LINES=500
+          REPO_NAME="${{ inputs.repository || github.repository }}"
 
-          mkfile() { mktemp -t "$1.XXXXXX"; }
+          # OPT: single temp dir with automatic cleanup (was: scattered mktemp, never cleaned)
+          TMPDIR="$(mktemp -d)"
+          trap 'rm -rf "$TMPDIR"' EXIT
+          mkfile() { mktemp "$TMPDIR/$1.XXXXXX"; }
+
           truncate_or_all() {
             local LINES
             LINES=$(wc -l < "$1" || echo 0)
@@ -139,112 +162,116 @@ jobs:
             fi
           }
 
-          git -c diff.renames=true diff --name-status -M "$BASE" "$HEAD" -- ramls/*.json > /tmp/status.txt || true
+          # FIX: write to report.md directly alongside GITHUB_STEP_SUMMARY
+          # (was: cat GITHUB_STEP_SUMMARY > report.md — fragile, may include other steps' output)
+          REPORT="report.md"
+          : > "$REPORT"
+          out() { tee -a "$REPORT" >> "$GITHUB_STEP_SUMMARY"; }
+          emit() { printf '%s\n' "$@" | out; }
 
-          REPO_NAME="${{ inputs.repository || github.repository }}"
-          {
-            echo "## JSON Schema Changes (\`$REPO_NAME\`)"
-            echo
-            echo "- Base: \`$BASE\`"
-            echo "- Head: \`$HEAD\`"
-            echo
-          } >> "$GITHUB_STEP_SUMMARY"
+          # ── Header ─────────────────────────────────────────────────
+          emit "## JSON Schema Changes (\`$REPO_NAME\`)" \
+               "" \
+               "- Base: \`$BASE\`" \
+               "- Head: \`$HEAD\`" \
+               ""
 
-          if [[ ! -s /tmp/status.txt ]]; then
-            echo "_No JSON schema changes detected in \`ramls/\` (top-level)._ " >> "$GITHUB_STEP_SUMMARY"
-            cat "$GITHUB_STEP_SUMMARY" > report.md
+          # ── Detect changed files ───────────────────────────────────
+          git -c diff.renames=true diff --name-status -M "$BASE" "$HEAD" \
+            -- 'ramls/*.json' > "$TMPDIR/status.txt" || true
+
+          if [[ ! -s "$TMPDIR/status.txt" ]]; then
+            emit "_No JSON schema changes detected in \`ramls/\` (top-level)._"
             exit 0
           fi
 
-          {
-            echo "### Changed files"
-            echo
-            echo "| Status | File (HEAD) |"
-            echo "|---|---|"
-          } >> "$GITHUB_STEP_SUMMARY"
+          # ── Changed-files table ────────────────────────────────────
+          emit "### Changed files" \
+               "" \
+               "| Status | File (HEAD) |" \
+               "|---|---|"
 
           CHANGES=()
           while IFS= read -r LINE; do
             CHANGES+=("$LINE")
-          done < /tmp/status.txt
+          done < "$TMPDIR/status.txt"
 
           for LINE in "${CHANGES[@]}"; do
             IFS=$'\t' read -r S A B <<< "$LINE"
             FILE="$A"
             [[ "$S" == R* ]] && FILE="$B"
             case "$S" in
-              M) STATUS="Modified" ;;
-              A) STATUS="Added" ;;
-              D) STATUS="Deleted" ;;
-              R*) PCT="${S#R}"; STATUS="Renamed (${PCT}%)" ;;
-              C*) PCT="${S#C}"; STATUS="Copied (${PCT}%)" ;;
-              T) STATUS="Type changed" ;;
-              U) STATUS="Unmerged" ;;
-              X) STATUS="Unknown" ;;
-              B) STATUS="Broken pairing" ;;
-              *) STATUS="$S" ;;
+              M)  STATUS="Modified" ;;
+              A)  STATUS="Added" ;;
+              D)  STATUS="Deleted" ;;
+              R*) STATUS="Renamed (${S#R}%)" ;;
+              C*) STATUS="Copied (${S#C}%)" ;;
+              T)  STATUS="Type changed" ;;
+              U)  STATUS="Unmerged" ;;
+              X)  STATUS="Unknown" ;;
+              B)  STATUS="Broken pairing" ;;
+              *)  STATUS="$S" ;;
             esac
-            echo "| $STATUS | \`$FILE\` |" >> "$GITHUB_STEP_SUMMARY"
+            emit "| $STATUS | \`$FILE\` |"
           done
 
-          {
-            echo
-            echo "### Diffs (normalized first, fallback to raw if empty)"
-            echo
-          } >> "$GITHUB_STEP_SUMMARY"
+          emit "" \
+               "### Diffs (normalized first, fallback to raw if empty)" \
+               ""
 
+          # ── Per-file diffs ─────────────────────────────────────────
           for LINE in "${CHANGES[@]}"; do
             IFS=$'\t' read -r S A B <<< "$LINE"
-            BASE_PATH="$A"
-            HEAD_PATH="$A"
-            TITLE="$A"
-            if [[ "$S" == R* ]]; then
-              BASE_PATH="$A"
-              HEAD_PATH="$B"
-              TITLE="$B"
-            fi
+            BASE_PATH="$A"; HEAD_PATH="$A"; TITLE="$A"
+            [[ "$S" == R* ]] && { HEAD_PATH="$B"; TITLE="$B"; }
 
-            echo "#### \`$TITLE\`" >> "$GITHUB_STEP_SUMMARY"
+            emit "#### \`$TITLE\`"
 
-            BASE_RAW="$(mkfile base_raw)"
-            HEAD_RAW="$(mkfile head_raw)"
-            git show "$BASE:$BASE_PATH" 2>/dev/null > "$BASE_RAW" || true
-            git show "$HEAD:$HEAD_PATH" 2>/dev/null > "$HEAD_RAW" || true
+            # Extract file content at each ref (empty if file doesn't exist at that ref)
+            BASE_RAW="$(mkfile base_raw)"; HEAD_RAW="$(mkfile head_raw)"
+            git show "$BASE:$BASE_PATH" 2>/dev/null > "$BASE_RAW" || : > "$BASE_RAW"
+            git show "$HEAD:$HEAD_PATH" 2>/dev/null > "$HEAD_RAW" || : > "$HEAD_RAW"
 
-            BASE_NORM="$(mkfile base_json)"
-            HEAD_NORM="$(mkfile head_json)"
+            # Normalize JSON for structural comparison
+            BASE_NORM="$(mkfile base_json)"; HEAD_NORM="$(mkfile head_json)"
             VALID_BASE=1; VALID_HEAD=1
-            if ! jq -S . < "$BASE_RAW" > "$BASE_NORM" 2>/dev/null; then VALID_BASE=0; echo '{}' > "$BASE_NORM"; fi
-            if ! jq -S . < "$HEAD_RAW" > "$HEAD_NORM" 2>/dev/null; then VALID_HEAD=0; echo '{}' > "$HEAD_NORM"; fi
+            jq -S . < "$BASE_RAW" > "$BASE_NORM" 2>/dev/null \
+              || { VALID_BASE=0; echo '{}' > "$BASE_NORM"; }
+            jq -S . < "$HEAD_RAW" > "$HEAD_NORM" 2>/dev/null \
+              || { VALID_HEAD=0; echo '{}' > "$HEAD_NORM"; }
 
             NORM_DIFF="$(mkfile norm_diff)"
-            if ! diff -u --label "$TITLE (base)" --label "$TITLE (head)" "$BASE_NORM" "$HEAD_NORM" > "$NORM_DIFF"; then
-              echo '```diff' >> "$GITHUB_STEP_SUMMARY"
-              truncate_or_all "$NORM_DIFF" >> "$GITHUB_STEP_SUMMARY"
-              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            if ! diff -u --label "$TITLE (base)" --label "$TITLE (head)" \
+                 "$BASE_NORM" "$HEAD_NORM" > "$NORM_DIFF"; then
+              emit '```diff'
+              truncate_or_all "$NORM_DIFF" | out
+              emit '```'
             else
-              [[ $VALID_BASE -eq 0 || $VALID_HEAD -eq 0 ]] && echo "_Note: one of the versions is not valid JSON — raw diff only._" >> "$GITHUB_STEP_SUMMARY"
-              echo "_No structural changes (after normalization)_" >> "$GITHUB_STEP_SUMMARY"
-              echo >> "$GITHUB_STEP_SUMMARY"
+              (( VALID_BASE == 0 || VALID_HEAD == 0 )) \
+                && emit "_Note: one of the versions is not valid JSON — raw diff only._"
+              emit "_No structural changes (after normalization)_" ""
 
               RAW_DIFF="$(mkfile raw_diff)"
-              diff -u --label "$TITLE (base)" --label "$TITLE (head)" "$BASE_RAW" "$HEAD_RAW" > "$RAW_DIFF" || true
-              echo "_Showing raw textual diff (formatting/whitespace changes may appear)_" >> "$GITHUB_STEP_SUMMARY"
-              echo '```diff' >> "$GITHUB_STEP_SUMMARY"
-              truncate_or_all "$RAW_DIFF" >> "$GITHUB_STEP_SUMMARY"
-              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              diff -u --label "$TITLE (base)" --label "$TITLE (head)" \
+                "$BASE_RAW" "$HEAD_RAW" > "$RAW_DIFF" || true
+
+              # FIX: only show raw diff section when there are actual differences
+              if [[ -s "$RAW_DIFF" ]]; then
+                emit "_Showing raw textual diff (formatting/whitespace changes may appear)_"
+                emit '```diff'
+                truncate_or_all "$RAW_DIFF" | out
+                emit '```'
+              else
+                emit "_Files are identical._"
+              fi
             fi
 
-            echo >> "$GITHUB_STEP_SUMMARY"
+            emit ""
           done
-
-          cat "$GITHUB_STEP_SUMMARY" > report.md
 
       - name: Ensure report exists
         if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          ls -l report.md || true
-          test -s report.md || (echo "report.md is missing or empty" && exit 1)
+        run: test -s report.md || { echo "::error::report.md is missing or empty"; exit 1; }
 
       - name: Comment PR with report
         if: ${{ github.event_name == 'pull_request' }}
@@ -257,24 +284,28 @@ jobs:
       - name: Install pandoc
         run: sudo apt-get update -qq && sudo apt-get install -y -qq pandoc
 
-      - name: Write minimal GitHub-like CSS
+      - name: Convert report.md → report.html
+        shell: bash
         run: |
           cat > style.css <<'CSS'
-          body { margin: 2rem auto; max-width: 900px; font: 16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#24292f; }
-          h1,h2,h3 { border-bottom:1px solid #d0d7de; padding-bottom:.3rem; }
-          pre,code { font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
-          pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
-          table { border-collapse: collapse; width: 100%; }
-          th,td { border:1px solid #d0d7de; padding:6px 10px; }
-          blockquote { color:#57606a; border-left:4px solid #d0d7de; padding:0 1rem; margin:0; }
+          body{margin:2rem auto;max-width:900px;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#24292f}
+          h1,h2,h3{border-bottom:1px solid #d0d7de;padding-bottom:.3rem}
+          pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+          pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}
+          table{border-collapse:collapse;width:100%}
+          th,td{border:1px solid #d0d7de;padding:6px 10px}
+          blockquote{color:#57606a;border-left:4px solid #d0d7de;padding:0 1rem;margin:0}
           CSS
 
-      - name: Convert report.md -> report.html
-        run: |
-          pandoc \
-            --from=gfm --to=html5 --standalone \
+          if pandoc --help 2>&1 | grep -q -- '--embed-resources'; then
+            EMBED="--embed-resources --standalone"
+          else
+            EMBED="--self-contained"
+          fi
+
+          pandoc --from=gfm --to=html5 --standalone \
             --metadata=pagetitle:"Schema Changes Report" \
-            --css=style.css --self-contained \
+            --css=style.css $EMBED \
             -o report.html report.md
 
       - name: Upload artifacts (MD + HTML)
