@@ -64,6 +64,7 @@ import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.resource.ItemStorage;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -74,6 +75,7 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.validator.CommonValidators;
@@ -274,6 +276,13 @@ public class ItemService {
   public Future<Void> publishReindexItemRecords(String rangeId, String fromId, String toId) {
     return itemRepository.getReindexItemRecords(fromId, toId)
       .compose(items -> domainEventService.publishReindexItems(rangeId, items));
+  }
+
+  public Future<Void> exportReindexItemRecords(ReindexRecordsRequest request) {
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+    return new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient)
+      .export(request, conn -> itemRepository.streamReindexItemRecords(conn, rangeFrom, rangeTo));
   }
 
   public void populateItemFromHoldings(Item item, HoldingsRecord holdingsRecord,

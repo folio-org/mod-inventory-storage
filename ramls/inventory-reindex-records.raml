@@ -8,7 +8,7 @@ traits:
   validate: !include raml-util/traits/validation.raml
 
 types:
-  publishReindexRecordsRequest: !include schemas/reindex-records/publishReindexRecords.json
+  reindexRecordsRequest: !include schemas/reindex-records/reindexRecordsRequest.json
   errors: !include raml-util/schemas/errors.schema
 
 /inventory-reindex-records/publish:
@@ -18,12 +18,39 @@ types:
     is: [ validate ]
     body:
       application/json:
-        type: publishReindexRecordsRequest
+        type: reindexRecordsRequest
         example:
           strict: false
-          value: ../examples/reindex-records/publishReindexRecords.json
+          value: ../examples/reindex-records/reindexRecordsRequest.json
     responses:
       201:
+        description: "Records of the given range were published for reindex"
+      400:
+        description: "Bad request: malformed request body"
+      401:
+        description: "Not authorized to perform requested action"
+        body:
+          text/plain:
+            example: "unable to retrieve records -- unauthorized"
+      500:
+        description: "Internal server error, e.g. due to misconfiguration"
+        body:
+          text/plain:
+            example: "internal server error, contact administrator"
+
+/inventory-reindex-records/export:
+  displayName: Inventory Storage Reindex Records Export API
+  post:
+    description: Export inventory storage reindex records.
+    is: [ validate ]
+    body:
+      application/json:
+        type: reindexRecordsRequest
+        example:
+          strict: false
+          value: ../examples/reindex-records/reindexRecordsRequest.json
+    responses:
+      200:
         description: "Records of the given range were published for reindex"
       400:
         description: "Bad request: malformed request body"

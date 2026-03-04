@@ -1,12 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "description": "Inventory Storage records for reindex",
-  "javaType": "org.folio.rest.jaxrs.model.PublishReindexRecordsRequest",
+  "javaType": "org.folio.rest.jaxrs.model.ReindexRecordsRequest",
   "type": "object",
   "properties": {
     "id": {
       "type": "string",
       "description": "UUID representing this range of records",
+      "$ref": "../common/uuid.json"
+    },
+    "traceId": {
+      "type": "string",
+      "description": "UUID for tracing the request, used for debugging and logging",
       "$ref": "../common/uuid.json"
     },
     "recordType": {

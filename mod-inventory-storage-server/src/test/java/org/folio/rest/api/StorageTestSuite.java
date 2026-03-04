@@ -8,6 +8,8 @@ import static org.folio.utility.ModuleUtility.removeTenant;
 import static org.folio.utility.ModuleUtility.startVerticleWebClientAndPrepareTenant;
 import static org.folio.utility.ModuleUtility.stopVerticleAndWebClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.utility.S3Utility.startS3;
+import static org.folio.utility.S3Utility.stopS3;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -96,6 +98,8 @@ public final class StorageTestSuite {
 
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     startKafka();
+    startS3();
+
     startVerticleWebClientAndPrepareTenant(TENANT_ID);
 
     running = true;
@@ -114,6 +118,7 @@ public final class StorageTestSuite {
     removeTenant(TENANT_ID);
     stopVerticleAndWebClient();
     stopKafka();
+    stopS3();
 
     PostgresClient.stopPostgresTester();
 

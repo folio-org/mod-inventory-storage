@@ -24,8 +24,8 @@ import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.jaxrs.model.PublishReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.RecordIdsRange;
+import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
@@ -47,14 +47,14 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
   @MethodSource("reindexTypesProvider")
   @ParameterizedTest
   void post_shouldReturn201_whenPublishingRecordsForReindex(String table,
-                                                            PublishReindexRecordsRequest.RecordType recordType,
+                                                            ReindexRecordsRequest.RecordType recordType,
                                                             List<Object> records,
                                                             Vertx vertx,
                                                             VertxTestContext ctx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     var client = vertx.createHttpClient();
     var rangeId = UUID.randomUUID().toString();
-    var publishRequestBody = new PublishReindexRecordsRequest()
+    var publishRequestBody = new ReindexRecordsRequest()
       .withId(rangeId)
       .withRecordType(recordType)
       .withRecordIdsRange(
@@ -115,12 +115,12 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       rangeId, mainInstance, holding, item, boundWith, anotherInstance, consortiumInstance);
   }
 
-  private PublishReindexRecordsRequest createPublishRequestBody(InstanceReindexTestData testData) {
+  private ReindexRecordsRequest createPublishRequestBody(InstanceReindexTestData testData) {
     var instanceIds = Stream.of(testData.mainInstanceId, testData.consortiumInstanceId, testData.anotherInstanceId)
       .map(UUID::toString).sorted().toList();
-    return new PublishReindexRecordsRequest()
+    return new ReindexRecordsRequest()
       .withId(testData.rangeId)
-      .withRecordType(PublishReindexRecordsRequest.RecordType.INSTANCE)
+      .withRecordType(ReindexRecordsRequest.RecordType.INSTANCE)
       .withRecordIdsRange(
         new RecordIdsRange().withFrom(instanceIds.get(0)).withTo(instanceIds.get(2)));
   }
@@ -128,7 +128,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
   private Future<TestResponse> saveTestDataAndTriggerPublish(Vertx vertx,
                                                              io.vertx.core.http.HttpClient client,
                                                              InstanceReindexTestData testData,
-                                                             PublishReindexRecordsRequest request) {
+                                                             ReindexRecordsRequest request) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
     return postgresClient.save(INSTANCE_TABLE, testData.mainInstanceId.toString(), testData.mainInstance)
       .compose(r -> postgresClient.save(HOLDING_TABLE, testData.holdingsId.toString(), testData.holding))
@@ -157,7 +157,7 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       .map(JsonObject::mapFrom)
       .toList();
     Assertions.assertThat(event.getString("recordType"))
-      .isEqualTo(PublishReindexRecordsRequest.RecordType.INSTANCE.value());
+      .isEqualTo(ReindexRecordsRequest.RecordType.INSTANCE.value());
     Assertions.assertThat(records).contains(testData.mainInstance, testData.anotherInstance);
   }
 
@@ -165,11 +165,11 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
     return Stream.of(
       arguments(
         ITEM_TABLE,
-        PublishReindexRecordsRequest.RecordType.ITEM,
+        ReindexRecordsRequest.RecordType.ITEM,
         List.of(new Item().withId(RECORD1_ID), new Item().withId(RECORD2_ID))),
       arguments(
         HOLDING_TABLE,
-        PublishReindexRecordsRequest.RecordType.HOLDINGS,
+        ReindexRecordsRequest.RecordType.HOLDINGS,
         List.of(new HoldingsRecord().withId(RECORD1_ID), new HoldingsRecord().withId(RECORD2_ID)))
     );
   }
