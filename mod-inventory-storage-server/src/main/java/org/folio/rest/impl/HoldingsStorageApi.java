@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecordView;
+import org.folio.rest.jaxrs.model.PatchRequest;
 import org.folio.rest.jaxrs.model.RetrieveEntitiesRequest;
 import org.folio.rest.jaxrs.resource.HoldingsStorage;
 import org.folio.rest.persist.PgUtil;
@@ -116,6 +117,20 @@ public class HoldingsStorageApi implements HoldingsStorage {
 
     new HoldingsService(vertxContext, okapiHeaders)
       .updateHoldingRecord(holdingsRecordId, entity)
+      .onSuccess(notUsed -> asyncResultHandler.handle(Future.succeededFuture(
+        PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())))
+      .onFailure(handleFailure(asyncResultHandler));
+  }
+
+  @Override
+  public void patchHoldingsStorageHoldingsByHoldingsRecordId(String holdingsRecordId,
+    PatchRequest entity,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new HoldingsService(vertxContext, okapiHeaders)
+      .patchHoldingRecord(holdingsRecordId, entity)
       .onSuccess(notUsed -> asyncResultHandler.handle(Future.succeededFuture(
         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())))
       .onFailure(handleFailure(asyncResultHandler));
