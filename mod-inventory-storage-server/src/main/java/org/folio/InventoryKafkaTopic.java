@@ -24,6 +24,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   INSTITUTION("institution"),
   ITEM("item"),
   LIBRARY("library"),
+  LOAN_TYPE("loan-type"),
   LOCATION("location"),
   REINDEX_RECORDS("reindex-records"),
   REINDEX_FILE_READY("reindex.file-ready"),
@@ -54,6 +55,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     map.put(CALL_NUMBER_TYPE, Pair.of("KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", 1));
     map.put(LOCATION, Pair.of("KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", 1));
     map.put(LIBRARY, Pair.of("KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", 1));
+    map.put(LOAN_TYPE, Pair.of("KAFKA_LOAN_TYPE_TOPIC_NUM_PARTITIONS", 1));
     map.put(CAMPUS, Pair.of("KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", 1));
     map.put(INSTITUTION, Pair.of("KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", 1));
     map.put(SUBJECT_TYPE, Pair.of("KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", 1));

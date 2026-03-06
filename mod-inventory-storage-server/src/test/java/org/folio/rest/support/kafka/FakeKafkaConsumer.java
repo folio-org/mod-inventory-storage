@@ -17,6 +17,7 @@ public final class FakeKafkaConsumer {
   static final String INSTANCE_TOPIC_NAME = "folio.test.inventory.instance";
   static final String HOLDINGS_TOPIC_NAME = "folio.test.inventory.holdings-record";
   static final String ITEM_TOPIC_NAME = "folio.test.inventory.item";
+  static final String LOAN_TYPE_TOPIC_NAME = "folio.test.inventory.loan-type";
   static final String BOUND_WITH_TOPIC_NAME = "folio.test.inventory.bound-with";
   static final String SERVICE_POINT_TOPIC_NAME = "folio.test.inventory.service-point";
   static final String REINDEX_RECORDS_TOPIC_NAME = "folio.test.inventory.reindex-records";
@@ -28,6 +29,7 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedItemMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedLoanTypeMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedServicePointMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexRecordsMessages = new GroupedCollectedMessages();
@@ -61,6 +63,7 @@ public final class FakeKafkaConsumer {
     collectedInstanceMessages.empty();
     collectedHoldingsMessages.empty();
     collectedItemMessages.empty();
+    collectedLoanTypeMessages.empty();
     collectedBoundWithMessages.empty();
     collectedServicePointMessages.empty();
     collectedReindexRecordsMessages.empty();
@@ -106,6 +109,10 @@ public final class FakeKafkaConsumer {
     return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(instanceId, itemId));
   }
 
+  public Collection<EventMessage> getMessagesForLoanType(String loanTypeId) {
+    return collectedLoanTypeMessages.messagesByGroupKey(loanTypeId);
+  }
+
   public Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
     return collectedBoundWithMessages.messagesByGroupKey(instanceId);
   }
@@ -116,28 +123,37 @@ public final class FakeKafkaConsumer {
 
   private VertxMessageCollectingTopicConsumer createConsumer() {
     return new VertxMessageCollectingTopicConsumer(
-      Set.of(INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME,
-        BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME,
-        HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-        REINDEX_RECORDS_TOPIC_NAME,
-        REINDEX_FILE_READY_TOPIC_NAME),
-      new AggregateMessageCollector(
-        filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedInstanceMessages),
-        filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME,
-          FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
-        filteredAndGroupedCollector(ITEM_TOPIC_NAME,
-          FakeKafkaConsumer::instanceAndIdKey, collectedItemMessages),
-        filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedBoundWithMessages),
-        filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedServicePointMessages),
-        filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-          FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
-        filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedReindexRecordsMessages),
-        filteredAndGroupedCollector(REINDEX_FILE_READY_TOPIC_NAME,
-          KafkaConsumerRecord::key, collectedReindexFileReadyMessages)));
+      subscribedTopics(),
+      eventMessageCollector());
+  }
+
+  private Set<String> subscribedTopics() {
+    return Set.of(
+      INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, LOAN_TYPE_TOPIC_NAME,
+      BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME, HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
+      REINDEX_RECORDS_TOPIC_NAME, REINDEX_FILE_READY_TOPIC_NAME);
+  }
+
+  private AggregateMessageCollector eventMessageCollector() {
+    return new AggregateMessageCollector(
+      filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedInstanceMessages),
+      filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME,
+        FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
+      filteredAndGroupedCollector(ITEM_TOPIC_NAME,
+        FakeKafkaConsumer::instanceAndIdKey, collectedItemMessages),
+      filteredAndGroupedCollector(LOAN_TYPE_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedLoanTypeMessages),
+      filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedBoundWithMessages),
+      filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedServicePointMessages),
+      filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
+        FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
+      filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedReindexRecordsMessages),
+      filteredAndGroupedCollector(REINDEX_FILE_READY_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedReindexFileReadyMessages));
   }
 
   @NotNull
