@@ -55,6 +55,7 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -3370,5 +3371,58 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     public boolean applyGlobally() {
       return false;
     }
+  }
+
+  @Test
+  @SneakyThrows
+  public void canPatchHoldingsRecord() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    var holdingId = UUID.randomUUID();
+
+    final var request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid("hrid")
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var response = createHoldingAndGetResponse(request);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var patchRequest = new JsonObject();
+    patchRequest.put("id", holdingId);
+    patchRequest.put("_version", 1);
+    patchRequest.put("administrativeNotes", new JsonArray(Collections.singletonList("new note")));
+    patchRequest.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+
+    final var updateResponse = patchHoldingAndGetResponse(holdingId, patchRequest);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertPatchDataApplied(holdingId);
+  }
+
+  @SneakyThrows
+  private JsonErrorResponse patchHoldingAndGetResponse(UUID holdingId, JsonObject request) {
+    final var updateCompleted = new CompletableFuture<JsonErrorResponse>();
+    getClient().patch(holdingsStorageUrl(String.format("/%s", holdingId)), request, TENANT_ID,
+      jsonErrors(updateCompleted));
+    return updateCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  private void assertPatchDataApplied(UUID holdingId) {
+    final CompletableFuture<Response> getCompleted = new CompletableFuture<>();
+    getClient().get(holdingsStorageUrl(String.format("/%s", holdingId)), TENANT_ID,
+      ResponseHandler.json(getCompleted));
+    final Response getResponse = getCompleted.get(TIMEOUT, TimeUnit.SECONDS);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    final JsonObject holding = getResponse.getJson();
+    assertThat(holding.getJsonArray("administrativeNotes").size(), is(1));
+    final String administrativeNote = holding.getJsonArray("administrativeNotes").getString(0);
+    assertThat(administrativeNote, is("new note"));
+    final String permanentLocationId = holding.getString("permanentLocationId");
+    assertThat(permanentLocationId, is(ANNEX_LIBRARY_LOCATION_ID.toString()));
   }
 }
