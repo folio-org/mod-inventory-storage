@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Holdings Storage
-version: v8.1
+version: v8.2
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -15,6 +15,7 @@ types:
   holdingsRecordViews: !include schemas/holdings-storage/holdingsRecordViews.json
   retrieveEntitiesRequest: !include schemas/common/retrieveEntitiesDto.json
   errors: !include raml-util/schemas/errors.schema
+  patchRequest: !include schemas/common/patchRequest.json
 
 traits:
   pageable: !include raml-util/traits/pageable.raml
@@ -88,6 +89,36 @@ resourceTypes:
             example:
               strict: false
               value: !include examples/holdings-storage/holdingsRecord_get.json
+      patch:
+              is: [ validate ]
+              description: Partial update of holdings record with given ID
+              body:
+                application/json:
+                  type: patchRequest
+                  example: !include examples/patchRequest.json
+              responses:
+                204:
+                  description: "Holdings record successfully updated"
+                404:
+                  description: "Holdings record with a given ID not found"
+                  body:
+                    text/plain:
+                      example: Not found
+                400:
+                  description: "Bad request, e.g. malformed request body or query parameter."
+                  body:
+                    text/plain:
+                      example: "unable to update instance - malformed JSON"
+                409:
+                  description: "Optimistic locking version conflict"
+                  body:
+                    text/plain:
+                      example: "version conflict"
+                500:
+                  description: "Internal server error, e.g. due to misconfiguration"
+                  body:
+                    text/plain:
+                      example: "internal server error, contact administrator"
     /retrieve:
       post:
         is: [ validate ]

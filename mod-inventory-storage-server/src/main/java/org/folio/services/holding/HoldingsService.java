@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.PatchRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
@@ -155,6 +157,25 @@ public class HoldingsService {
           return createHolding(holdingsRecord);
         }
       });
+  }
+
+  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
+    return holdingsRepository.getById(holdingId)
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(existingHoldingsRecord ->
+        applyPatch(existingHoldingsRecord, patchRequest)
+          .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord)));
+  }
+
+  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, PatchRequest patchRequest) {
+    var patchJson = JsonObject.mapFrom(patchRequest);
+    var holdingsRecordJson = JsonObject.mapFrom(holdingsRecord);
+    var patchedJson = holdingsRecordJson.mergeIn(patchJson);
+    try {
+      return Future.succeededFuture(OBJECT_MAPPER.readValue(patchedJson.encode(), HoldingsRecord.class));
+    } catch (JsonProcessingException e) {
+      return Future.failedFuture(e);
+    }
   }
 
   public Future<Response> createHolding(HoldingsRecord entity) {
