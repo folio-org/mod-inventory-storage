@@ -253,4 +253,16 @@ public class InterfaceUrls {
     return vertxUrl("/instance-storage/instances/bulk");
   }
 
+  public static URL internalInstanceStreamUrl(String subPath) {
+    return vertxUrl("/_internal/instance-storage/instances/stream" + subPath);
+  }
+
+  public static URL internalHoldingsStreamUrl(String subPath) {
+    return vertxUrl("/_internal/instance-storage/holdings/stream" + subPath);
+  }
+
+  public static URL internalItemStreamUrl(String subPath) {
+    return vertxUrl("/_internal/instance-storage/items/stream" + subPath);
+  }
+
 }

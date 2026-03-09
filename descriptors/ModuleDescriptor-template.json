@@ -1311,6 +1311,27 @@
       ]
     },
     {
+      "id": "internal-stream",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/_internal/instance-storage/instances/stream",
+          "permissionsRequired": ["inventory-storage.internal-stream.instances.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/_internal/instance-storage/holdings/stream",
+          "permissionsRequired": ["inventory-storage.internal-stream.holdings.get"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/_internal/instance-storage/items/stream",
+          "permissionsRequired": ["inventory-storage.internal-stream.items.get"]
+        }
+      ]
+    },
+    {
       "id": "inventory-view",
       "version": "3.1",
       "handlers": [
@@ -2455,6 +2476,21 @@
       "description": "get enriched instances for oai pmh"
     },
     {
+      "permissionName": "inventory-storage.internal-stream.instances.get",
+      "displayName": "inventory storage - stream instance records",
+      "description": "stream instance records as NDJSON for reindexing"
+    },
+    {
+      "permissionName": "inventory-storage.internal-stream.holdings.get",
+      "displayName": "inventory storage - stream holdings records",
+      "description": "stream holdings records as NDJSON for reindexing"
+    },
+    {
+      "permissionName": "inventory-storage.internal-stream.items.get",
+      "displayName": "inventory storage - stream item records",
+      "description": "stream item records as NDJSON for reindexing"
+    },
+    {
       "permissionName": "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
       "displayName": "inventory storage - get updated instances ids for inventory storage",
       "description": "get updated instances ids for inventory storage"
@@ -2827,6 +2863,9 @@
         "inventory-storage.bound-withs.collection.put",
         "inventory-storage.bound-with-parts.item.put",
         "inventory-storage.bound-with-parts.item.delete",
+        "inventory-storage.internal-stream.instances.get",
+        "inventory-storage.internal-stream.holdings.get",
+        "inventory-storage.internal-stream.items.get",
         "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
         "inventory-storage.inventory-hierarchy.items-and-holdings.collection.post",
         "inventory-storage.inventory-view.instances.collection.get",

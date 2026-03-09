@@ -1,0 +1,126 @@
+#%RAML 1.0
+title: Internal Stream API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://github.com/org/folio/mod-inventory-storage
+
+documentation:
+  - title: Internal Stream API
+    content: |
+      Internal/unstable streaming endpoints for cursor-based pagination of inventory records.
+      These endpoints are intended for internal use by mod-search for reindexing operations.
+      Response format is NDJSON (application/x-ndjson) where each line is a raw JSONB record.
+      Cross-page consistency is NOT guaranteed; consumers must handle delta reconciliation.
+
+types:
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/_internal/instance-storage:
+  /instances/stream:
+    displayName: Stream instance records as NDJSON
+    get:
+      description: |
+        Stream instance records using cursor-based pagination.
+        Each line is a raw JSONB object from Postgres.
+        Response headers X-Next-Cursor and X-Has-More control pagination.
+      is:
+        [validate]
+      queryParameters:
+        cursor:
+          description: UUID cursor from previous X-Next-Cursor header for pagination continuation
+          type: string
+          required: false
+        limit:
+          description: Number of records per page (default 1000, max 5000)
+          type: integer
+          required: false
+          default: 1000
+          maximum: 5000
+          minimum: 1
+      responses:
+        200:
+          body:
+            application/x-ndjson:
+              description: Newline-delimited JSON stream of instance records
+        400:
+          body:
+            text/plain:
+              description: Invalid cursor or limit parameter
+        500:
+          body:
+            text/plain:
+              description: Internal server error
+
+  /holdings/stream:
+    displayName: Stream holdings records as NDJSON
+    get:
+      description: |
+        Stream holdings records using cursor-based pagination.
+        Each line is a raw JSONB object from Postgres (includes instanceId).
+        Response headers X-Next-Cursor and X-Has-More control pagination.
+      is:
+        [validate]
+      queryParameters:
+        cursor:
+          description: UUID cursor from previous X-Next-Cursor header for pagination continuation
+          type: string
+          required: false
+        limit:
+          description: Number of records per page (default 1000, max 5000)
+          type: integer
+          required: false
+          default: 1000
+          maximum: 5000
+          minimum: 1
+      responses:
+        200:
+          body:
+            application/x-ndjson:
+              description: Newline-delimited JSON stream of holdings records
+        400:
+          body:
+            text/plain:
+              description: Invalid cursor or limit parameter
+        500:
+          body:
+            text/plain:
+              description: Internal server error
+
+  /items/stream:
+    displayName: Stream item records as NDJSON
+    get:
+      description: |
+        Stream item records using cursor-based pagination.
+        Each line is a raw JSONB object with instanceId merged from holdings JOIN.
+        Items without matching holdings (orphans) are excluded.
+        Response headers X-Next-Cursor and X-Has-More control pagination.
+      is:
+        [validate]
+      queryParameters:
+        cursor:
+          description: UUID cursor from previous X-Next-Cursor header for pagination continuation
+          type: string
+          required: false
+        limit:
+          description: Number of records per page (default 1000, max 5000)
+          type: integer
+          required: false
+          default: 1000
+          maximum: 5000
+          minimum: 1
+      responses:
+        200:
+          body:
+            application/x-ndjson:
+              description: Newline-delimited JSON stream of item records
+        400:
+          body:
+            text/plain:
+              description: Invalid cursor or limit parameter
+        500:
+          body:
+            text/plain:
+              description: Internal server error

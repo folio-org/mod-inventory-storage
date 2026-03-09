@@ -66,6 +66,7 @@ import org.junit.runners.Suite;
   AbstractInstanceRecordsApiTest.class,
   OaiPmhViewTest.class,
   InventoryHierarchyViewTest.class,
+  InternalStreamTest.class,
   HoldingsSourceTest.class,
   InstanceDomainEventTest.class,
   InventoryViewTest.class,
