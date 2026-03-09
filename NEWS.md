@@ -51,6 +51,7 @@
 * Add `/inventory-reindex-records/export` API to export reindex record ranges to S3 and publish `reindex.file-ready` events ([MODINVSTOR-1519](https://folio-org.atlassian.net/browse/MODINVSTOR-1519))
 * Implement of PATCH requests for holdings records ([MODINVSTOR-1507](https://folio-org.atlassian.net/browse/MODINVSTOR-1507))
 * Implement Kafka events publishing for Loan type CRUD ([MODINVSTOR-1513](https://folio-org.atlassian.net/browse/MODINVSTOR-1513))
+* Implement Kafka events publishing for Material type CRUD ([MODINVSTOR-1512](https://folio-org.atlassian.net/browse/MODINVSTOR-1512))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))

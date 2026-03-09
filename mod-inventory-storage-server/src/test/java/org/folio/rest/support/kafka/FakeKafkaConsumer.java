@@ -20,6 +20,7 @@ public final class FakeKafkaConsumer {
   static final String LOAN_TYPE_TOPIC_NAME = "folio.test.inventory.loan-type";
   static final String BOUND_WITH_TOPIC_NAME = "folio.test.inventory.bound-with";
   static final String SERVICE_POINT_TOPIC_NAME = "folio.test.inventory.service-point";
+  static final String MATERIAL_TYPE_TOPIC_NAME = "folio.test.inventory.material-type";
   static final String REINDEX_RECORDS_TOPIC_NAME = "folio.test.inventory.reindex-records";
   static final String REINDEX_FILE_READY_TOPIC_NAME = "folio.test.inventory.reindex.file-ready";
 
@@ -32,6 +33,7 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedLoanTypeMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedServicePointMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedMaterialTypeMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexRecordsMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexFileReadyMessages = new GroupedCollectedMessages();
 
@@ -66,6 +68,7 @@ public final class FakeKafkaConsumer {
     collectedLoanTypeMessages.empty();
     collectedBoundWithMessages.empty();
     collectedServicePointMessages.empty();
+    collectedMaterialTypeMessages.empty();
     collectedReindexRecordsMessages.empty();
     collectedReindexFileReadyMessages.empty();
   }
@@ -121,6 +124,10 @@ public final class FakeKafkaConsumer {
     return collectedServicePointMessages.messagesByGroupKey(servicePointId);
   }
 
+  public Collection<EventMessage> getMessagesForMaterialType(String materialTypeId) {
+    return collectedMaterialTypeMessages.messagesByGroupKey(materialTypeId);
+  }
+
   private VertxMessageCollectingTopicConsumer createConsumer() {
     return new VertxMessageCollectingTopicConsumer(
       subscribedTopics(),
@@ -148,6 +155,8 @@ public final class FakeKafkaConsumer {
         KafkaConsumerRecord::key, collectedBoundWithMessages),
       filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
         KafkaConsumerRecord::key, collectedServicePointMessages),
+      filteredAndGroupedCollector(MATERIAL_TYPE_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedMaterialTypeMessages),
       filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
         FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
       filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
