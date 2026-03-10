@@ -1342,6 +1342,26 @@
       "run": "after",
       "snippetPath": "instance/createInstanceFormatIdsIndex.sql",
       "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceAdministrativeNotesIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceNotesNoteIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceNotesNoteTypeIdIndex.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceNotesStaffOnlyIndex.sql",
+      "fromModuleVersion": "30.0.0"
     }
   ]
 }
