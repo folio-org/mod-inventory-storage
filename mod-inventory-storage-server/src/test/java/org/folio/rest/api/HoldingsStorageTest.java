@@ -3080,6 +3080,34 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertPatchDataApplied(holdingId);
   }
 
+  @Test
+  @SneakyThrows
+  public void canNotPatchHoldingsRecordIfRequiredFieldIsInvalid() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+
+    var holdingId = UUID.randomUUID();
+
+    final var request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid("hrid")
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .create();
+
+    var response = createHoldingAndGetResponse(request);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var patchRequest = new JsonObject();
+    patchRequest.put("id", holdingId);
+    patchRequest.put("_version", 1);
+    patchRequest.put("sourceId", "invalid-uuid");
+
+    final var updateResponse = patchHoldingAndGetResponse(holdingId, patchRequest);
+    assertThat(updateResponse.getStatusCode(), is(422));
+  }
+
   @SneakyThrows
   private JsonErrorResponse patchHoldingAndGetResponse(UUID holdingId, JsonObject request) {
     final var updateCompleted = new CompletableFuture<JsonErrorResponse>();
