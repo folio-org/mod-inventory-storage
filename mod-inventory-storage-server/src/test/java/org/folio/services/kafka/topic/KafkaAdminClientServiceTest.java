@@ -47,6 +47,7 @@ public class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.location",
     "folio.foo-tenant.inventory.library",
     "folio.foo-tenant.inventory.campus",
+    "folio.foo-tenant.inventory.loan-type",
     "folio.foo-tenant.inventory.subject-type",
     "folio.foo-tenant.inventory.institution",
     "folio.foo-tenant.inventory.reindex-records",
