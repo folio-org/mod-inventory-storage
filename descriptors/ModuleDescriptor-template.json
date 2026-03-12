@@ -107,7 +107,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "8.1",
+      "version": "8.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -133,6 +133,13 @@
           "methods": ["PUT"],
           "pathPattern": "/holdings-storage/holdings/{id}",
           "permissionsRequired": ["inventory-storage.holdings.item.put"],
+          "modulePermissions": [
+            "user-tenants.collection.get"
+          ]
+        }, {
+          "methods": ["PATCH"],
+          "pathPattern": "/holdings-storage/holdings/{id}",
+          "permissionsRequired": ["inventory-storage.holdings.item.patch.execute"],
           "modulePermissions": [
             "user-tenants.collection.get"
           ]
@@ -1563,6 +1570,11 @@
       "description": "modify holdings record in storage"
     },
     {
+      "permissionName": "inventory-storage.holdings.item.patch.execute",
+      "displayName": "inventory storage - partially modify holdings record",
+      "description": "partially modify holdings record in storage"
+    },
+    {
       "permissionName": "inventory-storage.holdings.item.delete",
       "displayName": "inventory storage - delete individual holdings record",
       "description": "delete individual holdings record from storage"
@@ -2671,6 +2683,7 @@
         "inventory-storage.holdings.item.get",
         "inventory-storage.holdings.item.post",
         "inventory-storage.holdings.item.put",
+        "inventory-storage.holdings.item.patch.execute",
         "inventory-storage.holdings.item.delete",
         "inventory-storage.holdings.collection.delete",
         "inventory-storage.holdings.batch.post",
