@@ -2947,6 +2947,7 @@
       { "name": "KAFKA_CALL_NUMBER_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LOCATION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_LIBRARY_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_LOAN_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_CAMPUS_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
