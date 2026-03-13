@@ -3082,7 +3082,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canNotPatchHoldingsRecordIfRequiredFieldIsInvalid() {
+  public void canNotPatchHoldingsRecordIfRequiredFieldIsNull() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -3102,7 +3102,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var patchRequest = new JsonObject();
     patchRequest.put("id", holdingId);
     patchRequest.put("_version", 1);
-    patchRequest.put("sourceId", "invalid-uuid");
+    patchRequest.put("sourceId", null);
 
     final var updateResponse = patchHoldingAndGetResponse(holdingId, patchRequest);
     assertThat(updateResponse.getStatusCode(), is(422));
