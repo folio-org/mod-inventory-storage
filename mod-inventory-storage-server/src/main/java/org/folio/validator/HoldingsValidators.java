@@ -6,11 +6,12 @@ import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorM
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.folio.rest.exceptions.ValidationException;
 
 public final class HoldingsValidators {
-  private static final String UUID_REGEX =
-    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$";
+  private static final Pattern UUID_REGEX =
+    Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
 
   private HoldingsValidators() { }
 
@@ -29,6 +30,6 @@ public final class HoldingsValidators {
   }
 
   private static boolean isValidUuid(String value) {
-    return value != null && value.matches(UUID_REGEX);
+    return value != null && UUID_REGEX.matcher(value).matches();
   }
 }
