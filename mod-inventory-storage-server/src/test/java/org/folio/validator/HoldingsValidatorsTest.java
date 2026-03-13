@@ -39,7 +39,7 @@ class HoldingsValidatorsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"sourceId", "instanceId", "permanentLocationId"})
-  void shouldFailWhenSourceIdInvalid(String fieldName) {
+  void shouldFailWhenRequiredFieldIdInvalid(String fieldName) {
     var patchJson = new JsonObject().put(fieldName, "not-a-uuid");
 
     var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
