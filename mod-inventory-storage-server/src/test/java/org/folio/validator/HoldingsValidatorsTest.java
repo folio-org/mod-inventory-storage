@@ -18,7 +18,7 @@ class HoldingsValidatorsTest {
   void shouldSucceedWhenNoTrackedFieldsPresent() {
     var patchJson = new JsonObject().put("nonTracked", "value");
 
-    var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
+    var result = HoldingsValidators.refuseNullValueInRequiredFields(patchJson);
 
     assertThat(result.succeeded(), is(true));
     assertThat(result.result(), is(patchJson));
@@ -31,7 +31,7 @@ class HoldingsValidatorsTest {
       .put("instanceId", VALID_UUID)
       .put("permanentLocationId", VALID_UUID);
 
-    var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
+    var result = HoldingsValidators.refuseNullValueInRequiredFields(patchJson);
 
     assertThat(result.succeeded(), is(true));
     assertThat(result.result(), is(patchJson));
@@ -39,36 +39,13 @@ class HoldingsValidatorsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"sourceId", "instanceId", "permanentLocationId"})
-  void shouldFailWhenRequiredFieldIdInvalid(String fieldName) {
-    var patchJson = new JsonObject().put(fieldName, "not-a-uuid");
+  void shouldFailWhenTrackedFieldPresentButNullValue(String fieldName) {
+    var patchJson = new JsonObject().putNull(fieldName);
 
-    var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
+    var result = HoldingsValidators.refuseNullValueInRequiredFields(patchJson);
 
     assertThat(result.failed(), is(true));
     assertThat(result.cause() instanceof ValidationException, is(true));
     assertThat(result.cause().getMessage(), containsString(fieldName));
-  }
-
-  @Test
-  void shouldFailWhenTrackedFieldPresentButNullValue() {
-    var patchJson = new JsonObject().putNull("sourceId");
-
-    var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
-
-    assertThat(result.failed(), is(true));
-    assertThat(result.cause() instanceof ValidationException, is(true));
-    assertThat(result.cause().getMessage(), containsString("sourceId"));
-  }
-
-  @Test
-  void shouldFailWhenTrackedFieldPresentButNonStringValue() {
-    // getString("sourceId") returns null when underlying value isn't a String
-    var patchJson = new JsonObject().put("sourceId", 123);
-
-    var result = HoldingsValidators.checkRequiredFieldsIfPresent(patchJson);
-
-    assertThat(result.failed(), is(true));
-    assertThat(result.cause() instanceof ValidationException, is(true));
-    assertThat(result.cause().getMessage(), containsString("sourceId"));
   }
 }

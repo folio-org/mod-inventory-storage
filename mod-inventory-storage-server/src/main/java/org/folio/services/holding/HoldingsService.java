@@ -18,7 +18,7 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.CommonValidators.validateUuidFormatForList;
-import static org.folio.validator.HoldingsValidators.checkRequiredFieldsIfPresent;
+import static org.folio.validator.HoldingsValidators.refuseNullValueInRequiredFields;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -165,7 +165,7 @@ public class HoldingsService {
     return holdingsRepository.getById(holdingId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(existingHoldingsRecord ->
-        checkRequiredFieldsIfPresent(patchJson)
+        refuseNullValueInRequiredFields(patchJson)
           .compose(json -> applyPatch(existingHoldingsRecord, json)
           .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord))));
   }
