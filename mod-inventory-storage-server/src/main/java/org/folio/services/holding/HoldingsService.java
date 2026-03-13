@@ -18,6 +18,7 @@ import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOp
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.CommonValidators.validateUuidFormatForList;
+import static org.folio.validator.HoldingsValidators.refuseNullValueInRequiredFields;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -160,15 +161,16 @@ public class HoldingsService {
   }
 
   public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
+    var patchJson = JsonObject.mapFrom(patchRequest);
     return holdingsRepository.getById(holdingId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(existingHoldingsRecord ->
-        applyPatch(existingHoldingsRecord, patchRequest)
-          .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord)));
+        refuseNullValueInRequiredFields(patchJson)
+          .compose(json -> applyPatch(existingHoldingsRecord, json)
+          .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord))));
   }
 
-  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, PatchRequest patchRequest) {
-    var patchJson = JsonObject.mapFrom(patchRequest);
+  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson) {
     var holdingsRecordJson = JsonObject.mapFrom(holdingsRecord);
     var patchedJson = holdingsRecordJson.mergeIn(patchJson);
     try {
