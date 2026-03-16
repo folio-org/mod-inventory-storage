@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -7,10 +10,9 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.MaterialType;
-import org.folio.rest.jaxrs.model.MaterialTypes;
+import org.folio.services.materialtype.MaterialTypeService;
 
-public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
-  implements org.folio.rest.jaxrs.resource.MaterialTypes {
+public class MaterialTypeApi implements org.folio.rest.jaxrs.resource.MaterialTypes {
 
   public static final String MATERIAL_TYPE_TABLE = "material_type";
 
@@ -19,22 +21,30 @@ public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
   public void getMaterialTypes(String query, String totalRecords, int offset, int limit,
                                Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetMaterialTypesResponse.class);
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .getByQuery(query, offset, limit)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void postMaterialTypes(MaterialType entity, Map<String, String> okapiHeaders,
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostMaterialTypesResponse.class);
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .create(entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void deleteMaterialTypes(Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .deleteAll()
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -43,7 +53,10 @@ public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
                                                Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetMaterialTypesByMaterialtypeIdResponse.class);
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .getById(id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -52,8 +65,10 @@ public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
                                                   Map<String, String> okapiHeaders,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                   Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteMaterialTypesByMaterialtypeIdResponse.class);
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .delete(id)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -62,22 +77,9 @@ public class MaterialTypeApi extends BaseApi<MaterialType, MaterialTypes>
                                                Map<String, String> okapiHeaders,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutMaterialTypesByMaterialtypeIdResponse.class);
-  }
-
-  @Override
-  protected String getReferenceTable() {
-    return MATERIAL_TYPE_TABLE;
-  }
-
-  @Override
-  protected Class<MaterialType> getEntityClass() {
-    return MaterialType.class;
-  }
-
-  @Override
-  protected Class<MaterialTypes> getEntityCollectionClass() {
-    return MaterialTypes.class;
+    new MaterialTypeService(vertxContext, okapiHeaders)
+      .update(id, entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 }
