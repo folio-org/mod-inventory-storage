@@ -46,7 +46,6 @@
 * Create a submodule with generated DTOs ([MODINVSTOR-1499](https://folio-org.atlassian.net/browse/MODINVSTOR-1499))
 * Implement of PATCH requests for instances ([MODINVSTOR-1456](https://folio-org.atlassian.net/browse/MODINVSTOR-1456))
 * Improve batch results of the PATCH /item-storage/items endpoint ([MODINVSTOR-1514](https://folio-org.atlassian.net/browse/MODINVSTOR-1514))
-* Implement of PATCH requests for items ([MODINVSTOR-1506](https://folio-org.atlassian.net/browse/MODINVSTOR-1506))
 * Add several new indexes to the instance table for use by FQM ([MODINVSTOR-1520](https://folio-org.atlassian.net/browse/MODINVSTOR-1520), [MODINVSTOR-1528](https://folio-org.atlassian.net/browse/MODINVSTOR-1528))
 * Add `/inventory-reindex-records/export` API to export reindex record ranges to S3 and publish `reindex.file-ready` events ([MODINVSTOR-1519](https://folio-org.atlassian.net/browse/MODINVSTOR-1519))
 * Implement of PATCH requests for holdings records ([MODINVSTOR-1507](https://folio-org.atlassian.net/browse/MODINVSTOR-1507))

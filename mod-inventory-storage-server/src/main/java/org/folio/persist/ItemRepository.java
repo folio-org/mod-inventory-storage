@@ -108,21 +108,6 @@ public class ItemRepository extends AbstractRepository<Item> {
     }
   }
 
-  public Future<List<Item>> patchItem(PgConnection conn, ItemPatchRequest patchRequest) {
-    try {
-      OptimisticLockingUtil.unsetVersionIfMinusOne(patchRequest);
-
-      var tuple = Tuple.of(JsonObject.mapFrom(patchRequest), patchRequest.getId());
-      var sql = "UPDATE %s SET jsonb = apply_jsonb_patch(jsonb, $1) WHERE id = $2 RETURNING jsonb::text"
-        .formatted(getFullTableName(ITEM_TABLE));
-
-      return executePatch(conn, sql, tuple);
-    } catch (Exception e) {
-      logger.error("Failed to patch item", e);
-      return Future.failedFuture(e);
-    }
-  }
-
   private ValidationException buildItemsSizeException(int actualSize) {
     var message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, actualSize);
     var errors = new Errors().withErrors(List.of(
