@@ -82,6 +82,7 @@
 * Cover instance-statuses, electronic-access-relationships, statistical-code-types, statistical-codes, ill-policies, holdings-types, call-number-types APIs with integration tests ([MODINVSTOR-1167](https://folio-org.atlassian.net/browse/MODINVSTOR-1167))
 * Re-work all s3 related envs var and standardization ([MODINVSTOR-1403](https://folio-org.atlassian.net/browse/MODINVSTOR-1403))
 * Randomize sample data instance id/hrid and update references ([MODINVSTOR-1485](https://folio-org.atlassian.net/browse/MODINVSTOR-1485))
+* Configuration for async-migration consumer use security properties ([MODINVSTOR-1531](https://folio-org.atlassian.net/browse/MODINVSTOR-1531))
 * Use GitHub workflow for CI/CD ([MODINVSTOR-1508](https://folio-org.atlassian.net/browse/MODINVSTOR-1508))
 
 ### Dependencies
