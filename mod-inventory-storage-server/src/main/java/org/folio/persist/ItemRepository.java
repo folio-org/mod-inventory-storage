@@ -139,21 +139,6 @@ public class ItemRepository extends AbstractRepository<Item> {
       });
   }
 
-  private Future<List<Item>> executePatch(PgConnection conn, String sql, Tuple tuple) {
-    return conn.preparedQuery(sql).execute(tuple)
-      .map(rowSet -> {
-        List<Item> updatedItems = new LinkedList<>();
-        for (Row row : rowSet) {
-          updatedItems.add(readValue(row.getString(0), Item.class));
-        }
-        return updatedItems;
-      })
-      .recover(throwable -> {
-        logger.error("Failed to patch item", throwable);
-        return Future.failedFuture(throwable);
-      });
-  }
-
   public Future<RowSet<Row>> getItemsWithCurrentHoldings(List<String> itemIds) {
     if (itemIds.isEmpty()) {
       return Future.succeededFuture();

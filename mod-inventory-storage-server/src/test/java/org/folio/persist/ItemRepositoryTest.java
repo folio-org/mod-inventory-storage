@@ -448,14 +448,4 @@ class ItemRepositoryTest {
       && sql.contains("WHERE id = $2")
       && sql.contains("RETURNING jsonb::text")));
   }
-
-  private void verifyPatchSql(PgConnection pgConnection) {
-    verify(pgConnection).preparedQuery(argThat(sql ->
-      sql != null
-        && sql.contains("UPDATE")
-        && sql.contains(".item")
-        && sql.contains("SET jsonb = apply_jsonb_patch(jsonb, $1)")
-        && sql.contains("WHERE id = $2")
-        && sql.contains("RETURNING jsonb::text")));
-  }
 }
