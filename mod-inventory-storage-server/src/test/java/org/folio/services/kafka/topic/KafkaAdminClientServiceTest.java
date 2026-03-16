@@ -43,6 +43,7 @@ public class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.bound-with",
     "folio.foo-tenant.inventory.async-migration",
     "folio.foo-tenant.inventory.service-point",
+    "folio.foo-tenant.inventory.material-type",
     "folio.foo-tenant.inventory.classification-type",
     "folio.foo-tenant.inventory.location",
     "folio.foo-tenant.inventory.library",
