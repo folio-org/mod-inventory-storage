@@ -9,14 +9,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.kafka.SimpleConfigurationReader;
+import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 
 public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
@@ -25,17 +23,17 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
   private static final Long PERIOD = 1000L;
 
   public static Map<String, String> getKafkaConsumerProperties(String groupId) {
-    Map<String, String> config = new HashMap<>();
-    config.put("bootstrap.servers", KafkaEnvironmentProperties.host() + ":" + KafkaEnvironmentProperties.port());
-    config.put("key.deserializer", StringDeserializer.class.getName());
-    config.put("max.poll.records", SimpleConfigurationReader.getValue(
-      List.of("kafka.consumer.max.poll.records", "spring.kafka.consumer.max-poll-records"), "100"));
-    config.put("value.deserializer", JsonObjectDeserializer.class.getName());
-    config.put("group.id", groupId);
-    config.put("metadata.max.age.ms", "15000");
-    config.put("auto.offset.reset", "earliest");
-    config.put("enable.auto.commit", "false");
-    return config;
+    var kafkaConfig = KafkaConfig.builder()
+      .envId(KafkaEnvironmentProperties.environment())
+      .kafkaHost(KafkaEnvironmentProperties.host())
+      .kafkaPort(KafkaEnvironmentProperties.port())
+      .consumerValueDeserializerClass(JsonObjectDeserializer.class.getName())
+      .build();
+    var consumerProps = kafkaConfig.getConsumerProps();
+    consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+    consumerProps.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, "15000");
+    consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+    return consumerProps;
   }
 
   @Override
