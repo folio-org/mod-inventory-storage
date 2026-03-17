@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history incl. tags)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -178,10 +178,12 @@ jobs:
 
           # ── Detect changed files ───────────────────────────────────
           git -c diff.renames=true diff --name-status -M "$BASE" "$HEAD" \
-            -- 'ramls/*.json' > "$TMPDIR/status.txt" || true
+            -- ':(glob)ramls/**/*.json' \
+               ':!ramls/examples/' \
+               ':!ramls/raml-util/' > "$TMPDIR/status.txt" || true
 
           if [[ ! -s "$TMPDIR/status.txt" ]]; then
-            emit "_No JSON schema changes detected in \`ramls/\` (top-level)._"
+            emit "_No JSON schema changes detected in \`ramls/\`._"
             exit 0
           fi
 
@@ -216,7 +218,7 @@ jobs:
           done
 
           emit "" \
-               "### Diffs (normalized first, fallback to raw if empty)" \
+               "### Schema changes" \
                ""
 
           # ── Per-file diffs ─────────────────────────────────────────
@@ -309,7 +311,7 @@ jobs:
             -o report.html report.md
 
       - name: Upload artifacts (MD + HTML)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ inputs.artifact_name || format('report-{0}-{1}', github.run_id, github.job) }}
           path: |
