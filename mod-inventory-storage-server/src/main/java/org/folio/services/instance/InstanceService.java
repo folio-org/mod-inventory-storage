@@ -223,8 +223,8 @@ public class InstanceService {
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance ->
          applyPatch(oldInstance, patchJson)
-          .compose(newInstance -> validateHridChange(oldInstance, newInstance))
-          .compose(newInstance -> performInstanceUpdate(id, oldInstance, newInstance)));
+          .compose(newInstance -> validateHridChange(oldInstance, newInstance)
+            .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance))));
   }
 
   private Future<Instance> applyPatch(Instance instance, JsonObject patchJson) {
