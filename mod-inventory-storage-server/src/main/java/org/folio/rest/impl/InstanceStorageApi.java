@@ -294,8 +294,9 @@ public class InstanceStorageApi implements InstanceStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    String userId = okapiHeaders.get("X-Okapi-User-Id");
     new InstanceService(vertxContext, okapiHeaders)
-      .patchInstance(instanceId, request)
+      .patchInstance(instanceId, request, userId)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }

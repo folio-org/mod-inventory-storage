@@ -32,6 +32,7 @@ import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -217,17 +218,22 @@ public class InstanceService {
       .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance));
   }
 
-  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest, String userId) {
     var patchJson = JsonObject.mapFrom(patchRequest);
     return instanceRepository.getById(id)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance ->
-         applyPatch(oldInstance, patchJson)
+         applyPatch(oldInstance, patchJson, userId)
           .compose(newInstance -> validateHridChange(oldInstance, newInstance)
             .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance))));
   }
 
-  private Future<Instance> applyPatch(Instance instance, JsonObject patchJson) {
+  private Future<Instance> applyPatch(Instance instance, JsonObject patchJson, String userId) {
+    var metadata = instance.getMetadata();
+    if (metadata != null) {
+      metadata.setUpdatedDate(new Date());
+      metadata.setUpdatedByUserId(userId);
+    }
     var instanceJson = JsonObject.mapFrom(instance);
     var patchedJson = instanceJson.mergeIn(patchJson);
     try {
