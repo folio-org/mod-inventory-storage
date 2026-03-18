@@ -32,7 +32,6 @@ import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +50,6 @@ import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
@@ -77,7 +75,6 @@ import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
-import org.folio.validator.PatchValidators;
 
 public class InstanceService {
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
@@ -280,15 +277,15 @@ public class InstanceService {
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
-//  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
-//    var patchJson = JsonObject.mapFrom(patchRequest);
-//    return PatchValidators.checkInstanceFields(patchRequest)
-//      .compose(NotesValidators::refuseLongNotes)
-//      .compose(notUsed -> instanceRepository.getById(id))
-//      .compose(CommonValidators::refuseIfNotFound)
-//      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
-//      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
-//  }
+  //  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+  //    var patchJson = JsonObject.mapFrom(patchRequest);
+  //    return PatchValidators.checkInstanceFields(patchRequest)
+  //      .compose(NotesValidators::refuseLongNotes)
+  //      .compose(notUsed -> instanceRepository.getById(id))
+  //      .compose(CommonValidators::refuseIfNotFound)
+  //      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
+  //      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
+  //  }
 
   private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
     final Promise<Response> patchResult = promise();
