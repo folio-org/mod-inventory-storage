@@ -27,6 +27,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,17 +161,22 @@ public class HoldingsService {
       });
   }
 
-  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
+  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest, String userId) {
     var patchJson = JsonObject.mapFrom(patchRequest);
     return holdingsRepository.getById(holdingId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(existingHoldingsRecord ->
         refuseNullValueInRequiredFields(patchJson)
-          .compose(json -> applyPatch(existingHoldingsRecord, json)
+          .compose(json -> applyPatch(existingHoldingsRecord, json, userId)
           .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord))));
   }
 
-  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson) {
+  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson, String userId) {
+    var metadata = holdingsRecord.getMetadata();
+    if (metadata != null) {
+      metadata.setUpdatedDate(new Date());
+      metadata.setUpdatedByUserId(userId);
+    }
     var holdingsRecordJson = JsonObject.mapFrom(holdingsRecord);
     var patchedJson = holdingsRecordJson.mergeIn(patchJson);
     try {
