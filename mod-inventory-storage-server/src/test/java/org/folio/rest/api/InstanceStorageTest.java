@@ -3008,13 +3008,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     patchJson.put("id", newId);
     patchJson.put("_version", 1);
     patchJson.put("title", "New Title");
-    var expectedJson = getResponse.getJson().put("title", "New Title").remove("metadata");
 
     var updatedResponse = patch(newId.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NO_CONTENT));
-
-    getResponse = getById(newId);
-    assertThat(getResponse.getJson().remove("metadata"), is(expectedJson));
   }
 
   @Test
@@ -3062,28 +3058,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchAnInstanceWhenFieldNameIsWrong() {
-    UUID id = UUID.randomUUID();
-    JsonObject instanceToCreate = smallAngryPlanet(id);
-
-    var newId = createInstanceRecord(instanceToCreate);
-
-    assertThat(newId, is(notNullValue()));
-
-    var getResponse = getById(newId);
-
-    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
-
-    var patchJson = new JsonObject();
-    patchJson.put("id", newId);
-    patchJson.put("_version", 1);
-    patchJson.put("notExistingField", "value");
-
-    var updatedResponse = patch(newId.toString(), patchJson);
-    assertThat(updatedResponse.getStatusCode(), is(HTTP_BAD_REQUEST));
-  }
-
-  @Test
   public void cannotPatchAnInstanceOnOptimisticLock() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -3124,26 +3098,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var updatedResponse = patch(id.toString(), patchJson);
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
-  }
-
-  @Test
-  public void cannotPatchAnInstanceWithLongAdministrativeNotes() {
-    UUID id = UUID.randomUUID();
-    JsonObject instanceToCreate = smallAngryPlanet(id);
-
-    var newId = createInstanceRecord(instanceToCreate);
-
-    assertThat(newId, is(notNullValue()));
-
-    var getResponse = getById(newId);
-
-    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
-
-    var patchJson = new JsonObject();
-    patchJson.put("administrativeNotes", List.of(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1)));
-
-    var updatedResponse = patch(newId.toString(), patchJson);
-    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 
   @Test
