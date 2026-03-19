@@ -283,31 +283,6 @@ public class InstanceService {
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
-  //  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
-  //    var patchJson = JsonObject.mapFrom(patchRequest);
-  //    return PatchValidators.checkInstanceFields(patchRequest)
-  //      .compose(NotesValidators::refuseLongNotes)
-  //      .compose(notUsed -> instanceRepository.getById(id))
-  //      .compose(CommonValidators::refuseIfNotFound)
-  //      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
-  //      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
-  //  }
-
-  private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
-    final Promise<Response> patchResult = promise();
-    return postgresClient.withTrans(conn ->
-      instanceRepository.patchInstance(conn, patchRequest)
-        .compose(response -> instanceRepository.getById(id)
-        .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-        .map(v -> response)))).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            patchResult.complete(transactionResult.result());
-          } else {
-            patchResult.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-  }
-
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
                                             boolean optimisticLocking) {
     try {
