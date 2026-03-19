@@ -250,13 +250,6 @@ public class InstanceService {
     return Future.succeededFuture(oldInstance);
   }
 
-  private Future<Instance> validateHridChange(Instance oldInstance, JsonObject patchJson) {
-    if (!oldInstance.getSource().startsWith("CONSORTIUM-")) {
-      return refuseWhenHridChanged(oldInstance, patchJson);
-    }
-    return Future.succeededFuture(oldInstance);
-  }
-
   private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
     try {
       var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
