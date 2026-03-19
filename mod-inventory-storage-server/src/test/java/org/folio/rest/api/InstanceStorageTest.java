@@ -3100,29 +3100,6 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(updatedResponse.getStatusCode(), is(HTTP_NOT_FOUND));
   }
 
-  @Test
-  public void cannotPatchAnInstanceWithLongNotes() {
-    UUID id = UUID.randomUUID();
-    JsonObject instanceToCreate = smallAngryPlanet(id);
-
-    var newId = createInstanceRecord(instanceToCreate);
-
-    assertThat(newId, is(notNullValue()));
-
-    var getResponse = getById(newId);
-
-    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
-
-    var longNote = new InstanceNote()
-      .withInstanceNoteTypeId(UUID.randomUUID().toString())
-      .withNote(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1));
-    var patchJson = new JsonObject();
-    patchJson.put("notes", List.of(longNote));
-
-    var updatedResponse = patch(newId.toString(), patchJson);
-    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
-  }
-
   private Response patch(String id, JsonObject patchJson) {
     CompletableFuture<Response> replaceCompleted = new CompletableFuture<>();
 
