@@ -129,10 +129,8 @@ public class HoldingsStorageApi implements HoldingsStorage {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String userId = okapiHeaders.get("X-Okapi-User-Id");
-
     new HoldingsService(vertxContext, okapiHeaders)
-      .patchHoldingRecord(holdingsRecordId, entity, userId)
+      .patchHoldingRecord(holdingsRecordId, entity)
       .onSuccess(notUsed -> asyncResultHandler.handle(Future.succeededFuture(
         PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())))
       .onFailure(handleFailure(asyncResultHandler));

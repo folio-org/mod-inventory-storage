@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
@@ -161,7 +162,8 @@ public class HoldingsService {
       });
   }
 
-  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest, String userId) {
+  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
+    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
     var patchJson = JsonObject.mapFrom(patchRequest);
     return holdingsRepository.getById(holdingId)
       .compose(CommonValidators::refuseIfNotFound)
@@ -180,8 +182,8 @@ public class HoldingsService {
     var holdingsRecordJson = JsonObject.mapFrom(holdingsRecord);
     var patchedJson = holdingsRecordJson.mergeIn(patchJson);
     try {
-      return Future.succeededFuture(OBJECT_MAPPER.readValue(patchedJson.encode(), HoldingsRecord.class));
-    } catch (JsonProcessingException e) {
+      return Future.succeededFuture(patchedJson.mapTo(HoldingsRecord.class));
+    } catch (Exception e) {
       return Future.failedFuture(e);
     }
   }

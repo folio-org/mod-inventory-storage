@@ -10,6 +10,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.support.HttpResponseMatchers.errorMessageContains;
 import static org.folio.rest.support.HttpResponseMatchers.errorParametersValueIs;
@@ -78,6 +79,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
@@ -542,7 +544,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonErrorResponse response = createCompleted.get(10, SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
@@ -563,7 +565,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     JsonErrorResponse response = createCompleted.get(10, SECONDS);
 
-    assertThat(response.getStatusCode(), is(HttpStatus.HTTP_UNPROCESSABLE_ENTITY.toInt()));
+    assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
     assertThat(response.getErrors(), hasSoleMessageContaining("Unrecognized field"));
   }
 
@@ -1726,7 +1728,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     getClient().post(instancesStorageSyncUrl(""), instanceCollection, TENANT_ID, ResponseHandler.json(createCompleted));
     var result = createCompleted.get(30, SECONDS);
     assertThat(result, allOf(
-      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
       errorMessageContains(invalidSubjectId)
     ));
   }
@@ -1758,7 +1760,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
     assertThat(response, allOf(
-      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
       errorMessageContains("Unrecognized field \"invalidPropertyName\"")));
 
     for (int i = 0; i < instancesArray.size(); i++) {
@@ -1818,7 +1820,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
     assertThat(response, allOf(
-      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
       anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate")),
       errorParametersValueIs(duplicateId.toString())));
 
@@ -2159,7 +2161,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     setInstanceSequence(1);
 
     Response response = instancesStorageSyncClient.attemptToCreate(instanceCollection);
-    assertThat(response, statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY));
+    assertThat(response, statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
 
     verifyDuplicateHridError(response, "in00000000001");
 
@@ -2487,7 +2489,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = instancesStorageSyncClient.attemptToCreate(subPath, instanceCollection);
     assertThat(response, allOf(
-      statusCodeIs(HttpStatus.HTTP_UNPROCESSABLE_ENTITY),
+      statusCodeIs(HTTP_UNPROCESSABLE_ENTITY),
       anyOf(errorMessageContains("value already exists"), errorMessageContains("duplicate"))));
 
     assertGetNotFound(instancesStorageUrl("/" + instancesArray.getJsonObject(0).getString("id")));
@@ -3109,5 +3111,48 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongAdministrativeNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var patchJson = new JsonObject();
+    patchJson.put("administrativeNotes", List.of(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1)));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
+  }
+
+  @Test
+  public void cannotPatchAnInstanceWithLongNotes() {
+    UUID id = UUID.randomUUID();
+    JsonObject instanceToCreate = smallAngryPlanet(id);
+
+    var newId = createInstanceRecord(instanceToCreate);
+
+    assertThat(newId, is(notNullValue()));
+
+    var getResponse = getById(newId);
+
+    assertThat(getResponse.getStatusCode(), is(HTTP_OK));
+
+    var longNote = new InstanceNote()
+      .withInstanceNoteTypeId(UUID.randomUUID().toString())
+      .withNote(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1));
+    var patchJson = new JsonObject();
+    patchJson.put("notes", List.of(longNote));
+
+    var updatedResponse = patch(newId.toString(), patchJson);
+    assertThat(updatedResponse.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
   }
 }

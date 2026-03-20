@@ -22,8 +22,6 @@ import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
 import static org.folio.validator.NotesValidators.refuseLongNotes;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -46,6 +44,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
@@ -84,7 +83,6 @@ public class InstanceService {
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
-  private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -218,13 +216,15 @@ public class InstanceService {
       .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance));
   }
 
-  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest, String userId) {
+  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
     var patchJson = JsonObject.mapFrom(patchRequest);
     return instanceRepository.getById(id)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance ->
          applyPatch(oldInstance, patchJson, userId)
           .compose(newInstance -> validateHridChange(oldInstance, newInstance)
+            .compose(ignored -> refuseLongNotes(newInstance))
             .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance))));
   }
 
@@ -237,8 +237,8 @@ public class InstanceService {
     var instanceJson = JsonObject.mapFrom(instance);
     var patchedJson = instanceJson.mergeIn(patchJson);
     try {
-      return Future.succeededFuture(OBJECT_MAPPER.readValue(patchedJson.encode(), Instance.class));
-    } catch (JsonProcessingException e) {
+      return Future.succeededFuture(patchedJson.mapTo(Instance.class));
+    } catch (Exception e) {
       return Future.failedFuture(e);
     }
   }
