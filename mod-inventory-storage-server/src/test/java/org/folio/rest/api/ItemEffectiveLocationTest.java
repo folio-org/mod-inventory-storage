@@ -14,6 +14,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.sqlclient.Row;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -215,8 +216,10 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     assertThat(associatedItem.getString(EFFECTIVE_LOCATION_ID_KEY),
       is(effectiveLocation(holdingEndLoc, itemLoc)));
 
-    itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
-
+    if (!(isPermLocationEquals(createdHolding, holdingToUpdate)
+      && isTempLocationEquals(createdHolding, holdingToUpdate))) {
+      itemMessageChecks.updatedMessagePublished(createdItem, associatedItem);
+    }
     JsonObject holdings = holdingsClient.getById(holdingsRecordId).getJson();
     holdingsMessageChecks.updatedMessagePublished(createdHolding, holdings);
   }
@@ -339,5 +342,19 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
       .firstNonNull(itemLocations.temp, itemLocations.perm, holdingLocations.temp, holdingLocations.perm)
       // No NPE, as holdings.permanentLocation is required
       .toString();
+  }
+
+  private boolean isPermLocationEquals(JsonObject createdHolding, JsonObject holdingToUpdate) {
+    return Objects.equals(
+      createdHolding.getString(PERMANENT_LOCATION_ID_KEY),
+      holdingToUpdate.getString(PERMANENT_LOCATION_ID_KEY)
+    );
+  }
+
+  private boolean isTempLocationEquals(JsonObject createdHolding, JsonObject holdingToUpdate) {
+    return Objects.equals(
+      createdHolding.getString(TEMPORARY_LOCATION_ID_KEY),
+      holdingToUpdate.getString(TEMPORARY_LOCATION_ID_KEY)
+    );
   }
 }

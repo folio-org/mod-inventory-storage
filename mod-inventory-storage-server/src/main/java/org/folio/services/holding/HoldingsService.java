@@ -295,13 +295,29 @@ public class HoldingsService {
   }
 
   private Future<Response> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    if (shouldUpdateItems(oldHoldings, newHoldings)) {
+      return postgresClient
+        .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
+          .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
+        .onSuccess(itemsBeforeUpdate ->
+          eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
+        .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+        .onSuccess(eventPublisher.publishUpdated(oldHoldings));
+    }
     return postgresClient
-      .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
-        .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
-      .onSuccess(itemsBeforeUpdate ->
-        eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
+      .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings))
       .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
       .onSuccess(eventPublisher.publishUpdated(oldHoldings));
+  }
+
+  private boolean shouldUpdateItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    return oldHoldings == null
+      || !Objects.equals(oldHoldings.getPermanentLocationId(), newHoldings.getPermanentLocationId())
+      || !Objects.equals(oldHoldings.getTemporaryLocationId(), newHoldings.getTemporaryLocationId())
+      || !Objects.equals(oldHoldings.getCallNumber(), newHoldings.getCallNumber())
+      || !Objects.equals(oldHoldings.getCallNumberPrefix(), newHoldings.getCallNumberPrefix())
+      || !Objects.equals(oldHoldings.getCallNumberSuffix(), newHoldings.getCallNumberSuffix())
+      || !Objects.equals(oldHoldings.getCallNumberTypeId(), newHoldings.getCallNumberTypeId());
   }
 
   private Future<Response> performUpsertWithItemUpdates(List<HoldingsRecord> holdings, boolean optimisticLocking) {
@@ -406,7 +422,7 @@ public class HoldingsService {
 
       if (newHolding != null) {
         var holdingsChanged = oldHolding == null || !equalsIgnoringMetadata(oldHolding, newHolding);
-        if (holdingsChanged) {
+        if (holdingsChanged && shouldUpdateItems(oldHolding, newHolding)) {
           var itemsCopy = (List<Item>) deepCopy(items, Item.class);
           itemsBeforeUpdate.put(holdingsId, itemsCopy);
           for (var item : items) {

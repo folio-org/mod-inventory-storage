@@ -1,7 +1,5 @@
 package org.folio.services.item;
 
-import static io.vertx.core.Future.succeededFuture;
-import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -34,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -47,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
@@ -390,27 +386,13 @@ public class ItemService {
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
     Conn connection, Collection<Item> items, HoldingsRecord holdingsRecord) {
-
-    final Promise<RowSet<Row>> allItemsUpdated = promise();
-    final var batchFactories = items.stream()
+    var preparedItems = items.stream()
       .map(item -> {
         populateItemFromHoldings(item, holdingsRecord, effectiveValuesService);
         return item;
       })
-      .map(this::updateSingleItemBatchFactory0)
       .toList();
-
-    Future<RowSet<Row>> lastUpdate = succeededFuture();
-    for (var factory : batchFactories) {
-      lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
-    }
-
-    lastUpdate.onComplete(allItemsUpdated);
-    return allItemsUpdated.future();
-  }
-
-  private Function<Conn, Future<RowSet<Row>>> updateSingleItemBatchFactory0(Item item) {
-    return connection -> itemRepository.update(connection, item.getId(), item);
+    return itemRepository.updateBatch(preparedItems, connection);
   }
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
