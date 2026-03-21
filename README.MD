@@ -115,6 +115,7 @@ These properties can be changed by setting env variable.
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS` Default value - `16`
 * `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS` Default value - `16`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS` Default value - `1`
+* `KAFKA_MATERIAL_TYPE_TOPIC_NUM_PARTITIONS` Default value - `1`
 
 There is also possibility for customizing through properties the Kafka Topic
 `message retention` (in milliseconds) and `maximum message size` (in bytes). The default values of these configurations
@@ -150,6 +151,7 @@ These environment variables configure Kafka, for details see [Kafka](#kafka):
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_MATERIAL_TYPE_TOPIC_NUM_PARTITIONS`
 
 
 These environment variables configure Kafka topic for specific business-related topics
@@ -164,6 +166,7 @@ These environment variables configure Kafka topic for specific business-related 
 * `KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS`
 * `KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS`
+* `KAFKA_MATERIAL_TYPE_TOPIC_NUM_PARTITIONS`
 * `KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION`
 * `KAFKA_REINDEX_RECORDS_TOPIC_MAX_MESSAGE_SIZE`
 

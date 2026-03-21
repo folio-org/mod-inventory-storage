@@ -30,6 +30,7 @@ import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
@@ -72,7 +74,6 @@ import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
-import org.folio.validator.PatchValidators;
 
 public class InstanceService {
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
@@ -214,16 +215,36 @@ public class InstanceService {
       .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance));
   }
 
+  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
+    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
+    var patchJson = JsonObject.mapFrom(patchRequest);
+    return instanceRepository.getById(id)
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(oldInstance ->
+         applyPatch(oldInstance, patchJson, userId)
+          .compose(newInstance -> validateHridChange(oldInstance, newInstance)
+            .compose(ignored -> refuseLongNotes(newInstance))
+            .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance))));
+  }
+
+  private Future<Instance> applyPatch(Instance instance, JsonObject patchJson, String userId) {
+    var metadata = instance.getMetadata();
+    if (metadata != null) {
+      metadata.setUpdatedDate(new Date());
+      metadata.setUpdatedByUserId(userId);
+    }
+    var instanceJson = JsonObject.mapFrom(instance);
+    var patchedJson = instanceJson.mergeIn(patchJson);
+    try {
+      return Future.succeededFuture(patchedJson.mapTo(Instance.class));
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+  }
+
   private Future<Instance> validateHridChange(Instance oldInstance, Instance newInstance) {
     if (!newInstance.getSource().startsWith("CONSORTIUM-")) {
       return refuseWhenHridChanged(oldInstance, newInstance);
-    }
-    return Future.succeededFuture(oldInstance);
-  }
-
-  private Future<Instance> validateHridChange(Instance oldInstance, JsonObject patchJson) {
-    if (!oldInstance.getSource().startsWith("CONSORTIUM-")) {
-      return refuseWhenHridChanged(oldInstance, patchJson);
     }
     return Future.succeededFuture(oldInstance);
   }
@@ -252,31 +273,6 @@ public class InstanceService {
         putResult.fail(transactionResult.cause());
       }
     }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-  }
-
-  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
-    var patchJson = JsonObject.mapFrom(patchRequest);
-    return PatchValidators.checkInstanceFields(patchRequest)
-      .compose(NotesValidators::refuseLongNotes)
-      .compose(notUsed -> instanceRepository.getById(id))
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(oldInstance -> validateHridChange(oldInstance, patchJson))
-      .compose(oldInstance -> performInstancePatch(id, oldInstance, patchRequest));
-  }
-
-  private Future<Response> performInstancePatch(String id, Instance oldInstance, InstancePatchRequest patchRequest) {
-    final Promise<Response> patchResult = promise();
-    return postgresClient.withTrans(conn ->
-      instanceRepository.patchInstance(conn, patchRequest)
-        .compose(response -> instanceRepository.getById(id)
-        .compose(newInstance -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-        .map(v -> response)))).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            patchResult.complete(transactionResult.result());
-          } else {
-            patchResult.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,

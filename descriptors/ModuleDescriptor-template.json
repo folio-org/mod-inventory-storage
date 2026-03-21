@@ -51,10 +51,6 @@
           "pathPattern": "/item-storage/items/{id}",
           "permissionsRequired": ["inventory-storage.items.item.put"]
         }, {
-          "methods": ["PATCH"],
-          "pathPattern": "/item-storage/items/{id}",
-          "permissionsRequired": ["inventory-storage.items.item.patch.execute"]
-        },{
           "methods": ["DELETE"],
           "pathPattern": "/item-storage/items/{id}",
           "permissionsRequired": ["inventory-storage.items.item.delete"]
@@ -1520,11 +1516,6 @@
       "description": "modify item in storage"
     },
     {
-      "permissionName": "inventory-storage.items.item.patch.execute",
-      "displayName": "inventory storage - patch item",
-      "description": "partially modify item in storage"
-    },
-    {
       "permissionName": "inventory-storage.items.item.delete",
       "displayName": "inventory storage - delete individual item",
       "description": "delete individual item from storage"
@@ -2673,7 +2664,6 @@
         "inventory-storage.items.item.post",
         "inventory-storage.items.collection.patch",
         "inventory-storage.items.item.put",
-        "inventory-storage.items.item.patch.execute",
         "inventory-storage.items.item.delete",
         "inventory-storage.items.collection.delete",
         "inventory-storage.items.batch.post",
@@ -2952,6 +2942,7 @@
       { "name": "KAFKA_INSTITUTION_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", "value": "1"},
+      { "name": "KAFKA_MATERIAL_TYPE_TOPIC_NUM_PARTITIONS", "value": "1"},
       { "name": "KAFKA_REINDEX_RECORDS_TOPIC_NUM_PARTITIONS", "value": "16"},
       { "name": "KAFKA_REINDEX_FILE_READY_TOPIC_NUM_PARTITIONS", "value": "16"},
       { "name": "KAFKA_REINDEX_RECORDS_TOPIC_MESSAGE_RETENTION", "value": "86400000"},

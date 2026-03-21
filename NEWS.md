@@ -46,11 +46,11 @@
 * Create a submodule with generated DTOs ([MODINVSTOR-1499](https://folio-org.atlassian.net/browse/MODINVSTOR-1499))
 * Implement of PATCH requests for instances ([MODINVSTOR-1456](https://folio-org.atlassian.net/browse/MODINVSTOR-1456))
 * Improve batch results of the PATCH /item-storage/items endpoint ([MODINVSTOR-1514](https://folio-org.atlassian.net/browse/MODINVSTOR-1514))
-* Implement of PATCH requests for items ([MODINVSTOR-1506](https://folio-org.atlassian.net/browse/MODINVSTOR-1506))
 * Add several new indexes to the instance table for use by FQM ([MODINVSTOR-1520](https://folio-org.atlassian.net/browse/MODINVSTOR-1520), [MODINVSTOR-1528](https://folio-org.atlassian.net/browse/MODINVSTOR-1528))
 * Add `/inventory-reindex-records/export` API to export reindex record ranges to S3 and publish `reindex.file-ready` events ([MODINVSTOR-1519](https://folio-org.atlassian.net/browse/MODINVSTOR-1519))
 * Implement of PATCH requests for holdings records ([MODINVSTOR-1507](https://folio-org.atlassian.net/browse/MODINVSTOR-1507))
 * Implement Kafka events publishing for Loan type CRUD ([MODINVSTOR-1513](https://folio-org.atlassian.net/browse/MODINVSTOR-1513))
+* Implement Kafka events publishing for Material type CRUD ([MODINVSTOR-1512](https://folio-org.atlassian.net/browse/MODINVSTOR-1512))
 
 ### Bug fixes
 * Fix ordering of electronic access items for inventory-hierarchy, oai-pmh-view ([MODINVSTOR-1224](https://folio-org.atlassian.net/browse/MODINVSTOR-1224))
@@ -82,6 +82,7 @@
 * Cover instance-statuses, electronic-access-relationships, statistical-code-types, statistical-codes, ill-policies, holdings-types, call-number-types APIs with integration tests ([MODINVSTOR-1167](https://folio-org.atlassian.net/browse/MODINVSTOR-1167))
 * Re-work all s3 related envs var and standardization ([MODINVSTOR-1403](https://folio-org.atlassian.net/browse/MODINVSTOR-1403))
 * Randomize sample data instance id/hrid and update references ([MODINVSTOR-1485](https://folio-org.atlassian.net/browse/MODINVSTOR-1485))
+* Configuration for async-migration consumer use security properties ([MODINVSTOR-1531](https://folio-org.atlassian.net/browse/MODINVSTOR-1531))
 * Use GitHub workflow for CI/CD ([MODINVSTOR-1508](https://folio-org.atlassian.net/browse/MODINVSTOR-1508))
 
 ### Dependencies
