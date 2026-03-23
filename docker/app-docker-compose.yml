@@ -1,0 +1,43 @@
+# Full application stack for mod-inventory-storage (infrastructure + module)
+# This includes all infrastructure services and the mod-inventory-storage module itself
+include:
+  - infra-docker-compose.yml
+services:
+  mod-inventory-storage:
+    image: dev.folio/mod-inventory-storage:latest
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    ports:
+      - "${MODULE_PORT}:8081"
+      - "${DEBUG_PORT}:5005"
+    environment:
+      ENV: ${ENV}
+      KAFKA_HOST: ${KAFKA_HOST}
+      KAFKA_PORT: ${KAFKA_PORT}
+      REPLICATION_FACTOR: ${REPLICATION_FACTOR}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JAVA_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+    networks:
+      - mod-inventory-storage-local
+    depends_on:
+      - postgres
+      - kafka-topic-init
+    deploy:
+      replicas: ${MODULE_REPLICAS:-1}
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "1024M"
+        reservations:
+          cpus: "0.5"
+          memory: "512M"

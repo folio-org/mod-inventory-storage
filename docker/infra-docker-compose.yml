@@ -1,0 +1,96 @@
+# Infrastructure services for mod-inventory-storage
+# This file contains all infrastructure dependencies (database, messaging)
+# It can be used standalone for local development or included in app-docker-compose.yml
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mod-inventory-storage-local
+
+  pgadmin:
+    image: dpage/pgadmin4:8.13
+    ports:
+      - ${PGADMIN_PORT}:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      PGADMIN_SERVER_JSON_FILE: '/pgadmin4/servers.json'
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: 'True'
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      - postgres
+    networks:
+      - mod-inventory-storage-local
+
+  kafka:
+    image: apache/kafka-native
+    networks:
+      - mod-inventory-storage-local
+    ports:
+      - ${KAFKA_PORT}:9093
+      - 29092:29092
+    environment:
+      # Configure listeners for both docker and host communication
+      KAFKA_LISTENERS: CONTROLLER://localhost:9091,HOST://0.0.0.0:29092,DOCKER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:29092,DOCKER://kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT,HOST:PLAINTEXT
+      # Settings required for KRaft mode (no Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9091
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      # Clustering
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      # Topic settings
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    networks:
+      - mod-inventory-storage-local
+    ports:
+      - ${KAFKA_UI_PORT}:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:${KAFKA_PORT}
+    depends_on:
+      - kafka
+
+  kafka-topic-init:
+    image: apache/kafka:latest
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9093
+      ENV: ${ENV}
+      KAFKA_TOPIC_PARTITIONS: ${KAFKA_TOPIC_PARTITIONS}
+    volumes:
+      - ./kafka-init.sh:/usr/bin/kafka-init.sh
+    entrypoint: ["bash", "/usr/bin/kafka-init.sh"]
+    networks:
+      - mod-inventory-storage-local
+
+networks:
+  mod-inventory-storage-local:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+
