@@ -27,6 +27,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
@@ -161,21 +163,27 @@ public class HoldingsService {
   }
 
   public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
+    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
     var patchJson = JsonObject.mapFrom(patchRequest);
     return holdingsRepository.getById(holdingId)
       .compose(CommonValidators::refuseIfNotFound)
       .compose(existingHoldingsRecord ->
         refuseNullValueInRequiredFields(patchJson)
-          .compose(json -> applyPatch(existingHoldingsRecord, json)
+          .compose(json -> applyPatch(existingHoldingsRecord, json, userId)
           .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord))));
   }
 
-  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson) {
+  private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson, String userId) {
+    var metadata = holdingsRecord.getMetadata();
+    if (metadata != null) {
+      metadata.setUpdatedDate(new Date());
+      metadata.setUpdatedByUserId(userId);
+    }
     var holdingsRecordJson = JsonObject.mapFrom(holdingsRecord);
     var patchedJson = holdingsRecordJson.mergeIn(patchJson);
     try {
-      return Future.succeededFuture(OBJECT_MAPPER.readValue(patchedJson.encode(), HoldingsRecord.class));
-    } catch (JsonProcessingException e) {
+      return Future.succeededFuture(patchedJson.mapTo(HoldingsRecord.class));
+    } catch (Exception e) {
       return Future.failedFuture(e);
     }
   }
