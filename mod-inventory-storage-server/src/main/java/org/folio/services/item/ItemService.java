@@ -392,7 +392,10 @@ public class ItemService {
         return item;
       })
       .toList();
-    return itemRepository.updateBatch(preparedItems, connection);
+    if (preparedItems.isEmpty()) {
+      return Future.succeededFuture();
+    }
+    return updateBatch(connection, preparedItems);
   }
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
