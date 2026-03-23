@@ -47,6 +47,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
@@ -90,6 +91,7 @@ public class ItemService {
   private static final List<String> READ_ONLY_FIELDS = List.of(
     "permanentLocation", "temporaryLocation", "effectiveLocationId", "effectiveShelvingOrder",
     "effectiveCallNumberComponents", "holdingsRecord2", "metadata", "materialType");
+  private static final int BATCH_SIZE = 100;
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -151,7 +153,11 @@ public class ItemService {
 
   public Future<RowSet<Row>> updateBatch(Conn conn, List<Item> allItemsToUpdate) {
     allItemsToUpdate.forEach(sanitizer::sanitize);
-    return itemRepository.updateBatch(allItemsToUpdate, conn);
+    Future<RowSet<Row>> future = Future.succeededFuture();
+    for (List<Item> batch : ListUtils.partition(allItemsToUpdate, BATCH_SIZE)) {
+      future = future.compose(prev -> itemRepository.updateBatch(batch, conn));
+    }
+    return future;
   }
 
   public Future<Response> updateItems(List<ItemPatchRequest> items) {
