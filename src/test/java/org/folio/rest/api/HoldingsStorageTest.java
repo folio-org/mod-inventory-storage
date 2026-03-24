@@ -50,10 +50,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -450,7 +447,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .getJson();
 
     final JsonObject replacement = holdingResource.copyJson()
-      .put("instanceId", newInstanceId.toString());
+      .put("instanceId", newInstanceId.toString())
+      .put("callNumber", "call number");
 
     holdingsClient.replace(holdingId, replacement);
 
@@ -464,8 +462,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
-    JsonObject newItem = item.copy()
-      .put("_version", 2);
+    var newItem = item.copy().put("_version", 2).put("effectiveShelvingOrder", "call number")
+      .put("effectiveCallNumberComponents", new JsonObject().put("callNumber", "call number"));
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
   }
@@ -3216,6 +3214,312 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseStatement.getString("statement"), is("Test statement"));
     assertThat(responseStatement.getString("note"), is("Test note"));
     assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updatingHoldingsWithFieldNotRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix
+    var holdingResource = createHoldingRecord(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix")
+      .create());
+    var holdingId = holdingResource.getId();
+
+    // create item and check that it has effective call number prefix populated from holding and version is 1
+    final var item = createAndAssertItem(holdingId, "1", null, null);
+    assertThat(item.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+      is("call number prefix"));
+
+    // update holding with a field that is not related to item and check that item is not updated
+    updateHoldingRecord(holdingId, holdingResource.copyJson().put("copyNumber", "copy number"));
+
+    // check that holding is updated with new copy number
+    var updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    var updatedHoldingJson = updatedHolding.getJson();
+    assertThat(updatedHoldingJson.getString("copyNumber"), is("copy number"));
+
+    // check that holdings updated message is published with updated holding data
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), updatedHoldingJson);
+
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+
+    // check that item version is still 1
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updatingHoldingsWithTheSameFieldsRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix and administrative note
+    var holdingResource = createHoldingRecord(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix")
+      .withAdministrativeNotes(List.of("note"))
+      .create());
+    var holdingId = holdingResource.getId();
+
+    // create item and check that it has effective call number prefix populated from holding and version is 1
+    final var item = createAndAssertItem(holdingId, "1", null, null);
+    assertThat(item.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+      is("call number prefix"));
+
+    // update holding with the same call number prefix and updated administrative notes
+    var holding = holdingResource.copyJson().put("administrativeNotes", new JsonArray().add("note upd"));
+    updateHoldingRecord(holdingId, holding);
+    var newHolding = holding.copy()
+      .put("_version", 2);
+
+    // check that holdings updated message is published
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), newHolding);
+
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+
+    // check that item version is still 1
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void postSynchronousBatchWithFieldRelatedToItemShouldUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix and administrative note
+    var holdingId = UUID.randomUUID();
+    var holdingResource = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withId(holdingId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix").create();
+
+    // post batch with one holding and check that holding is created
+    assertThat(postSynchronousBatch(new JsonArray().add(holdingResource)), statusCodeIs(HTTP_CREATED));
+    final Response response = getById(holdingId.toString());
+    JsonObject responseJson = response.getJson();
+    assertEquals(responseJson.getString("effectiveLocationId"), responseJson.getString("permanentLocationId"));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", MAIN_LIBRARY_LOCATION_ID.toString());
+
+    //update holding with new permanent location and check that item effective location is updated
+    responseJson.put("_version", "1").put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+    assertThat(postSynchronousBatch("?upsert=true", new JsonArray().add(responseJson)), statusCodeIs(HTTP_CREATED));
+    final Response updatedResponse = getById(holdingId.toString());
+    JsonObject newBody = updatedResponse.getJson();
+    assertThat(newBody.getString("effectiveLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+
+    // check item is updated since holding's effective location is changed
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+    var itemJson = itemResponse.getJson();
+    assertThat(itemJson.getString("_version"), is("2"));
+    assertThat(itemJson.getString("effectiveLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+  }
+
+  @Test
+  @SneakyThrows
+  public void postSynchronousBatchWithFieldNonRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix and administrative note
+    var holdingId = UUID.randomUUID();
+    var holdingResource = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withId(holdingId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix").create();
+
+    // post batch with one holding and check that holding is created
+    assertThat(postSynchronousBatch(new JsonArray().add(holdingResource)), statusCodeIs(HTTP_CREATED));
+    final Response response = getById(holdingId.toString());
+    JsonObject responseJson = response.getJson();
+    assertEquals(responseJson.getString("effectiveLocationId"), responseJson.getString("permanentLocationId"));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", MAIN_LIBRARY_LOCATION_ID.toString());
+
+    //update holding with new administrative note which is not related to item and check that item is not updated
+    responseJson.put("_version", "1").put("administrativeNotes", new JsonArray(Collections.singletonList("new note")));
+
+    assertThat(postSynchronousBatch("?upsert=true", new JsonArray().add(responseJson)), statusCodeIs(HTTP_CREATED));
+    final Response updatedResponse = getById(holdingId.toString());
+    JsonObject holding = updatedResponse.getJson();
+    assertThat(holding.getJsonArray("administrativeNotes").size(), is(1));
+    final String administrativeNote = holding.getJsonArray("administrativeNotes").getString(0);
+    assertThat(administrativeNote, is("new note"));
+
+    // check item is not updated and version is the same
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void postSynchronousBatchUnsafeWithFieldRelatedToItemShouldUpdateItem() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding
+    var holdingId = UUID.randomUUID();
+    var holdingResource = new HoldingRequestBuilder()
+      .forInstance(instanceId).withId(holdingId).withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix").create();
+    var holdings = new JsonArray().add(holdingResource);
+
+    // post batch with one holding and check that holding is created
+    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
+    JsonObject responseJson = getById(holdingId.toString()).getJson();
+    assertEquals(responseJson.getString("effectiveLocationId"), responseJson.getString("permanentLocationId"));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+
+    // unsafe update
+    holdings.getJsonObject(0).put("callNumber", "call number");
+    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
+    JsonObject holding = getById(holdingId.toString()).getJson();
+    assertThat(holding.getString("callNumber"), is("call number"));
+
+    // check item is updated and version is increased
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+    var itemJson = itemResponse.getJson();
+    assertThat(itemJson.getString("_version"), is("2"));
+    assertThat(itemJson.getString("effectiveShelvingOrder"), is("call number"));
+    assertThat(itemJson.getJsonObject("effectiveCallNumberComponents").getString("callNumber"), is("call number"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void postSynchronousBatchUnsafeWithFieldNonRelatedToItemShouldNotUpdateItem() {
+    OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
+      Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
+
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix and administrative note
+    var holdingId = UUID.randomUUID();
+    var holdingResource = new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withId(holdingId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix").create();
+    var holdings = new JsonArray().add(holdingResource);
+
+    // post batch with one holding and check that holding is created
+    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
+    JsonObject responseJson = getById(holdingId.toString()).getJson();
+    assertEquals(responseJson.getString("effectiveLocationId"), responseJson.getString("permanentLocationId"));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+
+    // unsafe update
+    holdings.getJsonObject(0).put("administrativeNotes", new JsonArray(Collections.singletonList("admin note")));
+    assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(HttpStatus.HTTP_CREATED));
+    JsonObject holding = getById(holdingId.toString()).getJson();
+    assertThat(holding.getJsonArray("administrativeNotes").getString(0), is("admin note"));
+
+    // check item is not updated and version is the same
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void patchHoldingsRecordWithFieldRelatedToItemShouldUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding
+    var holdingId = UUID.randomUUID();
+    final var request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid("hrid")
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create();
+    var response = createHoldingAndGetResponse(request);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", MAIN_LIBRARY_LOCATION_ID.toString());
+
+    // update holding with patch and change location
+    var patchRequest = new JsonObject();
+    patchRequest.put("id", holdingId);
+    patchRequest.put("_version", 1);
+    patchRequest.put("administrativeNotes", new JsonArray(Collections.singletonList("new note")));
+    patchRequest.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+    final var updateResponse = patchHoldingAndGetResponse(holdingId, patchRequest);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertPatchDataApplied(holdingId);
+
+    // check item is updated since holding's effective location is changed
+    var itemJson = get(itemsStorageUrl(String.format("/%s", item.getString("id")))).getJson();
+    assertThat(itemJson.getString("_version"), is("2"));
+    assertThat(itemJson.getString("effectiveLocationId"), is(ANNEX_LIBRARY_LOCATION_ID.toString()));
+  }
+
+  @Test
+  @SneakyThrows
+  public void patchHoldingsRecordWithFieldNonRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding
+    var holdingId = UUID.randomUUID();
+    final var request = new HoldingRequestBuilder()
+      .withId(holdingId)
+      .withHrid("hrid")
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(ANNEX_LIBRARY_LOCATION_ID).create();
+    var response = createHoldingAndGetResponse(request);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    // create item for holding
+    final var item = createAndAssertItem(holdingId, "1", "effectiveLocationId", ANNEX_LIBRARY_LOCATION_ID.toString());
+
+    // update holding with patch and add note which is not related to item
+    var patchRequest = new JsonObject();
+    patchRequest.put("id", holdingId);
+    patchRequest.put("_version", 1);
+    patchRequest.put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID);
+    patchRequest.put("administrativeNotes", new JsonArray(Collections.singletonList("new note")));
+    final var updateResponse = patchHoldingAndGetResponse(holdingId, patchRequest);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    assertPatchDataApplied(holdingId);
+
+    // check item is not updated and version is the same
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+    var itemJson = itemResponse.getJson();
+    assertThat(itemJson.getString("_version"), is("1"));
+  }
+
+  @SneakyThrows
+  private JsonObject createAndAssertItem(UUID holdingId,
+                                         String version,
+                                         String fieldName,
+                                         String fieldValue) {
+    var item = createItemForHolding(holdingId);
+    assertThat(item.getString("_version"), is(version));
+    assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
+    if (fieldName != null) {
+      assertThat(item.getString(fieldName), is(fieldValue));
+    }
+    return item;
   }
 
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {
