@@ -80,7 +80,7 @@ class InstallUpgradeIT {
 
   @Container
   private static final LocalStackContainer S3 =
-    new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
+    new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-community-archive"))
       .withServices("s3")
       .withNetwork(NETWORK)
       .withNetworkAliases("s3")

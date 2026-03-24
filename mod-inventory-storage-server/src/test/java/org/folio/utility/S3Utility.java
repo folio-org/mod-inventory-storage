@@ -16,7 +16,7 @@ public final class S3Utility {
   private static final Logger logger = LogManager.getLogger();
 
   private static final LocalStackContainer S3_CONTAINER =
-    new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-latest"))
+    new LocalStackContainer(DockerImageName.parse("localstack/localstack:s3-community-archive"))
       .withServices("s3");
 
   private S3Utility() {
