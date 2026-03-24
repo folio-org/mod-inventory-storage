@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "mod-inventory-storage (local)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "folio",
+      "Username": "folio_admin",
+      "SSLMode": "prefer"
+    }
+  }
+}
