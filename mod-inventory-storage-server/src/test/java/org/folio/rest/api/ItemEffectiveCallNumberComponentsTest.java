@@ -291,7 +291,12 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     );
 
     var itemAfterHoldingsUpdate = getById(createdItem.getJson());
-    itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
+    var holdingsSourceValue = holdings.getJson().getString(holdingsPropertyName);
+    // If the call number component value in holdings is not changed, the item will be updated with the same value
+    // and no event will be published
+    if (!Objects.equals(holdingsSourceValue, holdingsTargetValue)) {
+      itemMessageChecks.updatedMessagePublished(createdItem.getJson(), itemAfterHoldingsUpdate);
+    }
   }
 
   private void updateItemIfNeeded(IndividualResource createdItem, String itemPropertyName,

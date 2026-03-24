@@ -1,7 +1,5 @@
 package org.folio.services.item;
 
-import static io.vertx.core.Future.succeededFuture;
-import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -34,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -47,10 +44,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
@@ -94,6 +91,7 @@ public class ItemService {
   private static final List<String> READ_ONLY_FIELDS = List.of(
     "permanentLocation", "temporaryLocation", "effectiveLocationId", "effectiveShelvingOrder",
     "effectiveCallNumberComponents", "holdingsRecord2", "metadata", "materialType");
+  private static final int BATCH_SIZE = 100;
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -155,7 +153,11 @@ public class ItemService {
 
   public Future<RowSet<Row>> updateBatch(Conn conn, List<Item> allItemsToUpdate) {
     allItemsToUpdate.forEach(sanitizer::sanitize);
-    return itemRepository.updateBatch(allItemsToUpdate, conn);
+    Future<RowSet<Row>> future = Future.succeededFuture();
+    for (List<Item> batch : ListUtils.partition(allItemsToUpdate, BATCH_SIZE)) {
+      future = future.compose(prev -> itemRepository.updateBatch(batch, conn));
+    }
+    return future;
   }
 
   public Future<Response> updateItems(List<ItemPatchRequest> items) {
@@ -390,27 +392,16 @@ public class ItemService {
 
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
     Conn connection, Collection<Item> items, HoldingsRecord holdingsRecord) {
-
-    final Promise<RowSet<Row>> allItemsUpdated = promise();
-    final var batchFactories = items.stream()
+    var preparedItems = items.stream()
       .map(item -> {
         populateItemFromHoldings(item, holdingsRecord, effectiveValuesService);
         return item;
       })
-      .map(this::updateSingleItemBatchFactory0)
       .toList();
-
-    Future<RowSet<Row>> lastUpdate = succeededFuture();
-    for (var factory : batchFactories) {
-      lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
+    if (preparedItems.isEmpty()) {
+      return Future.succeededFuture();
     }
-
-    lastUpdate.onComplete(allItemsUpdated);
-    return allItemsUpdated.future();
-  }
-
-  private Function<Conn, Future<RowSet<Row>>> updateSingleItemBatchFactory0(Item item) {
-    return connection -> itemRepository.update(connection, item.getId(), item);
+    return updateBatch(connection, preparedItems);
   }
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
