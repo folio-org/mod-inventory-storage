@@ -1,6 +1,5 @@
 package org.folio.services.item;
 
-import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.Promise.promise;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -42,10 +41,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.logging.log4j.Logger;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.okapi.common.XOkapiHeaders;
@@ -79,6 +78,7 @@ public class ItemService {
   private static final String INSTANCE_ID_WITH_ITEM_JSON = """
     {"instanceId": "%s",%s
     """;
+  private static final int BATCH_SIZE = 100;
 
   private final HridManager hridManager;
   private final ItemEffectiveValuesService effectiveValuesService;
@@ -287,8 +287,7 @@ public class ItemService {
   private Future<RowSet<Row>> updateEffectiveCallNumbersAndLocation(
     AsyncResult<SQLConnection> connectionResult, Collection<Item> items, HoldingsRecord holdingsRecord) {
 
-    final Promise<RowSet<Row>> allItemsUpdated = promise();
-    final var batchFactories = items.stream()
+    final var preparedItems = items.stream()
       .map(item -> {
         effectiveValuesService.populateEffectiveValues(item, holdingsRecord);
         if (isItemFieldsAffected(holdingsRecord, item)) {
@@ -296,21 +295,19 @@ public class ItemService {
         }
         return item;
       })
-      .map(this::updateSingleItemBatchFactory)
       .toList();
-
-    final SQLConnection connection = connectionResult.result();
-    Future<RowSet<Row>> lastUpdate = succeededFuture();
-    for (var factory : batchFactories) {
-      lastUpdate = lastUpdate.compose(prev -> factory.apply(connection));
+    if (preparedItems.isEmpty()) {
+      return Future.succeededFuture();
     }
-
-    lastUpdate.onComplete(allItemsUpdated);
-    return allItemsUpdated.future();
+    return updateBatch(connectionResult, preparedItems);
   }
 
-  private Function<SQLConnection, Future<RowSet<Row>>> updateSingleItemBatchFactory(Item item) {
-    return connection -> itemRepository.update(connection, item.getId(), item);
+  public Future<RowSet<Row>> updateBatch(AsyncResult<SQLConnection> connection, List<Item> allItemsToUpdate) {
+    Future<RowSet<Row>> future = Future.succeededFuture();
+    for (List<Item> batch : ListUtils.partition(allItemsToUpdate, BATCH_SIZE)) {
+      future = future.compose(prev -> itemRepository.updateBatch(batch, connection.result()));
+    }
+    return future;
   }
 
   private Future<PutData> getItemAndHolding(String itemId, String holdingsId) {
