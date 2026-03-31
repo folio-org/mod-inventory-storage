@@ -1342,11 +1342,6 @@
       "run": "after",
       "snippetPath": "instance/createInstanceNotesNoteTypeIdIndex.sql",
       "fromModuleVersion": "30.0.0"
-    },
-    {
-      "run": "after",
-      "snippetPath": "instance/createInstanceNotesStaffOnlyIndex.sql",
-      "fromModuleVersion": "30.0.0"
     }
   ]
 }
