@@ -24,10 +24,13 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -243,24 +246,47 @@ public class HoldingsService {
 
         return refuseWhenHridChanged(oldHoldings, newHoldings)
           .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-          .compose(notUsed -> {
-            final Promise<List<Item>> overallResult = promise();
-
-            postgresClient.startTx(
-              connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
-                .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
-                .onComplete(handleTransaction(connection, overallResult))
-            );
-
-            return overallResult.future()
-              .compose(itemsBeforeUpdate -> itemEventService
-                .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
-              .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-              .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
-          });
+          .compose(notUsed -> shouldUpdateItems(oldHoldings, newHoldings)
+            ? processHoldingAndItemsUpdate(oldHoldings, newHoldings)
+            : processHoldingUpdate(oldHoldings, newHoldings)
+          );
       });
   }
 
+  private Future<Response> processHoldingUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    final Promise<RowSet<Row>> overallResult = Promise.promise();
+    postgresClient.startTx(
+      connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+        .onComplete(handleTransaction(connection, overallResult))
+    );
+    return overallResult.future()
+      .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+      .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+  }
+
+  private Future<Response> processHoldingAndItemsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    final Promise<List<Item>> overallResult = promise();
+    postgresClient.startTx(
+      connection -> holdingsRepository.update(connection, oldHoldings.getId(), newHoldings)
+        .compose(updateRes -> itemService.updateItemsOnHoldingChanged(connection, newHoldings))
+        .onComplete(handleTransaction(connection, overallResult))
+    );
+    return overallResult.future()
+      .compose(itemsBeforeUpdate -> itemEventService
+        .publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate))
+      .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
+      .onSuccess(domainEventPublisher.publishUpdated(oldHoldings));
+  }
+
+  private boolean shouldUpdateItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+    return oldHoldings == null
+      || !Objects.equals(oldHoldings.getPermanentLocationId(), newHoldings.getPermanentLocationId())
+      || !Objects.equals(oldHoldings.getTemporaryLocationId(), newHoldings.getTemporaryLocationId())
+      || !Objects.equals(oldHoldings.getCallNumber(), newHoldings.getCallNumber())
+      || !Objects.equals(oldHoldings.getCallNumberPrefix(), newHoldings.getCallNumberPrefix())
+      || !Objects.equals(oldHoldings.getCallNumberSuffix(), newHoldings.getCallNumberSuffix())
+      || !Objects.equals(oldHoldings.getCallNumberTypeId(), newHoldings.getCallNumberTypeId());
+  }
 
   private String calculateEffectiveLocation(HoldingsRecord holdingsRecord) {
     String permanentLocationId = holdingsRecord.getPermanentLocationId();
@@ -317,7 +343,7 @@ public class HoldingsService {
       instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
     }
     return Future.all(new ArrayList<>(instanceFuturesMap.values()))
-        .mapEmpty();
+      .mapEmpty();
   }
 
   private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {

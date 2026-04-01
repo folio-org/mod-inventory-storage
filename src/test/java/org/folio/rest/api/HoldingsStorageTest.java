@@ -450,7 +450,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .getJson();
 
     final JsonObject replacement = holdingResource.copyJson()
-      .put("instanceId", newInstanceId.toString());
+      .put("instanceId", newInstanceId.toString())
+      .put("callNumber", "call number");
 
     holdingsClient.replace(holdingId, replacement);
 
@@ -464,8 +465,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
 
-    JsonObject newItem = item.copy()
-      .put("_version", 2);
+    var newItem = item.copy().put("_version", 2).put("effectiveShelvingOrder", "call number")
+      .put("effectiveCallNumberComponents", new JsonObject().put("callNumber", "call number"));
 
     itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
   }
@@ -3216,6 +3217,100 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(responseStatement.getString("statement"), is("Test statement"));
     assertThat(responseStatement.getString("note"), is("Test note"));
     assertThat(responseStatement.getString("staffNote"), is("Test staff note"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updatingHoldingsWithFieldNotRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix
+    var holdingResource = createHolding(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix"));
+    var holdingId = holdingResource.getId();
+
+    // create item and check that it has effective call number prefix populated from holding and version is 1
+    final var item = createAndAssertItem(holdingId, "1", null, null);
+    assertThat(item.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+      is("call number prefix"));
+
+    // update holding with a field that is not related to item and check that item is not updated
+    holdingsClient.replace(holdingId, holdingResource.copyJson().put("copyNumber", "copy number"));
+
+    // check that holding is updated with new copy number
+    var updatedHolding = holdingsClient.getById(holdingId);
+    assertThat(updatedHolding.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    var updatedHoldingJson = updatedHolding.getJson();
+    assertThat(updatedHoldingJson.getString("copyNumber"), is("copy number"));
+
+    // check that holdings updated message is published with updated holding data
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), updatedHoldingJson);
+
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+
+    // check that item version is still 1
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @Test
+  @SneakyThrows
+  public void updatingHoldingsWithTheSameFieldsRelatedToItemShouldNotUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    // create holding with call number prefix and administrative note
+    var holdingResource = createHolding(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withCallNumberPrefix("call number prefix")
+      .withAdministrativeNotes(List.of("note")));
+    var holdingId = holdingResource.getId();
+
+    // create item and check that it has effective call number prefix populated from holding and version is 1
+    final var item = createAndAssertItem(holdingId, "1", null, null);
+    assertThat(item.getJsonObject("effectiveCallNumberComponents").getString("prefix"),
+      is("call number prefix"));
+
+    // update holding with the same call number prefix and updated administrative notes
+    var holding = holdingResource.copyJson().put("administrativeNotes", new JsonArray().add("note upd"));
+    holdingsClient.replace(holdingId, holding);
+
+    var newHolding = holding.copy()
+      .put("_version", 2);
+
+    // check that holdings updated message is published
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), newHolding);
+
+    var itemResponse = get(itemsStorageUrl(String.format("/%s", item.getString("id"))));
+
+    // check that item version is still 1
+    assertThat(itemResponse.getJson().getString("_version"), is("1"));
+  }
+
+  @SneakyThrows
+  private JsonObject createAndAssertItem(UUID holdingId,
+                                         String version,
+                                         String fieldName,
+                                         String fieldValue) {
+    var item = createItemForHolding(holdingId);
+    assertThat(item.getString("_version"), is(version));
+    assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
+    if (fieldName != null) {
+      assertThat(item.getString(fieldName), is(fieldValue));
+    }
+    return item;
+  }
+
+  private JsonObject createItemForHolding(UUID holdingId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    return create(itemsStorageUrl(""), new ItemRequestBuilder()
+      .forHolding(holdingId)
+      .withPermanentLoanType(canCirculateLoanTypeId)
+      .withMaterialType(bookMaterialTypeId)
+      .create()).getJson();
   }
 
   private void canPostSynchronousBatchAndCreateShadowInstance(String subpath) {
