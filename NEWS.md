@@ -1,3 +1,7 @@
+## v29.0.19 2026-04-01
+### Features
+* Trigger holding items recalculation only for effective-value field changes ([MODINVSTOR-1533](https://folio-org.atlassian.net/browse/MODINVSTOR-1533))
+
 ## v29.0.18 2026-02-16
 ### Bug fixes
 * Fix org.folio.processing.exceptions.MatchingException: `Failed to load records cause: 504 Gateway Time-out`([MODINVSTOR-1515](https://folio-org.atlassian.net/browse/MODINVSTOR-1515))
