@@ -72,6 +72,13 @@ public class InternalStreamTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void limitAboveMaxReturns400() throws Exception {
+    for (var urlFn : streamEndpoints()) {
+      assertThat(streamGet(urlFn.apply("?limit=200001")).statusCode(), is(400));
+    }
+  }
+
+  @Test
   public void singleInstanceRecord() throws Exception {
     createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
@@ -140,7 +147,19 @@ public class InternalStreamTest extends TestBaseWithInventoryUtil {
     HttpResponse<Buffer> response = streamGet(internalInstanceStreamUrl("?limit=2"));
     assertThat(response.getHeader("X-Has-More"), is("true"));
     assertNotNull(response.getHeader("X-Next-Cursor"));
-    assertThat(parseNdjson(response).size(), is(2));
+    List<JsonObject> records = parseNdjson(response);
+    assertThat(records.size(), is(2));
+    assertThat(response.getHeader("X-Next-Cursor"), is(records.getLast().getString("id")));
+  }
+
+  @Test
+  public void maxLimitIsAccepted() throws Exception {
+    createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    HttpResponse<Buffer> response = streamGet(internalInstanceStreamUrl("?limit=200000"));
+    assertThat(response.statusCode(), is(200));
+    assertThat(response.getHeader("X-Has-More"), is("false"));
+    assertThat(parseNdjson(response).size(), is(1));
   }
 
   @Test

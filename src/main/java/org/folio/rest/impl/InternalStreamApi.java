@@ -31,6 +31,8 @@ public class InternalStreamApi implements InternalInstanceStorage {
   private static final String HEADER_NEXT_CURSOR = "X-Next-Cursor";
   private static final String HEADER_HAS_MORE = "X-Has-More";
   private static final String CONTENT_TYPE_NDJSON = "application/x-ndjson";
+  private static final int MAX_PAGE_LIMIT = 200_000;
+  private static final String REPEATABLE_READ_SQL = "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ";
 
   private static final ResourceQueries INSTANCE_QUERIES = new ResourceQueries(
     "SELECT id::text FROM instance ORDER BY id LIMIT ($1 + 1)",
@@ -111,9 +113,9 @@ public class InternalStreamApi implements InternalInstanceStorage {
       }
     }
 
-    if (limit < 1 || limit > 5000) {
+    if (limit < 1 || limit > MAX_PAGE_LIMIT) {
       asyncResultHandler.handle(succeededFuture(respond400WithTextPlain(
-        "Invalid limit: must be between 1 and 5000")));
+        "Invalid limit: must be between 1 and " + MAX_PAGE_LIMIT)));
       return;
     }
 
@@ -149,77 +151,72 @@ public class InternalStreamApi implements InternalInstanceStorage {
         return;
       }
 
-      // Execute boundary query to determine pagination headers
-      postgresClient.select(tx, boundarySql, boundaryParams, boundaryAr -> {
-        if (boundaryAr.failed()) {
-          log.error("Boundary query failed", boundaryAr.cause());
+      postgresClient.execute(tx, REPEATABLE_READ_SQL, isolationAr -> {
+        if (isolationAr.failed()) {
+          log.error("Failed to set transaction isolation level", isolationAr.cause());
           finalizeOnce(finalized, () -> rollbackAndRespond(postgresClient, tx, response,
-            boundaryAr.cause(), asyncResultHandler));
+            isolationAr.cause(), asyncResultHandler));
           return;
         }
 
-        RowSet<Row> boundaryRows = boundaryAr.result();
-        int count = 0;
-        String cursorId = null;
-        for (Row row : boundaryRows) {
-          count++;
-          if (count == limit) {
-            cursorId = row.getString(0);
-          }
-        }
-
-        if (count > limit) {
-          response.putHeader(HEADER_HAS_MORE, "true");
-          response.putHeader(HEADER_NEXT_CURSOR, cursorId);
-        } else {
-          response.putHeader(HEADER_HAS_MORE, "false");
-        }
-
-        // Execute stream query
-        postgresClient.selectStream(tx, streamSql, streamParams, streamAr -> {
-          if (streamAr.failed()) {
-            log.error("Stream query failed", streamAr.cause());
+        // Execute boundary query to determine pagination headers
+        postgresClient.select(tx, boundarySql, boundaryParams, boundaryAr -> {
+          if (boundaryAr.failed()) {
+            log.error("Boundary query failed", boundaryAr.cause());
             finalizeOnce(finalized, () -> rollbackAndRespond(postgresClient, tx, response,
-              streamAr.cause(), asyncResultHandler));
+              boundaryAr.cause(), asyncResultHandler));
             return;
           }
 
-          RowStream<Row> rowStream = streamAr.result();
+          RowSet<Row> boundaryRows = boundaryAr.result();
+          int count = 0;
+          String cursorId = null;
+          for (Row row : boundaryRows) {
+            count++;
+            if (count == limit) {
+              cursorId = row.getString(0);
+            }
+          }
 
-          // Client disconnect cleanup
-          response.closeHandler(v -> {
-            log.info("Client disconnected, cleaning up stream");
-            rowStream.close();
-            finalizeOnce(finalized, () -> postgresClient.rollbackTx(tx, h -> {
-              if (h.failed()) {
-                log.error("Failed to rollback after client disconnect", h.cause());
-              }
-            }));
-          });
+          if (count > limit) {
+            response.putHeader(HEADER_HAS_MORE, "true");
+            response.putHeader(HEADER_NEXT_CURSOR, cursorId);
+          } else {
+            response.putHeader(HEADER_HAS_MORE, "false");
+          }
 
-          rowStream
-            .exceptionHandler(e -> {
-              log.error("Row stream error", e);
+          // Execute stream query
+          postgresClient.selectStream(tx, streamSql, streamParams, streamAr -> {
+            if (streamAr.failed()) {
+              log.error("Stream query failed", streamAr.cause());
+              finalizeOnce(finalized, () -> rollbackAndRespond(postgresClient, tx, response,
+                streamAr.cause(), asyncResultHandler));
+              return;
+            }
+
+            RowStream<Row> rowStream = streamAr.result();
+
+            // Client disconnect cleanup
+            response.closeHandler(v -> {
+              log.info("Client disconnected, cleaning up stream");
               rowStream.close();
-              finalizeOnce(finalized, () -> {
-                postgresClient.rollbackTx(tx, h -> {
-                  if (h.failed()) {
-                    log.error("Failed to rollback after stream error", h.cause());
-                  }
-                });
-                if (!response.headWritten()) {
-                  asyncResultHandler.handle(succeededFuture(
-                    respond500WithTextPlain("Internal server error")));
-                } else {
-                  response.reset();
-                  asyncResultHandler.handle(succeededFuture());
-                }
-              });
-            })
-            .endHandler(end -> finalizeOnce(finalized, () ->
-              postgresClient.endTx(tx, h -> {
+              finalizeOnce(finalized, () -> postgresClient.rollbackTx(tx, h -> {
                 if (h.failed()) {
-                  log.error("Failed to commit transaction", h.cause());
+                  log.error("Failed to rollback after client disconnect", h.cause());
+                }
+              }));
+            });
+
+            rowStream
+              .exceptionHandler(e -> {
+                log.error("Row stream error", e);
+                rowStream.close();
+                finalizeOnce(finalized, () -> {
+                  postgresClient.rollbackTx(tx, h -> {
+                    if (h.failed()) {
+                      log.error("Failed to rollback after stream error", h.cause());
+                    }
+                  });
                   if (!response.headWritten()) {
                     asyncResultHandler.handle(succeededFuture(
                       respond500WithTextPlain("Internal server error")));
@@ -227,22 +224,37 @@ public class InternalStreamApi implements InternalInstanceStorage {
                     response.reset();
                     asyncResultHandler.handle(succeededFuture());
                   }
-                  return;
-                }
-                response.end();
+                });
               })
-            ))
-            .handler(row -> {
-              String jsonText = row.getString(0);
-              if (jsonText != null) {
-                response.write(jsonText + "\n");
-                if (response.writeQueueFull()) {
-                  rowStream.pause();
+              .endHandler(end -> finalizeOnce(finalized, () ->
+                postgresClient.endTx(tx, h -> {
+                  if (h.failed()) {
+                    log.error("Failed to commit transaction", h.cause());
+                    if (!response.headWritten()) {
+                      asyncResultHandler.handle(succeededFuture(
+                        respond500WithTextPlain("Internal server error")));
+                    } else {
+                      response.reset();
+                      asyncResultHandler.handle(succeededFuture());
+                    }
+                    return;
+                  }
+                  response.end();
+                })
+              ))
+              .handler(row -> {
+                String jsonText = row.getString(0);
+                if (jsonText != null) {
+                  response.write(jsonText + "\n");
+                  if (response.writeQueueFull()) {
+                    rowStream.pause();
+                  }
                 }
-              }
-            });
+              })
+            ;
 
-          response.drainHandler(drain -> rowStream.resume());
+            response.drainHandler(drain -> rowStream.resume());
+          });
         });
       });
     });
