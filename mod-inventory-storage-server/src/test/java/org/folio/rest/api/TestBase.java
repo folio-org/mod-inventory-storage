@@ -155,6 +155,10 @@ public abstract class TestBase {
     StorageTestSuite.deleteAll(servicePointsUrl(""), tenantId);
   }
 
+  protected static void clearData(URL url, String tenantId) {
+    StorageTestSuite.deleteAll(url, tenantId);
+  }
+
   /**
    * Delete all rows found using the client by "id" field.
    */

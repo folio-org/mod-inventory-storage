@@ -103,7 +103,7 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    clearData();
+    clearData(instancesStorageUrl(""), TENANT_ID);
     synchronizationHandler =
       new ShadowInstanceSynchronizationHandler(consortiaDataCache, vertx.createHttpClient(), vertx);
 
