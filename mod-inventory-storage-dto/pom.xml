@@ -48,7 +48,6 @@
               <targetPackage>org.folio.rest.jaxrs.model</targetPackage>
               <outputDirectory>${project.build.directory}/generated-sources/jsonschema2pojo</outputDirectory>
               <includeHashcodeAndEquals>true</includeHashcodeAndEquals>
-              <useCommonsLang3>true</useCommonsLang3>
               <generateBuilders>true</generateBuilders>
               <includeAdditionalProperties>true</includeAdditionalProperties>
               <includeConstructors>true</includeConstructors>
