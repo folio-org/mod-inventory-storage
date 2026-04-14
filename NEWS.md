@@ -1,4 +1,28 @@
-## v30.0.0 YYYY-mm-DD
+## v30.1.0 YYYY-mm-DD
+### Breaking changes
+* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+
+### New APIs versions
+* Provides `API_NAME vX.Y`
+* Requires `API_NAME vX.Y`
+
+### Features
+* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+
+### Bug fixes
+* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+
+### Tech Dept
+* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+
+### Dependencies
+* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Add `LIB_NAME VERSION`
+* Remove `LIB_NAME`
+
+---
+
+## v30.0.0 2026-04-14
 ### Breaking changes
 * Upgrade to Vert.x 5.0.x ([MODINVSTOR-1484](https://folio-org.atlassian.net/browse/MODINVSTOR-1484))
 * Constraint item call number type ID to refer to a known type ([MODINVSTOR-987](https://folio-org.atlassian.net/browse/MODINVSTOR-987))
@@ -10,12 +34,18 @@
 * Provides `item-storage-dereferenced 1.2`
 * Provides `holdings-storage 8.2`
 * Provides `instance-storage 11.3`
+* Provides `instance-storage-batch-sync 3.1`
+* Provides `instance-storage-batch-sync-unsafe 3.1`
+* Provides `instance-storage-bulk 1.1`
 * Provides `service-points 3.5`
 * Provides `inventory-hierarchy 0.8`
 * Provides `inventory-view 3.2`
 * Provides `inventory-view-instance-set 3.2`
+* Provides `inventory-record-bulk 1.1`
+* Provides `inventory-reindex-records 1.1`
 * Provides `locations 3.2`
 * Provides `location-units 2.1`
+* Provides `loan-types 2.4`
 
 ### Features
 * Make max.request.size configurable for reindex holdings/items producers ([MODINVSTOR-1372](https://folio-org.atlassian.net/browse/MODINVSTOR-1372))
@@ -88,9 +118,16 @@
 * Improve Docker Compose setup for local development ([MODINVSTOR-1465](https://folio-org.atlassian.net/browse/MODINVSTOR-1465))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
-* Add `LIB_NAME VERSION`
-* Remove `LIB_NAME`
+* Bump `raml-module-builder` from `35.4.2` to `36.0.0`
+* Bump `vertx` from `4.5.23` to `5.0.10`
+* Bump `folio-kafka-wrapper` from `3.3.1` to `4.0.0`
+* Bump `folio-s3-client` from `2.3.1` to `3.0.0`
+* Bump `commons-lang3` from `3.17.0` to `3.20.0`
+* Bump `log4j` from `2.24.3` to `2.25.4`
+* Bump `caffeine` from `3.2.0` to `3.2.3`
+* Bump `lombok` from `1.18.36` to `1.18.44`
+* Add `jackson-bom 2.21.2`
+* Remove `snappy-java`
 
 ---
 

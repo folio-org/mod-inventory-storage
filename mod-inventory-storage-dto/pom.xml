@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>mod-inventory-storage</artifactId>
-    <version>30.0.0-SNAPSHOT</version>
+    <version>30.1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>mod-inventory-storage-dto</artifactId>
@@ -48,7 +46,6 @@
               <targetPackage>org.folio.rest.jaxrs.model</targetPackage>
               <outputDirectory>${project.build.directory}/generated-sources/jsonschema2pojo</outputDirectory>
               <includeHashcodeAndEquals>true</includeHashcodeAndEquals>
-              <useCommonsLang3>true</useCommonsLang3>
               <generateBuilders>true</generateBuilders>
               <includeAdditionalProperties>true</includeAdditionalProperties>
               <includeConstructors>true</includeConstructors>
