@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.folio</groupId>
     <artifactId>mod-inventory-storage</artifactId>
-    <version>30.0.0-SNAPSHOT</version>
+    <version>30.1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>mod-inventory-storage-server</artifactId>
@@ -535,7 +535,7 @@
     <url>https://github.com/folio-org/mod-inventory-storage</url>
     <connection>scm:git:git://github.com:folio-org/mod-inventory-storage.git</connection>
     <developerConnection>scm:git:git@github.com:folio-org/mod-inventory-storage.git</developerConnection>
-    <tag>release/v30.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
 </project>
