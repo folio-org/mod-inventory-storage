@@ -23,7 +23,7 @@
 
     <!-- Dependency versions -->
     <raml-module-builder-version>36.0.0</raml-module-builder-version>
-    <vertx.version>5.0.10</vertx.version>
+    <vertx.version>5.0.11</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.25.1</aspectj.version>
     <folio-kafka-wrapper.version>4.0.0</folio-kafka-wrapper.version>
@@ -31,7 +31,7 @@
     <lombok.version>1.18.44</lombok.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <log4j.version>2.25.4</log4j.version>
-    <folio-s3-client.version>3.0.0</folio-s3-client.version>
+    <folio-s3-client.version>3.0.1</folio-s3-client.version>
     <jackson.version>2.21.2</jackson.version>
 
     <!-- Test dependency versions -->
