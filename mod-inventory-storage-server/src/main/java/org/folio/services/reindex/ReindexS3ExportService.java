@@ -7,9 +7,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,39 +23,81 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.s3.client.FolioS3Client;
+import org.folio.utils.Environment;
 
 /**
  * Streams DB rows as NDJSON to S3 using multipart upload.
  *
  * <p>Rows are fetched via a {@link RowStream} (small DB cursor batches) and
- * written to a temp file. Once the file reaches {@link #MINIMAL_PART_SIZE} (5 MB)
- * a part is uploaded, the file is rotated, and streaming resumes. The final
- * (possibly smaller) part is uploaded in the {@code endHandler}, then the
- * multipart upload is completed. On any error the upload is aborted.
+ * written to a temp file. Once the file reaches the configured part-size
+ * threshold a part is uploaded, the file is rotated, and streaming resumes.
+ * The final (possibly smaller) part is uploaded in the {@code endHandler},
+ * then the multipart upload is completed. On any error the upload is aborted.
+ *
+ * <p>The part-size threshold is configurable via the
+ * {@code S3_REINDEX_PART_SIZE_MB} environment variable (default 16 MB).
+ * S3 enforces a minimum of 5 MB per non-final part; values below that are
+ * clamped up to 5 MB. Larger parts mean fewer S3 requests per file, which
+ * reduces the chance of {@code SlowDown} (HTTP 503) responses on hot prefixes
+ * and lowers per-request overhead.
  */
 public class ReindexS3ExportService {
 
-  private static final long MINIMAL_PART_SIZE = 5_242_880L; // 5 MB — S3 minimum part size
+  static final String PART_SIZE_MB_ENV = "S3_REINDEX_PART_SIZE_MB";
+  static final int DEFAULT_PART_SIZE_MB = 16;
+  static final String RETRY_MAX_ATTEMPTS_ENV = "S3_REINDEX_RETRY_MAX_ATTEMPTS";
+  static final int DEFAULT_RETRY_MAX_ATTEMPTS = 5;
+  static final String RETRY_BASE_DELAY_MS_ENV = "S3_REINDEX_RETRY_BASE_DELAY_MS";
+  static final int DEFAULT_RETRY_BASE_DELAY_MS = 200;
+
+  private static final long S3_MINIMUM_PART_SIZE = 5_242_880L; // 5 MB — S3 hard minimum
 
   private static final FileAttribute<Set<PosixFilePermission>> OWNER_ONLY_FILE_PERMISSIONS =
     PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------"));
 
   private static final Logger log = LogManager.getLogger(ReindexS3ExportService.class);
+  private static final long MINIMAL_PART_SIZE = resolvePartSize();
+  private static final int RETRY_MAX_ATTEMPTS =
+    Environment.getIntValue(RETRY_MAX_ATTEMPTS_ENV, DEFAULT_RETRY_MAX_ATTEMPTS);
+  private static final long RETRY_BASE_DELAY_MS =
+    Environment.getIntValue(RETRY_BASE_DELAY_MS_ENV, DEFAULT_RETRY_BASE_DELAY_MS);
+
   private final Context vertxContext;
   private final FolioS3Client s3Client;
   private final long minimalPartSize;
+  private final int retryMaxAttempts;
+  private final long retryBaseDelayMs;
 
   public ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client) {
-    this(vertxContext, s3Client, MINIMAL_PART_SIZE);
+    this(vertxContext, s3Client, MINIMAL_PART_SIZE, RETRY_MAX_ATTEMPTS, RETRY_BASE_DELAY_MS);
   }
 
   /**
-   * Package-private constructor for testing with a custom part-size threshold.
+   * Package-private constructor for testing with custom part-size and retry settings
+   * (so unit tests can use small values to avoid sleeping in CI).
    */
-  ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client, long minimalPartSize) {
+  ReindexS3ExportService(Context vertxContext, FolioS3Client s3Client, long minimalPartSize,
+                         int retryMaxAttempts, long retryBaseDelayMs) {
     this.vertxContext = vertxContext;
     this.s3Client = s3Client;
     this.minimalPartSize = minimalPartSize;
+    this.retryMaxAttempts = retryMaxAttempts;
+    this.retryBaseDelayMs = retryBaseDelayMs;
+  }
+
+  private static long resolvePartSize() {
+    int mb = Environment.getIntValue(PART_SIZE_MB_ENV, DEFAULT_PART_SIZE_MB);
+    long bytes = mb * 1024L * 1024L;
+    if (bytes < S3_MINIMUM_PART_SIZE) {
+      log.warn("resolvePartSize:: {}={} MB is below the S3 minimum of 5 MB; clamping to 5 MB",
+        PART_SIZE_MB_ENV, mb);
+      return S3_MINIMUM_PART_SIZE;
+    }
+    return bytes;
+  }
+
+  private <T> T retry(String op, java.util.concurrent.Callable<T> action) throws Exception {
+    return S3RetryableCalls.withRetry(op, action, retryMaxAttempts, retryBaseDelayMs);
   }
 
   /**
@@ -67,7 +109,8 @@ public class ReindexS3ExportService {
    * @return a Future that completes when the upload is finished, or fails on error
    */
   public Future<Void> exportToS3(RowStream<Row> rowStream, String s3Key) {
-    return vertxContext.executeBlocking(() -> s3Client.initiateMultipartUpload(s3Key))
+    return vertxContext.executeBlocking(() -> retry("initiateMultipartUpload",
+        () -> s3Client.initiateMultipartUpload(s3Key)))
       .compose(uploadId -> doExport(rowStream, s3Key, uploadId));
   }
 
@@ -123,15 +166,20 @@ public class ReindexS3ExportService {
         () -> {
           ctx.flushAndClose();
           if (ctx.currentFileSize() > 0) {
-            var etag = s3Client.uploadMultipartPart(ctx.s3Key, ctx.uploadId, ctx.partNumber++, ctx.tempFile.toString());
+            int partNum = ctx.partNumber++;
+            var etag = retry("uploadMultipartPart#" + partNum,
+              () -> s3Client.uploadMultipartPart(ctx.s3Key, ctx.uploadId, partNum, ctx.tempFile.toString()));
             ctx.partEtags.add(etag);
           }
           if (!ctx.partEtags.isEmpty()) {
-            s3Client.completeMultipartUpload(ctx.s3Key, ctx.uploadId, ctx.partEtags);
+            retry("completeMultipartUpload", () -> {
+              s3Client.completeMultipartUpload(ctx.s3Key, ctx.uploadId, ctx.partEtags);
+              return null;
+            });
           } else {
             // No rows exported: abort multipart and write an empty NDJSON object
             s3Client.abortMultipartUpload(ctx.s3Key, ctx.uploadId);
-            s3Client.write(ctx.s3Key, InputStream.nullInputStream(), 0L);
+            retry("write(empty)", () -> s3Client.write(ctx.s3Key, new ByteArrayInputStream(new byte[0]), 0L));
           }
           ctx.cleanup();
           return null;
@@ -203,10 +251,12 @@ public class ReindexS3ExportService {
       return fileSize;
     }
 
-    Void uploadCurrentPart() throws IOException {
+    Void uploadCurrentPart() throws Exception {
       writer.flush();
       writer.close();
-      var etag = s3Client.uploadMultipartPart(s3Key, uploadId, partNumber++, tempFile.toString());
+      int partNum = partNumber++;
+      var etag = retry("uploadMultipartPart#" + partNum,
+        () -> s3Client.uploadMultipartPart(s3Key, uploadId, partNum, tempFile.toString()));
       partEtags.add(etag);
       Files.deleteIfExists(tempFile);
       rotateTempFile();
