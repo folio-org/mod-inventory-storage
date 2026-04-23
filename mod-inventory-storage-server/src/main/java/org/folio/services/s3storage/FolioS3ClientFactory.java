@@ -1,6 +1,7 @@
 package org.folio.services.s3storage;
 
 import static org.folio.utils.Environment.getBoolValue;
+import static org.folio.utils.Environment.getIntValue;
 import static org.folio.utils.Environment.getValueOrEmpty;
 import static org.folio.utils.Environment.getValueOrFail;
 
@@ -12,6 +13,22 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public class FolioS3ClientFactory {
+
+  /**
+   * Idle keep-alive (seconds) for the OkHttp connection pool used by the
+   * reindex S3 client. AWS S3 frontends close idle keep-alive sockets after
+   * roughly 20 s; OkHttp's default of 300 s causes us to repeatedly reuse
+   * already-closed sockets and fail with {@code unexpected end of stream} /
+   * {@code Broken pipe}. 15 s mirrors the safety margin used by AWS's own
+   * SDKs (which default to 60 s for general workloads).
+   *
+   * <p>Only applied to {@link S3ConfigType#REINDEX}; for other config types
+   * the property is left {@code null} so folio-s3-client keeps OkHttp's
+   * default behavior.
+   */
+  static final String REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_ENV =
+    "S3_REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS";
+  static final int REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_DEFAULT = 15;
 
   private static final String S3_PREFIX = "S3_";
   private static final String S3_URL_CONFIG = "URL";
@@ -46,7 +63,16 @@ public class FolioS3ClientFactory {
       .accessKey(getValueOrEmpty(getKey(S3_ACCESS_KEY_ID_CONFIG, configType)))
       .secretKey(getValueOrEmpty(getKey(S3_SECRET_ACCESS_KEY_CONFIG, configType)))
       .awsSdk(getBoolValue(getKey(S3_IS_AWS_CONFIG, configType), S3_IS_AWS_DEFAULT))
+      .idleKeepAliveSeconds(resolveIdleKeepAliveSeconds(configType))
       .build();
+  }
+
+  private static @Nullable Integer resolveIdleKeepAliveSeconds(@Nullable S3ConfigType configType) {
+    if (configType != S3ConfigType.REINDEX) {
+      return null;
+    }
+    return getIntValue(REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_ENV,
+      REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_DEFAULT);
   }
 
   private static String getKey(@NonNull String configName, @Nullable S3ConfigType configType) {
