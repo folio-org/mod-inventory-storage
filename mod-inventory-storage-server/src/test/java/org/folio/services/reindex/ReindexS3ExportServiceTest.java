@@ -67,19 +67,17 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_noRows_abortsMultipartAndWritesEmptyFile() {
-    when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
-
+  public void exportToS3_noRows_writesEmptyFileViaSinglePutWithoutMultipart() {
     get(exportService.exportToS3(new TestRowStream(0), S3_KEY));
 
-    verify(s3Client).abortMultipartUpload(S3_KEY, UPLOAD_ID);
     verify(s3Client).write(eq(S3_KEY), any(), eq(0L));
+    verify(s3Client, never()).initiateMultipartUpload(any());
+    verify(s3Client, never()).abortMultipartUpload(any(), any());
     verify(s3Client, never()).completeMultipartUpload(any(), any(), any());
   }
 
   @Test
   public void exportToS3_noRows_writesEmptyFileWithResettableStream() {
-    when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
 
     get(exportService.exportToS3(new TestRowStream(0), S3_KEY));

@@ -1,10 +1,10 @@
 package org.folio.services.s3storage;
 
 import static org.folio.utils.Environment.getBoolValue;
-import static org.folio.utils.Environment.getIntValue;
 import static org.folio.utils.Environment.getValueOrEmpty;
 import static org.folio.utils.Environment.getValueOrFail;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
@@ -16,19 +16,21 @@ public class FolioS3ClientFactory {
 
   /**
    * Idle keep-alive (seconds) for the OkHttp connection pool used by the
-   * reindex S3 client. AWS S3 frontends close idle keep-alive sockets after
-   * roughly 20 s; OkHttp's default of 300 s causes us to repeatedly reuse
-   * already-closed sockets and fail with {@code unexpected end of stream} /
-   * {@code Broken pipe}. 15 s mirrors the safety margin used by AWS's own
-   * SDKs (which default to 60 s for general workloads).
+   * reindex S3 client. Optional override; when unset, folio-s3-client uses
+   * OkHttp's default ({@code 5 minutes}).
+   *
+   * <p>Lowering this was tried (15 s) to mitigate {@code unexpected end of
+   * stream} / {@code Broken pipe} on stale pooled sockets, but in practice
+   * it more than doubled the failure rate by churning through new TLS
+   * handshakes — so we leave it unset by default and rely on the lazy
+   * multipart-init flow + {@code S3RetryableCalls} retries instead. The env
+   * variable remains here only for further experimentation.
    *
    * <p>Only applied to {@link S3ConfigType#REINDEX}; for other config types
-   * the property is left {@code null} so folio-s3-client keeps OkHttp's
-   * default behavior.
+   * the property is left {@code null}.
    */
   static final String REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_ENV =
     "S3_REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS";
-  static final int REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_DEFAULT = 15;
 
   private static final String S3_PREFIX = "S3_";
   private static final String S3_URL_CONFIG = "URL";
@@ -71,8 +73,8 @@ public class FolioS3ClientFactory {
     if (configType != S3ConfigType.REINDEX) {
       return null;
     }
-    return getIntValue(REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_ENV,
-      REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_DEFAULT);
+    var raw = getValueOrEmpty(REINDEX_OKHTTP_IDLE_KEEPALIVE_SECONDS_ENV);
+    return StringUtils.isBlank(raw) ? null : Integer.valueOf(raw);
   }
 
   private static String getKey(@NonNull String configName, @Nullable S3ConfigType configType) {
