@@ -1,7 +1,9 @@
 package org.folio.services.reindex;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.s3.exception.S3ClientException;
@@ -81,17 +83,42 @@ final class S3RetryableCalls {
 
   /**
    * Returns true if the exception (or any cause in its chain) indicates a
-   * transient S3 server-side error that is safe to retry: HTTP 5xx,
-   * {@code SlowDown}, or AWS {@code InternalError}.
+   * transient failure that is safe to retry.
+   *
+   * <p>Two categories are treated as retryable:
+   * <ol>
+   *   <li><b>Wire-level failures</b> — any {@link IOException} (covers
+   *       {@code SocketException} "Broken pipe", {@code EOFException} "unexpected
+   *       end of stream", {@code SSLException}, {@code SocketTimeoutException}, …)
+   *       or {@link TimeoutException}. These never produced
+   *       a server response, and S3 multipart parts are idempotent (S3 keys
+   *       parts by {@code (uploadId, partNumber)} and only the ETag from the
+   *       successful attempt is referenced at completion), so re-issuing the
+   *       PUT is safe.</li>
+   *   <li><b>Server-side 5xx</b> — message-substring match on the AWS / MinIO
+   *       error envelopes for {@code SlowDown}, {@code InternalError},
+   *       {@code ServiceUnavailable}, and any {@code 500}/{@code 503} status.</li>
+   * </ol>
    */
   static boolean isRetryable(Throwable e) {
     Throwable c = e;
     while (c != null) {
+      // (1) Transient by exception type — wire-level failure that produced no
+      //     server response. Always safe to retry an idempotent S3 multipart call.
+      if (c instanceof IOException
+          || c instanceof TimeoutException) {
+        return true;
+      }
+      // (2) Transient by message — server-side 5xx / throttling envelopes
+      //     surfaced by MinIO as a generic exception with an embedded status.
       String m = c.getMessage();
       if (m != null && (m.contains("Response code: 503") || m.contains("Response code: 500")
-        || m.contains("Status Code: 503") || m.contains("Status Code: 500")
-        || m.contains("SlowDown") || m.contains("InternalError")
-        || m.contains("ServiceUnavailable"))) {
+          || m.contains("Status Code: 503") || m.contains("Status Code: 500")
+          || m.contains("SlowDown") || m.contains("InternalError")
+          || m.contains("ServiceUnavailable")
+          || m.contains("unexpected end of stream")
+          || m.contains("Broken pipe")
+          || m.contains("Connection reset"))) {
         return true;
       }
 

@@ -3,7 +3,14 @@ package org.folio.services.reindex;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.net.ssl.SSLException;
 import org.folio.s3.exception.S3ClientException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,10 +29,39 @@ class S3RetryableCallsTest {
     // AWS error codes
     "ErrorResponse(code = InternalError, message = ...)",
     "ErrorResponse(code = SlowDown)",
-    "ErrorResponse(code = ServiceUnavailable)"
+    "ErrorResponse(code = ServiceUnavailable)",
+    // Wire-level failures surfaced as plain string causes
+    "unexpected end of stream on https://...",
+    "Broken pipe",
+    "Connection reset"
   })
   void isRetryable_returnsTrueForTransient5xxMessages(String causeMessage) {
     var ex = new S3ClientException("err", new RuntimeException(causeMessage));
+    assertThat(S3RetryableCalls.isRetryable(ex)).isTrue();
+  }
+
+  @ParameterizedTest(name = "[{index}] retryable IOException subtype: {0}")
+  @ValueSource(classes = {
+    IOException.class,
+    EOFException.class,
+    SocketException.class,
+    SocketTimeoutException.class,
+    SSLException.class,
+    TimeoutException.class
+  })
+  void isRetryable_returnsTrueForWireLevelExceptionTypes(Class<? extends Exception> exType) throws Exception {
+    // Wrap the wire-level exception inside an S3ClientException, like MinioS3Client does.
+    var cause = exType.getDeclaredConstructor(String.class).newInstance("boom");
+    var ex = new S3ClientException("Cannot upload part # 2 for upload ID: …", cause);
+    assertThat(S3RetryableCalls.isRetryable(ex)).isTrue();
+  }
+
+  @Test
+  void isRetryable_returnsTrueForUploadPartChain() {
+    var eof = new EOFException("\\n not found: limit=0 content=…");
+    var io = new IOException("unexpected end of stream on https:///...", eof);
+    var execEx = new ExecutionException(io);
+    var ex = new S3ClientException("Cannot upload part # 2 for upload ID: …", execEx);
     assertThat(S3RetryableCalls.isRetryable(ex)).isTrue();
   }
 
@@ -58,7 +94,7 @@ class S3RetryableCallsTest {
   @Test
   void withRetry_returnsFirstAttemptResult_whenNoFailure() throws Exception {
     var calls = new AtomicInteger();
-    String result = S3RetryableCalls.withRetry("op", () -> {
+    var result = S3RetryableCalls.withRetry("op", () -> {
       calls.incrementAndGet();
       return "ok";
     }, 5, 1L);
@@ -69,7 +105,7 @@ class S3RetryableCallsTest {
   @Test
   void withRetry_succeedsAfterTransientFailures() throws Exception {
     var calls = new AtomicInteger();
-    String result = S3RetryableCalls.withRetry("op", () -> {
+    var result = S3RetryableCalls.withRetry("op", () -> {
       int n = calls.incrementAndGet();
       if (n < 3) {
         throw new S3ClientException("transient",
@@ -118,5 +154,22 @@ class S3RetryableCallsTest {
       }, 5, 1L)
     ).isInstanceOf(IllegalStateException.class);
     assertThat(calls).hasValue(1);
+  }
+
+  @Test
+  void withRetry_retriesUploadPartEofChain_thenSucceeds() throws Exception {
+    var calls = new AtomicInteger();
+    var result = S3RetryableCalls.withRetry("uploadMultipartPart#2", () -> {
+      int n = calls.incrementAndGet();
+      if (n < 2) {
+        // Same shape as a real EOF on a stale-pooled S3 connection.
+        var io = new IOException("unexpected end of stream on https://.../...");
+        var execEx = new ExecutionException(io);
+        throw new S3ClientException("Cannot upload part # 2 for upload ID: …", execEx);
+      }
+      return "etag";
+    }, 5, 1L);
+    assertThat(result).isEqualTo("etag");
+    assertThat(calls).hasValue(2);
   }
 }
