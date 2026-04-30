@@ -1342,6 +1342,11 @@
       "run": "after",
       "snippetPath": "instance/createInstanceNotesNoteTypeIdIndex.sql",
       "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "item/create-set-order-trigger-safe.sql",
+      "fromModuleVersion": "30.1.0"
     }
   ]
 }

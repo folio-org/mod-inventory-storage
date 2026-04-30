@@ -10,7 +10,7 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Bug fixes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINV-1362](https://folio-org.atlassian.net/browse/MODINV-1362))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
