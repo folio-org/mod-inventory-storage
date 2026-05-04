@@ -1346,7 +1346,7 @@
     {
       "run": "after",
       "snippetPath": "item/create-set-order-trigger-safe.sql",
-      "fromModuleVersion": "30.1.0"
+      "fromModuleVersion": "30.0.1"
     }
   ]
 }
