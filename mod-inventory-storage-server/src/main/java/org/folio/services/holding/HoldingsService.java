@@ -320,6 +320,7 @@ public class HoldingsService {
 
   private boolean shouldUpdateItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     return oldHoldings == null
+      || !Objects.equals(oldHoldings.getInstanceId(), newHoldings.getInstanceId())
       || !Objects.equals(oldHoldings.getPermanentLocationId(), newHoldings.getPermanentLocationId())
       || !Objects.equals(oldHoldings.getTemporaryLocationId(), newHoldings.getTemporaryLocationId())
       || !Objects.equals(oldHoldings.getCallNumber(), newHoldings.getCallNumber())
