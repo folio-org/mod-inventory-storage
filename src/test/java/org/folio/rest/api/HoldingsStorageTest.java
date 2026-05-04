@@ -472,6 +472,41 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  @SneakyThrows
+  public void canMoveHoldingsToNewInstance_shouldUpdateItem() {
+    var instanceId = UUID.randomUUID();
+    var newInstanceId = UUID.randomUUID();
+
+    instancesClient.create(smallAngryPlanet(instanceId));
+    instancesClient.create(smallAngryPlanet(newInstanceId));
+    setHoldingsSequence(1);
+
+    var holdingResource = createHolding(new HoldingRequestBuilder()
+      .forInstance(instanceId)
+      .withSource(getPreparedHoldingSourceId())
+      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID));
+
+    var holdingId = holdingResource.getId();
+    final var item = createItemForHolding(holdingId);
+
+    var replacement = holdingResource.copyJson()
+      .put("instanceId", newInstanceId.toString());
+    holdingsClient.replace(holdingId, replacement);
+
+    var getResponse = holdingsClient.getById(holdingId);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+
+    var holdingFromGet = getResponse.getJson();
+    assertThat(holdingFromGet.getString("instanceId"), is(newInstanceId.toString()));
+
+    holdingsMessageChecks.updatedMessagePublished(holdingResource.getJson(), holdingFromGet);
+
+    var newItem = item.copy().put("_version", 2);
+
+    itemMessageChecks.updatedMessagePublished(item, newItem, instanceId.toString());
+  }
+
+  @Test
   public void canDeleteHolding() {
     UUID instanceId = UUID.randomUUID();
 
