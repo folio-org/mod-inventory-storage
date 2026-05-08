@@ -10,7 +10,8 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Bug fixes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
+* Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))

@@ -72,8 +72,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -285,6 +288,64 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse1.getJson().getInteger(ORDER_FIELD), anyOf(is(1), is(2)));
     assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), anyOf(is(1), is(2)));
     assertThat(getResponse2.getJson().getInteger(ORDER_FIELD), not(is(getResponse1.getJson().getInteger(ORDER_FIELD))));
+  }
+
+  @SneakyThrows
+  @Test
+  public void shouldHandleConcurrentItemCreationWithAutoOrder() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    var id1 = UUID.randomUUID();
+    var id2 = UUID.randomUUID();
+
+    var items = Map.of(id1, minimalItem(id1, holdingsRecordId), id2, minimalItem(id2, holdingsRecordId));
+    var responses = runConcurrentPosts(items);
+
+    assertThat(responses.get(0).getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(responses.get(1).getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var order1 = getById(id1).getJson().getInteger(ORDER_FIELD);
+    var order2 = getById(id2).getJson().getInteger(ORDER_FIELD);
+
+    assertThat(order1, anyOf(is(1), is(2)));
+    assertThat(order2, anyOf(is(1), is(2)));
+    assertThat(order1, not(is(order2)));
+  }
+
+  @SneakyThrows
+  @Test
+  public void shouldHandleConcurrentItemCreationWithManualAndAutoOrder() {
+    var holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+
+    var id1 = UUID.randomUUID();
+    var id2 = UUID.randomUUID();
+    var id3 = UUID.randomUUID();
+
+    var item2 = minimalItem(id2, holdingsRecordId);
+    item2.put(ORDER_FIELD, 6);
+    var items = Map.of(id1, minimalItem(id1, holdingsRecordId), id2, item2, id3, minimalItem(id3, holdingsRecordId));
+    var responses = runConcurrentPosts(items);
+
+    assertThat(responses.get(0).getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+    assertThat(responses.get(1).getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var order1 = getById(id1).getJson().getInteger(ORDER_FIELD);
+    var order3 = getById(id3).getJson().getInteger(ORDER_FIELD);
+
+    assertEquals(6, getById(id2).getJson().getInteger(ORDER_FIELD).intValue());
+    assertThat(order1, anyOf(is(1), is(2), is(7), is(8)));
+    assertThat(order3, anyOf(is(1), is(2), is(7), is(8)));
+    assertThat(order1, not(is(order3)));
+
+    var item4 = minimalItem(randomUUID(), holdingsRecordId);
+    var response = saveItemAndExpectJson(item4);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
+
+    var order4 = response.getJson().getInteger(ORDER_FIELD);
+
+    assertThat(order4, anyOf(is(7), is(8), is(9)));
+    assertThat(order4, not(is(order1)));
+    assertThat(order4, not(is(order3)));
   }
 
   @SneakyThrows
@@ -4297,5 +4358,31 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     CompletableFuture<Response> completed = new CompletableFuture<>();
     getClient().put(itemsStorageUrl("/" + itemId), item, TENANT_ID, ResponseHandler.empty(completed));
     return completed.get(TIMEOUT, TimeUnit.SECONDS);
+  }
+
+  @SneakyThrows
+  private List<Response> runConcurrentPosts(Map<UUID, JsonObject> items) {
+    var executor = Executors.newFixedThreadPool(items.size());
+    var barrier = new CyclicBarrier(items.size());
+
+    List<Callable<Response>> tasks = items.entrySet().stream()
+      .map(entry -> (Callable<Response>) () -> {
+        barrier.await();
+        var future = new CompletableFuture<Response>();
+        getClient().post(itemsStorageUrl(""), entry.getValue(), TENANT_ID, ResponseHandler.json(future));
+        return future.get(TIMEOUT, TimeUnit.SECONDS);
+      }).toList();
+
+    var futures = tasks.stream()
+      .map(executor::submit)
+      .toList();
+
+    var results = new ArrayList<Response>();
+    for (var f : futures) {
+      results.add(f.get());
+    }
+
+    executor.shutdown();
+    return results;
   }
 }
