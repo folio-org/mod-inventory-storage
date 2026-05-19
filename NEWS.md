@@ -1,3 +1,7 @@
+## v29.0.20 2026-05-18
+### Bug fixes
+* Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
+
 ## v29.0.19 2026-04-01
 ### Features
 * Trigger holding items recalculation only for effective-value field changes ([MODINVSTOR-1533](https://folio-org.atlassian.net/browse/MODINVSTOR-1533))
