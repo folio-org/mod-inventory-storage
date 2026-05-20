@@ -1,6 +1,7 @@
 ## v30.0.2 2026-05-27
 ### Bug fixes
 * Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
+* Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
 
 ---
 
