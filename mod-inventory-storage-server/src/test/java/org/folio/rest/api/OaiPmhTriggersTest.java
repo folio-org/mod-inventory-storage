@@ -9,6 +9,8 @@ import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -149,6 +151,68 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     var dateBeforeDeletingHolding = futureDateBefore.get(80, TimeUnit.SECONDS);
     deleteAll(holdingsStorageUrl(""));
     verifyCompleteUpdatedDate(dateBeforeDeletingHolding);
+  }
+
+  @SneakyThrows
+  @Test
+  public void moveHoldingsRecordToAnotherInstanceTest() {
+    var sourceInstanceId = UUID.randomUUID();
+    var targetInstanceId = UUID.randomUUID();
+    instancesClient.create(instance(sourceInstanceId));
+    instancesClient.create(instance(targetInstanceId));
+    var holdingId = createHolding(sourceInstanceId, MAIN_LIBRARY_LOCATION_ID, null);
+
+    var futureDates = new CompletableFuture<Map<String, LocalDateTime>>();
+    getCompleteUpdatedDates(futureDates);
+    final var datesBefore = futureDates.get(80, TimeUnit.SECONDS);
+
+    // Move the holding to the target instance
+    var holdingJson = holdingsClient.getById(holdingId).getJson();
+    holdingJson.put("instanceId", targetInstanceId.toString());
+    updateHoldingRecord(holdingId, holdingJson);
+
+    futureDates = new CompletableFuture<>();
+    getCompleteUpdatedDates(futureDates);
+    var datesAfter = futureDates.get(80, TimeUnit.SECONDS);
+
+    assertEquals(datesBefore.keySet(), datesAfter.keySet());
+    assertTrue("Source instance complete_updated_date should have been updated",
+      datesBefore.get(sourceInstanceId.toString()).isBefore(datesAfter.get(sourceInstanceId.toString())));
+    assertTrue("Target instance complete_updated_date should have been updated",
+      datesBefore.get(targetInstanceId.toString()).isBefore(datesAfter.get(targetInstanceId.toString())));
+  }
+
+  @SneakyThrows
+  @Test
+  public void moveItemToAnotherHoldingsRecordTest() {
+    var sourceHoldingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var targetHoldingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var itemJson = createItem(journalMaterialTypeId, sourceHoldingId);
+
+    var futureDates = new CompletableFuture<Map<String, LocalDateTime>>();
+    getCompleteUpdatedDates(futureDates);
+    final var datesBefore = futureDates.get(80, TimeUnit.SECONDS);
+
+    // Move the item to the target holding
+    itemJson.put("holdingsRecordId", targetHoldingId.toString());
+    var itemId = itemJson.getString("id");
+    var putResponse = itemsClient.attemptToReplace(itemId, itemJson);
+    assertThat("Failed to move item: " + putResponse.getBody(),
+      putResponse.getStatusCode(), is(204));
+
+    futureDates = new CompletableFuture<>();
+    getCompleteUpdatedDates(futureDates);
+    var datesAfter = futureDates.get(80, TimeUnit.SECONDS);
+
+    // Resolve parent instance IDs from holdings
+    var sourceInstanceId = holdingsClient.getById(sourceHoldingId).getJson().getString("instanceId");
+    var targetInstanceId = holdingsClient.getById(targetHoldingId).getJson().getString("instanceId");
+
+    assertEquals(datesBefore.keySet(), datesAfter.keySet());
+    assertTrue("Source instance complete_updated_date should have been updated after item move",
+      datesBefore.get(sourceInstanceId).isBefore(datesAfter.get(sourceInstanceId)));
+    assertTrue("Target instance complete_updated_date should have been updated after item move",
+      datesBefore.get(targetInstanceId).isBefore(datesAfter.get(targetInstanceId)));
   }
 
   @SneakyThrows
