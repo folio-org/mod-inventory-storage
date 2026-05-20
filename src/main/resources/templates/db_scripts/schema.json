@@ -1297,6 +1297,11 @@
       "run": "after",
       "snippetPath": "inventory-hierarchy/updateGetItemsAndHoldingsFunctionToSupportMultipleBoundsWith.sql",
       "fromModuleVersion": "29.0.21"
+    },
+    {
+      "run": "after",
+      "snippetPath": "oaipmh/updateCompleteUpdatedDateFunctionsToHandleMove.sql",
+      "fromModuleVersion": "29.0.21"
     }
   ]
 }

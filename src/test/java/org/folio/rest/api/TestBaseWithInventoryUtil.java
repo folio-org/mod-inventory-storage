@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -279,6 +280,15 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .withCallNumberSuffix("testCallNumberSuffix")
         .create(),
       TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl())).getId();
+  }
+
+  protected static void updateHoldingRecord(UUID id, JsonObject holdingJson) {
+    var holdingId = id != null ? id.toString() : null;
+    var putResponse = holdingsClient.attemptToReplace(holdingId, holdingJson, TENANT_ID,
+      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    assertThat(
+      String.format("Failed to update holding record %s: %s", id, putResponse.getBody()),
+      putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
   public static UUID createInstanceRecord(JsonObject instanceJson) {
