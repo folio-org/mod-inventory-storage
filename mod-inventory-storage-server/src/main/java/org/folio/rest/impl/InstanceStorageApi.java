@@ -257,6 +257,21 @@ public class InstanceStorageApi implements InstanceStorage {
 
   @Validate
   @Override
+  public void getInstanceStorageInstancesSummaryByInstanceId(
+    String instanceId,
+    boolean skipSuppressedFromDiscoveryRecords,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new InstanceService(vertxContext, okapiHeaders)
+      .getInstanceSummary(instanceId, skipSuppressedFromDiscoveryRecords)
+      .otherwise(EndpointFailureHandler::failureResponse)
+      .onComplete(asyncResultHandler);
+  }
+
+  @Validate
+  @Override
   public void deleteInstanceStorageInstancesByInstanceId(
     String instanceId,
 

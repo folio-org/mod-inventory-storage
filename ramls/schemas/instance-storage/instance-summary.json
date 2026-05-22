@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A compact summary of an instance and derived inventory facts",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceSummary",
+  "type": "object",
+  "properties": {
+    "instance": {
+      "type": "object",
+      "$ref": "instance.json"
+    },
+    "isBoundWith": {
+      "type": "boolean"
+    },
+    "visibility": {
+      "type": "object",
+      "description": "Discovery visibility facts for the instance, holdings, and items",
+      "additionalProperties": true
+    },
+    "itemDerivedFields": {
+      "type": "object",
+      "description": "Fields derived from items without returning item rows",
+      "additionalProperties": true
+    },
+    "electronicAccess": {
+      "type": "array",
+      "description": "Deduplicated electronic access entries from the instance, holdings, and items",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "sourceTypeCandidates": {
+      "type": "object",
+      "description": "Candidate reference values useful for source type mapping",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "instance",
+    "isBoundWith",
+    "visibility",
+    "itemDerivedFields",
+    "electronicAccess",
+    "sourceTypeCandidates"
+  ]
+}

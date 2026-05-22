@@ -1352,6 +1352,11 @@
       "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateFunctionsToHandleMove.sql",
       "fromModuleVersion": "30.0.2"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createInstanceSummaryFunction.sql",
+      "fromModuleVersion": "30.0.2"
     }
   ]
 }

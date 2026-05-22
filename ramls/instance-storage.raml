@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Instance Storage
-version: v11.3
+version: v11.4
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -10,6 +10,7 @@ documentation:
 
 types:
   instance: !include schemas/instance-storage/instance.json
+  instanceSummary: !include schemas/instance-storage/instance-summary.json
   instances: !include schemas/instance-storage/instances.json
   marcJson: !include schemas/instance-storage/marc.json
   instanceRelationship: !include schemas/instance-storage/instancerelationship.json
@@ -133,6 +134,32 @@ resourceTypes:
             body:
               text/plain:
                 example: "internal server error, contact administrator"
+
+      /summary:
+        get:
+          description: |
+            Get a compact summary for an instance, including visibility facts and item-derived aggregate fields.
+          queryParameters:
+            skipSuppressedFromDiscoveryRecords:
+              description: Skip discovery suppressed holdings and items when calculating derived fields
+              type: boolean
+              required: false
+              default: true
+          responses:
+            200:
+              body:
+                application/json:
+                  type: instanceSummary
+            404:
+              description: "Instance with a given ID not found"
+              body:
+                text/plain:
+                  example: Not found
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "internal server error, contact administrator"
 
       /source-record:
         delete:
