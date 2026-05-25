@@ -18,7 +18,7 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 
