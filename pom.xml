@@ -36,7 +36,7 @@
 
     <!-- Test dependency versions -->
     <okapi-testing.version>7.0.3</okapi-testing.version>
-    <junit.version>6.0.3</junit.version>
+    <junit.version>6.1.0</junit.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <joda-time.version>2.14.2</joda-time.version>
     <hamcrest.version>3.0</hamcrest.version>
