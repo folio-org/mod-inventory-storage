@@ -12,12 +12,13 @@
 ### Bug fixes
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
 * Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
+* Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 
