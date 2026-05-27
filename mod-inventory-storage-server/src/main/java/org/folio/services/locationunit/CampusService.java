@@ -1,114 +1,107 @@
 package org.folio.services.locationunit;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
-import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
+import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.folio.HttpStatus.HTTP_NOT_FOUND;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
+import static org.folio.HttpStatus.HTTP_OK;
 
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import java.util.Map;
-import java.util.function.Function;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.folio.persist.CampusRepository;
-import org.folio.rest.exceptions.BadRequestException;
+import org.folio.client.LocationCampusClient;
+import org.folio.client.RestClientImpl;
 import org.folio.rest.jaxrs.model.LocationCampus;
-import org.folio.rest.jaxrs.model.LocationCampuses;
-import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.DeleteLocationUnitsCampusesResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.GetLocationUnitsCampusesByIdResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.PostLocationUnitsCampusesResponse;
-import org.folio.rest.jaxrs.resource.LocationUnits.PutLocationUnitsCampusesByIdResponse;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.CampusDomainEventPublisher;
 
 public class CampusService {
 
-  private static final String MSG_ID_NOT_MATCH = "Illegal operation: Campus ID cannot be changed";
-
-  private final Context context;
   private final Map<String, String> okapiHeaders;
-  private final CampusRepository repository;
-  private final CampusDomainEventPublisher domainEventService;
+  private final LocationCampusClient campusClient;
+  private final CampusDomainEventPublisher domainEventPublisher;
 
   public CampusService(Context context, Map<String, String> okapiHeaders) {
-    this.context = context;
     this.okapiHeaders = okapiHeaders;
-    this.repository = new CampusRepository(context, okapiHeaders);
-    this.domainEventService = new CampusDomainEventPublisher(context, okapiHeaders);
+    this.campusClient = new LocationCampusClient(new RestClientImpl(context.owner().createHttpClient()));
+    this.domainEventPublisher = new CampusDomainEventPublisher(context, okapiHeaders);
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords, boolean includeShadow) {
-    try {
-      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadow)
-        .map(results -> {
-          var collection = new LocationCampuses();
-          collection.setLoccamps(results.getResults());
-          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
-          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
-        });
-    } catch (CQLQueryValidationException e) {
-      return Future.failedFuture(new BadRequestException(e.getMessage()));
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
+  public Future<Response> getByQuery(String cql, int offset, int limit,
+                                     boolean includeShadow) {
+    return campusClient.getByQuery(cql, offset, limit, includeShadow, okapiHeaders)
+      .map(this::toResponse);
   }
 
   public Future<Response> getById(String id) {
-    return PgUtil.getById(CAMPUS_TABLE, LocationCampus.class, id, okapiHeaders, context,
-      GetLocationUnitsCampusesByIdResponse.class);
+    return campusClient.getById(id, okapiHeaders)
+      .map(this::toResponse);
   }
 
-  public Future<Response> create(LocationCampus loccamp) {
-    return PgUtil.post(CAMPUS_TABLE, loccamp, okapiHeaders, context,
-        PostLocationUnitsCampusesResponse.class)
-      .onSuccess(domainEventService.publishCreated());
+  public Future<Response> create(LocationCampus campus) {
+    return campusClient.create(campus, okapiHeaders)
+      .map(httpResponse -> {
+        if (httpResponse.statusCode() == HTTP_CREATED.toInt()) {
+          var created = httpResponse.bodyAsJson(LocationCampus.class);
+          if (created != null) {
+            domainEventPublisher.publishCreated()
+              .handle(Response.status(HTTP_CREATED.toInt()).entity(created).build());
+          }
+        }
+        return toResponse(httpResponse);
+      });
   }
 
-  public Future<Response> update(String id, LocationCampus loccamp) {
-    if (loccamp.getId() != null && !loccamp.getId().equals(id)) {
-      return succeededFuture(
-        PutLocationUnitsCampusesByIdResponse.respond400WithTextPlain(
-          createValidationErrorMessage(
-            "loccamp", loccamp.getId(), MSG_ID_NOT_MATCH)));
-    }
-    if (loccamp.getId() == null) {
-      loccamp.setId(id);
-    }
-
-    return repository.getById(id)
-      .compose(oldLoccamp ->
-        PgUtil.put(CAMPUS_TABLE, loccamp, id, okapiHeaders, context,
-            PutLocationUnitsCampusesByIdResponse.class)
-          .onSuccess(domainEventService.publishUpdated(oldLoccamp))
-      );
+  public Future<Response> update(String id, LocationCampus campus) {
+    return campusClient.getById(id, okapiHeaders)
+      .compose(oldResponse -> {
+        if (oldResponse.statusCode() == HTTP_NOT_FOUND.toInt()) {
+          return Future.succeededFuture(toResponse(oldResponse));
+        }
+        var oldCampus = oldResponse.statusCode() == HTTP_OK.toInt()
+                        ? oldResponse.bodyAsJson(LocationCampus.class) : null;
+        return campusClient.update(id, campus, okapiHeaders)
+          .map(httpResponse -> {
+            if (httpResponse.statusCode() == HTTP_NO_CONTENT.toInt() && oldCampus != null) {
+              domainEventPublisher.publishUpdated(oldCampus, campus);
+            }
+            return toResponse(httpResponse);
+          });
+      });
   }
 
   public Future<Response> delete(String id) {
-    return repository.getById(id)
-      .compose(oldLoccamp ->
-        PgUtil.deleteById(CAMPUS_TABLE, id, okapiHeaders, context,
-            DeleteLocationUnitsCampusesByIdResponse.class)
-          .onSuccess(domainEventService.publishRemoved(oldLoccamp))
-      );
+    return campusClient.getById(id, okapiHeaders)
+      .compose(oldResponse -> {
+        if (oldResponse.statusCode() == HTTP_NOT_FOUND.toInt()) {
+          return Future.succeededFuture(toResponse(oldResponse));
+        }
+        var oldCampus = oldResponse.statusCode() == HTTP_OK.toInt()
+                        ? oldResponse.bodyAsJson(LocationCampus.class) : null;
+        return campusClient.delete(id, okapiHeaders)
+          .map(httpResponse -> {
+            if (httpResponse.statusCode() == HTTP_NO_CONTENT.toInt() && oldCampus != null) {
+              domainEventPublisher.publishRemoved(oldCampus)
+                .handle(Response.status(HTTP_NO_CONTENT.toInt()).build());
+            }
+            return toResponse(httpResponse);
+          });
+      });
   }
 
   public Future<Response> deleteAll() {
-    return repository.deleteAll()
-      .transform(prepareDeleteAllResponse())
-      .onSuccess(response -> domainEventService.publishAllRemoved());
+    return domainEventPublisher.publishAllRemoved()
+      .map(v -> Response.status(HTTP_NO_CONTENT.toInt()).build());
   }
 
-  private Function<AsyncResult<RowSet<Row>>, Future<Response>> prepareDeleteAllResponse() {
-    return reply -> reply.succeeded()
-      ? succeededFuture(DeleteLocationUnitsCampusesResponse.respond204())
-      : succeededFuture(
-      DeleteLocationUnitsCampusesResponse.respond500WithTextPlain(
-        reply.cause().getMessage())
-    );
+  private Response toResponse(HttpResponse<Buffer> httpResponse) {
+    var builder = Response.status(httpResponse.statusCode());
+    var body = httpResponse.bodyAsString();
+    if (body != null && !body.isBlank()) {
+      builder.entity(body).type(MediaType.APPLICATION_JSON_TYPE);
+    }
+    return builder.build();
   }
 }

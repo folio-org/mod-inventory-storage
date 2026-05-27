@@ -5,8 +5,8 @@ import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.folio.persist.InstitutionRepository.INSTITUTION_TABLE;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
-import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
