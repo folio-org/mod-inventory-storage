@@ -6,6 +6,18 @@
     {
       "id": "user-tenants",
       "version": "1.0"
+    },
+    {
+      "id": "location-storage",
+      "version": "1.0"
+    },
+    {
+      "id": "service-point-storage",
+      "version": "1.0"
+    },
+    {
+      "id": "locations-migration",
+      "version": "1.0"
     }
   ],
   "provides": [
@@ -1282,7 +1294,13 @@
           "methods": ["POST"],
           "pathPattern": "/_/tenant",
           "modulePermissions": [
-            "user-tenants.collection.get"
+            "user-tenants.collection.get",
+            "location-storage.migration.institutions.collection.post",
+            "location-storage.migration.campuses.collection.post",
+            "location-storage.migration.libraries.collection.post",
+            "location-storage.migration.locations.collection.post",
+            "location-storage.migration.service-points.collection.post",
+            "location-storage.migration.service-points-users.collection.post"
           ]
         }, {
           "methods": ["DELETE", "GET"],
