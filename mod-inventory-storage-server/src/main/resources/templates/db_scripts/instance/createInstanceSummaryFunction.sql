@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_instance_summary(
   _instance_id uuid,
-  _skip_suppressed_from_discovery_records boolean DEFAULT true)
+  _skip_suppressed_from_discovery_records boolean DEFAULT true,
+  _include_item_electronic_access boolean DEFAULT true)
   RETURNS jsonb
   LANGUAGE sql
 AS $function$
@@ -27,9 +28,18 @@ WITH
   direct_items_all AS (
     SELECT
       item.id,
-      hr.id AS summary_holdings_record_id,
-      item.jsonb,
       item.materialtypeid,
+      NULLIF(item.jsonb ->> 'effectiveShelvingOrder', '') AS effective_shelving_order,
+      CASE
+        WHEN _include_item_electronic_access THEN
+          CASE
+            WHEN jsonb_typeof(item.jsonb -> 'electronicAccess') = 'array'
+              AND item.jsonb -> 'electronicAccess' <> '[]'::jsonb
+              THEN item.jsonb -> 'electronicAccess'
+            ELSE NULL
+          END
+        ELSE NULL
+      END AS electronic_access,
       COALESCE((hr.jsonb ->> 'discoverySuppress')::boolean, false) AS holdings_discovery_suppress,
       COALESCE((item.jsonb ->> 'discoverySuppress')::boolean, false) AS item_discovery_suppress
     FROM holdings_all hr
@@ -38,9 +48,18 @@ WITH
   bound_with_items_all AS (
     SELECT
       item.id,
-      hr.id AS summary_holdings_record_id,
-      item.jsonb,
       item.materialtypeid,
+      NULLIF(item.jsonb ->> 'effectiveShelvingOrder', '') AS effective_shelving_order,
+      CASE
+        WHEN _include_item_electronic_access THEN
+          CASE
+            WHEN jsonb_typeof(item.jsonb -> 'electronicAccess') = 'array'
+              AND item.jsonb -> 'electronicAccess' <> '[]'::jsonb
+              THEN item.jsonb -> 'electronicAccess'
+            ELSE NULL
+          END
+        ELSE NULL
+      END AS electronic_access,
       COALESCE((hr.jsonb ->> 'discoverySuppress')::boolean, false) AS holdings_discovery_suppress,
       COALESCE((item.jsonb ->> 'discoverySuppress')::boolean, false) AS item_discovery_suppress
     FROM holdings_all hr
@@ -50,9 +69,9 @@ WITH
   items_all AS (
     SELECT DISTINCT ON (all_items.id)
       all_items.id,
-      all_items.summary_holdings_record_id,
-      all_items.jsonb,
       all_items.materialtypeid,
+      all_items.effective_shelving_order,
+      all_items.electronic_access,
       all_items.holdings_discovery_suppress,
       all_items.item_discovery_suppress
     FROM (
@@ -82,8 +101,13 @@ WITH
         WITH ORDINALITY AS electronic_access(value, ordinal)
     UNION ALL
     SELECT 3 AS source_order, electronic_access.ordinal, electronic_access.value
-    FROM items_summary item
-      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(item.jsonb -> 'electronicAccess', '[]'::jsonb))
+    FROM (
+        SELECT item.electronic_access
+        FROM items_summary item
+        WHERE _include_item_electronic_access
+          AND item.electronic_access IS NOT NULL
+      ) item
+      CROSS JOIN LATERAL jsonb_array_elements(item.electronic_access)
         WITH ORDINALITY AS electronic_access(value, ordinal)
   ),
   electronic_access_distinct AS (
@@ -102,8 +126,12 @@ WITH
   material_type_candidates AS (
     SELECT COALESCE(jsonb_agg(jsonb_build_object('id', id, 'name', name) ORDER BY name), '[]'::jsonb) AS material_types
     FROM (
-      SELECT DISTINCT mt.id::text AS id, mt.jsonb ->> 'name' AS name
-      FROM items_summary item
+      SELECT mt.id::text AS id, mt.jsonb ->> 'name' AS name
+      FROM (
+          SELECT DISTINCT item.materialtypeid
+          FROM items_summary item
+          WHERE item.materialtypeid IS NOT NULL
+        ) item
         JOIN ${myuniversity}_${mymodule}.material_type mt ON item.materialtypeid = mt.id
     ) material_types
   ),
@@ -170,9 +198,9 @@ SELECT jsonb_build_object(
   ),
   'itemDerivedFields', jsonb_build_object(
     'effectiveShelvingOrder', (
-      SELECT item.jsonb ->> 'effectiveShelvingOrder'
+      SELECT item.effective_shelving_order
       FROM items_summary item
-      WHERE NULLIF(item.jsonb ->> 'effectiveShelvingOrder', '') IS NOT NULL
+      WHERE item.effective_shelving_order IS NOT NULL
       ORDER BY item.id
       LIMIT 1
     ),
