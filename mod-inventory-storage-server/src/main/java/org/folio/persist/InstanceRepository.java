@@ -266,7 +266,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   private String buildReindexInstancesSql(String fromId, String toId, boolean notConsortiumRecords) {
-    var sql = new StringBuilder("WITH bound_instances AS (");
+    var sql = new StringBuilder("WITH bound_instances AS MATERIALIZED (");
     sql.append("SELECT DISTINCT hr.instanceId FROM ");
     sql.append(getFullTableName(BOUND_WITH_TABLE));
     sql.append(" as bw JOIN ");
