@@ -1,7 +1,15 @@
+## v30.0.2 2026-05-27
+### Bug fixes
+* Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
+
+---
+
 ## v30.0.1 2026-05-15
 ### Bug fixes
 * Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
+
+---
 
 ## v30.0.0 2026-04-14
 ### Breaking changes
