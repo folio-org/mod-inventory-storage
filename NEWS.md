@@ -1,3 +1,7 @@
+## v29.0.21 2026-05-28
+### Bug fixes
+* Update get_items_and_holdings_view to improve performance ([MODINVSTOR-1555](https://folio-org.atlassian.net/browse/MODINVSTOR-1555))
+
 ## v29.0.20 2026-05-18
 ### Bug fixes
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))

@@ -1292,6 +1292,11 @@
       "run": "after",
       "snippetPath": "createIndexInstanceStatusId.sql",
       "fromModuleVersion": "29.0.18"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/updateGetItemsAndHoldingsFunctionToSupportMultipleBoundsWith.sql",
+      "fromModuleVersion": "29.0.21"
     }
   ]
 }
