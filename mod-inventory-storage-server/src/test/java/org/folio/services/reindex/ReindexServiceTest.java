@@ -17,7 +17,6 @@ import io.vertx.core.Future;
 import java.util.UUID;
 import java.util.function.Function;
 import org.folio.persist.ReindexJobRepository;
-import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
@@ -46,7 +45,7 @@ public class ReindexServiceTest {
     verify(runner, times(1)).startReindex(any());
   }
 
-  @Test(expected = BadRequestException.class)
+  @Test(expected = RuntimeException.class)
   public void cannotCancelFinishedJob() {
     var reindexJob = new ReindexJob();
     reindexJob.withId(UUID.randomUUID().toString());

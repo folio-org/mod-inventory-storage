@@ -23,7 +23,7 @@
 
     <!-- Dependency versions -->
     <raml-module-builder-version>36.0.0</raml-module-builder-version>
-    <vertx.version>5.0.12</vertx.version>
+    <vertx.version>5.1.0</vertx.version>
     <marc4j.version>2.9.6</marc4j.version>
     <aspectj.version>1.9.25.1</aspectj.version>
     <folio-kafka-wrapper.version>4.1.0-SNAPSHOT</folio-kafka-wrapper.version>
@@ -32,7 +32,7 @@
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <log4j.version>2.26.0</log4j.version>
     <folio-s3-client.version>3.0.1</folio-s3-client.version>
-    <jackson.version>2.21.3</jackson.version>
+    <jackson.version>2.22.0</jackson.version>
 
     <!-- Test dependency versions -->
     <okapi-testing.version>7.0.4</okapi-testing.version>
@@ -61,7 +61,7 @@
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
-    <checkstyle.version>13.4.2</checkstyle.version>
+    <checkstyle.version>13.5.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
