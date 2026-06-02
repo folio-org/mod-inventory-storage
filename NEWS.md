@@ -1,3 +1,9 @@
+## v30.0.3 2026-06-02
+### Bug fixes
+* Fix Instance complete_updated_date update performance on item create/update  ([MODINVSTOR-1569](https://folio-org.atlassian.net/browse/MODINVSTOR-1569))
+
+---
+
 ## v30.0.2 2026-05-27
 ### Bug fixes
 * Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
