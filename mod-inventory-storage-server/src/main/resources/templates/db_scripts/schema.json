@@ -1351,11 +1351,6 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateFunctionsToHandleMove.sql",
-      "fromModuleVersion": "30.0.2"
-    },
-    {
-      "run": "after",
-      "snippetPath": "oaipmh/fixCompleteUpdatedDateForItemInsertUpdate.sql",
       "fromModuleVersion": "30.0.3"
     }
   ]
