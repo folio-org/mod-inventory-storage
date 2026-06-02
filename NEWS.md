@@ -14,6 +14,7 @@
 * Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
 * Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
 * Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
+* Fix Instace complete_updated_date update performance on item create/update  ([MODINVSTOR-1569](https://folio-org.atlassian.net/browse/MODINVSTOR-1569))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
