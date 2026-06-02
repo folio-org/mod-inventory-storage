@@ -1301,7 +1301,7 @@
     {
       "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateFunctionsToHandleMove.sql",
-      "fromModuleVersion": "29.0.21"
+      "fromModuleVersion": "29.0.22"
     }
   ]
 }
