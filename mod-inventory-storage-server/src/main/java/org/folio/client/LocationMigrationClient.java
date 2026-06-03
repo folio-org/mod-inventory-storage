@@ -76,6 +76,9 @@ public final class LocationMigrationClient {
   }
 
   private <T> Future<Void> doPost(String path, List<T> entities) {
+    if (entities == null || entities.isEmpty()) {
+      return Future.succeededFuture();
+    }
     return restClient.post(path, headers, entities, HTTP_NO_CONTENT.toInt()).mapEmpty();
   }
 
