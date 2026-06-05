@@ -1,3 +1,7 @@
+## v29.0.22 2026-06-05
+### Bug fixes
+* Fix Instance complete_updated_date update performance on item create/update ([MODINVSTOR-1571](https://folio-org.atlassian.net/browse/MODINVSTOR-1571))
+
 ## v29.0.21 2026-05-28
 ### Bug fixes
 * Update get_items_and_holdings_view to improve performance ([MODINVSTOR-1555](https://folio-org.atlassian.net/browse/MODINVSTOR-1555))
