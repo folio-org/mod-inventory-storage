@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <include file="scripts/v-base/01-functions.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/02-create-tables.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/03-drop-tables.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/04-inventory-hierarchy.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/05-statistical-code.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/06-item-order-tracker.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/07-subject-source-and-type.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

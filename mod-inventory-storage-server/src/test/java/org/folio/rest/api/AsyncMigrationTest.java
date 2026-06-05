@@ -11,7 +11,6 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
-import static org.folio.services.migration.MigrationName.ITEM_SHELVING_ORDER_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +54,8 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.migration.MigrationName;
 import org.folio.services.migration.async.AsyncMigrationContext;
-import org.folio.services.migration.async.ShelvingOrderMigrationJobRunner;
+import org.folio.services.migration.async.AsyncMigrationJobRunner;
+import org.folio.services.migration.async.ItemOrderMigrationJobRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,11 +74,6 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMigrateItemsForShelvingOrder() {
-    testMigration(ITEM_SHELVING_ORDER_MIGRATION, 101);
-  }
-
-  @Test
   public void canMigrateItemsForPopulateOrders() {
     testMigration(ITEM_ORDER_MIGRATION, 1);
   }
@@ -87,13 +82,13 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
+    assertEquals(Integer.valueOf(1), migrations.getTotalRecords());
   }
 
   @Test
   public void canGetAllAvailableMigrationJobs() {
     asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
-      .withMigrations(List.of(ITEM_SHELVING_ORDER_MIGRATION.getValue())));
+      .withMigrations(List.of(ITEM_ORDER_MIGRATION.getValue())));
     AsyncMigrationJobCollection migrations = asyncMigration.getAllMigrationJobs();
     assertNotNull(migrations);
     assertFalse(migrations.getJobs().isEmpty());
@@ -119,7 +114,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
       .toCompletableFuture());
     var amc = new AsyncMigrationContext(getContext(), okapiHeaders(), postgresClient);
     jobRunner().startAsyncMigration(migrationJob,
-      new AsyncMigrationContext(amc, ITEM_SHELVING_ORDER_MIGRATION.getValue()));
+      new AsyncMigrationContext(amc, ITEM_ORDER_MIGRATION.getValue()));
 
     asyncMigration.cancelMigrationJob(migrationJob.getId());
 
@@ -174,7 +169,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     return new AsyncMigrationJob()
       .withJobStatus(IN_PROGRESS)
       .withId(UUID.randomUUID().toString())
-      .withMigrations(Collections.singletonList(ITEM_SHELVING_ORDER_MIGRATION.getValue()))
+      .withMigrations(Collections.singletonList(ITEM_ORDER_MIGRATION.getValue()))
       .withSubmittedDate(new Date());
   }
 
@@ -182,8 +177,8 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     return postgresClient(getContext(), okapiHeaders());
   }
 
-  private ShelvingOrderMigrationJobRunner jobRunner() {
-    return new ShelvingOrderMigrationJobRunner();
+  private AsyncMigrationJobRunner jobRunner() {
+    return new ItemOrderMigrationJobRunner();
   }
 
   private AsyncMigrationJobRepository getRepository() {

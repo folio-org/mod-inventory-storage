@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority" author="folio">
+    <comment>Drop authority table (removed from schema)</comment>
+    <sql>
+      DROP TABLE IF EXISTS authority CASCADE;
+      DROP FUNCTION IF EXISTS update_authority_references();
+      DROP FUNCTION IF EXISTS authority_set_ol_version() CASCADE;
+      DROP FUNCTION IF EXISTS authority_set_md() CASCADE;
+      DROP FUNCTION IF EXISTS set_authority_md_json() CASCADE;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority-note-type" author="folio">
+    <comment>Drop authority_note_type table (removed from schema)</comment>
+    <sql>
+      DROP TABLE IF EXISTS authority_note_type CASCADE;
+      DROP FUNCTION IF EXISTS update_authority_note_type_references();
+      DROP FUNCTION IF EXISTS authority_note_type_set_ol_version() CASCADE;
+      DROP FUNCTION IF EXISTS authority_note_type_set_md() CASCADE;
+      DROP FUNCTION IF EXISTS set_authority_note_type_md_json() CASCADE;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority-source-file" author="folio">
+    <comment>Drop authority_source_file table (removed from schema)</comment>
+    <sql>
+      DROP TABLE IF EXISTS authority_source_file CASCADE;
+      DROP FUNCTION IF EXISTS update_authority_source_file_references();
+      DROP FUNCTION IF EXISTS authority_source_file_set_ol_version() CASCADE;
+      DROP FUNCTION IF EXISTS authority_source_file_set_md() CASCADE;
+      DROP FUNCTION IF EXISTS set_authority_source_file_md_json() CASCADE;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-drop-table-related-instance-type" author="folio">
+    <comment>Drop related_instance_type table (removed from schema)</comment>
+    <sql>
+      DROP TABLE IF EXISTS related_instance_type CASCADE;
+      DROP FUNCTION IF EXISTS update_related_instance_type_references();
+      DROP FUNCTION IF EXISTS related_instance_type_set_ol_version() CASCADE;
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,3103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-loan-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="loan_type"/>
+      </not>
+    </preConditions>
+    <comment>Create loan_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="loan_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="loan_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS loan_type_name_idx_unique
+      ON loan_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-loan-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="identifier_type"/>
+      </not>
+    </preConditions>
+    <comment>Create loan_type table and inline base DDL dependencies</comment>
+
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_loan_type ON loan_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON loan_type CASCADE;
+      CREATE TRIGGER loan_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON loan_type
+                                                        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+
+      DROP TRIGGER IF EXISTS set_loan_type_md_trigger ON loan_type CASCADE;
+      CREATE TRIGGER loan_type_bi_set_md_trg BEFORE INSERT ON loan_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_loan_type_md_json_trigger ON loan_type CASCADE;
+      CREATE TRIGGER loan_type_bu_set_md_trg BEFORE UPDATE ON loan_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-material-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="material_type"/>
+      </not>
+    </preConditions>
+    <comment>Create material_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="material_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="material_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS material_type_name_idx_unique
+        ON material_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-material-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_material_type ON material_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON material_type CASCADE;
+      CREATE TRIGGER material_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON material_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+
+      DROP TRIGGER IF EXISTS set_material_type_md_trigger ON material_type CASCADE;
+      CREATE TRIGGER material_type_bi_set_md_trg BEFORE INSERT ON material_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_material_type_md_json_trigger ON material_type CASCADE;
+      CREATE TRIGGER material_type_bu_set_md_trg BEFORE UPDATE ON material_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-locinstitution" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="locinstitution"/>
+      </not>
+    </preConditions>
+    <comment>Create locinstitution table and inline base DDL dependencies</comment>
+
+    <createTable tableName="locinstitution">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="locinstitution_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS locinstitution_name_idx_unique
+        ON locinstitution (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-locinstitution" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_locinstitution ON locinstitution CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON locinstitution CASCADE;
+      CREATE TRIGGER locinstitution_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON locinstitution
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+
+      DROP TRIGGER IF EXISTS set_locinstitution_md_trigger ON locinstitution CASCADE;
+      CREATE TRIGGER locinstitution_bi_set_md_trg BEFORE INSERT ON locinstitution
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_locinstitution_md_json_trigger ON locinstitution CASCADE;
+      CREATE TRIGGER locinstitution_bu_set_md_trg BEFORE UPDATE ON locinstitution
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-loccampus" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="loccampus"/>
+      </not>
+    </preConditions>
+    <comment>Create loccampus table and inline base DDL dependencies</comment>
+
+    <createTable tableName="loccampus">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="loccampus_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="institutionId" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="loccampus"
+                             baseColumnNames="institutionId"
+                             constraintName="institutionId_locinstitution_fkey"
+                             referencedTableName="locinstitution"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="loccampus" indexName="loccampus_institutionId_idx">
+      <column name="institutionId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS loccampus_name_idx_unique
+        ON loccampus (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-loccampus" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_loccampus ON loccampus CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON loccampus CASCADE;
+      CREATE TRIGGER loccampus_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON loccampus
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_loccampus_md_trigger ON loccampus CASCADE;
+      CREATE TRIGGER loccampus_bi_set_md_trg BEFORE INSERT ON loccampus
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_loccampus_md_json_trigger ON loccampus CASCADE;
+      CREATE TRIGGER loccampus_bu_set_md_trg BEFORE UPDATE ON loccampus
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_loccampus_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.institutionId = NEW.jsonb->>'institutionId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_loccampus_references ON loccampus CASCADE;
+      CREATE TRIGGER loccampus_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON loccampus
+        FOR EACH ROW EXECUTE PROCEDURE update_loccampus_references();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-loclibrary" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="loclibrary"/>
+      </not>
+    </preConditions>
+    <comment>Create loclibrary table and inline base DDL dependencies</comment>
+
+    <createTable tableName="loclibrary">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="loclibrary_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="campusId" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="loclibrary"
+                             baseColumnNames="campusId"
+                             constraintName="campusId_loccampus_fkey"
+                             referencedTableName="loccampus"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="loclibrary" indexName="loclibrary_campusId_idx">
+      <column name="campusId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS loclibrary_name_idx_unique
+        ON loclibrary (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-loclibrary" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_loclibrary ON loclibrary CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON loclibrary CASCADE;
+      CREATE TRIGGER loclibrary_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON loclibrary
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_loclibrary_md_trigger ON loclibrary CASCADE;
+      CREATE TRIGGER loclibrary_bi_set_md_trg BEFORE INSERT ON loclibrary
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_loclibrary_md_json_trigger ON loclibrary CASCADE;
+      CREATE TRIGGER loclibrary_bu_set_md_trg BEFORE UPDATE ON loclibrary
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_loclibrary_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.campusId = NEW.jsonb->>'campusId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_loclibrary_references ON loclibrary CASCADE;
+      CREATE TRIGGER loclibrary_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON loclibrary
+        FOR EACH ROW EXECUTE PROCEDURE update_loclibrary_references();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-location" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="location"/>
+      </not>
+    </preConditions>
+    <comment>Create location table and inline base DDL dependencies</comment>
+
+    <createTable tableName="location">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="location_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="institutionId" type="UUID"/>
+      <column name="campusId" type="UUID"/>
+      <column name="libraryId" type="UUID"/>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="location"
+                             baseColumnNames="institutionId"
+                             constraintName="institutionId_locinstitution_fkey"
+                             referencedTableName="locinstitution"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="location"
+                             baseColumnNames="campusId"
+                             constraintName="campusId_loccampus_fkey"
+                             referencedTableName="loccampus"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="location"
+                             baseColumnNames="libraryId"
+                             constraintName="libraryId_loclibrary_fkey"
+                             referencedTableName="loclibrary"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="location" indexName="location_institutionId_idx">
+      <column name="institutionId"/>
+    </createIndex>
+
+    <createIndex tableName="location" indexName="location_campusId_idx">
+      <column name="campusId"/>
+    </createIndex>
+
+    <createIndex tableName="location" indexName="location_libraryId_idx">
+      <column name="libraryId"/>
+    </createIndex>
+
+    <sql>
+      CREATE INDEX IF NOT EXISTS location_primaryServicePoint_idx
+        ON location (left(lower(jsonb->>'primaryServicePoint'), 600));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS location_name_idx_unique
+        ON location (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS location_code_idx_unique
+        ON location (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-location" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_location ON location CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON location CASCADE;
+      CREATE TRIGGER location_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON location
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_location_md_trigger ON location CASCADE;
+      CREATE TRIGGER location_bi_set_md_trg BEFORE INSERT ON location
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_location_md_json_trigger ON location CASCADE;
+      CREATE TRIGGER location_bu_set_md_trg BEFORE UPDATE ON location
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_location_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.institutionId = NEW.jsonb->>'institutionId';
+        NEW.campusId = NEW.jsonb->>'campusId';
+        NEW.libraryId = NEW.jsonb->>'libraryId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_location_references ON location CASCADE;
+      CREATE TRIGGER location_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON location
+        FOR EACH ROW EXECUTE PROCEDURE update_location_references();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-service-point" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="service_point"/>
+      </not>
+    </preConditions>
+    <comment>Create service_point table and inline base DDL dependencies</comment>
+
+    <createTable tableName="service_point">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="service_point_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql>
+      CREATE INDEX IF NOT EXISTS service_point_pickupLocation_idx
+        ON service_point (left(lower(jsonb->>'pickupLocation'), 600));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS service_point_name_idx_unique
+        ON service_point (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS service_point_code_idx_unique
+        ON service_point (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-service-point" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_service_point ON service_point CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON service_point CASCADE;
+      CREATE TRIGGER service_point_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON service_point
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_service_point_md_trigger ON service_point CASCADE;
+      CREATE TRIGGER service_point_bi_set_md_trg BEFORE INSERT ON service_point
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_service_point_md_json_trigger ON service_point CASCADE;
+      CREATE TRIGGER service_point_bu_set_md_trg BEFORE UPDATE ON service_point
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-service-point-user" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="service_point_user"/>
+      </not>
+    </preConditions>
+    <comment>Create service_point_user table and inline base DDL dependencies</comment>
+
+    <createTable tableName="service_point_user">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="service_point_user_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="defaultServicePointId" type="UUID"/>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="service_point_user"
+                             baseColumnNames="defaultServicePointId"
+                             constraintName="defaultServicePointId_service_point_fkey"
+                             referencedTableName="service_point"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="service_point_user" indexName="service_point_user_defaultServicePointId_idx">
+      <column name="defaultServicePointId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS service_point_user_userId_idx_unique
+        ON service_point_user (lower(f_unaccent(jsonb->>'userId')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-service-point-user" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_service_point_user ON service_point_user CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON service_point_user CASCADE;
+      CREATE TRIGGER service_point_user_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON service_point_user
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_service_point_user_md_trigger ON service_point_user CASCADE;
+      CREATE TRIGGER service_point_user_bi_set_md_trg BEFORE INSERT ON service_point_user
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_service_point_user_md_json_trigger ON service_point_user CASCADE;
+      CREATE TRIGGER service_point_user_bu_set_md_trg BEFORE UPDATE ON service_point_user
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_service_point_user_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.defaultServicePointId = NEW.jsonb->>'defaultServicePointId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_service_point_user_references ON service_point_user CASCADE;
+      CREATE TRIGGER service_point_user_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON service_point_user
+        FOR EACH ROW EXECUTE PROCEDURE update_service_point_user_references();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-identifier-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="identifier_type"/>
+      </not>
+    </preConditions>
+    <comment>Create identifier_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="identifier_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="identifier_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS identifier_type_name_idx_unique
+        ON identifier_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+  
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-identifier-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_identifier_type ON identifier_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON identifier_type CASCADE;
+      CREATE TRIGGER identifier_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON identifier_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_identifier_type_md_trigger ON identifier_type CASCADE;
+      CREATE TRIGGER identifier_type_bi_set_md_trg BEFORE INSERT ON identifier_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_identifier_type_md_json_trigger ON identifier_type CASCADE;
+      CREATE TRIGGER identifier_type_bu_set_md_trg BEFORE UPDATE ON identifier_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-relationship-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_relationship_type"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_relationship_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_relationship_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_relationship_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_relationship_type_name_idx_unique
+        ON instance_relationship_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-relationship-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_relationship_type ON instance_relationship_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_relationship_type CASCADE;
+      CREATE TRIGGER instance_relationship_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_relationship_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_relationship_type_md_trigger ON instance_relationship_type CASCADE;
+      CREATE TRIGGER instance_relationship_type_bi_set_md_trg BEFORE INSERT ON instance_relationship_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_relationship_type_md_json_trigger ON instance_relationship_type CASCADE;
+      CREATE TRIGGER instance_relationship_type_bu_set_md_trg BEFORE UPDATE ON instance_relationship_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-contributor-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="contributor_type"/>
+      </not>
+    </preConditions>
+    <comment>Create contributor_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="contributor_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="contributor_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS contributor_type_name_idx_unique
+        ON contributor_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS contributor_type_code_idx_unique
+        ON contributor_type (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-contributor-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_contributor_type ON contributor_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON contributor_type CASCADE;
+      CREATE TRIGGER contributor_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON contributor_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-contributor-name-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="contributor_name_type"/>
+      </not>
+    </preConditions>
+    <comment>Create contributor_name_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="contributor_name_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="contributor_name_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS contributor_name_type_name_idx_unique
+        ON contributor_name_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-contributor-name-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_contributor_name_type ON contributor_name_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON contributor_name_type CASCADE;
+      CREATE TRIGGER contributor_name_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON contributor_name_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_contributor_name_type_md_trigger ON contributor_name_type CASCADE;
+      CREATE TRIGGER contributor_name_type_bi_set_md_trg BEFORE INSERT ON contributor_name_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_contributor_name_type_md_json_trigger ON contributor_name_type CASCADE;
+      CREATE TRIGGER contributor_name_type_bu_set_md_trg BEFORE UPDATE ON contributor_name_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_type"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_type_name_idx_unique
+        ON instance_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_type_code_idx_unique
+        ON instance_type (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_type ON instance_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_type CASCADE;
+      CREATE TRIGGER instance_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-format" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_format"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_format table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_format">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_format_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_format_name_idx_unique
+        ON instance_format (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_format_code_idx_unique
+        ON instance_format (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-format" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_format ON instance_format CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_format CASCADE;
+      CREATE TRIGGER instance_format_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_format
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-nature-of-content-term" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="nature_of_content_term"/>
+      </not>
+    </preConditions>
+    <comment>Create nature_of_content_term table and inline base DDL dependencies</comment>
+
+    <createTable tableName="nature_of_content_term">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="nature_of_content_term_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS nature_of_content_term_name_idx_unique
+        ON nature_of_content_term (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-nature-of-content-term" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_nature_of_content_term ON nature_of_content_term CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON nature_of_content_term CASCADE;
+      CREATE TRIGGER nature_of_content_term_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON nature_of_content_term
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_nature_of_content_term_md_trigger ON nature_of_content_term CASCADE;
+      CREATE TRIGGER nature_of_content_term_bi_set_md_trg BEFORE INSERT ON nature_of_content_term
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_nature_of_content_term_md_json_trigger ON nature_of_content_term CASCADE;
+      CREATE TRIGGER nature_of_content_term_bu_set_md_trg BEFORE UPDATE ON nature_of_content_term
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-classification-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="classification_type"/>
+      </not>
+    </preConditions>
+    <comment>Create classification_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="classification_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="classification_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS classification_type_name_idx_unique
+        ON classification_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-classification-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_classification_type ON classification_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON classification_type CASCADE;
+      CREATE TRIGGER classification_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON classification_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_classification_type_md_trigger ON classification_type CASCADE;
+      CREATE TRIGGER classification_type_bi_set_md_trg BEFORE INSERT ON classification_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_classification_type_md_json_trigger ON classification_type CASCADE;
+      CREATE TRIGGER classification_type_bu_set_md_trg BEFORE UPDATE ON classification_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-electronic-access-relationship" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="electronic_access_relationship"/>
+      </not>
+    </preConditions>
+    <comment>Create electronic_access_relationship table and inline base DDL dependencies</comment>
+
+    <createTable tableName="electronic_access_relationship">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="electronic_access_relationship_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS electronic_access_relationship_name_idx_unique
+        ON electronic_access_relationship (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-electronic-access-relationship" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_electronic_access_relationship ON electronic_access_relationship CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON electronic_access_relationship CASCADE;
+      CREATE TRIGGER electronic_access_relationship_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON electronic_access_relationship
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_electronic_access_relationship_md_trigger ON electronic_access_relationship CASCADE;
+      CREATE TRIGGER electronic_access_relationship_bi_set_md_trg BEFORE INSERT ON electronic_access_relationship
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_electronic_access_relationship_md_json_trigger ON electronic_access_relationship CASCADE;
+      CREATE TRIGGER electronic_access_relationship_bu_set_md_trg BEFORE UPDATE ON electronic_access_relationship
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-statistical-code-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="statistical_code_type"/>
+      </not>
+    </preConditions>
+    <comment>Create statistical_code_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="statistical_code_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="statistical_code_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_type_code_idx_unique
+        ON statistical_code_type (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-statistical-code-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_statistical_code_type ON statistical_code_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON statistical_code_type CASCADE;
+      CREATE TRIGGER statistical_code_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON statistical_code_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_statistical_code_type_md_trigger ON statistical_code_type CASCADE;
+      CREATE TRIGGER statistical_code_type_bi_set_md_trg BEFORE INSERT ON statistical_code_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_statistical_code_type_md_json_trigger ON statistical_code_type CASCADE;
+      CREATE TRIGGER statistical_code_type_bu_set_md_trg BEFORE UPDATE ON statistical_code_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Create statistical_code table and inline base DDL dependencies</comment>
+
+    <createTable tableName="statistical_code">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="statistical_code_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="statisticalcodetypeid" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="statistical_code"
+                             baseColumnNames="statisticalcodetypeid"
+                             constraintName="statisticalCodeTypeId_statistical_code_type_fkey"
+                             referencedTableName="statistical_code_type"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="statistical_code" indexName="statistical_code_statisticalCodeTypeId_idx">
+      <column name="statisticalcodetypeid"/>
+    </createIndex>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_code_statisticalCodeTypeId_idx_unique
+        ON statistical_code (lower(f_unaccent(jsonb->>'code')), lower(f_unaccent(jsonb->>'statisticalCodeTypeId')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS statistical_code_name_idx_unique
+        ON statistical_code (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-statistical-code" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_statistical_code ON statistical_code CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON statistical_code CASCADE;
+      CREATE TRIGGER statistical_code_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON statistical_code
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_statistical_code_md_trigger ON statistical_code CASCADE;
+      CREATE TRIGGER statistical_code_bi_set_md_trg BEFORE INSERT ON statistical_code
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_statistical_code_md_json_trigger ON statistical_code CASCADE;
+      CREATE TRIGGER statistical_code_bu_set_md_trg BEFORE UPDATE ON statistical_code
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_statistical_code_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.statisticalcodetypeid = NEW.jsonb->>'statisticalCodeTypeId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_statistical_code_references ON statistical_code CASCADE;
+      CREATE TRIGGER statistical_code_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON statistical_code
+        FOR EACH ROW EXECUTE PROCEDURE update_statistical_code_references();
+    </sql>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-status" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_status"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_status table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_status">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_status_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_status_name_idx_unique
+        ON instance_status (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_status_code_idx_unique
+        ON instance_status (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-status" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_status ON instance_status CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_status CASCADE;
+      CREATE TRIGGER instance_status_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_status
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_status_md_trigger ON instance_status CASCADE;
+      CREATE TRIGGER instance_status_bi_set_md_trg BEFORE INSERT ON instance_status
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_status_md_json_trigger ON instance_status CASCADE;
+      CREATE TRIGGER instance_status_bu_set_md_trg BEFORE UPDATE ON instance_status
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-mode-of-issuance" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="mode_of_issuance"/>
+      </not>
+    </preConditions>
+    <comment>Create mode_of_issuance table and inline base DDL dependencies</comment>
+
+    <createTable tableName="mode_of_issuance">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="mode_of_issuance_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS mode_of_issuance_name_idx_unique
+        ON mode_of_issuance (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-mode-of-issuance" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_mode_of_issuance ON mode_of_issuance CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON mode_of_issuance CASCADE;
+      CREATE TRIGGER mode_of_issuance_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON mode_of_issuance
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_mode_of_issuance_md_trigger ON mode_of_issuance CASCADE;
+      CREATE TRIGGER mode_of_issuance_bi_set_md_trg BEFORE INSERT ON mode_of_issuance
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_mode_of_issuance_md_json_trigger ON mode_of_issuance CASCADE;
+      CREATE TRIGGER mode_of_issuance_bu_set_md_trg BEFORE UPDATE ON mode_of_issuance
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-alternative-title-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="alternative_title_type"/>
+      </not>
+    </preConditions>
+    <comment>Create alternative_title_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="alternative_title_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="alternative_title_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS alternative_title_type_name_idx_unique
+        ON alternative_title_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-alternative-title-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_alternative_title_type ON alternative_title_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON alternative_title_type CASCADE;
+      CREATE TRIGGER alternative_title_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON alternative_title_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_alternative_title_type_md_trigger ON alternative_title_type CASCADE;
+      CREATE TRIGGER alternative_title_type_bi_set_md_trg BEFORE INSERT ON alternative_title_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_alternative_title_type_md_json_trigger ON alternative_title_type CASCADE;
+      CREATE TRIGGER alternative_title_type_bu_set_md_trg BEFORE UPDATE ON alternative_title_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-date-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_date_type"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_date_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_date_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_date_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-date-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_date_type ON instance_date_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_date_type CASCADE;
+      CREATE TRIGGER instance_date_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_date_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_date_type_md_trigger ON instance_date_type CASCADE;
+      CREATE TRIGGER instance_date_type_bi_set_md_trg BEFORE INSERT ON instance_date_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_date_type_md_json_trigger ON instance_date_type CASCADE;
+      CREATE TRIGGER instance_date_type_bu_set_md_trg BEFORE UPDATE ON instance_date_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-instance-date-type" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO instance_date_type (id, jsonb)
+      VALUES
+        ('42dac21e-3c81-4cb1-9f16-9e50c81bacc4', '{"id":"42dac21e-3c81-4cb1-9f16-9e50c81bacc4","name":"Continuing resource ceased publication","code":"d","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('0750f52b-3bfc-458d-9307-e9afc8bcdffa', '{"id":"0750f52b-3bfc-458d-9307-e9afc8bcdffa","name":"Continuing resource currently published","code":"c","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('5a1a1adb-de71-45e6-ba94-1c0838969f04', '{"id":"5a1a1adb-de71-45e6-ba94-1c0838969f04","name":"Continuing resource status unknown","code":"u","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('5f84208a-0aa6-4694-a58f-5310b654f012', '{"id":"5f84208a-0aa6-4694-a58f-5310b654f012","name":"Date of distribution/release/issue and production/recording session when different","code":"p","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('e77bb7ed-2e53-4c62-8b06-5907b8934ba7', '{"id":"e77bb7ed-2e53-4c62-8b06-5907b8934ba7","name":"Dates unknown","code":"n","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('9669a463-5971-42dc-9eee-046bbd678fb1', '{"id":"9669a463-5971-42dc-9eee-046bbd678fb1","name":"Detailed date","code":"e","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('6de732c5-c29b-4a10-9db0-0729ca960f12', '{"id":"6de732c5-c29b-4a10-9db0-0729ca960f12","name":"Inclusive dates of collection","code":"i","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('8fa6d067-41ff-4362-96a0-96b16ddce267', '{"id":"8fa6d067-41ff-4362-96a0-96b16ddce267","name":"Multiple dates","code":"m","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8', '{"id":"6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8","name":"No attempt to code","code":"|","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8', '{"id":"77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8","name":"No dates given; B.C. date involved","code":"b","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('3a4296bf-504b-451b-9355-5806f8d88253', '{"id":"3a4296bf-504b-451b-9355-5806f8d88253","name":"Publication date and copyright date","code":"t","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('4afa7d3d-e6f5-4134-9ab5-32ad377d2432', '{"id":"4afa7d3d-e6f5-4134-9ab5-32ad377d2432","name":"Questionable date","code":"q","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('ccc293d5-9e88-4222-ac04-d058351ddb7b', '{"id":"ccc293d5-9e88-4222-ac04-d058351ddb7b","name":"Range of years of bulk of collection","code":"k","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('47622598-61eb-4348-899a-1208275c3882', '{"id":"47622598-61eb-4348-899a-1208275c3882","name":"Reprint/reissue date and original date","code":"r","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('24a506e8-2a92-4ecc-bd09-ff849321fd5a', '{"id":"24a506e8-2a92-4ecc-bd09-ff849321fd5a","name":"Single known date/probable date","code":"s","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}')
+        ON CONFLICT (id) DO UPDATE SET jsonb=EXCLUDED.jsonb;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-subject-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="subject_type"/>
+      </not>
+    </preConditions>
+    <comment>Create subject_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="subject_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="subject_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS subject_type_name_idx_unique
+        ON subject_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-subject-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_subject_type ON subject_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON subject_type CASCADE;
+      CREATE TRIGGER subject_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON subject_type
+                                                        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_subject_type_md_trigger ON subject_type CASCADE;
+      CREATE TRIGGER subject_type_bi_set_md_trg BEFORE INSERT ON subject_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_subject_type_md_json_trigger ON subject_type CASCADE;
+      CREATE TRIGGER subject_type_bu_set_md_trg BEFORE UPDATE ON subject_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-type" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b1',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b1', 'name', 'Personal name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b2',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b2', 'name', 'Corporate name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b3',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b3', 'name', 'Meeting name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b4',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b4', 'name', 'Uniform title',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b5',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b5', 'name', 'Named event',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b6',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b6', 'name', 'Chronological term',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b7',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b7', 'name', 'Topical term',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b8',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b8', 'name', 'Geographic name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b9',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b9', 'name', 'Uncontrolled',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff510',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff510', 'name', 'Faceted topical terms',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff511',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff511', 'name', 'Genre/form',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff512',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff512', 'name', 'Occupation',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff513',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b13', 'name', 'Function',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff514',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff514', 'name', 'Curriculum objective',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff515',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff515', 'name', 'Hierarchical place name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff516',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff516', 'name', 'Type of entity unspecified',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-subject-source" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="subject_source"/>
+      </not>
+    </preConditions>
+    <comment>Create subject_source table and inline base DDL dependencies</comment>
+
+    <createTable tableName="subject_source">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="subject_source_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS subject_source_name_idx_unique
+        ON subject_source (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS subject_source_code_idx_unique
+        ON subject_source (lower(f_unaccent(jsonb->>'code')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-subject-source" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_subject_source ON subject_source CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON subject_source CASCADE;
+      CREATE TRIGGER subject_source_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON subject_source
+                                                        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_subject_source_md_trigger ON subject_source CASCADE;
+      CREATE TRIGGER subject_source_bi_set_md_trg BEFORE INSERT ON subject_source
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_subject_source_md_json_trigger ON subject_source CASCADE;
+      CREATE TRIGGER subject_source_bu_set_md_trg BEFORE UPDATE ON subject_source
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-source" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d40',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d40', 'name', 'Library of Congress Subject Headings', 'code', 'lcsh', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d41',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d41', 'name', 'Library of Congress Children''s and Young Adults'' Subject Headings', 'code', 'cyac', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d42',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d42', 'name', 'Medical Subject Headings', 'code', 'mesh', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d43',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d43', 'name', 'National Agricultural Library subject authority file', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d44',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d44', 'name', 'Source not specified', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d45',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d45', 'name', 'Canadian Subject Headings', 'code', 'cash',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d46',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d46', 'name', 'Répertoire de vedettes-matière', 'code', 'rvm',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance"/>
+      </not>
+    </preConditions>
+    <comment>Create instance table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+
+      <column name="complete_updated_date" type="timestamptz"/>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="instanceStatusId" type="UUID"/>
+      <column name="modeOfIssuanceId" type="UUID"/>
+      <column name="dates_dateTypeId" type="UUID"/>
+      <column name="instanceTypeId" type="UUID"/>
+    </createTable>
+
+    <createTable tableName="audit_instance">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_instance_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="instance"
+                             baseColumnNames="instanceStatusId"
+                             constraintName="instanceStatusId_instance_status_fkey"
+                             referencedTableName="instance_status"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="instance"
+                             baseColumnNames="modeOfIssuanceId"
+                             constraintName="modeOfIssuanceId_mode_of_issuance_fkey"
+                             referencedTableName="mode_of_issuance"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="instance"
+                             baseColumnNames="dates_dateTypeId"
+                             constraintName="dates_dateTypeId_instance_date_type_fkey"
+                             referencedTableName="instance_date_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="instance"
+                             baseColumnNames="instanceTypeId"
+                             constraintName="instanceTypeId_instance_type_fkey"
+                             referencedTableName="instance_type"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="instance" indexName="instance_instanceStatusId_idx">
+      <column name="instanceStatusId"/>
+    </createIndex>
+
+    <createIndex tableName="instance" indexName="instance_modeOfIssuanceId_idx">
+      <column name="modeOfIssuanceId"/>
+    </createIndex>
+
+    <createIndex tableName="instance" indexName="instance_dates_dateTypeId_idx">
+      <column name="dates_dateTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="instance" indexName="instance_instanceTypeId_idx">
+      <column name="instanceTypeId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_source_idx
+        ON instance (left(lower(jsonb->>'source'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_indexTitle_idx
+        ON instance (left(lower(f_unaccent(jsonb->>'indexTitle')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_title_idx
+        ON instance (left(lower(f_unaccent(jsonb->>'title')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_sourceUri_idx
+        ON instance (left(lower(f_unaccent(jsonb->>'sourceUri')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_statisticalCodeIds_idx
+        ON instance (left(lower(jsonb->>'statisticalCodeIds'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_staffSuppress_idx
+        ON instance (left(lower(jsonb->>'staffSuppress'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_discoverySuppress_idx
+        ON instance (left(lower(jsonb->>'discoverySuppress'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_metadata_updatedDate_idx
+        ON instance (left(lower(jsonb->'metadata'->>'updatedDate'), 600));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_hrid_idx_unique
+        ON instance (lower(f_unaccent(jsonb->>'hrid')));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_matchKey_idx_unique
+        ON instance (lower(f_unaccent(jsonb->>'matchKey')));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_identifiers_idx_ft
+        ON instance USING GIN (get_tsvector(f_unaccent(instance.jsonb->>'identifiers')));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_invalidIsbn_idx_ft
+        ON instance USING GIN (get_tsvector(normalize_invalid_isbns(jsonb->'identifiers')));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS instance_isbn_idx_ft
+        ON instance USING GIN (get_tsvector(normalize_isbns(jsonb->'identifiers')));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS idx_instance_complete_updated_date ON instance(complete_updated_date);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_deleted_idx ON instance ((jsonb ->> 'deleted'));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_discoverysuppress_source_idx
+        ON instance (((jsonb ->> 'discoverySuppress'::text)), ((jsonb ->> 'source'::text)));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_creation_date_idx ON instance (creation_date);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_identifiers_values_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'identifiers', 'value'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_publication_date_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'publication', 'dateOfPublication'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_subjects_values_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'subjects', 'value'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_cataloged_date_idx ON instance (to_timestamp(jsonb->>'catalogedDate'));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_format_ids_idx ON instance
+        USING gin ((jsonb -> 'instanceFormatIds') jsonb_path_ops);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_notes_instancenotesnotetypeid_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'notes', 'instanceNoteTypeId'))
+                 jsonb_path_ops
+        );
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance ON instance CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance CASCADE;
+      CREATE TRIGGER instance_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_md_trigger ON instance CASCADE;
+      CREATE TRIGGER instance_bi_set_md_trg BEFORE INSERT ON instance
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_md_json_trigger ON instance CASCADE;
+      CREATE TRIGGER instance_bu_set_md_trg BEFORE UPDATE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION update_instance_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.instanceStatusId = NEW.jsonb->>'instanceStatusId';
+        NEW.modeOfIssuanceId = NEW.jsonb->>'modeOfIssuanceId';
+        NEW.dates_dateTypeId = NEW.jsonb->'dates'->>'dateTypeId';
+        NEW.instanceTypeId = NEW.jsonb->>'instanceTypeId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_instance_references ON instance CASCADE;
+      CREATE TRIGGER instance_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE update_instance_references();
+
+      CREATE OR REPLACE FUNCTION instance_set_ol_version()
+      RETURNS trigger AS $$
+      BEGIN
+        CASE TG_OP
+          WHEN 'INSERT' THEN
+              NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', to_jsonb(1));
+          WHEN 'UPDATE' THEN
+            IF NEW.jsonb->'_version' = '-1' THEN
+              IF OLD.jsonb->'_version' IS NULL THEN
+                NEW.jsonb = NEW.jsonb - '_version';
+              ELSE
+                NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', OLD.jsonb->'_version');
+              END IF;
+            END IF;
+            IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
+              RAISE 'Cannot update record % because it has been changed (optimistic locking): '
+                    'Stored _version is %, _version of request is %',
+                    OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
+                    USING ERRCODE = '23F09', TABLE = 'instance', SCHEMA = '${database.defaultSchemaName}';
+            END IF;
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
+                to_jsonb(COALESCE(((OLD.jsonb->>'_version')::numeric + 1) % 2147483648, 1)));
+        END CASE;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS set_instance_ol_version_trigger
+        ON instance CASCADE;
+
+      CREATE TRIGGER instance_ol_bi_set_version_trg BEFORE INSERT OR UPDATE OF jsonb
+        ON instance
+        FOR EACH ROW EXECUTE PROCEDURE instance_set_ol_version();
+
+      CREATE OR REPLACE FUNCTION audit_instance_changes()
+      RETURNS TRIGGER AS $instance_audit$
+      DECLARE
+        jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_instance WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+        END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+        INSERT INTO audit_instance VALUES (uuid, jsonb);
+        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $instance_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_instance ON instance CASCADE;
+      CREATE TRIGGER audit_instance AFTER DELETE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE audit_instance_changes();
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION set_instance_status_updated_date()
+      RETURNS trigger
+      AS $function$
+        BEGIN
+          IF (OLD.jsonb->'statusId' IS DISTINCT FROM NEW.jsonb->'statusId') THEN
+            -- Date time in "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" format at UTC (00:00) time zone
+            NEW.jsonb = jsonb_set(
+              NEW.jsonb, '{statusUpdatedDate}',
+              to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"'))
+            );
+          END IF;
+          RETURN NEW;
+        END;
+      $function$  LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS set_instance_status_updated_date ON instance;
+
+      CREATE TRIGGER set_instance_status_updated_date BEFORE
+      UPDATE ON instance
+      FOR EACH ROW EXECUTE PROCEDURE set_instance_status_updated_date();
+
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS idx_instance_complete_updated_date ON instance(complete_updated_date);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_deleted_idx ON instance ((jsonb ->> 'deleted'));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_discoverysuppress_source_idx
+        ON instance (((jsonb ->> 'discoverySuppress'::text)), ((jsonb ->> 'source'::text)));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_creation_date_idx ON instance (creation_date);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_identifiers_values_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'identifiers', 'value'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_publication_date_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'publication', 'dateOfPublication'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_subjects_values_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'subjects', 'value'))
+                 jsonb_path_ops
+        );
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_cataloged_date_idx ON instance (to_timestamp(jsonb->>'catalogedDate'));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_format_ids_idx ON instance
+        USING gin ((jsonb -> 'instanceFormatIds') jsonb_path_ops);
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS instance_notes_instancenotesnotetypeid_idx ON instance
+      USING gin (
+                 normalize_jsonb_array(
+                   extract_values(jsonb, 'notes', 'instanceNoteTypeId'))
+                 jsonb_path_ops
+        );
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-relationship" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_relationship"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_relationship table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_relationship">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_relationship_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="superInstanceId" type="UUID"/>
+      <column name="subInstanceId" type="UUID"/>
+      <column name="instanceRelationshipTypeId" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="instance_relationship"
+                             baseColumnNames="superInstanceId"
+                             constraintName="superInstanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="instance_relationship"
+                             baseColumnNames="subInstanceId"
+                             constraintName="subInstanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="instance_relationship"
+                             baseColumnNames="instanceRelationshipTypeId"
+                             constraintName="instanceRelationshipTypeId_instance_relationship_type_fkey"
+                             referencedTableName="instance_relationship_type"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="instance_relationship" indexName="instance_relationship_superInstanceId_idx">
+      <column name="superInstanceId"/>
+    </createIndex>
+
+    <createIndex tableName="instance_relationship" indexName="instance_relationship_subInstanceId_idx">
+      <column name="subInstanceId"/>
+    </createIndex>
+
+    <createIndex tableName="instance_relationship" indexName="instance_relationship_instanceRelationshipTypeId_idx">
+      <column name="instanceRelationshipTypeId"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-relationship" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_relationship ON instance_relationship CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_relationship CASCADE;
+      CREATE TRIGGER instance_relationship_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_relationship
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_relationship_md_trigger ON instance_relationship CASCADE;
+      CREATE TRIGGER instance_relationship_bi_set_md_trg BEFORE INSERT ON instance_relationship
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_relationship_md_json_trigger ON instance_relationship CASCADE;
+      CREATE TRIGGER instance_relationship_bu_set_md_trg BEFORE UPDATE ON instance_relationship
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_instance_relationship_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.superInstanceId = NEW.jsonb->>'superInstanceId';
+        NEW.subInstanceId = NEW.jsonb->>'subInstanceId';
+        NEW.instanceRelationshipTypeId = NEW.jsonb->>'instanceRelationshipTypeId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_instance_relationship_references ON instance_relationship CASCADE;
+      CREATE TRIGGER instance_relationship_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON instance_relationship
+        FOR EACH ROW EXECUTE PROCEDURE update_instance_relationship_references();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-source-marc" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_source_marc"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_source_marc table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_source_marc">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_source_marc_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="instance_source_marc"
+                             baseColumnNames="id"
+                             constraintName="instance_source_marc_id_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-source-marc" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_source_marc ON instance_source_marc CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_source_marc CASCADE;
+      CREATE TRIGGER instance_source_marc_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_source_marc
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_source_marc_md_trigger ON instance_source_marc CASCADE;
+      CREATE TRIGGER instance_source_marc_bi_set_md_trg BEFORE INSERT ON instance_source_marc
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_source_marc_md_json_trigger ON instance_source_marc CASCADE;
+      CREATE TRIGGER instance_source_marc_bu_set_md_trg BEFORE UPDATE ON instance_source_marc
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION set_instance_sourceRecordFormat()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          CASE TG_OP
+          WHEN 'INSERT' THEN
+            NEW.jsonb := NEW.jsonb - 'sourceRecordFormat';
+          ELSE
+            NEW.jsonb := CASE (SELECT count(*) FROM instance_source_marc WHERE id=NEW.id)
+                         WHEN 0 THEN NEW.jsonb - 'sourceRecordFormat'
+                         ELSE jsonb_set(NEW.jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
+                         END;
+          END CASE;
+          RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+      DROP TRIGGER IF EXISTS set_instance_sourceRecordFormat ON instance CASCADE;
+      CREATE TRIGGER set_instance_sourceRecordFormat
+        BEFORE INSERT OR UPDATE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE set_instance_sourceRecordFormat();
+
+      CREATE OR REPLACE FUNCTION update_instance_source_marc()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          IF (TG_OP = 'DELETE') THEN
+            UPDATE instance
+              SET jsonb = jsonb - 'sourceRecordFormat'
+              WHERE id = OLD.id;
+          ELSE
+            UPDATE instance
+              SET jsonb = jsonb_set(jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
+              WHERE id = NEW.id;
+          END IF;
+          RETURN NULL;
+        END;
+        $$ language 'plpgsql';
+      DROP TRIGGER IF EXISTS update_instance_source_marc ON instance_source_marc CASCADE;
+      CREATE TRIGGER update_instance_source_marc
+        AFTER DELETE OR INSERT OR UPDATE ON instance_source_marc
+        FOR EACH ROW EXECUTE PROCEDURE update_instance_source_marc();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-ill-policy" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="ill_policy"/>
+      </not>
+    </preConditions>
+    <comment>Create ill_policy table and inline base DDL dependencies</comment>
+
+    <createTable tableName="ill_policy">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="ill_policy_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS ill_policy_name_idx_unique
+        ON ill_policy (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-ill-policy" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_ill_policy ON ill_policy CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON ill_policy CASCADE;
+      CREATE TRIGGER ill_policy_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON ill_policy
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_ill_policy_md_trigger ON ill_policy CASCADE;
+      CREATE TRIGGER ill_policy_bi_set_md_trg BEFORE INSERT ON ill_policy
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_ill_policy_md_json_trigger ON ill_policy CASCADE;
+      CREATE TRIGGER ill_policy_bu_set_md_trg BEFORE UPDATE ON ill_policy
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-call-number-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="call_number_type"/>
+      </not>
+    </preConditions>
+    <comment>Create call_number_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="call_number_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="call_number_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS call_number_type_name_idx_unique
+        ON call_number_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-call-number-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_call_number_type ON call_number_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON call_number_type CASCADE;
+      CREATE TRIGGER call_number_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON call_number_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_call_number_type_md_trigger ON call_number_type CASCADE;
+      CREATE TRIGGER call_number_type_bi_set_md_trg BEFORE INSERT ON call_number_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_call_number_type_md_json_trigger ON call_number_type CASCADE;
+      CREATE TRIGGER call_number_type_bu_set_md_trg BEFORE UPDATE ON call_number_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-holdings-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="holdings_type"/>
+      </not>
+    </preConditions>
+    <comment>Create holdings_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="holdings_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="holdings_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS holdings_type_name_idx_unique
+        ON holdings_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-holdings-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_holdings_type ON holdings_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON holdings_type CASCADE;
+      CREATE TRIGGER holdings_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON holdings_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_holdings_type_md_trigger ON holdings_type CASCADE;
+      CREATE TRIGGER holdings_type_bi_set_md_trg BEFORE INSERT ON holdings_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_holdings_type_md_json_trigger ON holdings_type CASCADE;
+      CREATE TRIGGER holdings_type_bu_set_md_trg BEFORE UPDATE ON holdings_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-note-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_note_type"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_note_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="instance_note_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="instance_note_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS instance_note_type_name_idx_unique
+        ON instance_note_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-note-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_instance_note_type ON instance_note_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON instance_note_type CASCADE;
+      CREATE TRIGGER instance_note_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON instance_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_instance_note_type_md_trigger ON instance_note_type CASCADE;
+      CREATE TRIGGER instance_note_type_bi_set_md_trg BEFORE INSERT ON instance_note_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_instance_note_type_md_json_trigger ON instance_note_type CASCADE;
+      CREATE TRIGGER instance_note_type_bu_set_md_trg BEFORE UPDATE ON instance_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-holdings-note-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="holdings_note_type"/>
+      </not>
+    </preConditions>
+    <comment>Create holdings_note_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="holdings_note_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="holdings_note_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS holdings_note_type_name_idx_unique
+        ON holdings_note_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-holdings-note-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_holdings_note_type ON holdings_note_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON holdings_note_type CASCADE;
+      CREATE TRIGGER holdings_note_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON holdings_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_holdings_note_type_md_trigger ON holdings_note_type CASCADE;
+      CREATE TRIGGER holdings_note_type_bi_set_md_trg BEFORE INSERT ON holdings_note_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_holdings_note_type_md_json_trigger ON holdings_note_type CASCADE;
+      CREATE TRIGGER holdings_note_type_bu_set_md_trg BEFORE UPDATE ON holdings_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-item-note-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="item_note_type"/>
+      </not>
+    </preConditions>
+    <comment>Create item_note_type table and inline base DDL dependencies</comment>
+
+    <createTable tableName="item_note_type">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="item_note_type_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS item_note_type_name_idx_unique
+        ON item_note_type (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item-note-type" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_item_note_type ON item_note_type CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON item_note_type CASCADE;
+      CREATE TRIGGER item_note_type_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON item_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_item_note_type_md_trigger ON item_note_type CASCADE;
+      CREATE TRIGGER item_note_type_bi_set_md_trg BEFORE INSERT ON item_note_type
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_item_note_type_md_json_trigger ON item_note_type CASCADE;
+      CREATE TRIGGER item_note_type_bu_set_md_trg BEFORE UPDATE ON item_note_type
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-item-damaged-status" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="item_damaged_status"/>
+      </not>
+    </preConditions>
+    <comment>Create item_damaged_status table and inline base DDL dependencies</comment>
+
+    <createTable tableName="item_damaged_status">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="item_damaged_status_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS item_damaged_status_name_idx_unique
+        ON item_damaged_status (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item-damaged-status" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_item_damaged_status ON item_damaged_status CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON item_damaged_status CASCADE;
+      CREATE TRIGGER item_damaged_status_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON item_damaged_status
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_item_damaged_status_md_trigger ON item_damaged_status CASCADE;
+      CREATE TRIGGER item_damaged_status_bi_set_md_trg BEFORE INSERT ON item_damaged_status
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_item_damaged_status_md_json_trigger ON item_damaged_status CASCADE;
+      CREATE TRIGGER item_damaged_status_bu_set_md_trg BEFORE UPDATE ON item_damaged_status
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-holdings-records-source" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="holdings_records_source"/>
+      </not>
+    </preConditions>
+    <comment>Create holdings_records_source table and inline base DDL dependencies</comment>
+
+    <createTable tableName="holdings_records_source">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="holdings_records_source_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE UNIQUE INDEX IF NOT EXISTS holdings_records_source_name_idx_unique
+        ON holdings_records_source (lower(f_unaccent(jsonb->>'name')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-holdings-records-source" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_holdings_records_source ON holdings_records_source CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON holdings_records_source CASCADE;
+      CREATE TRIGGER holdings_records_source_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON holdings_records_source
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_holdings_records_source_md_trigger ON holdings_records_source CASCADE;
+      CREATE TRIGGER holdings_records_source_bi_set_md_trg BEFORE INSERT ON holdings_records_source
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_holdings_records_source_md_json_trigger ON holdings_records_source CASCADE;
+      CREATE TRIGGER holdings_records_source_bu_set_md_trg BEFORE UPDATE ON holdings_records_source
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-holdings-record" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="holdings_record"/>
+      </not>
+    </preConditions>
+    <comment>Create holdings_record table and inline base DDL dependencies</comment>
+
+    <createTable tableName="holdings_record">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="holdings_record_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="instanceId" type="UUID"/>
+      <column name="permanentLocationId" type="UUID"/>
+      <column name="temporaryLocationId" type="UUID"/>
+      <column name="effectiveLocationId" type="UUID"/>
+      <column name="holdingsTypeId" type="UUID"/>
+      <column name="callNumberTypeId" type="UUID"/>
+      <column name="illPolicyId" type="UUID"/>
+      <column name="sourceId" type="UUID"/>
+    </createTable>
+
+    <createTable tableName="audit_holdings_record">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_holdings_record_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="instanceId"
+                             constraintName="instanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="permanentLocationId"
+                             constraintName="permanentLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="temporaryLocationId"
+                             constraintName="temporaryLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="effectiveLocationId"
+                             constraintName="effectiveLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="holdingsTypeId"
+                             constraintName="holdingsTypeId_holdings_type_fkey"
+                             referencedTableName="holdings_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="callNumberTypeId"
+                             constraintName="callNumberTypeId_call_number_type_fkey"
+                             referencedTableName="call_number_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="illPolicyId"
+                             constraintName="illPolicyId_ill_policy_fkey"
+                             referencedTableName="ill_policy"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="sourceId"
+                             constraintName="sourceId_holdings_records_source_fkey"
+                             referencedTableName="holdings_records_source"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_instanceId_idx">
+      <column name="instanceId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_permanentLocationId_idx">
+      <column name="permanentLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_temporaryLocationId_idx">
+      <column name="temporaryLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_effectiveLocationId_idx">
+      <column name="effectiveLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_holdingsTypeId_idx">
+      <column name="holdingsTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_callNumberTypeId_idx">
+      <column name="callNumberTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_illPolicyId_idx">
+      <column name="illPolicyId"/>
+    </createIndex>
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_sourceId_idx">
+      <column name="sourceId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS holdings_record_callNumber_idx
+        ON holdings_record (left(lower(jsonb->>'callNumber'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS holdings_record_callNumberAndSuffix_idx
+        ON holdings_record (left(lower(concat_space_sql(jsonb->>'callNumber', jsonb->>'callNumberSuffix')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS holdings_record_fullCallNumber_idx
+        ON holdings_record (left(lower(concat_space_sql(jsonb->>'callNumberPrefix', jsonb->>'callNumber', jsonb->>'callNumberSuffix')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS holdings_record_discoverySuppress_idx
+        ON holdings_record (left(lower(jsonb->>'discoverySuppress'), 600));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS holdings_record_hrid_idx_unique
+        ON holdings_record (lower(f_unaccent(jsonb->>'hrid')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-holdings-record" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_holdings_record ON holdings_record CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON holdings_record CASCADE;
+      CREATE TRIGGER holdings_record_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_holdings_record_md_trigger ON holdings_record CASCADE;
+      CREATE TRIGGER holdings_record_bi_set_md_trg BEFORE INSERT ON holdings_record
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_holdings_record_md_json_trigger ON holdings_record CASCADE;
+      CREATE TRIGGER holdings_record_bu_set_md_trg BEFORE UPDATE ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_holdings_record_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.instanceId = NEW.jsonb->>'instanceId';
+        NEW.permanentLocationId = NEW.jsonb->>'permanentLocationId';
+        NEW.temporaryLocationId = NEW.jsonb->>'temporaryLocationId';
+        NEW.effectiveLocationId = NEW.jsonb->>'effectiveLocationId';
+        NEW.holdingsTypeId = NEW.jsonb->>'holdingsTypeId';
+        NEW.callNumberTypeId = NEW.jsonb->>'callNumberTypeId';
+        NEW.illPolicyId = NEW.jsonb->>'illPolicyId';
+        NEW.sourceId = NEW.jsonb->>'sourceId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_holdings_record_references ON holdings_record CASCADE;
+      CREATE TRIGGER holdings_record_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE update_holdings_record_references();
+
+      CREATE OR REPLACE FUNCTION holdings_record_set_ol_version()
+      RETURNS trigger AS $$
+      BEGIN
+        CASE TG_OP
+          WHEN 'INSERT' THEN
+              NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', to_jsonb(1));
+          WHEN 'UPDATE' THEN
+            IF NEW.jsonb->'_version' = '-1' THEN
+              IF OLD.jsonb->'_version' IS NULL THEN
+                NEW.jsonb = NEW.jsonb - '_version';
+              ELSE
+                NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', OLD.jsonb->'_version');
+              END IF;
+            END IF;
+            IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
+              RAISE 'Cannot update record % because it has been changed (optimistic locking): '
+                    'Stored _version is %, _version of request is %',
+                    OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
+                    USING ERRCODE = '23F09', TABLE = 'holdings_record', SCHEMA = '${database.defaultSchemaName}';
+            END IF;
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
+                to_jsonb(COALESCE(((OLD.jsonb->>'_version')::numeric + 1) % 2147483648, 1)));
+        END CASE;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS set_holdings_record_ol_version_trigger
+        ON holdings_record CASCADE;
+
+      CREATE TRIGGER holdings_record_ol_bi_set_version_trg BEFORE INSERT OR UPDATE OF jsonb
+        ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE holdings_record_set_ol_version();
+
+      CREATE OR REPLACE FUNCTION audit_holdings_record_changes()
+      RETURNS TRIGGER AS $holdings_record_audit$
+      DECLARE
+        jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_holdings_record WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+        END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+        INSERT INTO audit_holdings_record VALUES (uuid, jsonb);
+        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $holdings_record_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_holdings_record ON holdings_record CASCADE;
+      CREATE TRIGGER audit_holdings_record AFTER DELETE ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE audit_holdings_record_changes();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-item" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="item"/>
+      </not>
+    </preConditions>
+    <comment>Create item table and inline base DDL dependencies</comment>
+
+    <createTable tableName="item">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="item_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="holdingsRecordId" type="UUID"/>
+      <column name="permanentLoanTypeId" type="UUID"/>
+      <column name="temporaryLoanTypeId" type="UUID"/>
+      <column name="materialTypeId" type="UUID"/>
+      <column name="permanentLocationId" type="UUID"/>
+      <column name="temporaryLocationId" type="UUID"/>
+      <column name="effectiveLocationId" type="UUID"/>
+      <column name="itemLevelCallNumberTypeId" type="UUID"/>
+      <column name="effectiveCallNumberComponents_typeId" type="UUID"/>
+    </createTable>
+
+    <createTable tableName="audit_item">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_item_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="holdingsRecordId"
+                             constraintName="holdingsRecordId_holdings_record_fkey"
+                             referencedTableName="holdings_record"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="permanentLoanTypeId"
+                             constraintName="permanentLoanTypeId_loan_type_fkey"
+                             referencedTableName="loan_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="temporaryLoanTypeId"
+                             constraintName="temporaryLoanTypeId_loan_type_fkey"
+                             referencedTableName="loan_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="materialTypeId"
+                             constraintName="materialTypeId_material_type_fkey"
+                             referencedTableName="material_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="permanentLocationId"
+                             constraintName="permanentLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="temporaryLocationId"
+                             constraintName="temporaryLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="effectiveLocationId"
+                             constraintName="effectiveLocationId_location_fkey"
+                             referencedTableName="location"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="itemLevelCallNumberTypeId"
+                             constraintName="itemLevelCallNumberTypeId_call_number_type_fkey"
+                             referencedTableName="call_number_type"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="effectiveCallNumberComponents_typeId"
+                             constraintName="effectiveCallNumberComponents_typeId_call_number_type_fkey"
+                             referencedTableName="call_number_type"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="item" indexName="item_holdingsRecordId_idx">
+      <column name="holdingsRecordId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_permanentLoanTypeId_idx">
+      <column name="permanentLoanTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_temporaryLoanTypeId_idx">
+      <column name="temporaryLoanTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_materialTypeId_idx">
+      <column name="materialTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_permanentLocationId_idx">
+      <column name="permanentLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_temporaryLocationId_idx">
+      <column name="temporaryLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_effectiveLocationId_idx">
+      <column name="effectiveLocationId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_itemLevelCallNumberTypeId_idx">
+      <column name="itemLevelCallNumberTypeId"/>
+    </createIndex>
+
+    <createIndex tableName="item" indexName="item_effectiveCallNumberComponents_typeId_idx">
+      <column name="effectiveCallNumberComponents_typeId"/>
+    </createIndex>
+
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_accessionNumber_idx
+        ON item (left(lower(jsonb->>'accessionNumber'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_status_name_idx
+        ON item (left(lower(f_unaccent(jsonb->'status'->>'name')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_callNumberAndSuffix_idx
+        ON item (left(lower(concat_space_sql(jsonb->'effectiveCallNumberComponents'->>'callNumber', jsonb->'effectiveCallNumberComponents'->>'suffix')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_fullCallNumber_idx
+        ON item (left(lower(concat_space_sql(jsonb->'effectiveCallNumberComponents'->>'prefix', jsonb->'effectiveCallNumberComponents'->>'callNumber', jsonb->'effectiveCallNumberComponents'->>'suffix')), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_discoverySuppress_idx
+        ON item (left(lower(jsonb->>'discoverySuppress'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_purchaseOrderLineIdentifier_idx
+        ON item (left(lower(jsonb->>'purchaseOrderLineIdentifier'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_effectiveCallNumberComponents_callNumber_idx
+        ON item (left(lower(jsonb->'effectiveCallNumberComponents'->>'callNumber'), 600));
+    </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_order_idx
+        ON item USING btree
+        ((jsonb -> 'order'::text) ASC NULLS LAST)
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS item_barcode_idx_unique
+        ON item (lower(jsonb->>'barcode'));
+    </sql>
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS item_hrid_idx_unique
+        ON item (lower(f_unaccent(jsonb->>'hrid')));
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS item_barcode_idx_pattern
+        ON item (lower(jsonb->>'barcode') text_pattern_ops);
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_item ON item CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON item CASCADE;
+      CREATE TRIGGER item_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON item
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_item_md_trigger ON item CASCADE;
+      CREATE TRIGGER item_bi_set_md_trg BEFORE INSERT ON item
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_item_md_json_trigger ON item CASCADE;
+      CREATE TRIGGER item_bu_set_md_trg BEFORE UPDATE ON item
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_item_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.holdingsRecordId = NEW.jsonb->>'holdingsRecordId';
+        NEW.permanentLoanTypeId = NEW.jsonb->>'permanentLoanTypeId';
+        NEW.temporaryLoanTypeId = NEW.jsonb->>'temporaryLoanTypeId';
+        NEW.materialTypeId = NEW.jsonb->>'materialTypeId';
+        NEW.permanentLocationId = NEW.jsonb->>'permanentLocationId';
+        NEW.temporaryLocationId = NEW.jsonb->>'temporaryLocationId';
+        NEW.effectiveLocationId = NEW.jsonb->>'effectiveLocationId';
+        NEW.itemLevelCallNumberTypeId = NEW.jsonb->>'itemLevelCallNumberTypeId';
+        NEW.effectiveCallNumberComponents_typeId = NEW.jsonb->'effectiveCallNumberComponents'->>'typeId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_item_references ON item CASCADE;
+      CREATE TRIGGER item_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON item
+        FOR EACH ROW EXECUTE PROCEDURE update_item_references();
+
+      CREATE OR REPLACE FUNCTION item_set_ol_version()
+      RETURNS trigger AS $$
+      BEGIN
+        CASE TG_OP
+          WHEN 'INSERT' THEN
+              NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', to_jsonb(1));
+          WHEN 'UPDATE' THEN
+            IF NEW.jsonb->'_version' = '-1' THEN
+              IF OLD.jsonb->'_version' IS NULL THEN
+                NEW.jsonb = NEW.jsonb - '_version';
+              ELSE
+                NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}', OLD.jsonb->'_version');
+              END IF;
+            END IF;
+            IF NEW.jsonb->'_version' IS DISTINCT FROM OLD.jsonb->'_version' THEN
+              RAISE 'Cannot update record % because it has been changed (optimistic locking): '
+                    'Stored _version is %, _version of request is %',
+                    OLD.id, OLD.jsonb->'_version', NEW.jsonb->'_version'
+                    USING ERRCODE = '23F09', TABLE = 'item', SCHEMA = '${database.defaultSchemaName}';
+            END IF;
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{_version}',
+                to_jsonb(COALESCE(((OLD.jsonb->>'_version')::numeric + 1) % 2147483648, 1)));
+        END CASE;
+        RETURN NEW;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS set_item_ol_version_trigger
+        ON item CASCADE;
+
+      CREATE TRIGGER item_ol_bi_set_version_trg BEFORE INSERT OR UPDATE OF jsonb
+        ON item
+        FOR EACH ROW EXECUTE PROCEDURE item_set_ol_version();
+
+      CREATE OR REPLACE FUNCTION audit_item_changes()
+      RETURNS TRIGGER AS $item_audit$
+      DECLARE
+        jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_item WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+        END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+        INSERT INTO audit_item VALUES (uuid, jsonb);
+        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $item_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_item ON item CASCADE;
+      CREATE TRIGGER audit_item AFTER DELETE ON item
+        FOR EACH ROW EXECUTE PROCEDURE audit_item_changes();
+
+      CREATE OR REPLACE FUNCTION update_item_status_date() RETURNS TRIGGER
+      AS $$
+        DECLARE
+          newStatus text;
+        BEGIN
+          newStatus = NEW.jsonb->'status'->>'name';
+          IF (newStatus IS DISTINCT FROM OLD.jsonb->'status'->>'name') THEN
+            -- Date time in "YYYY-MM-DD"T"HH24:MI:SS.ms'Z'" format at UTC (00:00) time zone
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}',
+             to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"')), true);
+          ELSIF (OLD.jsonb->'status'->'date' IS NOT NULL) THEN
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', OLD.jsonb->'status'->'date', true);
+          ELSE
+            NEW.jsonb = NEW.jsonb #- '{status, date}';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_item_status_date ON item;
+      CREATE TRIGGER update_item_status_date BEFORE UPDATE
+      ON item FOR EACH ROW EXECUTE PROCEDURE update_item_status_date();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-hrid-settings" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="hrid_settings"/>
+      </not>
+    </preConditions>
+    <comment>Create hrid_settings table and inline base DDL dependencies</comment>
+
+    <createTable tableName="hrid_settings">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="hrid_settings_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="lock" type="bool" defaultValueBoolean="true"/>
+    </createTable>
+
+    <sql>
+      ALTER TABLE hrid_settings
+        ADD CONSTRAINT hrid_settings_lock_check CHECK (lock = true);
+    </sql>
+
+    <sql>
+      CREATE SEQUENCE IF NOT EXISTS hrid_instances_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+      CREATE SEQUENCE IF NOT EXISTS hrid_holdings_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+      CREATE SEQUENCE IF NOT EXISTS hrid_items_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+
+      GRANT ALL ON SEQUENCE hrid_instances_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_holdings_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_items_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON TABLE hrid_settings TO ${database.defaultSchemaName};
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE VIEW hrid_settings_view AS
+      SELECT jsonb_set(jsonb_set(jsonb_set(jsonb,
+                                           '{instances,currentNumber}', to_jsonb(hrid_instances_seq.last_value
+          - CASE WHEN hrid_instances_seq.is_called THEN 0 ELSE 1 END)),
+                                 '{holdings,currentNumber}',  to_jsonb(hrid_holdings_seq.last_value
+          - CASE WHEN hrid_holdings_seq.is_called  THEN 0 ELSE 1 END)),
+                       '{items,currentNumber}',     to_jsonb(hrid_items_seq.last_value
+          - CASE WHEN hrid_items_seq.is_called     THEN 0 ELSE 1 END))
+               AS jsonb
+      FROM hrid_settings, hrid_instances_seq, hrid_holdings_seq, hrid_items_seq;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-hrid-settings" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_hrid_settings ON hrid_settings CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON hrid_settings CASCADE;
+      CREATE TRIGGER hrid_settings_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON hrid_settings
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_hrid_settings_md_trigger ON hrid_settings CASCADE;
+      CREATE TRIGGER hrid_settings_bi_set_md_trg BEFORE INSERT ON hrid_settings
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_hrid_settings_md_json_trigger ON hrid_settings CASCADE;
+      CREATE TRIGGER hrid_settings_bu_set_md_trg BEFORE UPDATE ON hrid_settings
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-hrid-settings" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO hrid_settings
+        SELECT 'a501f2a8-5b31-48b2-874d-2191e48db8cd', jsonb_build_object(
+          'instances', jsonb_build_object('prefix', 'in', 'startNumber', 1),
+          'holdings', jsonb_build_object('prefix', 'ho', 'startNumber', 1),
+          'items', jsonb_build_object('prefix', 'it', 'startNumber', 1),
+          'commonRetainLeadingZeroes', 'true',
+          'metadata', jsonb_build_object(
+            'createdDate', to_jsonb(to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')),
+            'updatedDate', to_jsonb(to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')),
+            'createdByUserId', '00000000-0000-0000-0000-000000000000',
+            'updatedByUserId', '00000000-0000-0000-0000-000000000000')
+        )
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-preceding-succeeding-title" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="preceding_succeeding_title"/>
+      </not>
+    </preConditions>
+    <comment>Create preceding_succeeding_title table and inline base DDL dependencies</comment>
+
+    <createTable tableName="preceding_succeeding_title">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="preceding_succeeding_title_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="precedingInstanceId" type="UUID"/>
+      <column name="succeedingInstanceId" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="preceding_succeeding_title"
+                             baseColumnNames="precedingInstanceId"
+                             constraintName="precedingInstanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="preceding_succeeding_title"
+                             baseColumnNames="succeedingInstanceId"
+                             constraintName="succeedingInstanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="preceding_succeeding_title" indexName="preceding_succeeding_title_precedingInstanceId_idx">
+      <column name="precedingInstanceId"/>
+    </createIndex>
+
+    <createIndex tableName="preceding_succeeding_title" indexName="preceding_succeeding_title_succeedingInstanceId_idx">
+      <column name="succeedingInstanceId"/>
+    </createIndex>
+
+    <sql splitStatements="false">
+      ALTER TABLE preceding_succeeding_title
+        DROP CONSTRAINT IF EXISTS preceding_or_succeeding_id_is_set;
+      ALTER TABLE preceding_succeeding_title
+        ADD CONSTRAINT preceding_or_succeeding_id_is_set CHECK(
+        jsonb->'precedingInstanceId' IS NOT NULL OR jsonb->'succeedingInstanceId' IS NOT NULL);
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-preceding-succeeding-title" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_preceding_succeeding_title ON preceding_succeeding_title CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON preceding_succeeding_title CASCADE;
+      CREATE TRIGGER preceding_succeeding_title_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON preceding_succeeding_title
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+      DROP TRIGGER IF EXISTS set_preceding_succeeding_title_md_trigger ON preceding_succeeding_title CASCADE;
+      CREATE TRIGGER preceding_succeeding_title_bi_set_md_trg BEFORE INSERT ON preceding_succeeding_title
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_preceding_succeeding_title_md_json_trigger ON preceding_succeeding_title CASCADE;
+      CREATE TRIGGER preceding_succeeding_title_bu_set_md_trg BEFORE UPDATE ON preceding_succeeding_title
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_preceding_succeeding_title_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.precedingInstanceId = NEW.jsonb->>'precedingInstanceId';
+        NEW.succeedingInstanceId = NEW.jsonb->>'succeedingInstanceId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_preceding_succeeding_title_references ON preceding_succeeding_title CASCADE;
+      CREATE TRIGGER preceding_succeeding_title_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON preceding_succeeding_title
+        FOR EACH ROW EXECUTE PROCEDURE update_preceding_succeeding_title_references();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-reindex-job" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="reindex_job"/>
+      </not>
+    </preConditions>
+    <comment>Create reindex_job table and inline base DDL dependencies</comment>
+
+    <createTable tableName="reindex_job">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="reindex_job_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-reindex-job" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_reindex_job ON reindex_job CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON reindex_job CASCADE;
+      CREATE TRIGGER reindex_job_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON reindex_job
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-bound-with-part" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="bound_with_part"/>
+      </not>
+    </preConditions>
+    <comment>Create bound_with_part table and inline base DDL dependencies</comment>
+
+    <createTable tableName="bound_with_part">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="bound_with_part_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+      <column name="creation_date" type="TIMESTAMP"/>
+      <column name="created_by" type="TEXT"/>
+      <column name="itemId" type="UUID"/>
+      <column name="holdingsRecordId" type="UUID"/>
+    </createTable>
+
+    <addForeignKeyConstraint baseTableName="bound_with_part"
+                             baseColumnNames="itemId"
+                             constraintName="itemId_item_fkey"
+                             referencedTableName="item"
+                             referencedColumnNames="id" />
+
+    <addForeignKeyConstraint baseTableName="bound_with_part"
+                             baseColumnNames="holdingsRecordId"
+                             constraintName="holdingsRecordId_holdings_record_fkey"
+                             referencedTableName="holdings_record"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="bound_with_part" indexName="bound_with_part_itemId_idx">
+      <column name="itemId"/>
+    </createIndex>
+
+    <createIndex tableName="bound_with_part" indexName="bound_with_part_holdingsRecordId_idx">
+      <column name="holdingsRecordId"/>
+    </createIndex>
+
+    <sql>
+      CREATE UNIQUE INDEX IF NOT EXISTS bound_with_part_itemId_holdingsRecordId_idx_unique
+        ON bound_with_part (lower(f_unaccent(jsonb->>'itemId')), lower(f_unaccent(jsonb->>'holdingsRecordId')));
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-bound-with-part" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_bound_with_part ON bound_with_part CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON bound_with_part CASCADE;
+      CREATE TRIGGER bound_with_part_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON bound_with_part
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+
+      DROP TRIGGER IF EXISTS set_bound_with_part_md_trigger ON bound_with_part CASCADE;
+      CREATE TRIGGER bound_with_part_bi_set_md_trg BEFORE INSERT ON bound_with_part
+         FOR EACH ROW EXECUTE PROCEDURE set_md_on_insert();
+
+      DROP TRIGGER IF EXISTS set_bound_with_part_md_json_trigger ON bound_with_part CASCADE;
+      CREATE TRIGGER bound_with_part_bu_set_md_trg BEFORE UPDATE ON bound_with_part
+        FOR EACH ROW EXECUTE PROCEDURE set_md_on_update();
+
+      CREATE OR REPLACE FUNCTION update_bound_with_part_references()
+      RETURNS TRIGGER AS $$
+      BEGIN
+        NEW.itemId = NEW.jsonb->>'itemId';
+        NEW.holdingsRecordId = NEW.jsonb->>'holdingsRecordId';
+        RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_bound_with_part_references ON bound_with_part CASCADE;
+      CREATE TRIGGER bound_with_part_bi_bu_update_references_trg
+        BEFORE INSERT OR UPDATE ON bound_with_part
+        FOR EACH ROW EXECUTE PROCEDURE update_bound_with_part_references();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-notification-sending-error" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="notification_sending_error"/>
+      </not>
+    </preConditions>
+    <comment>Create notification_sending_error table and inline base DDL dependencies</comment>
+
+    <createTable tableName="notification_sending_error">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="notification_sending_error_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-notification-sending-error" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_notification_sending_error ON notification_sending_error CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON notification_sending_error CASCADE;
+      CREATE TRIGGER notification_sending_error_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON notification_sending_error
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-iteration-job" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="iteration_job"/>
+      </not>
+    </preConditions>
+    <comment>Create iteration_job table and inline base DDL dependencies</comment>
+
+    <createTable tableName="iteration_job">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="iteration_job_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-iteration-job" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_iteration_job ON iteration_job CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON iteration_job CASCADE;
+      CREATE TRIGGER iteration_job_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON iteration_job
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-async-migration-job" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="async_migration_job"/>
+      </not>
+    </preConditions>
+    <comment>Create async_migration_job table and inline base DDL dependencies</comment>
+
+    <createTable tableName="async_migration_job">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="async_migration_job_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-async-migration-job" author="folio">
+    <sql splitStatements="false">
+      DROP TRIGGER IF EXISTS set_id_injson_async_migration_job ON async_migration_job CASCADE;
+      DROP TRIGGER IF EXISTS set_id_in_jsonb ON async_migration_job CASCADE;
+      CREATE TRIGGER async_migration_job_bi_bu_set_id_in_jsonb_trg BEFORE INSERT OR UPDATE ON async_migration_job
+        FOR EACH ROW EXECUTE PROCEDURE set_id_in_jsonb();
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

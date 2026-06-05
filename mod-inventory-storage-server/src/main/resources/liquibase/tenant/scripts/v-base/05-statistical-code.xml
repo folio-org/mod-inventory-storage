@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Create instance_statistical_code join table linking instances to statistical codes</comment>
+
+    <createTable tableName="instance_statistical_code">
+      <column name="instance_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="statistical_code_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-instance-statistical-code-to-instance" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_instance_id" foreignKeyTableName="instance_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from instance_statistical_code.instance_id to instance.id with cascade delete</comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_instance_id"
+      baseTableName="instance_statistical_code"
+      baseColumnNames="instance_id"
+      referencedTableName="instance"
+      referencedColumnNames="id"
+      onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-instance-statistical-code-to-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_statistical_code_id"
+                                    foreignKeyTableName="instance_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from instance_statistical_code.statistical_code_id to statistical_code.id</comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_statistical_code_id"
+      baseTableName="instance_statistical_code"
+      baseColumnNames="statistical_code_id"
+      referencedTableName="statistical_code"
+      referencedColumnNames="id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-enforce-table-instance-statistical-code-unique" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <uniqueConstraintExists constraintName="unq_instance_statistical_code" tableName="instance_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add unique constraint on (instance_id, statistical_code_id) in instance_statistical_code</comment>
+
+    <addUniqueConstraint
+      constraintName="unq_instance_statistical_code"
+      tableName="instance_statistical_code"
+      columnNames="instance_id, statistical_code_id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-instance-statistical-code-instance-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_instance_statistical_code_instance_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on instance_statistical_code.instance_id for lookup performance</comment>
+
+    <createIndex tableName="instance_statistical_code" indexName="idx_instance_statistical_code_instance_id">
+      <column name="instance_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-instance-statistical-code-statistical-code-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_instance_statistical_code_statistical_code_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on instance_statistical_code.statistical_code_id for lookup performance</comment>
+
+    <createIndex tableName="instance_statistical_code" indexName="idx_instance_statistical_code_statistical_code_id">
+      <column name="statistical_code_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-holdings-record-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="holdings_record_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Create holdings_record_statistical_code join table linking holdings records to statistical codes</comment>
+
+    <createTable tableName="holdings_record_statistical_code">
+      <column name="holdings_record_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="statistical_code_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-holdings-record-statistical-code-to-holdings-record" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_holdings_record_id"
+                                    foreignKeyTableName="holdings_record_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from holdings_record_statistical_code.holdings_record_id to holdings_record.id with cascade delete
+    </comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_holdings_record_id"
+      baseTableName="holdings_record_statistical_code"
+      baseColumnNames="holdings_record_id"
+      referencedTableName="holdings_record"
+      referencedColumnNames="id"
+      onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-holdings-record-statistical-code-to-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_statistical_code_id"
+                                    foreignKeyTableName="holdings_record_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from holdings_record_statistical_code.statistical_code_id to statistical_code.id</comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_statistical_code_id"
+      baseTableName="holdings_record_statistical_code"
+      baseColumnNames="statistical_code_id"
+      referencedTableName="statistical_code"
+      referencedColumnNames="id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-enforce-table-holdings-record-statistical-code-unique" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <uniqueConstraintExists constraintName="unq_holdings_record_statistical_code"
+                                tableName="holdings_record_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add unique constraint on (holdings_record_id, statistical_code_id) in holdings_record_statistical_code
+    </comment>
+
+    <addUniqueConstraint
+      constraintName="unq_holdings_record_statistical_code"
+      tableName="holdings_record_statistical_code"
+      columnNames="holdings_record_id, statistical_code_id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-holdings-record-statistical-code-holdings-record-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_holdings_record_statistical_code_holdings_record_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on holdings_record_statistical_code.holdings_record_id for lookup performance</comment>
+
+    <createIndex tableName="holdings_record_statistical_code"
+                 indexName="idx_holdings_record_statistical_code_holdings_record_id">
+      <column name="holdings_record_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-holdings-record-statistical-code-statistical-code-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_holdings_record_statistical_code_statistical_code_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on holdings_record_statistical_code.statistical_code_id for lookup performance</comment>
+
+    <createIndex tableName="holdings_record_statistical_code"
+                 indexName="idx_holdings_record_statistical_code_statistical_code_id">
+      <column name="statistical_code_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-item-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="item_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Create item_statistical_code join table linking items to statistical codes</comment>
+
+    <createTable tableName="item_statistical_code">
+      <column name="item_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="statistical_code_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-item-statistical-code-to-item" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_holdings_record_id" foreignKeyTableName="item_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from item_statistical_code.item_id to item.id with cascade delete</comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_holdings_record_id"
+      baseTableName="item_statistical_code"
+      baseColumnNames="item_id"
+      referencedTableName="item"
+      referencedColumnNames="id"
+      onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-fk-item-statistical-code-to-statistical-code" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <foreignKeyConstraintExists foreignKeyName="fk_statistical_code_id"
+                                    foreignKeyTableName="item_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add FK from item_statistical_code.statistical_code_id to statistical_code.id</comment>
+
+    <addForeignKeyConstraint
+      constraintName="fk_statistical_code_id"
+      baseTableName="item_statistical_code"
+      baseColumnNames="statistical_code_id"
+      referencedTableName="statistical_code"
+      referencedColumnNames="id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-enforce-table-item-statistical-code-unique" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <uniqueConstraintExists constraintName="unq_item_statistical_code" tableName="item_statistical_code"/>
+      </not>
+    </preConditions>
+    <comment>Add unique constraint on (item_id, statistical_code_id) in item_statistical_code</comment>
+
+    <addUniqueConstraint
+      constraintName="unq_item_statistical_code"
+      tableName="item_statistical_code"
+      columnNames="item_id, statistical_code_id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-item-statistical-code-item-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_item_statistical_code_item_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on item_statistical_code.item_id for lookup performance</comment>
+
+    <createIndex tableName="item_statistical_code" indexName="idx_item_statistical_code_item_id">
+      <column name="item_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-item-statistical-code-statistical-code-id" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <indexExists indexName="idx_item_statistical_code_statistical_code_id"/>
+      </not>
+    </preConditions>
+    <comment>Create index on item_statistical_code.statistical_code_id for lookup performance</comment>
+
+    <createIndex tableName="item_statistical_code" indexName="idx_item_statistical_code_statistical_code_id">
+      <column name="statistical_code_id"/>
+    </createIndex>
+  </changeSet>
+  
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-statistical-code" author="folio">
+    <comment>Create triggers for statistical-code</comment>
+
+    <sqlFile path="sql/statistical-code/create_populate_triggers.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  </changeSet>
+</databaseChangeLog>
