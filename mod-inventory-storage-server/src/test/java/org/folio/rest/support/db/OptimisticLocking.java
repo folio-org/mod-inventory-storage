@@ -10,7 +10,7 @@ public class OptimisticLocking {
   private static final Map<String, String> TABLES = Map.of(
     "instance", "failOnConflictUnlessSuppressed",
     "item", "failOnConflictUnlessSuppressed",
-    "holdings-record", "failOnConflictUnlessSuppressed"
+    "holdings_record", "failOnConflictUnlessSuppressed"
   );
 
   /**

@@ -26,32 +26,19 @@
       ]
     },
     {
-      "tableName": "item",
-      "fromModuleVersion": "19.2.0",
-      "withMetadata": false,
-      "withAuditing": false,
-      "index": [
-        {
-          "fieldName": "callNumberAndSuffix",
-          "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        },
-        {
-          "fieldName": "fullCallNumber",
-          "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
-          "tOps": "ADD",
-          "caseSensitive": false,
-          "removeAccents": false
-        }
-      ]
-    },
-    {
       "tableName": "holdings_record",
       "fromModuleVersion": "19.2.0",
       "withMetadata": false,
       "withAuditing": false,
+      "foreignKeys": [
+        {
+          "fieldName": "instanceId",
+          "targetTable": "instance",
+          "targetTableAlias": "instance",
+          "tableAlias": "holdingsRecords",
+          "tOps": "ADD"
+        }
+      ],
       "index": [
         {
           "fieldName": "callNumberAndSuffix",
@@ -68,6 +55,53 @@
           "removeAccents": false
         }
       ]
+    },
+    {
+      "tableName": "item",
+      "fromModuleVersion": "19.2.0",
+      "withMetadata": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "holdingsRecordId",
+          "targetTable": "holdings_record",
+          "targetTableAlias": "holdingsRecords",
+          "tableAlias": "item"
+        },
+        {
+          "targetPath": [
+            "holdingsRecordId",
+            "instanceId"
+          ],
+          "targetTable": "instance",
+          "targetTableAlias": "instance",
+          "tableAlias": "item"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "callNumberAndSuffix",
+          "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
     }
   ],
   "scripts": [
@@ -79,6 +113,10 @@
     {
       "run": "after",
       "snippetPath": "change_table_owner.sql"
+    },
+    {
+      "run": "after",
+      "snippetPath": "change_function_owner.sql"
     }
   ]
 }

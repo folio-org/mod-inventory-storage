@@ -11,5 +11,6 @@
   <include file="scripts/v-base/05-statistical-code.xml" relativeToChangelogFile="true"/>
   <include file="scripts/v-base/06-item-order-tracker.xml" relativeToChangelogFile="true"/>
   <include file="scripts/v-base/07-subject-source-and-type.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v-base/100-cleanup.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

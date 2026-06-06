@@ -1562,7 +1562,7 @@
       $$ language 'plpgsql';
 
       DROP TRIGGER IF EXISTS update_instance_references ON instance CASCADE;
-      CREATE TRIGGER instance_bi_bu_update_references_trg
+      CREATE TRIGGER update_instance_references
         BEFORE INSERT OR UPDATE ON instance
         FOR EACH ROW EXECUTE PROCEDURE update_instance_references();
 
@@ -1782,7 +1782,7 @@
       $$ language 'plpgsql';
 
       DROP TRIGGER IF EXISTS update_instance_relationship_references ON instance_relationship CASCADE;
-      CREATE TRIGGER instance_relationship_bi_bu_update_references_trg
+      CREATE TRIGGER update_instance_relationship_references
         BEFORE INSERT OR UPDATE ON instance_relationship
         FOR EACH ROW EXECUTE PROCEDURE update_instance_relationship_references();
     </sql>
@@ -2214,13 +2214,24 @@
       <column name="jsonb" type="JSONB">
         <constraints nullable="false"/>
       </column>
+      <column name="instanceId" type="UUID"/>
     </createTable>
+
+    <addForeignKeyConstraint baseTableName="holdings_record"
+                             baseColumnNames="instanceId"
+                             constraintName="instanceId_instance_fkey"
+                             referencedTableName="instance"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="holdings_record" indexName="holdings_record_instanceId_idx">
+      <column name="instanceId"/>
+    </createIndex>
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-alter-table-holdings-record-add-columns-indexes-fks" author="folio">
     <preConditions onFail="MARK_RAN">
       <not>
-        <columnExists tableName="holdings_record" columnName="instanceId"/>
+        <columnExists tableName="holdings_record" columnName="permanentLocationId"/>
       </not>
     </preConditions>
     <comment>Add non-core columns, audit table, foreign key constraints, and indexes to holdings_record table</comment>
@@ -2228,7 +2239,6 @@
     <addColumn tableName="holdings_record">
       <column name="creation_date" type="TIMESTAMP"/>
       <column name="created_by" type="TEXT"/>
-      <column name="instanceId" type="UUID"/>
       <column name="permanentLocationId" type="UUID"/>
       <column name="temporaryLocationId" type="UUID"/>
       <column name="effectiveLocationId" type="UUID"/>
@@ -2237,12 +2247,6 @@
       <column name="illPolicyId" type="UUID"/>
       <column name="sourceId" type="UUID"/>
     </addColumn>
-
-    <addForeignKeyConstraint baseTableName="holdings_record"
-                             baseColumnNames="instanceId"
-                             constraintName="instanceId_instance_fkey"
-                             referencedTableName="instance"
-                             referencedColumnNames="id" />
 
     <addForeignKeyConstraint baseTableName="holdings_record"
                              baseColumnNames="permanentLocationId"
@@ -2285,10 +2289,6 @@
                              constraintName="sourceId_holdings_records_source_fkey"
                              referencedTableName="holdings_records_source"
                              referencedColumnNames="id" />
-
-    <createIndex tableName="holdings_record" indexName="holdings_record_instanceId_idx">
-      <column name="instanceId"/>
-    </createIndex>
 
     <createIndex tableName="holdings_record" indexName="holdings_record_permanentLocationId_idx">
       <column name="permanentLocationId"/>
@@ -2419,7 +2419,7 @@
       $$ language 'plpgsql';
 
       DROP TRIGGER IF EXISTS update_holdings_record_references ON holdings_record CASCADE;
-      CREATE TRIGGER holdings_record_bi_bu_update_references_trg
+      CREATE TRIGGER update_holdings_record_references
         BEFORE INSERT OR UPDATE ON holdings_record
         FOR EACH ROW EXECUTE PROCEDURE update_holdings_record_references();
 
@@ -2474,13 +2474,24 @@
       <column name="jsonb" type="JSONB">
         <constraints nullable="false"/>
       </column>
+      <column name="holdingsRecordId" type="UUID"/>
     </createTable>
+
+    <addForeignKeyConstraint baseTableName="item"
+                             baseColumnNames="holdingsRecordId"
+                             constraintName="holdingsRecordId_holdings_record_fkey"
+                             referencedTableName="holdings_record"
+                             referencedColumnNames="id" />
+
+    <createIndex tableName="item" indexName="item_holdingsRecordId_idx">
+      <column name="holdingsRecordId"/>
+    </createIndex>
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-alter-table-item-add-columns-indexes-fks" author="folio">
     <preConditions onFail="MARK_RAN">
       <not>
-        <columnExists tableName="item" columnName="holdingsRecordId"/>
+        <columnExists tableName="item" columnName="permanentLoanTypeId"/>
       </not>
     </preConditions>
     <comment>Add non-core columns, audit table, foreign key constraints, and indexes to item table</comment>
@@ -2488,7 +2499,6 @@
     <addColumn tableName="item">
       <column name="creation_date" type="TIMESTAMP"/>
       <column name="created_by" type="TEXT"/>
-      <column name="holdingsRecordId" type="UUID"/>
       <column name="permanentLoanTypeId" type="UUID"/>
       <column name="temporaryLoanTypeId" type="UUID"/>
       <column name="materialTypeId" type="UUID"/>
@@ -2498,12 +2508,6 @@
       <column name="itemLevelCallNumberTypeId" type="UUID"/>
       <column name="effectiveCallNumberComponents_typeId" type="UUID"/>
     </addColumn>
-
-    <addForeignKeyConstraint baseTableName="item"
-                             baseColumnNames="holdingsRecordId"
-                             constraintName="holdingsRecordId_holdings_record_fkey"
-                             referencedTableName="holdings_record"
-                             referencedColumnNames="id" />
 
     <addForeignKeyConstraint baseTableName="item"
                              baseColumnNames="permanentLoanTypeId"
@@ -2552,10 +2556,6 @@
                              constraintName="effectiveCallNumberComponents_typeId_call_number_type_fkey"
                              referencedTableName="call_number_type"
                              referencedColumnNames="id" />
-
-    <createIndex tableName="item" indexName="item_holdingsRecordId_idx">
-      <column name="holdingsRecordId"/>
-    </createIndex>
 
     <createIndex tableName="item" indexName="item_permanentLoanTypeId_idx">
       <column name="permanentLoanTypeId"/>
