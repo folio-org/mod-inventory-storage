@@ -505,7 +505,7 @@
         ON identifier_type (lower(f_unaccent(jsonb->>'name')));
     </sql>
   </changeSet>
-  
+
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-identifier-type" author="folio">
     <sql splitStatements="false">
       DROP TRIGGER IF EXISTS set_id_injson_identifier_type ON identifier_type CASCADE;
@@ -1347,7 +1347,7 @@
         <tableExists tableName="instance"/>
       </not>
     </preConditions>
-    <comment>Create instance table and inline base DDL dependencies</comment>
+    <comment>Create instance table with id and jsonb columns</comment>
 
     <createTable tableName="instance">
       <column name="id" type="UUID">
@@ -1356,7 +1356,19 @@
       <column name="jsonb" type="JSONB">
         <constraints nullable="false"/>
       </column>
+    </createTable>
+  </changeSet>
 
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-instance-add-columns-indexes-fks" author="folio">
+    <preConditions>
+        <not>
+          <columnExists tableName="instance" columnName="complete_updated_date"/>
+        </not>
+    </preConditions>
+
+    <comment>Add non-core columns, foreign key constraints, and indexes to instance table</comment>
+
+    <addColumn tableName="instance">
       <column name="complete_updated_date" type="timestamptz"/>
       <column name="creation_date" type="TIMESTAMP"/>
       <column name="created_by" type="TEXT"/>
@@ -1364,16 +1376,7 @@
       <column name="modeOfIssuanceId" type="UUID"/>
       <column name="dates_dateTypeId" type="UUID"/>
       <column name="instanceTypeId" type="UUID"/>
-    </createTable>
-
-    <createTable tableName="audit_instance">
-      <column name="id" type="UUID">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_instance_pkey"/>
-      </column>
-      <column name="jsonb" type="JSONB">
-        <constraints nullable="false"/>
-      </column>
-    </createTable>
+    </addColumn>
 
     <addForeignKeyConstraint baseTableName="instance"
                              baseColumnNames="instanceStatusId"
@@ -1650,6 +1653,52 @@
       FOR EACH ROW EXECUTE PROCEDURE set_instance_status_updated_date();
 
     </sql>
+  </changeSet>
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-audit-instance" author="folio">
+    <preConditions>
+      <not>
+        <tableExists tableName="audit_instance"/>
+      </not>
+    </preConditions>
+    <createTable tableName="audit_instance">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_instance_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION audit_instance_changes()
+      RETURNS TRIGGER AS $instance_audit$
+      DECLARE
+        jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_instance WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+        END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+        INSERT INTO audit_instance VALUES (uuid, jsonb);
+        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $instance_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_instance ON instance CASCADE;
+      CREATE TRIGGER audit_instance AFTER DELETE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE audit_instance_changes();
+    </sql>
+
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-relationship" author="folio">

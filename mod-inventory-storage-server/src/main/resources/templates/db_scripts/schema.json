@@ -1,2 +1,40 @@
 {
+  "tables": [
+    {
+      "tableName": "instance",
+      "fromModuleVersion": "19.2.0",
+      "withMetadata": false,
+      "withAuditing": false,
+      "fullTextIndex": [
+        {
+          "fieldName": "identifiers",
+          "arraySubfield": "value",
+          "arrayModifiers": [
+            "identifierTypeId"
+          ]
+        },
+        {
+          "fieldName": "invalidIsbn",
+          "sqlExpression": "normalize_invalid_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        },
+        {
+          "fieldName": "isbn",
+          "sqlExpression": "normalize_isbns(jsonb->'identifiers')",
+          "sqlExpressionQuery": "normalize_digits($)"
+        }
+      ]
+    }
+  ],
+  "scripts": [
+    {
+      "run": "before",
+      "snippetPath": "create_isbn_functions.sql",
+      "fromModuleVersion": "19.2.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "change_table_owner.sql"
+    }
+  ]
 }
