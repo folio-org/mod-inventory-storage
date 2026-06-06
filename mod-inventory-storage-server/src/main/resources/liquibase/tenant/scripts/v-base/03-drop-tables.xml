@@ -6,7 +6,7 @@
                    objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
   <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority" author="folio">
-    <comment>Drop authority table (removed from schema)</comment>
+    <comment>Drop authority table</comment>
     <sql>
       DROP TABLE IF EXISTS authority CASCADE;
       DROP FUNCTION IF EXISTS update_authority_references();
@@ -17,7 +17,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority-note-type" author="folio">
-    <comment>Drop authority_note_type table (removed from schema)</comment>
+    <comment>Drop authority_note_type table</comment>
     <sql>
       DROP TABLE IF EXISTS authority_note_type CASCADE;
       DROP FUNCTION IF EXISTS update_authority_note_type_references();
@@ -28,7 +28,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-drop-table-authority-source-file" author="folio">
-    <comment>Drop authority_source_file table (removed from schema)</comment>
+    <comment>Drop authority_source_file table</comment>
     <sql>
       DROP TABLE IF EXISTS authority_source_file CASCADE;
       DROP FUNCTION IF EXISTS update_authority_source_file_references();
@@ -39,7 +39,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-drop-table-related-instance-type" author="folio">
-    <comment>Drop related_instance_type table (removed from schema)</comment>
+    <comment>Drop related_instance_type table</comment>
     <sql>
       DROP TABLE IF EXISTS related_instance_type CASCADE;
       DROP FUNCTION IF EXISTS update_related_instance_type_references();

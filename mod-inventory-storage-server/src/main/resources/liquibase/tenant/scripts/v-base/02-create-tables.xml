@@ -1650,68 +1650,6 @@
       FOR EACH ROW EXECUTE PROCEDURE set_instance_status_updated_date();
 
     </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS idx_instance_complete_updated_date ON instance(complete_updated_date);
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_deleted_idx ON instance ((jsonb ->> 'deleted'));
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_discoverysuppress_source_idx
-        ON instance (((jsonb ->> 'discoverySuppress'::text)), ((jsonb ->> 'source'::text)));
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_creation_date_idx ON instance (creation_date);
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_identifiers_values_idx ON instance
-      USING gin (
-                 normalize_jsonb_array(
-                   extract_values(jsonb, 'identifiers', 'value'))
-                 jsonb_path_ops
-        );
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_publication_date_idx ON instance
-      USING gin (
-                 normalize_jsonb_array(
-                   extract_values(jsonb, 'publication', 'dateOfPublication'))
-                 jsonb_path_ops
-        );
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_subjects_values_idx ON instance
-      USING gin (
-                 normalize_jsonb_array(
-                   extract_values(jsonb, 'subjects', 'value'))
-                 jsonb_path_ops
-        );
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_cataloged_date_idx ON instance (to_timestamp(jsonb->>'catalogedDate'));
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_format_ids_idx ON instance
-        USING gin ((jsonb -> 'instanceFormatIds') jsonb_path_ops);
-    </sql>
-
-    <sql splitStatements="false">
-      CREATE INDEX IF NOT EXISTS instance_notes_instancenotesnotetypeid_idx ON instance
-      USING gin (
-                 normalize_jsonb_array(
-                   extract_values(jsonb, 'notes', 'instanceNoteTypeId'))
-                 jsonb_path_ops
-        );
-    </sql>
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-relationship" author="folio">
