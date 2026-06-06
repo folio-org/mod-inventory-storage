@@ -1360,7 +1360,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-alter-table-instance-add-columns-indexes-fks" author="folio">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
         <not>
           <columnExists tableName="instance" columnName="complete_updated_date"/>
         </not>
@@ -1654,12 +1654,14 @@
 
     </sql>
   </changeSet>
+
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-audit-instance" author="folio">
-    <preConditions>
+    <preConditions onFail="MARK_RAN">
       <not>
         <tableExists tableName="audit_instance"/>
       </not>
     </preConditions>
+
     <createTable tableName="audit_instance">
       <column name="id" type="UUID">
         <constraints nullable="false" primaryKey="true" primaryKeyName="audit_instance_pkey"/>
@@ -1668,6 +1670,7 @@
         <constraints nullable="false"/>
       </column>
     </createTable>
+
     <sql splitStatements="false">
       CREATE OR REPLACE FUNCTION audit_instance_changes()
       RETURNS TRIGGER AS $instance_audit$
@@ -2202,7 +2205,7 @@
         <tableExists tableName="holdings_record"/>
       </not>
     </preConditions>
-    <comment>Create holdings_record table and inline base DDL dependencies</comment>
+    <comment>Create holdings_record table with id and jsonb columns</comment>
 
     <createTable tableName="holdings_record">
       <column name="id" type="UUID">
@@ -2211,6 +2214,18 @@
       <column name="jsonb" type="JSONB">
         <constraints nullable="false"/>
       </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-holdings-record-add-columns-indexes-fks" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="holdings_record" columnName="instanceId"/>
+      </not>
+    </preConditions>
+    <comment>Add non-core columns, audit table, foreign key constraints, and indexes to holdings_record table</comment>
+
+    <addColumn tableName="holdings_record">
       <column name="creation_date" type="TIMESTAMP"/>
       <column name="created_by" type="TEXT"/>
       <column name="instanceId" type="UUID"/>
@@ -2221,16 +2236,7 @@
       <column name="callNumberTypeId" type="UUID"/>
       <column name="illPolicyId" type="UUID"/>
       <column name="sourceId" type="UUID"/>
-    </createTable>
-
-    <createTable tableName="audit_holdings_record">
-      <column name="id" type="UUID">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_holdings_record_pkey"/>
-      </column>
-      <column name="jsonb" type="JSONB">
-        <constraints nullable="false"/>
-      </column>
-    </createTable>
+    </addColumn>
 
     <addForeignKeyConstraint baseTableName="holdings_record"
                              baseColumnNames="instanceId"
@@ -2334,6 +2340,55 @@
     </sql>
   </changeSet>
 
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-audit-holdings-record" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="audit_holdings_record"/>
+      </not>
+    </preConditions>
+    <comment>Create audit_holdings_record table</comment>
+
+    <createTable tableName="audit_holdings_record">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_holdings_record_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION audit_holdings_record_changes()
+      RETURNS TRIGGER AS $holdings_record_audit$
+      DECLARE
+      jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_holdings_record WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+      END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+      INSERT INTO audit_holdings_record VALUES (uuid, jsonb);
+      RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $holdings_record_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_holdings_record ON holdings_record CASCADE;
+      CREATE TRIGGER audit_holdings_record AFTER DELETE ON holdings_record
+        FOR EACH ROW EXECUTE PROCEDURE audit_holdings_record_changes();
+    </sql>
+  </changeSet>
+
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-holdings-record" author="folio">
     <sql splitStatements="false">
       DROP TRIGGER IF EXISTS set_id_injson_holdings_record ON holdings_record CASCADE;
@@ -2401,35 +2456,6 @@
       CREATE TRIGGER holdings_record_ol_bi_set_version_trg BEFORE INSERT OR UPDATE OF jsonb
         ON holdings_record
         FOR EACH ROW EXECUTE PROCEDURE holdings_record_set_ol_version();
-
-      CREATE OR REPLACE FUNCTION audit_holdings_record_changes()
-      RETURNS TRIGGER AS $holdings_record_audit$
-      DECLARE
-        jsonb JSONB;
-        uuidtext TEXT;
-        uuid UUID;
-      BEGIN
-        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
-        uuidtext = md5(jsonb::text);
-        uuidtext = overlay(uuidtext placing '4' from 13);
-        uuidtext = overlay(uuidtext placing '8' from 17);
-        uuid = uuidtext::uuid;
-        WHILE EXISTS (SELECT 1 FROM audit_holdings_record WHERE id = uuid) LOOP
-          uuid = next_uuid(uuid);
-        END LOOP;
-        jsonb = jsonb_build_object(
-          'id', to_jsonb(uuid::text),
-          'record', jsonb,
-          'operation', to_jsonb(left(TG_OP, 1)),
-          'createdDate', to_jsonb(current_timestamp::text));
-        INSERT INTO audit_holdings_record VALUES (uuid, jsonb);
-        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
-      END;
-      $holdings_record_audit$ LANGUAGE plpgsql;
-
-      DROP TRIGGER IF EXISTS audit_holdings_record ON holdings_record CASCADE;
-      CREATE TRIGGER audit_holdings_record AFTER DELETE ON holdings_record
-        FOR EACH ROW EXECUTE PROCEDURE audit_holdings_record_changes();
     </sql>
   </changeSet>
 
@@ -2439,7 +2465,7 @@
         <tableExists tableName="item"/>
       </not>
     </preConditions>
-    <comment>Create item table and inline base DDL dependencies</comment>
+    <comment>Create item table with id and jsonb columns</comment>
 
     <createTable tableName="item">
       <column name="id" type="UUID">
@@ -2448,6 +2474,18 @@
       <column name="jsonb" type="JSONB">
         <constraints nullable="false"/>
       </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-item-add-columns-indexes-fks" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="item" columnName="holdingsRecordId"/>
+      </not>
+    </preConditions>
+    <comment>Add non-core columns, audit table, foreign key constraints, and indexes to item table</comment>
+
+    <addColumn tableName="item">
       <column name="creation_date" type="TIMESTAMP"/>
       <column name="created_by" type="TEXT"/>
       <column name="holdingsRecordId" type="UUID"/>
@@ -2459,16 +2497,7 @@
       <column name="effectiveLocationId" type="UUID"/>
       <column name="itemLevelCallNumberTypeId" type="UUID"/>
       <column name="effectiveCallNumberComponents_typeId" type="UUID"/>
-    </createTable>
-
-    <createTable tableName="audit_item">
-      <column name="id" type="UUID">
-        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_item_pkey"/>
-      </column>
-      <column name="jsonb" type="JSONB">
-        <constraints nullable="false"/>
-      </column>
-    </createTable>
+    </addColumn>
 
     <addForeignKeyConstraint baseTableName="item"
                              baseColumnNames="holdingsRecordId"
@@ -2608,6 +2637,56 @@
     </sql>
   </changeSet>
 
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-audit-item" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="audit_item"/>
+      </not>
+    </preConditions>
+    <comment>Add non-core columns, audit table, foreign key constraints, and indexes to item table</comment>
+
+
+    <createTable tableName="audit_item">
+      <column name="id" type="UUID">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="audit_item_pkey"/>
+      </column>
+      <column name="jsonb" type="JSONB">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION audit_item_changes()
+      RETURNS TRIGGER AS $item_audit$
+      DECLARE
+      jsonb JSONB;
+        uuidtext TEXT;
+        uuid UUID;
+      BEGIN
+        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
+        uuidtext = md5(jsonb::text);
+        uuidtext = overlay(uuidtext placing '4' from 13);
+        uuidtext = overlay(uuidtext placing '8' from 17);
+        uuid = uuidtext::uuid;
+        WHILE EXISTS (SELECT 1 FROM audit_item WHERE id = uuid) LOOP
+          uuid = next_uuid(uuid);
+      END LOOP;
+        jsonb = jsonb_build_object(
+          'id', to_jsonb(uuid::text),
+          'record', jsonb,
+          'operation', to_jsonb(left(TG_OP, 1)),
+          'createdDate', to_jsonb(current_timestamp::text));
+      INSERT INTO audit_item VALUES (uuid, jsonb);
+      RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+      END;
+      $item_audit$ LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS audit_item ON item CASCADE;
+      CREATE TRIGGER audit_item AFTER DELETE ON item
+        FOR EACH ROW EXECUTE PROCEDURE audit_item_changes();
+    </sql>
+  </changeSet>
+
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item" author="folio">
     <sql splitStatements="false">
       DROP TRIGGER IF EXISTS set_id_injson_item ON item CASCADE;
@@ -2676,35 +2755,6 @@
       CREATE TRIGGER item_ol_bi_set_version_trg BEFORE INSERT OR UPDATE OF jsonb
         ON item
         FOR EACH ROW EXECUTE PROCEDURE item_set_ol_version();
-
-      CREATE OR REPLACE FUNCTION audit_item_changes()
-      RETURNS TRIGGER AS $item_audit$
-      DECLARE
-        jsonb JSONB;
-        uuidtext TEXT;
-        uuid UUID;
-      BEGIN
-        jsonb = CASE WHEN TG_OP = 'DELETE' THEN OLD.jsonb ELSE NEW.jsonb END;
-        uuidtext = md5(jsonb::text);
-        uuidtext = overlay(uuidtext placing '4' from 13);
-        uuidtext = overlay(uuidtext placing '8' from 17);
-        uuid = uuidtext::uuid;
-        WHILE EXISTS (SELECT 1 FROM audit_item WHERE id = uuid) LOOP
-          uuid = next_uuid(uuid);
-        END LOOP;
-        jsonb = jsonb_build_object(
-          'id', to_jsonb(uuid::text),
-          'record', jsonb,
-          'operation', to_jsonb(left(TG_OP, 1)),
-          'createdDate', to_jsonb(current_timestamp::text));
-        INSERT INTO audit_item VALUES (uuid, jsonb);
-        RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
-      END;
-      $item_audit$ LANGUAGE plpgsql;
-
-      DROP TRIGGER IF EXISTS audit_item ON item CASCADE;
-      CREATE TRIGGER audit_item AFTER DELETE ON item
-        FOR EACH ROW EXECUTE PROCEDURE audit_item_changes();
 
       CREATE OR REPLACE FUNCTION update_item_status_date() RETURNS TRIGGER
       AS $$

@@ -24,6 +24,50 @@
           "sqlExpressionQuery": "normalize_digits($)"
         }
       ]
+    },
+    {
+      "tableName": "item",
+      "fromModuleVersion": "19.2.0",
+      "withMetadata": false,
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "callNumberAndSuffix",
+          "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "effectiveCallNumberComponents.prefix, effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
+    },
+    {
+      "tableName": "holdings_record",
+      "fromModuleVersion": "19.2.0",
+      "withMetadata": false,
+      "withAuditing": false,
+      "index": [
+        {
+          "fieldName": "callNumberAndSuffix",
+          "multiFieldNames": "callNumber, callNumberSuffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "fullCallNumber",
+          "multiFieldNames": "callNumberPrefix, callNumber, callNumberSuffix",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
     }
   ],
   "scripts": [
