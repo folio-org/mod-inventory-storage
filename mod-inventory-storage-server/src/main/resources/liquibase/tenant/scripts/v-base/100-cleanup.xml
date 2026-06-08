@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-drop-unused-functions" author="folio">
+    <comment>Drop unused functions</comment>
+    <sql>DROP FUNCTION IF EXISTS apply_jsonb_patch(jsonb, jsonb) CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS migrate_series_and_subjects(jsonb) CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS alternative_title_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS bound_with_part_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS call_number_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS classification_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS contributor_name_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS electronic_access_relationship_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS holdings_note_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS holdings_record_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS holdings_records_source_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS holdings_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS hrid_settings_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS identifier_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS ill_policy_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_date_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_note_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_relationship_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_relationship_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_source_marc_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS instance_status_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS item_damaged_status_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS item_note_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS item_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS loan_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS location_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS loccampus_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS locinstitution_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS loclibrary_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS material_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS mode_of_issuance_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS nature_of_content_term_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS preceding_succeeding_title_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS service_point_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS service_point_user_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_alternative_title_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_bound_with_part_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_call_number_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_classification_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_contributor_name_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_electronic_access_relationship_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_holdings_note_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_holdings_record_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_holdings_records_source_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_holdings_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_hrid_settings_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_identifier_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_ill_policy_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_date_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_note_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_relationship_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_relationship_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_source_marc_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_instance_status_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_item_damaged_status_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_item_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_item_note_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_loan_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_location_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_loccampus_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_locinstitution_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_loclibrary_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_material_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_mode_of_issuance_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_nature_of_content_term_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_preceding_succeeding_title_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_service_point_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_service_point_user_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_statistical_code_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_statistical_code_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_subject_source_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS set_subject_type_md_json() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS statistical_code_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS statistical_code_type_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS subject_source_set_md() CASCADE;</sql>
+    <sql>DROP FUNCTION IF EXISTS subject_type_set_md() CASCADE;</sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-cleanup-table-notification-sending-error" author="folio">
+    <comment>Cleanup notification_sending_error table</comment>
+
+    <delete tableName="notification_sending_error"/>
+  </changeSet>
+
+</databaseChangeLog>
