@@ -21,7 +21,7 @@ public class LocationApi implements org.folio.rest.jaxrs.resource.Locations {
                            Context vertxContext) {
 
     new LocationService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit, totalRecords, includeShadowLocations)
+      .getByQuery(query, offset, limit, includeShadowLocations)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }

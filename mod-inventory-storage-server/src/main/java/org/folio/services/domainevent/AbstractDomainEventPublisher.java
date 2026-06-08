@@ -104,6 +104,11 @@ abstract class AbstractDomainEventPublisher<D, E> {
     };
   }
 
+  public Future<Void> publishUpdated(D oldRecord, D newRecord) {
+    return convertDomainsToEvents(List.of(newRecord), List.of(oldRecord))
+      .compose(domainEventService::publishRecordsUpdated);
+  }
+
   public Handler<Response> publishUpdated(BatchOperationContext<D> batchOperation) {
     return response -> {
       if (!isUpdateSuccessResponse(response)) {

@@ -28,7 +28,7 @@ public class LocationUnitApi implements LocationUnits {
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
     new InstitutionService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit, totalRecords, includeShadow)
+      .getByQuery(query, offset, limit, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -96,7 +96,7 @@ public class LocationUnitApi implements LocationUnits {
                                        Context vertxContext) {
 
     new CampusService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit, totalRecords, includeShadow)
+      .getByQuery(query, offset, limit, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
@@ -162,7 +162,7 @@ public class LocationUnitApi implements LocationUnits {
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
     new LibraryService(vertxContext, okapiHeaders)
-      .getByQuery(query, offset, limit, totalRecords, includeShadow)
+      .getByQuery(query, offset, limit, includeShadow)
       .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
       .onFailure(handleFailure(asyncResultHandler));
   }
