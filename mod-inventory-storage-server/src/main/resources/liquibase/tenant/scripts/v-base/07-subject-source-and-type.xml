@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-subject-source" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not><tableExists tableName="instance_subject_source"/></not>
+    </preConditions>
+
+    <comment>Create instance_subject_source join table linking instances to subject sources</comment>
+    <createTable tableName="instance_subject_source">
+      <column name="instance_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="source_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="fk_instance_id"
+      baseTableName="instance_subject_source"
+      baseColumnNames="instance_id"
+      referencedTableName="instance"
+      referencedColumnNames="id"
+      onDelete="CASCADE"/>
+
+    <addForeignKeyConstraint
+      constraintName="fk_source_id"
+      baseTableName="instance_subject_source"
+      baseColumnNames="source_id"
+      referencedTableName="subject_source"
+      referencedColumnNames="id"/>
+
+    <addUniqueConstraint
+      constraintName="unique_instance_source"
+      tableName="instance_subject_source"
+      columnNames="instance_id, source_id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-subject-type" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_subject_type"/>
+      </not>
+    </preConditions>
+
+    <comment>Create instance_subject_type join table linking instances to subject types</comment>
+    <createTable tableName="instance_subject_type">
+      <column name="instance_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+      <column name="type_id" type="uuid">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      constraintName="fk_instance_id"
+      baseTableName="instance_subject_type"
+      baseColumnNames="instance_id"
+      referencedTableName="instance"
+      referencedColumnNames="id"
+      onDelete="CASCADE"/>
+
+    <addForeignKeyConstraint
+      constraintName="fk_type_id"
+      baseTableName="instance_subject_type"
+      baseColumnNames="type_id"
+      referencedTableName="subject_type"
+      referencedColumnNames="id"/>
+
+    <addUniqueConstraint
+      constraintName="unique_instance_type"
+      tableName="instance_subject_type"
+      columnNames="instance_id, type_id"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-trigger-check-subject-references-on-insert-or-update" author="folio">
+    <comment>Create trigger function to validate subject source and type references</comment>
+    <sqlFile path="sql/instance/create_check_subject_references_on_insert_or_update_trigger.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  </changeSet>
+
+</databaseChangeLog>

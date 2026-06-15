@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-item-order-tracker" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not><tableExists tableName="item_order_tracker"/></not>
+    </preConditions>
+    <comment>Create item_order_tracker table to track max item order per holdings record</comment>
+
+    <createTable tableName="item_order_tracker">
+      <column name="holdings_id" type="uuid">
+        <constraints nullable="false" primaryKey="true" primaryKeyName="item_order_tracker_pkey"/>
+      </column>
+      <column name="max_order" type="integer" defaultValueNumeric="1">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-trigger-set-order" author="folio">
+    <comment>Create item set_order trigger</comment>
+    <sqlFile path="sql/item/create_set_order_trigger.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  </changeSet>
+
+</databaseChangeLog>

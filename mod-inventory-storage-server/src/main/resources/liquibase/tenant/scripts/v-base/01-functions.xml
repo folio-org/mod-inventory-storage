@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+  <changeSet id="MODINVSTOR-1051@@schema-create-shared-md-functions" author="folio">
+    <comment>Add shared set_md_on_insert and set_md_on_update trigger functions</comment>
+    <sql splitStatements="false">
+      -- Trigger function fired on INSERT.
+      -- Reads metadata.createdDate from the incoming jsonb, normalises it to UTC,
+      -- and writes the result back to both metadata.createdDate and metadata.updatedDate
+      -- (so a freshly created record always has both dates in sync).
+      -- Also populates the dedicated columns creation_date and created_by from the jsonb payload.
+      CREATE OR REPLACE FUNCTION set_md_on_insert()
+        RETURNS TRIGGER AS $$
+        DECLARE
+          input       text;
+          createdDate timestamp;
+        BEGIN
+          -- Nothing to do when the caller did not supply a createdDate
+          input = NEW.jsonb -> 'metadata' ->> 'createdDate';
+          IF input IS NULL THEN
+            RETURN NEW;
+          END IF;
+
+          -- Normalise to UTC: if the literal contains no timezone offset the cast
+          -- to timestamptz introduces the session timezone, so we compare the two
+          -- representations and fall back to explicit AT TIME ZONE when they differ.
+          IF (input::timestamp::timestamptz = input::timestamptz) THEN
+            createdDate = input::timestamp;
+          ELSE
+            createdDate = input::timestamptz AT TIME ZONE '+00';
+          END IF;
+
+          -- Write the normalised timestamp back into jsonb in ISO-8601 UTC format
+          NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,createdDate}',
+                                to_jsonb(to_char(createdDate, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')));
+          -- On insert, updatedDate is initialised to the same value as createdDate
+          NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,updatedDate}',
+                                to_jsonb(to_char(createdDate, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')));
+
+          -- Populate dedicated audit columns so they can be indexed / queried directly
+          NEW.creation_date = createdDate;
+          NEW.created_by    = NEW.jsonb -> 'metadata' ->> 'createdByUserId';
+
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+
+      -- Trigger function fired on UPDATE.
+      -- Protects the immutable creation audit fields: restores metadata.createdDate and
+      -- metadata.createdByUserId in jsonb from the dedicated columns, preventing callers
+      -- from silently overwriting them.
+      -- Also normalises metadata.updatedDate to UTC when one is provided by the caller.
+      CREATE OR REPLACE FUNCTION set_md_on_update()
+        RETURNS TRIGGER AS $$
+        DECLARE
+          input       text;
+          updatedDate timestamp;
+        BEGIN
+          -- If creation_date was never set there is no audit data to protect
+          IF NEW.creation_date IS NULL THEN
+            RETURN NEW;
+          END IF;
+
+          -- Restore immutable createdDate from the dedicated column, overriding whatever
+          -- the caller may have sent in the jsonb payload
+          NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,createdDate}',
+                                to_jsonb(to_char(NEW.creation_date, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')));
+
+          -- Restore immutable createdByUserId; remove the key entirely when it is NULL
+          IF NEW.created_by IS NULL THEN
+            NEW.jsonb = NEW.jsonb #- '{metadata,createdByUserId}';
+          ELSE
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,createdByUserId}',
+                                  to_jsonb(NEW.created_by));
+          END IF;
+
+          -- Normalise updatedDate to UTC when the caller supplied one
+          input = NEW.jsonb -> 'metadata' ->> 'updatedDate';
+          IF input IS NOT NULL THEN
+            IF (input::timestamp::timestamptz = input::timestamptz) THEN
+              updatedDate = input::timestamp;
+            ELSE
+              updatedDate = input::timestamptz AT TIME ZONE '+00';
+            END IF;
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{metadata,updatedDate}',
+                                  to_jsonb(to_char(updatedDate, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')));
+          END IF;
+
+          RETURN NEW;
+        END;
+        $$ LANGUAGE plpgsql;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-run-script-createToTimestampFunction" author="folio">
+    <comment>Create immutable to_timestamp helper function for indexing</comment>
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION to_timestamp(text)
+        RETURNS timestamp AS $$
+      BEGIN
+        -- We assume the input text is always in a format (like ISO 8601)
+        -- that casts consistently to timestamp. This function turns the
+        -- ::timestamp cast into an IMMUTABLE function, so that it can be
+        -- used in indexes
+        RETURN $1::timestamp;
+      EXCEPTION WHEN others THEN
+        RETURN NULL;
+      END;
+      $$ LANGUAGE plpgsql IMMUTABLE;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-run-script-createJsonbArrayIndexFunctions" author="folio">
+    <comment>Create JSONB array index helper functions</comment>
+    <sql splitStatements="false">
+      -- Convert text to lowercase and remove accents for consistent indexing
+      -- Usage: normalize_token('Sømé Téxt wîth Åcçéñts') -> 'some text with accents'
+      CREATE OR REPLACE FUNCTION normalize_token(input_text text)
+        RETURNS text AS
+      $$
+      SELECT lower(f_unaccent(input_text))
+      $$ LANGUAGE sql IMMUTABLE
+                      PARALLEL SAFE;
+
+      -- Normalize each element in a JSONB array of strings and aggregate back into a JSONB array
+      -- Usage: normalize_jsonb_array('["Sømé", "Téxt", "wîth", "Åcçéñts"]'::jsonb) -> '["some", "text", "with", "accents"]'
+      CREATE OR REPLACE FUNCTION normalize_jsonb_array(input_array jsonb)
+        RETURNS jsonb AS
+      $$
+      SELECT coalesce(jsonb_agg(normalize_token(val)), '[]' ::jsonb)
+      FROM jsonb_array_elements_text(input_array) AS val
+      $$ LANGUAGE sql IMMUTABLE
+                      PARALLEL SAFE;
+
+      -- Extract values from a JSONB array of objects based on specified keys and aggregate into a JSONB array
+      -- Usage: extract_values('{"items": [{"name": "Item1", "value": "A"}, {"name": "Item2", "value": "B"}]}'::jsonb, 'items', 'value') -> '["A", "B"]'
+      CREATE OR REPLACE FUNCTION extract_values(input_jsonb jsonb, array_key text, value_key text)
+        RETURNS jsonb AS
+      $$
+      SELECT coalesce(jsonb_agg(elem -> value_key), '[]'::jsonb)
+      FROM jsonb_array_elements(input_jsonb -> array_key) AS elem
+      $$ LANGUAGE sql IMMUTABLE
+                      PARALLEL SAFE;
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

@@ -61,7 +61,13 @@
       <artifactId>folio-s3-client</artifactId>
       <version>${folio-s3-client.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-liquibase-util</artifactId>
+      <version>1.11.0</version>
+      <type>jar</type>
+    </dependency>
+ 
     <!-- Test Dependencies  -->
     <dependency>
       <groupId>io.vertx</groupId>
