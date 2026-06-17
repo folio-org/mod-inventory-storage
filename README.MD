@@ -197,12 +197,18 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_MARC_MIGRATION_ACCESS_KEY_ID` (default value is an empty string - "")
 * `S3_MARC_MIGRATION_SECRET_ACCESS_KEY` (default value is an empty string - "")
 * `S3_MARC_MIGRATION_IS_AWS` (default value - `false`)
+* `S3_MARC_MIGRATION_IDLE_KEEP_ALIVE_SECONDS` — OkHttp idle connection keep-alive in seconds; set below the server-side idle timeout to prevent stale-connection errors (unset = OkHttp default of 5 minutes)
+* `S3_MARC_MIGRATION_MAX_IDLE_CONNECTIONS` — maximum idle connections retained in the OkHttp pool (unset = OkHttp default of 5)
+* `S3_MARC_MIGRATION_MAX_REQUESTS_PER_HOST` — maximum concurrent S3 requests per host (unset = OkHttp default of 5)
 * `S3_REINDEX_URL`
 * `S3_REINDEX_REGION`
 * `S3_REINDEX_BUCKET`
 * `S3_REINDEX_ACCESS_KEY_ID` (default value is an empty string - "")
 * `S3_REINDEX_SECRET_ACCESS_KEY` (default value is an empty string - "")
 * `S3_REINDEX_IS_AWS` (default value - `false`)
+* `S3_REINDEX_IDLE_KEEP_ALIVE_SECONDS` — OkHttp idle connection keep-alive in seconds; set below the server-side idle timeout to prevent stale-connection errors (unset = OkHttp default of 5 minutes)
+* `S3_REINDEX_MAX_IDLE_CONNECTIONS` — maximum idle connections retained in the OkHttp pool (unset = OkHttp default of 5)
+* `S3_REINDEX_MAX_REQUESTS_PER_HOST` — maximum concurrent S3 requests per host (unset = OkHttp default of 5)
 * `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
