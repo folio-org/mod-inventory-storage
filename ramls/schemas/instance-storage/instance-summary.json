@@ -11,37 +11,211 @@
     "isBoundWith": {
       "type": "boolean"
     },
-    "visibility": {
+    "recordCounts": {
       "type": "object",
-      "description": "Discovery visibility facts for the instance, holdings, and items",
-      "additionalProperties": true
+      "description": "Counts that allow consumers to apply their own suppression policy",
+      "additionalProperties": false,
+      "properties": {
+        "instance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "suppressedFromDiscovery": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "suppressedFromDiscovery"
+          ]
+        },
+        "holdings": {
+          "$ref": "#/definitions/suppressionCounts"
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "type": "integer"
+            },
+            "suppressedFromDiscovery": {
+              "type": "integer"
+            },
+            "suppressedByHoldings": {
+              "type": "integer"
+            },
+            "suppressedFromDiscoveryOrByHoldings": {
+              "type": "integer"
+            },
+            "notSuppressedFromDiscovery": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "total",
+            "suppressedFromDiscovery",
+            "suppressedByHoldings",
+            "suppressedFromDiscoveryOrByHoldings",
+            "notSuppressedFromDiscovery"
+          ]
+        }
+      },
+      "required": [
+        "instance",
+        "holdings",
+        "items"
+      ]
     },
-    "itemDerivedFields": {
+    "aggregates": {
       "type": "object",
-      "description": "Fields derived from items without returning item rows",
-      "additionalProperties": true
+      "description": "Aggregate facts for all records and for records not suppressed from discovery",
+      "additionalProperties": false,
+      "properties": {
+        "allRecords": {
+          "$ref": "#/definitions/aggregateScope"
+        },
+        "notSuppressedFromDiscoveryRecords": {
+          "$ref": "#/definitions/aggregateScope"
+        }
+      },
+      "required": [
+        "allRecords",
+        "notSuppressedFromDiscoveryRecords"
+      ]
     },
-    "electronicAccess": {
-      "type": "array",
-      "description": "Deduplicated electronic access entries from the instance, holdings, and items",
-      "items": {
-        "type": "object",
-        "additionalProperties": true
-      }
-    },
-    "sourceTypeCandidates": {
+    "referenceValues": {
       "type": "object",
-      "description": "Candidate reference values useful for source type mapping",
-      "additionalProperties": true
+      "description": "Instance-level reference values useful to consumers",
+      "additionalProperties": false,
+      "properties": {
+        "instanceFormats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/namedValue"
+          }
+        },
+        "modeOfIssuance": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/definitions/namedValue"
+        },
+        "natureOfContentTerms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/namedValue"
+          }
+        },
+        "instanceType": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/definitions/namedValue"
+        }
+      },
+      "required": [
+        "instanceFormats",
+        "modeOfIssuance",
+        "natureOfContentTerms",
+        "instanceType"
+      ]
     }
   },
   "additionalProperties": false,
   "required": [
     "instance",
     "isBoundWith",
-    "visibility",
-    "itemDerivedFields",
-    "electronicAccess",
-    "sourceTypeCandidates"
-  ]
+    "recordCounts",
+    "aggregates",
+    "referenceValues"
+  ],
+  "definitions": {
+    "suppressionCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "suppressedFromDiscovery": {
+          "type": "integer"
+        },
+        "notSuppressedFromDiscovery": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "suppressedFromDiscovery",
+        "notSuppressedFromDiscovery"
+      ]
+    },
+    "aggregateScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "itemDerivedFields": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "effectiveShelvingOrder": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "effectiveShelvingOrder"
+          ]
+        },
+        "electronicAccess": {
+          "type": "array",
+          "description": "Deduplicated electronic access entries from the instance, holdings, and items",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "referenceValues": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "itemMaterialTypes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/namedValue"
+              }
+            }
+          },
+          "required": [
+            "itemMaterialTypes"
+          ]
+        }
+      },
+      "required": [
+        "itemDerivedFields",
+        "electronicAccess",
+        "referenceValues"
+      ]
+    },
+    "namedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    }
+  }
 }

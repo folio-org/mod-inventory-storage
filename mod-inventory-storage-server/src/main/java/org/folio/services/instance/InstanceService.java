@@ -83,7 +83,7 @@ public class InstanceService {
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
-  private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid, $2) AS summary";
+  private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid) AS summary";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -120,8 +120,8 @@ public class InstanceService {
       });
   }
 
-  public Future<Response> getInstanceSummary(String id, boolean skipSuppressedFromDiscoveryRecords) {
-    return postgresClient.execute(GET_INSTANCE_SUMMARY_SQL, Tuple.of(id, skipSuppressedFromDiscoveryRecords))
+  public Future<Response> getInstanceSummary(String id) {
+    return postgresClient.execute(GET_INSTANCE_SUMMARY_SQL, Tuple.of(id))
       .map(rows -> {
         var iterator = rows.iterator();
         if (!iterator.hasNext()) {

@@ -138,13 +138,7 @@ resourceTypes:
       /summary:
         get:
           description: |
-            Get a compact summary for an instance, including visibility facts and item-derived aggregate fields.
-          queryParameters:
-            skipSuppressedFromDiscoveryRecords:
-              description: Skip discovery suppressed holdings and items when calculating derived fields
-              type: boolean
-              required: false
-              default: true
+            Get a compact summary for an instance, including record counts and aggregate inventory facts.
           responses:
             200:
               body:

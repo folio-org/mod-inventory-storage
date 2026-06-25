@@ -23,14 +23,12 @@ Required environment:
   TENANT_SCHEMA
 
 Optional environment:
-  SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS=true
   STATEMENT_TIMEOUT=30s
   LOCK_TIMEOUT=1s
   IDLE_TIMEOUT=30s
   INCLUDE_RELATIONSHIP_COUNTS=true
-  INCLUDE_ITEM_ELECTRONIC_ACCESS=false
-  BENCHMARK_SQL_VERSION=004
-  BENCHMARK_SQL_FILE=/tmp/instance-summary-benchmark-004.sql
+  BENCHMARK_SQL_VERSION=005
+  BENCHMARK_SQL_FILE=/tmp/instance-summary-benchmark-005.sql
   BENCHMARK_OUTPUT_DIR=/tmp
   SQL_FUNCTION_FILE=mod-inventory-storage-server/src/main/resources/templates/db_scripts/instance/createInstanceSummaryFunction.sql
 
@@ -79,28 +77,16 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SQL_FUNCTION_FILE="${SQL_FUNCTION_FILE:-${SCRIPT_DIR}/mod-inventory-storage-server/src/main/resources/templates/db_scripts/instance/createInstanceSummaryFunction.sql}"
-SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS="${SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS:-true}"
-INCLUDE_ITEM_ELECTRONIC_ACCESS="${INCLUDE_ITEM_ELECTRONIC_ACCESS:-false}"
 STATEMENT_TIMEOUT="${STATEMENT_TIMEOUT:-30s}"
 LOCK_TIMEOUT="${LOCK_TIMEOUT:-1s}"
 IDLE_TIMEOUT="${IDLE_TIMEOUT:-30s}"
 INCLUDE_RELATIONSHIP_COUNTS="${INCLUDE_RELATIONSHIP_COUNTS:-true}"
-BENCHMARK_SQL_VERSION="${BENCHMARK_SQL_VERSION:-004}"
+BENCHMARK_SQL_VERSION="${BENCHMARK_SQL_VERSION:-005}"
 BENCHMARK_SQL_FILE="${BENCHMARK_SQL_FILE:-/tmp/instance-summary-benchmark-${BENCHMARK_SQL_VERSION}.sql}"
 BENCHMARK_OUTPUT_DIR="${BENCHMARK_OUTPUT_DIR:-/tmp}"
 
 if [[ ! -f "$SQL_FUNCTION_FILE" ]]; then
   echo "SQL function file not found: ${SQL_FUNCTION_FILE}" >&2
-  exit 2
-fi
-
-if [[ "$SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS" != "true" && "$SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS" != "false" ]]; then
-  echo "SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS must be true or false." >&2
-  exit 2
-fi
-
-if [[ "$INCLUDE_ITEM_ELECTRONIC_ACCESS" != "true" && "$INCLUDE_ITEM_ELECTRONIC_ACCESS" != "false" ]]; then
-  echo "INCLUDE_ITEM_ELECTRONIC_ACCESS must be true or false." >&2
   exit 2
 fi
 
@@ -118,8 +104,6 @@ SUMMARY_QUERY="$(
     in_body {
       gsub(/\$\{myuniversity\}_\$\{mymodule\}/, schema)
       gsub(/_instance_id/, ":'\''instance_id'\''::uuid")
-      gsub(/_skip_suppressed_from_discovery_records/, ":'\''skip_suppressed'\''::boolean")
-      gsub(/_include_item_electronic_access/, ":'\''include_item_electronic_access'\''::boolean")
       print
     }
   ' "$SQL_FUNCTION_FILE" | awk '
@@ -138,7 +122,7 @@ SUMMARY_QUERY="$(
 
 cat > "$BENCHMARK_SQL_FILE" <<SQL
 \\set ON_ERROR_STOP on
-\\echo === Instance :instance_id skipSuppressed=:skip_suppressed includeItemElectronicAccess=:include_item_electronic_access ===
+\\echo === Instance :instance_id ===
 BEGIN TRANSACTION READ ONLY;
 SET LOCAL statement_timeout = :'statement_timeout';
 SET LOCAL lock_timeout = :'lock_timeout';
@@ -197,14 +181,22 @@ ${SUMMARY_QUERY}
 SELECT
   pg_column_size(summary) AS response_size_bytes,
   pg_size_pretty(pg_column_size(summary)::bigint) AS response_size,
-  summary #>> '{visibility,instanceDiscoverySuppress}' AS instance_discovery_suppress,
-  summary #>> '{visibility,hasAnyHoldings}' AS has_any_holdings,
-  summary #>> '{visibility,hasVisibleHoldings}' AS has_visible_holdings,
-  summary #>> '{visibility,hasAnyItems}' AS has_any_items,
-  summary #>> '{visibility,hasVisibleItems}' AS has_visible_items,
-  summary #>> '{visibility,allHoldingsSuppressed}' AS all_holdings_suppressed,
-  jsonb_array_length(summary -> 'electronicAccess') AS electronic_access_count,
-  jsonb_array_length(summary #> '{itemDerivedFields,materialTypes}') AS material_type_count
+  summary #>> '{recordCounts,instance,suppressedFromDiscovery}' AS instance_discovery_suppress,
+  summary #>> '{recordCounts,holdings,total}' AS holdings_total,
+  summary #>> '{recordCounts,holdings,suppressedFromDiscovery}' AS holdings_suppressed_from_discovery,
+  summary #>> '{recordCounts,holdings,notSuppressedFromDiscovery}' AS holdings_not_suppressed_from_discovery,
+  summary #>> '{recordCounts,items,total}' AS items_total,
+  summary #>> '{recordCounts,items,suppressedFromDiscovery}' AS items_suppressed_from_discovery,
+  summary #>> '{recordCounts,items,suppressedByHoldings}' AS items_suppressed_by_holdings,
+  summary #>> '{recordCounts,items,suppressedFromDiscoveryOrByHoldings}' AS items_suppressed_from_discovery_or_by_holdings,
+  summary #>> '{recordCounts,items,notSuppressedFromDiscovery}' AS items_not_suppressed_from_discovery,
+  jsonb_array_length(summary #> '{aggregates,allRecords,electronicAccess}') AS all_records_electronic_access_count,
+  jsonb_array_length(summary #> '{aggregates,notSuppressedFromDiscoveryRecords,electronicAccess}')
+    AS not_suppressed_electronic_access_count,
+  jsonb_array_length(summary #> '{aggregates,allRecords,referenceValues,itemMaterialTypes}')
+    AS all_records_material_type_count,
+  jsonb_array_length(summary #> '{aggregates,notSuppressedFromDiscoveryRecords,referenceValues,itemMaterialTypes}')
+    AS not_suppressed_material_type_count
 FROM (
 ${SUMMARY_QUERY}
 ) AS s(summary);
@@ -222,8 +214,6 @@ for instance_id in "$@"; do
       --username "$REMOTE_PGUSER" \
       --dbname "$REMOTE_PGDATABASE" \
       --set "instance_id=${instance_id}" \
-      --set "skip_suppressed=${SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS}" \
-      --set "include_item_electronic_access=${INCLUDE_ITEM_ELECTRONIC_ACCESS}" \
       --set "statement_timeout=${STATEMENT_TIMEOUT}" \
       --set "lock_timeout=${LOCK_TIMEOUT}" \
       --set "idle_timeout=${IDLE_TIMEOUT}" \
