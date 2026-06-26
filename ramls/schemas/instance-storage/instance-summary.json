@@ -5,10 +5,12 @@
   "type": "object",
   "properties": {
     "instance": {
+      "description": "Instance record being summarized",
       "type": "object",
       "$ref": "instance.json"
     },
     "isBoundWith": {
+      "description": "Whether any holdings for the instance are part of a bound-with relationship",
       "type": "boolean"
     },
     "recordCounts": {
@@ -17,10 +19,12 @@
       "additionalProperties": false,
       "properties": {
         "instance": {
+          "description": "Counts and suppression facts for the instance record",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "suppressedFromDiscovery": {
+              "description": "Whether the instance record is suppressed from discovery",
               "type": "boolean"
             }
           },
@@ -29,25 +33,32 @@
           ]
         },
         "holdings": {
+          "description": "Counts for holdings records associated with the instance",
           "$ref": "#/definitions/suppressionCounts"
         },
         "items": {
+          "description": "Counts for item records associated with the instance",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "total": {
+              "description": "Total number of item records associated with the instance",
               "type": "integer"
             },
             "suppressedFromDiscovery": {
+              "description": "Number of item records directly suppressed from discovery",
               "type": "integer"
             },
             "suppressedByHoldings": {
+              "description": "Number of item records associated with holdings suppressed from discovery",
               "type": "integer"
             },
             "suppressedFromDiscoveryOrByHoldings": {
+              "description": "Number of item records directly suppressed from discovery or associated with suppressed holdings",
               "type": "integer"
             },
             "notSuppressedFromDiscovery": {
+              "description": "Number of item records not directly suppressed from discovery and not associated with suppressed holdings",
               "type": "integer"
             }
           },
@@ -72,9 +83,11 @@
       "additionalProperties": false,
       "properties": {
         "allRecords": {
+          "description": "Aggregate facts calculated from all holdings and item records",
           "$ref": "#/definitions/aggregateScope"
         },
         "notSuppressedFromDiscoveryRecords": {
+          "description": "Aggregate facts calculated from holdings and item records not suppressed from discovery",
           "$ref": "#/definitions/aggregateScope"
         }
       },
@@ -89,12 +102,14 @@
       "additionalProperties": false,
       "properties": {
         "instanceFormats": {
+          "description": "Instance format reference values for the instance",
           "type": "array",
           "items": {
             "$ref": "#/definitions/namedValue"
           }
         },
         "modeOfIssuance": {
+          "description": "Mode of issuance reference value for the instance",
           "type": [
             "object",
             "null"
@@ -102,12 +117,14 @@
           "$ref": "#/definitions/namedValue"
         },
         "natureOfContentTerms": {
+          "description": "Nature of content term reference values for the instance",
           "type": "array",
           "items": {
             "$ref": "#/definitions/namedValue"
           }
         },
         "instanceType": {
+          "description": "Instance type reference value for the instance",
           "type": [
             "object",
             "null"
@@ -137,12 +154,15 @@
       "additionalProperties": false,
       "properties": {
         "total": {
+          "description": "Total number of records in this category",
           "type": "integer"
         },
         "suppressedFromDiscovery": {
+          "description": "Number of records in this category suppressed from discovery",
           "type": "integer"
         },
         "notSuppressedFromDiscovery": {
+          "description": "Number of records in this category not suppressed from discovery",
           "type": "integer"
         }
       },
@@ -157,10 +177,12 @@
       "additionalProperties": false,
       "properties": {
         "itemDerivedFields": {
+          "description": "Fields derived from item records without returning item rows",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "effectiveShelvingOrder": {
+              "description": "First item effective shelving order in this aggregate scope, if available",
               "type": [
                 "string",
                 "null"
@@ -180,10 +202,12 @@
           }
         },
         "referenceValues": {
+          "description": "Reference values derived from records in this aggregate scope",
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "itemMaterialTypes": {
+              "description": "Material type reference values represented by items in this aggregate scope",
               "type": "array",
               "items": {
                 "$ref": "#/definitions/namedValue"
@@ -206,9 +230,11 @@
       "additionalProperties": false,
       "properties": {
         "id": {
+          "description": "Reference value identifier",
           "type": "string"
         },
         "name": {
+          "description": "Reference value display name",
           "type": "string"
         }
       },
