@@ -1,5 +1,7 @@
 DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.get_instance_summary(uuid, boolean, boolean);
 DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.get_instance_summary(uuid, boolean);
+DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.get_instance_summary_multi_tenant(text, uuid);
+DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.merge_instance_summaries(jsonb, text);
 
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_instance_summary(_instance_id uuid)
   RETURNS jsonb
@@ -308,5 +310,259 @@ FROM target_instance ti
   CROSS JOIN nature_of_content_candidates
   CROSS JOIN mode_of_issuance_candidate
   CROSS JOIN instance_type_candidate;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.merge_instance_summaries(
+  _summary_wrappers jsonb,
+  _preferred_schema text
+)
+  RETURNS jsonb
+  LANGUAGE sql
+AS $function$
+WITH
+  summaries AS MATERIALIZED (
+    SELECT
+      summary_wrapper ->> 'schemaName' AS schema_name,
+      summary_wrapper -> 'summary' AS summary
+    FROM jsonb_array_elements(COALESCE(_summary_wrappers, '[]'::jsonb)) AS summary_wrapper
+    WHERE summary_wrapper -> 'summary' IS NOT NULL
+      AND summary_wrapper -> 'summary' <> 'null'::jsonb
+  ),
+  selected_summary AS (
+    SELECT (
+      SELECT summary
+      FROM summaries
+      ORDER BY CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END, schema_name
+      LIMIT 1
+    ) AS summary
+  ),
+  record_counts AS (
+    SELECT
+      COALESCE(SUM((summary #>> '{recordCounts,holdings,total}')::bigint), 0) AS holdings_total,
+      COALESCE(SUM((summary #>> '{recordCounts,holdings,suppressedFromDiscovery}')::bigint), 0)
+        AS holdings_suppressed_from_discovery,
+      COALESCE(SUM((summary #>> '{recordCounts,holdings,notSuppressedFromDiscovery}')::bigint), 0)
+        AS holdings_not_suppressed_from_discovery,
+      COALESCE(SUM((summary #>> '{recordCounts,items,total}')::bigint), 0) AS items_total,
+      COALESCE(SUM((summary #>> '{recordCounts,items,suppressedFromDiscovery}')::bigint), 0)
+        AS items_suppressed_from_discovery,
+      COALESCE(SUM((summary #>> '{recordCounts,items,suppressedByHoldings}')::bigint), 0)
+        AS items_suppressed_by_holdings,
+      COALESCE(SUM((summary #>> '{recordCounts,items,suppressedFromDiscoveryOrByHoldings}')::bigint), 0)
+        AS items_suppressed_from_discovery_or_by_holdings,
+      COALESCE(SUM((summary #>> '{recordCounts,items,notSuppressedFromDiscovery}')::bigint), 0)
+        AS items_not_suppressed_from_discovery
+    FROM summaries
+  ),
+  bound_with_summary AS (
+    SELECT COALESCE(bool_or((summary ->> 'isBoundWith')::boolean), false) AS is_bound_with
+    FROM summaries
+  ),
+  electronic_access_data AS (
+    SELECT scoped.scope, s.schema_name, electronic_access.ordinal, electronic_access.value
+    FROM summaries s
+      CROSS JOIN LATERAL (VALUES
+        ('allRecords', s.summary #> '{aggregates,allRecords,electronicAccess}'),
+        ('notSuppressedFromDiscoveryRecords',
+          s.summary #> '{aggregates,notSuppressedFromDiscoveryRecords,electronicAccess}')
+      ) AS scoped(scope, values_json)
+      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(scoped.values_json, '[]'::jsonb))
+        WITH ORDINALITY AS electronic_access(value, ordinal)
+    WHERE NULLIF(electronic_access.value ->> 'uri', '') IS NOT NULL
+  ),
+  electronic_access_distinct AS (
+    SELECT DISTINCT ON (scope, value ->> 'uri')
+      scope,
+      value,
+      schema_name,
+      ordinal
+    FROM electronic_access_data
+    ORDER BY
+      scope,
+      value ->> 'uri',
+      CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END,
+      schema_name,
+      ordinal
+  ),
+  electronic_access_by_scope AS (
+    SELECT
+      COALESCE(
+        jsonb_agg(value ORDER BY CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END, schema_name, ordinal)
+          FILTER (WHERE scope = 'allRecords'),
+        '[]'::jsonb
+      ) AS all_records,
+      COALESCE(
+        jsonb_agg(value ORDER BY CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END, schema_name, ordinal)
+          FILTER (WHERE scope = 'notSuppressedFromDiscoveryRecords'),
+        '[]'::jsonb
+      ) AS not_suppressed_from_discovery_records
+    FROM electronic_access_distinct
+  ),
+  material_type_data AS (
+    SELECT scoped.scope, s.schema_name, material_type.value
+    FROM summaries s
+      CROSS JOIN LATERAL (VALUES
+        ('allRecords', s.summary #> '{aggregates,allRecords,referenceValues,itemMaterialTypes}'),
+        ('notSuppressedFromDiscoveryRecords',
+          s.summary #> '{aggregates,notSuppressedFromDiscoveryRecords,referenceValues,itemMaterialTypes}')
+      ) AS scoped(scope, values_json)
+      CROSS JOIN LATERAL jsonb_array_elements(COALESCE(scoped.values_json, '[]'::jsonb)) AS material_type(value)
+    WHERE NULLIF(material_type.value ->> 'id', '') IS NOT NULL
+  ),
+  material_type_distinct AS (
+    SELECT DISTINCT ON (scope, value ->> 'id')
+      scope,
+      value,
+      schema_name
+    FROM material_type_data
+    ORDER BY
+      scope,
+      value ->> 'id',
+      CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END,
+      schema_name,
+      value ->> 'name'
+  ),
+  material_types_by_scope AS (
+    SELECT
+      COALESCE(
+        jsonb_agg(value ORDER BY value ->> 'name') FILTER (WHERE scope = 'allRecords'),
+        '[]'::jsonb
+      ) AS all_records,
+      COALESCE(
+        jsonb_agg(value ORDER BY value ->> 'name') FILTER (WHERE scope = 'notSuppressedFromDiscoveryRecords'),
+        '[]'::jsonb
+      ) AS not_suppressed_from_discovery_records
+    FROM material_type_distinct
+  ),
+  shelving_order_data AS (
+    SELECT scoped.scope, s.schema_name, scoped.value
+    FROM summaries s
+      CROSS JOIN LATERAL (VALUES
+        ('allRecords', NULLIF(s.summary #>> '{aggregates,allRecords,itemDerivedFields,effectiveShelvingOrder}', '')),
+        ('notSuppressedFromDiscoveryRecords',
+          NULLIF(s.summary #>> '{aggregates,notSuppressedFromDiscoveryRecords,itemDerivedFields,effectiveShelvingOrder}',
+            ''))
+      ) AS scoped(scope, value)
+    WHERE scoped.value IS NOT NULL
+  ),
+  shelving_order_by_scope AS (
+    SELECT
+      (
+        SELECT value
+        FROM shelving_order_data
+        WHERE scope = 'allRecords'
+        ORDER BY CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END, schema_name
+        LIMIT 1
+      ) AS all_records,
+      (
+        SELECT value
+        FROM shelving_order_data
+        WHERE scope = 'notSuppressedFromDiscoveryRecords'
+        ORDER BY CASE WHEN schema_name = _preferred_schema THEN 0 ELSE 1 END, schema_name
+        LIMIT 1
+      ) AS not_suppressed_from_discovery_records
+  )
+SELECT CASE
+  WHEN selected_summary.summary IS NULL THEN NULL
+  ELSE selected_summary.summary || jsonb_build_object(
+    'isBoundWith', bound_with_summary.is_bound_with,
+    'recordCounts', jsonb_build_object(
+      'instance', selected_summary.summary #> '{recordCounts,instance}',
+      'holdings', jsonb_build_object(
+        'total', record_counts.holdings_total,
+        'suppressedFromDiscovery', record_counts.holdings_suppressed_from_discovery,
+        'notSuppressedFromDiscovery', record_counts.holdings_not_suppressed_from_discovery
+      ),
+      'items', jsonb_build_object(
+        'total', record_counts.items_total,
+        'suppressedFromDiscovery', record_counts.items_suppressed_from_discovery,
+        'suppressedByHoldings', record_counts.items_suppressed_by_holdings,
+        'suppressedFromDiscoveryOrByHoldings', record_counts.items_suppressed_from_discovery_or_by_holdings,
+        'notSuppressedFromDiscovery', record_counts.items_not_suppressed_from_discovery
+      )
+    ),
+    'aggregates', jsonb_build_object(
+      'allRecords', jsonb_build_object(
+        'itemDerivedFields', jsonb_build_object(
+          'effectiveShelvingOrder', shelving_order_by_scope.all_records
+        ),
+        'electronicAccess', electronic_access_by_scope.all_records,
+        'referenceValues', jsonb_build_object(
+          'itemMaterialTypes', material_types_by_scope.all_records
+        )
+      ),
+      'notSuppressedFromDiscoveryRecords', jsonb_build_object(
+        'itemDerivedFields', jsonb_build_object(
+          'effectiveShelvingOrder', shelving_order_by_scope.not_suppressed_from_discovery_records
+        ),
+        'electronicAccess', electronic_access_by_scope.not_suppressed_from_discovery_records,
+        'referenceValues', jsonb_build_object(
+          'itemMaterialTypes', material_types_by_scope.not_suppressed_from_discovery_records
+        )
+      )
+    )
+  )
+END
+FROM selected_summary
+  CROSS JOIN record_counts
+  CROSS JOIN bound_with_summary
+  CROSS JOIN electronic_access_by_scope
+  CROSS JOIN material_types_by_scope
+  CROSS JOIN shelving_order_by_scope;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_instance_summary_multi_tenant(
+  _schemas_str text,
+  _instance_id uuid
+)
+  RETURNS jsonb
+  LANGUAGE plpgsql
+AS $function$
+DECLARE
+  summary_query text;
+  summary_wrappers jsonb;
+BEGIN
+  SELECT string_agg(
+      format(
+        'SELECT jsonb_build_object(''schemaName'', %L, ''summary'', %I.get_instance_summary($1)) AS summary_wrapper',
+        schema_name,
+        schema_name
+      ),
+      ' UNION ALL '
+      ORDER BY schema_name
+    )
+    INTO summary_query
+  FROM (
+    SELECT DISTINCT schema_name
+    FROM (
+      SELECT NULLIF(trim(schema_name), '') AS schema_name
+      FROM unnest(string_to_array(COALESCE(_schemas_str, ''), ',')) AS schema_name
+      UNION ALL
+      SELECT '${myuniversity}_${mymodule}'
+    ) normalized_schema_names
+    WHERE schema_name IS NOT NULL
+  ) schema_names;
+
+  IF summary_query IS NULL THEN
+    RETURN NULL;
+  END IF;
+
+  EXECUTE format(
+    'SELECT COALESCE(jsonb_agg(summary_wrapper), ''[]''::jsonb)
+     FROM (%s) tenant_summaries
+     WHERE summary_wrapper -> ''summary'' IS NOT NULL
+       AND summary_wrapper -> ''summary'' <> ''null''::jsonb',
+    summary_query
+  )
+  INTO summary_wrappers
+  USING _instance_id;
+
+  RETURN ${myuniversity}_${mymodule}.merge_instance_summaries(
+    summary_wrappers,
+    '${myuniversity}_${mymodule}'
+  );
+END;
 $function$
 ;

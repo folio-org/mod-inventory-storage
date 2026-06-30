@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Request for an instance summary aggregated across multiple inventory-storage tenants",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceSummaryMultiTenantRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tenantIds": {
+      "description": "Tenant IDs whose inventory-storage schemas should be included in the summary aggregation",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "description": "Tenant ID to include in the summary aggregation",
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "tenantIds"
+  ]
+}

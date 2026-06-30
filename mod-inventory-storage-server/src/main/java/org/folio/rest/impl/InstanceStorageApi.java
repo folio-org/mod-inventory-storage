@@ -24,6 +24,7 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.InstanceRelationship;
 import org.folio.rest.jaxrs.model.InstanceRelationships;
+import org.folio.rest.jaxrs.model.InstanceSummaryMultiTenantRequest;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.RetrieveEntitiesRequest;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
@@ -265,6 +266,21 @@ public class InstanceStorageApi implements InstanceStorage {
 
     new InstanceService(vertxContext, okapiHeaders)
       .getInstanceSummary(instanceId)
+      .otherwise(EndpointFailureHandler::failureResponse)
+      .onComplete(asyncResultHandler);
+  }
+
+  @Validate
+  @Override
+  public void postInstanceStorageInstancesSummaryMultiTenantByInstanceId(
+    String instanceId,
+    InstanceSummaryMultiTenantRequest request,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
+
+    new InstanceService(vertxContext, okapiHeaders)
+      .getInstanceSummaryMultiTenant(instanceId, request)
       .otherwise(EndpointFailureHandler::failureResponse)
       .onComplete(asyncResultHandler);
   }

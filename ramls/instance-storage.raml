@@ -11,6 +11,7 @@ documentation:
 types:
   instance: !include schemas/instance-storage/instance.json
   instanceSummary: !include schemas/instance-storage/instance-summary.json
+  instanceSummaryMultiTenantRequest: !include schemas/instance-storage/instance-summary-multi-tenant-request.json
   instances: !include schemas/instance-storage/instances.json
   marcJson: !include schemas/instance-storage/marc.json
   instanceRelationship: !include schemas/instance-storage/instancerelationship.json
@@ -154,6 +155,39 @@ resourceTypes:
               body:
                 text/plain:
                   example: "internal server error, contact administrator"
+        /multi-tenant:
+          post:
+            is: [ validate ]
+            description: |
+              Get a compact summary for an instance aggregated across multiple inventory-storage tenants.
+            body:
+              application/json:
+                type: instanceSummaryMultiTenantRequest
+                example:
+                  tenantIds:
+                    - central
+                    - member1
+                    - member2
+            responses:
+              200:
+                body:
+                  application/json:
+                    type: instanceSummary
+              400:
+                description: "Bad request, e.g. malformed request body."
+                body:
+                  text/plain:
+                    example: "tenantIds is required"
+              404:
+                description: "Instance with a given ID not found in any requested tenant"
+                body:
+                  text/plain:
+                    example: Not found
+              500:
+                description: "Internal server error, e.g. due to misconfiguration"
+                body:
+                  text/plain:
+                    example: "internal server error, contact administrator"
 
       /source-record:
         delete:

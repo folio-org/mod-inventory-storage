@@ -52,6 +52,7 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
+import org.folio.rest.jaxrs.model.InstanceSummaryMultiTenantRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.jaxrs.resource.InstanceStorage;
@@ -84,6 +85,8 @@ public class InstanceService {
     "Expected a maximum of %s records to prevent out of memory but got %s";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid) AS summary";
+  private static final String GET_INSTANCE_SUMMARY_MULTI_TENANT_SQL =
+    "SELECT get_instance_summary_multi_tenant($1::text, $2::uuid) AS summary";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -135,6 +138,46 @@ public class InstanceService {
 
         return Response.ok(summary.encode(), "application/json").build();
       });
+  }
+
+  public Future<Response> getInstanceSummaryMultiTenant(String id, InstanceSummaryMultiTenantRequest request) {
+    String schemaNames = schemaNamesFromTenantIds(request);
+    if (schemaNames == null) {
+      return Future.succeededFuture(Response.status(400)
+        .type("text/plain")
+        .entity("tenantIds is required")
+        .build());
+    }
+
+    return postgresClient.execute(GET_INSTANCE_SUMMARY_MULTI_TENANT_SQL, Tuple.of(schemaNames, id))
+      .map(rows -> {
+        var iterator = rows.iterator();
+        if (!iterator.hasNext()) {
+          return Response.status(404).type("text/plain").build();
+        }
+
+        JsonObject summary = iterator.next().getJsonObject("summary");
+        if (summary == null) {
+          return Response.status(404).type("text/plain").build();
+        }
+
+        return Response.ok(summary.encode(), "application/json").build();
+      });
+  }
+
+  private String schemaNamesFromTenantIds(InstanceSummaryMultiTenantRequest request) {
+    if (request == null || request.getTenantIds() == null) {
+      return null;
+    }
+
+    String schemaNames = request.getTenantIds().stream()
+      .map(StringUtils::trimToNull)
+      .filter(Objects::nonNull)
+      .map(PostgresClient::convertToPsqlStandard)
+      .distinct()
+      .collect(Collectors.joining(","));
+
+    return StringUtils.trimToNull(schemaNames);
   }
 
   @SuppressWarnings("java:S107")
