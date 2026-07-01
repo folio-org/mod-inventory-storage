@@ -25,6 +25,7 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
 import java.lang.reflect.Method;
@@ -103,7 +104,7 @@ public class InstanceService {
     this.instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
     this.marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
     this.relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
+    this.consortiumService = new ConsortiumServiceImpl(vertxContext.get(HttpClient.class.getName()),
       vertxContext.get(ConsortiumDataCache.class.getName()));
     this.sanitizer = SanitizerFactory.getSanitizer(Instance.class);
   }

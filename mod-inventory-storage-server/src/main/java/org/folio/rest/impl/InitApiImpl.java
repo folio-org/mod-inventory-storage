@@ -7,6 +7,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.ThreadingModel;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
@@ -114,7 +115,9 @@ public class InitApiImpl implements InitAPI {
   }
 
   private void initConsortiumDataCache(Vertx vertx, Context context) {
-    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
+    HttpClient httpClient = vertx.createHttpClient();
+    context.put(HttpClient.class.getName(), httpClient);
+    ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, httpClient);
     context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
   }
 
