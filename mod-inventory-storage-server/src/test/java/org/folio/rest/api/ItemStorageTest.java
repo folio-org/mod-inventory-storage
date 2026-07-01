@@ -25,6 +25,7 @@ import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
+import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -549,6 +550,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldNotUpdateItemIfNoChanges() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var itemId = randomUUID();
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var item = createItem(nod(itemId, holdingId));
@@ -559,6 +562,25 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     var updatedItem = getById(itemId).getJson();
     //assert that there was no update in database
     assertThat(updatedItem.getString("_version"), is("1"));
+    var kafkaEvents = KAFKA_CONSUMER.getMessagesForItem(itemId.toString());
+    //assert that there's only CREATE kafka message, no updates
+    assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
+  public void shouldUpdateItemIfNoChangesAndOptimizeUpdatesDisabled() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    var itemId = randomUUID();
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var item = createItem(nod(itemId, holdingId));
+    itemMessageChecks.createdMessagePublished(itemId.toString());
+
+    assertThat(update(item).getStatusCode(), is(204));
+
+    var updatedItem = getById(itemId).getJson();
+    //assert that there was no update in database
+    assertThat(updatedItem.getString("_version"), is("2"));
     var kafkaEvents = KAFKA_CONSUMER.getMessagesForItem(itemId.toString());
     //assert that there's only CREATE kafka message, no updates
     assertThat(kafkaEvents.size(), is(1));
