@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
@@ -74,6 +75,7 @@ import org.folio.services.domainevent.ItemDomainEventPublisher;
 import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
+import org.folio.services.setting.SettingsService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -98,6 +100,7 @@ public class ItemService {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final ItemDomainEventPublisher domainEventService;
+  private final SettingsService settingsService;
   private final ItemRepository itemRepository;
   private final PostgresClient postgresClient;
   private final HoldingsRepository holdingsRepository;
@@ -110,6 +113,7 @@ public class ItemService {
     this.hridManager = new HridManager(postgresClient);
     this.effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     this.domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
+    this.settingsService = new SettingsService(vertxContext, okapiHeaders);
     this.itemRepository = new ItemRepository(vertxContext, okapiHeaders);
     this.holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
     this.sanitizer = SanitizerFactory.getSanitizer(Item.class);
@@ -329,7 +333,8 @@ public class ItemService {
     effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
     try {
       var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
-      if (noChanges) {
+      var isOptimizeUpdatesEnabled = settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT));
+      if (isOptimizeUpdatesEnabled && noChanges) {
         return Future.succeededFuture();
       } else {
         return doUpdateItem(newItem)

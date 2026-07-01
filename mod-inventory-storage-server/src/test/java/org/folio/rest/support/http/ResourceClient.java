@@ -176,6 +176,11 @@ public final class ResourceClient {
       "Service points", "servicepoints");
   }
 
+  public static ResourceClient forSettings(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::settingsStorageUrl,
+      "Settings", "settings");
+  }
+
   public IndividualResource create(Builder builder) {
     return create(builder.create());
   }
@@ -255,6 +260,12 @@ public final class ResourceClient {
 
     client.put(urlMakerWithId(id), request, headers, tenantId, ResponseHandler.any(putCompleted));
 
+    return TestBase.get(putCompleted);
+  }
+
+  public Response attemptToUpdate(String id, JsonObject request, String tenantId, Map<String, String> headers) {
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.patch(urlMakerWithId(id), request, headers, tenantId, ResponseHandler.any(putCompleted));
     return TestBase.get(putCompleted);
   }
 
