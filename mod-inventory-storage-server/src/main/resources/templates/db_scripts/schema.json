@@ -1,10 +1,430 @@
 {
   "tables": [
     {
-      "tableName": "instance",
-      "fromModuleVersion": "19.2.0",
+      "tableName": "loan_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "material_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "locinstitution",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loccampus",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "loclibrary",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "location",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "institutionId",
+          "targetTable": "locinstitution",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "campusId",
+          "targetTable": "loccampus",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "libraryId",
+          "targetTable": "loclibrary",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "primaryServicePoint",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
+    },
+    {
+      "tableName": "service_point",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "pickupLocation",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ]
+    },
+    {
+      "tableName": "service_point_user",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "userId",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "defaultServicePointId",
+          "targetTable": "service_point",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "identifier_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_relationship_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "contributor_type",
       "withMetadata": false,
       "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "contributor_name_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_type",
+      "withMetadata": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_format",
+      "withMetadata": false,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "nature_of_content_term",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "classification_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "electronic_access_relationship",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "statistical_code_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "statistical_code",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "code, statisticalCodeTypeId",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "fieldName": "statisticalCodeTypeId",
+          "targetTable": "statistical_code_type",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_status",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "mode_of_issuance",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "alternative_title_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_date_type",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
+      "tableName": "instance",
+      "fromModuleVersion": "19.2.0",
+      "withMetadata": true,
+      "withAuditing": true,
+      "withOptimisticLocking": "failOnConflictUnlessSuppressed",
+      "auditingTableName": "audit_instance",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
+      "foreignKeys": [
+        {
+          "fieldName": "instanceStatusId",
+          "targetTable": "instance_status",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "modeOfIssuanceId",
+          "targetTable": "mode_of_issuance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "dates.dateTypeId",
+          "targetTable": "instance_date_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceTypeId",
+          "targetTable": "instance_type",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "matchKey",
+          "tOps": "ADD"
+        }
+      ],
+      "index": [
+        {
+          "fieldName": "source",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "indexTitle",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "title",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
+        {
+          "fieldName": "sourceUri",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "statisticalCodeIds",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "staffSuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "metadata.updatedDate",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        }
+      ],
       "fullTextIndex": [
         {
           "fieldName": "identifiers",
@@ -26,10 +446,128 @@
       ]
     },
     {
+      "tableName": "instance_relationship",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "superInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "subInstanceId",
+          "targetTable": "instance",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "instanceRelationshipTypeId",
+          "targetTable": "instance_relationship_type",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_source_marc",
+      "withMetadata": true,
+      "customSnippetPath": "instanceSourceMarc.sql"
+    },
+    {
+      "tableName": "ill_policy",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "call_number_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "holdings_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "instance_note_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "holdings_note_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "item_note_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "item_damaged_status",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "holdings_records_source",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "holdings_record",
       "fromModuleVersion": "19.2.0",
-      "withMetadata": false,
-      "withAuditing": false,
+      "withMetadata": true,
+      "withAuditing": true,
+      "withOptimisticLocking": "failOnConflictUnlessSuppressed",
+      "auditingTableName": "audit_holdings_record",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "instanceId",
@@ -37,9 +575,59 @@
           "targetTableAlias": "instance",
           "tableAlias": "holdingsRecords",
           "tOps": "ADD"
+        },
+        {
+          "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveLocationId",
+          "targetTable": "location",
+          "targetTableAlias": "effectiveLocation",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsTypeId",
+          "targetTable": "holdings_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "callNumberTypeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "illPolicyId",
+          "targetTable": "ill_policy",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "sourceId",
+          "targetTable": "holdings_records_source",
+          "tOps": "ADD"
         }
       ],
+      "uniqueIndex": [
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
+        }
+      ],
+      "ginIndex": [
+      ],
       "index": [
+        {
+          "fieldName": "callNumber",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
         {
           "fieldName": "callNumberAndSuffix",
           "multiFieldNames": "callNumber, callNumberSuffix",
@@ -53,28 +641,33 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
-        }
-      ]
-    },
-    {
-      "tableName": "item",
-      "fromModuleVersion": "19.2.0",
-      "withMetadata": false,
-      "withAuditing": false,
-      "uniqueIndex": [
+        },
         {
-          "fieldName": "barcode",
+          "fieldName": "discoverySuppress",
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
         }
       ],
+      "fullTextIndex": [
+      ]
+    },
+    {
+      "tableName": "item",
+      "withMetadata": true,
+      "fromModuleVersion": "19.2.0",
+      "withAuditing": true,
+      "withOptimisticLocking": "failOnConflictUnlessSuppressed",
+      "auditingTableName": "audit_item",
+      "auditingFieldName": "record",
+      "customSnippetPath": "audit-delete-trigger.sql",
       "foreignKeys": [
         {
           "fieldName": "holdingsRecordId",
           "targetTable": "holdings_record",
           "targetTableAlias": "holdingsRecords",
-          "tableAlias": "item"
+          "tableAlias": "item",
+          "tOps": "ADD"
         },
         {
           "targetPath": [
@@ -84,9 +677,73 @@
           "targetTable": "instance",
           "targetTableAlias": "instance",
           "tableAlias": "item"
+        },
+        {
+          "fieldName": "permanentLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLoanTypeId",
+          "targetTable": "loan_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "materialTypeId",
+          "targetTable": "material_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "permanentLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "temporaryLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveLocationId",
+          "targetTable": "location",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "itemLevelCallNumberTypeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "effectiveCallNumberComponents.typeId",
+          "targetTable": "call_number_type",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "barcode",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "hrid",
+          "tOps": "ADD"
         }
       ],
       "index": [
+        {
+          "fieldName": "accessionNumber",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "status.name",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        },
         {
           "fieldName": "callNumberAndSuffix",
           "multiFieldNames": "effectiveCallNumberComponents.callNumber, effectiveCallNumberComponents.suffix",
@@ -100,6 +757,122 @@
           "tOps": "ADD",
           "caseSensitive": false,
           "removeAccents": false
+        },
+        {
+          "fieldName": "discoverySuppress",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "purchaseOrderLineIdentifier",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "effectiveCallNumberComponents.callNumber",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": false
+        },
+        {
+          "fieldName": "order",
+          "tOps": "ADD",
+          "sqlExpression": "(jsonb->'order')"
+        }
+      ],
+      "ginIndex": [
+      ],
+      "fullTextIndex": [
+      ]
+    },
+    {
+      "tableName": "hrid_settings",
+      "fromModuleVersion": "25.1.0",
+      "withMetadata": true,
+      "withAuditing": false
+    },
+    {
+      "tableName": "preceding_succeeding_title",
+      "fromModuleVersion": "19.0.0",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "precedingInstanceId",
+          "targetTable": "instance"
+        },
+        {
+          "fieldName": "succeedingInstanceId",
+          "targetTable": "instance"
+        }
+      ]
+    },
+    {
+      "tableName": "reindex_job",
+      "withMetadata": false,
+      "withAuditing": false
+    },
+    {
+      "tableName": "bound_with_part",
+      "withMetadata": true,
+      "foreignKeys": [
+        {
+          "fieldName": "itemId",
+          "targetTable": "item",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "holdingsRecordId",
+          "targetTable": "holdings_record",
+          "tOps": "ADD"
+        }
+      ],
+      "uniqueIndex": [
+        {
+          "fieldName": "itemId, holdingsRecordId",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "notification_sending_error",
+      "withMetadata": false,
+      "withAuditing": false
+    },
+    {
+      "tableName": "iteration_job",
+      "withMetadata": false,
+      "withAuditing": false
+    },
+    {
+      "tableName": "async_migration_job",
+      "withMetadata": false,
+      "withAuditing": false
+    },
+    {
+      "tableName": "subject_type",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
+      "tableName": "subject_source",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "code",
+          "tOps": "ADD"
         }
       ]
     }

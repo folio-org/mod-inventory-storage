@@ -31,13 +31,6 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-loan-type" author="folio">
-    <preConditions onFail="MARK_RAN">
-      <not>
-        <tableExists tableName="identifier_type"/>
-      </not>
-    </preConditions>
-    <comment>Create loan_type table and inline base DDL dependencies</comment>
-
     <sql splitStatements="false">
       DROP TRIGGER IF EXISTS set_id_injson_loan_type ON loan_type CASCADE;
       DROP TRIGGER IF EXISTS set_id_in_jsonb ON loan_type CASCADE;
