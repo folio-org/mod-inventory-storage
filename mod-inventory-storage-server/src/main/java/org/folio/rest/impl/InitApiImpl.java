@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.caches.SettingCache;
 import org.folio.services.consortium.ServicePointSynchronizationVerticle;
 import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
 import org.folio.services.consortium.SynchronizationVerticle;
@@ -28,6 +29,7 @@ public class InitApiImpl implements InitAPI {
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initConsortiumDataCache(vertx, context);
+    initSettingCache(vertx, context);
     validateS3Configurations()
       .compose(v -> initAsyncMigrationVerticle(vertx))
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
@@ -116,6 +118,11 @@ public class InitApiImpl implements InitAPI {
   private void initConsortiumDataCache(Vertx vertx, Context context) {
     ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
     context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
+  }
+
+  private void initSettingCache(Vertx vertx, Context context) {
+    SettingCache settingCache = new SettingCache(vertx);
+    context.put(SettingCache.class.getName(), settingCache);
   }
 
   private ConsortiumDataCache getConsortiumDataCache(Context context) {

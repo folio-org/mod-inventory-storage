@@ -1,0 +1,69 @@
+#%RAML 1.0
+title: Settings Storage API
+version: v1.0
+protocols: [HTTP, HTTPS]
+baseUri: http://localhost
+
+documentation:
+  - title: Settings Storage API
+    content: <b>Storage for inventory settings</b>
+
+types:
+  setting: !include schemas/settings/setting.json
+  settingUpdateRequest: !include schemas/settings/settingUpdateRequest.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  validate: !include raml-util/traits/validation.raml
+
+/settings:
+  /{key}:
+    uriParameters:
+      key:
+        type: string
+        required: true
+        description: The key of the setting to retrieve or update.
+        example: inventory.optimize-updates.enabled
+
+    get:
+      description: Retrieves the setting by the specified key.
+      responses:
+        200:
+          body:
+            application/json:
+              type: setting
+        404:
+          description: Setting not found.
+          body:
+            text/plain:
+              example: Setting not found
+
+    patch:
+      description: Updates the value of the specified setting.
+      is: [validate]
+      body:
+        application/json:
+          type: settingUpdateRequest
+      responses:
+        204:
+          description: Setting updated successfully
+        400:
+          description: Bad request, e.g. malformed request body
+          body:
+            text/plain:
+              example: invalid request
+        404:
+          description: Setting not found
+          body:
+            text/plain:
+              example: Setting not found
+        422:
+          description: Validation error
+          body:
+            application/json:
+              type: errors
+        500:
+          description: Internal server error
+          body:
+            text/plain:
+              example: Internal server error

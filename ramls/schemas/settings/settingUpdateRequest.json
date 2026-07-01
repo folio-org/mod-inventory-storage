@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Setting Update",
+  "description": "Request body for updating a setting.",
+  "javaType": "org.folio.rest.jaxrs.model.SettingUpdateRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "description": "New value of the setting."
+    }
+  }
+}

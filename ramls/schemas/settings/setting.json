@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Setting object schema",
+  "javaType": "org.folio.rest.jaxrs.model.Setting",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "value",
+    "type",
+    "centralManaged"
+  ],
+  "properties": {
+    "id": {
+      "description": "Unique identifier of the setting record (UUID).",
+      "type": "string",
+      "format": "uuid"
+    },
+    "key": {
+      "description": "Unique key of the setting.",
+      "type": "string"
+    },
+    "value": {
+      "description": "Value of the setting.",
+      "type": "string"
+    },
+    "type": {
+      "description": "Type of the setting.",
+      "type": "string",
+      "enum": [
+        "BOOLEAN",
+        "INTEGER",
+        "STRING"
+      ]
+    },
+    "centralManaged": {
+      "description": "Indicates if the setting is centrally managed.",
+      "type": "boolean"
+    },
+    "description": {
+      "description": "Human-readable description of the setting.",
+      "type": "string"
+    },
+    "createdDate": {
+      "description": "Timestamp when the setting was created.",
+      "type": "string",
+      "format": "date-time",
+      "javaType": "java.time.OffsetDateTime"
+    },
+    "createdByUserId": {
+      "description": "ID of the user who created the setting.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "updatedDate": {
+      "description": "Timestamp when the setting was last updated.",
+      "type": "string",
+      "format": "date-time",
+      "javaType": "java.time.OffsetDateTime"
+    },
+    "updatedByUserId": {
+      "description": "ID of the user who last updated the setting.",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
