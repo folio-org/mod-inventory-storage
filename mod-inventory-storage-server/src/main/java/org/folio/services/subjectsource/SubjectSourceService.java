@@ -13,6 +13,7 @@ import static org.folio.rest.support.SubjectUtil.validateSubjectSourceUpdate;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpClient;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.persist.SubjectSourceRepository;
@@ -42,7 +43,7 @@ public class SubjectSourceService {
     this.okapiHeaders = okapiHeaders;
     this.repository = new SubjectSourceRepository(context, okapiHeaders);
     this.domainEventService = new SubjectSourceDomainEventPublisher(context, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+    this.consortiumService = new ConsortiumServiceImpl(context.get(HttpClient.class.getName()),
       context.get(ConsortiumDataCache.class.getName()));
   }
 
