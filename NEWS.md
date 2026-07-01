@@ -1,3 +1,9 @@
+## v30.0.7 2026-09-18
+### Bug fixes
+* HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
+
+---
+
 ## v30.0.6 2026-08-28
 ### New APIs versions
 * Provides `instance-storage 11.4`
