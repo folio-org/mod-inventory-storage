@@ -104,6 +104,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
+    mockLocations();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }
@@ -164,7 +165,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static void setupLocations() {
-    setupLocations(TENANT_ID);
+    //    setupLocations(TENANT_ID);
   }
 
   protected static void setupLocations(String tenantId) {
@@ -176,6 +177,15 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     LocationUtility.createLocation(SECOND_FLOOR_LOCATION_ID, SECOND_FLOOR_LOCATION, "TestBaseWI/SF", tenantId);
     LocationUtility.createLocation(THIRD_FLOOR_LOCATION_ID, THIRD_FLOOR_LOCATION, "TestBaseWI/TF", tenantId);
     LocationUtility.createLocation(FOURTH_FLOOR_LOCATION_ID, FOURTH_FLOOR_LOCATION, "TestBaseWI/FF", tenantId);
+  }
+
+  public static void mockLocations() {
+    WireMock.stubFor(WireMock.post("/location-storage/institutions").willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post("/location-storage/campuses").willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post("/location-storage/libraries").willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post("/location-storage/locations").willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post("/service-point-storage/service-points").willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post("/service-point-storage/service-points-users").willReturn(WireMock.created()));
   }
 
   protected static UUID createInstanceAndHolding(UUID holdingsPermanentLocationId) {
