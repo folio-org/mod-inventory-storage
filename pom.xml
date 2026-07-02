@@ -31,7 +31,7 @@
     <lombok.version>1.18.46</lombok.version>
     <commons-lang3.version>3.20.0</commons-lang3.version>
     <log4j.version>2.26.0</log4j.version>
-    <folio-s3-client.version>3.1.0-SNAPSHOT</folio-s3-client.version>
+    <folio-s3-client.version>3.0.2</folio-s3-client.version>
     <jackson.version>2.22.0</jackson.version>
 
     <!-- Test dependency versions -->
