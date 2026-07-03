@@ -260,6 +260,10 @@
       CREATE TRIGGER update_item_status_date BEFORE UPDATE
       ON item FOR EACH ROW EXECUTE PROCEDURE update_item_status_date();
     </sql>
+    <sql>
+      CREATE INDEX IF NOT EXISTS item_formerids_idx_ft ON item
+        USING gin (get_tsvector(f_unaccent(jsonb ->> 'formerIds')));
+    </sql>
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-table-hrid-settings" author="folio">
@@ -273,7 +277,7 @@
     </preConditions>
     <comment>Create hrid_settings table and inline base DDL dependencies</comment>
 
-    <addColumn tableName="">
+    <addColumn tableName="hrid_settings">
       <column name="lock" type="bool" defaultValueBoolean="true"/>
     </addColumn>
 
