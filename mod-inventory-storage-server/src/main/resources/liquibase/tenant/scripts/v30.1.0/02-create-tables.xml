@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-instance-date-type" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO instance_date_type (id, jsonb)
+      VALUES
+        ('42dac21e-3c81-4cb1-9f16-9e50c81bacc4', '{"id":"42dac21e-3c81-4cb1-9f16-9e50c81bacc4","name":"Continuing resource ceased publication","code":"d","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('0750f52b-3bfc-458d-9307-e9afc8bcdffa', '{"id":"0750f52b-3bfc-458d-9307-e9afc8bcdffa","name":"Continuing resource currently published","code":"c","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('5a1a1adb-de71-45e6-ba94-1c0838969f04', '{"id":"5a1a1adb-de71-45e6-ba94-1c0838969f04","name":"Continuing resource status unknown","code":"u","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('5f84208a-0aa6-4694-a58f-5310b654f012', '{"id":"5f84208a-0aa6-4694-a58f-5310b654f012","name":"Date of distribution/release/issue and production/recording session when different","code":"p","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('e77bb7ed-2e53-4c62-8b06-5907b8934ba7', '{"id":"e77bb7ed-2e53-4c62-8b06-5907b8934ba7","name":"Dates unknown","code":"n","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('9669a463-5971-42dc-9eee-046bbd678fb1', '{"id":"9669a463-5971-42dc-9eee-046bbd678fb1","name":"Detailed date","code":"e","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('6de732c5-c29b-4a10-9db0-0729ca960f12', '{"id":"6de732c5-c29b-4a10-9db0-0729ca960f12","name":"Inclusive dates of collection","code":"i","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('8fa6d067-41ff-4362-96a0-96b16ddce267', '{"id":"8fa6d067-41ff-4362-96a0-96b16ddce267","name":"Multiple dates","code":"m","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8', '{"id":"6f8cd9a8-26ac-4df6-8709-62fe2c0d04f8","name":"No attempt to code","code":"|","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8', '{"id":"77a09c3c-37bd-4ad3-aae4-9d86fc1b33d8","name":"No dates given; B.C. date involved","code":"b","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('3a4296bf-504b-451b-9355-5806f8d88253', '{"id":"3a4296bf-504b-451b-9355-5806f8d88253","name":"Publication date and copyright date","code":"t","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('4afa7d3d-e6f5-4134-9ab5-32ad377d2432', '{"id":"4afa7d3d-e6f5-4134-9ab5-32ad377d2432","name":"Questionable date","code":"q","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('ccc293d5-9e88-4222-ac04-d058351ddb7b', '{"id":"ccc293d5-9e88-4222-ac04-d058351ddb7b","name":"Range of years of bulk of collection","code":"k","displayFormat":{"delimiter":"-","keepDelimiter":true},"source":"folio"}'),
+        ('47622598-61eb-4348-899a-1208275c3882', '{"id":"47622598-61eb-4348-899a-1208275c3882","name":"Reprint/reissue date and original date","code":"r","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}'),
+        ('24a506e8-2a92-4ecc-bd09-ff849321fd5a', '{"id":"24a506e8-2a92-4ecc-bd09-ff849321fd5a","name":"Single known date/probable date","code":"s","displayFormat":{"delimiter":",","keepDelimiter":false},"source":"folio"}')
+        ON CONFLICT (id) DO UPDATE SET jsonb=EXCLUDED.jsonb;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-type" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b1',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b1', 'name', 'Personal name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b2',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b2', 'name', 'Corporate name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b3',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b3', 'name', 'Meeting name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b4',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b4', 'name', 'Uniform title',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b5',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b5', 'name', 'Named event',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b6',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b6', 'name', 'Chronological term',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b7',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b7', 'name', 'Topical term',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b8',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b8', 'name', 'Geographic name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b9',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b9', 'name', 'Uncontrolled',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff510',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff510', 'name', 'Faceted topical terms',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff511',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff511', 'name', 'Genre/form',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff512',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff512', 'name', 'Occupation',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff513',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff5b13', 'name', 'Function',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff514',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff514', 'name', 'Curriculum objective',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff515',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff515', 'name', 'Hierarchical place name',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_type (id, jsonb)
+      VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff516',
+              json_build_object('id','d6488f88-1e74-40ce-81b5-b19a928ff516', 'name', 'Type of entity unspecified',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-source" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d40',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d40', 'name', 'Library of Congress Subject Headings', 'code', 'lcsh', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d41',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d41', 'name', 'Library of Congress Children''s and Young Adults'' Subject Headings', 'code', 'cyac', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d42',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d42', 'name', 'Medical Subject Headings', 'code', 'mesh', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d43',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d43', 'name', 'National Agricultural Library subject authority file', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d44',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d44', 'name', 'Source not specified', 'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d45',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d45', 'name', 'Canadian Subject Headings', 'code', 'cash',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+
+      INSERT INTO subject_source (id, jsonb)
+      VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d46',
+              json_build_object('id','e894d0dc-621d-4b1d-98f6-6f7120eb0d46', 'name', 'Répertoire de vedettes-matière', 'code', 'rvm',  'source', 'folio'))
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-instance-add-columns-indexes-fks" author="folio">
+    <preConditions onFail="MARK_RAN">
+        <not>
+          <columnExists tableName="instance" columnName="complete_updated_date"/>
+        </not>
+    </preConditions>
+
+    <comment>Add non-core columns, foreign key constraints, and indexes to instance table</comment>
+
+    <addColumn tableName="instance">
+      <column name="complete_updated_date" type="timestamptz"/>
+    </addColumn>
+
+    <sql splitStatements="false">
+      CREATE INDEX IF NOT EXISTS idx_instance_complete_updated_date ON instance(complete_updated_date);
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance" author="folio">
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION set_instance_status_updated_date()
+      RETURNS trigger
+      AS $function$
+        BEGIN
+          IF (OLD.jsonb->'statusId' IS DISTINCT FROM NEW.jsonb->'statusId') THEN
+            -- Date time in "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" format at UTC (00:00) time zone
+            NEW.jsonb = jsonb_set(
+              NEW.jsonb, '{statusUpdatedDate}',
+              to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"'))
+            );
+          END IF;
+          RETURN NEW;
+        END;
+      $function$  LANGUAGE plpgsql;
+
+      DROP TRIGGER IF EXISTS set_instance_status_updated_date ON instance;
+
+      CREATE TRIGGER set_instance_status_updated_date BEFORE
+      UPDATE ON instance
+      FOR EACH ROW EXECUTE PROCEDURE set_instance_status_updated_date();
+
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-source-marc" author="folio">
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION set_instance_sourceRecordFormat()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          CASE TG_OP
+          WHEN 'INSERT' THEN
+            NEW.jsonb := NEW.jsonb - 'sourceRecordFormat';
+          ELSE
+            NEW.jsonb := CASE (SELECT count(*) FROM instance_source_marc WHERE id=NEW.id)
+                         WHEN 0 THEN NEW.jsonb - 'sourceRecordFormat'
+                         ELSE jsonb_set(NEW.jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
+                         END;
+          END CASE;
+          RETURN NEW;
+        END;
+        $$ language 'plpgsql';
+      DROP TRIGGER IF EXISTS set_instance_sourceRecordFormat ON instance CASCADE;
+      CREATE TRIGGER set_instance_sourceRecordFormat
+        BEFORE INSERT OR UPDATE ON instance
+        FOR EACH ROW EXECUTE PROCEDURE set_instance_sourceRecordFormat();
+
+      CREATE OR REPLACE FUNCTION update_instance_source_marc()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          IF (TG_OP = 'DELETE') THEN
+            UPDATE instance
+              SET jsonb = jsonb - 'sourceRecordFormat'
+              WHERE id = OLD.id;
+          ELSE
+            UPDATE instance
+              SET jsonb = jsonb_set(jsonb, '{sourceRecordFormat}', '"MARC-JSON"')
+              WHERE id = NEW.id;
+          END IF;
+          RETURN NULL;
+        END;
+        $$ language 'plpgsql';
+      DROP TRIGGER IF EXISTS update_instance_source_marc ON instance_source_marc CASCADE;
+      CREATE TRIGGER update_instance_source_marc
+        AFTER DELETE OR INSERT OR UPDATE ON instance_source_marc
+        FOR EACH ROW EXECUTE PROCEDURE update_instance_source_marc();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item" author="folio">
+    <sql splitStatements="false">
+      CREATE OR REPLACE FUNCTION update_item_status_date() RETURNS TRIGGER
+      AS $$
+        DECLARE
+          newStatus text;
+        BEGIN
+          newStatus = NEW.jsonb->'status'->>'name';
+          IF (newStatus IS DISTINCT FROM OLD.jsonb->'status'->>'name') THEN
+            -- Date time in "YYYY-MM-DD"T"HH24:MI:SS.ms'Z'" format at UTC (00:00) time zone
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}',
+             to_jsonb(to_char(CURRENT_TIMESTAMP(3) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.ms"Z"')), true);
+          ELSIF (OLD.jsonb->'status'->'date' IS NOT NULL) THEN
+            NEW.jsonb = jsonb_set(NEW.jsonb, '{status,date}', OLD.jsonb->'status'->'date', true);
+          ELSE
+            NEW.jsonb = NEW.jsonb #- '{status, date}';
+          END IF;
+          RETURN NEW;
+        END;
+        $$ LANGUAGE 'plpgsql';
+
+      DROP TRIGGER IF EXISTS update_item_status_date ON item;
+      CREATE TRIGGER update_item_status_date BEFORE UPDATE
+      ON item FOR EACH ROW EXECUTE PROCEDURE update_item_status_date();
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-hrid-settings" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <tableExists tableName="hrid_settings"/>
+        <not>
+          <columnExists tableName="hrid_settings" columnName="lock"/>
+        </not>
+      </and>
+    </preConditions>
+    <comment>Create hrid_settings table and inline base DDL dependencies</comment>
+
+    <addColumn tableName="">
+      <column name="lock" type="bool" defaultValueBoolean="true"/>
+    </addColumn>
+
+    <sql>
+      ALTER TABLE hrid_settings
+        ADD CONSTRAINT hrid_settings_lock_check CHECK (lock = true);
+    </sql>
+
+    <sql>
+      CREATE SEQUENCE IF NOT EXISTS hrid_instances_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+      CREATE SEQUENCE IF NOT EXISTS hrid_holdings_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+      CREATE SEQUENCE IF NOT EXISTS hrid_items_seq
+        INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
+        OWNED BY hrid_settings.jsonb;
+
+      GRANT ALL ON SEQUENCE hrid_instances_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_holdings_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_items_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON TABLE hrid_settings TO ${database.defaultSchemaName};
+    </sql>
+
+    <sql splitStatements="false">
+      CREATE OR REPLACE VIEW hrid_settings_view AS
+      SELECT jsonb_set(jsonb_set(jsonb_set(jsonb,
+                                           '{instances,currentNumber}', to_jsonb(hrid_instances_seq.last_value
+          - CASE WHEN hrid_instances_seq.is_called THEN 0 ELSE 1 END)),
+                                 '{holdings,currentNumber}',  to_jsonb(hrid_holdings_seq.last_value
+          - CASE WHEN hrid_holdings_seq.is_called  THEN 0 ELSE 1 END)),
+                       '{items,currentNumber}',     to_jsonb(hrid_items_seq.last_value
+          - CASE WHEN hrid_items_seq.is_called     THEN 0 ELSE 1 END))
+               AS jsonb
+      FROM hrid_settings, hrid_instances_seq, hrid_holdings_seq, hrid_items_seq;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@data-seed-table-hrid-settings" author="folio">
+    <sql splitStatements="false">
+      INSERT INTO hrid_settings
+        SELECT 'a501f2a8-5b31-48b2-874d-2191e48db8cd', jsonb_build_object(
+          'instances', jsonb_build_object('prefix', 'in', 'startNumber', 1),
+          'holdings', jsonb_build_object('prefix', 'ho', 'startNumber', 1),
+          'items', jsonb_build_object('prefix', 'it', 'startNumber', 1),
+          'commonRetainLeadingZeroes', 'true',
+          'metadata', jsonb_build_object(
+            'createdDate', to_jsonb(to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')),
+            'updatedDate', to_jsonb(to_char(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')),
+            'createdByUserId', '00000000-0000-0000-0000-000000000000',
+            'updatedByUserId', '00000000-0000-0000-0000-000000000000')
+        )
+        ON CONFLICT DO NOTHING;
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-table-preceding-succeeding-title" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="preceding_succeeding_title"/>
+    </preConditions>
+    <comment>Create preceding_succeeding_title table and inline base DDL dependencies</comment>
+
+    <sql splitStatements="false">
+      ALTER TABLE preceding_succeeding_title
+        DROP CONSTRAINT IF EXISTS preceding_or_succeeding_id_is_set;
+      ALTER TABLE preceding_succeeding_title
+        ADD CONSTRAINT preceding_or_succeeding_id_is_set CHECK(
+        jsonb->'precedingInstanceId' IS NOT NULL OR jsonb->'succeedingInstanceId' IS NOT NULL);
+    </sql>
+  </changeSet>
+
+</databaseChangeLog>

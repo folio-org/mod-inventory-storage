@@ -7,7 +7,9 @@
 
   <changeSet id="MODINVSTOR-1051@@schema-create-table-instance-subject-source" author="folio">
     <preConditions onFail="MARK_RAN">
-      <not><tableExists tableName="instance_subject_source"/></not>
+      <not>
+        <tableExists tableName="instance_subject_source"/>
+      </not>
     </preConditions>
 
     <comment>Create instance_subject_source join table linking instances to subject sources</comment>
@@ -81,7 +83,8 @@
 
   <changeSet id="MODINVSTOR-1051@@schema-create-trigger-check-subject-references-on-insert-or-update" author="folio">
     <comment>Create trigger function to validate subject source and type references</comment>
-    <sqlFile path="sql/instance/create_check_subject_references_on_insert_or_update_trigger.sql" relativeToChangelogFile="true" splitStatements="false"/>
+    <sqlFile path="sql/instance/create_check_subject_references_on_insert_or_update_trigger.sql"
+             relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
 </databaseChangeLog>

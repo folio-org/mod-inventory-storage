@@ -4,13 +4,12 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-  <include file="scripts/v-base/01-functions.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/02-create-tables.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/03-drop-tables.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/04-inventory-hierarchy.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/05-statistical-code.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/06-item-order-tracker.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/07-subject-source-and-type.xml" relativeToChangelogFile="true"/>
-  <include file="scripts/v-base/100-cleanup.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/01-functions.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/02-create-tables.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/03-drop-tables.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/04-inventory-hierarchy.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/05-statistical-code.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/06-item-order-tracker.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/07-subject-source-and-type.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

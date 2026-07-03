@@ -7,7 +7,9 @@
 
   <changeSet id="MODINVSTOR-1051@@schema-create-table-item-order-tracker" author="folio">
     <preConditions onFail="MARK_RAN">
-      <not><tableExists tableName="item_order_tracker"/></not>
+      <not>
+        <tableExists tableName="item_order_tracker"/>
+      </not>
     </preConditions>
     <comment>Create item_order_tracker table to track max item order per holdings record</comment>
 
