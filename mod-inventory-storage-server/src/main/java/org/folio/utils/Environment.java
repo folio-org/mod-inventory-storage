@@ -46,6 +46,11 @@ public record Environment() {
     return Integer.parseInt(value);
   }
 
+  public static Integer parseOptionalInt(@NonNull String key) {
+    var raw = getValue(key);
+    return raw != null ? Integer.parseInt(raw) : null;
+  }
+
   public static int getKafkaProducerMaxRequestSize() {
     return getIntValue(MAX_REQUEST_SIZE, 10485760); // 10MB
   }
