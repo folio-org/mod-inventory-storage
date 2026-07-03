@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.Date;
@@ -103,7 +104,7 @@ public class HoldingsService {
     this.hridManager = new HridManager(postgresClient);
     this.holdingsRepository = new HoldingsRepository(context, okapiHeaders);
     this.instanceRepository = new InstanceRepository(context, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+    this.consortiumService = new ConsortiumServiceImpl(context.get(HttpClient.class.getName()),
       context.get(ConsortiumDataCache.class.getName()));
     this.effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
     this.upsertSqlBuilder = new HoldingsUpsertSqlBuilder(holdingsRepository, new ItemRepository(context, okapiHeaders));

@@ -15,6 +15,9 @@
 * Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
 * Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
 * Fix Instace complete_updated_date update performance on item create/update  ([MODINVSTOR-1569](https://folio-org.atlassian.net/browse/MODINVSTOR-1569))
+* Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
+* HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
+* Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
