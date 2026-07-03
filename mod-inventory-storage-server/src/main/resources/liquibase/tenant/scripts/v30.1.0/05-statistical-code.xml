@@ -216,13 +216,13 @@
   <changeSet id="MODINVSTOR-1051@@schema-create-fk-item-statistical-code-to-item" author="folio">
     <preConditions onFail="MARK_RAN">
       <not>
-        <foreignKeyConstraintExists foreignKeyName="fk_holdings_record_id" foreignKeyTableName="item_statistical_code"/>
+        <foreignKeyConstraintExists foreignKeyName="fk_item_id" foreignKeyTableName="item_statistical_code"/>
       </not>
     </preConditions>
     <comment>Add FK from item_statistical_code.item_id to item.id with cascade delete</comment>
 
     <addForeignKeyConstraint
-      constraintName="fk_holdings_record_id"
+      constraintName="fk_item_id"
       baseTableName="item_statistical_code"
       baseColumnNames="item_id"
       referencedTableName="item"

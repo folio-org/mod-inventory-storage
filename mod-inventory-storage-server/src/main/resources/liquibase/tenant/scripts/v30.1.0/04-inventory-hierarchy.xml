@@ -5,13 +5,13 @@
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
                    objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-auxiliary-functions.sql" author="folio">
-    <comment>Create create_pmh_view function</comment>
+  <changeSet id="MODINVSTOR-1051@@schema-create-function-pmh-auxiliary-helpers" author="folio">
+    <comment>Create auxiliary helper functions (strtotimestamp, dateormin, dateormax, getelectronicaccessname, etc.) used by PMH views</comment>
     <sqlFile path="sql/inventory-hierarchy/create_auxiliary_functions.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-indexes.sql" author="folio">
-    <comment>Create create_pmh_view function</comment>
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-pmh-metadata-dates" author="folio">
+    <comment>Create indexes on instance, item, holdings_record and audit tables for PMH createdDate/updatedDate lookups</comment>
     <sqlFile path="sql/inventory-hierarchy/create_pmh_indexes.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
@@ -50,7 +50,7 @@
     <sqlFile path="sql/inventory-hierarchy/create_instance_set_view.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-run-script-oaipmh-createTriggersAndFunctionsForCompleteUpdatedDate" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-create-trigger-complete-updated-date" author="folio">
     <comment>Run SQL migration script oaipmh/create_instance_complete_updated_date_triggers.sql for v-26.1 tenant upgrade</comment>
     <sqlFile path="sql/inventory-hierarchy/create_instance_complete_updated_date_triggers.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>

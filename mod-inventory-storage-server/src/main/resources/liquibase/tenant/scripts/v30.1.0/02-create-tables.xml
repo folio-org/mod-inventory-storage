@@ -6,6 +6,7 @@
                    objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
   <changeSet id="MODINVSTOR-1051@@data-seed-table-instance-date-type" author="folio">
+    <comment>Seed instance_date_type reference values</comment>
     <sql splitStatements="false">
       INSERT INTO instance_date_type (id, jsonb)
       VALUES
@@ -29,6 +30,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-type" author="folio">
+    <comment>Seed subject_type reference values</comment>
     <sql splitStatements="false">
       INSERT INTO subject_type (id, jsonb)
       VALUES ('d6488f88-1e74-40ce-81b5-b19a928ff5b1',
@@ -110,6 +112,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@data-seed-table-subject-source" author="folio">
+    <comment>Seed subject_source reference values</comment>
     <sql splitStatements="false">
       INSERT INTO subject_source (id, jsonb)
       VALUES ('e894d0dc-621d-4b1d-98f6-6f7120eb0d40',
@@ -147,14 +150,14 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-alter-table-instance-add-columns-indexes-fks" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-instance-add-column-and-indexes" author="folio">
     <preConditions onFail="MARK_RAN">
         <not>
           <columnExists tableName="instance" columnName="complete_updated_date"/>
         </not>
     </preConditions>
 
-    <comment>Add non-core columns, foreign key constraints, and indexes to instance table</comment>
+    <comment>Add complete_updated_date column and supporting indexes to instance table</comment>
 
     <addColumn tableName="instance">
       <column name="complete_updated_date" type="timestamptz"/>
@@ -204,6 +207,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance" author="folio">
+    <comment>Create trigger to auto-populate instance.statusUpdatedDate when statusId changes</comment>
     <sql splitStatements="false">
       CREATE OR REPLACE FUNCTION set_instance_status_updated_date()
       RETURNS trigger
@@ -230,6 +234,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-instance-source-marc" author="folio">
+    <comment>Create triggers to keep instance.sourceRecordFormat in sync with instance_source_marc rows</comment>
     <sql splitStatements="false">
       CREATE OR REPLACE FUNCTION set_instance_sourceRecordFormat()
         RETURNS TRIGGER AS $$
@@ -274,6 +279,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-triggers-table-item" author="folio">
+    <comment>Create trigger to auto-populate item.status.date on status change, and GIN index on item.formerIds for full-text search</comment>
     <sql splitStatements="false">
       CREATE OR REPLACE FUNCTION update_item_status_date() RETURNS TRIGGER
       AS $$
@@ -304,7 +310,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-table-hrid-settings" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-alter-table-hrid-settings-add-column-lock" author="folio">
     <preConditions onFail="MARK_RAN">
       <and>
         <tableExists tableName="hrid_settings"/>
@@ -313,7 +319,7 @@
         </not>
       </and>
     </preConditions>
-    <comment>Create hrid_settings table and inline base DDL dependencies</comment>
+    <comment>Add lock column/constraints, HRID sequences, and hrid_settings_view to existing hrid_settings table</comment>
 
     <addColumn tableName="hrid_settings">
       <column name="lock" type="bool" defaultValueBoolean="true"/>
@@ -359,6 +365,7 @@
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@data-seed-table-hrid-settings" author="folio">
+    <comment>Seed default hrid_settings row with instance/holdings/item HRID prefixes and start numbers</comment>
     <sql splitStatements="false">
       INSERT INTO hrid_settings
         SELECT 'a501f2a8-5b31-48b2-874d-2191e48db8cd', jsonb_build_object(
@@ -376,11 +383,11 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-table-preceding-succeeding-title" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-enforce-table-preceding-succeeding-title-instance-id-check" author="folio">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="preceding_succeeding_title"/>
     </preConditions>
-    <comment>Create preceding_succeeding_title table and inline base DDL dependencies</comment>
+    <comment>Recreate check constraint ensuring precedingInstanceId or succeedingInstanceId is set on preceding_succeeding_title</comment>
 
     <sql splitStatements="false">
       ALTER TABLE preceding_succeeding_title
@@ -391,11 +398,11 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-table-item" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-item-barcode-pattern" author="folio">
     <preConditions onFail="MARK_RAN">
       <tableExists tableName="item"/>
     </preConditions>
-    <comment>Create preceding_succeeding_title table and inline base DDL dependencies</comment>
+    <comment>Create case-insensitive pattern index on item.barcode for LIKE/ILIKE lookups</comment>
 
     <sql splitStatements="false">
       CREATE INDEX IF NOT EXISTS item_barcode_idx_pattern
