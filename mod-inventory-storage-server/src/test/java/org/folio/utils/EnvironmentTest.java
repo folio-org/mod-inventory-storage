@@ -104,6 +104,25 @@ class EnvironmentTest {
   }
 
   @Test
+  void parseOptionalInt_keyIsMissing_returnsNull() {
+    assertNull(Environment.parseOptionalInt(MISSING_TEST_KEY));
+  }
+
+  @Test
+  void parseOptionalInt_valueExists_returnsParsedInteger() {
+    System.setProperty(TEST_INT_KEY, "8192");
+
+    assertEquals(8192, Environment.parseOptionalInt(TEST_INT_KEY));
+  }
+
+  @Test
+  void parseOptionalInt_valueIsNonNumeric_throwsException() {
+    System.setProperty(TEST_KEY, "not-a-number");
+
+    assertThrows(NumberFormatException.class, () -> Environment.parseOptionalInt(TEST_KEY));
+  }
+
+  @Test
   void getKafkaProducerMaxRequestSize_propertyMissing_returnsDefaultValue() {
     assertEquals(10485760, Environment.getKafkaProducerMaxRequestSize());
   }
