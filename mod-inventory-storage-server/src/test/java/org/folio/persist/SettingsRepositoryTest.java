@@ -147,8 +147,8 @@ class SettingsRepositoryTest {
 
   @Test
   void update_nullSetting_throwsException() {
-    assertThrows(RuntimeException.class,
-      () -> repository.update(new Setting()));
+    var setting = new Setting();
+    assertThrows(RuntimeException.class, () -> repository.update(setting));
   }
 
   private Setting createSetting() {
