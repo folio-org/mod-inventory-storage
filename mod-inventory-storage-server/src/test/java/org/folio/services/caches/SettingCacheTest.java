@@ -101,8 +101,15 @@ public class SettingCacheTest {
     // Act
     settingCache.put(TEST_CACHE_KEY, valueFuture);
 
-    // Assert - should complete without error
-    vertx.setTimer(100, v -> async.complete());
+    // Assert
+    Future<String> result = settingCache.get(TEST_CACHE_KEY, (key, executor) ->
+      CompletableFuture.completedFuture("should_not_use_this"));
+
+    result.onComplete(ar -> {
+      context.assertTrue(ar.succeeded());
+      context.assertEquals(TEST_CACHE_VALUE, ar.result());
+      async.complete();
+    });
   }
 
   @Test
@@ -201,19 +208,4 @@ public class SettingCacheTest {
       async.complete();
     });
   }
-
-  @Test
-  public void shouldHandleFailedFuture(TestContext context) {
-    Async async = context.async();
-    // Arrange
-    CompletableFuture<String> failedFuture = new CompletableFuture<>();
-    failedFuture.completeExceptionally(new RuntimeException("Test error"));
-
-    // Act
-    settingCache.put(TEST_CACHE_KEY, failedFuture);
-
-    // Assert - should not throw exception during put
-    vertx.setTimer(100, v -> async.complete());
-  }
 }
-

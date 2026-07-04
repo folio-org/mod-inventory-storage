@@ -1,12 +1,12 @@
 package org.folio.services.setting;
 
 import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -21,13 +21,18 @@ import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.SettingsValidationException;
 import org.folio.rest.jaxrs.model.Setting;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.caches.SettingCache;
 import org.junit.jupiter.api.AfterEach;
@@ -38,22 +43,27 @@ import org.mockito.MockedStatic;
 class SettingsServiceTest {
 
   private static final String USER_ID = "00000000-0000-0000-0000-000000000000";
+  private static final String CENTRAL_TENANT_ID = "central";
+  private static final String MEMBER_TENANT_ID = "member";
+  private static final String TENANT_ID = "diku";
+  private static final String CONSORTIUM_ID = "consortium_id";
 
   private SettingCache cache;
   private SettingsService settingsService;
   private Map<String, String> okapiHeaders;
   private PostgresClient postgresClient;
   private MockedStatic<PgUtil> mockedPgUtil;
+  private ConsortiumDataCache consortiumDataCache;
 
   @BeforeEach
   void setUp() {
-    var vertx = mock(Vertx.class);
     postgresClient = mock(PostgresClient.class);
     cache = mock(SettingCache.class);
     var context = mock(Context.class);
     var httpClient = mock(HttpClientAgent.class);
-    var consortiumDataCache = mock(ConsortiumDataCache.class);
+    consortiumDataCache = mock(ConsortiumDataCache.class);
 
+    var vertx = mock(Vertx.class);
     when(context.owner()).thenReturn(vertx);
     when(vertx.createHttpClient()).thenReturn(httpClient);
     when(context.get(ConsortiumDataCache.class.getName())).thenReturn(consortiumDataCache);
@@ -63,7 +73,7 @@ class SettingsServiceTest {
     mockedPgUtil = mockStatic(PgUtil.class);
     mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
       .thenReturn(postgresClient);
-    okapiHeaders = Map.of("X-Okapi-Tenant", TENANT_ID, "X-Okapi-User-Id", USER_ID);
+    okapiHeaders = new HashMap<>(Map.of("X-Okapi-Tenant", TENANT_ID, "X-Okapi-User-Id", USER_ID));
     settingsService = new SettingsService(context, okapiHeaders);
   }
 
@@ -135,6 +145,41 @@ class SettingsServiceTest {
     boolean result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
 
     assertThat(result, is(false));
+  }
+
+  @Test
+  void updateSettingShouldUpdateSettingAcrossConsortiumSuccessfully() {
+    var key = INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue();
+    var setting = createTestSetting(key, "false", Setting.Type.BOOLEAN);
+    setting.setCentralManaged(true);
+    okapiHeaders.put("X-Okapi-Tenant", CENTRAL_TENANT_ID);
+    setupQueryMock(setting);
+    when(consortiumDataCache.getConsortiumData(anyString(), anyMap()))
+      .thenReturn(Future.succeededFuture(
+        Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, List.of(MEMBER_TENANT_ID)))
+      ));
+
+    var result = settingsService.updateSetting(key, true, okapiHeaders);
+
+    assertThat(result.succeeded(), is(true));
+  }
+
+  @Test
+  void updateSettingShouldFailForMemberTenant() {
+    var key = INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue();
+    var setting = createTestSetting(key, "false", Setting.Type.BOOLEAN);
+    setting.setCentralManaged(true);
+    okapiHeaders.put("X-Okapi-Tenant", MEMBER_TENANT_ID);
+    setupQueryMock(setting);
+    when(consortiumDataCache.getConsortiumData(anyString(), anyMap()))
+      .thenReturn(Future.succeededFuture(
+        Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, List.of(MEMBER_TENANT_ID)))
+      ));
+
+    var result = settingsService.updateSetting(key, true, okapiHeaders);
+
+    assertThat(result.failed(), is(true));
+    assertThat(result.cause(), instanceOf(BadRequestException.class));
   }
 
   private void setupQueryMock(Setting setting) {

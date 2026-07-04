@@ -58,7 +58,7 @@ public class SettingsService {
   public Future<Void> updateSetting(String key, Object value, Map<String, String> okapiHeaders) {
     return getSettingByKey(key)
       .compose(entity -> {
-        if (!entity.getCentralManaged()) {
+        if (entity.getCentralManaged() == null || !entity.getCentralManaged().booleanValue()) {
           return updateSettingAndCache(key, value, okapiHeaders, entity);
         }
         return consortiumService.getConsortiumData(okapiHeaders)

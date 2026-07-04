@@ -40,9 +40,7 @@ public class SettingsRepository extends AbstractRepository<Setting> {
         setting.getValue(),
         setting.getUpdatedByUserId(),
         setting.getKey()))
-      .map(rows -> {
-        return mapToSetting(rows.iterator().next());
-      });
+      .map(rows -> mapToSetting(rows.iterator().next()));
   }
 
   private Setting mapToSetting(Row row) {

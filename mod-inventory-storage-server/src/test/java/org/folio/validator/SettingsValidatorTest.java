@@ -36,8 +36,9 @@ class SettingsValidatorTest {
   @ParameterizedTest
   @MethodSource("invalidStringValues")
   void validateStringTypeShouldRejectNonStringValues(Object value) {
+    var setting = createStringSetting();
     var exception = assertThrows(SettingsValidationException.class,
-      () -> settingsValidator.validate(value, createStringSetting()));
+      () -> settingsValidator.validate(value, setting));
 
     assertThat(exception.getMessage(), is("Setting value should be a string"));
   }
@@ -63,8 +64,9 @@ class SettingsValidatorTest {
   @ParameterizedTest
   @MethodSource("invalidIntegerValues")
   void validateIntegerTypeShouldRejectNonIntegerValues(Object value) {
+    var setting = createIntegerSetting();
     var exception = assertThrows(SettingsValidationException.class,
-      () -> settingsValidator.validate(value, createIntegerSetting()));
+      () -> settingsValidator.validate(value, setting));
 
     assertThat(exception.getMessage(), is("Setting value should be an integer"));
   }
@@ -96,8 +98,9 @@ class SettingsValidatorTest {
   @ParameterizedTest
   @MethodSource("invalidBooleanValues")
   void validateBooleanTypeShouldRejectInvalidValues(Object value) {
+    var setting = createBooleanSetting();
     var exception = assertThrows(SettingsValidationException.class,
-      () -> settingsValidator.validate(value, createBooleanSetting()));
+      () -> settingsValidator.validate(value, setting));
 
     assertThat(exception.getMessage(), is("Setting value should be a boolean"));
   }
