@@ -55,7 +55,8 @@ public class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.reindex.file-ready",
     "folio.foo-tenant.inventory.subject-source",
     "folio.foo-tenant.inventory.instance-date-type",
-    "folio.foo-tenant.inventory.call-number-type");
+    "folio.foo-tenant.inventory.call-number-type",
+    "folio.foo-tenant.inventory.setting");
   private KafkaAdminClient mockClient;
   private Vertx vertx;
 

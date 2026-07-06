@@ -23,6 +23,9 @@ public final class FakeKafkaConsumer {
   static final String MATERIAL_TYPE_TOPIC_NAME = "folio.test.inventory.material-type";
   static final String REINDEX_RECORDS_TOPIC_NAME = "folio.test.inventory.reindex-records";
   static final String REINDEX_FILE_READY_TOPIC_NAME = "folio.test.inventory.reindex.file-ready";
+  static final String SETTING_TOPIC_NAME = "folio.test.inventory.setting";
+  static final String SETTING_TOPIC_NAME_CENTRAL_TENANT = "folio.central.inventory.setting";
+  static final String SETTING_TOPIC_NAME_MEMBER_TENANT = "folio.member.inventory.setting";
 
   static final String HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT =
     "folio.consortium.inventory.holdings-record";
@@ -36,6 +39,7 @@ public final class FakeKafkaConsumer {
   private final GroupedCollectedMessages collectedMaterialTypeMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexRecordsMessages = new GroupedCollectedMessages();
   private final GroupedCollectedMessages collectedReindexFileReadyMessages = new GroupedCollectedMessages();
+  private final GroupedCollectedMessages collectedSettingMessages = new GroupedCollectedMessages();
 
   private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
 
@@ -71,6 +75,7 @@ public final class FakeKafkaConsumer {
     collectedMaterialTypeMessages.empty();
     collectedReindexRecordsMessages.empty();
     collectedReindexFileReadyMessages.empty();
+    collectedSettingMessages.empty();
   }
 
   public int getAllPublishedInstanceIdsCount() {
@@ -128,6 +133,10 @@ public final class FakeKafkaConsumer {
     return collectedMaterialTypeMessages.messagesByGroupKey(materialTypeId);
   }
 
+  public Collection<EventMessage> getMessagesForSetting(String settingId) {
+    return collectedSettingMessages.messagesByGroupKey(settingId);
+  }
+
   private VertxMessageCollectingTopicConsumer createConsumer() {
     return new VertxMessageCollectingTopicConsumer(
       subscribedTopics(),
@@ -139,9 +148,11 @@ public final class FakeKafkaConsumer {
       INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, LOAN_TYPE_TOPIC_NAME,
       BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME, MATERIAL_TYPE_TOPIC_NAME,
       HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-      REINDEX_RECORDS_TOPIC_NAME, REINDEX_FILE_READY_TOPIC_NAME);
+      REINDEX_RECORDS_TOPIC_NAME, REINDEX_FILE_READY_TOPIC_NAME, SETTING_TOPIC_NAME,
+      SETTING_TOPIC_NAME_CENTRAL_TENANT, SETTING_TOPIC_NAME_MEMBER_TENANT);
   }
 
+  @SuppressWarnings("checkstyle:MethodLength")
   private AggregateMessageCollector eventMessageCollector() {
     return new AggregateMessageCollector(
       filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
@@ -163,7 +174,13 @@ public final class FakeKafkaConsumer {
       filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
         KafkaConsumerRecord::key, collectedReindexRecordsMessages),
       filteredAndGroupedCollector(REINDEX_FILE_READY_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedReindexFileReadyMessages));
+        KafkaConsumerRecord::key, collectedReindexFileReadyMessages),
+      filteredAndGroupedCollector(SETTING_TOPIC_NAME,
+        KafkaConsumerRecord::key, collectedSettingMessages),
+      filteredAndGroupedCollector(SETTING_TOPIC_NAME_CENTRAL_TENANT,
+        KafkaConsumerRecord::key, collectedSettingMessages),
+      filteredAndGroupedCollector(SETTING_TOPIC_NAME_MEMBER_TENANT,
+        KafkaConsumerRecord::key, collectedSettingMessages));
   }
 
   @NotNull

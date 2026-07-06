@@ -278,6 +278,10 @@ public final class ResourceClient {
     return TestBase.get(client.get(urlMakerWithId(id), TENANT_ID));
   }
 
+  public Response getByIdIfPresent(String id, String tenantId) {
+    return TestBase.get(client.get(urlMakerWithId(id), tenantId));
+  }
+
   public void delete(UUID id) {
     delete(id, Map.of());
   }

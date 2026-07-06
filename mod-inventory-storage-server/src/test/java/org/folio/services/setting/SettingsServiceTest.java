@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -35,9 +36,11 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.caches.SettingCache;
+import org.folio.services.domainevent.SettingEventPublisher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 
 class SettingsServiceTest {
@@ -53,6 +56,7 @@ class SettingsServiceTest {
   private Map<String, String> okapiHeaders;
   private PostgresClient postgresClient;
   private MockedStatic<PgUtil> mockedPgUtil;
+  private MockedConstruction<SettingEventPublisher> mockedPublisherConstruction;
   private ConsortiumDataCache consortiumDataCache;
 
   @BeforeEach
@@ -62,7 +66,6 @@ class SettingsServiceTest {
     var context = mock(Context.class);
     var httpClient = mock(HttpClientAgent.class);
     consortiumDataCache = mock(ConsortiumDataCache.class);
-
     var vertx = mock(Vertx.class);
     when(context.owner()).thenReturn(vertx);
     when(vertx.createHttpClient()).thenReturn(httpClient);
@@ -73,12 +76,16 @@ class SettingsServiceTest {
     mockedPgUtil = mockStatic(PgUtil.class);
     mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
       .thenReturn(postgresClient);
+    mockedPublisherConstruction = mockConstruction(SettingEventPublisher.class,
+      (mock, ctx) -> when(mock.publish(any(), anyString(), anyMap()))
+        .thenReturn(Future.succeededFuture()));
     okapiHeaders = new HashMap<>(Map.of("X-Okapi-Tenant", TENANT_ID, "X-Okapi-User-Id", USER_ID));
     settingsService = new SettingsService(context, okapiHeaders);
   }
 
   @AfterEach
   void tearDown() {
+    mockedPublisherConstruction.close();
     mockedPgUtil.close();
   }
 
