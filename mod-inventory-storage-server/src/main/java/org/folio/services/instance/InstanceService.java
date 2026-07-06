@@ -256,7 +256,7 @@ public class InstanceService {
     return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
       .compose(isOptimizeUpdatesEnabled -> {
         try {
-          if (isOptimizeUpdatesEnabled && equalsIgnoringMetadata(oldInstance, newInstance)) {
+          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
             return Future.succeededFuture(InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
           }
         } catch (Exception e) {

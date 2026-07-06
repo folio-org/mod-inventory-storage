@@ -334,7 +334,7 @@ public class ItemService {
     return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
       .compose(isOptimizeUpdatesEnabled -> {
         try {
-          if (isOptimizeUpdatesEnabled && equalsIgnoringMetadata(putData.oldItem, newItem)) {
+          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(putData.oldItem, newItem)) {
             return Future.succeededFuture();
           } else {
             return doUpdateItem(newItem)

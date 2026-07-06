@@ -290,7 +290,7 @@ public class HoldingsService {
     return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
       .compose(isOptimizeUpdatesEnabled -> {
         try {
-          if (isOptimizeUpdatesEnabled && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
+          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
             return Future.succeededFuture()
               .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
           }
