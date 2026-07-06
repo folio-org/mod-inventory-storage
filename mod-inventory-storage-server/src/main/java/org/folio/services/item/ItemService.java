@@ -331,20 +331,21 @@ public class ItemService {
   private Future<Void> performItemUpdate(Item newItem, PutData putData, HoldingsRecord oldHoldings) {
     putData.oldHoldings = oldHoldings;
     effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-    try {
-      var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
-      var isOptimizeUpdatesEnabled = settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT));
-      if (isOptimizeUpdatesEnabled && noChanges) {
-        return Future.succeededFuture();
-      } else {
-        return doUpdateItem(newItem)
-          .onSuccess(finalItem -> domainEventService.publishUpdated(
-            finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
-          .mapEmpty();
-      }
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
+    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+      .compose(isOptimizeUpdatesEnabled -> {
+        try {
+          if (isOptimizeUpdatesEnabled && equalsIgnoringMetadata(putData.oldItem, newItem)) {
+            return Future.succeededFuture();
+          } else {
+            return doUpdateItem(newItem)
+              .onSuccess(finalItem -> domainEventService.publishUpdated(
+                finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings))
+              .mapEmpty();
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
+      });
   }
 
   private void processDeletedItemRow(Row row) {

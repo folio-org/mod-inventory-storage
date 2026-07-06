@@ -203,7 +203,7 @@ public class InterfaceUrls {
   }
 
   public static URL settingsStorageUrl(String subPath) {
-    return vertxUrl("/settings" + subPath);
+    return vertxUrl("/inventory-settings" + subPath);
   }
 
   public static URL oaiPmhView(String subPath) {

@@ -57,14 +57,14 @@ public class SettingsService {
 
   public Future<Void> updateSetting(String key, Object value, Map<String, String> okapiHeaders) {
     return getSettingByKey(key)
-      .compose(entity -> {
-        if (entity.getCentralManaged() == null || !entity.getCentralManaged().booleanValue()) {
-          return updateSettingAndCache(key, value, okapiHeaders, entity);
+      .compose(existingSetting -> {
+        if (existingSetting.getCentralManaged() == null || !existingSetting.getCentralManaged().booleanValue()) {
+          return updateSettingAndCache(value, okapiHeaders, existingSetting);
         }
         return consortiumService.getConsortiumData(okapiHeaders)
           .compose(consortiumData -> {
             if (consortiumData.isEmpty()) {
-              return updateSettingAndCache(key, value, okapiHeaders, entity);
+              return updateSettingAndCache(value, okapiHeaders, existingSetting);
             }
             var consortium = consortiumData.get();
             var tenantId = okapiHeaders.get(TENANT);
@@ -73,7 +73,7 @@ public class SettingsService {
               logger.warn("updateSetting:: {}", message);
               return Future.failedFuture(new BadRequestException(message));
             }
-            return updateSettingAcrossConsortium(key, value, okapiHeaders, entity, consortium.memberTenants());
+            return updateSettingAcrossConsortium(value, okapiHeaders, existingSetting, consortium.memberTenants());
           });
       })
       .onSuccess(v -> logger.debug("Setting updated with key {} and value {}", key, value))
@@ -81,25 +81,32 @@ public class SettingsService {
       );
   }
 
-  private Future<Void> updateSettingAcrossConsortium(String key, Object value, Map<String, String> okapiHeaders,
-                                                     Setting entity, List<String> memberTenants) {
-    return updateSettingByKey(key, value, entity, okapiHeaders)
+  public Future<Boolean> isOptimizeUpdatesEnabled(String tenantId) {
+    return getCachedSettingValue(tenantId, INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue())
+      .map(Boolean::parseBoolean);
+  }
+
+  private Future<Void> updateSettingAcrossConsortium(Object value, Map<String, String> okapiHeaders,
+                                                     Setting existingSetting, List<String> memberTenants) {
+    return updateSettingByKey(value, existingSetting, okapiHeaders)
       .compose(updatedSetting -> {
-        var cacheKey = okapiHeaders.get(TENANT) + ":" + key;
+        var cacheKey = okapiHeaders.get(TENANT) + ":" + updatedSetting.getKey();
         cache.put(cacheKey, CompletableFuture.completedFuture(value.toString()));
-        ArrayList<Future<Void>> updateFutures = new ArrayList<>();
-        buildMemberTenantUpdateFutures(key, okapiHeaders, updatedSetting, memberTenants, updateFutures);
+        var updateFutures = new ArrayList<Future<Void>>();
+        buildMemberTenantUpdateFutures(okapiHeaders, updatedSetting, memberTenants, updateFutures);
         return Future.all(updateFutures)
-          .onFailure(t -> logger.error("Error updating setting across consortium for key {}", key, t))
+          .onFailure(t -> logger.error("Error updating setting across consortium for key {}",
+            updatedSetting.getKey(), t))
           .mapEmpty();
       });
   }
 
-  private void buildMemberTenantUpdateFutures(String key, Map<String, String> okapiHeaders, Setting updatedSetting,
+  private void buildMemberTenantUpdateFutures(Map<String, String> okapiHeaders, Setting updatedSetting,
                                               List<String> memberTenants, List<Future<Void>> futures) {
     var value = updatedSetting.getValue();
+    var key = updatedSetting.getKey();
     for (String memberTenantId : memberTenants) {
-      HashMap<String, String> headers = new HashMap<>(okapiHeaders);
+      var headers = new HashMap<>(okapiHeaders);
       headers.put(TENANT, memberTenantId);
       var repository = new SettingsRepository(context, headers);
       futures.add(repository.update(updatedSetting)
@@ -114,21 +121,14 @@ public class SettingsService {
     }
   }
 
-  private Future<Void> updateSettingAndCache(String key, Object value, Map<String, String> okapiHeaders,
-                                             Setting entity) {
-    return updateSettingByKey(key, value, entity, okapiHeaders)
-      .onSuccess(v -> {
-        var cachedKey = okapiHeaders.get(TENANT) + ":" + key;
+  private Future<Void> updateSettingAndCache(Object value, Map<String, String> okapiHeaders,
+                                             Setting existingSetting) {
+    return updateSettingByKey(value, existingSetting, okapiHeaders)
+      .onSuccess(updatedSetting -> {
+        var cachedKey = okapiHeaders.get(TENANT) + ":" + updatedSetting.getKey();
         cache.put(cachedKey, CompletableFuture.completedFuture(value.toString()));
-        logger.debug("Setting updated: {} with value: {}", key, value);
+        logger.debug("Setting updated: {} with value: {}", updatedSetting.getKey(), value);
       }).mapEmpty();
-  }
-
-  public boolean isOptimizeUpdatesEnabled(String tenantId) {
-    return Boolean.parseBoolean(
-      getCachedSettingValue(tenantId, INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue())
-        .result()
-    );
   }
 
   private Future<String> getCachedSettingValue(String tenantId, String key) {
@@ -150,18 +150,15 @@ public class SettingsService {
       });
   }
 
-  private Future<Setting> updateSettingByKey(String key, Object value, Setting entity,
+  private Future<Setting> updateSettingByKey(Object value, Setting existingSetting,
                                              Map<String, String> okapiHeaders) {
+    var key = existingSetting.getKey();
     logger.debug("Updating setting: {}", key);
-    if (entity == null) {
-      logger.warn("Setting not found: {}", key);
-      return Future.failedFuture(new NotFoundException("Setting not found: " + key));
-    }
-    validator.validate(value, entity);
-    entity.setValue(value.toString());
-    entity.setUpdatedDate(new Date());
-    entity.setUpdatedByUserId(getUserId(okapiHeaders));
-    return settingsRepository.update(entity);
+    validator.validate(value, existingSetting);
+    existingSetting.setValue(value.toString());
+    existingSetting.setUpdatedDate(new Date());
+    existingSetting.setUpdatedByUserId(getUserId(okapiHeaders));
+    return settingsRepository.update(existingSetting);
   }
 
   private UUID getUserId(Map<String, String> okapiHeaders) {

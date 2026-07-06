@@ -1438,17 +1438,17 @@
       ]
     },
     {
-      "id": "settings",
+      "id": "inventory-settings",
       "version": "1.0",
       "handlers": [
         {
           "methods": ["GET"],
-          "pathPattern": "/settings/{key}",
+          "pathPattern": "/inventory-settings/{key}",
           "permissionsRequired": ["inventory-storage.settings.item.get"]
         },
         {
           "methods": ["PATCH"],
-          "pathPattern": "/settings/{key}",
+          "pathPattern": "/inventory-settings/{key}",
           "permissionsRequired": ["inventory-storage.settings.item.patch"]
         }
        ]

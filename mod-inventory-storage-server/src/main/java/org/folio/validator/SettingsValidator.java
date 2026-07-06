@@ -10,8 +10,18 @@ public class SettingsValidator {
     switch (entity.getType()) {
       case STRING -> validateType(value, String.class, "Setting value should be a string");
       case INTEGER -> validateType(value, Integer.class, "Setting value should be an integer");
-      case BOOLEAN -> validateBoolean(value);
+      case BOOLEAN -> validateType(value, Boolean.class, "Setting value should be a boolean");
       default -> throw new IllegalStateException("Unexpected value: " + entity.getType());
+    }
+  }
+
+  private <T> void validateType(Object value, Class<T> type, String errorMessage) {
+    if (type.equals(Boolean.class)) {
+      validateBoolean(value);
+    } else {
+      if (!type.isInstance(value)) {
+        throw new SettingsValidationException(errorMessage);
+      }
     }
   }
 
@@ -24,11 +34,5 @@ public class SettingsValidator {
       return;
     }
     throw new SettingsValidationException("Setting value should be a boolean");
-  }
-
-  private <T> void validateType(Object value, Class<T> type, String errorMessage) {
-    if (!type.isInstance(value)) {
-      throw new SettingsValidationException(errorMessage);
-    }
   }
 }
