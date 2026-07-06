@@ -31,7 +31,8 @@ public enum InventoryKafkaTopic implements KafkaTopic {
   SERVICE_POINT("service-point"),
   SUBJECT_SOURCE("subject-source"),
   SUBJECT_TYPE("subject-type"),
-  MATERIAL_TYPE("material-type");
+  MATERIAL_TYPE("material-type"),
+  SETTING("setting");
 
   private static final String DEFAULT_NUM_PARTITIONS_PROPERTY = "KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS";
   private static final int DEFAULT_NUM_PARTITIONS_VALUE = 50;
@@ -65,6 +66,7 @@ public enum InventoryKafkaTopic implements KafkaTopic {
     map.put(SUBJECT_SOURCE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", 1));
     map.put(INSTANCE_DATE_TYPE, Pair.of("KAFKA_SUBJECT_SOURCE_TOPIC_NUM_PARTITIONS", 1));
     map.put(MATERIAL_TYPE, Pair.of("KAFKA_MATERIAL_TYPE_TOPIC_NUM_PARTITIONS", 1));
+    map.put(SETTING, Pair.of("KAFKA_SETTING_TOPIC_NUM_PARTITIONS", 1));
     TOPIC_PARTITION_MAP = Collections.unmodifiableMap(map);
   }
 
