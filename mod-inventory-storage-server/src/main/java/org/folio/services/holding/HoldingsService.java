@@ -287,24 +287,25 @@ public class HoldingsService {
   }
 
   private Future<Response> checkAndPerformUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
-    try {
-      var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
-      var isOptimizeUpdatesEnabled = settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT));
-      if (isOptimizeUpdatesEnabled && noChanges) {
-        return Future.succeededFuture()
-          .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
-      }
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
+    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+      .compose(isOptimizeUpdatesEnabled -> {
+        try {
+          if (isOptimizeUpdatesEnabled && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
+            return Future.succeededFuture()
+              .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
 
-    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-      newHoldings.setVersion(null);  // enforce optimistic locking
-    }
+        if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
+          newHoldings.setVersion(null);  // enforce optimistic locking
+        }
 
-    return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-      .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+        return refuseWhenHridChanged(oldHoldings, newHoldings)
+          .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+          .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+      });
   }
 
   private Future<Response> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

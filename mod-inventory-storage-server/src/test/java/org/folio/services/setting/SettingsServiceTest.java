@@ -133,18 +133,18 @@ class SettingsServiceTest {
   void isOptimizeUpdatesEnabledShouldReturnTrueWhenEnabled() {
     when(cache.get(anyString(), any())).thenReturn(Future.succeededFuture("true"));
 
-    boolean result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
+    Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
 
-    assertThat(result, is(true));
+    assertThat(result.result(), is(true));
   }
 
   @Test
   void isOptimizeUpdatesEnabledShouldReturnFalseWhenDisabled() {
     when(cache.get(anyString(), any())).thenReturn(Future.succeededFuture("false"));
 
-    boolean result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
+    Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
 
-    assertThat(result, is(false));
+    assertThat(result.result(), is(false));
   }
 
   @Test
