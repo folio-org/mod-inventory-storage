@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="MODINVSTOR-1577@@schema-create-table-settings" author="svitlana_kovalova">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="settings"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="settings">
+      <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="key" type="VARCHAR(255)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="unique_settings_key"/>
+      </column>
+      <column name="value" type="TEXT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="type" type="VARCHAR(50)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="central_managed" type="BOOLEAN">
+        <constraints nullable="false"/>
+      </column>
+      <column name="description" type="TEXT"/>
+      <column name="created_date" type="TIMESTAMP"/>
+      <column name="created_by_user_id" type="UUID"/>
+      <column name="updated_date" type="TIMESTAMP"/>
+      <column name="updated_by_user_id" type="UUID"/>
+    </createTable>
+
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1577@@insert-settings-record" author="svitlana_kovalova">
+
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">
+        SELECT COUNT(*)
+        FROM settings
+        WHERE "key" = 'inventory.optimize-updates.enabled'
+      </sqlCheck>
+    </preConditions>
+
+    <insert tableName="settings">
+      <column name="key" value="inventory.optimize-updates.enabled"/>
+      <column name="value" value="false"/>
+      <column name="type" value="BOOLEAN"/>
+      <column name="central_managed" valueBoolean="true"/>
+      <column name="description"
+              value="Enables optimization to prevent redundant updates in Inventory (Instance, Holding, and Item)."/>
+      <column name="created_date" valueComputed="NOW()"/>
+      <column name="created_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+      <column name="updated_date" valueComputed="NOW()"/>
+      <column name="updated_by_user_id" value="00000000-0000-0000-0000-000000000000"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>
