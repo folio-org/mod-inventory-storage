@@ -246,6 +246,3 @@ class SettingEventPublisherTest {
     assertThat(result.succeeded(), is(true));
   }
 }
-
-
-
