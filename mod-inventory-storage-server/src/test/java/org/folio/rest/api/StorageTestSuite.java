@@ -64,6 +64,7 @@ import org.junit.runners.Suite;
   ReferenceTablesTest.class,
   ReindexJobRunnerTest.class,
   SampleDataTest.class,
+  SettingStorageTest.class,
   SubjectSourceTest.class,
   SubjectTypeTest.class
 })

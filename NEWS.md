@@ -3,11 +3,11 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
+* Provides `settings v1.0`
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
 
 ### Bug fixes
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))

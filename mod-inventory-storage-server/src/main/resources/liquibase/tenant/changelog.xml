@@ -11,5 +11,6 @@
   <include file="scripts/v30.1.0/05-statistical-code.xml" relativeToChangelogFile="true"/>
   <include file="scripts/v30.1.0/06-item-order-tracker.xml" relativeToChangelogFile="true"/>
   <include file="scripts/v30.1.0/07-subject-source-and-type.xml" relativeToChangelogFile="true"/>
+  <include file="scripts/v30.1.0/08-create-settings-table.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

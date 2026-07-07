@@ -2,6 +2,7 @@ package org.folio.services.holding;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse;
@@ -66,6 +67,7 @@ import org.folio.services.item.ItemService;
 import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
+import org.folio.services.setting.SettingsService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -91,6 +93,7 @@ public class HoldingsService {
   private final InstanceRepository instanceRepository;
   private final ConsortiumService consortiumService;
   private final ItemEffectiveValuesService effectiveValuesService;
+  private final SettingsService settingsService;
   private final HoldingsUpsertSqlBuilder upsertSqlBuilder;
   private final HoldingsEventPublisher eventPublisher;
   private final Sanitizer<HoldingsRecord> sanitizer;
@@ -107,6 +110,7 @@ public class HoldingsService {
     this.consortiumService = new ConsortiumServiceImpl(context.get(HttpClient.class.getName()),
       context.get(ConsortiumDataCache.class.getName()));
     this.effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
+    this.settingsService = new SettingsService(context, okapiHeaders);
     this.upsertSqlBuilder = new HoldingsUpsertSqlBuilder(holdingsRepository, new ItemRepository(context, okapiHeaders));
     this.eventPublisher = new HoldingsEventPublisher(context, okapiHeaders);
     this.sanitizer = SanitizerFactory.getSanitizer(HoldingsRecord.class);
@@ -284,23 +288,25 @@ public class HoldingsService {
   }
 
   private Future<Response> checkAndPerformUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
-    try {
-      var noChanges = equalsIgnoringMetadata(oldHoldings, newHoldings);
-      if (noChanges) {
-        return Future.succeededFuture()
-          .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
-      }
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
+    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+      .compose(isOptimizeUpdatesEnabled -> {
+        try {
+          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
+            return Future.succeededFuture()
+              .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+          }
+        } catch (Exception e) {
+          return Future.failedFuture(e);
+        }
 
-    if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
-      newHoldings.setVersion(null);  // enforce optimistic locking
-    }
+        if (Integer.valueOf(-1).equals(newHoldings.getVersion())) {
+          newHoldings.setVersion(null);  // enforce optimistic locking
+        }
 
-    return refuseWhenHridChanged(oldHoldings, newHoldings)
-      .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-      .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+        return refuseWhenHridChanged(oldHoldings, newHoldings)
+          .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
+          .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+      });
   }
 
   private Future<Response> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {

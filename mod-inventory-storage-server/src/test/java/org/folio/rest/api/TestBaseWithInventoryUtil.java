@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -28,6 +29,7 @@ import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.SettingUpdateRequest;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -389,6 +391,16 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
     instanceToCreate.put("_version", 1);
     return instanceToCreate;
+  }
+
+  protected static Response updateSettingByKey(String key, boolean value) {
+    var settingRequest = new JsonObject(JsonObject.mapFrom(new SettingUpdateRequest()
+      .withValue(value)).encode());
+
+    var headers = new HashMap<String, String>();
+    headers.put(XOkapiHeaders.TENANT, TENANT_ID);
+    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
+    return settingsClient.attemptToUpdate(key, settingRequest, TENANT_ID, headers);
   }
 
   protected JsonObject createItem(JsonObject itemToCreate) {
