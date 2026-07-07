@@ -65,9 +65,7 @@ class SettingUpdateConsumerVerticleTest {
 
   @Test
   void verticleShouldExtendAbstractVerticle() {
-    var verticle = new SettingUpdateConsumerVerticle(cache);
-
-    assertThat(verticle.getClass().getSuperclass().getSimpleName(), is("AbstractVerticle"));
+    assertThat(SettingUpdateConsumerVerticle.class.getSuperclass().getSimpleName(), is("AbstractVerticle"));
   }
 
   @Test
@@ -80,5 +78,3 @@ class SettingUpdateConsumerVerticleTest {
     assertThat(options1 != options2, is(true));
   }
 }
-
-

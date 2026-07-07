@@ -366,14 +366,18 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
     // Get the setting for central tenant
     var initialResponse = getSettingByKeyForTenant(key, CONSORTIUM_CENTRAL_TENANT);
-    var settingId = initialResponse.getJson().getString("id");
     var initialValue = initialResponse.getJson().getString("value");
 
     // Update setting for central tenant
     var newValue = !"true".equals(initialValue);
-    updateSettingByKeyForTenant(key, newValue, CONSORTIUM_CENTRAL_TENANT);
+    var updateResponse = updateSettingByKeyForTenant(key, newValue, CONSORTIUM_CENTRAL_TENANT);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
+    var getResponse = getSettingByKeyForTenant(key, CONSORTIUM_CENTRAL_TENANT);
+    assertThat(getResponse.getStatusCode(), is(HttpURLConnection.HTTP_OK));
+    assertThat(getResponse.getJson().getString("value"), is("true"));
     // Verify setting event was published with correct tenant ID
+    var settingId = initialResponse.getJson().getString("id");
     settingEventMessageChecks.settingEventPublishedForTenant(settingId, CONSORTIUM_CENTRAL_TENANT);
   }
 
@@ -396,7 +400,8 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
     // Update setting from CENTRAL tenant - this should propagate to member tenant
     var newValue = !"true".equals(initialValue);
-    updateSettingByKeyForTenant(key, newValue, CONSORTIUM_CENTRAL_TENANT);
+    var updateResponse = updateSettingByKeyForTenant(key, newValue, CONSORTIUM_CENTRAL_TENANT);
+    assertThat(updateResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
 
     // Verify setting event was published with member tenant ID
     // The central tenant update propagates to member tenant, publishing an event for member

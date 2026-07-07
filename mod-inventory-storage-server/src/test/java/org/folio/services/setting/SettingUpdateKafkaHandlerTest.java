@@ -20,6 +20,9 @@ import org.folio.services.caches.SettingCache;
 import org.folio.services.domainevent.SettingEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SettingUpdateKafkaHandlerTest {
 
@@ -89,29 +92,11 @@ class SettingUpdateKafkaHandlerTest {
     assertThat(result.result(), is(RECORD_KEY));
   }
 
-  @Test
-  void handleShouldFailWhenJsonParsingFails() {
-    var kafkaRecord = createKafkaRecord("invalid-json");
-
-    var result = handler.handle(kafkaRecord);
-
-    assertThat(result.failed(), is(true));
-    verify(cache, never()).put(anyString(), any());
-  }
-
-  @Test
-  void handleShouldFailWhenKafkaRecordValueIsNull() {
-    var kafkaRecord = createKafkaRecord(null);
-
-    var result = handler.handle(kafkaRecord);
-
-    assertThat(result.failed(), is(true));
-    verify(cache, never()).put(anyString(), any());
-  }
-
-  @Test
-  void handleShouldFailWhenKafkaRecordValueIsEmpty() {
-    var kafkaRecord = createKafkaRecord("");
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = {"invalid-json"})
+  void handleShouldFailWhenKafkaRecordValueIsInvalid(String value) {
+    var kafkaRecord = createKafkaRecord(value);
 
     var result = handler.handle(kafkaRecord);
 
@@ -149,21 +134,17 @@ class SettingUpdateKafkaHandlerTest {
 
   @SuppressWarnings("unchecked")
   private KafkaConsumerRecord<String, String> createKafkaRecordWithCustomHeader(String value, String headerName) {
-    KafkaConsumerRecord<String, String> record = mock(KafkaConsumerRecord.class);
-    when(record.topic()).thenReturn(TOPIC);
-    when(record.key()).thenReturn(RECORD_KEY);
-    when(record.value()).thenReturn(value);
+    KafkaConsumerRecord<String, String> kafkaConsumerRecord = mock(KafkaConsumerRecord.class);
+    when(kafkaConsumerRecord.topic()).thenReturn(TOPIC);
+    when(kafkaConsumerRecord.key()).thenReturn(RECORD_KEY);
+    when(kafkaConsumerRecord.value()).thenReturn(value);
 
     KafkaHeader tenantHeader = mock(KafkaHeader.class);
     when(tenantHeader.key()).thenReturn(headerName);
     when(tenantHeader.value()).thenReturn(Buffer.buffer(TENANT_ID));
 
-    when(record.headers()).thenReturn(List.of(tenantHeader));
+    when(kafkaConsumerRecord.headers()).thenReturn(List.of(tenantHeader));
 
-    return record;
+    return kafkaConsumerRecord;
   }
 }
-
-
-
-
