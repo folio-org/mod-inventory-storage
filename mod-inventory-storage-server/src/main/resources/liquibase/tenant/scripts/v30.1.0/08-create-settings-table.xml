@@ -11,7 +11,7 @@
         <tableExists tableName="settings"/>
       </not>
     </preConditions>
-
+    <comment>Create settings table to store configuration settings for Inventory</comment>
     <createTable tableName="settings">
       <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
         <constraints primaryKey="true" nullable="false"/>
@@ -46,7 +46,7 @@
         WHERE "key" = 'inventory.optimize-updates.enabled'
       </sqlCheck>
     </preConditions>
-
+    <comment>Insert a record into the settings table to enable optimization to prevent redundant updates in Inventory (Instance, Holding, and Item)</comment>
     <insert tableName="settings">
       <column name="key" value="inventory.optimize-updates.enabled"/>
       <column name="value" value="false"/>
