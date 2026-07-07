@@ -42,14 +42,13 @@ public final class AsyncMigrationsConsumerUtils {
   }
 
   private static void processTenantMigrations(Map.Entry<String, Set<ConsumerRecord<String, JsonObject>>> tenantEntry,
-                                               Context vertxContext,
-                                               KafkaConsumer<String, JsonObject> consumer) {
+                                              Context vertxContext,
+                                              KafkaConsumer<String, JsonObject> consumer) {
     var tenantId = tenantEntry.getKey();
     var headers = new CaseInsensitiveMap<String, String>();
     headers.put(TENANT_HEADER, tenantId);
 
-    var availableMigrations = Set.of(
-      new ShelvingOrderAsyncMigrationService(vertxContext, headers),
+    var availableMigrations = Set.<AsyncBaseMigrationService>of(
       new ItemOrderMigrationService(vertxContext, headers));
     var jobService = new AsyncMigrationJobService(vertxContext, headers);
 

@@ -6,27 +6,18 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
-import org.folio.dbschema.Versioned;
 import org.folio.kafka.services.KafkaAdminClientService;
+import org.folio.liquibase.LiquibaseUtil;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.services.migration.BaseMigrationService;
-import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 import org.folio.utils.SampleDataIdRandomizer;
 
 public class TenantRefApi extends TenantAPI {
@@ -40,51 +31,36 @@ public class TenantRefApi extends TenantAPI {
   private static final String ITEMS = "item-storage/items";
   private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
   private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
-  private static final String SERVICE_POINTS_USERS = "service-points-users";
 
   private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[] {
-    "material-types",
-    "loan-types",
-    "identifier-types",
-    "contributor-types",
-    "service-points",
-    "instance-relationship-types",
-    "contributor-name-types",
-    "instance-types",
-    "instance-formats",
-    "nature-of-content-terms",
-    "classification-types",
-    "instance-statuses",
-    "statistical-code-types", "statistical-codes",
-    "modes-of-issuance",
     "alternative-title-types",
+    "call-number-types",
+    "classification-types",
+    "contributor-name-types",
+    "contributor-types",
     "electronic-access-relationships",
-    "ill-policies",
-    "holdings-types",
-    "instance-note-types",
     "holdings-note-types",
-    "item-note-types",
-    "item-damaged-statuses",
     "holdings-sources",
-    "bound-with/instances",
-    "bound-with/holdingsrecords",
-    "bound-with/items",
-    "bound-with/bound-with-parts"
+    "holdings-types",
+    "identifier-types",
+    "ill-policies",
+    "instance-formats",
+    "instance-note-types",
+    "instance-relationship-types",
+    "instance-statuses",
+    "instance-types",
+    "item-damaged-statuses",
+    "item-note-types",
+    "loan-types",
+    "material-types",
+    "modes-of-issuance",
+    "nature-of-content-terms",
+    "statistical-code-types",
+    "statistical-codes",
+    "subject-sources",
+    "subject-types"
   };
-
-  /**
-   * Returns attributes.getModuleFrom() < featureVersion or attributes.getModuleFrom() is null.
-   */
-  static boolean isNew(TenantAttributes attributes, String featureVersion) {
-    if (attributes.getModuleFrom() == null) {
-      return true;
-    }
-    var since = new Versioned() {
-    };
-    since.setFromModuleVersion(featureVersion);
-    return since.isNewForThisInstall(attributes.getModuleFrom());
-  }
 
   @Validate
   @Override
@@ -92,9 +68,9 @@ public class TenantRefApi extends TenantAPI {
                          Handler<AsyncResult<Response>> handler, Context context) {
     // delete Kafka topics if tenant purged
     var result = tenantAttributes.getPurge() != null && tenantAttributes.getPurge()
-                          ? new KafkaAdminClientService(context.owner()).deleteKafkaTopics(InventoryKafkaTopic.values(),
-      tenantId(headers))
-                          : Future.succeededFuture();
+                 ? new KafkaAdminClientService(context.owner())
+                   .deleteKafkaTopics(InventoryKafkaTopic.values(), tenantId(headers))
+                 : Future.succeededFuture();
     result.onComplete(x -> super.postTenant(tenantAttributes, headers, handler, context));
   }
 
@@ -102,51 +78,52 @@ public class TenantRefApi extends TenantAPI {
   @Override
   Future<Integer> loadData(TenantAttributes attributes, String tenantId,
                            Map<String, String> headers, Context vertxContext) {
+    var vertx = vertxContext.owner();
 
     // create topics before loading data
-    var future = new KafkaAdminClientService(vertxContext.owner())
+    var future = new KafkaAdminClientService(vertx)
       .createKafkaTopics(InventoryKafkaTopic.values(), tenantId)
-      .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext));
+      .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext))
+      .compose(num -> vertx.executeBlocking(() -> {
+        LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
+        log.info("loadData:: Liquibase schema initialization completed for tenant {}", tenantId);
+        return null;
+      }).map(v -> num));
 
-    if (isNew(attributes, "20.0.0")) {
-      future = loadDataForVersion20(attributes, headers, vertxContext, future);
-    }
-
-    if (isNew(attributes, "25.1.0")) {
-      future = loadDataForVersion25(attributes, headers, vertxContext, future);
-    }
+    future = loadReferenceData(attributes, headers, vertxContext, future);
+    future = loadSampleData(attributes, headers, vertxContext, future);
 
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
       .map(result));
   }
 
-  private Future<Integer> loadDataForVersion20(TenantAttributes attributes, Map<String, String> headers,
-                                                Context vertxContext, Future<Integer> future) {
-    var servicePoints = loadServicePoints();
-    if (servicePoints.isEmpty()) {
-      return Future.failedFuture(new IOException("Failed to load service points"));
-    }
-
+  private Future<Integer> loadReferenceData(TenantAttributes attributes, Map<String, String> headers,
+                                            Context vertxContext, Future<Integer> future) {
     var tl = new TenantLoading();
     configureReferenceData(tl);
-    configureSampleData(tl, servicePoints);
-    
+    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+  }
+
+  private Future<Integer> loadSampleData(TenantAttributes attributes, Map<String, String> headers,
+                                         Context vertxContext, Future<Integer> future) {
+    var tl = new TenantLoading();
+    configureSampleData(tl);
     return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
   private void configureReferenceData(TenantLoading tl) {
     tl.withKey(REFERENCE_KEY).withLead(REFERENCE_LEAD);
-    tl.withIdContent();
+    tl.withPostIgnore();
     for (String p : refPaths) {
       tl.add(p);
     }
-    tl.withPostIgnore();  // System call number type couldn't be updated
-    tl.add("call-number-types");
   }
 
-  private void configureSampleData(TenantLoading tl, List<JsonObject> servicePoints) {
+  private void configureSampleData(TenantLoading tl) {
     tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-    tl.withIdContent();
+    tl.withPostIgnore();
+    tl.add("service-points");
+    tl.add("service-points-users");
     tl.add("location-units/institutions");
     tl.add("location-units/campuses");
     tl.add("location-units/libraries");
@@ -167,51 +144,7 @@ public class TenantRefApi extends TenantAPI {
     tl.add("bound-with/holdingsrecords", HOLDINGS);
     tl.add("bound-with/items", ITEMS);
     tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
-    tl.withPostIgnore();
     tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
-
-    tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
-      .withPostOnly()
-      .withAcceptStatus(422)
-      .add("users", SERVICE_POINTS_USERS);
-  }
-
-  private List<JsonObject> loadServicePoints() {
-    var servicePoints = new LinkedList<JsonObject>();
-    try {
-      var urls = TenantLoading.getURLsFromClassPathDir(
-        REFERENCE_LEAD + "/service-points");
-      for (var url : urls) {
-        var stream = url.openStream();
-        var content = IOUtils.toString(stream, StandardCharsets.UTF_8);
-        stream.close();
-        servicePoints.add(new JsonObject(content));
-      }
-      return servicePoints;
-    } catch (URISyntaxException | IOException ex) {
-      return Collections.emptyList();
-    }
-  }
-
-  private Future<Integer> loadDataForVersion25(TenantAttributes attributes, Map<String, String> headers,
-                                                Context vertxContext, Future<Integer> future) {
-    var idRandomizer = new SampleDataIdRandomizer();
-
-    var tl = new TenantLoading();
-    tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
-    tl.withIdContent();
-
-    // Randomize instance IDs and HRIDs for version 25.1 instances
-    tl.withFilter(json -> randomizeInstance(idRandomizer, json));
-    tl.add("bound-with/instances-25.1", INSTANCES);
-
-    // Update references in version 25.1 related entities
-    tl.withFilter(idRandomizer::updateInstanceIdReferences);
-    tl.add("bound-with/holdingsrecords-25.1", HOLDINGS);
-    tl.add("bound-with/items-25.1", ITEMS);
-    tl.add("bound-with/bound-with-parts-25.1", BOUND_WITH_PARTS);
-
-    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
   private Future<Void> runJavaMigrations(TenantAttributes ta, Context context,
@@ -219,8 +152,7 @@ public class TenantRefApi extends TenantAPI {
 
     log.info("About to start java migrations...");
 
-    var javaMigrations = List.of(
-      new ItemShelvingOrderMigrationService(context, okapiHeaders));
+    var javaMigrations = List.<BaseMigrationService>of();
 
     var startedMigrations = javaMigrations.stream()
       .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
@@ -236,20 +168,5 @@ public class TenantRefApi extends TenantAPI {
   private String randomizeInstance(SampleDataIdRandomizer idRandomizer, String json) {
     var randomizedIdJson = idRandomizer.randomizeInstanceId(json);
     return idRandomizer.randomizeHrid(randomizedIdJson);
-  }
-
-  private String servicePointUserFilter(String service, List<JsonObject> servicePoints) {
-    var jsonInput = new JsonObject(service);
-    var jsonOutput = new JsonObject();
-    jsonOutput.put("userId", jsonInput.getString("id"));
-    var ar = new JsonArray();
-    for (var pt : servicePoints) {
-      ar.add(pt.getString("id"));
-    }
-    jsonOutput.put("servicePointsIds", ar);
-    jsonOutput.put("defaultServicePointId", ar.getString(0));
-    var res = jsonOutput.encodePrettily();
-    log.info("servicePointUser result : {}", res);
-    return res;
   }
 }
