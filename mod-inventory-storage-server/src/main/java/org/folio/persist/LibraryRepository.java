@@ -1,7 +1,6 @@
 package org.folio.persist;
 
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -11,6 +10,8 @@ import org.folio.rest.jaxrs.model.LocationLibrary;
 import org.folio.rest.persist.interfaces.Results;
 
 public class LibraryRepository extends AbstractRepository<LocationLibrary> {
+
+  public static final String LIBRARY_TABLE = "loclibrary";
 
   public LibraryRepository(Context context, Map<String, String> okapiHeaders) {
     super(postgresClient(context, okapiHeaders), LIBRARY_TABLE, LocationLibrary.class);

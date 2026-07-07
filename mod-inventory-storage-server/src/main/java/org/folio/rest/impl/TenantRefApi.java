@@ -6,17 +6,9 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
@@ -26,6 +18,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.LocationMigrationService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 import org.folio.utils.SampleDataIdRandomizer;
 
@@ -40,7 +33,6 @@ public class TenantRefApi extends TenantAPI {
   private static final String ITEMS = "item-storage/items";
   private static final String INSTANCE_RELATIONSHIPS = "instance-storage/instance-relationships";
   private static final String BOUND_WITH_PARTS = "inventory-storage/bound-with-parts";
-  private static final String SERVICE_POINTS_USERS = "service-points-users";
 
   private static final Logger log = LogManager.getLogger();
   final String[] refPaths = new String[] {
@@ -48,7 +40,6 @@ public class TenantRefApi extends TenantAPI {
     "loan-types",
     "identifier-types",
     "contributor-types",
-    "service-points",
     "instance-relationship-types",
     "contributor-name-types",
     "instance-types",
@@ -117,20 +108,16 @@ public class TenantRefApi extends TenantAPI {
     }
 
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
+      .compose(v -> new LocationMigrationService(vertxContext, headers).migrate())
       .map(result));
   }
 
   private Future<Integer> loadDataForVersion20(TenantAttributes attributes, Map<String, String> headers,
                                                 Context vertxContext, Future<Integer> future) {
-    var servicePoints = loadServicePoints();
-    if (servicePoints.isEmpty()) {
-      return Future.failedFuture(new IOException("Failed to load service points"));
-    }
-
     var tl = new TenantLoading();
     configureReferenceData(tl);
-    configureSampleData(tl, servicePoints);
-    
+    configureSampleData(tl);
+
     return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
   }
 
@@ -144,13 +131,9 @@ public class TenantRefApi extends TenantAPI {
     tl.add("call-number-types");
   }
 
-  private void configureSampleData(TenantLoading tl, List<JsonObject> servicePoints) {
+  private void configureSampleData(TenantLoading tl) {
     tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
     tl.withIdContent();
-    tl.add("location-units/institutions");
-    tl.add("location-units/campuses");
-    tl.add("location-units/libraries");
-    tl.add("locations");
     tl.add("holdings-sources");
 
     var idRandomizer = new SampleDataIdRandomizer();
@@ -169,28 +152,6 @@ public class TenantRefApi extends TenantAPI {
     tl.add("bound-with/bound-with-parts", BOUND_WITH_PARTS);
     tl.withPostIgnore();
     tl.add("instance-relationships", INSTANCE_RELATIONSHIPS);
-
-    tl.withFilter(service -> servicePointUserFilter(service, servicePoints))
-      .withPostOnly()
-      .withAcceptStatus(422)
-      .add("users", SERVICE_POINTS_USERS);
-  }
-
-  private List<JsonObject> loadServicePoints() {
-    var servicePoints = new LinkedList<JsonObject>();
-    try {
-      var urls = TenantLoading.getURLsFromClassPathDir(
-        REFERENCE_LEAD + "/service-points");
-      for (var url : urls) {
-        var stream = url.openStream();
-        var content = IOUtils.toString(stream, StandardCharsets.UTF_8);
-        stream.close();
-        servicePoints.add(new JsonObject(content));
-      }
-      return servicePoints;
-    } catch (URISyntaxException | IOException ex) {
-      return Collections.emptyList();
-    }
   }
 
   private Future<Integer> loadDataForVersion25(TenantAttributes attributes, Map<String, String> headers,
@@ -236,20 +197,5 @@ public class TenantRefApi extends TenantAPI {
   private String randomizeInstance(SampleDataIdRandomizer idRandomizer, String json) {
     var randomizedIdJson = idRandomizer.randomizeInstanceId(json);
     return idRandomizer.randomizeHrid(randomizedIdJson);
-  }
-
-  private String servicePointUserFilter(String service, List<JsonObject> servicePoints) {
-    var jsonInput = new JsonObject(service);
-    var jsonOutput = new JsonObject();
-    jsonOutput.put("userId", jsonInput.getString("id"));
-    var ar = new JsonArray();
-    for (var pt : servicePoints) {
-      ar.add(pt.getString("id"));
-    }
-    jsonOutput.put("servicePointsIds", ar);
-    jsonOutput.put("defaultServicePointId", ar.getString(0));
-    var res = jsonOutput.encodePrettily();
-    log.info("servicePointUser result : {}", res);
-    return res;
   }
 }

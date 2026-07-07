@@ -21,29 +21,21 @@ import static org.folio.rest.support.http.InterfaceUrls.statisticalCodeTypesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.statisticalCodesUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
-import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.folio.utility.ModuleUtility;
 import org.junit.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
@@ -220,17 +212,6 @@ public class ReferenceTablesTest extends TestBase {
       var source = loanTypesCollection.getJsonObject(i).getString("source");
       assertEquals("folio", source);
     }
-  }
-
-  @ParameterizedTest
-  @CsvSource({"1.0.0, 28.1.0"})
-  @SneakyThrows
-  public void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
-    ModuleUtility.prepareTenant(TENANT_ID, moduleFrom, moduleTo, false);
-    int statusCode = servicePointsClient.getById(
-        UUID.fromString("32c6f0c7-26e4-4350-8c29-1e11c2e3efc4"))
-      .getStatusCode();
-    assertThat(statusCode, is(HttpURLConnection.HTTP_OK));
   }
 
   private Response getReferenceRecords(URL baseUrl)

@@ -1,7 +1,6 @@
 package org.folio.persist;
 
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -11,6 +10,8 @@ import org.folio.rest.jaxrs.model.LocationInstitution;
 import org.folio.rest.persist.interfaces.Results;
 
 public class InstitutionRepository extends AbstractRepository<LocationInstitution> {
+
+  public static final String INSTITUTION_TABLE = "locinstitution";
 
   public InstitutionRepository(Context context,
                                Map<String, String> okapiHeaders) {

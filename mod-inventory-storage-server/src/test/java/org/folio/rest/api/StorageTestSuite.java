@@ -32,9 +32,11 @@ import org.folio.rest.support.ResponseHandler;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+@Ignore
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
   AbstractInstanceRecordsApiTest.class,

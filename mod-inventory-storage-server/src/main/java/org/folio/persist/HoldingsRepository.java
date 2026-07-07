@@ -1,8 +1,8 @@
 package org.folio.persist;
 
+import static org.folio.persist.LocationRepository.LOCATION_TABLE;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.services.location.LocationService.LOCATION_TABLE;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;

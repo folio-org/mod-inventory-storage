@@ -1,5 +1,8 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -7,20 +10,19 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ServicePointsUser;
-import org.folio.rest.jaxrs.model.ServicePointsUsers;
+import org.folio.services.servicepoint.ServicePointsUserService;
 
-public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePointsUsers>
-  implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
-
-  public static final String SERVICE_POINT_USER_TABLE = "service_point_user";
+public class ServicePointsUserApi implements org.folio.rest.jaxrs.resource.ServicePointsUsers {
 
   @Validate
   @Override
   public void getServicePointsUsers(String query, String totalRecords, int offset, int limit,
                                     Map<String, String> okapiHeaders,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetServicePointsUsersResponse.class);
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .getByQuery(query, offset, limit, totalRecords)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -28,14 +30,20 @@ public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePoin
   public void postServicePointsUsers(ServicePointsUser entity,
                                      Map<String, String> okapiHeaders,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostServicePointsUsersResponse.class);
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .create(entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void deleteServicePointsUsers(Map<String, String> okapiHeaders,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .deleteAll()
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -44,8 +52,10 @@ public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePoin
                                                          Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
-    getEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetServicePointsUsersByServicePointsUserIdResponse.class);
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .getById(servicePointsUserId)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -54,8 +64,10 @@ public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePoin
                                                             Map<String, String> okapiHeaders,
                                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                                             Context vertxContext) {
-    deleteEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteServicePointsUsersByServicePointsUserIdResponse.class);
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .delete(servicePointsUserId)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
@@ -65,22 +77,9 @@ public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePoin
                                                          Map<String, String> okapiHeaders,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
-    putEntityById(servicePointsUserId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutServicePointsUsersByServicePointsUserIdResponse.class);
-  }
-
-  @Override
-  protected String getReferenceTable() {
-    return SERVICE_POINT_USER_TABLE;
-  }
-
-  @Override
-  protected Class<ServicePointsUser> getEntityClass() {
-    return ServicePointsUser.class;
-  }
-
-  @Override
-  protected Class<ServicePointsUsers> getEntityCollectionClass() {
-    return ServicePointsUsers.class;
+    new ServicePointsUserService(vertxContext, okapiHeaders)
+      .update(servicePointsUserId, entity)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 }
