@@ -1440,6 +1440,22 @@
           "permissionsRequired": ["inventory-storage.migration.job.item.delete"]
         }
       ]
+    },
+    {
+      "id": "inventory-settings",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/inventory-settings/{key}",
+          "permissionsRequired": ["inventory-storage.settings.item.get"]
+        },
+        {
+          "methods": ["PATCH"],
+          "pathPattern": "/inventory-settings/{key}",
+          "permissionsRequired": ["inventory-storage.settings.item.patch"]
+        }
+       ]
     }
   ],
   "optional": [
@@ -2661,6 +2677,16 @@
       "description": "create or update instances records in bulk from external file"
     },
     {
+      "permissionName": "inventory-storage.settings.item.get",
+      "displayName": "inventory storage - get inventory setting",
+      "description": "get inventory setting"
+    },
+    {
+      "permissionName": "inventory-storage.settings.item.patch",
+      "displayName": "inventory storage - patch inventory setting",
+      "description": "patch inventory setting"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2907,7 +2933,9 @@
         "inventory-storage.reindex-records.publish.post",
         "inventory-storage.reindex-records.export.post",
         "inventory-storage.instance-date-types.collection.get",
-        "inventory-storage.instance-date-types.item.patch"
+        "inventory-storage.instance-date-types.item.patch",
+        "inventory-storage.settings.item.get",
+        "inventory-storage.settings.item.patch"
       ]
     }
   ],

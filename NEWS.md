@@ -3,22 +3,27 @@
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### New APIs versions
-* Provides `API_NAME vX.Y`
+* Provides `settings v1.0`
 * Requires `API_NAME vX.Y`
 
 ### Features
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
 
 ### Bug fixes
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
 * Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
 * Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
+* Add MATERIALIZED to bound_instances CTE in reindexInstances query ([MODINVSTOR-1566](https://folio-org.atlassian.net/browse/MODINVSTOR-1566))
+* Fix Instace complete_updated_date update performance on item create/update  ([MODINVSTOR-1569](https://folio-org.atlassian.net/browse/MODINVSTOR-1569))
+* Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
+* HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
+* Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 
 ### Tech Dept
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Dependencies
-* Bump `LIB_NAME` from `OLD_VERSION` to `NEW_VERSION`
+* Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 

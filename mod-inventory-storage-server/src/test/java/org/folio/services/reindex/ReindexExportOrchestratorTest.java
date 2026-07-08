@@ -6,7 +6,7 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.api.TestBase.get;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -73,34 +73,37 @@ public class ReindexExportOrchestratorTest {
   }
 
   @Test
-  public void export_noRows_abortsMultipartWritesEmptyAndPublishesEvent() {
-    when(s3Client.initiateMultipartUpload(any())).thenReturn(UPLOAD_ID);
+  public void export_noRows_writesEmptyFileViaSinglePutAndPublishesEvent() {
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     get(orchestrator.export(buildRequest(TRACE_ID),
       c -> succeededFuture(new TestRowStream(0))));
 
-    verify(s3Client).abortMultipartUpload(any(), eq(UPLOAD_ID));
     verify(s3Client).write(any(), any(), eq(0L));
+    verify(s3Client, never()).initiateMultipartUpload(any());
+    verify(s3Client, never()).abortMultipartUpload(any(), any());
+    verify(s3Client, never()).completeMultipartUpload(any(), any(), any());
     verify(eventPublisher).publish(any());
   }
 
   @Test
-  public void export_rowsPresent_multipartCompletedAndEventPublished() {
-    when(s3Client.initiateMultipartUpload(any())).thenReturn(UPLOAD_ID);
-    when(s3Client.uploadMultipartPart(any(), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
+  public void export_rowsPresent_singlePutAndEventPublished() {
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     get(orchestrator.export(buildRequest(TRACE_ID),
       c -> succeededFuture(new TestRowStream(2))));
 
-    verify(s3Client).completeMultipartUpload(any(), eq(UPLOAD_ID), any());
+    // 2 rows produce well under the 16 MB part-size threshold, so the
+    // service uses a single PUT and never initiates a multipart upload.
+    verify(s3Client).write(any(), any(), anyLong());
+    verify(s3Client, never()).initiateMultipartUpload(any());
+    verify(s3Client, never()).completeMultipartUpload(any(), any(), any());
+    verify(s3Client, never()).abortMultipartUpload(any(), any());
     verify(eventPublisher).publish(any());
   }
 
   @Test
   public void export_blankTraceId_eventStillPublished() {
-    when(s3Client.initiateMultipartUpload(any())).thenReturn(UPLOAD_ID);
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     get(orchestrator.export(buildRequest(""),

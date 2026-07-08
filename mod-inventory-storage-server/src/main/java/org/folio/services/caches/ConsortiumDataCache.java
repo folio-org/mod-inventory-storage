@@ -100,7 +100,10 @@ public class ConsortiumDataCache {
         JsonObject userTenant = userTenants.getJsonObject(0);
         var centralTenantId = userTenant.getString(CENTRAL_TENANT_ID_FIELD);
         var consortiumId = userTenant.getString(CONSORTIUM_ID_FIELD);
-        return loadConsortiumTenants(consortiumId, headers)
+        // The /consortia/{id}/tenants endpoint is served from the central tenant's schema only.
+        var centralTenantHeaders = new CaseInsensitiveMap<>(headers);
+        centralTenantHeaders.put(TENANT, centralTenantId);
+        return loadConsortiumTenants(consortiumId, centralTenantHeaders)
           .map(memberTenants -> Optional.of(new ConsortiumData(centralTenantId, consortiumId, memberTenants)));
       })
       .toCompletionStage()

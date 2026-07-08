@@ -1,5 +1,6 @@
 package org.folio.services.caches;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 
@@ -139,6 +140,33 @@ public class ConsortiumDataCacheTest {
 
     future.onComplete(ar -> {
       context.assertTrue(ar.failed());
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldUseCentralTenantHeaderWhenLoadingConsortiumTenants(TestContext context) {
+    var async = context.async();
+    var centralTenantId = "central";
+    var consortiumId = UUID.randomUUID().toString();
+
+    WireMock.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.ok().withBody(new JsonObject()
+      .put(USER_TENANTS_FIELD, new JsonArray().add(new JsonObject()
+        .put(CENTRAL_TENANT_ID_FIELD, centralTenantId)
+        .put(CONSORTIUM_ID_FIELD, consortiumId))).encodePrettily())));
+
+    WireMock.stubFor(get(urlMatching("/consortia/.*/tenants"))
+      .withHeader(XOkapiHeaders.TENANT, equalTo(centralTenantId))
+      .willReturn(WireMock.ok().withBody(new JsonObject()
+        .put(ECS_TENANTS_FIELD, new JsonArray()
+          .add(new JsonObject().put("id", centralTenantId).put("isCentral", true))
+          .add(new JsonObject().put("id", "memberA").put("isCentral", false))
+          .add(new JsonObject().put("id", "memberB").put("isCentral", false))).encodePrettily())));
+
+    consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders).onComplete(ar -> {
+      context.assertTrue(ar.succeeded(), "load should succeed when call uses central tenant header");
+      ConsortiumData data = ar.result().orElseThrow();
+      context.assertEquals(2, data.memberTenants().size(), "non-central member tenants must be returned");
       async.complete();
     });
   }

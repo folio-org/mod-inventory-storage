@@ -20,3 +20,5 @@ node_modules
 /bin/
 .factorypath
 .vscode/
+.agents/
+skills-lock.json
