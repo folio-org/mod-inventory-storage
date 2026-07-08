@@ -81,34 +81,31 @@ public class TenantRefApi extends TenantAPI {
     var vertx = vertxContext.owner();
 
     // create topics before loading data
-    var future = new KafkaAdminClientService(vertx)
+    return new KafkaAdminClientService(vertx)
       .createKafkaTopics(InventoryKafkaTopic.values(), tenantId)
-      .compose(x -> super.loadData(attributes, tenantId, headers, vertxContext))
-      .compose(num -> vertx.executeBlocking(() -> {
+      .compose(v -> vertx.executeBlocking(() -> {
         LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
         log.info("loadData:: Liquibase schema initialization completed for tenant {}", tenantId);
         return null;
-      }).map(v -> num));
-
-    future = loadReferenceData(attributes, headers, vertxContext, future);
-    future = loadSampleData(attributes, headers, vertxContext, future);
-
-    return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
+      }))
+      .compose(integer -> loadReferenceData(attributes, headers, vertxContext)
+        .compose(integer1 -> loadSampleData(attributes, headers, vertxContext, integer1)))
+      .compose(result -> runJavaMigrations(attributes, vertxContext, headers)
       .map(result));
   }
 
   private Future<Integer> loadReferenceData(TenantAttributes attributes, Map<String, String> headers,
-                                            Context vertxContext, Future<Integer> future) {
+                                            Context vertxContext) {
     var tl = new TenantLoading();
     configureReferenceData(tl);
-    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+    return tl.perform(attributes, headers, vertxContext, 0);
   }
 
   private Future<Integer> loadSampleData(TenantAttributes attributes, Map<String, String> headers,
-                                         Context vertxContext, Future<Integer> future) {
+                                         Context vertxContext, Integer n) {
     var tl = new TenantLoading();
     configureSampleData(tl);
-    return future.compose(n -> tl.perform(attributes, headers, vertxContext, n));
+    return tl.perform(attributes, headers, vertxContext, n);
   }
 
   private void configureReferenceData(TenantLoading tl) {
