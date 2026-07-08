@@ -34,7 +34,27 @@
         },
         "holdings": {
           "description": "Counts for holdings records associated with the instance",
-          "$ref": "#/definitions/suppressionCounts"
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "total": {
+              "description": "Total number of holdings records associated with the instance",
+              "type": "integer"
+            },
+            "suppressedFromDiscovery": {
+              "description": "Number of holdings records suppressed from discovery",
+              "type": "integer"
+            },
+            "notSuppressedFromDiscovery": {
+              "description": "Number of holdings records not suppressed from discovery",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "total",
+            "suppressedFromDiscovery",
+            "notSuppressedFromDiscovery"
+          ]
         },
         "items": {
           "description": "Counts for item records associated with the instance",
@@ -149,29 +169,6 @@
     "referenceValues"
   ],
   "definitions": {
-    "suppressionCounts": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "total": {
-          "description": "Total number of records in this category",
-          "type": "integer"
-        },
-        "suppressedFromDiscovery": {
-          "description": "Number of records in this category suppressed from discovery",
-          "type": "integer"
-        },
-        "notSuppressedFromDiscovery": {
-          "description": "Number of records in this category not suppressed from discovery",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "total",
-        "suppressedFromDiscovery",
-        "notSuppressedFromDiscovery"
-      ]
-    },
     "aggregateScope": {
       "type": "object",
       "additionalProperties": false,
