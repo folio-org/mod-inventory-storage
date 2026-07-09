@@ -6,6 +6,7 @@ import static java.util.UUID.randomUUID;
 import static org.folio.rest.support.ResponseHandler.json;
 import static org.folio.rest.support.ResponseHandler.text;
 import static org.folio.rest.support.http.InterfaceUrls.instancesStorageUrl;
+import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -72,20 +73,19 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
     JsonObject recordCounts = summary.getJsonObject("recordCounts");
 
     assertCounts(recordCounts.getJsonObject("holdings"), 2, 1, 1);
-    assertCounts(recordCounts.getJsonObject("items"), 3, 1, 1, 2, 1);
+    assertCounts(recordCounts.getJsonObject("items"), 4, 1, 1, 2, 2);
 
     JsonObject aggregates = summary.getJsonObject("aggregates");
-    JsonArray allMaterialTypes = aggregates
+    assertThat(aggregates
       .getJsonObject("allRecords")
-      .getJsonObject("referenceValues")
-      .getJsonArray("itemMaterialTypes");
-    JsonArray visibleMaterialTypes = aggregates
+      .getJsonObject("itemDerivedFields")
+      .getString("effectiveShelvingOrder"), is("PN 12 A6 41999"));
+    assertThat(aggregates
       .getJsonObject("notSuppressedFromDiscoveryRecords")
-      .getJsonObject("referenceValues")
-      .getJsonArray("itemMaterialTypes");
+      .getJsonObject("itemDerivedFields")
+      .getString("effectiveShelvingOrder"), is("PN 12 A6 41999"));
 
-    assertThat(names(allMaterialTypes), containsInAnyOrder("book", "journal"));
-    assertThat(names(visibleMaterialTypes), contains("journal"));
+    assertMaterialTypeAggregates(aggregates);
   }
 
   @Test
@@ -114,13 +114,24 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
 
   private void createMixedVisibilityInventoryHoldingAndItem(UUID instanceId) {
     UUID visibleHoldingId = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, null);
-    UUID suppressedHoldingId = createSuppressedHolding(instanceId);
 
     createItem(buildItem(visibleHoldingId, MAIN_LIBRARY_LOCATION_ID, null)
-      .withMaterialTypeId(journalMaterialTypeID));
+      .withId("00000000-0000-4000-8000-000000000001")
+      .withMaterialTypeId(journalMaterialTypeID)
+      .withItemLevelCallNumber("PN2 .A69")
+      .withItemLevelCallNumberTypeId(LC_CN_TYPE_ID)
+      .withVolume("v.1")
+      .withEnumeration("no. 1"));
+    createItem(buildItem(visibleHoldingId, MAIN_LIBRARY_LOCATION_ID, null)
+      .withId("ffffffff-ffff-4fff-bfff-ffffffffffff")
+      .withMaterialTypeId(journalMaterialTypeID)
+      .withItemLevelCallNumber("PN2 .A6 1999")
+      .withItemLevelCallNumberTypeId(LC_CN_TYPE_ID));
     createItem(buildItem(visibleHoldingId, MAIN_LIBRARY_LOCATION_ID, null)
       .withMaterialTypeId(bookMaterialTypeID)
       .withDiscoverySuppress(true));
+
+    UUID suppressedHoldingId = createSuppressedHolding(instanceId);
     createItem(buildItem(suppressedHoldingId, SECOND_FLOOR_LOCATION_ID, null)
       .withMaterialTypeId(bookMaterialTypeID));
   }
@@ -140,6 +151,20 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
       .map(JsonObject.class::cast)
       .map(value -> value.getString("name"))
       .toList();
+  }
+
+  private static void assertMaterialTypeAggregates(JsonObject aggregates) {
+    JsonArray allMaterialTypes = aggregates
+      .getJsonObject("allRecords")
+      .getJsonObject("referenceValues")
+      .getJsonArray("itemMaterialTypes");
+    JsonArray visibleMaterialTypes = aggregates
+      .getJsonObject("notSuppressedFromDiscoveryRecords")
+      .getJsonObject("referenceValues")
+      .getJsonArray("itemMaterialTypes");
+
+    assertThat(names(allMaterialTypes), containsInAnyOrder("book", "journal"));
+    assertThat(names(visibleMaterialTypes), contains("journal"));
   }
 
   private static JsonObject getSummary(UUID instanceId) {

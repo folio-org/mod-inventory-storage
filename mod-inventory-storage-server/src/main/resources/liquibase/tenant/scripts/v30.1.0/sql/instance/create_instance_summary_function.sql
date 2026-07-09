@@ -193,14 +193,14 @@ WITH
         SELECT item.effective_shelving_order
         FROM items_all item
         WHERE item.effective_shelving_order IS NOT NULL
-        ORDER BY item.id
+        ORDER BY item.effective_shelving_order, item.id
         LIMIT 1
       ) AS all_records,
       (
         SELECT item.effective_shelving_order
         FROM items_not_suppressed item
         WHERE item.effective_shelving_order IS NOT NULL
-        ORDER BY item.id
+        ORDER BY item.effective_shelving_order, item.id
         LIMIT 1
       ) AS not_suppressed_from_discovery_records
   ),
