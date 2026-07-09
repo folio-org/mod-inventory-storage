@@ -332,6 +332,36 @@
       ALTER TABLE hrid_settings
         ADD CONSTRAINT hrid_settings_lock_check CHECK (lock = true);
     </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-alter-sequence-for-hrid-settings" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <and>
+        <sequenceExists sequenceName="hrid_instances_seq"/>
+        <sequenceExists sequenceName="hrid_holdings_seq"/>
+        <sequenceExists sequenceName="hrid_holdings_seq"/>
+      </and>
+    </preConditions>
+    <comment>Add HRID sequences and hrid_settings_view</comment>
+
+    <sql>
+      GRANT ALL ON SEQUENCE hrid_instances_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_holdings_seq TO ${database.defaultSchemaName};
+      GRANT ALL ON SEQUENCE hrid_items_seq TO ${database.defaultSchemaName};
+    </sql>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1051@@schema-create-sequence-for-hrid-settings" author="folio">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <and>
+          <sequenceExists sequenceName="hrid_instances_seq"/>
+          <sequenceExists sequenceName="hrid_holdings_seq"/>
+          <sequenceExists sequenceName="hrid_holdings_seq"/>
+        </and>
+      </not>
+    </preConditions>
+    <comment>Add HRID sequences and hrid_settings_view</comment>
 
     <sql>
       CREATE SEQUENCE IF NOT EXISTS hrid_instances_seq
@@ -343,11 +373,6 @@
       CREATE SEQUENCE IF NOT EXISTS hrid_items_seq
         INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 99999999999
         OWNED BY hrid_settings.jsonb;
-
-      GRANT ALL ON SEQUENCE hrid_instances_seq TO ${database.defaultSchemaName};
-      GRANT ALL ON SEQUENCE hrid_holdings_seq TO ${database.defaultSchemaName};
-      GRANT ALL ON SEQUENCE hrid_items_seq TO ${database.defaultSchemaName};
-      GRANT ALL ON TABLE hrid_settings TO ${database.defaultSchemaName};
     </sql>
 
     <sql splitStatements="false">
