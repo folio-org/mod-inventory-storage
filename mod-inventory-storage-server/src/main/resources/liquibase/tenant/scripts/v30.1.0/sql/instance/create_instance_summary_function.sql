@@ -1,14 +1,14 @@
-DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.get_instance_summary(uuid, boolean, boolean);
-DROP FUNCTION IF EXISTS ${myuniversity}_${mymodule}.get_instance_summary(uuid, boolean);
+DROP FUNCTION IF EXISTS get_instance_summary(uuid, boolean, boolean);
+DROP FUNCTION IF EXISTS get_instance_summary(uuid, boolean);
 
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.get_instance_summary(_instance_id uuid)
+CREATE OR REPLACE FUNCTION get_instance_summary(_instance_id uuid)
   RETURNS jsonb
   LANGUAGE sql
 AS $function$
 WITH
   target_instance AS (
     SELECT i.id, i.jsonb
-    FROM ${myuniversity}_${mymodule}.instance i
+    FROM instance i
     WHERE i.id = _instance_id
   ),
   holdings_all AS (
@@ -17,7 +17,7 @@ WITH
       hr.instanceid,
       hr.jsonb,
       COALESCE((hr.jsonb ->> 'discoverySuppress')::boolean, false) AS discovery_suppress
-    FROM ${myuniversity}_${mymodule}.holdings_record hr
+    FROM holdings_record hr
       JOIN target_instance ti ON hr.instanceid = ti.id
   ),
   holdings_not_suppressed AS (
@@ -39,7 +39,7 @@ WITH
       COALESCE((hr.jsonb ->> 'discoverySuppress')::boolean, false) AS holdings_discovery_suppress,
       COALESCE((item.jsonb ->> 'discoverySuppress')::boolean, false) AS item_discovery_suppress
     FROM holdings_all hr
-      JOIN ${myuniversity}_${mymodule}.item item ON item.holdingsrecordid = hr.id
+      JOIN item item ON item.holdingsrecordid = hr.id
   ),
   bound_with_items_all AS (
     SELECT
@@ -55,8 +55,8 @@ WITH
       COALESCE((hr.jsonb ->> 'discoverySuppress')::boolean, false) AS holdings_discovery_suppress,
       COALESCE((item.jsonb ->> 'discoverySuppress')::boolean, false) AS item_discovery_suppress
     FROM holdings_all hr
-      JOIN ${myuniversity}_${mymodule}.bound_with_part bwp ON bwp.holdingsrecordid = hr.id
-      JOIN ${myuniversity}_${mymodule}.item item ON item.id = bwp.itemid
+      JOIN bound_with_part bwp ON bwp.holdingsrecordid = hr.id
+      JOIN item item ON item.id = bwp.itemid
   ),
   items_all AS (
     SELECT DISTINCT ON (all_items.id)
@@ -164,7 +164,7 @@ WITH
         FROM items_all item
         WHERE item.materialtypeid IS NOT NULL
       ) item
-      JOIN ${myuniversity}_${mymodule}.material_type mt ON item.materialtypeid = mt.id
+      JOIN material_type mt ON item.materialtypeid = mt.id
     UNION
     SELECT 'notSuppressedFromDiscoveryRecords' AS scope, mt.id::text AS id, mt.jsonb ->> 'name' AS name
     FROM (
@@ -172,7 +172,7 @@ WITH
         FROM items_not_suppressed item
         WHERE item.materialtypeid IS NOT NULL
       ) item
-      JOIN ${myuniversity}_${mymodule}.material_type mt ON item.materialtypeid = mt.id
+      JOIN material_type mt ON item.materialtypeid = mt.id
   ),
   material_types_by_scope AS (
     SELECT
@@ -212,7 +212,7 @@ WITH
       FROM target_instance ti
         CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(ti.jsonb -> 'instanceFormatIds', '[]'::jsonb))
           AS instance_format_ids(format_id)
-        JOIN ${myuniversity}_${mymodule}.instance_format instance_format
+        JOIN instance_format instance_format
           ON instance_format.id = instance_format_ids.format_id::uuid
     ) instance_formats
   ),
@@ -224,7 +224,7 @@ WITH
       FROM target_instance ti
         CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(ti.jsonb -> 'natureOfContentTermIds', '[]'::jsonb))
           AS nature_of_content_term_ids(term_id)
-        JOIN ${myuniversity}_${mymodule}.nature_of_content_term nature_of_content_term
+        JOIN nature_of_content_term nature_of_content_term
           ON nature_of_content_term.id = nature_of_content_term_ids.term_id::uuid
     ) nature_of_content_terms
   ),
@@ -234,7 +234,7 @@ WITH
       ELSE jsonb_build_object('id', mode_of_issuance.id::text, 'name', mode_of_issuance.jsonb ->> 'name')
     END AS mode_of_issuance
     FROM target_instance ti
-      LEFT JOIN ${myuniversity}_${mymodule}.mode_of_issuance mode_of_issuance
+      LEFT JOIN mode_of_issuance mode_of_issuance
         ON mode_of_issuance.id = NULLIF(ti.jsonb ->> 'modeOfIssuanceId', '')::uuid
   ),
   instance_type_candidate AS (
@@ -243,7 +243,7 @@ WITH
       ELSE jsonb_build_object('id', instance_type.id::text, 'name', instance_type.jsonb ->> 'name')
     END AS instance_type
     FROM target_instance ti
-      LEFT JOIN ${myuniversity}_${mymodule}.instance_type instance_type
+      LEFT JOIN instance_type instance_type
         ON instance_type.id = NULLIF(ti.jsonb ->> 'instanceTypeId', '')::uuid
   )
 SELECT jsonb_build_object(
@@ -251,8 +251,8 @@ SELECT jsonb_build_object(
   'isBoundWith', EXISTS (
     SELECT 1
     FROM holdings_all hr
-      JOIN ${myuniversity}_${mymodule}.bound_with_part bwp ON bwp.holdingsrecordid = hr.id
-      JOIN ${myuniversity}_${mymodule}.item item ON item.id = bwp.itemid
+      JOIN bound_with_part bwp ON bwp.holdingsrecordid = hr.id
+      JOIN item item ON item.id = bwp.itemid
   ),
   'recordCounts', jsonb_build_object(
     'instance', jsonb_build_object(
