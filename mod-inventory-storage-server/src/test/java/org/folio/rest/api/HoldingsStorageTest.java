@@ -56,6 +56,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -970,7 +971,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumber()
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberForAllItems()
     throws InterruptedException, ExecutionException, TimeoutException {
 
     var instanceId = UUID.randomUUID();
@@ -1049,7 +1050,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     var originalUpdatedDate = getItemMetadataUpdatedDate(itemId);
 
-    updateHoldingLocation(holding, holdingId);
+    updateHoldingTemporaryLocation(holding, holdingId, ONLINE_LOCATION_ID);
     assertItemMetadataChanged(itemId, originalUpdatedDate);
   }
 
@@ -1183,8 +1184,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var secondHoldings = UUID.randomUUID();
 
     final var firstHolding = createHoldingWithAllCallNumberComponents(instanceId, firstHoldings,
-      "firstTestCallNumber", "firstTestCallNumberPrefix", "firstTestCallNumberSuffix");
-    createHoldingWithAllCallNumberComponents(instanceId, secondHoldings,
+      MAIN_LIBRARY_LOCATION_ID, "firstTestCallNumber", "firstTestCallNumberPrefix", "firstTestCallNumberSuffix");
+    createHoldingWithAllCallNumberComponents(instanceId, secondHoldings, MAIN_LIBRARY_LOCATION_ID,
       "secondTestCallNumber", "secondTestCallNumberPrefix", "secondTestCallNumberSuffix");
 
     var itemIds = createItemsForTwoHoldings(firstHoldings, secondHoldings);
@@ -1203,7 +1204,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix()
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffixForAllItems()
     throws InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -1260,7 +1261,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefix()
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefixForAllItems()
     throws InterruptedException,
     ExecutionException, TimeoutException {
 
@@ -1278,6 +1279,310 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     updateHoldingCallNumberComponent(holding, holdingId, "callNumberPrefix", "updatedCallNumberPrefix");
 
     assertItemsHaveCallNumberComponent(itemIds, holdingId, "prefix", "updatedCallNumberPrefix");
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberType() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    assertEquals(LC_CALL_NUMBER_TYPE, holding.getString("callNumberTypeId"));
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update call number type in holdings
+    expectedEffectiveCallNumberComponents.withTypeId(DEWEY_CALL_NUMBER_TYPE);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberTypeId", DEWEY_CALL_NUMBER_TYPE);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertEquals(DEWEY_CALL_NUMBER_TYPE, updatedHolding.getString("callNumberTypeId"));
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefix() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update call number prefix in holdings
+    var updatedCallNumberPrefix = "updatedCallNumberPrefix";
+    expectedEffectiveCallNumberComponents.withPrefix(updatedCallNumberPrefix);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberPrefix", updatedCallNumberPrefix);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update call number suffix in holdings
+    var updatedCallNumberSuffix = "updatedCallNumberSuffix";
+    expectedEffectiveCallNumberComponents.withSuffix(updatedCallNumberSuffix);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumberSuffix", updatedCallNumberSuffix);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemEffectiveCallNumber() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update call number in holdings
+    var updatedCallNumber = "updatedCallNumber";
+    expectedEffectiveCallNumberComponents.withCallNumber(updatedCallNumber);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", updatedCallNumber);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemPermanentLocation() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update permanent location in holdings
+    updateHoldingPermanentLocation(holding, holdingId, ANNEX_LIBRARY_LOCATION_ID);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, ANNEX_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemTemporaryLocation() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update temporary location in holdings
+    updateHoldingTemporaryLocation(holding, holdingId, ANNEX_LIBRARY_LOCATION_ID);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, ANNEX_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemCallNumbersAndLocations() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update callNumber and location fields in holdings
+    var holdingForUpdate = holding.copy().put("callNumber", "updatedCallNumber")
+      .put("callNumberPrefix", "updatedCallNumberPrefix")
+      .put("callNumberSuffix", "updatedCallNumberSuffix")
+      .put("callNumberTypeId", DEWEY_CALL_NUMBER_TYPE)
+      .put("permanentLocationId", ANNEX_LIBRARY_LOCATION_ID)
+      .put("temporaryLocationId", null);
+    expectedEffectiveCallNumberComponents.withCallNumber("updatedCallNumber").withPrefix("updatedCallNumberPrefix")
+      .withSuffix("updatedCallNumberSuffix").withTypeId(DEWEY_CALL_NUMBER_TYPE);
+
+    updateHoldingRecord(holdingId, holdingForUpdate);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, ANNEX_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemEffectiveCallNumberAndNote() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // update call number and notes in holdings
+    var updatedCallNumber = "updatedCallNumber";
+    expectedEffectiveCallNumberComponents.withCallNumber(updatedCallNumber);
+    var holdingForUpdate = holding.copy()
+      .put("callNumber", updatedCallNumber)
+      .put("notes", new JsonArray().add(new HoldingsNote().withNote("test note")));
+    updateHoldingRecord(holdingId, holdingForUpdate);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertEquals("{note=test note, staffOnly=false}", updatedHolding.getJsonArray("notes").getString(0));
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
+  }
+
+  @Test
+  @SneakyThrows
+  @TestRailCase(388502)
+  public void updatingHoldingsUpdatesItemWhenDeleteEffectiveCallNumber() {
+    // create instance, holdings and item
+    var instanceId = UUID.randomUUID();
+    instancesClient.create(smallAngryPlanet(instanceId));
+    var holdingId = UUID.randomUUID();
+    final var holding = createHoldingWithAllCallNumberComponents(instanceId, holdingId, MAIN_LIBRARY_LOCATION_ID,
+      "testCallNumber", "testCallNumberPrefix", "testCallNumberSuffix");
+    var itemJson = createItemForHolding(holdingId);
+
+    var expectedEffectiveCallNumberComponents = getExpectedEffectiveCallNumberComponents(holding);
+
+    // assert initial effective call number components
+    assertItemHaveAllCallNumberComponents(itemJson, holdingId, "1", expectedEffectiveCallNumberComponents);
+    assertEffectiveLocation(holding, itemJson, MAIN_LIBRARY_LOCATION_ID);
+
+    // delete call number in holdings
+    expectedEffectiveCallNumberComponents.withCallNumber(null);
+    updateHoldingCallNumberComponent(holding, holdingId, "callNumber", null);
+    var updatedHolding = getById(holdingId.toString()).getJson();
+
+    // retrieve the updated item json after holdings update
+    var updatedIemJson = get(itemsStorageUrl(String.format("/%s", itemJson.getString("id")))).getJson();
+
+    // assert
+    assertMetadataUpdated(updatedIemJson, itemJson, updatedHolding);
+    assertEffectiveLocation(updatedHolding, updatedIemJson, MAIN_LIBRARY_LOCATION_ID);
+    assertItemHaveAllCallNumberComponents(updatedIemJson, holdingId, "2", expectedEffectiveCallNumberComponents);
   }
 
   @Test
@@ -2948,10 +3253,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       originalUpdatedDate);
   }
 
-  private void updateHoldingLocation(JsonObject holding, UUID holdingId)
+  private void updateHoldingTemporaryLocation(JsonObject holding, UUID holdingId, UUID temporaryLocationId)
     throws InterruptedException, ExecutionException, TimeoutException {
     var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
-    holding.put("temporaryLocationId", ONLINE_LOCATION_ID.toString());
+    holding.put("temporaryLocationId", temporaryLocationId);
+    var putResponse = update(holdingsUrl, holding);
+    assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+  }
+
+  private void updateHoldingPermanentLocation(JsonObject holding, UUID holdingId, UUID permanentLocationId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+    var holdingsUrl = holdingsStorageUrl(String.format("/%s", holdingId));
+    holding.put("permanentLocationId", permanentLocationId.toString());
     var putResponse = update(holdingsUrl, holding);
     assertThat(putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
@@ -2988,16 +3301,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       originalUpdatedDate);
   }
 
-  private JsonObject createHoldingWithAllCallNumberComponents(UUID instanceId, UUID holdingId,
+  private JsonObject createHoldingWithAllCallNumberComponents(UUID instanceId, UUID holdingId, UUID locationId,
                                                               String callNumber, String prefix, String suffix) {
     return createHoldingRecord(new HoldingRequestBuilder()
       .withId(holdingId)
       .forInstance(instanceId)
       .withSource(getPreparedHoldingSourceId())
-      .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
+      .withPermanentLocation(locationId)
       .withCallNumber(callNumber)
       .withCallNumberPrefix(prefix)
       .withCallNumberSuffix(suffix)
+      .withCallNumberTypeId(LC_CALL_NUMBER_TYPE)
       .withTags(new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE))).create()).getJson();
   }
 
@@ -3113,6 +3427,34 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
         item.getJsonObject("effectiveCallNumberComponents").getString(componentName),
         is(expectedValue));
     }
+  }
+
+  @SneakyThrows
+  private void assertItemHaveAllCallNumberComponents(JsonObject item, UUID holdingId, String itemVersion,
+                                                     EffectiveCallNumberComponents expectedCallNumberComponents) {
+    assertThat(item.getString("_version"), is(itemVersion));
+    assertThat(item.getString("holdingsRecordId"), is(holdingId.toString()));
+    var effectiveCallNumberComponents = item.getJsonObject("effectiveCallNumberComponents");
+    assertThat(effectiveCallNumberComponents.getString("callNumber"),
+      is(expectedCallNumberComponents.getCallNumber()));
+    assertThat(effectiveCallNumberComponents.getString("prefix"), is(expectedCallNumberComponents.getPrefix()));
+    assertThat(effectiveCallNumberComponents.getString("suffix"), is(expectedCallNumberComponents.getSuffix()));
+    assertThat(effectiveCallNumberComponents.getString("typeId"), is(expectedCallNumberComponents.getTypeId()));
+  }
+
+  private void assertMetadataUpdated(JsonObject updatedIemJson, JsonObject itemJson, JsonObject updatedHolding) {
+    var updatedMetadata = updatedIemJson.getJsonObject("metadata");
+
+    assertTrue(Instant.parse(updatedMetadata.getString("updatedDate"))
+      .isAfter(Instant.parse(itemJson.getJsonObject("metadata").getString("updatedDate"))));
+
+    assertEquals(updatedHolding.getJsonObject("metadata").getString("updatedByUserId"),
+      updatedMetadata.getString("updatedByUserId"));
+  }
+
+  private void assertEffectiveLocation(JsonObject holding, JsonObject item, UUID expectedLocationId) {
+    assertEquals(holding.getString("effectiveLocationId"), item.getString("effectiveLocationId"));
+    assertEquals(expectedLocationId.toString(), item.getString("effectiveLocationId"));
   }
 
   private void updateHoldingCallNumberComponent(JsonObject holding, UUID holdingId,
@@ -3851,6 +4193,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .stream()
       .map(String.class::cast)
       .toList();
+  }
+
+  private EffectiveCallNumberComponents getExpectedEffectiveCallNumberComponents(JsonObject holding) {
+    return new EffectiveCallNumberComponents()
+      .withPrefix("testCallNumberPrefix")
+      .withCallNumber("testCallNumber")
+      .withSuffix("testCallNumberSuffix")
+      .withTypeId(holding.getString("callNumberTypeId"));
   }
 
   private void mockUserTenantsForTenantWithoutPermissions() {
