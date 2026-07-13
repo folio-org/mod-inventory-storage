@@ -34,6 +34,9 @@ echo ">> Inserting ${COUNT} instances into ${SCHEMA}.instance (db=${DB_DATABASE}
 # NOT NULL columns without defaults, add them here or inspect with:  \d ${SCHEMA}.instance
 docker compose -f "${COMPOSE}" exec -T "${PG_SERVICE}" \
   psql -v ON_ERROR_STOP=1 -U "${DB_USERNAME}" -d "${DB_DATABASE}" <<SQL
+-- normalize_digits is an RMB function in the tenant schema; include it in the search path
+-- so functional indexes (normalize_isbns, normalize_invalid_isbns) resolve correctly.
+SET search_path TO ${SCHEMA}, public;
 SET session_replication_role = replica;  -- skip triggers & FK checks for fast bulk load
 INSERT INTO ${SCHEMA}.instance (id, jsonb)
 SELECT gen_random_uuid(),
