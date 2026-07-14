@@ -317,8 +317,8 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
       .toList();
   }
 
-  private static JsonObject withElectronicAccess(JsonObject record, String... uris) {
-    return record.put("electronicAccess", electronicAccess(Arrays.asList(uris)));
+  private static JsonObject withElectronicAccess(JsonObject inventoryRecord, String... uris) {
+    return inventoryRecord.put("electronicAccess", electronicAccess(Arrays.asList(uris)));
   }
 
   private static JsonArray electronicAccess(List<String> uris) {
