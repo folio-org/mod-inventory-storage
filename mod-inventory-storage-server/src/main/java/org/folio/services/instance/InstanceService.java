@@ -86,6 +86,7 @@ public class InstanceService {
     "Expected a maximum of %s records to prevent out of memory but got %s";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
   private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid) AS summary";
+  private static final String NOT_FOUND = "Not found";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -129,12 +130,12 @@ public class InstanceService {
       .map(rows -> {
         var iterator = rows.iterator();
         if (!iterator.hasNext()) {
-          return Response.status(404).type("text/plain").build();
+          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
         }
 
         JsonObject summary = iterator.next().getJsonObject("summary");
         if (summary == null) {
-          return Response.status(404).type("text/plain").build();
+          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
         }
 
         return Response.ok(summary.encode(), "application/json").build();

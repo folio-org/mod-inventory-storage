@@ -30,7 +30,7 @@ Optional environment:
   BENCHMARK_SQL_VERSION=005
   BENCHMARK_SQL_FILE=/tmp/instance-summary-benchmark-005.sql
   BENCHMARK_OUTPUT_DIR=/tmp
-  SQL_FUNCTION_FILE=mod-inventory-storage-server/src/main/resources/templates/db_scripts/instance/createInstanceSummaryFunction.sql
+  SQL_FUNCTION_FILE=mod-inventory-storage-server/src/main/resources/liquibase/tenant/scripts/v30.1.0/sql/instance/create_instance_summary_function.sql
 
 This runs the summary SQL inline in a read-only transaction. It does not create
 or replace any remote database objects. The generated SQL file is kept for
@@ -76,7 +76,7 @@ for instance_id in "$@"; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SQL_FUNCTION_FILE="${SQL_FUNCTION_FILE:-${SCRIPT_DIR}/mod-inventory-storage-server/src/main/resources/templates/db_scripts/instance/createInstanceSummaryFunction.sql}"
+SQL_FUNCTION_FILE="${SQL_FUNCTION_FILE:-${SCRIPT_DIR}/mod-inventory-storage-server/src/main/resources/liquibase/tenant/scripts/v30.1.0/sql/instance/create_instance_summary_function.sql}"
 STATEMENT_TIMEOUT="${STATEMENT_TIMEOUT:-30s}"
 LOCK_TIMEOUT="${LOCK_TIMEOUT:-1s}"
 IDLE_TIMEOUT="${IDLE_TIMEOUT:-30s}"
@@ -102,7 +102,6 @@ SUMMARY_QUERY="$(
     /AS \$function\$/ { in_body = 1; next }
     /^\$function\$/ { exit }
     in_body {
-      gsub(/\$\{myuniversity\}_\$\{mymodule\}/, schema)
       gsub(/_instance_id/, ":'\''instance_id'\''::uuid")
       print
     }
@@ -127,6 +126,7 @@ BEGIN TRANSACTION READ ONLY;
 SET LOCAL statement_timeout = :'statement_timeout';
 SET LOCAL lock_timeout = :'lock_timeout';
 SET LOCAL idle_in_transaction_session_timeout = :'idle_timeout';
+SET LOCAL search_path = ${TENANT_SCHEMA}, public;
 
 SQL
 

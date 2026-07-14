@@ -6,7 +6,6 @@
   "properties": {
     "instance": {
       "description": "Instance record being summarized",
-      "type": "object",
       "$ref": "instance.json"
     },
     "isBoundWith": {
@@ -130,10 +129,6 @@
         },
         "modeOfIssuance": {
           "description": "Mode of issuance reference value for the instance",
-          "type": [
-            "object",
-            "null"
-          ],
           "$ref": "#/definitions/namedValue"
         },
         "natureOfContentTerms": {
@@ -145,16 +140,11 @@
         },
         "instanceType": {
           "description": "Instance type reference value for the instance",
-          "type": [
-            "object",
-            "null"
-          ],
           "$ref": "#/definitions/namedValue"
         }
       },
       "required": [
         "instanceFormats",
-        "modeOfIssuance",
         "natureOfContentTerms",
         "instanceType"
       ]

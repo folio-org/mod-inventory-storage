@@ -183,6 +183,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
     assertCounts(recordCounts.getJsonObject("items"), 0, 0, 0, 0, 0);
     assertEmptyAggregateScope(summary, "allRecords");
     assertEmptyAggregateScope(summary, "notSuppressedFromDiscoveryRecords");
+    assertThat(summary.getJsonObject("referenceValues").containsKey("modeOfIssuance"), is(false));
   }
 
   @Test

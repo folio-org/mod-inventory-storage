@@ -291,11 +291,16 @@ SELECT jsonb_build_object(
       )
     )
   ),
-  'referenceValues', jsonb_build_object(
-    'instanceFormats', instance_format_candidates.instance_formats,
-    'modeOfIssuance', mode_of_issuance_candidate.mode_of_issuance,
-    'natureOfContentTerms', nature_of_content_candidates.nature_of_content_terms,
-    'instanceType', instance_type_candidate.instance_type
+  'referenceValues', (
+    jsonb_build_object(
+      'instanceFormats', instance_format_candidates.instance_formats,
+      'natureOfContentTerms', nature_of_content_candidates.nature_of_content_terms,
+      'instanceType', instance_type_candidate.instance_type
+    ) ||
+    CASE
+      WHEN mode_of_issuance_candidate.mode_of_issuance IS NULL THEN '{}'::jsonb
+      ELSE jsonb_build_object('modeOfIssuance', mode_of_issuance_candidate.mode_of_issuance)
+    END
   )
 )
 FROM target_instance ti
