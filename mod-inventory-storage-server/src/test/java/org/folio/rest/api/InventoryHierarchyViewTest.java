@@ -36,6 +36,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -458,6 +459,26 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       var holdings = response.getJson().getJsonArray("holdings");
       verifyItemsLocationNames(items);
       verifyHoldingsLocationNames(holdings);
+    });
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldHaveHrIdInItemsAndHoldings() {
+    var instanceId = UUID.fromString(predefinedInstance.getString("id"));
+    var expectedHoldingsHrid = predefinedHoldings.getString("hrid");
+
+    requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[] {instanceId}, false, response -> {
+      assertThat(response.getStatusCode(), is(HttpStatus.HTTP_OK.toInt()));
+      var items = response.getJson().getJsonArray("items");
+      var holdings = response.getJson().getJsonArray("holdings");
+      assertThat(items.size(), is(2));
+      assertThat(holdings.size(), is(1));
+      items.stream().map(JsonObject.class::cast).forEach(
+        item -> assertThat("item hrId is declared by the response schema and should be populated",
+          item.getString("hrId"), notNullValue()));
+      assertThat("holdings hrId is declared by the response schema and should match the stored record",
+        holdings.getJsonObject(0).getString("hrId"), is(expectedHoldingsHrid));
     });
   }
 

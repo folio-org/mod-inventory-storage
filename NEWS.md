@@ -10,6 +10,7 @@
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
 
 ### Bug fixes
+* Populate item and holdings `hrId` in the items-and-holdings view ([MODINVSTOR-1587](https://folio-org.atlassian.net/browse/MODINVSTOR-1587))
 * Trigger holding items recalculation on instanceId change ([MODINVSTOR-1548](https://folio-org.atlassian.net/browse/MODINVSTOR-1548))
 * Fix item order value calculation under concurrent execution to avoid race conditions. ([MODINVSTOR-1547](https://folio-org.atlassian.net/browse/MODINVSTOR-1547))
 * Update Instance complete_updated_date when items/holdings are moved between instances ([MODINVSTOR-1542](https://folio-org.atlassian.net/browse/MODINVSTOR-1542))
