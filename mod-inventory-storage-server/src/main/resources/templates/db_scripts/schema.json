@@ -890,6 +890,16 @@
     {
       "run": "after",
       "snippetPath": "change_function_owner.sql"
+    },
+    {
+      "run": "after",
+      "snippetPath": "create_custom_fields_table.sql",
+      "fromModuleVersion": "30.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "create_custom_fields_indexes.sql",
+      "fromModuleVersion": "30.0.0"
     }
   ]
 }

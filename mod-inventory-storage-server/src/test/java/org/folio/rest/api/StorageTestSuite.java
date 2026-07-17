@@ -41,6 +41,7 @@ import org.junit.runners.Suite;
   AsyncMigrationTest.class,
   AuditDeleteTest.class,
   BoundWithStorageTest.class,
+  CustomFieldsApiTest.class,
   DereferencedItemStorageTest.class,
   HoldingsStorageTest.class,
   HridSettingsStorageParameterizedTest.class,
