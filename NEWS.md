@@ -1,3 +1,10 @@
+## v30.0.4 2026-07-20
+### Bug fixes
+* Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
+* Improve performance of /inventory-reindex-records/export api ([MODINVSTOR-1584](https://folio-org.atlassian.net/browse/MODINVSTOR-1584))
+
+---
+
 ## v30.0.3 2026-06-02
 ### Bug fixes
 * Fix Instance complete_updated_date update performance on item create/update  ([MODINVSTOR-1569](https://folio-org.atlassian.net/browse/MODINVSTOR-1569))
