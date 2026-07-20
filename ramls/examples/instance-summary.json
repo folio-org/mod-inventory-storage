@@ -1,0 +1,147 @@
+{
+  "instance": {
+    "id": "601a8dc4-dee7-48eb-b03f-d02fdf0debd0",
+    "_version": 1,
+    "hrid": "in00000000001",
+    "source": "MARC",
+    "title": "Long Way to a Small Angry Planet",
+    "contributors": [
+      {
+        "name": "Chambers, Becky",
+        "contributorNameTypeId": "2b94c631-fca9-4892-a730-03ee529ffe2a",
+        "primary": true
+      }
+    ],
+    "identifiers": [
+      {
+        "identifierTypeId": "8261054f-be78-422d-bd51-4ed9f33c3422",
+        "value": "9781473619777"
+      }
+    ],
+    "electronicAccess": [
+      {
+        "uri": "https://example.org/ebooks/long-way",
+        "linkText": "Available online"
+      }
+    ],
+    "instanceTypeId": "535e3160-763a-42f9-b0c0-d8ed7df6e2a2",
+    "instanceFormatIds": [
+      "8e4d5d19-97f3-4abc-a252-f2b4b23a6d49"
+    ],
+    "modeOfIssuanceId": "9bce7691-9c81-4b19-902a-1a4f89a26609",
+    "natureOfContentTermIds": [
+      "0d74a603-7a26-46f1-8ba8-ec6ffac3480c"
+    ],
+    "discoverySuppress": false,
+    "tags": {
+      "tagList": [
+        "science-fiction"
+      ]
+    }
+  },
+  "isBoundWith": true,
+  "recordCounts": {
+    "holdings": {
+      "total": 2,
+      "suppressedFromDiscovery": 1,
+      "notSuppressedFromDiscovery": 1
+    },
+    "items": {
+      "total": 4,
+      "suppressedFromDiscovery": 1,
+      "suppressedByHoldings": 1,
+      "suppressedFromDiscoveryOrByHoldings": 2,
+      "notSuppressedFromDiscovery": 2
+    }
+  },
+  "aggregates": {
+    "allRecords": {
+      "itemDerivedFields": {
+        "effectiveShelvingOrder": "PN 12 A6 41999"
+      },
+      "electronicAccess": [
+        {
+          "uri": "https://example.org/ebooks/long-way",
+          "linkText": "Available online"
+        },
+        {
+          "uri": "https://example.org/item-visible",
+          "linkText": "Visible item link"
+        },
+        {
+          "uri": "https://example.org/item-suppressed",
+          "linkText": "Suppressed item link"
+        },
+        {
+          "uri": "https://example.org/holding-visible",
+          "linkText": "Visible holdings link"
+        },
+        {
+          "uri": "https://example.org/holding-suppressed",
+          "linkText": "Suppressed holdings link"
+        }
+      ],
+      "referenceValues": {
+        "itemMaterialTypes": [
+          {
+            "id": "1d89f03a-e963-4a61-b02a-200377ab0919",
+            "name": "book"
+          },
+          {
+            "id": "615b8413-82d5-4203-aa6e-e37984cb5ac3",
+            "name": "journal"
+          }
+        ]
+      }
+    },
+    "notSuppressedFromDiscoveryRecords": {
+      "itemDerivedFields": {
+        "effectiveShelvingOrder": "PN 12 A6 41999"
+      },
+      "electronicAccess": [
+        {
+          "uri": "https://example.org/ebooks/long-way",
+          "linkText": "Available online"
+        },
+        {
+          "uri": "https://example.org/item-visible",
+          "linkText": "Visible item link"
+        },
+        {
+          "uri": "https://example.org/holding-visible",
+          "linkText": "Visible holdings link"
+        }
+      ],
+      "referenceValues": {
+        "itemMaterialTypes": [
+          {
+            "id": "1d89f03a-e963-4a61-b02a-200377ab0919",
+            "name": "book"
+          }
+        ]
+      }
+    }
+  },
+  "referenceValues": {
+    "instanceFormats": [
+      {
+        "id": "8e4d5d19-97f3-4abc-a252-f2b4b23a6d49",
+        "name": "computer"
+      }
+    ],
+    "modeOfIssuance": {
+      "id": "9bce7691-9c81-4b19-902a-1a4f89a26609",
+      "name": "monographic unit"
+    },
+    "natureOfContentTerms": [
+      {
+        "id": "0d74a603-7a26-46f1-8ba8-ec6ffac3480c",
+        "name": "bibliography"
+      }
+    ],
+    "instanceType": {
+      "id": "535e3160-763a-42f9-b0c0-d8ed7df6e2a2",
+      "name": "text"
+    }
+  }
+}

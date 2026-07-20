@@ -17,20 +17,6 @@
       "description": "Counts that allow consumers to apply their own suppression policy",
       "additionalProperties": false,
       "properties": {
-        "instance": {
-          "description": "Counts and suppression facts for the instance record",
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "suppressedFromDiscovery": {
-              "description": "Whether the instance record is suppressed from discovery",
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "suppressedFromDiscovery"
-          ]
-        },
         "holdings": {
           "description": "Counts for holdings records associated with the instance",
           "type": "object",
@@ -91,7 +77,6 @@
         }
       },
       "required": [
-        "instance",
         "holdings",
         "items"
       ]

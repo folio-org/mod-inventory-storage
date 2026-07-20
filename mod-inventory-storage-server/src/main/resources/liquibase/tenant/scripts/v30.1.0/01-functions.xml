@@ -57,7 +57,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1564@@schema-create-function-instance-summary" author="folio">
+  <changeSet id="MODINVSTOR-1564@@schema-create-function-instance-summary" author="folio" runOnChange="true">
     <comment>Create get_instance_summary function</comment>
     <sqlFile path="sql/instance/create_instance_summary_function.sql"
              relativeToChangelogFile="true"

@@ -70,7 +70,6 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
     assertThat(summary.getBoolean("isBoundWith"), is(false));
 
     JsonObject recordCounts = summary.getJsonObject("recordCounts");
-    assertThat(recordCounts.getJsonObject("instance").getBoolean("suppressedFromDiscovery"), is(false));
     assertCounts(recordCounts.getJsonObject("holdings"), 1, 0, 1);
     assertCounts(recordCounts.getJsonObject("items"), 1, 0, 0, 0, 1);
 

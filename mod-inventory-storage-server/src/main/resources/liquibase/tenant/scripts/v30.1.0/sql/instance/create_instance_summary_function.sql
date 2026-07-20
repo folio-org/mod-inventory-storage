@@ -255,9 +255,6 @@ SELECT jsonb_build_object(
       JOIN item item ON item.id = bwp.itemid
   ),
   'recordCounts', jsonb_build_object(
-    'instance', jsonb_build_object(
-      'suppressedFromDiscovery', COALESCE((ti.jsonb ->> 'discoverySuppress')::boolean, false)
-    ),
     'holdings', jsonb_build_object(
       'total', holdings_counts.total,
       'suppressedFromDiscovery', holdings_counts.suppressed_from_discovery,
