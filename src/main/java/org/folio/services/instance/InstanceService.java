@@ -62,6 +62,7 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
 import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
+import org.folio.services.setting.SettingsService;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -82,6 +83,7 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
+  private final SettingsService settingsService;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
     this.vertxContext = vertxContext;
@@ -95,6 +97,7 @@ public class InstanceService {
     relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
       vertxContext.get(ConsortiumDataCache.class.getName()));
+    this.settingsService = new SettingsService(vertxContext, okapiHeaders);
   }
 
   public Future<Response> getInstance(String id) {
@@ -195,31 +198,31 @@ public class InstanceService {
         }
         return Future.succeededFuture(oldInstance);
       })
-      .compose(oldInstance -> {
-        try {
-          var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
-          if (noChanges) {
-            return Future.succeededFuture()
-              .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
-          }
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
+      .compose(oldInstance -> settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+    .compose(isOptimizeUpdatesEnabled -> {
+      try {
+        if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
 
-        final Promise<Response> putResult = promise();
-        return postgresClient.withTrans(conn -> {
-          Promise<Response> putPromise = putInstance(newInstance, id);
-          return putPromise.future()
-            .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-              .map(v -> response));
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            putResult.complete(transactionResult.result());
-          } else {
-            putResult.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-      });
+          return Future.succeededFuture( InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+        }
+      } catch (Exception e) {
+        return Future.failedFuture(e);
+      }
+
+      final Promise<Response> putResult = promise();
+      return postgresClient.withTrans(conn -> {
+        Promise<Response> putPromise = putInstance(newInstance, id);
+        return putPromise.future()
+          .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+            .map(v -> response));
+      }).onComplete(transactionResult -> {
+        if (transactionResult.succeeded()) {
+          putResult.complete(transactionResult.result());
+        } else {
+          putResult.fail(transactionResult.cause());
+        }
+      }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+    }));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,

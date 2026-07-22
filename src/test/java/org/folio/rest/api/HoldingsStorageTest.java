@@ -17,6 +17,7 @@ import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageSyncUrl;
 import static org.folio.rest.support.http.InterfaceUrls.holdingsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.ModuleUtility.prepareTenant;
@@ -965,6 +966,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldNotUpdateHoldingsIfNoChanges() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
     var holding = getById(holdingId).getJson();
     holdingsMessageChecks.createdMessagePublished(holdingId);
@@ -974,6 +977,24 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var updatedHolding = getById(holdingId).getJson();
     //assert that there was no update in database
     assertThat(updatedHolding.getString("_version"), is("1"));
+    var kafkaEvents = KAFKA_CONSUMER.getMessagesForHoldings(holdingId);
+    //assert that there's only CREATE kafka message, no updates
+    assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
+  public void shouldUpdateHoldingsIfNoChangesAndOptimizeUpdatesDisabled() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
+    var holding = getById(holdingId).getJson();
+    holdingsMessageChecks.createdMessagePublished(holdingId);
+
+    assertThat(update(holding).getStatusCode(), is(204));
+
+    var updatedHolding = getById(holdingId).getJson();
+    //assert that there was no update in database
+    assertThat(updatedHolding.getString("_version"), is("2"));
     var kafkaEvents = KAFKA_CONSUMER.getMessagesForHoldings(holdingId);
     //assert that there's only CREATE kafka message, no updates
     assertThat(kafkaEvents.size(), is(1));
