@@ -42,8 +42,8 @@ public class SettingEventPublisher {
 
     return producer.send(producerRecord)
       .<Void>mapEmpty()
-      .eventually(producer::flush)
-      .eventually(producer::close)
+      .eventually(() -> producer.flush())
+      .eventually(() -> producer.close())
       .onSuccess(v -> logger.info("publish:: sent setting event topic={}", topic))
       .onFailure(e -> logger.error("publish:: failed to send setting event topic={}", topic, e));
   }

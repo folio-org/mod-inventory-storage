@@ -4,11 +4,12 @@ import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import org.folio.utils.Environment;
+import org.folio.okapi.common.Config;
 
 public class SettingCache {
 
@@ -18,7 +19,8 @@ public class SettingCache {
   private final AsyncCache<String, String> cache;
 
   public SettingCache(Vertx vertx) {
-    int expirationTime = Environment.getIntValue(EXPIRATION_TIME_PARAM, DEFAULT_EXPIRATION_TIME_SECONDS);
+    int expirationTime =
+      Config.getSysConfInteger(EXPIRATION_TIME_PARAM, DEFAULT_EXPIRATION_TIME_SECONDS, new JsonObject());
     this.cache = Caffeine.newBuilder()
       .expireAfterWrite(expirationTime, TimeUnit.SECONDS)
       .executor(task -> vertx.runOnContext(v -> task.run()))

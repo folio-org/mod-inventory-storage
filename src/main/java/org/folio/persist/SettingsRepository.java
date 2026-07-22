@@ -22,7 +22,7 @@ public class SettingsRepository extends AbstractRepository<Setting> {
   }
 
   public Future<Setting> findByKey(String key) {
-    var sql = "SELECT * FROM %s WHERE key = $1".formatted(getFullTableName(SETTINGS_TABLE));
+    var sql = "SELECT * FROM %s WHERE key = $1".formatted(postgresClientFuturized.getFullTableName(SETTINGS_TABLE));
     return postgresClient.execute(sql, Tuple.of(key))
       .map(rowSet -> {
         var iterator = rowSet.iterator();
@@ -35,7 +35,7 @@ public class SettingsRepository extends AbstractRepository<Setting> {
 
   public Future<Setting> update(Setting setting) {
     var sql = "UPDATE %s SET value = $1, updated_date = now(), updated_by_user_id = $2 WHERE key = $3 RETURNING *"
-      .formatted(getFullTableName(SETTINGS_TABLE));
+      .formatted(postgresClientFuturized.getFullTableName(SETTINGS_TABLE));
     return postgresClient.execute(sql, Tuple.of(
         setting.getValue(),
         setting.getUpdatedByUserId(),

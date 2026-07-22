@@ -199,30 +199,31 @@ public class InstanceService {
         return Future.succeededFuture(oldInstance);
       })
       .compose(oldInstance -> settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
-    .compose(isOptimizeUpdatesEnabled -> {
-      try {
-        if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
+        .compose(isOptimizeUpdatesEnabled -> {
+          try {
+            if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
 
-          return Future.succeededFuture( InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
-        }
-      } catch (Exception e) {
-        return Future.failedFuture(e);
-      }
+              return Future.succeededFuture(
+                InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+            }
+          } catch (Exception e) {
+            return Future.failedFuture(e);
+          }
 
-      final Promise<Response> putResult = promise();
-      return postgresClient.withTrans(conn -> {
-        Promise<Response> putPromise = putInstance(newInstance, id);
-        return putPromise.future()
-          .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-            .map(v -> response));
-      }).onComplete(transactionResult -> {
-        if (transactionResult.succeeded()) {
-          putResult.complete(transactionResult.result());
-        } else {
-          putResult.fail(transactionResult.cause());
-        }
-      }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
-    }));
+          final Promise<Response> putResult = promise();
+          return postgresClient.withTrans(conn -> {
+            Promise<Response> putPromise = putInstance(newInstance, id);
+            return putPromise.future()
+              .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+                .map(v -> response));
+          }).onComplete(transactionResult -> {
+            if (transactionResult.succeeded()) {
+              putResult.complete(transactionResult.result());
+            } else {
+              putResult.fail(transactionResult.cause());
+            }
+          }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+        }));
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
