@@ -180,7 +180,7 @@ public class SettingCacheTest {
 
   @Test
   public void shouldMultiplePutsAndGetsWorkIndependently(TestContext context) {
-    Async async = context.async();
+    Async async = context.async(2);
     // Arrange
     String key1 = "cache:key1";
     String key2 = "cache:key2";
@@ -200,12 +200,12 @@ public class SettingCacheTest {
     result1.onComplete(ar1 -> {
       context.assertTrue(ar1.succeeded());
       context.assertEquals(value1, ar1.result());
-      async.complete();
+      async.countDown();
     });
     result2.onComplete(ar2 -> {
       context.assertTrue(ar2.succeeded());
       context.assertEquals(value2, ar2.result());
-      async.complete();
+      async.countDown();
     });
   }
 }
