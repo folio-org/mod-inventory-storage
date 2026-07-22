@@ -71,6 +71,7 @@ import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
 import org.folio.services.sanitizer.SanitizerFactory;
+import org.folio.services.setting.SettingsService;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
@@ -91,6 +92,7 @@ public class InstanceService {
   private final InstanceMarcRepository marcRepository;
   private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
+  private final SettingsService settingsService;
   private final Sanitizer<Instance> sanitizer;
 
   public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -105,6 +107,7 @@ public class InstanceService {
     this.relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
     this.consortiumService = new ConsortiumServiceImpl(vertxContext.owner().createHttpClient(),
       vertxContext.get(ConsortiumDataCache.class.getName()));
+    this.settingsService = new SettingsService(vertxContext, okapiHeaders);
     this.sanitizer = SanitizerFactory.getSanitizer(Instance.class);
   }
 
@@ -250,29 +253,29 @@ public class InstanceService {
   }
 
   private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
-    try {
-      var noChanges = equalsIgnoringMetadata(oldInstance, newInstance);
-      if (noChanges) {
-        return Future.succeededFuture()
-          .map(res -> InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
-      }
-    } catch (Exception e) {
-      return failedFuture(e);
-    }
-
-    final Promise<Response> putResult = promise();
-    return postgresClient.withTrans(conn -> {
-      Promise<Response> putPromise = putInstance(newInstance, id);
-      return putPromise.future()
-        .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-          .map(v -> response));
-    }).onComplete(transactionResult -> {
-      if (transactionResult.succeeded()) {
-        putResult.complete(transactionResult.result());
-      } else {
-        putResult.fail(transactionResult.cause());
-      }
-    }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+      .compose(isOptimizeUpdatesEnabled -> {
+        try {
+          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
+            return Future.succeededFuture(InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+          }
+        } catch (Exception e) {
+          return failedFuture(e);
+        }
+        final Promise<Response> putResult = promise();
+        return postgresClient.withTrans(conn -> {
+          Promise<Response> putPromise = putInstance(newInstance, id);
+          return putPromise.future()
+            .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
+              .map(v -> response));
+        }).onComplete(transactionResult -> {
+          if (transactionResult.succeeded()) {
+            putResult.complete(transactionResult.result());
+          } else {
+            putResult.fail(transactionResult.cause());
+          }
+        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+      });
   }
 
   private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,

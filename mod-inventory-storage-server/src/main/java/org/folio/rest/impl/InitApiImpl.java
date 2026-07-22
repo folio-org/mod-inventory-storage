@@ -11,12 +11,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.resource.interfaces.InitAPI;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.caches.SettingCache;
 import org.folio.services.consortium.ServicePointSynchronizationVerticle;
 import org.folio.services.consortium.ShadowInstanceSynchronizationVerticle;
 import org.folio.services.consortium.SynchronizationVerticle;
 import org.folio.services.migration.async.AsyncMigrationConsumerVerticle;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
+import org.folio.services.setting.SettingUpdateConsumerVerticle;
 import org.folio.utils.Environment;
 
 public class InitApiImpl implements InitAPI {
@@ -28,11 +30,13 @@ public class InitApiImpl implements InitAPI {
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     initConsortiumDataCache(vertx, context);
+    initSettingCache(vertx, context);
     validateS3Configurations()
       .compose(v -> initAsyncMigrationVerticle(vertx))
       .compose(v -> initShadowInstanceSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .compose(v -> initSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
       .compose(v -> initServicePointSynchronizationVerticle(vertx, getConsortiumDataCache(context)))
+      .compose(v -> initSettingUpdateConsumerVerticle(vertx, getSettingCache(context)))
       .map(true)
       .onComplete(handler);
   }
@@ -113,9 +117,28 @@ public class InitApiImpl implements InitAPI {
       .mapEmpty();
   }
 
+  private Future<Void> initSettingUpdateConsumerVerticle(Vertx vertx, SettingCache settingCache) {
+    return vertx.deployVerticle(
+        new SettingUpdateConsumerVerticle(settingCache), SettingUpdateConsumerVerticle.getDeploymentOptions())
+      .onSuccess(v -> log.info("initSettingUpdateConsumerVerticle:: SettingUpdateConsumerVerticle verticle "
+        + "was successfully started"))
+      .onFailure(e -> log.error("initSettingUpdateConsumerVerticle:: SettingUpdateConsumerVerticle verticle "
+        + "was not successfully started", e))
+      .mapEmpty();
+  }
+
   private void initConsortiumDataCache(Vertx vertx, Context context) {
     ConsortiumDataCache consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
     context.put(ConsortiumDataCache.class.getName(), consortiumDataCache);
+  }
+
+  private void initSettingCache(Vertx vertx, Context context) {
+    SettingCache settingCache = new SettingCache(vertx);
+    context.put(SettingCache.class.getName(), settingCache);
+  }
+
+  private SettingCache getSettingCache(Context context) {
+    return context.get(SettingCache.class.getName());
   }
 
   private ConsortiumDataCache getConsortiumDataCache(Context context) {
