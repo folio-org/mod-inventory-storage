@@ -1,3 +1,12 @@
+## v30.0.5 2026-07-22
+### New APIs versions
+* Provides `settings v1.0`
+
+### Features
+* Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1581](https://folio-org.atlassian.net/browse/MODINVSTOR-1581))
+
+---
+
 ## v30.0.4 2026-07-20
 ### Bug fixes
 * Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
