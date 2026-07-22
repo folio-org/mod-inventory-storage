@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
+import org.folio.rest.exceptions.SettingsValidationException;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.persist.PgExceptionUtil;
@@ -63,6 +64,8 @@ public final class EndpointFailureHandler {
     } else if (error instanceof ValidationException validationException) {
       final Errors errors = validationException.getErrors();
       return failedValidationResponse(errors);
+    } else if (error instanceof SettingsValidationException) {
+      return textPlainResponse(422, error);
     } else if (PgExceptionUtil.isVersionConflict(error)) {
       return textPlainResponse(409, error);
     } else if (error instanceof ResponseException responseException) {

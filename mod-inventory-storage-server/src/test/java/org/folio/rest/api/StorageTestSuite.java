@@ -74,6 +74,7 @@ import org.junit.runners.Suite;
   ReindexJobRunnerTest.class,
   RetainLeadingZeroesMigrationScriptTest.class,
   SampleDataTest.class,
+  SettingStorageTest.class,
   SubjectSourceTest.class,
   SubjectTypeTest.class,
   UpcIsmnMigrationScriptTest.class
