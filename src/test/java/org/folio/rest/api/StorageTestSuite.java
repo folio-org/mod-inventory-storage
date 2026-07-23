@@ -89,6 +89,7 @@ import org.junit.runners.Suite;
   StatisticalCodeTest.class,
   UpcIsmnMigrationScriptTest.class,
   InstanceStorageInstancesBulkApiTest.class,
+  SettingStorageTest.class,
   SubjectSourceTest.class,
   SubjectTypeTest.class
 

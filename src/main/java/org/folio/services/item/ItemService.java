@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.dbschema.ObjectMapperTool.readValue;
+import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
@@ -64,6 +65,7 @@ import org.folio.rest.tools.client.exceptions.ResponseException;
 import org.folio.services.ItemEffectiveValuesService;
 import org.folio.services.ResponseHandlerUtil;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.folio.services.setting.SettingsService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
 
@@ -85,6 +87,7 @@ public class ItemService {
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final ItemDomainEventPublisher domainEventService;
+  private final SettingsService settingsService;
   private final ItemRepository itemRepository;
   private final PostgresClient postgresClient;
   private final PostgresClientFuturized postgresClientFuturized;
@@ -99,6 +102,7 @@ public class ItemService {
     hridManager = new HridManager(postgresClient);
     effectiveValuesService = new ItemEffectiveValuesService(vertxContext, okapiHeaders);
     domainEventService = new ItemDomainEventPublisher(vertxContext, okapiHeaders);
+    settingsService = new SettingsService(vertxContext, okapiHeaders);
     itemRepository = new ItemRepository(vertxContext, okapiHeaders);
     holdingsRepository = new HoldingsRepository(vertxContext, okapiHeaders);
   }
@@ -160,18 +164,20 @@ public class ItemService {
       .compose(oldHoldings -> {
         putData.oldHoldings = oldHoldings;
         effectiveValuesService.populateEffectiveValues(newItem, putData.newHoldings);
-        try {
-          var noChanges = equalsIgnoringMetadata(putData.oldItem, newItem);
-          if (noChanges) {
-            return Future.succeededFuture();
-          } else {
-            return doUpdateItem(newItem)
-              .onSuccess(finalItem -> domainEventService.publishUpdated(
-                finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings));
-          }
-        } catch (Exception e) {
-          return Future.failedFuture(e);
-        }
+        return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+          .compose(isOptimizeUpdatesEnabled -> {
+            try {
+              if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(putData.oldItem, newItem)) {
+                return Future.succeededFuture();
+              } else {
+                return doUpdateItem(newItem)
+                  .onSuccess(finalItem -> domainEventService.publishUpdated(
+                    finalItem, putData.oldItem, putData.newHoldings, putData.oldHoldings));
+              }
+            } catch (Exception e) {
+              return Future.failedFuture(e);
+            }
+          });
       })
       .map(x -> PutItemStorageItemsByItemIdResponse.respond204());
   }
