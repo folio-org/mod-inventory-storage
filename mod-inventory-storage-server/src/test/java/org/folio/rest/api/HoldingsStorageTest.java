@@ -787,11 +787,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(holding).getStatusCode(), is(204));
 
     var updatedHolding = getById(holdingId).getJson();
-    //assert that there was no update in database
+    //assert that there was an update in database
     assertThat(updatedHolding.getString("_version"), is("2"));
-    var kafkaEvents = KAFKA_CONSUMER.getMessagesForHoldings(holdingId);
-    //assert that there's only CREATE kafka message, no updates
-    assertThat(kafkaEvents.size(), is(1));
+    //assert that UPDATE kafka message was published
+    holdingsMessageChecks.updatedMessagePublished(holding, updatedHolding);
   }
 
   @Test
