@@ -130,10 +130,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     INVALID_VALUE);
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
-    = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
+    = new ItemEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
   @BeforeClass
