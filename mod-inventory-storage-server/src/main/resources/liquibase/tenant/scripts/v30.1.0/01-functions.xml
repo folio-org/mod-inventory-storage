@@ -23,7 +23,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-function-jsonb-array-index-helpers" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-create-function-jsonb-array-index-helpers" author="folio" runOnChange="true">
     <comment>Create JSONB array index helper functions</comment>
     <sql splitStatements="false">
       -- Convert text to lowercase and remove accents for consistent indexing
@@ -31,7 +31,7 @@
       CREATE OR REPLACE FUNCTION normalize_token(input_text text)
         RETURNS text AS
       $$
-      SELECT lower(f_unaccent(input_text))
+      SELECT lower(${database.defaultSchemaName}.f_unaccent(input_text))
       $$ LANGUAGE sql IMMUTABLE
                       PARALLEL SAFE;
 
@@ -40,7 +40,7 @@
       CREATE OR REPLACE FUNCTION normalize_jsonb_array(input_array jsonb)
         RETURNS jsonb AS
       $$
-      SELECT coalesce(jsonb_agg(normalize_token(val)), '[]' ::jsonb)
+      SELECT coalesce(jsonb_agg(${database.defaultSchemaName}.normalize_token(val)), '[]' ::jsonb)
       FROM jsonb_array_elements_text(input_array) AS val
       $$ LANGUAGE sql IMMUTABLE
                       PARALLEL SAFE;

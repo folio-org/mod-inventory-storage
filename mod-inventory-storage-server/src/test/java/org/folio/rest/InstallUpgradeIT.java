@@ -90,6 +90,7 @@ class InstallUpgradeIT {
   protected static WireMockExtension okapiMock = WireMockExtension.newInstance()
     .options(wireMockConfig().dynamicPort()
       .notifier(new ConsoleNotifier(IS_LOG_ENABLED)))
+    .resetOnEachTest(false)
     .build();
 
   @Container
@@ -168,7 +169,7 @@ class InstallUpgradeIT {
       .put("module_to", "mod-inventory-storage-999999.0.0")
       .put("parameters", new JsonArray()
         .add(new JsonObject().put("key", "loadReference").put("value", "true"))
-        .add(new JsonObject().put("key", "loadSample").put("value", "false")));
+        .add(new JsonObject().put("key", "loadSample").put("value", "true")));
 
     postTenant(body);
 
@@ -202,7 +203,7 @@ class InstallUpgradeIT {
   private void setTenant(String tenant) {
     RestAssured.requestSpecification = new RequestSpecBuilder()
       .addHeader(XOkapiHeaders.URL_TO, "http://localhost:8081")
-      .addHeader(XOkapiHeaders.URL, okapiMock.baseUrl())
+      .addHeader(XOkapiHeaders.URL, okapiMock.baseUrl().replace("localhost", "host.testcontainers.internal"))
       .addHeader(XOkapiHeaders.TENANT, tenant)
       .addHeader(XOkapiHeaders.USER_ID, "67e1ce93-e358-46ea-aed8-96e2fa73520f")
       .setContentType(ContentType.JSON)
@@ -228,6 +229,7 @@ class InstallUpgradeIT {
       .body("error", is(nullValue()));  // job has succeeded without error
   }
 
+  @SuppressWarnings("checkstyle:MethodLength")
   private void smokeTest() {
     when()
       .get("/classification-types?limit=1000")
@@ -248,5 +250,35 @@ class InstallUpgradeIT {
       .then()
       .statusCode(200)
       .body("holdings.currentNumber", is(6));
+
+    when()
+      .get("/service-points")
+      .then()
+      .statusCode(200)
+      .body("servicepoints.size()", is(4));
+
+    when()
+      .get("/location-units/institutions")
+      .then()
+      .statusCode(200)
+      .body("locinsts.size()", is(1));
+
+    when()
+      .get("/location-units/campuses")
+      .then()
+      .statusCode(200)
+      .body("loccamps.size()", is(2));
+
+    when()
+      .get("/location-units/libraries")
+      .then()
+      .statusCode(200)
+      .body("loclibs.size()", is(2));
+
+    when()
+      .get("/locations")
+      .then()
+      .statusCode(200)
+      .body("locations.size()", is(6));
   }
 }
