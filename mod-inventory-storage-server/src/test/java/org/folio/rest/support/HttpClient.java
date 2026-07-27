@@ -23,6 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.okapi.common.XOkapiHeaders;
+import org.folio.utility.ModuleUtility;
 
 public class HttpClient {
   private static final Logger LOG = LogManager.getLogger();
@@ -284,7 +285,13 @@ public class HttpClient {
     }
     if (url != null) {
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-      request.putHeader(XOkapiHeaders.URL, baseUrl);
+      // Prefer the suite-wide okapi URL override (when set) so the X-Okapi-Url that the
+      // module echoes into Kafka events matches what the event assertions expect. Falls
+      // back to the request's own base URL when no override is configured.
+      String okapiUrl = ModuleUtility.okapiUrlOverride() != null
+        ? ModuleUtility.okapiUrlOverride()
+        : baseUrl;
+      request.putHeader(XOkapiHeaders.URL, okapiUrl);
       request.putHeader(XOkapiHeaders.URL_TO, baseUrl);
     }
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);

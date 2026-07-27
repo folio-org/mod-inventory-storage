@@ -84,7 +84,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceDates;
@@ -2608,8 +2607,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    getClient().post(holdingsStorageUrl(""), holdingsToCreate,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()), TENANT_ID, json(createCompleted));
+    getClient().post(holdingsStorageUrl(""), holdingsToCreate, TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
 

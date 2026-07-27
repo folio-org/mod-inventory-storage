@@ -1,7 +1,7 @@
 package org.folio.rest.support.messages;
 
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonObject;
@@ -12,7 +12,7 @@ public class MaterialTypeEventMessageChecks {
 
   private final FakeKafkaConsumer kafkaConsumer;
   private final EventMessageMatchers eventMessageMatchers = new EventMessageMatchers(
-    TENANT_ID, vertxUrl(""));
+    TENANT_ID, okapiUrl());
 
   public MaterialTypeEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
     this.kafkaConsumer = kafkaConsumer;

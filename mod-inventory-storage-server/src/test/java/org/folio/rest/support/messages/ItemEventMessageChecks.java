@@ -4,7 +4,7 @@ import static java.util.UUID.fromString;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
-import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -24,7 +24,7 @@ public class ItemEventMessageChecks {
 
   public ItemEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
     this.kafkaConsumer = kafkaConsumer;
-    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, okapiUrl());
   }
 
   public ItemEventMessageChecks(FakeKafkaConsumer kafkaConsumer, String urlHeader) {

@@ -130,7 +130,6 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
       .withValue("not a boolean")).encode());
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, TENANT_ID);
-    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
     var updateResponse = settingsClient.attemptToUpdate(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(),
       settingRequest, TENANT_ID, headers);
 
@@ -254,7 +253,6 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
       .withValue(true)).encode());
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, TENANT_ID);
-    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
 
     var response = settingsClient.attemptToUpdate("non.existent.setting.key",
       settingRequest, TENANT_ID, headers);
@@ -268,7 +266,6 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
     var settingRequest = new JsonObject().putNull("value");
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, TENANT_ID);
-    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
 
     var response = settingsClient.attemptToUpdate(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(),
       settingRequest, TENANT_ID, headers);
@@ -428,7 +425,6 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, tenantId);
-    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
     return settingsClient.attemptToUpdate(key, settingRequest, tenantId, headers);
   }
 }
