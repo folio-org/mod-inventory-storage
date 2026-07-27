@@ -8,6 +8,7 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.URI;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,10 @@ public final class ModuleUtility {
   private static Vertx vertx;
   private static HttpClient client;
   private static int port = 0;
+  // Suite-wide okapi URL used both for the default X-Okapi-Url request header and for
+  // Kafka event assertions, so the two never drift apart. Null means "not set": callers
+  // fall back to the module's own vertx URL, preserving the historical default.
+  private static String okapiUrlOverride;
 
   private ModuleUtility() {
     throw new UnsupportedOperationException("Cannot instantiate utility class.");
@@ -208,6 +213,39 @@ public final class ModuleUtility {
   public static URL vertxUrl(String path) {
     try {
       return new URL("http", "localhost", getPort(), path);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Set the okapi URL used as the default {@code X-Okapi-Url} header and as the expected
+   * URL in Kafka event assertions for the current test class. Should be cleared afterwards.
+   */
+  public static void setOkapiUrl(String url) {
+    okapiUrlOverride = url;
+  }
+
+  public static void clearOkapiUrl() {
+    okapiUrlOverride = null;
+  }
+
+  /** The configured okapi URL override,
+   * or {@code null} when none is set. */
+  public static String okapiUrlOverride() {
+    return okapiUrlOverride;
+  }
+
+  /**
+   * Resolved okapi URL for assertions: the override when set, otherwise the module's own
+   * vertx URL (the historical default).
+   */
+  public static URL okapiUrl() {
+    if (okapiUrlOverride == null) {
+      return vertxUrl("");
+    }
+    try {
+      return URI.create(okapiUrlOverride).toURL();
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

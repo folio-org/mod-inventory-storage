@@ -5,7 +5,9 @@ import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.ModuleUtility.clearOkapiUrl;
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.setOkapiUrl;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -39,6 +41,7 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
@@ -105,10 +108,22 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupLoanTypes();
     setupLocations();
 
+    // Route the default X-Okapi-Url header (and therefore the URL echoed into Kafka events)
+    // through WireMock, so it matches what the event message checks expect. The event checks
+    // in each subclass read this same value via ModuleUtility.okapiUrl().
+    setOkapiUrl(mockServer.baseUrl());
+
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+  }
+
+  @AfterClass
+  public static void testBaseWithInvUtilAfterClass() {
+    // Reset so a later class that does not set it up (e.g. a plain TestBase subclass) does not
+    // inherit this class's now-stopped WireMock URL.
+    clearOkapiUrl();
   }
 
   public static void mockUserTenantsForNonConsortiumMember() {

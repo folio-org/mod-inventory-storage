@@ -4,7 +4,7 @@ import static java.util.UUID.fromString;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
-import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -16,8 +16,8 @@ import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 public class ItemEventMessageChecks {
-  private static final EventMessageMatchers EVENT_MESSAGE_MATCHERS
-    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+  private final EventMessageMatchers eventMessageMatchers
+    = new EventMessageMatchers(TENANT_ID, okapiUrl());
 
   private final FakeKafkaConsumer kafkaConsumer;
 
@@ -51,7 +51,7 @@ public class ItemEventMessageChecks {
     final var instanceId = getInstanceIdForItem(item);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(
+      eventMessageMatchers.hasCreateEventMessageFor(
         addInstanceIdToItem(item, instanceId)));
   }
 
@@ -73,7 +73,7 @@ public class ItemEventMessageChecks {
     final var newInstanceId = getInstanceIdForItem(newItem);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      EVENT_MESSAGE_MATCHERS.hasUpdateEventMessageFor(
+      eventMessageMatchers.hasUpdateEventMessageFor(
         addInstanceIdToItem(oldItem, oldInstanceId),
         addInstanceIdToItem(newItem, newInstanceId)));
   }
@@ -83,13 +83,13 @@ public class ItemEventMessageChecks {
     final var instanceId = getInstanceIdForItem(item);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      EVENT_MESSAGE_MATCHERS.hasDeleteEventMessageFor(
+      eventMessageMatchers.hasDeleteEventMessageFor(
         addInstanceIdToItem(item, instanceId)));
   }
 
   public void allItemsDeletedMessagePublished() {
     awaitAtMost()
       .until(() -> kafkaConsumer.getMessagesForItemWithInstanceIdKey(NULL_ID, null),
-        EVENT_MESSAGE_MATCHERS.hasDeleteAllEventMessage());
+        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 }
