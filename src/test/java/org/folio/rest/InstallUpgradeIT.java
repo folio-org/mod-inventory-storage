@@ -61,7 +61,10 @@ public class InstallUpgradeIT {
   public static final KafkaContainer KAFKA =
     new KafkaContainer(KafkaUtility.getImageName())
       .withNetwork(NETWORK)
-      .withNetworkAliases("mykafka");
+      // withListener adds a TC-0 listener on port 19092 advertised as mykafka:19092,
+      // and registers "mykafka" as a network alias. MOD_MIS bootstraps on this port
+      // so all broker metadata it receives points to mykafka:19092 (reachable in Docker).
+      .withListener("mykafka:19092");
 
   @ClassRule(order = 1)
   public static final PostgreSQLContainer<?> POSTGRES =
@@ -93,7 +96,7 @@ public class InstallUpgradeIT {
       .withEnv("DB_PASSWORD", "password")
       .withEnv("DB_DATABASE", "postgres")
       .withEnv("KAFKA_HOST", "mykafka")
-      .withEnv("KAFKA_PORT", "9092");
+      .withEnv("KAFKA_PORT", "19092");
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallUpgradeIT.class);
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
@@ -154,6 +157,12 @@ public class InstallUpgradeIT {
         .add(new JsonObject().put("key", "loadSample").put("value", "true")));
 
     postTenant(body);
+
+    // Wait for Kafka domain-event consumers to finish processing the events published
+    // during the first postTenant. Without this, their concurrent DB activity exhausts
+    // the small connection pool and causes the idempotent migration run to fail.
+    Awaitility.await().atMost(Duration.ofSeconds(30))
+      .until(() -> when().get("/instance-storage/instances?limit=1").statusCode() == 200);
 
     // migrate from 0.0.0 to current version, installation and migration should be idempotent
     body.put("module_from", "0.0.0");
