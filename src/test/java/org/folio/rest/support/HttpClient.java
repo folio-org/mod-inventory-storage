@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.utility.ModuleUtility;
 
 public class HttpClient {
   private static final Logger LOG = LogManager.getLogger();
@@ -176,6 +177,21 @@ public class HttpClient {
     return asResponse(request(HttpMethod.PUT, url, body, tenantId));
   }
 
+  public void patch(
+    URL url,
+    Object body,
+    Map<String, String> headers,
+    String tenantId,
+    Handler<HttpResponse<Buffer>> responseHandler) {
+
+    request(HttpMethod.PATCH, url, body, headers, tenantId)
+      .recover(error -> {
+        LOG.error(error.getMessage(), error);
+        return null;
+      })
+      .onSuccess(responseHandler);
+  }
+
   public void get(
     String url,
     String tenantId,
@@ -255,7 +271,13 @@ public class HttpClient {
     }
     if (url != null) {
       String baseUrl = format("%s://%s", url.getProtocol(), url.getAuthority());
-      request.putHeader(X_OKAPI_URL, baseUrl);
+      // Prefer the suite-wide okapi URL override (when set) so the X-Okapi-Url that the
+      // module echoes into Kafka events matches what the event assertions expect. Falls
+      // back to the request's own base URL when no override is configured.
+      String okapiUrl = ModuleUtility.okapiUrlOverride() != null
+        ? ModuleUtility.okapiUrlOverride()
+        : baseUrl;
+      request.putHeader(X_OKAPI_URL, okapiUrl);
       request.putHeader(X_OKAPI_URL_TO, baseUrl);
     }
     request.putHeader(ACCEPT, APPLICATION_JSON + ", " + TEXT_PLAIN);

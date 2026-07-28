@@ -20,6 +20,7 @@ import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
 import static org.folio.rest.support.matchers.ResponseMatcher.hasValidationError;
 import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
+import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -203,9 +204,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     Response postResponse = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
-
     JsonObject itemFromPost = postResponse.getJson();
-
     assertThat(itemFromPost.getString("effectiveShelvingOrder"), is(desiredShelvingOrder));
   }
 
@@ -400,7 +399,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
-
     assertThat(itemFromPost.getString("id"), is(itemId.toString()));
 
     Response getResponse = getById(itemId);
@@ -523,6 +521,8 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   public void shouldNotUpdateItemIfNoChanges() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var itemId = UUID.randomUUID();
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var item = createItem(nod(itemId, holdingId));
@@ -539,11 +539,28 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
+  public void shouldUpdateItemIfNoChangesAndOptimizeUpdatesDisabled() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    var itemId = UUID.randomUUID();
+    var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
+    var item = createItem(nod(itemId, holdingId));
+    itemMessageChecks.createdMessagePublished(itemId.toString());
+
+    assertThat(update(item).getStatusCode(), is(204));
+
+    var updatedItem = getById(itemId).getJson();
+    //assert that there was an update in database
+    assertThat(updatedItem.getString("_version"), is("2"));
+    //assert that UPDATE kafka message was published
+    itemMessageChecks.updatedMessagePublished(item, updatedItem);
+  }
+
+  @Test
   public void canCreateAnItemWithoutProvidingId() throws InterruptedException, ExecutionException, TimeoutException {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     JsonObject itemToCreate = nod(null, holdingsRecordId);
-
     itemToCreate.put("tags", new JsonObject().put("tagList", new JsonArray().add(TAG_VALUE)));
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -556,9 +573,7 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(postResponse.getStatusCode(), is(HttpURLConnection.HTTP_CREATED));
 
     JsonObject itemFromPost = postResponse.getJson();
-
     String newId = itemFromPost.getString("id");
-
     assertThat(newId, is(notNullValue()));
 
     Response getResponse = getById(UUID.fromString(newId));
@@ -666,8 +681,6 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
       .put("materialTypeId", bookMaterialTypeID);
 
     setItemSequence(1);
-
-    // create item
     createItem(itemToUpdate);
 
     // populate circulationNotes and other necessary fields

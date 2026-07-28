@@ -372,6 +372,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
       }
       future.complete(handler.result());
     });
+    get(future);
   }
 
   private List<JsonObject> getOiaPmhViewInstances(Map<String, String> queryParams)

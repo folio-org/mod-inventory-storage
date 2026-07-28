@@ -5,7 +5,7 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.rest.support.AwaitConfiguration.awaitDuring;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
-import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -21,8 +21,8 @@ import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 import org.hamcrest.Matcher;
 
 public class InstanceEventMessageChecks {
-  private static final EventMessageMatchers EVENT_MESSAGE_MATCHERS
-    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+  private final EventMessageMatchers eventMessageMatchers
+    = new EventMessageMatchers(TENANT_ID, okapiUrl());
   private final FakeKafkaConsumer kafkaConsumer;
 
   public InstanceEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
@@ -42,7 +42,7 @@ public class InstanceEventMessageChecks {
     final String instanceId = getId(instance);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-      EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(instance));
+      eventMessageMatchers.hasCreateEventMessageFor(instance));
   }
 
   public void createdMessagePublished(String instanceId) {
@@ -61,39 +61,39 @@ public class InstanceEventMessageChecks {
       hasSize(instances.size()));
 
     instances.forEach(instance -> assertThat(kafkaConsumer.getMessagesForInstances(instanceIds),
-      EVENT_MESSAGE_MATCHERS.hasCreateEventMessageFor(instance)));
+      eventMessageMatchers.hasCreateEventMessageFor(instance)));
   }
 
   public void updatedMessagePublished(JsonObject oldInstance, JsonObject newInstance) {
     final String instanceId = getId(oldInstance);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-      EVENT_MESSAGE_MATCHERS.hasUpdateEventMessageFor(oldInstance, newInstance));
+      eventMessageMatchers.hasUpdateEventMessageFor(oldInstance, newInstance));
   }
 
   public void noUpdatedMessagePublished(String instanceId) {
     awaitDuring(1, SECONDS)
       .until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-        EVENT_MESSAGE_MATCHERS.hasNoUpdateEventMessage());
+        eventMessageMatchers.hasNoUpdateEventMessage());
   }
 
   public void deletedMessagePublished(JsonObject instance) {
     final String instanceId = getId(instance);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-      EVENT_MESSAGE_MATCHERS.hasDeleteEventMessageFor(instance));
+      eventMessageMatchers.hasDeleteEventMessageFor(instance));
   }
 
   public void noDeletedMessagePublished(String instanceId) {
     awaitDuring(1, SECONDS)
       .until(() -> kafkaConsumer.getMessagesForInstance(instanceId),
-        EVENT_MESSAGE_MATCHERS.hasNoDeleteEventMessage());
+        eventMessageMatchers.hasNoDeleteEventMessage());
   }
 
   public void allInstancesDeletedMessagePublished() {
     awaitAtMost()
       .until(() -> kafkaConsumer.getMessagesForInstance(NULL_ID),
-        EVENT_MESSAGE_MATCHERS.hasDeleteAllEventMessage());
+        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
   public void countOfAllPublishedInstancesIs(Matcher<Integer> matcher) {

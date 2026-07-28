@@ -202,6 +202,10 @@ public class InterfaceUrls {
     return vertxUrl("/hrid-settings-storage/hrid-settings" + subPath);
   }
 
+  public static URL settingsStorageUrl(String subPath) {
+    return vertxUrl("/inventory-settings" + subPath);
+  }
+
   public static URL oaiPmhView(String subPath) {
     return vertxUrl("/oai-pmh-view/instances" + subPath);
   }

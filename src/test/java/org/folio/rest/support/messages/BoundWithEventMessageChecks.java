@@ -1,7 +1,7 @@
 package org.folio.rest.support.messages;
 
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.ModuleUtility.vertxUrl;
+import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class BoundWithEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers
-    = new EventMessageMatchers(TENANT_ID, vertxUrl(""));
+    = new EventMessageMatchers(TENANT_ID, okapiUrl());
   private final FakeKafkaConsumer kafkaConsumer;
 
   public BoundWithEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {

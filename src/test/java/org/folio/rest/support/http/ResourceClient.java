@@ -176,13 +176,16 @@ public final class ResourceClient {
       "Service points", "servicepoints");
   }
 
-  public IndividualResource create(Builder builder) {
+  public static ResourceClient forSettings(HttpClient client) {
+    return new ResourceClient(client, InterfaceUrls::settingsStorageUrl,
+      "Settings", "settings");
+  }
 
+  public IndividualResource create(Builder builder) {
     return create(builder.create());
   }
 
   public IndividualResource create(JsonObject request) {
-
     return create(request, TENANT_ID);
   }
 
@@ -191,7 +194,6 @@ public final class ResourceClient {
   }
 
   public IndividualResource create(JsonObject request, String tenantId, Map<String, String> headers) {
-
     Response response = attemptToCreate("", request, tenantId, headers);
 
     assertThat(
@@ -202,7 +204,6 @@ public final class ResourceClient {
   }
 
   public void createNoResponse(JsonObject request) {
-
     Response response = attemptToCreate(request);
 
     assertThat(
@@ -231,7 +232,6 @@ public final class ResourceClient {
   }
 
   public void replace(UUID id, Builder builder) {
-
     replace(id, builder.create());
   }
 
@@ -260,6 +260,12 @@ public final class ResourceClient {
     return TestBase.get(putCompleted);
   }
 
+  public Response attemptToUpdate(String id, JsonObject request, String tenantId, Map<String, String> headers) {
+    CompletableFuture<Response> putCompleted = new CompletableFuture<>();
+    client.patch(urlMakerWithId(id), request, headers, tenantId, ResponseHandler.any(putCompleted));
+    return TestBase.get(putCompleted);
+  }
+
   public Response getById(UUID id) {
 
     return getByIdIfPresent(id != null ? id.toString() : null);
@@ -269,8 +275,11 @@ public final class ResourceClient {
     return TestBase.get(client.get(urlMakerWithId(id), TENANT_ID));
   }
 
-  public Response deleteIfPresent(String id) {
+  public Response getByIdIfPresent(String id, String tenantId) {
+    return TestBase.get(client.get(urlMakerWithId(id), tenantId));
+  }
 
+  public Response deleteIfPresent(String id) {
     CompletableFuture<Response> deleteFinished = new CompletableFuture<>();
 
     client.delete(urlMakerWithId(id),
@@ -325,7 +334,6 @@ public final class ResourceClient {
         assertThat(String.format(
             "Failed to delete %s: %s", resourceName, deleteResponse.getBody()),
           deleteResponse.getStatusCode(), is(204));
-
       } catch (Throwable e) {
         assertThat(String.format("Exception whilst deleting %s individually: %s",
             resourceName, e),

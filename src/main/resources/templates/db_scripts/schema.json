@@ -1302,6 +1302,11 @@
       "run": "after",
       "snippetPath": "oaipmh/updateCompleteUpdatedDateFunctionsToHandleMove.sql",
       "fromModuleVersion": "29.0.22"
+    },
+    {
+      "run": "after",
+      "snippetPath": "instance/createSettingsTable.sql",
+      "fromModuleVersion": "29.0.23"
     }
   ]
 }

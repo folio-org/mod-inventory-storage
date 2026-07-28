@@ -25,6 +25,7 @@ import static org.folio.rest.support.http.InterfaceUrls.natureOfContentTermsUrl;
 import static org.folio.rest.support.matchers.DateTimeMatchers.hasIsoFormat;
 import static org.folio.rest.support.matchers.DateTimeMatchers.withinSecondsBeforeNow;
 import static org.folio.rest.support.matchers.PostgresErrorMessageMatchers.isMaximumSequenceValueError;
+import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
@@ -557,7 +558,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldNotUpdateInstanceIfNoChanges() {
+  public void shouldNotUpdateInstanceIfNoChangesAndOptimizeUpdatesEnabled() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var id = UUID.randomUUID();
     createInstance(nod(id));
     var instance = getById(id).getJson();
@@ -571,6 +574,25 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var kafkaEvents = KAFKA_CONSUMER.getMessagesForInstance(id.toString());
     //assert that there's only CREATE kafka message, no updates
     assertThat(kafkaEvents.size(), is(1));
+  }
+
+  @Test
+  @SneakyThrows
+  public void shouldUpdateInstanceIfNoChangesAndOptimizeUpdatesDisabled() {
+    var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
+    assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
+    var id = UUID.randomUUID();
+    createInstance(nod(id));
+    var instance = getById(id).getJson();
+    instanceMessageChecks.createdMessagePublished(id.toString());
+
+    assertThat(update(instance).getStatusCode(), is(204));
+
+    var updatedInstance = getById(id).getJson();
+    //assert that there was an update in database
+    assertThat(updatedInstance.getString("_version"), is("2"));
+    //assert that UPDATE kafka message was published
+    instanceMessageChecks.updatedMessagePublished(instance, updatedInstance);
   }
 
   @Test

@@ -5,7 +5,9 @@ import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.loanTypesStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.ModuleUtility.clearOkapiUrl;
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.setOkapiUrl;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -19,6 +21,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -29,6 +32,7 @@ import org.folio.HttpStatus;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.jaxrs.model.SettingUpdateRequest;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -37,6 +41,7 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.LoanTypesClient;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
@@ -103,10 +108,22 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupLoanTypes();
     setupLocations();
 
+    // Route the default X-Okapi-Url header (and therefore the URL echoed into Kafka events)
+    // through WireMock, so it matches what the event message checks expect. The event checks
+    // in each subclass read this same value via ModuleUtility.okapiUrl().
+    setOkapiUrl(mockServer.baseUrl());
+
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+  }
+
+  @AfterClass
+  public static void testBaseWithInvUtilAfterClass() {
+    // Reset so a later class that does not set it up (e.g. a plain TestBase subclass) does not
+    // inherit this class's now-stopped WireMock URL.
+    clearOkapiUrl();
   }
 
   public static void mockUserTenantsForNonConsortiumMember() {
@@ -386,6 +403,16 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
     instanceToCreate.put("_version", 1);
     return instanceToCreate;
+  }
+
+  protected static Response updateSettingByKey(String key, boolean value) {
+    var settingRequest = new JsonObject(JsonObject.mapFrom(new SettingUpdateRequest()
+      .withValue(value)).encode());
+
+    var headers = new HashMap<String, String>();
+    headers.put(XOkapiHeaders.TENANT, TENANT_ID);
+    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
+    return settingsClient.attemptToUpdate(key, settingRequest, TENANT_ID, headers);
   }
 
   protected JsonObject createItem(JsonObject itemToCreate) {
