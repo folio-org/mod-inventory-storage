@@ -1,9 +1,14 @@
+# https://github.com/folio-org/.github/blob/master/README-maven.md
+
 name: Maven central workflow
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   maven:
