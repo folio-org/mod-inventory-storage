@@ -21,6 +21,7 @@
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 
 ### Tech Dept
+* Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
 * Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
 
 ### Dependencies
