@@ -84,7 +84,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstanceDates;
@@ -545,11 +544,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(instance).getStatusCode(), is(204));
 
     var updatedInstance = getById(id).getJson();
-    //assert that there was no update in database
+    //assert that there was an update in database
     assertThat(updatedInstance.getString("_version"), is("2"));
-    var kafkaEvents = KAFKA_CONSUMER.getMessagesForInstance(id.toString());
-    //assert that there's only CREATE kafka message, no updates
-    assertThat(kafkaEvents.size(), is(1));
+    //assert that UPDATE kafka message was published
+    instanceMessageChecks.updatedMessagePublished(instance, updatedInstance);
   }
 
   @Test
@@ -2609,8 +2607,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
 
-    getClient().post(holdingsStorageUrl(""), holdingsToCreate,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()), TENANT_ID, json(createCompleted));
+    getClient().post(holdingsStorageUrl(""), holdingsToCreate, TENANT_ID, json(createCompleted));
 
     Response response = createCompleted.get(2, SECONDS);
 

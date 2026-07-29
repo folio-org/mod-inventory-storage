@@ -4,7 +4,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static org.folio.rest.support.http.InterfaceUrls.instanceStatusesUrl;
 import static org.folio.rest.support.http.InterfaceUrls.itemsStorageUrl;
 import static org.folio.rest.support.http.InterfaceUrls.materialTypesStorageUrl;
+import static org.folio.utility.ModuleUtility.clearOkapiUrl;
 import static org.folio.utility.ModuleUtility.getClient;
+import static org.folio.utility.ModuleUtility.setOkapiUrl;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
@@ -20,7 +22,6 @@ import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -38,6 +39,7 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
@@ -104,10 +106,22 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     setupLoanTypes();
     setupLocations();
 
+    // Route the default X-Okapi-Url header (and therefore the URL echoed into Kafka events)
+    // through WireMock, so it matches what the event message checks expect. The event checks
+    // in each subclass read this same value via ModuleUtility.okapiUrl().
+    setOkapiUrl(mockServer.baseUrl());
+
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
 
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+  }
+
+  @AfterClass
+  public static void testBaseWithInvUtilAfterClass() {
+    // Reset so a later class that does not set it up (e.g. a plain TestBase subclass) does not
+    // inherit this class's now-stopped WireMock URL.
+    clearOkapiUrl();
   }
 
   public static void mockUserTenantsForNonConsortiumMember() {
@@ -280,7 +294,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   }
 
   protected static IndividualResource createHoldingRecord(JsonObject holdingsJson, String tenantId) {
-    return holdingsClient.create(holdingsJson, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return holdingsClient.create(holdingsJson, tenantId);
   }
 
   protected static void updateHoldingRecord(UUID id, Builder builder) {
@@ -289,8 +303,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   protected static void updateHoldingRecord(UUID id, JsonObject holdingJson) {
     var holdingId = id != null ? id.toString() : null;
-    var putResponse = holdingsClient.attemptToReplace(holdingId, holdingJson, TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    var putResponse = holdingsClient.attemptToReplace(holdingId, holdingJson);
     assertThat(
       String.format("Failed to update holding record %s: %s", id, putResponse.getBody()),
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
@@ -399,7 +412,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, TENANT_ID);
-    headers.put(XOkapiHeaders.URL, mockServer.baseUrl());
     return settingsClient.attemptToUpdate(key, settingRequest, TENANT_ID, headers);
   }
 

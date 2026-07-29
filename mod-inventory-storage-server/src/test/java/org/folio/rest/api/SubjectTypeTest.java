@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
@@ -275,15 +274,15 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   private Response createSubjectType(JsonObject object, String tenantId) {
-    return subjectTypeClient.attemptToCreate("", object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectTypeClient.attemptToCreate("", object, tenantId);
   }
 
   private Response updateSubjectType(String id, JsonObject object) {
-    return subjectTypeClient.attemptToReplace(id, object, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectTypeClient.attemptToReplace(id, object);
   }
 
   private Response updateSubjectType(String id, JsonObject object, String tenantId) {
-    return subjectTypeClient.attemptToReplace(id, object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectTypeClient.attemptToReplace(id, object, tenantId, Map.of());
   }
 
   private Response deleteSubjectType(UUID id) {

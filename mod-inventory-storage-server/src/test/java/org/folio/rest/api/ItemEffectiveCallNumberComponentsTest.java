@@ -14,14 +14,12 @@ import static org.junit.Assert.assertNotNull;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
 import org.folio.rest.support.IndividualResource;
@@ -304,7 +302,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     if (!Objects.equals(itemInitValue, itemTargetValue)) {
       var itemAfterHoldingsUpdate = getById(createdItem.getJson());
       itemsClient.replace(createdItem.getId(), itemAfterHoldingsUpdate.copy()
-        .put(itemPropertyName, itemTargetValue), Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+        .put(itemPropertyName, itemTargetValue));
 
       itemMessageChecks.updatedMessagePublished(itemAfterHoldingsUpdate,
         itemsClient.getById(createdItem.getId()).getJson());

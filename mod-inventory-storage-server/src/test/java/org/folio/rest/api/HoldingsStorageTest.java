@@ -79,7 +79,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsNote;
@@ -114,7 +113,6 @@ import org.junit.runners.MethodSorters;
 public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
-  private static final String X_OKAPI_URL = "X-Okapi-Url";
   private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
   private static final String CONSORTIUM_MEMBER_TENANT = "consortium";
   private static final String TENANT_WITHOUT_USER_TENANTS_PERMISSIONS = "nopermissions";
@@ -130,10 +128,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     INVALID_VALUE);
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
-    = new HoldingsEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER);
 
   private final ItemEventMessageChecks itemMessageChecks
-    = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
+    = new ItemEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
   @BeforeClass
@@ -433,8 +431,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .create();
     holdingToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
 
-    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID);
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
   }
@@ -457,8 +454,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var holding = holdingToUpdate.getJson();
     holding.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
 
-    var response = holdingsClient.attemptToReplace(holdingId.toString(), holding, TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    var response = holdingsClient.attemptToReplace(holdingId.toString(), holding);
 
     assertThat(response.getStatusCode(), is(400));
     assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
@@ -474,8 +470,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID)
       .create();
 
-    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID);
     assertThat(response.getStatusCode(), is(422));
     assertTrue(response.getBody().contains(String.format(
       "Cannot set holdings_record.instanceid = %s because it does not exist in instance.id.", instanceId)));
@@ -494,7 +489,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     UUID holdingId = holdingResource.getId();
 
-    holdingsClient.delete(holdingId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    holdingsClient.delete(holdingId);
 
     Response getResponse = holdingsClient.getById(holdingId);
 
@@ -641,7 +636,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
       .withSource(getPreparedHoldingSourceId())
       .withPermanentLocation(MAIN_LIBRARY_LOCATION_ID).create());
 
-    holdingsClient.deleteAll(Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    holdingsClient.deleteAll();
 
     List<JsonObject> allHoldings = holdingsClient.getAll();
 
@@ -660,7 +655,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     var holdings = createFiveHoldingsWithHrids(instanceId1, instanceId2);
 
-    holdingsClient.deleteByQuery("hrid==12*", Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    holdingsClient.deleteByQuery("hrid==12*", Map.of());
 
     assertHoldingsExistence(holdings);
     assertDeletedMessagesPublished(holdings[0], holdings[2], holdings[4]);
@@ -787,11 +782,10 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(holding).getStatusCode(), is(204));
 
     var updatedHolding = getById(holdingId).getJson();
-    //assert that there was no update in database
+    //assert that there was an update in database
     assertThat(updatedHolding.getString("_version"), is("2"));
-    var kafkaEvents = KAFKA_CONSUMER.getMessagesForHoldings(holdingId);
-    //assert that there's only CREATE kafka message, no updates
-    assertThat(kafkaEvents.size(), is(1));
+    //assert that UPDATE kafka message was published
+    holdingsMessageChecks.updatedMessagePublished(holding, updatedHolding);
   }
 
   @Test
@@ -4045,7 +4039,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private Response postSynchronousBatch(URL url, JsonArray holdingsArray, String tenantId) {
     JsonObject holdingsCollection = new JsonObject().put("holdingsRecords", holdingsArray);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
-    getClient().post(url, holdingsCollection, Map.of(X_OKAPI_URL, mockServer.baseUrl()), tenantId,
+    getClient().post(url, holdingsCollection, tenantId,
       ResponseHandler.any(createCompleted));
     try {
       return createCompleted.get(10, SECONDS);

@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.http.ResourceClient;
@@ -271,15 +270,15 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   private Response createSubjectSource(JsonObject object, String tenantId) {
-    return subjectSourceClient.attemptToCreate("", object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectSourceClient.attemptToCreate("", object, tenantId);
   }
 
   private Response updateSubjectSource(String id, JsonObject object) {
-    return subjectSourceClient.attemptToReplace(id, object, TENANT_ID, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectSourceClient.attemptToReplace(id, object);
   }
 
   private Response updateSubjectSource(String id, JsonObject object, String tenantId) {
-    return subjectSourceClient.attemptToReplace(id, object, tenantId, Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    return subjectSourceClient.attemptToReplace(id, object, tenantId, Map.of());
   }
 
   private Response deleteSubjectSource(UUID id) {

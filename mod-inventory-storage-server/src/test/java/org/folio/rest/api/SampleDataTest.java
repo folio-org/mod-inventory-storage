@@ -20,13 +20,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
 import java.net.URL;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.support.Response;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -46,8 +44,7 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
     TestBase.beforeAll();
 
     removeTenant(TENANT_ID);
-    prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true,
-      Map.of(XOkapiHeaders.URL, mockServer.baseUrl()));
+    prepareTenant(TENANT_ID, null, "mod-inventory-storage-1.0.0", true);
   }
 
   private static Predicate<JsonObject> hasId(String id) {

@@ -579,11 +579,10 @@ public class ItemStorageTest extends TestBaseWithInventoryUtil {
     assertThat(update(item).getStatusCode(), is(204));
 
     var updatedItem = getById(itemId).getJson();
-    //assert that there was no update in database
+    //assert that there was an update in database
     assertThat(updatedItem.getString("_version"), is("2"));
-    var kafkaEvents = KAFKA_CONSUMER.getMessagesForItem(itemId.toString());
-    //assert that there's only CREATE kafka message, no updates
-    assertThat(kafkaEvents.size(), is(1));
+    //assert that UPDATE kafka message was published
+    itemMessageChecks.updatedMessagePublished(item, updatedItem);
   }
 
   @Test
