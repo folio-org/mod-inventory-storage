@@ -156,6 +156,47 @@ class InstallUpgradeIT {
   }
 
   @Test
+  void installWithReferenceDataOnly() {
+    setTenant("refonly");
+
+    JsonObject body = new JsonObject()
+      .put("module_to", "mod-inventory-storage-999999.0.0")
+      .put("parameters", new JsonArray()
+        .add(new JsonObject().put("key", "loadReference").put("value", "true")));
+
+    postTenant(body);
+    referenceDataSmokeTest();
+  }
+
+  private void referenceDataSmokeTest() {
+    // reference data loaded
+    when()
+      .get("/classification-types?limit=1000")
+      .then()
+      .statusCode(200)
+      .body("classificationTypes.size()", is(10));
+
+    when()
+      .get("/service-points?limit=1000")
+      .then()
+      .statusCode(200)
+      .body("servicepoints.size()", is(4));
+
+    // sample data not loaded
+    when()
+      .get("/location-units/institutions")
+      .then()
+      .statusCode(200)
+      .body("locinsts.size()", is(0));
+
+    when()
+      .get("/locations")
+      .then()
+      .statusCode(200)
+      .body("locations.size()", is(0));
+  }
+
+  @Test
   void installAndUpgrade() {
     when()
       .get("/admin/health")

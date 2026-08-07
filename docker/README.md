@@ -199,7 +199,7 @@ wget --no-check-certificate \
   --header="X-Okapi-Tenant: consortium" \
   --header="Content-Type: application/json" \
   --header="X-Okapi-Url: http://localhost:9130" \
-  --post-data='{"module_to":"mod-inventory-storage-30.0.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
+  --post-data='{"module_to":"mod-inventory-storage-30.1.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
   http://localhost:8081/_/tenant
 ```
 
@@ -210,7 +210,7 @@ wget --no-check-certificate \
   --header="X-Okapi-Tenant: member" \
   --header="Content-Type: application/json" \
   --header="X-Okapi-Url: http://localhost:9130" \
-  --post-data='{"module_to":"mod-inventory-storage-30.0.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
+  --post-data='{"module_to":"mod-inventory-storage-30.1.0-SNAPSHOT","parameters":[{"key":"loadReference","value":"true"}]}' \
   http://localhost:8081/_/tenant
 ```
 
