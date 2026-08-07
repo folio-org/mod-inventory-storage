@@ -61,6 +61,7 @@ public class TenantRefApi extends TenantAPI {
     "nature-of-content-terms",
     "statistical-code-types",
     "statistical-codes",
+    "service-points",
     "subject-sources",
     "subject-types"
   };
@@ -136,7 +137,6 @@ public class TenantRefApi extends TenantAPI {
   private void configureSampleData(TenantLoading tl) {
     tl.withKey(SAMPLE_KEY).withLead(SAMPLE_LEAD);
     tl.withPostIgnore();
-    tl.add("service-points");
     tl.add("service-points-users");
     tl.add("location-units/institutions");
     tl.add("location-units/campuses");
