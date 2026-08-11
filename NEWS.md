@@ -8,6 +8,7 @@
 
 ### Features
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
+* Integrate folio-custom-fields for item ([MODINVSTOR-1446](https://folio-org.atlassian.net/browse/MODINVSTOR-1446))
 
 ### Bug fixes
 * Populate item and holdings `hrId` in the items-and-holdings view ([MODINVSTOR-1587](https://folio-org.atlassian.net/browse/MODINVSTOR-1587))
