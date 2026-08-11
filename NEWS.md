@@ -5,6 +5,8 @@
 ### New APIs versions
 * Provides `settings v1.0`
 * Requires `API_NAME vX.Y`
+* Provides `item-storage v11.3`
+* Provides `custom-fields v3.1`
 
 ### Features
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
