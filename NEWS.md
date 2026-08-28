@@ -1,3 +1,12 @@
+## v30.0.6 2026-08-28
+### New APIs versions
+* Provides `instance-storage 11.4`
+
+### Features
+* Create a instance summary endpoint ([MODINVSTOR-1602](https://folio-org.atlassian.net/browse/MODINVSTOR-1602))
+
+---
+
 ## v30.0.5 2026-07-22
 ### New APIs versions
 * Provides `settings v1.0`
