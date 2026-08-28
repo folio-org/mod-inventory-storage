@@ -4,9 +4,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,9 +31,8 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
 
   @Validate
   @Override
-  public void getInstanceCustomLinks(String query, @Pattern(regexp = "exact|estimated|none|auto") String totalRecords,
-      @Min(0) @Max(2147483647) int offset, @Min(0) @Max(2147483647) int limit, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getInstanceCustomLinks(String query, String totalRecords, int offset, int limit, Map<String,
+      String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
       GetInstanceCustomLinksResponse.class);
   }

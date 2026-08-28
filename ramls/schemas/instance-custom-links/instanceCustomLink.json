@@ -11,8 +11,7 @@
     },
     "name": {
       "type": "string",
-      "description": "Name of the instance custom link",
-      "maxLength": 99
+      "description": "Name of the instance custom link"
     },
     "linkText": {
       "type": "string",
@@ -21,13 +20,11 @@
     },
     "baseUrl": {
       "type": "string",
-      "description": "The base URL including scheme and host for rendering the instance custom link",
-      "maxLength": 99
+      "description": "The base URL including scheme and host for rendering the instance custom link"
     },
     "queryString": {
       "type": "string",
-      "description": "The templated path or query string to append to the base URL when rendering the instance custom link",
-      "maxLength": 99
+      "description": "The templated path or query string to append to the base URL when rendering the instance custom link"
     },
     "show": {
       "type": "boolean",

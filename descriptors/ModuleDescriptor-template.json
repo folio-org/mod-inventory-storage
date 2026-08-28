@@ -1456,6 +1456,37 @@
           "permissionsRequired": ["inventory-storage.settings.item.patch"]
         }
        ]
+    },
+    {
+      "id": "instance-custom-links",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-custom-links",
+          "perimssionsRequired": ["inventory-storage.instance-custom-links.collection.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-custom-links",
+          "perimssionsRequired": ["inventory-storage.instance-custom-links.item.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "perimssionsRequired": ["inventory-storage.instance-custom-links.item.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "perimssionsRequired": ["inventory-storage.instance-custom-links.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "perimssionsRequired": ["inventory-storage.instance-custom-links.item.delete"]
+        }
+      ]
     }
   ],
   "optional": [
@@ -2687,6 +2718,31 @@
       "description": "patch inventory setting"
     },
     {
+      "permissionName": "inventory-storage.instance-custom-links.collection.get",
+      "displayName": "inventory storage - get list of instance custom links",
+      "description": "get list of instance custom links"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.get",
+      "displayName": "inventory storage - get instance custom link",
+      "description": "get instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.post",
+      "displayName": "inventory storage - create instance custom link",
+      "description": "create instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.put",
+      "displayName": "inventory storage - modify an instance custom link",
+      "description": "modify an instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.delete",
+      "displayName": "inventory storage - delete an instance custom link",
+      "description": "delete an instance custom link"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2935,7 +2991,12 @@
         "inventory-storage.instance-date-types.collection.get",
         "inventory-storage.instance-date-types.item.patch",
         "inventory-storage.settings.item.get",
-        "inventory-storage.settings.item.patch"
+        "inventory-storage.settings.item.patch",
+        "inventory-storage.instance-custom-links.collection.get",
+        "inventory-storage.instance-custom-links.item.get",
+        "inventory-storage.instance-custom-links.item.post",
+        "inventory-storage.instance-custom-links.item.put",
+        "inventory-storage.instance-custom-links.item.delete"
       ]
     }
   ],

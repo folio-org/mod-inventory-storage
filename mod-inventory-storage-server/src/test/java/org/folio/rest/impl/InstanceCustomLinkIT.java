@@ -4,6 +4,7 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.services.instance.InstanceCustomLinkService.INSTANCE_CUSTOM_LINK_TABLE;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -11,10 +12,14 @@ import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.InstanceCustomLink;
 import org.folio.rest.jaxrs.model.InstanceCustomLinks;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCustomLink, InstanceCustomLinks> {
 
@@ -150,67 +155,16 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
   }
 
-  @Test
-  void cannotReuseCustomLinkNameOnCreate(Vertx vertx, VertxTestContext ctx) {
+  @ParameterizedTest
+  @MethodSource("duplicateFieldValueCreates")
+  void cannotReuseDuplicateFieldValueOnCreate(JsonObject first, JsonObject second, Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "repeated name")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "repeated name")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
+    doPost(client, resourceUrl(), first)
+      .onComplete(ctx.succeeding(response1 ->
+        doPost(client, resourceUrl(), second)
           .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
-      }));
-  }
-
-  @Test
-  void cannotReuseCustomLinkLinkTextOnCreate(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "repeated link text")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "repeated link text")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
-          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
-      }));
-  }
-
-  @Test
-  void cannotReuseCustomLinkBaseUrlOnCreate(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://repeated.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://repeated.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
-          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
-      }));
+          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()))
+      ));
   }
 
   @Test
@@ -286,99 +240,120 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       }));
   }
 
-  @Test
-  @SuppressWarnings("checkstyle:MethodLength")
-  void cannotReuseCustomLinkNameOnUpdate(Vertx vertx, VertxTestContext ctx) {
+  @ParameterizedTest
+  @MethodSource("duplicateFieldValueUpdates")
+  void cannotReuseDuplicateFieldValueOnUpdate(JsonObject first, JsonObject second, JsonObject update,
+      Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    var req3 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
+    doPost(client, resourceUrl(), first)
+      .onComplete(ctx.succeeding(response1 ->
+        doPost(client, resourceUrl(), second)
           .onComplete(ctx.succeeding(response2 -> {
             var id2 = response2.jsonBody().getString("id");
-            req3.put("id", id2);
-            doPut(client, resourceUrlById(id2), req3)
+            update.put("id", id2);
+            doPut(client, resourceUrlById(id2), update)
               .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
               .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
-          }));
-      }));
+          }))
+      ));
   }
 
-  @Test
   @SuppressWarnings("checkstyle:MethodLength")
-  void cannotReuseCustomLinkLinkTextOnUpdate(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    var req3 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
-          .onComplete(ctx.succeeding(response2 -> {
-            var id2 = response2.jsonBody().getString("id");
-            req3.put("id", id2);
-            doPut(client, resourceUrlById(id2), req3)
-              .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-              .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
-          }));
-      }));
+  private static Stream<Arguments> duplicateFieldValueCreates() {
+    return Stream.of(
+      arguments(
+        new JsonObject()
+          .put("name", "duplicate name")
+          .put("baseUrl", "https://base1.host")
+          .put("linkText", "link text 1")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "duplicate name")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "link text 2")
+          .put("source", "local")
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("baseUrl", "https://base1.host")
+          .put("linkText", "duplicate text")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "duplicate text")
+          .put("source", "local")
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("baseUrl", "https://duplicate")
+          .put("linkText", "link text 1")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://duplicate")
+          .put("linkText", "link text 2")
+          .put("source", "local")
+      )
+    );
   }
 
-  @Test
   @SuppressWarnings("checkstyle:MethodLength")
-  void cannotReuseCustomLinkBaseUrlOnUpdate(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "link text 1")
-      .put("source", "local");
-    var req2 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base2.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    var req3 = new JsonObject()
-      .put("name", "name 2")
-      .put("baseUrl", "https://base1.host")
-      .put("linkText", "link text 2")
-      .put("source", "local");
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        doPost(client, resourceUrl(), req2)
-          .onComplete(ctx.succeeding(response2 -> {
-            var id2 = response2.jsonBody().getString("id");
-            req3.put("id", id2);
-            doPut(client, resourceUrlById(id2), req3)
-              .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-              .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
-          }));
-      }));
+  private static Stream<Arguments> duplicateFieldValueUpdates() {
+    return Stream.of(
+      arguments(
+        new JsonObject()
+          .put("name", "duplicate name")
+          .put("baseUrl", "https://base1.host")
+          .put("linkText", "link text 1")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "link text 2")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "duplicate name")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "link text 2")
+          .put("source", "local")
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("baseUrl", "https://base1.host")
+          .put("linkText", "duplicate text")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "link text 2")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "duplicate text")
+          .put("source", "local")
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("baseUrl", "https://duplicate")
+          .put("linkText", "link text 1")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://base2.host")
+          .put("linkText", "link text 2")
+          .put("source", "local"),
+        new JsonObject()
+          .put("name", "name 2")
+          .put("baseUrl", "https://duplicate")
+          .put("linkText", "link text 2")
+          .put("source", "local")
+      )
+    );
   }
 }
