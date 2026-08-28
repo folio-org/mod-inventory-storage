@@ -51,6 +51,7 @@ import org.junit.runners.Suite;
   InstanceDomainEventTest.class,
   InstanceRelationshipsTest.class,
   InstanceSetTest.class,
+  InstanceSummaryStorageTest.class,
   InstanceStorageInstancesBulkApiTest.class,
   InstanceStorageTest.class,
   InventoryHierarchyViewTest.class,
