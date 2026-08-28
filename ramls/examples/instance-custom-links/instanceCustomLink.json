@@ -1,0 +1,8 @@
+    {
+      "id": "a3300f00-1d30-440d-a475-a5c8fad7ba7e",
+      "name": "OPAC",
+      "linkText": "Locate",
+      "baseUrl": "https://www.locate.library.com",
+      "queryString": "/items/{UUID}.html",
+      "show": true
+    }

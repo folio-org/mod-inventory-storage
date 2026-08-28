@@ -229,6 +229,25 @@
       ]
     },
     {
+      "tableName": "instance_custom_link",
+      "withMetadata": true,
+      "withAuditing": false,
+      "uniqueIndex": [
+        {
+          "fieldName": "name",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "linkText",
+          "tOps": "ADD"
+        },
+        {
+          "fieldName": "baseUrl",
+          "tOps": "ADD"
+        }
+      ]
+    },
+    {
       "tableName": "nature_of_content_term",
       "withMetadata": true,
       "withAuditing": false,
