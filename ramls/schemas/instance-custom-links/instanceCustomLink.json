@@ -12,7 +12,7 @@
     "name": {
       "type": "string",
       "description": "Name of the instance custom link",
-      "maxLength": 1000
+      "maxLength": 150
     },
     "linkText": {
       "type": "string",
@@ -27,7 +27,7 @@
     "queryString": {
       "type": "string",
       "description": "The templated path or query string to append to the base URL when rendering the instance custom link",
-      "maxLength": 1000
+      "maxLength": 150
     },
     "show": {
       "type": "boolean",
