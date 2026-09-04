@@ -22,4 +22,8 @@ public class InstanceCustomLinkService {
   public Future<String> create(InstanceCustomLink entity) {
     return postgresClient.withTrans(conn -> repository.create(conn, entity));
   }
+
+  public Future<String> modify(String id, InstanceCustomLink entity) {
+    return postgresClient.withTrans(conn -> repository.modify(conn, id, entity));
+  }
 }

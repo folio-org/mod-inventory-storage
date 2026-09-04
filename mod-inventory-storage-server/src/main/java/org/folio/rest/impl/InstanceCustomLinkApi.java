@@ -1,8 +1,10 @@
 package org.folio.rest.impl;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -43,17 +45,17 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var errors = validate(entity);
     if (!errors.isEmpty()) {
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
+      asyncResultHandler.handle(succeededFuture(
         PostInstanceCustomLinksResponse.respond422WithApplicationJson(new Errors().withErrors(errors))));
       return;
     }
 
     new InstanceCustomLinkService(vertxContext, okapiHeaders).create(entity)
-      .onSuccess(id -> asyncResultHandler.handle(Future.succeededFuture(PostInstanceCustomLinksResponse
+      .onSuccess(id -> asyncResultHandler.handle(succeededFuture(PostInstanceCustomLinksResponse
         .respond201WithApplicationJson(entity.withId(id), PostInstanceCustomLinksResponse.headersFor201()))))
       .onFailure(cause -> {
         if (cause instanceof ValidationException ve) {
-          asyncResultHandler.handle(Future.succeededFuture(PostInstanceCustomLinksResponse
+          asyncResultHandler.handle(succeededFuture(PostInstanceCustomLinksResponse
             .respond422WithApplicationJson(ve.getErrors())));
         } else {
           try {
@@ -61,7 +63,7 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
             PgUtil.response(INSTANCE_CUSTOM_LINK_TYPE_TABLE, entity.getId(), cause,
               PostInstanceCustomLinksResponse.class, respond500, respond500).onComplete(asyncResultHandler);
           } catch (NoSuchMethodException ex) {
-            Future.failedFuture(ex);
+            failedFuture(ex);
           }
         }
       });
@@ -86,17 +88,29 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
   public void putInstanceCustomLinksById(String id, InstanceCustomLink entity, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var errors = validate(entity);
-
     if (!errors.isEmpty()) {
-      asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(
-        PutInstanceCustomLinksByIdResponse.respond422WithApplicationJson(
-          new Errors().withErrors(errors)
-        )));
+      asyncResultHandler.handle(succeededFuture(
+        PutInstanceCustomLinksByIdResponse.respond422WithApplicationJson(new Errors().withErrors(errors))));
       return;
     }
 
-    PgUtil.put(INSTANCE_CUSTOM_LINK_TYPE_TABLE, entity, id, okapiHeaders, vertxContext,
-      PutInstanceCustomLinksByIdResponse.class, asyncResultHandler);
+    new InstanceCustomLinkService(vertxContext, okapiHeaders).modify(id, entity)
+      .onSuccess(x -> asyncResultHandler.handle(succeededFuture(PutInstanceCustomLinksByIdResponse.respond204())))
+      .onFailure(cause -> {
+        if (cause instanceof ValidationException ve) {
+          asyncResultHandler.handle(succeededFuture(PutInstanceCustomLinksByIdResponse
+            .respond422WithApplicationJson(ve.getErrors())));
+        } else {
+          try {
+            var respond500 = PutInstanceCustomLinksByIdResponse.class.getMethod("respond500WithTextPlain",
+              Object.class);
+            PgUtil.response(INSTANCE_CUSTOM_LINK_TYPE_TABLE, entity.getId(), cause,
+              PutInstanceCustomLinksByIdResponse.class, respond500, respond500).onComplete(asyncResultHandler);
+          } catch (NoSuchMethodException ex) {
+            failedFuture(ex);
+          }
+        }
+      });
   }
 
   @Override

@@ -4,10 +4,14 @@ import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.services.instance.InstanceCustomLinkService.INSTANCE_CUSTOM_LINK_TABLE;
+import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.function.Function;
@@ -16,11 +20,16 @@ import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.InstanceCustomLink;
 import org.folio.rest.jaxrs.model.InstanceCustomLinks;
 import org.folio.rest.jaxrs.model.Metadata;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@ExtendWith(VertxExtension.class)
 class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCustomLink, InstanceCustomLinks> {
 
   @Override
@@ -92,6 +101,11 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
     );
   }
   
+  @BeforeEach
+  void beforeEach(Vertx vertx, VertxTestContext ctx) {
+    deleteAllInstanceCustomLinkData(vertx, ctx);
+  }
+
   @Test
   void createWithValidQueryString(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
@@ -157,13 +171,17 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
 
   @ParameterizedTest
   @MethodSource("duplicateFieldValueCreates")
-  void cannotReuseDuplicateFieldValueOnCreate(JsonObject first, JsonObject second, Vertx vertx, VertxTestContext ctx) {
+  void cannotReuseDuplicateFieldValueOnCreate(JsonObject first, JsonObject second, String duplicatedField,
+      Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     doPost(client, resourceUrl(), first)
       .onComplete(ctx.succeeding(response1 ->
         doPost(client, resourceUrl(), second)
           .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()))
+          .onComplete(event -> ctx.verify(() -> {
+            assertDuplicateError(event.result(), duplicatedField);
+            ctx.completeNow();
+          }))
       ));
   }
 
@@ -243,7 +261,7 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   @ParameterizedTest
   @MethodSource("duplicateFieldValueUpdates")
   void cannotReuseDuplicateFieldValueOnUpdate(JsonObject first, JsonObject second, JsonObject update,
-      Vertx vertx, VertxTestContext ctx) {
+      String duplicatedField, Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     doPost(client, resourceUrl(), first)
       .onComplete(ctx.succeeding(response1 ->
@@ -253,9 +271,32 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
             update.put("id", id2);
             doPut(client, resourceUrlById(id2), update)
               .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-              .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
+              .onComplete(event -> ctx.verify(() -> {
+                assertDuplicateError(event.result(), duplicatedField);
+                ctx.completeNow();
+              }));
           }))
       ));
+  }
+
+  private void assertDuplicateError(TestResponse response, String fieldName) {
+    var errors = response.jsonBody().getJsonArray("errors");
+    assertThat(errors.size(), is(1));
+
+    var error = errors.getJsonObject(0);
+    var errorParameters = error.getJsonArray("parameters");
+    assertThat(errorParameters.size(), is(1));
+
+    var parameter = errorParameters.getJsonObject(0);
+    assertThat(parameter.getString("key"), is(fieldName));
+  }
+
+  private static void deleteAllInstanceCustomLinkData(Vertx vertx, VertxTestContext ctx) {
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+
+    postgresClient.delete(INSTANCE_CUSTOM_LINK_TABLE, (CQLWrapper) null)
+      .onFailure(ctx::failNow)
+      .onComplete(event -> ctx.completeNow());
   }
 
   @SuppressWarnings("checkstyle:MethodLength")
@@ -271,7 +312,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "duplicate name")
           .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
-          .put("source", "local")
+          .put("source", "local"),
+        "name"
       ),
       arguments(
         new JsonObject()
@@ -283,7 +325,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "name 2")
           .put("baseUrl", "https://base2.host")
           .put("linkText", "duplicate text")
-          .put("source", "local")
+          .put("source", "local"),
+        "linkText"
       ),
       arguments(
         new JsonObject()
@@ -295,7 +338,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "name 2")
           .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 2")
-          .put("source", "local")
+          .put("source", "local"),
+        "baseUrl"
       )
     );
   }
@@ -318,7 +362,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "duplicate name")
           .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
-          .put("source", "local")
+          .put("source", "local"),
+        "name"
       ),
       arguments(
         new JsonObject()
@@ -335,7 +380,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "name 2")
           .put("baseUrl", "https://base2.host")
           .put("linkText", "duplicate text")
-          .put("source", "local")
+          .put("source", "local"),
+        "linkText"
       ),
       arguments(
         new JsonObject()
@@ -352,7 +398,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
           .put("name", "name 2")
           .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 2")
-          .put("source", "local")
+          .put("source", "local"),
+        "baseUrl"
       )
     );
   }
