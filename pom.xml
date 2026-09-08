@@ -109,9 +109,29 @@
     </dependencies>
   </dependencyManagement>
 
+
   <build>
 
     <plugins>
+      <plugin>
+        <groupId>org.openrewrite.maven</groupId>
+        <artifactId>rewrite-maven-plugin</artifactId>
+        <version>6.47.0</version>
+        <configuration>
+          <exportDatatables>true</exportDatatables>
+          <activeRecipes>
+            <recipe>org.openrewrite.java.testing.junit5.JUnit5BestPractices</recipe>
+          </activeRecipes>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.openrewrite.recipe</groupId>
+            <artifactId>rewrite-testing-frameworks</artifactId>
+            <version>3.45.0</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
       <plugin>
         <groupId>org.folio</groupId>
         <artifactId>folio-module-descriptor-validator</artifactId>
@@ -181,14 +201,6 @@
                   <sourceFile>${project.build.directory}/DeploymentDescriptor-template.json</sourceFile>
                   <destinationFile>${project.build.directory}/DeploymentDescriptor.json</destinationFile>
                 </fileSet>
-                <fileSet>
-                  <sourceFile>${project.build.directory}/DeploymentDescriptor-environment-template.json</sourceFile>
-                  <destinationFile>${project.build.directory}/DeploymentDescriptor-environment.json</destinationFile>
-                </fileSet>
-                <fileSet>
-                  <sourceFile>${project.build.directory}/Install-template.json</sourceFile>
-                  <destinationFile>${project.build.directory}/Install.json</destinationFile>
-                </fileSet>
               </fileSets>
             </configuration>
           </execution>
@@ -236,6 +248,10 @@
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
     </repository>
+    <repository>
+      <id>codegenome</id>
+      <url>https://artifacts.codegenomeproject.org/maven</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -244,6 +260,11 @@
       <name>FOLIO Maven repository</name>
       <url>https://repository.folio.org/repository/maven-folio</url>
     </pluginRepository>
+      <pluginRepository>
+        <id>codegenome</id>
+        <url>https://artifacts.codegenomeproject.org/maven</url>
+      </pluginRepository>
+
   </pluginRepositories>
 
   <distributionManagement>
