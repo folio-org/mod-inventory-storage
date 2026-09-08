@@ -91,11 +91,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>${joda-time.version}</version>
@@ -123,26 +118,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.junit.vintage</groupId>
-      <artifactId>junit-vintage-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit4.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>pl.pragmatists</groupId>
-      <artifactId>JUnitParams</artifactId>
-      <version>${JUnitParams.version}</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -191,8 +175,8 @@
     </dependency>
     <dependency>  <!-- for mocking env variable -->
       <groupId>uk.org.webcompere</groupId>
-      <artifactId>system-stubs-junit4</artifactId>
-      <version>${system-stubs-junit4.version}</version>
+      <artifactId>system-stubs-jupiter</artifactId>
+      <version>${system-stubs.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -408,13 +392,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <excludes>
-            <exclude>org/folio/rest/api/*Test.java</exclude>
-          </excludes>
-          <includes>
-            <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>**/*Test.java</include>
-          </includes>
           <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
                of translated error messages.
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven

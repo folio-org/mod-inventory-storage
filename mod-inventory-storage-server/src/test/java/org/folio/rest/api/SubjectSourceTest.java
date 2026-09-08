@@ -11,50 +11,49 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.http.ResourceClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class SubjectSourceTest extends TestBaseWithInventoryUtil {
+class SubjectSourceTest extends TestBaseWithInventoryUtil {
   private static ResourceClient subjectSourceClient;
   private static final String SUBJECT_SOURCE_ID = "e894d0dc-621d-4b1d-98f6-6f7120eb0d40";
 
   @SneakyThrows
-  @BeforeClass
-  public static void before() {
+  @BeforeAll
+  static void before() {
     prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
     subjectSourceClient = ResourceClient.forSubjectSources(getClient());
+  }
 
+  @SneakyThrows
+  @AfterAll
+  static void afterClass() {
+    removeTenant(CONSORTIUM_CENTRAL_TENANT);
+  }
+
+  @BeforeEach
+  void beforeEach() {
     mockUserTenantsForNonConsortiumMember();
     mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockConsortiumTenants();
   }
 
-  @SneakyThrows
-  @AfterClass
-  public static void afterClass() {
-    removeTenant(CONSORTIUM_CENTRAL_TENANT);
-  }
-
   @Test
-  public void cannotCreateSubjectSourceWithDuplicateName() {
+  void cannotCreateSubjectSourceWithDuplicateName() {
 
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings2")
@@ -71,9 +70,8 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSubjectSourceWithDuplicateCode()
-    throws InterruptedException, TimeoutException,
-    ExecutionException {
+  void cannotCreateSubjectSourceWithDuplicateCode()
+    throws Exception {
 
     JsonObject subjectSource = new JsonObject()
       .put("name", "Test")
@@ -95,7 +93,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSubjectSourceWithSourceFolio() {
+  void cannotCreateSubjectSourceWithSourceFolio() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings2")
       .put("source", "folio");
@@ -111,7 +109,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSubjectSourceWithSourceConsortiumAtNonEcs() {
+  void cannotCreateSubjectSourceWithSourceConsortiumAtNonEcs() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings2")
       .put("source", "consortium");
@@ -127,7 +125,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateSubjectSourceWithSourceConsortiumAtEcs() {
+  void canCreateSubjectSourceWithSourceConsortiumAtEcs() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings2")
       .put("source", "consortium");
@@ -138,7 +136,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateNonExistingSubjectSource() {
+  void cannotUpdateNonExistingSubjectSource() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings")
       .put("source", "local");
@@ -150,7 +148,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectSourceWithSourceFolio() {
+  void cannotUpdateSubjectSourceWithSourceFolio() {
     JsonObject subjectSource = new JsonObject()
       .put("name", "Library of Congress Subject Headings")
       .put("source", "local");
@@ -165,7 +163,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectSourceToFolio() {
+  void cannotUpdateSubjectSourceToFolio() {
     String subjectSourceId = UUID.randomUUID().toString();
 
     JsonObject subjectSource = new JsonObject()
@@ -185,7 +183,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectSourceToConsortiumAtNonEcs() {
+  void cannotUpdateSubjectSourceToConsortiumAtNonEcs() {
     String subjectSourceId = UUID.randomUUID().toString();
 
     JsonObject subjectSource = new JsonObject()
@@ -206,7 +204,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateSubjectSourceToConsortiumAtEcs() {
+  void canUpdateSubjectSourceToConsortiumAtEcs() {
     String subjectSourceId = UUID.randomUUID().toString();
 
     JsonObject subjectSource = new JsonObject()
@@ -223,7 +221,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateSubjectSourceToLocalAtEcs() {
+  void canUpdateSubjectSourceToLocalAtEcs() {
     String subjectSourceId = UUID.randomUUID().toString();
 
     JsonObject subjectSource = new JsonObject()
@@ -240,7 +238,7 @@ public class SubjectSourceTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteSubjectSourceLinkedToInstance() {
+  void cannotDeleteSubjectSourceLinkedToInstance() {
     var instanceId = UUID.randomUUID();
 
     JsonObject subjectSource = new JsonObject()

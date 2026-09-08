@@ -6,11 +6,11 @@ import static org.folio.rest.api.entities.PrecedingSucceedingTitle.SUCCEEDING_IN
 import static org.folio.rest.support.http.InterfaceUrls.precedingSucceedingTitleUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.json.JsonArray;
@@ -26,11 +26,11 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
+class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   private static final String INVALID_UUID_ERROR_MESSAGE = "Invalid UUID format of id, should be "
     + "xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx where M is 1-5 and N is 8, 9, a, b, A or B and x is 0-9, a-f or A-F.";
   private static final String HRID = "inst000000000022";
@@ -44,8 +44,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
    * If isolation between test classes gets fixed then this afterAll() should
    * not be necessary anymore.
    */
-  @AfterClass
-  public static void afterAll() {
+  @AfterAll
+  static void afterTest() {
     TestBase.afterAll();
 
     // Prevent tests from other classes from being affected by this data.
@@ -57,8 +57,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
@@ -73,7 +73,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateConnectedPrecedingSucceedingTitle() {
+  void canCreateConnectedPrecedingSucceedingTitle() {
     IndividualResource instance1Resource = createInstance("Title One");
     IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
@@ -87,7 +87,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateUnconnectedPrecedingTitle() {
+  void canCreateUnconnectedPrecedingTitle() {
     IndividualResource instanceResource = createInstance("Title One");
     String instanceId = instanceResource.getId().toString();
     JsonArray identifiers = new JsonArray();
@@ -101,7 +101,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateUnconnectedSucceedingTitle() {
+  void canCreateUnconnectedSucceedingTitle() {
     IndividualResource instanceResource = createInstance("Title One");
     String instanceId = instanceResource.getId().toString();
     JsonArray identifiers = new JsonArray();
@@ -115,7 +115,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateConnectedPrecedingSucceedingTitle() {
+  void canUpdateConnectedPrecedingSucceedingTitle() {
     IndividualResource instance1Resource = createInstance("Title One");
     IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
@@ -135,7 +135,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateUnconnectedPrecedingSucceedingTitle() {
+  void canUpdateUnconnectedPrecedingSucceedingTitle() {
     IndividualResource instance1Resource = createInstance("Title One");
     String instance1Id = instance1Resource.getId().toString();
     JsonArray identifiers = new JsonArray();
@@ -161,7 +161,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeletePrecedingSucceedingTitle() {
+  void canDeletePrecedingSucceedingTitle() {
     IndividualResource instanceResource = createInstance("Title One");
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
@@ -178,7 +178,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetPrecedingSucceedingTitleByQuery() {
+  void canGetPrecedingSucceedingTitleByQuery() {
     IndividualResource instance1Resource = createInstance("Title One");
     IndividualResource instance2Resource = createInstance("Title Two");
     String instance1Id = instance1Resource.getId().toString();
@@ -201,7 +201,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithNonExistingPrecedingInstance() {
+  void cannotCreatePrecedingSucceedingTitleWithNonExistingPrecedingInstance() {
     String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
     IndividualResource instanceResource = createInstance("Title One");
 
@@ -216,7 +216,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithNonExistingSucceedingInstance() {
+  void cannotCreatePrecedingSucceedingTitleWithNonExistingSucceedingInstance() {
     String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
 
     IndividualResource instance1Response = createInstance("Title One");
@@ -234,7 +234,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreatePrecedingSucceedingTitleWithEmptyPrecedingAndSucceedingInstanceId() {
+  void cannotCreatePrecedingSucceedingTitleWithEmptyPrecedingAndSucceedingInstanceId() {
     JsonArray identifiers = new JsonArray();
     identifiers.add(identifier(UUID_ISBN, "9781473619777"));
 
@@ -249,14 +249,14 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotGetByInvalidPrecedingSucceedingId() {
+  void cannotGetByInvalidPrecedingSucceedingId() {
     Response badParameterResponse = precedingSucceedingTitleClient.getByIdIfPresent("abc");
     assertThat(badParameterResponse.getStatusCode(), is(HttpResponseStatus.UNPROCESSABLE_ENTITY.code()));
     assertErrors(badParameterResponse, INVALID_UUID_ERROR_MESSAGE);
   }
 
   @Test
-  public void cannotPutByInvalidPrecedingSucceedingId() {
+  void cannotPutByInvalidPrecedingSucceedingId() {
     IndividualResource instance1Resource = createInstance("Title One");
 
     JsonArray identifiers = new JsonArray();
@@ -271,14 +271,14 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteByInvalidPrecedingSucceedingId() {
+  void cannotDeleteByInvalidPrecedingSucceedingId() {
     Response badParameterResponse = precedingSucceedingTitleClient.deleteIfPresent("abc");
     assertThat(badParameterResponse.getStatusCode(), is(HttpURLConnection.HTTP_BAD_REQUEST));
     assertThat(badParameterResponse.getBody(), is(INVALID_UUID_ERROR_MESSAGE));
   }
 
   @Test
-  public void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
+  void canUpdatePrecedingSucceedingTitleCollection() throws Exception {
     var instance1Resource = createInstance("Title One");
     var instanceId = instance1Resource.getId().toString();
 
@@ -298,7 +298,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
     cleanupTitles(existedTitles);
   }
 
-  private PrecedingSucceedingTitle createPrecedingSucceedingTitle(String instanceId) throws Exception {
+  private PrecedingSucceedingTitle createPrecedingSucceedingTitle(String instanceId) {
     var title = new PrecedingSucceedingTitle(instanceId, null, null, null, null);
     precedingSucceedingTitleClient.create(title.getJson());
     return title;
@@ -322,8 +322,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
 
   private void assertTitlesUpdatedCorrectly(List<JsonObject> existedTitles, String instanceId) {
     existedTitles.forEach(entry -> {
-      assertThat(entry.getString("succeedingInstanceId"), equalTo(instanceId));
-      assertThat(entry.getString("precedingInstanceId"), nullValue());
+      assertEquals(entry.getString("succeedingInstanceId"), instanceId);
+      assertNull(entry.getString("precedingInstanceId"));
     });
   }
 
@@ -333,7 +333,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void failedUpdatePrecedingSucceedingTitleCollectionWhenInstanceIsMissing() throws Exception {
+  void failedUpdatePrecedingSucceedingTitleCollectionWhenInstanceIsMissing() throws Exception {
     String missedInstanceId = UUID.randomUUID().toString();
     PrecedingSucceedingTitle precedingSucceedingTitle1 = new PrecedingSucceedingTitle(
       missedInstanceId, null, null, null, null);
@@ -352,7 +352,7 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void failedUpdatePrecedingSucceedingTitleCollectionWhenTitleNotContainsInstanceId() throws Exception {
+  void failedUpdatePrecedingSucceedingTitleCollectionWhenTitleNotContainsInstanceId() throws Exception {
     String instanceId = UUID.randomUUID().toString();
     PrecedingSucceedingTitle precedingSucceedingTitle = new PrecedingSucceedingTitle(
       null, null, null, null, null);
@@ -364,8 +364,8 @@ public class PrecedingSucceedingTitleTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.any(putCompleted));
     Response response = putCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(422));
-    assertThat(response.getBody(),
-      containsString("The precedingInstanceId or succeedingInstanceId should contain instanceId"));
+    assertTrue(response.getBody()
+      .contains("The precedingInstanceId or succeedingInstanceId should contain instanceId"));
   }
 
   private IndividualResource createInstance(String title) {

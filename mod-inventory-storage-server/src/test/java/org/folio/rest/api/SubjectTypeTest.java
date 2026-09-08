@@ -9,54 +9,52 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.http.ResourceClient;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class SubjectTypeTest extends TestBaseWithInventoryUtil {
+class SubjectTypeTest extends TestBaseWithInventoryUtil {
   private static ResourceClient subjectTypeClient;
   private static final String SUBJECT_TYPE_ID = "d6488f88-1e74-40ce-81b5-b19a928ff5b1";
 
   @SneakyThrows
-  @BeforeClass
-  public static void before() {
+  @BeforeAll
+  static void before() {
     subjectTypeClient = ResourceClient.forSubjectTypes(getClient());
     prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
+  }
 
+  @SneakyThrows
+  @AfterAll
+  static void afterClass() {
+    removeTenant(CONSORTIUM_CENTRAL_TENANT);
+  }
+
+  @BeforeEach
+  void beforeEach() {
     mockUserTenantsForNonConsortiumMember();
     mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockConsortiumTenants();
   }
 
-  @SneakyThrows
-  @AfterClass
-  public static void afterClass() {
-    removeTenant(CONSORTIUM_CENTRAL_TENANT);
-  }
-
   @Test
-  public void cannotCreateSubjectTypeWithDuplicateName()
-    throws InterruptedException, TimeoutException,
-    ExecutionException {
+  void cannotCreateSubjectTypeWithDuplicateName()
+    throws Exception {
 
     JsonObject subjectType = new JsonObject()
       .put("name", "Topical name")
@@ -75,7 +73,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSubjectTypeWithSourceFolio() {
+  void cannotCreateSubjectTypeWithSourceFolio() {
     JsonObject subjectType = new JsonObject()
       .put("name", "Topical name2")
       .put("source", "folio");
@@ -91,7 +89,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSubjectTypeWithSourceConsortiumAtNonEcs() {
+  void cannotCreateSubjectTypeWithSourceConsortiumAtNonEcs() {
     JsonObject subjecType = new JsonObject()
       .put("name", "Topical name2")
       .put("source", "consortium");
@@ -107,7 +105,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateSubjectTypeWithSourceConsortiumAtEcs() {
+  void canCreateSubjectTypeWithSourceConsortiumAtEcs() {
     JsonObject subjectType = new JsonObject()
       .put("name", "Topical name2")
       .put("source", "consortium");
@@ -118,7 +116,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateNonExistingSubjectType() {
+  void cannotUpdateNonExistingSubjectType() {
     JsonObject subjectType = new JsonObject()
       .put("name", "Library of Congress Subject Headings")
       .put("source", "local");
@@ -130,7 +128,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectTypeWithSourceFolio() {
+  void cannotUpdateSubjectTypeWithSourceFolio() {
     JsonObject subjectType = new JsonObject()
       .put("name", "Topical name2")
       .put("source", "local");
@@ -146,7 +144,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectTypeToFolio() {
+  void cannotUpdateSubjectTypeToFolio() {
     String subjectTypeId = UUID.randomUUID().toString();
 
     JsonObject subjectType = new JsonObject()
@@ -166,7 +164,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateSubjectTypeToConsortiumAtNonEcs() {
+  void cannotUpdateSubjectTypeToConsortiumAtNonEcs() {
     String subjectTypeId = UUID.randomUUID().toString();
 
     JsonObject subjectType = new JsonObject()
@@ -186,7 +184,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateSubjectTypeToConsortiumAtEcs() {
+  void canUpdateSubjectTypeToConsortiumAtEcs() {
     String subjectTypeId = UUID.randomUUID().toString();
 
     JsonObject subjectType = new JsonObject()
@@ -203,7 +201,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateSubjectTypeToLocalAtEcs() {
+  void canUpdateSubjectTypeToLocalAtEcs() {
     String subjectTypeId = UUID.randomUUID().toString();
 
     JsonObject subjectType = new JsonObject()
@@ -220,7 +218,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteSubjectTypeLinkedToInstance() {
+  void cannotDeleteSubjectTypeLinkedToInstance() {
     var instanceId = UUID.randomUUID();
 
     JsonObject subjectType = new JsonObject()
@@ -246,7 +244,7 @@ public class SubjectTypeTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void clearLinksBetweenSubjectTypeAndInstance() {
+  void clearLinksBetweenSubjectTypeAndInstance() {
     var instanceId = UUID.randomUUID();
 
     JsonObject subjectType = new JsonObject()

@@ -37,9 +37,9 @@ import org.folio.rest.support.fixtures.InstanceReindexFixture;
 import org.folio.rest.support.fixtures.StatisticalCodeFixture;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
@@ -51,7 +51,6 @@ public abstract class TestBase {
    * timeout in seconds for simple requests. Usage: completableFuture.get(TIMEOUT, TimeUnit.SECONDS)
    */
   public static final long TIMEOUT = 100;
-  public static final String SUPPORTED_CONTENT_TYPE_JSON_DEF = "application/json";
   public static ResourceClient holdingsClient;
   protected static final Logger logger = LogManager.getLogger();
   protected static ResourceClient instancesClient;
@@ -77,7 +76,7 @@ public abstract class TestBase {
   static InstanceReindexFixture instanceReindex;
   static AsyncMigrationFixture asyncMigration;
 
-  @BeforeClass
+  @BeforeAll
   public static void beforeAll() {
     logger.info("starting @BeforeClass testBaseBeforeClass()");
 
@@ -117,9 +116,13 @@ public abstract class TestBase {
     settingsClient = ResourceClient.forSettings(getClient());
   }
 
-  @AfterClass
+  @AfterAll
   public static void afterAll() {
-    KAFKA_CONSUMER.unsubscribe();
+    try {
+      KAFKA_CONSUMER.unsubscribe();
+    } catch (Exception e) {
+      logger.warn("Unsubscribe failed with: ", e);
+    }
   }
 
   /**
@@ -195,7 +198,7 @@ public abstract class TestBase {
   }
 
   @SneakyThrows
-  @Before
+  @BeforeEach
   public void removeAllEvents() {
     KAFKA_CONSUMER.discardAllMessages();
   }

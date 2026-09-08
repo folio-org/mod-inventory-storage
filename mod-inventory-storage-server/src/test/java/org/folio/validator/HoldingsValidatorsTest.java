@@ -1,8 +1,8 @@
 package org.folio.validator;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.rest.exceptions.ValidationException;
@@ -46,6 +46,6 @@ class HoldingsValidatorsTest {
 
     assertThat(result.failed(), is(true));
     assertThat(result.cause() instanceof ValidationException, is(true));
-    assertThat(result.cause().getMessage(), containsString(fieldName));
+    assertTrue(result.cause().getMessage().contains(fieldName));
   }
 }

@@ -1,8 +1,8 @@
 package org.folio.persist;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import io.vertx.core.Vertx;
 import java.util.Map;
@@ -17,7 +17,7 @@ class HoldingsRepositoryTest {
     var headers = Map.of("X-Okapi-Tenant", "diku");
     var holdingsRepository = new HoldingsRepository(context, headers);
     var future = holdingsRepository.getByInstanceId(null, sortBys, 0, 0);
-    assertThat(future.cause(), is(instanceOf(IllegalArgumentException.class)));
+    assertInstanceOf(IllegalArgumentException.class, future.cause());
     assertThat(future.cause().getMessage(), is("sortBy: foo"));
   }
 }

@@ -7,8 +7,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -20,11 +20,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.ObjectUtils;
-import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider;
 import org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider.PermTemp;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
@@ -32,17 +29,17 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.messages.HoldingsEventMessageChecks;
 import org.folio.rest.support.messages.ItemEventMessageChecks;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Test cases to verify effectiveLocationId property calculation that implemented
  * as two triggers for holdings_record and item tables (see itemEffectiveLocation.sql).
  */
-@RunWith(JUnitParamsRunner.class)
-public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
+class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   private static final UUID INSTANCE_ID = UUID.randomUUID();
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
@@ -52,12 +49,13 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     clearData();
     setupMaterialTypes();
     setupLoanTypes();
     setupLocations();
+    mockUserTenantsForNonConsortiumMember();
 
     // Create once to be used by the many parameterized unit test in
     // canCalculateEffectiveLocationOnIHoldingUpdate(PermTemp, PermTemp, PermTemp)
@@ -67,8 +65,8 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIds("item");
     StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
@@ -99,7 +97,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() {
+  void canCalculateEffectiveLocationOnHoldingRemoveTempLocationShouldBeHoldingPermLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     final Item[] itemsToCreate = {
@@ -120,12 +118,12 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
 
     for (Item item : itemsToCreate) {
       Item fetchedItem = getItem(item.getId());
-      assertEquals(fetchedItem.toString(), fetchedItem.getEffectiveLocationId(), MAIN_LIBRARY_LOCATION_ID.toString());
+      assertEquals(fetchedItem.getEffectiveLocationId(), MAIN_LIBRARY_LOCATION_ID.toString(), fetchedItem.toString());
     }
   }
 
   @Test
-  public void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() {
+  void canCalculateEffectiveLocationOnHoldingUpdateWhenSomeItemsHasLocation() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
 
     Item itemWithPermLocation = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
@@ -166,10 +164,10 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
    * @param itemStartLoc permanent and temporary location of the item before the update
    * @param itemEndLoc   permanent and temporary location of the item after the update
    */
-  @Test
-  @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
-              method = "canCalculateEffectiveLocationOnItemUpdateParams")
-  public void canCalculateEffectiveLocationOnItemUpdate(
+  @ParameterizedTest
+  @MethodSource("org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider#"
+    + "canCalculateEffectiveLocationOnItemUpdateParams")
+  void canCalculateEffectiveLocationOnItemUpdate(
     PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) {
 
     UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingLoc.perm, holdingLoc.temp);
@@ -189,10 +187,10 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
       is(effectiveLocation(holdingLoc, itemEndLoc)));
   }
 
-  @Test
-  @Parameters(source = ItemEffectiveLocationTestDataProvider.class,
-              method = "canCalculateEffectiveLocationOnHoldingUpdateParams")
-  public void canCalculateEffectiveLocationHoldingUpdate(
+  @ParameterizedTest
+  @MethodSource("org.folio.rest.api.testdata.ItemEffectiveLocationTestDataProvider#"
+    + "canCalculateEffectiveLocationOnHoldingUpdateParams")
+  void canCalculateEffectiveLocationHoldingUpdate(
     PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) {
 
     UUID holdingsRecordId = createHolding(INSTANCE_ID, holdingStartLoc.perm, holdingStartLoc.temp);
@@ -225,7 +223,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void responseContainsAllRequiredHeaders() throws Exception {
+  void responseContainsAllRequiredHeaders() throws Exception {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
 
     CompletableFuture<HttpResponse<Buffer>> createCompleted = new CompletableFuture<>();
@@ -238,11 +236,11 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
     HttpResponse<Buffer> response = createCompleted.get(TIMEOUT, TimeUnit.SECONDS);
 
     assertThat(response.statusCode(), is(201));
-    assertThat(response.getHeader("location"), not(is(emptyString())));
+    assertThat(response.getHeader("location"), not(emptyString()));
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() {
+  void canCalculateEffectiveLocationWhenItemAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(ONLINE_LOCATION_ID, SECOND_FLOOR_LOCATION_ID);
 
@@ -261,7 +259,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() {
+  void canCalculateEffectiveLocationWhenItemHasPermLocationAndAssociatedToAnotherHolding() {
     UUID initialHoldingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     UUID updatedHoldingRecordId = createInstanceAndHolding(SECOND_FLOOR_LOCATION_ID);
 
@@ -283,7 +281,7 @@ public class ItemEffectiveLocationTest extends TestBaseWithInventoryUtil {
    * Does "UPDATE item" correctly set both item.jsonb->>'effectiveLocationId' and item.effectiveLocationId?.
    */
   @Test
-  public void canSetTableFieldOnItemUpdate() {
+  void canSetTableFieldOnItemUpdate() {
     UUID holdingsRecordId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID, ANNEX_LIBRARY_LOCATION_ID);
     Item item = buildItem(holdingsRecordId, ONLINE_LOCATION_ID, null);
     createItem(item);

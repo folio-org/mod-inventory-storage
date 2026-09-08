@@ -14,24 +14,21 @@ import static org.folio.utility.ModuleUtility.prepareTenant;
 import static org.folio.utility.ModuleUtility.removeTenant;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import io.vertx.core.json.JsonObject;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class SampleDataTest extends TestBaseWithInventoryUtil {
+class SampleDataTest extends TestBaseWithInventoryUtil {
 
   /**
    * Remove tenant WITHOUT sample data,
@@ -39,8 +36,8 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
    * Omit update for now.. It hangs for unknown reasons when using Embedded Postgres MODINVSTOR-369
    */
   @SneakyThrows
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     TestBase.beforeAll();
 
     removeTenant(TENANT_ID);
@@ -53,41 +50,41 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void instanceCount() {
+  void instanceCount() {
     assertCount(instancesStorageUrl("?limit=100"), "instances", 36);
   }
 
   @Test
-  public void holdingsCount() {
+  void holdingsCount() {
     assertCount(holdingsStorageUrl("?limit=100"), "holdingsRecords", 20);
   }
 
   @Test
-  public void itemCount() {
+  void itemCount() {
     assertCount(itemsStorageUrl("?limit=100"), "items", 25);
   }
 
   @Test
-  public void instanceRelationshipsCount() {
+  void instanceRelationshipsCount() {
     assertCount(instanceRelationshipsUrl("?limit=100"), "instanceRelationships", 5);
   }
 
   @Test
-  public void boundWithPartsCount() {
+  void boundWithPartsCount() {
     assertCount(boundWithPartsUrl("?limit=100"), "boundWithParts", 10);
   }
 
   @Test
-  public void holdingsRecordTransparentWater() {
+  void holdingsRecordTransparentWater() {
     var holdingsRecord = get(holdingsStorageUrl("/e9285a1c-1dfc-4380-868c-e74073003f43"));
-    assertThat(holdingsRecord.getString("instanceId"), notNullValue());
+    assertNotNull(holdingsRecord.getString("instanceId"));
     assertThat(holdingsRecord.getString("callNumber"), is("M1366.S67 T73 2017"));
     assertThat(holdingsRecord.getString("permanentLocationId"), is("fcd64ce1-6995-48f0-840e-89ffa2288371"));
     assertMetadata(holdingsRecord);
   }
 
   @Test
-  public void instanceTransparentWater() {
+  void instanceTransparentWater() {
     var holdingsRecord = get(holdingsStorageUrl("/e9285a1c-1dfc-4380-868c-e74073003f43"));
     var instanceId = holdingsRecord.getString("instanceId");
     var instance = get(instancesStorageUrl("/" + instanceId));
@@ -96,7 +93,7 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void itemSemanticWebPrimer() {
+  void itemSemanticWebPrimer() {
     var item = get(itemsStorageUrl("/7212ba6a-8dcf-45a1-be9a-ffaa847c4423"));
     var status = item.getJsonObject("status");
     assertThat(status.getString("name"), is("Available"));
@@ -106,13 +103,13 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void instanceRelationshipGlobalAfrica2() {
+  void instanceRelationshipGlobalAfrica2() {
     var ir = getInstanceRelationship("e5cea7b1-3c48-428c-bc5e-2efc9ead1924");
 
-    assertThat("Instance relationship could not be found", ir, notNullValue());
+    assertNotNull(ir, "Instance relationship could not be found");
 
-    assertThat(ir.getString("superInstanceId"), notNullValue());
-    assertThat(ir.getString("subInstanceId"), notNullValue());
+    assertNotNull(ir.getString("superInstanceId"));
+    assertNotNull(ir.getString("subInstanceId"));
     assertThat(ir.getString("instanceRelationshipTypeId"), is("30773a27-b485-4dab-aeb6-b8c04fa3cb17"));
     assertMetadata(ir);
 
@@ -132,11 +129,11 @@ public class SampleDataTest extends TestBaseWithInventoryUtil {
    */
   private void assertMetadata(JsonObject entity) {
     var metadata = entity.getJsonObject("metadata");
-    assertThat(metadata, is(notNullValue()));
-    assertThat(metadata.getString("createdDate"), is(notNullValue()));
-    assertThat(metadata.getString("createdByUserId"), is(nullValue()));
-    assertThat(metadata.getString("updatedDate"), is(notNullValue()));
-    assertThat(metadata.getString("updatedByUserId"), is(nullValue()));
+    assertNotNull(metadata);
+    assertNotNull(metadata.getString("createdDate"));
+    assertNull(metadata.getString("createdByUserId"));
+    assertNotNull(metadata.getString("updatedDate"));
+    assertNull(metadata.getString("updatedByUserId"));
   }
 
   @SneakyThrows

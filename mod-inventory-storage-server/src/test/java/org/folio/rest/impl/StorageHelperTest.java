@@ -1,11 +1,11 @@
 package org.folio.rest.impl;
 
 import org.folio.okapi.testing.UtilityClassTester;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class StorageHelperTest {
+class StorageHelperTest {
   @Test
-  public void isUtilityClass() {
+  void isUtilityClass() {
     UtilityClassTester.assertUtilityClass(StorageHelper.class);
   }
 }

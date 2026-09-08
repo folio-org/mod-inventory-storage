@@ -3,6 +3,7 @@ package org.folio.services.consortium;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -18,13 +19,16 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 import io.vertx.core.Future;
@@ -34,15 +38,16 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import lombok.SneakyThrows;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.InventoryKafkaTopic;
@@ -55,22 +60,24 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
 import org.folio.utility.ModuleUtility;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(VertxUnitRunner.class)
-public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
+@ExtendWith({VertxExtension.class, MockitoExtension.class})
+class ShadowInstanceSynchronizationHandlerTest extends TestBase {
 
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort());
+  @RegisterExtension
+  static WireMockExtension mockServer = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
+      .notifier(new ConsoleNotifier(false))
+      .dynamicPort())
+    .configureStaticDsl(true)
+    .build();
 
   private static final String SHARING_JOBS_PATH = "/consortia/.{36}/sharing/instances";
   private static final String CENTRAL_TENANT_ID = "mobius";
@@ -87,22 +94,19 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     .withName("Default Instance Type")
     .withSource("local");
 
-  private final Vertx vertx = Vertx.vertx();
-
   @Mock
   private ConsortiumDataCache consortiaDataCache;
   private ShadowInstanceSynchronizationHandler synchronizationHandler;
 
-  @BeforeClass
-  public static void setUpClass() throws ExecutionException, InterruptedException, TimeoutException {
+  @BeforeAll
+  static void setUpClass() throws ExecutionException, InterruptedException, TimeoutException {
     ModuleUtility.prepareTenant(CENTRAL_TENANT_ID, false);
     createInstanceType(INSTANCE_TYPE, CENTRAL_TENANT_ID);
     createInstanceType(INSTANCE_TYPE, TENANT_ID);
   }
 
-  @Before
-  public void setUp() {
-    MockitoAnnotations.openMocks(this);
+  @BeforeEach
+  void setUp(Vertx vertx) {
     clearData(instancesStorageUrl(""), TENANT_ID);
     synchronizationHandler =
       new ShadowInstanceSynchronizationHandler(consortiaDataCache, vertx.createHttpClient(), vertx);
@@ -115,14 +119,16 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
 
     WireMock.stubFor(WireMock.get(new UrlPathPattern(new RegexPattern(SHARING_JOBS_PATH), true))
       .willReturn(WireMock.ok().withBody(sharingCollection.encodePrettily())));
-    Mockito.when(consortiaDataCache.getConsortiumData(anyString(), anyMap()))
-      .thenReturn(Future.succeededFuture(Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID,
-        emptyList()))));
+  }
+
+  private void mockConsortiumDataCache() {
+    when(consortiaDataCache.getConsortiumData(anyString(), anyMap()))
+      .thenReturn(succeededFuture(Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, emptyList()))));
   }
 
   @Test
-  public void shouldUpdateShadowInstance(TestContext context)
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void shouldUpdateShadowInstance(VertxTestContext context) {
+    mockConsortiumDataCache();
     Instance shadowInstance = new Instance()
       .withId(UUID.randomUUID().toString())
       .withInstanceTypeId(INSTANCE_TYPE_ID)
@@ -143,12 +149,14 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
 
     synchronizationHandler.handle(kafkaRecord)
       .compose(v -> getInstanceById(sharedInstance.getId(), TENANT_ID))
-      .onComplete(context.asyncAssertSuccess(
-        updatedShadowInstance -> context.assertEquals(sharedInstance.getTitle(), updatedShadowInstance.getTitle())));
+      .onComplete(context.succeeding(updatedShadowInstance -> {
+        context.verify(() -> assertEquals(sharedInstance.getTitle(), updatedShadowInstance.getTitle()));
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldNotUpdateShadowInstanceIfEventTypeIsNotUpdate(TestContext context) {
+  void shouldNotUpdateShadowInstanceIfEventTypeIsNotUpdate(VertxTestContext context) {
     Instance instance = new Instance()
       .withId(UUID.randomUUID().toString())
       .withInstanceTypeId(INSTANCE_TYPE_ID)
@@ -156,26 +164,34 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
       .withSource("MARC");
 
     DomainEvent<Instance> event = DomainEvent.createEvent(instance, CENTRAL_TENANT_ID);
-    context.assertNotEquals(DomainEventType.UPDATE, event.getType());
+    assertNotEquals(DomainEventType.UPDATE, event.getType());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
     synchronizationHandler.handle(kafkaRecord)
-      .onComplete(context.asyncAssertSuccess(v -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)))));
+      .onComplete(context.succeeding(v -> {
+        context.verify(() -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH))));
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldNotInitiateShadowInstanceUpdateIfEventContainsNonCentralTenant(TestContext context) {
+  void shouldNotInitiateShadowInstanceUpdateIfEventContainsNonCentralTenant(VertxTestContext context) {
+    mockConsortiumDataCache();
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
     DomainEvent<Instance> event = DomainEvent.updateEvent(instance, instance, TENANT_ID);
-    context.assertNotEquals(CENTRAL_TENANT_ID, event.getTenant());
+    assertNotEquals(CENTRAL_TENANT_ID, event.getTenant());
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
     synchronizationHandler.handle(kafkaRecord)
-      .onComplete(context.asyncAssertSuccess(v -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH)))));
+      .onComplete(context.succeeding(v -> {
+        context.verify(() -> verify(0, getRequestedFor(urlMatching(SHARING_JOBS_PATH))));
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldReturnFailedFutureIfFailedToGetInstanceSharingActions(TestContext context) {
+  void shouldReturnFailedFutureIfFailedToGetInstanceSharingActions(VertxTestContext context) {
+    mockConsortiumDataCache();
     WireMock.stubFor(WireMock.get(new UrlPathPattern(new RegexPattern(SHARING_JOBS_PATH), true))
       .willReturn(WireMock.serverError()));
 
@@ -184,7 +200,10 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
     KafkaConsumerRecordImpl<String, String> kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
     synchronizationHandler.handle(kafkaRecord)
-      .onComplete(context.asyncAssertFailure(v -> verify(1, getRequestedFor(urlMatching(SHARING_JOBS_PATH + ".+")))));
+      .onComplete(context.failing(v -> {
+        context.verify(() -> verify(1, getRequestedFor(urlMatching(SHARING_JOBS_PATH + ".+"))));
+        context.completeNow();
+      }));
   }
 
   private static void createInstanceType(InstanceType instanceType, String tenantId)
@@ -198,8 +217,8 @@ public class ShadowInstanceSynchronizationHandlerTest extends TestBase {
       response.getStatusCode(), is(HTTP_CREATED));
   }
 
-  private void createInstance(Instance instanceToCreate, String tenantId)
-    throws InterruptedException, ExecutionException, TimeoutException {
+  @SneakyThrows
+  private void createInstance(Instance instanceToCreate, String tenantId) {
 
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
     getClient().post(instancesStorageUrl(""), instanceToCreate, tenantId, json(createCompleted));

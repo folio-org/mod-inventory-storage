@@ -12,10 +12,11 @@ import static org.folio.rest.jaxrs.model.ServicePoint.HoldShelfClosedLibraryDate
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -701,7 +702,7 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<ServicePoi
   private void verifyServicePointWithStaffSlips(TestResponse response, String code, String name,
                                                   String uuidTrue, String uuidFalse, VertxTestContext ctx) {
     JsonObject json = response.jsonBody();
-    assertThat(json.getString("id"), notNullValue());
+    assertNotNull(json.getString("id"));
     assertThat(json.getString("code"), is(code));
     assertThat(json.getString("name"), is(name));
     JsonArray slips = json.getJsonArray("staffSlips");
@@ -756,9 +757,9 @@ public class ServicePointsIT extends BaseReferenceDataIntegrationTest<ServicePoi
     assertThat(servicePointIds, hasItems(spId1.toString(), spId2.toString()));
     if (shouldReturnRoutingServicePoints) {
       assertThat(servicePointIds, hasItem(spId3.toString()));
-      assertThat(servicePointIds, hasSize(3));
+      assertEquals(3, servicePointIds.size());
     } else {
-      assertThat(servicePointIds, hasSize(2));
+      assertEquals(2, servicePointIds.size());
     }
     ctx.completeNow();
   }

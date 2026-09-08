@@ -5,9 +5,9 @@ import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.HoldingsRecordsSourceApi.HOLDINGS_RECORDS_SOURCE_TABLE;
 import static org.folio.rest.jaxrs.model.HoldingsRecordsSource.Source.LOCAL;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -139,7 +139,7 @@ class HoldingsSourcesIT extends BaseReferenceDataIntegrationTest<HoldingsRecords
           JsonArray errors = response.jsonBody().getJsonArray("errors");
           assertThat(errors.size(), is(1));
           JsonObject firstError = errors.getJsonObject(0);
-          assertThat(firstError.getString("message"), containsString("must match"));
+          assertTrue(firstError.getString("message").contains("must match"));
           assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"), is("id"));
         });
         ctx.completeNow();

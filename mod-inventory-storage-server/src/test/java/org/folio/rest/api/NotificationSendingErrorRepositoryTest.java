@@ -12,11 +12,11 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 import org.folio.rest.persist.PgUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class NotificationSendingErrorRepositoryTest extends TestBaseWithInventoryUtil {
+class NotificationSendingErrorRepositoryTest extends TestBaseWithInventoryUtil {
   @Test
-  public void canSaveNotificationError() {
+  void canSaveNotificationError() {
     var repository = createRepository();
     var originalError = new NotificationSendingError(UUID.randomUUID().toString(),
       "topic", "key", "value", "error\nerror2", new Date());

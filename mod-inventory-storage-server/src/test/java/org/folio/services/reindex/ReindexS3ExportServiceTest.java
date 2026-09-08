@@ -4,7 +4,7 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.api.TestBase.get;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -19,15 +19,18 @@ import java.io.InputStream;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.exception.S3ClientException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReindexS3ExportServiceTest {
+@MockitoSettings(strictness = Strictness.WARN)
+@ExtendWith(MockitoExtension.class)
+class ReindexS3ExportServiceTest {
 
   private static final String S3_KEY = "tenant/instance/trace/range.ndjson";
   private static final String UPLOAD_ID = "upload-id-1";
@@ -40,8 +43,8 @@ public class ReindexS3ExportServiceTest {
 
   private ReindexS3ExportService exportService;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     // 1-byte threshold forces a part upload after every row.
     // 5 retry attempts with 1ms base delay so transient-failure tests are fast.
     exportService = new ReindexS3ExportService(vertxContext, s3Client, 1L, 5, 1L);
@@ -67,7 +70,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_noRows_writesEmptyFileViaSinglePutWithoutMultipart() {
+  void exportToS3_noRows_writesEmptyFileViaSinglePutWithoutMultipart() {
     get(exportService.exportToS3(new TestRowStream(0), S3_KEY));
 
     verify(s3Client).write(eq(S3_KEY), any(), eq(0L));
@@ -77,7 +80,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_noRows_writesEmptyFileWithResettableStream() {
+  void exportToS3_noRows_writesEmptyFileWithResettableStream() {
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
 
     get(exportService.exportToS3(new TestRowStream(0), S3_KEY));
@@ -91,7 +94,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_singleRow_singlePartUploadedAndCompleted() {
+  void exportToS3_singleRow_singlePartUploadedAndCompleted() {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
 
@@ -102,7 +105,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_multipleRows_multiplePartsUploadedAndCompleted() {
+  void exportToS3_multipleRows_multiplePartsUploadedAndCompleted() {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
 
@@ -113,7 +116,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_initiateMultipartFails_futureFailsWithoutAbort() {
+  void exportToS3_initiateMultipartFails_futureFailsWithoutAbort() {
     var cause = new RuntimeException("S3 unavailable");
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(cause);
 
@@ -127,7 +130,7 @@ public class ReindexS3ExportServiceTest {
   // multipart methods, so we wrap them with our own backoff retry) ----
 
   @Test
-  public void exportToS3_initiateMultipart_retriesOnTransient503() {
+  void exportToS3_initiateMultipart_retriesOnTransient503() {
     when(s3Client.initiateMultipartUpload(S3_KEY))
       .thenThrow(slowDown503())   // attempt 1: 503 SlowDown
       .thenThrow(slowDown503())   // attempt 2: 503 SlowDown
@@ -141,7 +144,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_completeMultipart_retriesOnTransient500InternalError() {
+  void exportToS3_completeMultipart_retriesOnTransient500InternalError() {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
     org.mockito.Mockito.doThrow(internalError500())
@@ -155,7 +158,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_initiateMultipart_givesUpAfterMaxAttempts() {
+  void exportToS3_initiateMultipart_givesUpAfterMaxAttempts() {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(slowDown503());
 
     var exportFuture = exportService.exportToS3(new TestRowStream(1), S3_KEY);
@@ -166,7 +169,7 @@ public class ReindexS3ExportServiceTest {
   }
 
   @Test
-  public void exportToS3_nonRetryableException_failsImmediately() {
+  void exportToS3_nonRetryableException_failsImmediately() {
     // S3ClientException with a 403 (auth) is not in the retryable list
     var authError = new S3ClientException("Access denied",
       new RuntimeException("Response code: 403, body: AccessDenied"));

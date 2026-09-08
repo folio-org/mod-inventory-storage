@@ -21,6 +21,11 @@ import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT
 import static org.folio.utility.LocationUtility.createServicePoint;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
+import static org.folio.utility.RestUtility.CONSORTIUM_ID;
+import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -30,9 +35,9 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpResponseHead;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.client.common.TopicPartition;
 import io.vertx.kafka.client.consumer.OffsetAndMetadata;
@@ -44,171 +49,190 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 import lombok.SneakyThrows;
-import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.utility.ModuleUtility;
 import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import uk.org.webcompere.systemstubs.rules.EnvironmentVariablesRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-@RunWith(VertxUnitRunner.class)
-public class ServicePointSynchronizationVerticleTest extends TestBaseWithInventoryUtil {
+@ExtendWith({VertxExtension.class, SystemStubsExtension.class})
+class ServicePointSynchronizationVerticleTest extends TestBaseWithInventoryUtil {
 
-  private static final String CENTRAL_TENANT_ID = "consortium";
-  private static final String COLLEGE_TENANT_ID = "college";
   private static final String SERVICE_POINT_TOPIC = format(
-    "%s.%s.inventory.service-point", environment(), CENTRAL_TENANT_ID);
+    "%s.%s.inventory.service-point", environment(), CONSORTIUM_CENTRAL_TENANT);
   private static final String KAFKA_SERVER_URL = format("%s:%s", host(), port());
-  private static final String SERVICE_POINT_ID = UUID.randomUUID().toString();
-  private static final String CONSORTIUM_ID = UUID.randomUUID().toString();
-  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants".formatted(
-    CONSORTIUM_ID);
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
+
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
-  @Rule
-  public EnvironmentVariablesRule environmentVariablesRule =
-    new EnvironmentVariablesRule(ECS_TLR_FEATURE_ENABLED, "true");
 
-  @BeforeClass
-  public static void setUpClass() throws Exception {
-    ModuleUtility.prepareTenant(CENTRAL_TENANT_ID, false);
-    ModuleUtility.prepareTenant(COLLEGE_TENANT_ID, false);
+  @SystemStub
+  private EnvironmentVariables env = new EnvironmentVariables(ECS_TLR_FEATURE_ENABLED, "true");
+  // Generated fresh per test in setUp() rather than once for the class: reusing a fixed id let a
+  // still-draining async propagation from a previous test race the next test's own create with a
+  // duplicate-key error.
+  private String servicePointId;
+
+  @BeforeAll
+  static void setUpClass() throws Exception {
+    ModuleUtility.prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
+    ModuleUtility.prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
 
     producer = createProducer();
     adminClient = createAdminClient();
   }
 
-  @Before
-  public void setUp() {
-    clearData(CENTRAL_TENANT_ID);
-    clearData(COLLEGE_TENANT_ID);
+  @BeforeEach
+  void setUp() {
+    servicePointId = UUID.randomUUID().toString();
+    clearData(CONSORTIUM_CENTRAL_TENANT);
+    clearData(CONSORTIUM_MEMBER_TENANT);
     mockUserTenantsForConsortiumMember();
     mockConsortiumTenants();
     mockUserTenantsForNonConsortiumMember();
-    assertTrue(Boolean.parseBoolean(System.getenv().getOrDefault(ECS_TLR_FEATURE_ENABLED,
-      "false")));
+    assertTrue(Boolean.parseBoolean(System.getenv().getOrDefault(ECS_TLR_FEATURE_ENABLED, "false")));
   }
 
-  @AfterClass
-  public static void tearDownClass() throws ExecutionException, InterruptedException,
-    TimeoutException {
-
-    ModuleUtility.removeTenant(CENTRAL_TENANT_ID);
-    ModuleUtility.removeTenant(COLLEGE_TENANT_ID);
-    waitFor(producer.close().compose(v -> adminClient.close())
-    );
+  @SneakyThrows
+  @AfterAll
+  static void tearDownClass() {
+    ModuleUtility.removeTenant(CONSORTIUM_CENTRAL_TENANT);
+    ModuleUtility.removeTenant(CONSORTIUM_MEMBER_TENANT);
+    waitFor(producer.close().compose(v -> adminClient.close()));
   }
 
   @Test
-  public void shouldPropagateCreationOfServicePointOnLendingTenant(TestContext context) {
-    var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
+  void shouldPropagateCreationOfServicePointOnLendingTenant(VertxTestContext context) {
+    var servicePointFromCentralTenant = createServicePointAgainstTenant(CONSORTIUM_CENTRAL_TENANT, false);
 
     int initialOffset = getOffsetForServicePointCreateEvents();
     publishServicePointCreateEvent(servicePointFromCentralTenant);
     waitUntilValueIsIncreased(initialOffset,
       ServicePointSynchronizationVerticleTest::getOffsetForServicePointCreateEvents);
-    getServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(collegeServicePoint ->
-        context.assertEquals(servicePointFromCentralTenant.getId(), collegeServicePoint.getId())));
+
+    var collegeServicePoint = waitForServicePointOnTenant(CONSORTIUM_MEMBER_TENANT);
+    assertEquals(servicePointFromCentralTenant.getId(), collegeServicePoint.getId());
+    context.completeNow();
   }
 
   @Test
-  public void shouldPropagateUpdateOfServicePointOnLendingTenant(TestContext context) {
-    var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID,
-      true);
-    var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID,
-      false);
+  void shouldPropagateUpdateOfServicePointOnLendingTenant(VertxTestContext context) {
+    var servicePointFromCentralTenant = createServicePointAgainstTenant(CONSORTIUM_CENTRAL_TENANT, false);
 
-    int initialOffset = getOffsetForServicePointUpdateEvents();
-    publishServicePointUpdateEvent(servicePointFromDataTenant, servicePointFromCentralTenant);
-    waitUntilValueIsIncreased(initialOffset,
+    // Creating the central service point already triggers the verticle's own create-propagation
+    // to the member tenant (ECS_TLR_FEATURE_ENABLED=true). Wait for that shadow copy instead of
+    // also creating one directly against the member tenant: the two would race on the same id and
+    // whichever loses gets a duplicate-key error from postServicePoints.
+    int createOffset = getOffsetForServicePointCreateEvents();
+    publishServicePointCreateEvent(servicePointFromCentralTenant);
+    waitUntilValueIsIncreased(createOffset,
+      ServicePointSynchronizationVerticleTest::getOffsetForServicePointCreateEvents);
+    var servicePointFromDataTenant = waitForServicePointOnTenant(CONSORTIUM_MEMBER_TENANT);
+
+    var updatedServicePointFromCentralTenant = servicePointFromCentralTenant
+      .withDiscoveryDisplayName("Circulation Desk -- Basement(updated)");
+
+    int updateOffset = getOffsetForServicePointUpdateEvents();
+    publishServicePointUpdateEvent(servicePointFromDataTenant, updatedServicePointFromCentralTenant);
+    waitUntilValueIsIncreased(updateOffset,
       ServicePointSynchronizationVerticleTest::getOffsetForServicePointUpdateEvents);
-    getServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(collegeServicePoint ->
-        context.assertEquals(servicePointFromCentralTenant.getDiscoveryDisplayName(),
-          collegeServicePoint.getDiscoveryDisplayName())));
+
+    var updatedCollegeServicePoint = waitForServicePointOnTenant(CONSORTIUM_MEMBER_TENANT,
+      servicePoint -> updatedServicePointFromCentralTenant.getDiscoveryDisplayName()
+        .equals(servicePoint.getDiscoveryDisplayName()));
+    assertEquals(updatedServicePointFromCentralTenant.getDiscoveryDisplayName(),
+      updatedCollegeServicePoint.getDiscoveryDisplayName());
+    context.completeNow();
   }
 
   @Test
-  public void shouldPropagateDeleteOfServicePointOnLendingTenant(TestContext context) {
-    var servicePointFromCentralTenant = createServicePointAgainstTenant(CENTRAL_TENANT_ID, false);
-    var servicePointFromDataTenant = createServicePointAgainstTenant(COLLEGE_TENANT_ID, false);
+  void shouldPropagateDeleteOfServicePointOnLendingTenant(VertxTestContext context) {
+    var servicePointFromCentralTenant = createServicePointAgainstTenant(CONSORTIUM_CENTRAL_TENANT, false);
 
-    getServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(servicePoint ->
-        context.assertEquals(servicePointFromCentralTenant.getId(),
-          servicePointFromDataTenant.getId())));
+    // See shouldPropagateUpdateOfServicePointOnLendingTenant: wait for the verticle's own
+    // create-propagation to the member tenant instead of creating a second copy directly, which
+    // would race the propagation on the same id.
+    int createOffset = getOffsetForServicePointCreateEvents();
+    publishServicePointCreateEvent(servicePointFromCentralTenant);
+    waitUntilValueIsIncreased(createOffset,
+      ServicePointSynchronizationVerticleTest::getOffsetForServicePointCreateEvents);
+    // waitFor()/waitForServicePointOnTenant() block the calling thread, so they must run on the
+    // test thread, not inside a Vert.x callback (e.g. compose/onComplete) - doing so would block
+    // the event loop they need to complete on, deadlocking until the blocking call's own timeout.
+    var servicePointFromDataTenant = waitForServicePointOnTenant(CONSORTIUM_MEMBER_TENANT);
 
     int initialOffset = getOffsetForServicePointDeleteEvents();
     publishServicePointDeleteEvent(servicePointFromDataTenant);
     waitUntilValueIsIncreased(initialOffset,
       ServicePointSynchronizationVerticleTest::getOffsetForServicePointDeleteEvents);
-    getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(statusCode ->
-        context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+
+    waitForServicePointAbsentOnTenant(CONSORTIUM_MEMBER_TENANT);
+    context.completeNow();
   }
 
   @Test
-  public void shouldHandleUpdateEventForNonExistingServicePoint(TestContext context) {
+  void shouldHandleUpdateEventForNonExistingServicePoint(VertxTestContext context) {
     ServicePoint nonExistingServicePoint = new ServicePoint().withId(UUID.randomUUID().toString());
     publishServicePointUpdateEvent(nonExistingServicePoint, nonExistingServicePoint);
 
-    getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(statusCode ->
-        context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+    getStatusCodeOfServicePointById(CONSORTIUM_MEMBER_TENANT)
+      .onComplete(context.succeeding(statusCode -> {
+        context.verify(() -> assertEquals(HTTP_NOT_FOUND, statusCode));
+        context.completeNow();
+      }));
   }
 
   @Test
-  public void shouldHandleDeleteEventForNonExistingServicePoint(TestContext context) {
+  void shouldHandleDeleteEventForNonExistingServicePoint(VertxTestContext context) {
     ServicePoint nonExistingServicePoint = new ServicePoint().withId(UUID.randomUUID().toString());
     publishServicePointDeleteEvent(nonExistingServicePoint);
 
-    getStatusCodeOfServicePointById(COLLEGE_TENANT_ID)
-      .onComplete(context.asyncAssertSuccess(statusCode ->
-        context.assertEquals(HTTP_NOT_FOUND, statusCode)));
+    getStatusCodeOfServicePointById(CONSORTIUM_MEMBER_TENANT)
+      .onComplete(context.succeeding(statusCode -> {
+        context.verify(() -> assertEquals(HTTP_NOT_FOUND, statusCode));
+        context.completeNow();
+      }));
   }
 
   @SneakyThrows
-  public static <T> T waitFor(Future<T> future, int timeoutSeconds) {
+  private static <T> T waitFor(Future<T> future, int timeoutSeconds) {
     return future.toCompletionStage()
       .toCompletableFuture()
       .get(timeoutSeconds, TimeUnit.SECONDS);
   }
 
-  public static <T> T waitFor(Future<T> future) {
+  private static <T> T waitFor(Future<T> future) {
     return waitFor(future, 10);
   }
 
   private Future<ServicePoint> getServicePointById(String tenantId) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    getClient().get(servicePointsUrl("/" + SERVICE_POINT_ID), tenantId, promise::complete);
+    getClient().get(servicePointsUrl("/" + servicePointId), tenantId, promise::complete);
     return promise.future().map(resp -> {
-      MatcherAssert.assertThat(resp.statusCode(), CoreMatchers.is(HTTP_OK));
+      assertThat(resp.statusCode(), CoreMatchers.is(HTTP_OK));
       return resp.bodyAsJson(ServicePoint.class);
     });
   }
 
   private Future<Integer> getStatusCodeOfServicePointById(String tenantId) {
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-    getClient().get(servicePointsUrl("/" + SERVICE_POINT_ID), tenantId, promise::complete);
+    getClient().get(servicePointsUrl("/" + servicePointId), tenantId, promise::complete);
     return promise.future().map(HttpResponseHead::statusCode);
   }
 
   @SneakyThrows(Exception.class)
-  private static ServicePoint createServicePointAgainstTenant(String tenantId, boolean updated) {
+  private ServicePoint createServicePointAgainstTenant(String tenantId, boolean updated) {
     String discoveryDisplayName = "Circulation Desk -- Basement" + (updated ? "(updated)" : "");
-    return createServicePoint(UUID.fromString(SERVICE_POINT_ID), "Circ Desk 2522", "cd2522",
+    return createServicePoint(UUID.fromString(servicePointId), "Circ Desk 2522", "cd2522",
       discoveryDisplayName, null, 20,
       true, createHoldShelfExpiryPeriod(), tenantId)
       .getJson().mapTo(ServicePoint.class);
@@ -219,16 +243,40 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
       .until(valueSupplier, newValue -> newValue > previousValue);
   }
 
+  /**
+   * Poll for the propagated service point on {@code tenantId} instead of trusting a single GET
+   * right after {@link #waitUntilValueIsIncreased}. The Kafka consumer group backing that offset
+   * check is shared for the whole test JVM run and also advances for other tenants' unrelated
+   * service-point activity, so "offset increased" alone doesn't guarantee this event's downstream
+   * HTTP-level propagation has actually finished - only that some message got committed.
+   */
+  private ServicePoint waitForServicePointOnTenant(String tenantId) {
+    return waitForServicePointOnTenant(tenantId, servicePoint -> true);
+  }
+
+  @SneakyThrows
+  private ServicePoint waitForServicePointOnTenant(String tenantId, Predicate<ServicePoint> ready) {
+    return waitAtMost(60, SECONDS).until(() -> {
+      int statusCode = waitFor(getStatusCodeOfServicePointById(tenantId));
+      return statusCode == HTTP_OK ? waitFor(getServicePointById(tenantId)) : null;
+    }, servicePoint -> servicePoint != null && ready.test(servicePoint));
+  }
+
+  private void waitForServicePointAbsentOnTenant(String tenantId) {
+    waitAtMost(60, SECONDS).until(() -> waitFor(getStatusCodeOfServicePointById(tenantId)),
+      statusCode -> statusCode == HTTP_NOT_FOUND);
+  }
+
   private static JsonObject buildCreateEvent(ServicePoint newVersion) {
     return new JsonObject()
-      .put("tenant", CENTRAL_TENANT_ID)
+      .put("tenant", CONSORTIUM_CENTRAL_TENANT)
       .put("type", "CREATE")
       .put("new", newVersion);
   }
 
   private static JsonObject buildUpdateEvent(ServicePoint oldVersion, ServicePoint newVersion) {
     return new JsonObject()
-      .put("tenant", CENTRAL_TENANT_ID)
+      .put("tenant", CONSORTIUM_CENTRAL_TENANT)
       .put("type", "UPDATE")
       .put("old", oldVersion)
       .put("new", newVersion);
@@ -236,7 +284,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
 
   private static JsonObject buildDeleteEvent(ServicePoint object) {
     return new JsonObject()
-      .put("tenant", CENTRAL_TENANT_ID)
+      .put("tenant", CONSORTIUM_CENTRAL_TENANT)
       .put("type", "DELETE")
       .put("old", object);
   }
@@ -247,7 +295,7 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
     publishEvent(buildCreateEvent(newServicePoint));
   }
 
-  private void publishServicePointUpdateEvent(ServicePoint oldServicePoint,    ServicePoint newServicePoint) {
+  private void publishServicePointUpdateEvent(ServicePoint oldServicePoint, ServicePoint newServicePoint) {
 
     publishEvent(buildUpdateEvent(oldServicePoint, newServicePoint));
   }
@@ -269,9 +317,9 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
   }
 
   private void publishEvent(JsonObject eventPayload) {
-    var kafkaRecord = KafkaProducerRecord.create(SERVICE_POINT_TOPIC, SERVICE_POINT_ID,
+    var kafkaRecord = KafkaProducerRecord.create(SERVICE_POINT_TOPIC, servicePointId,
       eventPayload);
-    kafkaRecord.addHeader("X-Okapi-Tenant".toLowerCase(Locale.ROOT), CENTRAL_TENANT_ID);
+    kafkaRecord.addHeader("X-Okapi-Tenant".toLowerCase(Locale.ROOT), CONSORTIUM_CENTRAL_TENANT);
     kafkaRecord.addHeader("X-Okapi-Token".toLowerCase(Locale.ROOT),
       "test-token".toLowerCase(Locale.ROOT));
     kafkaRecord.addHeader("X-Okapi-Url", mockServer.baseUrl().toLowerCase(Locale.ROOT));
@@ -309,31 +357,10 @@ public class ServicePointSynchronizationVerticleTest extends TestBaseWithInvento
     JsonObject userTenantsCollection = new JsonObject()
       .put("userTenants", new JsonArray()
         .add(new JsonObject()
-          .put("centralTenantId", CENTRAL_TENANT_ID)
+          .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
           .put("consortiumId", CONSORTIUM_ID)));
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader("X-Okapi-Tenant", equalToIgnoreCase(CENTRAL_TENANT_ID))
+      .withHeader("X-Okapi-Tenant", equalToIgnoreCase(CONSORTIUM_CENTRAL_TENANT))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
-  }
-
-  public static void mockConsortiumTenants() {
-    JsonObject tenantsCollection = new JsonObject()
-      .put("tenants", new JsonArray()
-        .add(new JsonObject()
-          .put("id", CENTRAL_TENANT_ID)
-          .put("isCentral", true))
-        .add(new JsonObject()
-          .put("id", COLLEGE_TENANT_ID)
-          .put("isCentral", false)));
-    WireMock.stubFor(WireMock.get(CONSORTIUM_TENANTS_PATH)
-      .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
-  }
-
-  public static void mockUserTenantsForNonConsortiumMember() {
-    JsonObject emptyUserTenantsCollection = new JsonObject()
-      .put("userTenants", JsonArray.of());
-    WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(COLLEGE_TENANT_ID))
-      .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 }

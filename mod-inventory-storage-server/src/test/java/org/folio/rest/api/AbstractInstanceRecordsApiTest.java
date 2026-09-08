@@ -4,8 +4,8 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -20,9 +20,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Tuple;
 import java.util.Collections;
 import java.util.Map;
@@ -31,39 +31,46 @@ import java.util.function.Supplier;
 import javax.ws.rs.core.Response;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.impl.AbstractInstanceRecordsApi;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.AdditionalAnswers;
 
-@RunWith(VertxUnitRunner.class)
-public class AbstractInstanceRecordsApiTest extends TestBase {
+@ExtendWith(VertxExtension.class)
+class AbstractInstanceRecordsApiTest extends TestBase {
   private static final Map<String, String> OKAPI_HEADERS = Collections.singletonMap(
     RestVerticle.OKAPI_HEADER_TENANT, TENANT_ID);
 
   @Test
-  public void shouldRespondWith500StatusWhenErrorsOccursWhilstFetchingRecords(TestContext testContext) {
+  void shouldRespondWith500StatusWhenErrorsOccursWhilstFetchingRecords(VertxTestContext testContext) {
+    var httpResponse = mock(HttpServerResponse.class);
     RoutingContext routingContext = mock(RoutingContext.class);
-    when(routingContext.response()).thenReturn(mock(HttpServerResponse.class));
+    when(routingContext.response()).thenReturn(httpResponse);
     new MyAbstractInstanceRecordsApi().fetchRecordsByQuery("SELECT 1",
       routingContext, null,
-      testContext.asyncAssertSuccess(response -> assertThat(response.getStatus(), is(500))));
+      testContext.succeeding(response -> {
+        testContext.verify(() -> assertThat(response.getStatus(), is(500)));
+        testContext.completeNow();
+      }));
   }
 
   @Test
-  public void shouldCloseTcpWhenFailureAfterHttpHeadHasBeenWritten(TestContext testContext) {
+  void shouldCloseTcpWhenFailureAfterHttpHeadHasBeenWritten(VertxTestContext testContext) {
     HttpServerResponse httpServerResponse = mock(HttpServerResponse.class);
     when(httpServerResponse.headWritten()).thenReturn(true);
     RoutingContext routingContext = mock(RoutingContext.class);
     when(routingContext.response()).thenReturn(httpServerResponse);
     new MyAbstractInstanceRecordsApi().fetchRecordsByQuery("SELECT 1",
-      routingContext, null, testContext.asyncAssertSuccess(response -> {
-        assertThat(response, is(nullValue()));
-        verify(httpServerResponse).reset();
+      routingContext, null, testContext.succeeding(response -> {
+        testContext.verify(() -> {
+          assertNull(response);
+          verify(httpServerResponse).reset();
+        });
+        testContext.completeNow();
       }));
   }
 
   @Test
-  public void canFetch300Records() {
+  void canFetch300Records() {
     RoutingContext routingContext = mock(RoutingContext.class);
     HttpServerResponse httpServerResponse = getHttpServerResponseMock();
     when(routingContext.response()).thenReturn(httpServerResponse);
@@ -75,7 +82,7 @@ public class AbstractInstanceRecordsApiTest extends TestBase {
   }
 
   @Test
-  public void canHandleWriteQueueFull() {
+  void canHandleWriteQueueFull() {
     Handler<?>[] drainHandler = new Handler[1];
     AtomicInteger drainCount = new AtomicInteger();
 

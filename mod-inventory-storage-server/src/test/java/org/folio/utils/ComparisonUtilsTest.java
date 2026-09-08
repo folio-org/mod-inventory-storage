@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -12,14 +11,14 @@ import org.junit.jupiter.api.Test;
 class ComparisonUtilsTest {
 
   @Test
-  void testPrivateConstructor() throws NoSuchMethodException {
+  void privateConstructor() throws Exception {
     var constructor = ComparisonUtils.class.getDeclaredConstructor();
     constructor.setAccessible(true);
     assertThrows(InvocationTargetException.class, constructor::newInstance);
   }
 
   @Test
-  void testEqualsIgnoringMetadata_true() throws JsonProcessingException {
+  void equalsIgnoringMetadataTrue() throws Exception {
     var obj1 = testMap(1, 1);
     var obj2 = testMap(1, 2);
 
@@ -27,7 +26,7 @@ class ComparisonUtilsTest {
   }
 
   @Test
-  void testEqualsIgnoringMetadata_false() throws JsonProcessingException {
+  void equalsIgnoringMetadataFalse() throws Exception {
     var obj1 = testMap(1, 1);
     var obj2 = testMap(2, 2);
 

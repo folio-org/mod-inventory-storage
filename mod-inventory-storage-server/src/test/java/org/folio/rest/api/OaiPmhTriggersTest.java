@@ -11,12 +11,12 @@ import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -29,33 +29,33 @@ import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
+@ExtendWith(VertxExtension.class)
+class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   private final PostgresClient postgresClient = PostgresClientFactory
     .getInstance(getVertx().getOrCreateContext(), TENANT_ID);
 
   @SneakyThrows
-  @After
-  public void afterEach() {
+  @AfterEach
+  void afterEach() {
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
   }
 
   @Test
-  public void createInstanceTest() {
+  void createInstanceTest() {
     instancesClient.create(instance(UUID.randomUUID()));
     verifyCompleteUpdatedDate(null);
   }
 
   @SneakyThrows
   @Test
-  public void createItemTest() {
+  void createItemTest() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     CompletableFuture<LocalDateTime> future = new CompletableFuture<>();
     getCompleteUpdatedDate(future);
@@ -66,7 +66,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void createHoldingsRecordTest() {
+  void createHoldingsRecordTest() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(instance(instanceId));
     CompletableFuture<LocalDateTime> future = new CompletableFuture<>();
@@ -78,7 +78,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void updateInstanceTest() {
+  void updateInstanceTest() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     createItem(journalMaterialTypeId, holdingId);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();
@@ -92,7 +92,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void updateItemTest() {
+  void updateItemTest() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     createItem(journalMaterialTypeId, holdingId);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();
@@ -106,7 +106,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void updateBoundWithItemTest() {
+  void updateBoundWithItemTest() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var holding2Id = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemJson = createItem(journalMaterialTypeId, holdingId);
@@ -131,7 +131,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void updateHoldingsRecordTest() {
+  void updateHoldingsRecordTest() {
     createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();
     getCompleteUpdatedDate(futureDateBefore);
@@ -144,7 +144,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void deleteHoldingsRecordTest() {
+  void deleteHoldingsRecordTest() {
     createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();
     getCompleteUpdatedDate(futureDateBefore);
@@ -155,7 +155,7 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void moveHoldingsRecordToAnotherInstanceTest() {
+  void moveHoldingsRecordToAnotherInstanceTest() {
     var sourceInstanceId = UUID.randomUUID();
     var targetInstanceId = UUID.randomUUID();
     instancesClient.create(instance(sourceInstanceId));
@@ -176,15 +176,15 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     var datesAfter = futureDates.get(80, TimeUnit.SECONDS);
 
     assertEquals(datesBefore.keySet(), datesAfter.keySet());
-    assertTrue("Source instance complete_updated_date should have been updated",
-      datesBefore.get(sourceInstanceId.toString()).isBefore(datesAfter.get(sourceInstanceId.toString())));
-    assertTrue("Target instance complete_updated_date should have been updated",
-      datesBefore.get(targetInstanceId.toString()).isBefore(datesAfter.get(targetInstanceId.toString())));
+    assertTrue(datesBefore.get(sourceInstanceId.toString()).isBefore(datesAfter.get(sourceInstanceId.toString())),
+      "Source instance complete_updated_date should have been updated");
+    assertTrue(datesBefore.get(targetInstanceId.toString()).isBefore(datesAfter.get(targetInstanceId.toString())),
+      "Target instance complete_updated_date should have been updated");
   }
 
   @SneakyThrows
   @Test
-  public void moveItemToAnotherHoldingsRecordTest() {
+  void moveItemToAnotherHoldingsRecordTest() {
     var sourceHoldingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var targetHoldingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     var itemJson = createItem(journalMaterialTypeId, sourceHoldingId);
@@ -209,15 +209,15 @@ public class OaiPmhTriggersTest extends TestBaseWithInventoryUtil {
     var targetInstanceId = holdingsClient.getById(targetHoldingId).getJson().getString("instanceId");
 
     assertEquals(datesBefore.keySet(), datesAfter.keySet());
-    assertTrue("Source instance complete_updated_date should have been updated after item move",
-      datesBefore.get(sourceInstanceId).isBefore(datesAfter.get(sourceInstanceId)));
-    assertTrue("Target instance complete_updated_date should have been updated after item move",
-      datesBefore.get(targetInstanceId).isBefore(datesAfter.get(targetInstanceId)));
+    assertTrue(datesBefore.get(sourceInstanceId).isBefore(datesAfter.get(sourceInstanceId)),
+      "Source instance complete_updated_date should have been updated after item move");
+    assertTrue(datesBefore.get(targetInstanceId).isBefore(datesAfter.get(targetInstanceId)),
+      "Target instance complete_updated_date should have been updated after item move");
   }
 
   @SneakyThrows
   @Test
-  public void deleteItemTest() {
+  void deleteItemTest() {
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     createItem(journalMaterialTypeId, holdingId);
     CompletableFuture<LocalDateTime> futureDateBefore = new CompletableFuture<>();

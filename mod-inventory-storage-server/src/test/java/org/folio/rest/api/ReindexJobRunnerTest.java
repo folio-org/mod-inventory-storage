@@ -13,7 +13,8 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -40,9 +41,9 @@ import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
+class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   private final ReindexJobRepository repository = getRepository();
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher =
     new CommonDomainEventPublisher<>(getContext(), new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
@@ -68,7 +69,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReindexInstances() {
+  void canReindexInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
@@ -88,7 +89,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
 
     assertThat(job.getPublished(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(IDS_PUBLISHED));
-    assertThat(job.getSubmittedDate(), notNullValue());
+    assertNotNull(job.getSubmittedDate());
 
     // Should be a single reindex message for each instance ID generated in the row stream
     // The numbers should match exactly, but intermittently, the published id count is
@@ -114,7 +115,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetAllInstancesReindexJobs() {
+  void canGetAllInstancesReindexJobs() {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
@@ -142,21 +143,21 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var jobs = instanceReindex.getReindexJobs();
 
     assertThat(jobs.getReindexJobs().getFirst().getJobStatus(), is(IDS_PUBLISHED));
-    assertThat(jobs.getTotalRecords(), notNullValue());
+    assertNotNull(jobs.getTotalRecords());
 
     instanceMessageChecks.countOfAllPublishedInstancesIs(
       greaterThanOrEqualTo(numberOfRecords));
   }
 
   @Test
-  public void canStartInstanceReindex() {
+  void canStartInstanceReindex() {
     ReindexJob res = instanceReindex.postReindexJob(instanceReindexJob());
-    assertThat(res, notNullValue());
-    assertThat(res.getId(), notNullValue());
+    assertNotNull(res);
+    assertNotNull(res.getId());
   }
 
   @Test
-  public void canCancelReindex() {
+  void canCancelReindex() {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = instanceReindexJob();
     var postgresClient = spy(getPostgresClient());
@@ -184,7 +185,7 @@ public class ReindexJobRunnerTest extends TestBaseWithInventoryUtil {
     var job = instanceReindex.getReindexJob(reindexJob.getId());
 
     assertThat(job.getJobStatus(), is(ID_PUBLISHING_CANCELLED));
-    assertThat(job.getPublished(), greaterThanOrEqualTo(1000));
+    assertTrue(job.getPublished() >= 1000);
   }
 
   private ReindexJobRunner jobRunner(PostgresClient postgresClient) {

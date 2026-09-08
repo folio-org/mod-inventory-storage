@@ -25,27 +25,24 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.ModuleUtility.prepareTenant;
 import static org.folio.utility.ModuleUtility.removeTenant;
+import static org.folio.utility.RestUtility.CONSORTIUM_ID;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.IsIterableContaining.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.FileSource;
@@ -71,8 +68,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import kotlin.jvm.functions.Function4;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
@@ -98,19 +93,20 @@ import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.consortium.entities.SharingStatus;
 import org.folio.util.PercentCodec;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer.MethodName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-@RunWith(JUnitParamsRunner.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
+@TestMethodOrder(MethodName.class)
+class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String TAG_VALUE = "test-tag";
   private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
@@ -134,8 +130,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     = new ItemEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
 
     StorageTestSuite.deleteAll(CONSORTIUM_MEMBER_TENANT, "preceding_succeeding_title");
@@ -152,15 +148,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  @AfterClass
-  public static void afterClass() {
+  @AfterAll
+  static void afterClass() {
     removeTenant(CONSORTIUM_MEMBER_TENANT);
     removeTenant(TENANT_WITHOUT_USER_TENANTS_PERMISSIONS);
   }
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
     StorageTestSuite.deleteAll(TENANT_ID, "bound_with_part");
@@ -183,15 +179,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  @After
-  public void afterEach() {
+  @AfterEach
+  void afterEach() {
     setHoldingsSequence(1);
 
     StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
   @Test
-  public void canCreateHolding() {
+  void canCreateHolding() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
@@ -211,7 +207,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingWithoutProvidingAnId() {
+  void canCreateHoldingWithoutProvidingAnId() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -226,7 +222,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = holdingResponse.getJson();
 
-    assertThat(holding.getString("id"), is(notNullValue()));
+    assertNotNull(holding.getString("id"));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
 
@@ -249,8 +245,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingWithIdThatIsNotUuid()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotCreateHoldingWithIdThatIsNotUuid()
+    throws Exception {
 
     String nonUuidId = "6556456";
 
@@ -277,13 +273,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     assertThat(errors.size(), is(1));
 
     JsonObject firstError = errors.getJsonObject(0);
-    assertThat(firstError.getString("message"), containsString("must match"));
+    assertTrue(firstError.getString("message").contains("must match"));
     assertThat(firstError.getJsonArray("parameters").getJsonObject(0).getString("key"),
       is("id"));
   }
 
   @Test
-  public void canCreateHoldingAtSpecificLocation() {
+  void canCreateHoldingAtSpecificLocation() {
 
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -317,7 +313,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReplaceHoldingAtSpecificLocation() {
+  void canReplaceHoldingAtSpecificLocation() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     String adminNote = "an admin note";
@@ -348,7 +344,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canMoveHoldingsToNewInstance() throws ExecutionException, InterruptedException, TimeoutException {
+  void canMoveHoldingsToNewInstance() throws Exception {
     var instanceId = UUID.randomUUID();
     var newInstanceId = UUID.randomUUID();
 
@@ -385,7 +381,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canMoveHoldingsToNewInstance_shouldUpdateItem() {
+  void canMoveHoldingsToNewInstance_shouldUpdateItem() {
     var instanceId = UUID.randomUUID();
     var newInstanceId = UUID.randomUUID();
 
@@ -419,7 +415,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingWithInvalidStatisticalCodeIds() {
+  void cannotCreateHoldingWithInvalidStatisticalCodeIds() {
     var instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -433,11 +429,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     var response = holdingsClient.attemptToCreate("", holdingToCreate, TENANT_ID);
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  public void cannotUpdateHoldingWithInvalidStatisticalCodeIds() {
+  void cannotUpdateHoldingWithInvalidStatisticalCodeIds() {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -457,11 +453,11 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var response = holdingsClient.attemptToReplace(holdingId.toString(), holding);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  public void cannotCreateHoldingWithInvalidInstanceId() {
+  void cannotCreateHoldingWithInvalidInstanceId() {
     var instanceId = UUID.randomUUID();
 
     var holdingToCreate = new HoldingRequestBuilder()
@@ -477,7 +473,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteHolding() {
+  void canDeleteHolding() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -500,7 +496,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void canGetAllHoldings() {
+  void canGetAllHoldings() {
     var holdingIds = createThreeHoldingsForInstances();
 
     var getCompleted = new CompletableFuture<Response>();
@@ -512,7 +508,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void canRetrieveAllHoldings() {
+  void canRetrieveAllHoldings() {
     var holdingIds = createThreeHoldingsForInstances();
 
     var getCompleted = new CompletableFuture<Response>();
@@ -524,7 +520,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPageWithNegativeLimit() throws Exception {
+  void cannotPageWithNegativeLimit() throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -548,7 +544,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPageWithNegativeOffset() throws Exception {
+  void cannotPageWithNegativeOffset() throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -571,10 +567,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPageAllHoldings()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void canPageAllHoldings()
+    throws Exception {
 
     createFiveHoldingsForPagingTest();
 
@@ -589,7 +583,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canGetByInstanceId() {
+  void canGetByInstanceId() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(nod(instanceId));
 
@@ -612,7 +606,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAllHoldings() {
+  void canDeleteAllHoldings() {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     UUID thirdInstanceId = UUID.randomUUID();
@@ -647,7 +641,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void canDeleteHoldingsByCql() {
+  void canDeleteHoldingsByCql() {
     var instanceId1 = UUID.randomUUID();
     var instanceId2 = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId1));
@@ -663,16 +657,16 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void cannotDeleteHoldingsWithEmptyCql() {
+  void cannotDeleteHoldingsWithEmptyCql() {
     var response = getClient().delete(holdingsStorageUrl("?query="), TENANT_ID).get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString("empty"));
+    assertTrue(response.getBody().contains("empty"));
   }
 
   @SneakyThrows
   @Test
-  public void tenantIsRequiredForCreatingNewHolding() {
+  void tenantIsRequiredForCreatingNewHolding() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -692,9 +686,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void tenantIsRequiredForGettingHolding()
-    throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void tenantIsRequiredForGettingHolding()
+    throws Exception {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -718,8 +711,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void tenantIsRequiredForGettingAllHoldings() throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void tenantIsRequiredForGettingAllHoldings() throws Exception {
 
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
@@ -732,7 +724,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void optimisticLockingVersion() {
+  void optimisticLockingVersion() {
     UUID holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     JsonObject holding = getById(holdingId.toString()).getJson();
     holding.put(PERMANENT_LOCATION_ID_KEY, ANNEX_LIBRARY_LOCATION_ID);
@@ -754,7 +746,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldNotUpdateHoldingsIfNoChanges() {
+  void shouldNotUpdateHoldingsIfNoChanges() {
     var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
@@ -772,7 +764,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldUpdateHoldingsIfNoChangesAndOptimizeUpdatesDisabled() {
+  void shouldUpdateHoldingsIfNoChangesAndOptimizeUpdatesDisabled() {
     var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var holdingId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID).toString();
@@ -789,8 +781,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsWithSourceIdShouldUpdate()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingHoldingsWithSourceIdShouldUpdate()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -816,8 +808,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsWithoutSourceIdShouldNotUpdate()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingHoldingsWithoutSourceIdShouldNotUpdate()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -842,8 +834,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingPermanentLocationChangesEffectiveLocationWhenNoTemporaryLocationSet()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -867,8 +859,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingPermanentLocationDoesNotChangeEffectiveLocationWhenTemporaryLocationSet()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingPermanentLocationDoesNotChangeEffectiveLocationWhenTemporaryLocationSet()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
     UUID holdingId = UUID.randomUUID();
 
@@ -893,8 +885,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingOrRemovingTemporaryLocationChangesEffectiveLocation()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     setHoldingsSequence(1);
@@ -917,7 +909,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     updateRemoveAndVerifyEffectiveLocation(holdingId, holding, "temporaryLocationId", MAIN_LIBRARY_LOCATION_ID);
   }
 
-  @Parameters({
+  @CsvSource({
     "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
     "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
     "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
@@ -938,8 +930,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
     "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
   })
-  @Test
-  public void updatingHoldingsUpdatesItemShelvingOrder(
+  @ParameterizedTest
+  void updatingHoldingsUpdatesItemShelvingOrder(
     String desiredShelvingOrder,
     String initiallyDesiredShelvesOrder,
     String prefix,
@@ -949,7 +941,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     String chronology,
     String copy,
     String suffix
-  ) throws InterruptedException, ExecutionException, TimeoutException {
+  ) throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -965,8 +957,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberForAllItems()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberForAllItems()
+    throws Exception {
 
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -982,8 +974,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void removingHoldingsCallNumberUpdatesItemEffectiveCallNumber()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -999,8 +991,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void holdingsCallNumberDoesNotSupersedeItemLevelCallNumber()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1016,8 +1008,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updateHoldingsCallNumberUpdatesItemLevelMetadata()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void updateHoldingsCallNumberUpdatesItemLevelMetadata()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1033,8 +1025,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updateHoldingsLocationUpdatesItemLevelMetadata()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void updateHoldingsLocationUpdatesItemLevelMetadata()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1049,8 +1041,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updateHoldingsFieldsNotRelatedToItemShouldNotChangeItemMetadata()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void updateHoldingsFieldsNotRelatedToItemShouldNotChangeItemMetadata()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1066,8 +1058,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingHoldingsLimitAdministrativeNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void creatingHoldingsLimitAdministrativeNoteMaximumLength()
+    throws Exception {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1093,8 +1085,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingHoldingsLimitNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void creatingHoldingsLimitNoteMaximumLength()
+    throws Exception {
 
     UUID instanceId = UUID.randomUUID();
 
@@ -1121,8 +1113,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsLimitAdministrativeNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void updatingHoldingsLimitAdministrativeNoteMaximumLength()
+    throws Exception {
 
     UUID instanceId = UUID.randomUUID();
     UUID holdingId = UUID.randomUUID();
@@ -1144,8 +1136,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsLimitNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void updatingHoldingsLimitNoteMaximumLength()
+    throws Exception {
 
     UUID instanceId = UUID.randomUUID();
     UUID holdingId = UUID.randomUUID();
@@ -1167,9 +1159,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsDoesNotUpdateItemsOnAnotherHoldings()
-    throws ExecutionException,
-    InterruptedException, TimeoutException {
+  void updatingHoldingsDoesNotUpdateItemsOnAnotherHoldings()
+    throws Exception {
 
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1198,9 +1189,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffixForAllItems()
-    throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberSuffixForAllItems()
+    throws Exception {
 
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1219,8 +1209,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void removingHoldingsCallNumberSuffixUpdatesItemEffectiveCallNumberSuffix()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1238,8 +1228,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void holdingsCallNumberSuffixDoesNotSupersedeItemLevelCallNumberSuffix()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1255,9 +1245,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefixForAllItems()
-    throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberPrefixForAllItems()
+    throws Exception {
 
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1278,7 +1267,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberType() {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberType() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1313,7 +1302,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberPrefix() {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberPrefix() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1346,7 +1335,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix() {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberSuffix() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1379,7 +1368,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemEffectiveCallNumber() {
+  void updatingHoldingsUpdatesItemEffectiveCallNumber() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1412,7 +1401,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemPermanentLocation() {
+  void updatingHoldingsUpdatesItemPermanentLocation() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1443,7 +1432,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemTemporaryLocation() {
+  void updatingHoldingsUpdatesItemTemporaryLocation() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1474,7 +1463,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemCallNumbersAndLocations() {
+  void updatingHoldingsUpdatesItemCallNumbersAndLocations() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1513,7 +1502,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemEffectiveCallNumberAndNote() {
+  void updatingHoldingsUpdatesItemEffectiveCallNumberAndNote() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1550,7 +1539,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(388502)
-  public void updatingHoldingsUpdatesItemWhenDeleteEffectiveCallNumber() {
+  void updatingHoldingsUpdatesItemWhenDeleteEffectiveCallNumber() {
     // create instance, holdings and item
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1580,8 +1569,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void removingHoldingsCallNumberPrefixUpdatesItemEffectiveCallNumberPrefix()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1599,8 +1588,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void holdingsCallNumberPrefixDoesNotSupersedeItemLevelCallNumberPrefix()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     var holdingId = UUID.randomUUID();
@@ -1618,7 +1607,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
+  void cannotCreateHoldingWithoutPermanentLocation() throws Exception {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -1642,7 +1631,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingsWhenHridIsSupplied() {
+  void canCreateHoldingsWhenHridIsSupplied() {
     log.info("Starting canCreateAHoldingsWhenHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1675,10 +1664,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingsWhenDuplicateHridIsSupplied()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotCreateHoldingsWhenDuplicateHridIsSupplied()
+    throws Exception {
     log.info("Starting cannotCreateAHoldingsWhenDuplicateHRIDIsSupplied");
 
     final var instanceId = UUID.randomUUID();
@@ -1702,7 +1689,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void cannotCreateHoldingsWithHridFailure() {
+  void cannotCreateHoldingsWithHridFailure() {
     final UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -1737,7 +1724,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
+  void cannotPostSynchronousBatchWithInvalidStatisticalCodeIds() {
 
     final JsonArray holdingsArray = threeHoldings();
     var invalidHolding = holdingsArray.getJsonObject(1);
@@ -1746,12 +1733,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var response = postSynchronousBatch(holdingsArray);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
   @SneakyThrows
-  public void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
+  void cannotCreateHoldingsWhenAlreadyAllocatedHridIsAllocated() {
     final var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -1775,10 +1762,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotChangeHridAfterCreation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotChangeHridAfterCreation()
+    throws Exception {
     log.info("Starting cannotChangeHRIDAfterCreation");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1813,10 +1798,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotRemoveHridAfterCreation()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotRemoveHridAfterCreation()
+    throws Exception {
     log.info("Starting cannotRemoveHRIDAfterCreation");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1851,7 +1834,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUsePutToCreateHoldingsWhenHridIsSupplied() {
+  void canUsePutToCreateHoldingsWhenHridIsSupplied() {
     log.info("Starting canUsePutToCreateAHoldingsWhenHRIDIsSupplied");
 
     final UUID instanceId = UUID.randomUUID();
@@ -1885,7 +1868,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingAndCreateShadowInstance() {
+  void canCreateHoldingAndCreateShadowInstance() {
     log.info("Starting canCreateHoldingAndCreateShadowInstance");
     mockSharingInstance();
 
@@ -1898,7 +1881,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
     JsonObject holding = createHoldingRecord(builder.create(), CONSORTIUM_MEMBER_TENANT).getJson();
 
-    assertThat(holding.getString("id"), is(notNullValue()));
+    assertNotNull(holding.getString("id"));
     assertThat(holding.getString("instanceId"), is(instanceId.toString()));
     assertThat(holding.getString("permanentLocationId"), is(MAIN_LIBRARY_LOCATION_ID.toString()));
     assertExists(holding, CONSORTIUM_MEMBER_TENANT);
@@ -1911,7 +1894,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithGeneratedHrid() {
+  void canPostSynchronousBatchWithGeneratedHrid() {
     log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
 
     setHoldingsSequence(1);
@@ -1934,7 +1917,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithSuppliedAndGeneratedHrid() {
+  void canPostSynchronousBatchWithSuppliedAndGeneratedHrid() {
     log.info("Starting canPostSynchronousBatchWithSuppliedAndGeneratedHRID");
 
     setHoldingsSequence(1);
@@ -1962,7 +1945,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateHrids() {
+  void cannotPostSynchronousBatchWithDuplicateHrids() {
     log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
 
     setHoldingsSequence(1);
@@ -1980,7 +1963,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithHridFailure() {
+  void cannotPostSynchronousBatchWithHridFailure() {
     log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
 
     setHoldingsSequence(99999999999L);
@@ -2001,7 +1984,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canFilterByFullCallNumber() {
+  void canFilterByFullCallNumber() {
     var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2018,7 +2001,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canFilterByCallNumberAndSuffix() {
+  void canFilterByCallNumberAndSuffix() {
     var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2040,7 +2023,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canFilterByInstanceProperty() {
+  void canFilterByInstanceProperty() {
     IndividualResource instancePlanet = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
     IndividualResource instanceUprooted = instancesClient
@@ -2049,23 +2032,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     final UUID holdingUprooted = createHolding(instanceUprooted.getId(), MAIN_LIBRARY_LOCATION_ID, null);
 
     var foundPlanet = holdingsClient.getMany("instance.title = planet");
-    assertThat(foundPlanet, hasSize(1));
+    assertEquals(1, foundPlanet.size());
     assertThat(foundPlanet.getFirst().getId(), is(holdingPlanet));
 
     var foundUprooted = holdingsClient.getMany("instance.title = uprooted");
-    assertThat(foundUprooted, hasSize(1));
+    assertEquals(1, foundUprooted.size());
     assertThat(foundUprooted.getFirst().getId(), is(holdingUprooted));
   }
 
   @Test
-  public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
+  void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
     // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
     JsonArray holdings = threeHoldings();
     assertThat(postSynchronousBatchUnsafe(holdings), statusCodeIs(413));
   }
 
   @Test
-  public void canPostSynchronousBatchUnsafe() {
+  void canPostSynchronousBatchUnsafe() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -2081,7 +2064,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+  void cannotPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -2093,23 +2076,23 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var response = postSynchronousBatchUnsafe(holdings);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  @Ignore
-  public void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithoutUpsert() {
+  @Disabled
+  void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithoutUpsert() {
     canPostSynchronousBatchUnsafeAndCreateShadowInstance("");
   }
 
   @Test
-  @Ignore
-  public void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithUpsertTrue() {
+  @Disabled
+  void canPostSynchronousBatchUnsafeAndCreateShadowInstanceWithUpsertTrue() {
     canPostSynchronousBatchUnsafeAndCreateShadowInstance("?upsert=true");
   }
 
   @Test
-  public void canPostSynchronousBatch() {
+  void canPostSynchronousBatch() {
     JsonArray holdingsArray = threeHoldings();
     assertThat(postSynchronousBatch(holdingsArray), statusCodeIs(HTTP_CREATED));
     for (Object hrObj : holdingsArray) {
@@ -2123,7 +2106,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
+  void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
     var holdingsArray = new JsonArray();
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId), TENANT_ID);
@@ -2140,14 +2123,14 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
     var response = TestBase.get(getCompleted);
     assertThat(response, statusCodeIs(HTTP_OK));
     var createdHolding = response.getJson().getJsonArray("holdingsRecords").getJsonObject(0);
-    assertThat(createdHolding.getString("id"), notNullValue());
-    assertThat(createdHolding.getString("callNumber"), equalTo("test-call-number"));
+    assertNotNull(createdHolding.getString("id"));
+    assertEquals("test-call-number", createdHolding.getString("callNumber"));
     holdingsMessageChecks.createdMessagePublished(getById(createdHolding.getString("id")).getJson(),
       TENANT_ID, mockServer.baseUrl());
   }
 
   @Test
-  public void canPostSynchronousBatchForConsortiumMember() {
+  void canPostSynchronousBatchForConsortiumMember() {
     JsonArray holdingsArray = threeHoldings(CONSORTIUM_MEMBER_TENANT);
     assertThat(postSynchronousBatch("", holdingsArray, CONSORTIUM_MEMBER_TENANT), statusCodeIs(HTTP_CREATED));
     for (Object hrObj : holdingsArray) {
@@ -2161,17 +2144,17 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchAndCreateShadowInstanceWithoutUpsert() {
+  void canPostSynchronousBatchAndCreateShadowInstanceWithoutUpsert() {
     canPostSynchronousBatchAndCreateShadowInstance("");
   }
 
   @Test
-  public void canPostSynchronousBatchAndCreateShadowInstanceWithUpsertTrue() {
+  void canPostSynchronousBatchAndCreateShadowInstanceWithUpsertTrue() {
     canPostSynchronousBatchAndCreateShadowInstance("?upsert=true");
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithNonExistingInstanceAndNonConsortiumTenant() {
+  void cannotPostSynchronousBatchWithNonExistingInstanceAndNonConsortiumTenant() {
     JsonArray holdingsArray = threeHoldingsWithoutInstance();
     var response = postSynchronousBatch(holdingsArray);
 
@@ -2191,7 +2174,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateId() {
+  void cannotPostSynchronousBatchWithDuplicateId() {
     JsonArray holdingsArray = threeHoldings();
     String duplicateId = holdingsArray.getJsonObject(0).getString("id");
     holdingsArray.getJsonObject(1).put("id", duplicateId);
@@ -2215,18 +2198,18 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() {
+  void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() {
     assertThat(postSynchronousBatchWithExistingId(""), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithUpsertFalse() {
+  void cannotPostSynchronousBatchWithExistingIdWithUpsertFalse() {
     assertThat(postSynchronousBatchWithExistingId("?upsert=false"), statusCodeIs(HTTP_UNPROCESSABLE_ENTITY));
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdWithUpsertTrueMultipleTimesAndItemUpdate()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void canPostSynchronousBatchWithExistingIdWithUpsertTrueMultipleTimesAndItemUpdate()
+    throws Exception {
     final var existingHrId = UUID.randomUUID().toString();
     final var holdingsArray1 = threeHoldings();
     final var holdingsArray2 = threeHoldings();
@@ -2252,7 +2235,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByDiscoverySuppressProperty() {
+  void canSearchByDiscoverySuppressProperty() {
     final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2264,7 +2247,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldFindHoldingByCallNumberWhenThereIsSuffix() {
+  void shouldFindHoldingByCallNumberWhenThereIsSuffix() {
     final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2282,7 +2265,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void explicitRightTruncationCanBeApplied() {
+  void explicitRightTruncationCanBeApplied() {
     final var instance = instancesClient
       .create(smallAngryPlanet(UUID.randomUUID()));
 
@@ -2302,7 +2285,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSetHoldingStatementWithNotes() {
+  void canSetHoldingStatementWithNotes() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2337,7 +2320,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSetHoldingStatementForIndexesWithNotes() {
+  void canSetHoldingStatementForIndexesWithNotes() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2373,7 +2356,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSetHoldingStatementForSupplementsWithNotes() {
+  void canSetHoldingStatementForSupplementsWithNotes() {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2409,8 +2392,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateHoldingWithAdditionalCallNumbersMissingCallNumber()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotCreateHoldingWithAdditionalCallNumbersMissingCallNumber()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2436,8 +2419,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingWithMinimalAdditionalCallNumbers()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canCreateHoldingWithMinimalAdditionalCallNumbers()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2460,8 +2443,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingWithAdditionalCallNumbers()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canCreateHoldingWithAdditionalCallNumbers() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2482,8 +2464,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateHoldingWithEmptyAdditionalCallNumbers()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canCreateHoldingWithEmptyAdditionalCallNumbers()
+    throws Exception {
     UUID instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2504,8 +2486,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAdditionalCallNumberFromHolding()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canDeleteAdditionalCallNumberFromHolding()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2531,8 +2513,8 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateHoldingsAdditionalCallNumbers()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canUpdateHoldingsAdditionalCallNumbers()
+    throws Exception {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2562,7 +2544,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canNotRemoveHoldingsSourcesAttachedToHoldings() {
+  void canNotRemoveHoldingsSourcesAttachedToHoldings() {
     var instanceId = UUID.randomUUID();
 
     instancesClient.create(smallAngryPlanet(instanceId));
@@ -2586,7 +2568,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canPatchHoldingsRecord() {
+  void canPatchHoldingsRecord() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -2616,7 +2598,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void updatingHoldingsWithFieldNotRelatedToItemShouldNotUpdateItem() {
+  void updatingHoldingsWithFieldNotRelatedToItemShouldNotUpdateItem() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     // create holding with call number prefix
@@ -2653,7 +2635,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void updatingHoldingsWithTheSameFieldsRelatedToItemShouldNotUpdateItem() {
+  void updatingHoldingsWithTheSameFieldsRelatedToItemShouldNotUpdateItem() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     // create holding with call number prefix and administrative note
@@ -2689,7 +2671,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282782)
-  public void postSynchronousBatchWithFieldRelatedToItemShouldUpdateItem() {
+  void postSynchronousBatchWithFieldRelatedToItemShouldUpdateItem() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     // create holding with call number prefix and administrative note
@@ -2727,7 +2709,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282786)
-  public void postSynchronousBatchWithFieldNonRelatedToItemShouldNotUpdateItem() {
+  void postSynchronousBatchWithFieldNonRelatedToItemShouldNotUpdateItem() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     // create holding with call number prefix and administrative note
@@ -2766,7 +2748,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282782)
-  public void postSynchronousBatchUnsafeWithFieldRelatedToItemShouldUpdateItem() {
+  void postSynchronousBatchUnsafeWithFieldRelatedToItemShouldUpdateItem() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -2805,7 +2787,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282786)
-  public void postSynchronousBatchUnsafeWithFieldNonRelatedToItemShouldNotUpdateItem() {
+  void postSynchronousBatchUnsafeWithFieldNonRelatedToItemShouldNotUpdateItem() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -2843,7 +2825,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282783)
-  public void patchHoldingsRecordWithFieldNonRelatedToItemShouldNotUpdateItem() {
+  void patchHoldingsRecordWithFieldNonRelatedToItemShouldNotUpdateItem() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
     // create holding
@@ -2879,7 +2861,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282781)
-  public void patchHoldingsRecordWithRelatedFieldShouldUpdateItem() {
+  void patchHoldingsRecordWithRelatedFieldShouldUpdateItem() {
     for (var params : relatedHoldingFieldsProvider()) {
       var holdingId = createHoldingWithField(params[0], params[1]);
       var item = createItemAndAssertVersion(holdingId, "1");
@@ -2893,7 +2875,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @TestRailCase(1282782)
-  public void postSynchronousBatchWithRelatedFieldShouldUpdateItem() {
+  void postSynchronousBatchWithRelatedFieldShouldUpdateItem() {
     for (var params : relatedHoldingFieldsProvider()) {
       var holdingId = createHoldingWithField(params[0], params[1]);
       var item = createItemAndAssertVersion(holdingId, "1");
@@ -2906,7 +2888,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canNotPatchHoldingsRecordIfRequiredFieldIsNull() {
+  void canNotPatchHoldingsRecordIfRequiredFieldIsNull() {
     var instanceId = UUID.randomUUID();
     instancesClient.create(smallAngryPlanet(instanceId));
 
@@ -3556,15 +3538,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertDuplicateHridError(Response response, String hrid) {
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
     final var errors = response.getJson().mapTo(Errors.class);
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
     assertThat(errors.getErrors().size(), is(1));
-    assertThat(errors.getErrors().getFirst(), notNullValue());
-    assertThat(errors.getErrors().getFirst().getMessage(),
-      containsString("HRID value already exists in table holdings_record: " + hrid));
-    assertThat(errors.getErrors().getFirst().getParameters(), notNullValue());
+    assertNotNull(errors.getErrors().getFirst());
+    assertTrue(errors.getErrors().getFirst().getMessage()
+      .contains("HRID value already exists in table holdings_record: " + hrid));
+    assertNotNull(errors.getErrors().getFirst().getParameters());
     assertThat(errors.getErrors().getFirst().getParameters().size(), is(1));
-    assertThat(errors.getErrors().getFirst().getParameters().getFirst(), notNullValue());
+    assertNotNull(errors.getErrors().getFirst().getParameters().getFirst());
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getValue(),
@@ -3581,13 +3563,13 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertHridAllocationError(Response response, String hrid) {
     assertThat(response.getStatusCode(), is(422));
     final var errors = response.getJson().mapTo(Errors.class);
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
-    assertThat(errors.getErrors().getFirst(), notNullValue());
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
+    assertNotNull(errors.getErrors().getFirst());
     assertThat(errors.getErrors().getFirst().getMessage(),
       is("HRID value already exists in table holdings_record: " + hrid));
-    assertThat(errors.getErrors().getFirst().getParameters(), notNullValue());
-    assertThat(errors.getErrors().getFirst().getParameters().getFirst(), notNullValue());
+    assertNotNull(errors.getErrors().getFirst().getParameters());
+    assertNotNull(errors.getErrors().getFirst().getParameters().getFirst());
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(errors.getErrors().getFirst().getParameters().getFirst().getValue(),
@@ -3597,15 +3579,15 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertBatchDuplicateHridError(Response response, String hrid) {
     assertThat(response.getStatusCode(), is(422));
     final var errors = response.getJson().mapTo(Errors.class);
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), notNullValue());
+    assertNotNull(errors);
+    assertNotNull(errors.getErrors());
     var error = errors.getErrors().getFirst();
-    assertThat(error, notNullValue());
+    assertNotNull(error);
     assertThat(error.getMessage(),
       is("HRID value already exists in table holdings_record: " + hrid));
-    assertThat(error.getParameters(), notNullValue());
+    assertNotNull(error.getParameters());
     var parameter = error.getParameters().getFirst();
-    assertThat(parameter, notNullValue());
+    assertNotNull(parameter);
     assertThat(parameter.getKey(),
       is("lower(f_unaccent(jsonb ->> 'hrid'::text))"));
     assertThat(parameter.getValue(),
@@ -3955,11 +3937,9 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
           }
         }));
 
-    try {
+    Assertions.assertDoesNotThrow(() -> {
       sequenceSet.get(2, SECONDS);
-    } catch (Exception e) {
-      fail(e.getMessage());
-    }
+    });
   }
 
   /**
@@ -4113,12 +4093,12 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(JsonObject expectedHolding, String tenantId) {
     Response response = getById(expectedHolding.getString("id"), tenantId);
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-    assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
+    assertTrue(response.getBody().contains(expectedHolding.getString("instanceId")));
   }
 
   private void assertExists(Response response, JsonObject expectedHolding) {
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-    assertThat(response.getBody(), containsString(expectedHolding.getString("instanceId")));
+    assertTrue(response.getBody().contains(expectedHolding.getString("instanceId")));
   }
 
   private void assertNotExists(JsonObject holding) {
@@ -4133,7 +4113,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
 
   private void assertHridRange(Response response, String minHrid, String maxHrid) {
     assertThat(response.getJson().getString("hrid"),
-      is(both(greaterThanOrEqualTo(minHrid)).and(lessThanOrEqualTo(maxHrid))));
+      both(greaterThanOrEqualTo(minHrid)).and(lessThanOrEqualTo(maxHrid)));
   }
 
   private Response create(URL url, Object entity) throws InterruptedException, ExecutionException, TimeoutException {
@@ -4204,7 +4184,7 @@ public class HoldingsStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void mockSharingInstance() {
-    WireMock.stubFor(WireMock.post("/consortia/mobius/sharing/instances")
+    WireMock.stubFor(WireMock.post("/consortia/" + CONSORTIUM_ID + "/sharing/instances")
       .willReturn(WireMock.created().withTransformers(ConsortiumInstanceSharingTransformer.NAME)));
   }
 

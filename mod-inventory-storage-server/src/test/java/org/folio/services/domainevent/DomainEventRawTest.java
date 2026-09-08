@@ -1,15 +1,14 @@
 package org.folio.services.domainevent;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.endsWith;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DomainEventRawTest {
+class DomainEventRawTest {
 
   @Test
-  public void deleteEventIncludesOldRecordRespresentationAndEventTypeAndTenant() {
-    assertThat(DomainEventRaw.deleteEvent("myold", "mytenant").toString(),
-      endsWith("[oldEntity=myold,newEntity=<null>,type=DELETE,tenant=mytenant]"));
+  void deleteEventIncludesOldRecordRespresentationAndEventTypeAndTenant() {
+    assertTrue(DomainEventRaw.deleteEvent("myold", "mytenant").toString()
+      .endsWith("[oldEntity=myold,newEntity=<null>,type=DELETE,tenant=mytenant]"));
   }
 }

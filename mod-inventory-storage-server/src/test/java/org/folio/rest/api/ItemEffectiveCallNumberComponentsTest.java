@@ -9,28 +9,25 @@ import static org.folio.rest.support.matchers.ItemMatchers.hasTypeId;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.Objects;
 import java.util.UUID;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.naming.TestCaseName;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData;
 import org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData.CallNumberComponentPropertyNames;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.ItemEventMessageChecks;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(JUnitParamsRunner.class)
 public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventoryUtil {
   public static final String DEWEY_CALL_NUMBER_TYPE = "03dd64d0-5626-4ecd-8ece-4531e0069f35";
   public static final String NLM_CALL_NUMBER_TYPE = "054d460d-d6b9-4469-9e37-7a78a2266655";
@@ -40,18 +37,20 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   private final ItemEventMessageChecks itemMessageChecks
     = new ItemEventMessageChecks(KAFKA_CONSUMER, mockServer.baseUrl());
 
-  @BeforeClass
-  public static void createCallNumberTypes() {
+  @BeforeAll
+  static void createCallNumberTypes() {
     TestBase.beforeAll();
   }
 
-  @Test
-  @Parameters(
-    source = ItemEffectiveCallNumberComponentsTestData.class,
-    method = "createPropertiesParams"
-  )
-  @TestCaseName("[{index}]: {params}")
-  public void canCalculateEffectiveCallNumberPropertyOnCreate(
+  @BeforeEach
+  void beforeEach() {
+    mockUserTenantsForNonConsortiumMember();
+  }
+
+  @ParameterizedTest(name = "[{index}]: {arguments}")
+  @MethodSource("org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData#"
+    + "createPropertiesParams")
+  void canCalculateEffectiveCallNumberPropertyOnCreate(
     CallNumberComponentPropertyNames callNumberProperties,
     String holdingsPropertyValue, String itemPropertyValue) {
 
@@ -83,7 +82,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   @Test
-  public void canCalculateEffectiveCallNumberPropertyOnBatchCreate() {
+  void canCalculateEffectiveCallNumberPropertyOnBatchCreate() {
     final UUID firstHoldingsId = createInstanceAndHoldingWithBuilder(MAIN_LIBRARY_LOCATION_ID,
       builder -> builder.withCallNumber("firstHRCallNumber")
         .withCallNumberPrefix("firstHRPrefix")
@@ -105,7 +104,7 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
   }
 
   @Test
-  public void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() {
+  void shouldCalculatePropertyWhenHoldingsIsNotRetrieved() {
     final UUID holdingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
     final JsonObject useAllOwnComponents = nodWithNoBarcode(holdingsId)
       .put("itemLevelCallNumber", "allOwnComponentsCN")
@@ -125,13 +124,10 @@ public class ItemEffectiveCallNumberComponentsTest extends TestBaseWithInventory
     )));
   }
 
-  @Test
-  @Parameters(
-    source = ItemEffectiveCallNumberComponentsTestData.class,
-    method = "updatePropertiesParams"
-  )
-  @TestCaseName("[{index}]: {params}")
-  public void canCalculateEffectiveCallNumberPropertyOnUpdate(
+  @ParameterizedTest(name = "[{index}]: {arguments}")
+  @MethodSource("org.folio.rest.api.testdata.ItemEffectiveCallNumberComponentsTestData#"
+    + "updatePropertiesParams")
+  void canCalculateEffectiveCallNumberPropertyOnUpdate(
     CallNumberComponentPropertyNames callNumberProperties,
     String holdingsInitValue, String holdingsTargetValue,
     String itemInitValue, String itemTargetValue) {

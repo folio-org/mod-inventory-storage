@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -24,26 +23,24 @@ import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.http.InterfaceUrls;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.messages.BoundWithEventMessageChecks;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
 public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   static ResourceClient boundWithPartsClient = ResourceClient.forBoundWithParts(getClient());
 
   private final BoundWithEventMessageChecks boundWithEventMessageChecks
     = new BoundWithEventMessageChecks(KAFKA_CONSUMER);
 
-  @AfterClass
+  @AfterAll
   public static void afterAll() {
     deleteAllById(boundWithPartsClient);
   }
 
   @SneakyThrows
-  @After
-  public void beforeEach() {
+  @AfterEach
+  void beforeEach() {
     deleteAllById(boundWithPartsClient);
     clearData();
     setupMaterialTypes();
@@ -53,7 +50,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAndRetrieveBoundWithParts() {
+  void canCreateAndRetrieveBoundWithParts() {
     IndividualResource mainInstance = createInstance("Main Instance");
     IndividualResource mainHoldingsRecord = createHoldingsRecord(mainInstance.getId());
     IndividualResource item = createItem(mainHoldingsRecord.getId());
@@ -86,7 +83,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotDeleteItemThatHasBoundWithParts() {
+  void cannotDeleteItemThatHasBoundWithParts() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
@@ -100,7 +97,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canChangeOnePartOfBoundWith() {
+  void canChangeOnePartOfBoundWith() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource instance2 = createInstance("Instance 2");
@@ -124,7 +121,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAndOrDeleteBoundWithPartsBycSetOfParts() {
+  void canCreateAndOrDeleteBoundWithPartsBycSetOfParts() {
     final IndividualResource instance1 = createInstance("Instance 1");
     final IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     final IndividualResource item = createItem(holdingsRecord1.getId());
@@ -142,7 +139,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAllPartsOfBoundWithByEmptyContentsList() {
+  void canDeleteAllPartsOfBoundWithByEmptyContentsList() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
@@ -159,7 +156,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canDeleteAllPartsOfBoundWithByOnlyProvidingMainHoldingsRecordId() {
+  void canDeleteAllPartsOfBoundWithByOnlyProvidingMainHoldingsRecordId() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
@@ -171,7 +168,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void providingOnlyMainHoldingsRecordIdWhenBoundWithDoesNotExistYetHasNoEffect() {
+  void providingOnlyMainHoldingsRecordIdWhenBoundWithDoesNotExistYetHasNoEffect() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
@@ -196,7 +193,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void providingEmptyListOfPartsWhenBoundWithDoesNotExistYetHasNoEffect() {
+  void providingEmptyListOfPartsWhenBoundWithDoesNotExistYetHasNoEffect() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());
@@ -220,7 +217,7 @@ public class BoundWithStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotUpdateBoundWithIfItemOrSomeHoldingsDoNotExist() {
+  void cannotUpdateBoundWithIfItemOrSomeHoldingsDoNotExist() {
     IndividualResource instance1 = createInstance("Instance 1");
     IndividualResource holdingsRecord1 = createHoldingsRecord(instance1.getId());
     IndividualResource item = createItem(holdingsRecord1.getId());

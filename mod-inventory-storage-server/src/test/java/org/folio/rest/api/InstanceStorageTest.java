@@ -39,27 +39,22 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.IsNull.notNullValue;
 import static org.joda.time.Seconds.seconds;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -103,12 +98,14 @@ import org.folio.rest.support.db.OptimisticLocking;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.utility.LocationUtility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
+@ExtendWith(VertxExtension.class)
 public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   public static final String SUBJECTS_KEY = "subjects";
   private static final String INSTANCES_KEY = "instances";
@@ -156,8 +153,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""), TENANT_ID);
     StorageTestSuite.deleteAll(holdingsStorageUrl(""), TENANT_ID);
     StorageTestSuite.deleteAll(instancesStorageUrl(""), TENANT_ID);
@@ -168,26 +165,24 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @SneakyThrows
-  @After
-  public void afterEach(TestContext context) {
+  @AfterEach
+  void afterEach(VertxTestContext context) {
     setInstanceSequence(1);
 
     StorageTestSuite.checkForMismatchedIds("instance");
 
     // This calls get() to ensure blocking until all futures are complete.
-    final Async async = context.async();
     List<CompletableFuture<Response>> cfs = new ArrayList<>();
     natureOfContentIdsToRemoveAfterTest.forEach(id -> cfs.add(getClient()
       .delete(natureOfContentTermsUrl("/" + id), TENANT_ID)));
     CompletableFuture.allOf(cfs.toArray(new CompletableFuture[0]))
-      .whenComplete((v, t) -> async.complete());
+      .whenComplete((v, t) -> context.completeNow());
 
     removeAllEvents();
   }
 
   @Test
-  public void canCreateAnInstance() throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void canCreateAnInstance() throws Exception {
 
     UUID id = UUID.randomUUID();
     String[] natureOfContentIds = createNatureOfContentTerms();
@@ -210,10 +205,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateAnInstanceWithoutProvidingId()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void canCreateAnInstanceWithoutProvidingId()
+    throws Exception {
 
     JsonObject instanceToCreate = smallAngryPlanet(null);
 
@@ -230,7 +223,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     String newId = instance.getString("id");
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     Response getResponse = getById(newId);
 
@@ -248,10 +241,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateAnInstanceWithIdThatIsNotUuid()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotCreateAnInstanceWithIdThatIsNotUuid()
+    throws Exception {
 
     String id = "6556456";
 
@@ -279,12 +270,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(response.getStatusCode(), is(422));
 
-    assertThat(response.getBody(), containsString("must match"));
+    assertTrue(response.getBody().contains("must match"));
   }
 
   @SneakyThrows
   @Test
-  public void cannotCreateAnInstanceWithInvalidStatisticalCodeIds() {
+  void cannotCreateAnInstanceWithInvalidStatisticalCodeIds() {
 
     JsonObject instanceToCreate = smallAngryPlanet(null);
     instanceToCreate.put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
@@ -296,14 +287,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     Response response = createCompleted.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  public void cannotUpdateAnInstanceWithNotExistingSubjectIds()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotUpdateAnInstanceWithNotExistingSubjectIds()
+    throws Exception {
 
     var instanceToCreate = smallAngryPlanet(null);
     CompletableFuture<Response> createCompleted = new CompletableFuture<>();
@@ -317,7 +306,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var instance = response.getJson();
     var newId = instance.getString("id");
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -335,10 +324,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateAnInstanceWithNotExistingSubjectIds()
-    throws InterruptedException,
-    ExecutionException,
-    TimeoutException {
+  void cannotCreateAnInstanceWithNotExistingSubjectIds()
+    throws Exception {
 
     var instanceToCreate = smallAngryPlanet(null);
     var subject = new Subject()
@@ -359,7 +346,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateAnInstanceUnlinkSubjectSourceAndType() {
+  void canUpdateAnInstanceUnlinkSubjectSourceAndType() {
 
     UUID id = UUID.randomUUID();
     var subject = new Subject()
@@ -372,7 +359,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -385,7 +372,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateAnInstanceLinkAndUnlinkSubjectSourceAndType() {
+  void canUpdateAnInstanceLinkAndUnlinkSubjectSourceAndType() {
 
     UUID id = UUID.randomUUID();
     var subject = new Subject()
@@ -398,7 +385,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -416,8 +403,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPutAnInstanceAtNonexistingLocation()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotPutAnInstanceAtNonexistingLocation()
+    throws Exception {
 
     UUID id = UUID.randomUUID();
 
@@ -436,8 +423,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingInstanceLimitNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void creatingInstanceLimitNoteMaximumLength()
+    throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("notes", new JsonArray().add(new InstanceNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
@@ -453,8 +440,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void creatingInstanceLimitAdministrativeNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void creatingInstanceLimitAdministrativeNoteMaximumLength()
+    throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
     instanceToCreate.put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
@@ -470,8 +457,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingInstanceLimitAdministrativeNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void updatingInstanceLimitAdministrativeNoteMaximumLength()
+    throws Exception {
     UUID id = UUID.randomUUID();
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
@@ -480,8 +467,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void updatingInstanceLimitNoteMaximumLength()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void updatingInstanceLimitNoteMaximumLength()
+    throws Exception {
     UUID id = UUID.randomUUID();
     createInstance(smallAngryPlanet(id));
     JsonObject instance = getById(id).getJson();
@@ -490,7 +477,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void optimisticLockingVersion() throws Exception {
+  void optimisticLockingVersion() throws Exception {
     UUID id = UUID.randomUUID();
     createInstance(nod(id));
     JsonObject instance = getById(id).getJson();
@@ -513,7 +500,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldNotUpdateInstanceIfNoChangesAndOptimizeUpdatesEnabled() {
+  void shouldNotUpdateInstanceIfNoChangesAndOptimizeUpdatesEnabled() {
     var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), true);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var id = UUID.randomUUID();
@@ -533,7 +520,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldUpdateInstanceIfNoChangesAndOptimizeUpdatesDisabled() {
+  void shouldUpdateInstanceIfNoChangesAndOptimizeUpdatesDisabled() {
     var response = updateSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue(), false);
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
     var id = UUID.randomUUID();
@@ -551,8 +538,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotProvideAdditionalPropertiesInInstance()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void cannotProvideAdditionalPropertiesInInstance()
+    throws Exception {
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
 
@@ -570,8 +557,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotProvideAdditionalPropertiesInInstanceIdentifiers()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void cannotProvideAdditionalPropertiesInInstanceIdentifiers()
+    throws Exception {
 
     JsonObject requestWithAdditionalProperty = nod(UUID.randomUUID());
 
@@ -591,8 +578,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canReplaceAnInstanceAtSpecificLocation() throws InterruptedException,
-    ExecutionException, TimeoutException {
+  void canReplaceAnInstanceAtSpecificLocation() throws Exception {
 
     UUID id = UUID.randomUUID();
     String adminNote = "An Admin note";
@@ -637,7 +623,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canDeleteAnInstance() {
+  void canDeleteAnInstance() {
     UUID id = UUID.randomUUID();
 
     JsonObject instanceToCreate = smallAngryPlanet(id);
@@ -660,7 +646,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void cannotDeleteInstanceThatDoesNotExist() {
+  void cannotDeleteInstanceThatDoesNotExist() {
 
     var response = getClient().delete(instancesStorageUrl("/" + UUID.randomUUID()), TENANT_ID).get(10, SECONDS);
 
@@ -669,7 +655,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void canDeleteInstancesByCql() {
+  void canDeleteInstancesByCql() {
 
     final var id5 = UUID.randomUUID();
     final var instance1 = createInstance(nod(UUID.randomUUID()).put("hrid", "1234")).getJson();
@@ -697,16 +683,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void cannotDeleteInstancesWithEmptyCql() {
+  void cannotDeleteInstancesWithEmptyCql() {
 
     var response = getClient().delete(instancesStorageUrl("?query="), TENANT_ID).get(10, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString("empty"));
+    assertTrue(response.getBody().contains("empty"));
   }
 
   @Test
-  public void canGetInstanceById() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetInstanceById() throws Exception {
 
     UUID id = UUID.randomUUID();
 
@@ -734,7 +720,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetAllInstances() throws Exception {
     UUID firstInstanceId = UUID.randomUUID();
     UUID secondInstanceId = UUID.randomUUID();
     createInstance(smallAngryPlanet(firstInstanceId));
@@ -784,7 +770,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRetrieveAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+  void canRetrieveAllInstances() throws Exception {
     var firstInstanceId = UUID.randomUUID();
     var secondInstanceId = UUID.randomUUID();
     createInstance(smallAngryPlanet(firstInstanceId));
@@ -820,8 +806,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByClassificationNumberWithoutArrayModifier()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canSearchByClassificationNumberWithoutArrayModifier()
+    throws Exception {
 
     createInstancesWithClassificationNumbers();
 
@@ -833,8 +819,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchUsingMetadataDateUpdatedIndex()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canSearchUsingMetadataDateUpdatedIndex()
+    throws Exception {
 
     UUID firstInstanceId = UUID.randomUUID();
 
@@ -874,7 +860,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPageAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+  void canPageAllInstances() throws Exception {
 
     createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(nod(UUID.randomUUID()));
@@ -911,8 +897,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canProvideLargePageOffsetAndLimit()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canProvideLargePageOffsetAndLimit()
+    throws Exception {
 
     createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(nod(UUID.randomUUID()));
@@ -939,10 +925,10 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetWithOptimizedSql(TestContext testContext) {
+  void canGetWithOptimizedSql() {
     var n = PgUtil.getOptimizedSqlSize() / 2;
     var pg = PostgresClient.getInstance(getVertx(), TENANT_ID);
-    insertTestDataForOptimizedSql(testContext, pg, n);
+    insertTestDataForOptimizedSql(pg, n);
 
     assertOptimizedSqlLimit9Results();
     assertOptimizedSqlLimit5Results();
@@ -953,14 +939,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertOptimizedSqlDescendingOffset6Limit3Results();
   }
 
-  private void insertTestDataForOptimizedSql(TestContext testContext, PostgresClient pg, int n) {
+  private void insertTestDataForOptimizedSql(PostgresClient pg, int n) {
     // "b foo" records are before the getOptimizedSqlSize() limit
     // "d foo" records are after the getOptimizedSqlSize() limit
-    insert(testContext, pg, "a", n);
-    insert(testContext, pg, "b foo", 5);
-    insert(testContext, pg, "c", n);
-    insert(testContext, pg, "d foo", 5);
-    insert(testContext, pg, "e", n);
+    insert(pg, "a", n);
+    insert(pg, "b foo", 5);
+    insert(pg, "c", n);
+    insert(pg, "d foo", 5);
+    insert(pg, "e", n);
   }
 
   private void assertOptimizedSqlLimit9Results() {
@@ -1038,7 +1024,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateInstanceSourceRecord() throws Exception {
+  void canCreateInstanceSourceRecord() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
@@ -1054,11 +1040,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(fields.getJsonObject(1).getJsonObject("245")
       .getJsonArray("subfields").getJsonObject(0).getString("a"), is("The Yearbook of Okapiology"));
     assertThat(getResponse.getJson().getMap().keySet(), containsInAnyOrder("id", "leader", "fields"));
-    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+    assertNull(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY));
   }
 
-  @Test  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
-  public void canCreateInstanceSourceRecord101073931X() throws Exception {
+  // https://issues.folio.org/browse/MODINVSTOR-142?focusedCommentId=33665#comment-33665
+  @Test
+  void canCreateInstanceSourceRecord101073931X() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
@@ -1069,11 +1056,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
-    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+    assertNull(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY));
   }
 
-  @Test  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
-  public void canCreateInstanceSourceRecord1011273942() throws Exception {
+  // https://issues.folio.org/browse/MODINVSTOR-143?focusedCommentId=33618#comment-33618
+  @Test
+  void canCreateInstanceSourceRecord1011273942() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
@@ -1084,11 +1072,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("1011273942"));
-    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+    assertNull(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY));
   }
 
   @Test
-  public void canUpdateInstanceSourceRecord() throws Exception {
+  void canUpdateInstanceSourceRecord() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
@@ -1100,20 +1088,20 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     assertThat(getResponse.getStatusCode(), is(200));
     JsonArray fields = getResponse.getJson().getJsonArray("fields");
     assertThat(fields.getJsonObject(0).getString("001"), is("101073931X"));
-    assertThat(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), nullValue());
+    assertNull(getResponse.getJson().getString(STATUS_UPDATED_DATE_PROPERTY));
   }
 
   @Test
-  public void cannotGetNonExistingSourceRecord() {
+  void cannotGetNonExistingSourceRecord() {
     getMarcJsonNotFound(UUID.randomUUID());
   }
 
   @Test
-  public void canDeleteInstanceMarcSourceRecord() throws Exception {
+  void canDeleteInstanceMarcSourceRecord() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
-    assertThat(getSourceRecordFormat(id), is(nullValue()));
+    assertNull(getSourceRecordFormat(id));
 
     put(id, marcJson);
     assertThat(getSourceRecordFormat(id), is("MARC-JSON"));
@@ -1124,16 +1112,16 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.empty(deleteCompleted));
     Response deleteResponse = deleteCompleted.get(10, SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
-    assertThat(getSourceRecordFormat(id), is(nullValue()));
+    assertNull(getSourceRecordFormat(id));
     getMarcJsonNotFound(id);
   }
 
   @Test
-  public void canDeleteInstanceSourceRecord() throws Exception {
+  void canDeleteInstanceSourceRecord() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
-    assertThat(getSourceRecordFormat(id), is(nullValue()));
+    assertNull(getSourceRecordFormat(id));
 
     put(id, marcJson);
     assertThat(getSourceRecordFormat(id), is("MARC-JSON"));
@@ -1144,12 +1132,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       TENANT_ID, ResponseHandler.empty(deleteCompleted));
     Response deleteResponse = deleteCompleted.get(10, SECONDS);
     assertThat(deleteResponse.getStatusCode(), is(HttpStatus.HTTP_NO_CONTENT.toInt()));
-    assertThat(getSourceRecordFormat(id), is(nullValue()));
+    assertNull(getSourceRecordFormat(id));
     getMarcJsonNotFound(id);
   }
 
   @Test
-  public void canDeleteSourceRecordWhenDeletingInstance() throws Exception {
+  void canDeleteSourceRecordWhenDeletingInstance() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instance = smallAngryPlanet(id);
     createInstance(instance);
@@ -1167,12 +1155,12 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateSourceRecordWithoutInstance() throws Exception {
+  void cannotCreateSourceRecordWithoutInstance() throws Exception {
     put(UUID.randomUUID(), marcJson, HttpStatus.HTTP_NOT_FOUND);
   }
 
   @Test
-  public void canSearchForInstancesByTitle() {
+  void canSearchForInstancesByTitle() {
     canSort("title=\"Upr*\"", "Uprooted");
     // Note that 'Up' is a stop word, and will be removed from the query!
     // We have an issue for dropping stop words: RMB-228
@@ -1180,37 +1168,37 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForInstancesByTitleWord() {
+  void canSearchForInstancesByTitleWord() {
     canSort("title=\"Times\"", "Interesting Times");
   }
 
   @Test
-  public void canSearchForInstancesByTitleAdj() {
+  void canSearchForInstancesByTitleAdj() {
     canSort("title adj \"Upro*\"", "Uprooted");
   }
 
   @Test
-  public void canSearchForInstancesUsingSimilarQueryToUiLookAheadSearch() {
+  void canSearchForInstancesUsingSimilarQueryToUiLookAheadSearch() {
     canSort("title=\"upr*\" or contributors=\"name\": \"upr*\" or identifiers=\"value\": \"upr*\"", "Uprooted");
   }
 
   @Test
-  public void arrayModifierfsIdentifiers1() {
+  void arrayModifierfsIdentifiers1() {
     canSort("identifiers = /@value 9781447294146", "Uprooted");
   }
 
   @Test
-  public void arrayModifierfsIdentifiers2() {
+  void arrayModifierfsIdentifiers2() {
     canSort("identifiers = /@identifierTypeId = " + UUID_ISBN + " 9781447294146", "Uprooted");
   }
 
   @Test
-  public void arrayModifierfsIdentifiers3() {
+  void arrayModifierfsIdentifiers3() {
     canSort("identifiers = /@identifierTypeId " + UUID_ASIN, "Nod");
   }
 
   @Test
-  public void canSearchWithoutSqlInjection() {
+  void canSearchWithoutSqlInjection() {
     create5instances();
 
     // check for MODINVSTOR-293:
@@ -1232,7 +1220,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchBySubjects() throws Exception {
+  void canSearchBySubjects() throws Exception {
     JsonObject first = buildInstanceWithSubjects("first", "foo", "bar", "baz");
     JsonObject second = buildInstanceWithSubjects("second", "abc def ghi", "uvw xyz");
 
@@ -1274,7 +1262,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByBarcode() throws Exception {
+  void canSearchByBarcode() throws Exception {
     UUID expectedInstanceId = UUID.randomUUID();
     UUID expectedHoldingId = UUID.randomUUID();
     createInstance(smallAngryPlanet(expectedInstanceId));
@@ -1311,7 +1299,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   // This is intended to demonstrate usage of the two different views
   @Test
-  public void canSearchByBarcodeAndPermanentLocation() throws Exception {
+  void canSearchByBarcodeAndPermanentLocation() throws Exception {
     UUID smallAngryPlanetInstanceId = UUID.randomUUID();
     UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
     UUID annexSmallAngryHoldingId = UUID.randomUUID();
@@ -1351,7 +1339,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   // This is intended to demonstrate that instances without holdings or items
   // are not excluded from searching
   @Test
-  public void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances() throws Exception {
+  void canSearchByTitleAndBarcodeWithMissingHoldingsAndItemsAndStillGetInstances() throws Exception {
     UUID smallAngryPlanetInstanceId = UUID.randomUUID();
     UUID mainLibrarySmallAngryHoldingId = UUID.randomUUID();
     UUID nodInstanceId = UUID.randomUUID();
@@ -1396,63 +1384,63 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphens() {
+  void canSearchForFirstIsbnWithAdditionalHyphens() {
     canSort("isbn = 0-552-16754-1", "Interesting Times");
   }
 
   @Test
-  public void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
+  void canSearchForFirstIsbnWithAdditionalHyphenAndTruncation() {
     canSort("isbn = 05-5*", "Interesting Times");
   }
 
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphens() {
+  void canSearchForSecondIsbnWithMissingHyphens() {
     canSort("isbn = 9780552167543", "Interesting Times");
   }
 
   @Test
-  public void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
+  void canSearchForSecondIsbnWithMissingHyphensAndTrunation() {
     canSort("isbn = 9780* sortBy title", "Interesting Times", "Temeraire");
   }
 
   @Test
-  public void canSearchForSecondIsbnWithAlteredHyphens() {
+  void canSearchForSecondIsbnWithAlteredHyphens() {
     canSort("isbn = 9-7-8-055-2167-543", "Interesting Times");
   }
 
   @Test
-  public void cannotFindIsbnWithTailString() {
+  void cannotFindIsbnWithTailString() {
     canSort("isbn = 552-16754-3");
   }
 
   @Test
-  public void cannotFindIsbnWithInnerStringAndTruncation() {
+  void cannotFindIsbnWithInnerStringAndTruncation() {
     canSort("isbn = 552*");
   }
 
   @Test
-  public void canFindFirstInvalidIsbn() {
+  void canFindFirstInvalidIsbn() {
     canSort("invalidIsbn = 12345", "Interesting Times");
   }
 
   @Test
-  public void cannotFindIsbnInInvalidIsbn() {
+  void cannotFindIsbnInInvalidIsbn() {
     canSort("invalidIsbn = 0552167541");
   }
 
   @Test
-  public void cannotFindInvalidIsbnInIsbn() {
+  void cannotFindInvalidIsbnInIsbn() {
     canSort("isbn = 12345");
   }
 
   @Test
-  public void canSortAscending() {
+  void canSortAscending() {
     canSort("cql.allRecords=1 sortBy title",
       "Interesting Times", "Long Way to a Small Angry Planet", "Nod", "Temeraire", "Uprooted");
   }
 
   @Test
-  public void canSortDescending() {
+  void canSortDescending() {
     canSort("cql.allRecords=1 sortBy title/sort.descending",
       "Uprooted", "Temeraire", "Nod", "Long Way to a Small Angry Planet", "Interesting Times");
   }
@@ -1460,7 +1448,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   // Interesting Times has two ISBNs: 0552167541, 978-0-552-16754-3
 
   @Test
-  public void canDeleteAllInstances() throws InterruptedException, ExecutionException, TimeoutException {
+  void canDeleteAllInstances() throws Exception {
     createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(nod(UUID.randomUUID()));
     createInstance(uprooted(UUID.randomUUID()));
@@ -1493,7 +1481,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void tenantIsRequiredForCreatingNewInstance() {
+  void tenantIsRequiredForCreatingNewInstance() {
     JsonObject instance = nod(UUID.randomUUID());
 
     CompletableFuture<Response> postCompleted = new CompletableFuture<>();
@@ -1508,7 +1496,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void tenantIsRequiredForGettingAnInstance() {
+  void tenantIsRequiredForGettingAnInstance() {
 
     URL getInstanceUrl = instancesStorageUrl(format("/%s",
       UUID.randomUUID()));
@@ -1525,7 +1513,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void tenantIsRequiredForGettingAllInstances() {
+  void tenantIsRequiredForGettingAllInstances() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
 
     getClient().get(instancesStorageUrl(""), null, ResponseHandler.any(getCompleted));
@@ -1538,7 +1526,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
   @Test
-  public void testCrossTableQueries() {
+  void crossTableQueries() {
     setupCrossTableQueryTestData();
     String[] queryUrls = buildCrossTableQueryUrls(instancesStorageUrl("") + "?query=");
 
@@ -1547,7 +1535,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void shouldReturnInstanceWhenFilterByTags() throws Exception {
+  void shouldReturnInstanceWhenFilterByTags() throws Exception {
 
     final String tagsKey = "tags";
     final String tagListKey = "tagList";
@@ -1579,8 +1567,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSyncInstancesWhenNumberOfInstancesExceedsMaxEntitiesProperty()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotPostSyncInstancesWhenNumberOfInstancesExceedsMaxEntitiesProperty()
+    throws Exception {
     JsonArray instancesArray = new JsonArray();
     int numberOfInstances = MAX_ENTITIES + 1;
 
@@ -1600,7 +1588,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldChangeInitialStatusUpdatedDate() throws Exception {
+  void shouldChangeInitialStatusUpdatedDate() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
@@ -1621,22 +1609,22 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     assertThat(updatedInstance.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
 
-    assertThat(updatedInstance
-      .getInstant(STATUS_UPDATED_DATE_PROPERTY), not(initialDate));
+    assertNotEquals(updatedInstance
+      .getInstant(STATUS_UPDATED_DATE_PROPERTY).toString(), initialDate);
   }
 
   /**
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldChangeStatusUpdatedDateOnSubsequentStatusChanges() throws Exception {
+  void shouldChangeStatusUpdatedDateOnSubsequentStatusChanges() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
 
     createInstance(instanceToCreate);
     Response createdInstance = getById(id);
-    assertThat(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY), notNullValue());
+    assertNotNull(createdInstance.getJson().getString(STATUS_UPDATED_DATE_PROPERTY));
 
     JsonObject updatedInstanceWithCatStatus = updateInstanceWithStatus(
       instanceToCreate, createdInstance, getCatalogedInstanceType().getId().toString());
@@ -1650,7 +1638,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Test case for instanceStatusUpdatedDateTrigger.sql trigger.
    */
   @Test
-  public void shouldNotChangeStatusUpdatedDateWhenStatusHasNotChanged() throws Exception {
+  void shouldNotChangeStatusUpdatedDateWhenStatusHasNotChanged() throws Exception {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id)
       .put("statusId", getOtherInstanceType().getId().toString());
@@ -1682,7 +1670,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatch() throws Exception {
+  void canPostSynchronousBatch() throws Exception {
     log.info("Starting canPostSynchronousBatch");
     JsonArray instancesArray = new JsonArray();
 
@@ -1711,7 +1699,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void instancesCreatedInBatchSynchShouldHaveMetadata() throws Exception {
+  void instancesCreatedInBatchSynchShouldHaveMetadata() throws Exception {
     JsonObject instanceCollection = createRequestForMultipleInstances(2);
     toList(instanceCollection.getJsonArray(INSTANCES_KEY)).forEach(instance ->
       assertFalse(instance.containsKey(METADATA_KEY)));
@@ -1723,7 +1711,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void instancesCreatedInBatchShouldHaveStatusDate() throws Exception {
+  void instancesCreatedInBatchShouldHaveStatusDate() throws Exception {
     JsonObject instanceCollection = createRequestForMultipleInstances(3);
 
     final var createCompleted = createInstancesBatchSync(instanceCollection);
@@ -1735,7 +1723,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotBatchCreateInstancesWithNonExistingSubjectIds() throws Exception {
+  void cannotBatchCreateInstancesWithNonExistingSubjectIds() throws Exception {
     var instanceCollection = createRequestForMultipleInstances(3);
     var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
     var invalidSubjectId = UUID.randomUUID().toString();
@@ -1755,7 +1743,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotBatchCreateInstancesWithInvalidStatisticalCodeIds() throws Exception {
+  void cannotBatchCreateInstancesWithInvalidStatisticalCodeIds() throws Exception {
     var instanceCollection = createRequestForMultipleInstances(3);
     var instanceToCreate = smallAngryPlanet(UUID.randomUUID());
 
@@ -1768,11 +1756,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var response = createCompleted.get(30, SECONDS);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithInvalidInstance() {
+  void cannotPostSynchronousBatchWithInvalidInstance() {
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(UUID.randomUUID()));
     instancesArray.add(smallAngryPlanet(UUID.randomUUID()).put("invalidPropertyName", "bar"));
@@ -1790,17 +1778,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
+  void cannotPostSynchronousBatchWithExistingIdWithoutUpsertParameter() throws Exception {
     cannotPostSynchronousBatchWithExistingId("");
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithExistingIdUpsertFalse() throws Exception {
+  void cannotPostSynchronousBatchWithExistingIdUpsertFalse() throws Exception {
     cannotPostSynchronousBatchWithExistingId("?upsert=false");
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
+  void canPostSynchronousBatchWithExistingIdUpsertTrue() throws Exception {
     UUID duplicateId = UUID.randomUUID();
     final IndividualResource existingInstance = createInstance(nod(duplicateId));
     final JsonObject firstInstanceToCreate = uprooted(UUID.randomUUID());
@@ -1821,17 +1809,17 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
+  void canPostSynchronousBatchWithoutIdsWithUpsertTrue() {
     canPostSynchronousBatchWithoutIds("?upsert=true");
   }
 
   @Test
-  public void canPostSynchronousBatchWithoutIdsWithoutUpsert() {
+  void canPostSynchronousBatchWithoutIdsWithoutUpsert() {
     canPostSynchronousBatchWithoutIds("");
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateId() {
+  void cannotPostSynchronousBatchWithDuplicateId() {
     UUID duplicateId = UUID.randomUUID();
     JsonArray instancesArray = new JsonArray();
     instancesArray.add(uprooted(duplicateId));
@@ -1851,14 +1839,14 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
+  void cannotPostSynchronousBatchUnsafeIfNotAllowed() {
     // not allowed because env var DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not set
     JsonArray instances = new JsonArray().add(uprooted(UUID.randomUUID())).add(temeraire(UUID.randomUUID()));
     assertThat(postSynchronousBatchUnsafe(instances), statusCodeIs(413));
   }
 
   @Test
-  public void canPostSynchronousBatchUnsafe() {
+  void canPostSynchronousBatchUnsafe() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -1874,7 +1862,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
+  void canPostSynchronousBatchUnsafeWithInvalidStatisticalCodeIds() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
 
@@ -1886,11 +1874,11 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var response = postSynchronousBatchUnsafe(instances);
 
     assertThat(response.getStatusCode(), is(400));
-    assertThat(response.getBody(), containsString(INVALID_TYPE_ERROR_MESSAGE));
+    assertTrue(response.getBody().contains(INVALID_TYPE_ERROR_MESSAGE));
   }
 
   @Test
-  public void canGenerateInstanceHridWhenNotSupplied() throws Exception {
+  void canGenerateInstanceHridWhenNotSupplied() throws Exception {
     log.info("Starting canGenerateInstanceHRIDWhenNotSupplied");
 
     final UUID id = UUID.randomUUID();
@@ -1909,7 +1897,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateInstanceWhenHridSupplied() throws Exception {
+  void canCreateInstanceWhenHridSupplied() throws Exception {
     log.info("Starting canCreateInstanceWhenHRIDSupplied");
 
     final String hrid = "testHRID";
@@ -1927,7 +1915,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateInstanceWithDuplicateHrid() throws Exception {
+  void cannotCreateInstanceWithDuplicateHrid() throws Exception {
     log.info("Starting cannotCreateInstanceWithDuplicateHRID");
 
     final UUID id = UUID.randomUUID();
@@ -1959,7 +1947,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateInstanceWithHridFailure() throws Exception {
+  void cannotCreateInstanceWithHridFailure() throws Exception {
     log.info("Starting cannotCreateInstanceWithHRIDFailure");
 
     final UUID id = UUID.randomUUID();
@@ -1990,7 +1978,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotChangeHridAfterCreation() throws Exception {
+  void cannotChangeHridAfterCreation() throws Exception {
     log.info("Starting cannotChageHRIDAfterCreation");
 
     final UUID id = UUID.randomUUID();
@@ -2023,7 +2011,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void allowChangeHridWhenSourceIsConsortia() throws Exception {
+  void allowChangeHridWhenSourceIsConsortia() throws Exception {
     log.info("Starting allowChangeHridWhenSourceIsConsortia");
 
     final UUID id = UUID.randomUUID();
@@ -2044,7 +2032,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void cannotCreateAnInstanceWhenAlreadyAllocatedHridIsAllocated() {
+  void cannotCreateAnInstanceWhenAlreadyAllocatedHridIsAllocated() {
     final var instanceRequest = smallAngryPlanet(UUID.randomUUID());
     instanceRequest.remove("id");
     instanceRequest.remove("hrid");
@@ -2073,7 +2061,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotRemoveHridAfterCreation() throws Exception {
+  void cannotRemoveHridAfterCreation() throws Exception {
     log.info("Starting cannotRemoveHRIDAfterCreation");
 
     final UUID id = UUID.randomUUID();
@@ -2106,7 +2094,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithGeneratedHrid() throws Exception {
+  void canPostSynchronousBatchWithGeneratedHrid() throws Exception {
     log.info("Starting canPostSynchronousBatchWithGeneratedHRID");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2130,15 +2118,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       final Response response = getById(instance.getString("id"));
       assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
       assertThat(response.getJson().getString("hrid"),
-        is(both(greaterThanOrEqualTo("in00000000001"))
-          .and(lessThanOrEqualTo("in00000000003"))));
+        Matchers.both(Matchers.greaterThanOrEqualTo("in00000000001"))
+          .and(lessThanOrEqualTo("in00000000003")));
     }
 
     log.info("Finished canPostSynchronousBatchWithGeneratedHRID");
   }
 
   @Test
-  public void canPostSynchronousBatchWithExistingAndGeneratedHrid() throws Exception {
+  void canPostSynchronousBatchWithExistingAndGeneratedHrid() throws Exception {
     log.info("Starting canPostSynchronousBatchWithExistingAndGeneratedHRID");
 
     final UUID[] id = new UUID[5];
@@ -2168,7 +2156,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithDuplicateHrids() {
+  void cannotPostSynchronousBatchWithDuplicateHrids() {
     log.info("Starting cannotPostSynchronousBatchWithDuplicateHRIDs");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2190,7 +2178,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPostSynchronousBatchWithHridFailure() {
+  void cannotPostSynchronousBatchWithHridFailure() {
     log.info("Starting cannotPostSynchronousBatchWithHRIDFailure");
 
     final JsonArray instancesArray = new JsonArray();
@@ -2212,7 +2200,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateInstanceWithDuplicateMatchKey() throws Exception {
+  void cannotCreateInstanceWithDuplicateMatchKey() throws Exception {
     log.info("Starting cannotCreateInstanceWithDuplicateMatchKey");
 
     final UUID id = UUID.randomUUID();
@@ -2245,7 +2233,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostSynchronousBatchWithDiscoverySuppressedInstances() {
+  void canPostSynchronousBatchWithDiscoverySuppressedInstances() {
     final JsonArray instancesArray = new JsonArray();
     final UUID smallAngryPlanetId = UUID.randomUUID();
     final UUID uprootedId = UUID.randomUUID();
@@ -2267,7 +2255,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPostDiscoverySuppressedInstance() throws Exception {
+  void canPostDiscoverySuppressedInstance() throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID())
       .put(DISCOVERY_SUPPRESS, true));
 
@@ -2276,7 +2264,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
+  void canUpdateInstanceWithDiscoverySuppressProperty() throws Exception {
     IndividualResource instance = createInstance(smallAngryPlanet(UUID.randomUUID()));
     assertThat(instance.getJson().getBoolean(DISCOVERY_SUPPRESS), is(false));
 
@@ -2295,7 +2283,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByDiscoverySuppressProperty() throws Exception {
+  void canSearchByDiscoverySuppressProperty() throws Exception {
     final IndividualResource suppressedInstance = createInstance(smallAngryPlanet(UUID.randomUUID())
       .put(DISCOVERY_SUPPRESS, true));
     final IndividualResource notSuppressedInstance = createInstance(
@@ -2314,7 +2302,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canSearchByStaffSuppressProperty() throws Exception {
+  void canSearchByStaffSuppressProperty() throws Exception {
     final IndividualResource suppressedInstance = createInstance(smallAngryPlanet(UUID.randomUUID())
       .put(STAFF_SUPPRESS, true));
     final IndividualResource notSuppressedInstance = createInstance(
@@ -2342,8 +2330,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
    * Insert n records into instance table where the title field is build using
    * prefix and the number from 1 .. n.
    */
-  private void insert(TestContext testContext, PostgresClient pg, String prefix, int n) {
-    Async async = testContext.async();
+  @SneakyThrows
+  private void insert(PostgresClient pg, String prefix, int n) {
     String table = PostgresClient.convertToPsqlStandard(TENANT_ID) + ".instance";
     String sql = "INSERT INTO " + table
       + " SELECT uuid, json_build_object('title', prefix || n, 'id', uuid)"
@@ -2351,11 +2339,15 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
       + "       FROM (SELECT generate_series(1, " + n + ") AS n, '" + prefix + " ' AS prefix) AS tmp1"
       + "      ) AS tmp2";
 
-    pg.execute(sql, testContext.asyncAssertSuccess(updated -> {
-      testContext.assertEquals(n, updated.rowCount());
-      async.complete();
+    VertxTestContext testContext = new VertxTestContext();
+    pg.execute(sql, testContext.succeeding(updated -> {
+      testContext.verify(() -> assertEquals(n, updated.rowCount()));
+      testContext.completeNow();
     }));
-    async.await(10000 /* ms */);
+    assertTrue(testContext.awaitCompletion(10, TimeUnit.SECONDS));
+    if (testContext.failed()) {
+      throw testContext.causeOfFailure();
+    }
   }
 
   private MarcJson toMarcJson(String resourcePath) throws IOException {
@@ -2532,8 +2524,8 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
     var response = TestBase.get(getCompleted);
     assertThat(response, statusCodeIs(HTTP_OK));
     var createdInstance = response.getJson().getJsonArray("instances").getJsonObject(0);
-    assertThat(createdInstance.getString("id"), notNullValue());
-    assertThat(createdInstance.getString("title"), equalTo("Test-Instance"));
+    assertNotNull(createdInstance.getString("id"));
+    assertEquals("Test-Instance", createdInstance.getString("title"));
     instanceMessageChecks.createdMessagePublished(getById(createdInstance.getString("id")).getJson());
   }
 
@@ -2593,11 +2585,9 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
         }
       }));
 
-    try {
+    Assertions.assertDoesNotThrow(() -> {
       sequenceSet.get(2, SECONDS);
-    } catch (Exception e) {
-      fail(e.getMessage());
-    }
+    });
   }
 
   private void createHoldings(JsonObject holdingsToCreate)
@@ -2691,7 +2681,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private void assertExists(JsonObject expectedInstance) {
     Response response = getById(expectedInstance.getString("id"));
     assertThat(response, statusCodeIs(HttpStatus.HTTP_OK));
-    assertThat(response.getBody(), containsString(expectedInstance.getString("title")));
+    assertTrue(response.getBody().contains(expectedInstance.getString("title")));
   }
 
   private void assertNotExists(JsonObject instanceToGet) {
@@ -2877,8 +2867,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   private void verifyStatusUpdatedDateChanged(JsonObject first, JsonObject second) {
-    assertThat(first.getString(STATUS_UPDATED_DATE_PROPERTY),
-      not(second.getString(STATUS_UPDATED_DATE_PROPERTY)));
+    assertNotEquals(first.getString(STATUS_UPDATED_DATE_PROPERTY), second.getString(STATUS_UPDATED_DATE_PROPERTY));
 
     assertThat(first.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
     assertThat(second.getString(STATUS_UPDATED_DATE_PROPERTY), hasIsoFormat());
@@ -2973,7 +2962,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private void verifyBatchUpsertResults(JsonArray instancesArray, UUID duplicateId,
                                         IndividualResource existingInstance,
                                         JsonObject firstInstanceToCreate,
-                                        JsonObject secondInstanceToCreate) throws Exception {
+                                        JsonObject secondInstanceToCreate) {
     assertExists(instancesArray.getJsonObject(0));
     assertExists(instancesArray.getJsonObject(1));
     assertExists(instancesArray.getJsonObject(2));
@@ -2991,20 +2980,20 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   private void verifyDuplicateHridError(Response response, String expectedHrid) {
     final Errors errors = response.getJson().mapTo(Errors.class);
 
-    assertThat(errors, notNullValue());
-    assertThat(errors.getErrors(), hasSize(1));
+    assertNotNull(errors);
+    assertEquals(1, errors.getErrors().size());
     var error = errors.getErrors().getFirst();
     assertThat(error.getMessage(),
       anyOf(containsString("value already exists"), containsString("duplicate key")));
-    assertThat(error.getParameters(), notNullValue());
+    assertNotNull(error.getParameters());
     var parameter = error.getParameters().getFirst();
-    assertThat(parameter, notNullValue());
-    assertThat(parameter.getKey(), containsString("'hrid'"));
+    assertNotNull(parameter);
+    assertTrue(parameter.getKey().contains("'hrid'"));
     assertThat(parameter.getValue(), is(expectedHrid));
   }
 
   @Test
-  public void canPatchAnInstanceUnlinkSubjectSourceAndType() {
+  void canPatchAnInstanceUnlinkSubjectSourceAndType() {
     UUID id = UUID.randomUUID();
     var subject = new Subject()
       .withSourceId(UUID_INSTANCE_SUBJECT_SOURCE_ID.toString())
@@ -3016,7 +3005,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -3034,13 +3023,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchAnInstanceWhenHridIsChanged() {
+  void cannotPatchAnInstanceWhenHridIsChanged() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -3056,13 +3045,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canPatchAnInstanceWhenHridIsNotChanged() {
+  void canPatchAnInstanceWhenHridIsNotChanged() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -3078,13 +3067,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchAnInstanceOnOptimisticLock() {
+  void cannotPatchAnInstanceOnOptimisticLock() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -3108,7 +3097,7 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchWhenInstanceNotFound() {
+  void cannotPatchWhenInstanceNotFound() {
     UUID id = UUID.randomUUID();
 
     var patchJson = new JsonObject();
@@ -3134,13 +3123,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchAnInstanceWithLongAdministrativeNotes() {
+  void cannotPatchAnInstanceWithLongAdministrativeNotes() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 
@@ -3154,13 +3143,13 @@ public class InstanceStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotPatchAnInstanceWithLongNotes() {
+  void cannotPatchAnInstanceWithLongNotes() {
     UUID id = UUID.randomUUID();
     JsonObject instanceToCreate = smallAngryPlanet(id);
 
     var newId = createInstanceRecord(instanceToCreate);
 
-    assertThat(newId, is(notNullValue()));
+    assertNotNull(newId);
 
     var getResponse = getById(newId);
 

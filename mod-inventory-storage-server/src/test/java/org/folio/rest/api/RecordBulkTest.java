@@ -10,13 +10,13 @@ import static org.folio.rest.support.http.InterfaceUrls.recordBulkUrl;
 import static org.folio.util.StringUtil.urlEncode;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,22 +24,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.folio.rest.jaxrs.model.RecordBulkIdsGetField;
 import org.folio.rest.support.Response;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class RecordBulkTest extends TestBaseWithInventoryUtil {
+@ExtendWith(VertxExtension.class)
+class RecordBulkTest extends TestBaseWithInventoryUtil {
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -47,14 +45,14 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     removeAllEvents();
   }
 
-  @After
-  public void checkIdsAfterEach() {
+  @AfterEach
+  void checkIdsAfterEach() {
     StorageTestSuite.checkForMismatchedIds("instance");
     StorageTestSuite.checkForMismatchedIds("holdings_record");
   }
 
   @Test
-  public void canGetInstanceBulkUsingDefaults() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetInstanceBulkUsingDefaults() throws Exception {
     int totalMoons = 2;
     Map<String, JsonObject> moons = manyMoons(totalMoons);
     createManyMoons(moons);
@@ -69,7 +67,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfId() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetInstanceBulkOfId() throws Exception {
     int totalMoons = 2;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
       RecordBulkIdsGetField.ID);
@@ -85,8 +83,8 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceBulkOfIdWithLimitAndOffset()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetInstanceBulkOfIdWithLimitAndOffset()
+    throws Exception {
     int totalMoons = 20;
     int expectedMatches = 5;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -103,7 +101,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstanceIdsByEffectiveLocation() throws ExecutionException, InterruptedException, TimeoutException {
+  void canGetInstanceIdsByEffectiveLocation() throws Exception {
     var expectedInstanceId = UUID.randomUUID();
     var effectiveLocationId = MAIN_LIBRARY_LOCATION_ID;
     instancesClient.create(instance(expectedInstanceId));
@@ -127,11 +125,11 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
     assertThat(ids.size(), is(1));
 
     var instanceId = ids.getJsonObject(0).getString("id");
-    assertThat(instanceId, equalTo(expectedInstanceId.toString()));
+    assertEquals(instanceId, expectedInstanceId.toString());
   }
 
   @Test
-  public void canGetInstanceBulkOfIdWithQueryExact() throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetInstanceBulkOfIdWithQueryExact() throws Exception {
     int totalMoons = 10;
     int expectedMatches = 1;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -149,7 +147,7 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotGetInstanceBulkOfNonExistentId() throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotGetInstanceBulkOfNonExistentId() throws Exception {
     int totalMoons = 2;
     int expectedMatches = 0;
     Map<String, JsonObject> moons = manyMoons(totalMoons,
@@ -167,8 +165,8 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetHoldingsBulkOfId()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetHoldingsBulkOfId()
+    throws Exception {
 
     int totalHoldingsIds = 2;
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);
@@ -183,8 +181,8 @@ public class RecordBulkTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetHoldingsBulkOfIdWithLimitAndOffset()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetHoldingsBulkOfIdWithLimitAndOffset()
+    throws Exception {
 
     int totalHoldingsIds = 20;
     List<String> holdingIds = createAndGetHoldingsIds(totalHoldingsIds);

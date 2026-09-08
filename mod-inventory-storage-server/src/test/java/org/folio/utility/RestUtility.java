@@ -9,7 +9,9 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpResponse;
+import java.net.URI;
 import java.net.URL;
+import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -58,6 +60,7 @@ public final class RestUtility {
     send(url, method, userId, content, contentType, TENANT_ID, handler);
   }
 
+  @SneakyThrows
   public static void send(String url, HttpMethod method, String userId, String content,
                           String contentType, String tenantId, Handler<HttpResponse<Buffer>> handler) {
 
@@ -66,6 +69,8 @@ public final class RestUtility {
     if (userId != null) {
       headers.add("X-Okapi-User-Id", userId);
     }
+    var uri = new URI(url);
+    String baseUrl = format("%s://%s", uri.getScheme(), uri.getAuthority());
 
     getClient().getWebClient()
       .requestAbs(method, url)
@@ -73,6 +78,8 @@ public final class RestUtility {
       .putHeader("x-okapi-tenant", tenantId)
       .putHeader("Accept", "application/json,text/plain")
       .putHeader("Content-type", contentType)
+      .putHeader("X-Okapi-Url-to", baseUrl)
+      .putHeader("X-Okapi-Url", baseUrl)
       .putHeaders(headers)
       .sendBuffer(body)
       .onSuccess(handler)

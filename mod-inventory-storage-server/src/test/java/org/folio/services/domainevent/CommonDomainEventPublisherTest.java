@@ -5,10 +5,10 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.api.TestBase.get;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
@@ -24,15 +24,18 @@ import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.api.entities.Instance;
 import org.folio.rest.support.sql.TestRowStream;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CommonDomainEventPublisherTest {
+@MockitoSettings(strictness = Strictness.WARN)
+@ExtendWith(MockitoExtension.class)
+class CommonDomainEventPublisherTest {
   private static final String TENANT_ID = "foo";
 
   @Mock
@@ -43,15 +46,15 @@ public class CommonDomainEventPublisherTest {
   private FailureHandler failureHandler;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
-  @Before
-  public void setUpPublisher() {
+  @BeforeEach
+  void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
       new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(TENANT_ID),
       producerManager, failureHandler);
   }
 
   @Test
-  public void shouldPauseStreamWhenProducerIsFull() {
+  void shouldPauseStreamWhenProducerIsFull() {
     var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
@@ -70,7 +73,7 @@ public class CommonDomainEventPublisherTest {
   }
 
   @Test
-  public void shouldStopProcessingIfProgressThrowsError() {
+  void shouldStopProcessingIfProgressThrowsError() {
     var stream = spy(new TestRowStream(6));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
@@ -92,7 +95,7 @@ public class CommonDomainEventPublisherTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void shouldAdjustRecordCountWhenSomeFailed() {
+  void shouldAdjustRecordCountWhenSomeFailed() {
     var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
@@ -107,7 +110,7 @@ public class CommonDomainEventPublisherTest {
   }
 
   @Test
-  public void shouldStopProcessingIfErrorOccurred() {
+  void shouldStopProcessingIfErrorOccurred() {
     var stream = spy(new TestRowStream(4));
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
@@ -125,7 +128,7 @@ public class CommonDomainEventPublisherTest {
   }
 
   @Test
-  public void shouldCallFailureHandlerWhenPublishingFailed() {
+  void shouldCallFailureHandlerWhenPublishingFailed() {
     var causeError = new IllegalArgumentException("error");
 
     when(producerManager.<String, String>createShared(any())).thenReturn(producer);
@@ -135,7 +138,7 @@ public class CommonDomainEventPublisherTest {
 
     var future = eventPublisher.publishAllRecordsRemoved();
     var e = assertThrows(RuntimeException.class, () -> get(future));
-    assertThat(e.getCause().getCause(), is(instanceOf(IllegalArgumentException.class)));
+    assertInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
 
     verify(failureHandler, times(1)).handleFailure(eq(causeError), any());
   }

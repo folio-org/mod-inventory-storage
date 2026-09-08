@@ -28,7 +28,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
   }
 
   @SuppressWarnings("unused")
-  public Object[][] createPropertiesParams() {
+  public static Object[][] createPropertiesParams() {
     // Format:
     // CallNumber component names, holdings value, item value
     return new Object[][] {
@@ -56,7 +56,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
   }
 
   @SuppressWarnings("unused")
-  public Object[][] updatePropertiesParams() {
+  public static Object[][] updatePropertiesParams() {
     // Format:
     // CallNumber component names, init holdings value, target holdings value, init item value, target item value
     return Stream.of(
@@ -68,7 +68,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
     ).flatMap(Arrays::stream).toArray(Object[][]::new);
   }
 
-  private Object[][] callNumberTestCases() {
+  private static Object[][] callNumberTestCases() {
     return new Object[][] {
       {forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", "targetItCN"},
       {forProperty("callNumber"), "initHrCN", null, "initItCN", "targetItCN"},
@@ -81,7 +81,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
     };
   }
 
-  private Object[][] suffixTestCases() {
+  private static Object[][] suffixTestCases() {
     return new Object[][] {
       {forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", "targetItCNSuffix"},
       {forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "targetItCNSuffix"},
@@ -94,7 +94,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
     };
   }
 
-  private Object[][] prefixTestCases() {
+  private static Object[][] prefixTestCases() {
     return new Object[][] {
       {forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", "targetItCNPrefix"},
       {forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "targetItCNPrefix"},
@@ -107,7 +107,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
     };
   }
 
-  private Object[][] prefixDuplicateTestCases() {
+  private static Object[][] prefixDuplicateTestCases() {
     return new Object[][] {
       {forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", "targetItCNPrefix"},
       {forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "targetItCNPrefix"},
@@ -120,7 +120,7 @@ public class ItemEffectiveCallNumberComponentsTestData {
     };
   }
 
-  private Object[][] typeIdTestCases() {
+  private static Object[][] typeIdTestCases() {
     return new Object[][] {
       {forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE, NLM_CALL_NUMBER_TYPE,
        LC_CALL_NUMBER_TYPE, MOYS_CALL_NUMBER_TYPE},

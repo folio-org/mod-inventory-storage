@@ -13,16 +13,16 @@ import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
+class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   private final InstanceEventMessageChecks instanceMessageChecks
     = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -31,7 +31,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void eventIsNotSentWhenUpdateFailed() {
+  void eventIsNotSentWhenUpdateFailed() {
     final var instance = instancesClient.create(
       smallAngryPlanet(UUID.randomUUID()));
 
@@ -47,7 +47,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void eventIsNotSentWhenCreateFailed() {
+  void eventIsNotSentWhenCreateFailed() {
     final UUID instanceId = UUID.randomUUID();
     final JsonObject instanceJson = smallAngryPlanet(instanceId)
       // setting invalid type id so a FK constraint happens
@@ -60,7 +60,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void eventIsNotSentWhenRemoveFailed() {
+  void eventIsNotSentWhenRemoveFailed() {
     final var instance = instancesClient.create(
       smallAngryPlanet(UUID.randomUUID()));
     // create a holding so that instance is not allowed to be removed
@@ -78,7 +78,7 @@ public class InstanceDomainEventTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void eventIsNotSentWhenRemoveAllFailed() {
+  void eventIsNotSentWhenRemoveAllFailed() {
     final var instance = instancesClient.create(
       smallAngryPlanet(UUID.randomUUID()));
     instancesClient.create(smallAngryPlanet(UUID.randomUUID()));

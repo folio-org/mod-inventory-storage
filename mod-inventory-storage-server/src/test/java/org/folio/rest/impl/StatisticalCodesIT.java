@@ -9,8 +9,7 @@ import static org.folio.rest.impl.InstanceTypeApi.INSTANCE_TYPE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeApi.STATISTICAL_CODE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeTypeApi.STATISTICAL_CODE_TYPE_TABLE;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxTestContext;
@@ -156,8 +155,8 @@ class StatisticalCodesIT extends BaseReferenceDataIntegrationTest<StatisticalCod
         return doPost(client, resourceUrl(), pojo2JsonObject(updatedRecord))
           .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
           .onComplete(event -> ctx.verify(() -> {
-            assertThat(event.result().jsonBody().toString(), containsString(
-              "value already exists in table statistical_code: %s".formatted(newRecord.getName())));
+            assertTrue(event.result().jsonBody().toString()
+              .contains("value already exists in table statistical_code: %s".formatted(newRecord.getName())));
             ctx.completeNow();
           }));
       });

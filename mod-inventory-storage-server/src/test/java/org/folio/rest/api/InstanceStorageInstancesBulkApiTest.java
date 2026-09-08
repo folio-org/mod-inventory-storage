@@ -12,14 +12,13 @@ import static org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType.MAR
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -47,10 +46,10 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.services.s3storage.FolioS3ClientFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUtil {
+class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUtil {
 
   private static final String BULK_INSTANCES_PATH = "src/test/resources/instances/bulk/bulkInstances.ndjson";
   private static final String BULK_INSTANCES_WITH_INVALID_TYPE_PATH =
@@ -68,8 +67,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   private final FolioS3Client s3Client = FolioS3ClientFactory.getFolioS3Client(MARC_MIGRATION);
   private final InstanceEventMessageChecks instanceMessageChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     s3Client.createBucketIfNotExists();
     StorageTestSuite.deleteAll(TENANT_ID, PRECEDING_SUCCEEDING_TITLE_TABLE);
     clearData();
@@ -77,20 +76,20 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldUpdateInstancesWithoutErrors()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  void shouldUpdateInstancesWithoutErrors()
+    throws Exception {
     shouldUpdateInstances(true);
   }
 
   @Test
-  public void shouldUpdateInstancesWithoutErrorsAndDoNotPublishDomainEvents()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  void shouldUpdateInstancesWithoutErrorsAndDoNotPublishDomainEvents()
+    throws Exception {
     shouldUpdateInstances(false);
   }
 
   @Test
-  public void shouldUpdateInstancesWithErrors()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  void shouldUpdateInstancesWithErrors()
+    throws Exception {
     // given
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
@@ -126,8 +125,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldUpdateInstancesInTransaction()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  void shouldUpdateInstancesInTransaction()
+    throws Exception {
     // given
     String expectedErrorRecordsFileName = BULK_FILE_TO_UPLOAD + "_failedEntities";
     String expectedErrorsFileName = BULK_FILE_TO_UPLOAD + "_errors";
@@ -154,8 +153,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
   }
 
   @Test
-  public void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecified()
-    throws ExecutionException, InterruptedException, TimeoutException {
+  void shouldReturnUnprocessableEntityIfRecordsFileNameIsNotSpecified()
+    throws Exception {
     CompletableFuture<Response> future = getClient().post(instancesBulk(), new BulkUpsertRequest(), TENANT_ID);
     Response response = future.get(10, SECONDS);
     assertThat(response.getStatusCode(), is(HTTP_UNPROCESSABLE_ENTITY.toInt()));
@@ -181,8 +180,8 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
     // then
     assertThat(bulkResponse.getErrorsNumber(), is(0));
-    assertThat(bulkResponse.getErrorRecordsFileName(), nullValue());
-    assertThat(bulkResponse.getErrorsFileName(), nullValue());
+    assertNull(bulkResponse.getErrorRecordsFileName());
+    assertNull(bulkResponse.getErrorsFileName());
 
     verifyUpdatedInstancesAndTitles(existingInstance1, existingInstance2, publishEvents);
   }
@@ -279,9 +278,9 @@ public class InstanceStorageInstancesBulkApiTest extends TestBaseWithInventoryUt
 
     var updatedTitles = getPrecedingSucceedingTitlesByInstanceId(existingInstance2.getId());
     updatedTitles.forEach(titleJson -> {
-      assertThat(titleJson.getString("succeedingInstanceId"), equalTo(existingInstance2.getId().toString()));
-      assertThat(titleJson.getString("precedingInstanceId"), nullValue());
-      assertThat(titleJson.getString("title"), notNullValue());
+      assertEquals(titleJson.getString("succeedingInstanceId"), existingInstance2.getId().toString());
+      assertNull(titleJson.getString("precedingInstanceId"));
+      assertNotNull(titleJson.getString("title"));
     });
 
     if (publishEvents) {

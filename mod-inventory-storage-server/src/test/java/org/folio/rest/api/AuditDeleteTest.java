@@ -7,7 +7,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.pointer.JsonPointer;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.util.UUID;
@@ -21,12 +21,12 @@ import lombok.SneakyThrows;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class AuditDeleteTest extends TestBaseWithInventoryUtil {
+@ExtendWith(VertxExtension.class)
+class AuditDeleteTest extends TestBaseWithInventoryUtil {
 
   private static final String AUDIT_INSTANCE = "audit_instance";
   private static final String AUDIT_HOLDINGS_RECORD = "audit_holdings_record";
@@ -41,8 +41,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   private UUID holdingsRecordId;
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     clearData();
     clearAuditTables();
     setupMaterialTypes();
@@ -55,7 +55,7 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedItemsAreStoredInAuditTable() throws Exception {
+  void onlyDeletedItemsAreStoredInAuditTable() throws Exception {
     //given
     createItem(new ItemRequestBuilder()
       .forHolding(holdingsRecordId)
@@ -77,10 +77,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedInstancesAreStoredInAuditTable()
-    throws InterruptedException,
-    TimeoutException,
-    ExecutionException {
+  void onlyDeletedInstancesAreStoredInAuditTable()
+    throws Exception {
 
     //given
     final JsonObject recordJsonObject = instancesClient.getAll().getFirst();
@@ -99,10 +97,8 @@ public class AuditDeleteTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testOnlyDeletedHoldingsAreStoredInAuditTable()
-    throws InterruptedException,
-    TimeoutException,
-    ExecutionException {
+  void onlyDeletedHoldingsAreStoredInAuditTable()
+    throws Exception {
 
     //given
     final JsonObject recordJsonObject = holdingsClient.getAll().getFirst();

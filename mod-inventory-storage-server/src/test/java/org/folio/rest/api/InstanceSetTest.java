@@ -17,18 +17,15 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.util.PercentCodec;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class InstanceSetTest extends TestBaseWithInventoryUtil {
+class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID INSTANCE_ID_1 = UUID.fromString("10000000-0000-4000-8000-000000000000");
   private static final UUID INSTANCE_ID_2 = UUID.fromString("20000000-0000-4000-8000-000000000000");
   private static final UUID INSTANCE_ID_3 = UUID.fromString("30000000-0000-4000-8000-000000000000");
@@ -44,8 +41,8 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID ITEM_ID_612 = UUID.fromString("61200000-0000-4000-8000-000000000000");
   private static final UUID ITEM_ID_621 = UUID.fromString("62100000-0000-4000-8000-000000000000");
 
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     TestBase.beforeAll();
 
     createInstance(INSTANCE_ID_1);
@@ -110,38 +107,38 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnAllInstancesWhenNoCql() {
+  void shouldReturnAllInstancesWhenNoCql() {
     assertThat(getInstanceSets(null).size(), is(7));
   }
 
   @Test
-  public void canQueryTwoInstances() {
+  void canQueryTwoInstances() {
     var sets = getInstanceSets("id==" + INSTANCE_ID_3 + " OR id==" + INSTANCE_ID_5 + " sortBy id");
     assertThat(ids(sets), contains(INSTANCE_ID_3, INSTANCE_ID_5));
   }
 
   @Test
-  public void canQueryByHrid() {
+  void canQueryByHrid() {
     var sets = getInstanceSets("hrid==in2");
     assertThat(ids(sets), contains(INSTANCE_ID_2));
   }
 
   @Test
-  public void canQueryByItemBarcode() {
+  void canQueryByItemBarcode() {
     var sets = getInstanceSets("item.barcode==111");
     assertThat(ids(sets), contains(INSTANCE_ID_1));
   }
 
   @Test
   @SneakyThrows
-  public void invalidCqlReturns400() {
+  void invalidCqlReturns400() {
     CompletableFuture<Response> getCompleted = new CompletableFuture<>();
     getClient().get(instanceSetUrl("?limit=1&query=id=="), TENANT_ID, text(getCompleted));
     assertThat(getCompleted.get(10, SECONDS).getStatusCode(), is(400));
   }
 
   @Test
-  public void canQueryWithLimitAndOffset() {
+  void canQueryWithLimitAndOffset() {
     var sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.ascending", "", 2, 3);
     assertThat(ids(sets), contains(INSTANCE_ID_4, INSTANCE_ID_5));
     sets = getInstanceSets("cql.allRecords=1 sortBy id/sort.descending", "", 2, 3);
@@ -149,7 +146,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetEmptyArrays() {
+  void canGetEmptyArrays() {
     var parameters = "&holdingsRecords=true&items=true"
       + "&precedingTitles=true&succeedingTitles=true"
       + "&superInstanceRelationships=true&subInstanceRelationships=true";
@@ -165,14 +162,14 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetInstance() {
+  void canGetInstance() {
     var set = getInstance6("instance=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "instance"));
     assertThat(set.getJsonObject("instance").getString("id"), is(INSTANCE_ID_6.toString()));
   }
 
   @Test
-  public void canGetHoldingsRecords() {
+  void canGetHoldingsRecords() {
     var set = getInstance6("holdingsRecords=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "holdingsRecords"));
     var holdingsRecords = set.getJsonArray("holdingsRecords");
@@ -180,7 +177,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetItems() {
+  void canGetItems() {
     var set = getInstance6("items=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "items"));
     var items = set.getJsonArray("items");
@@ -188,7 +185,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetPrecedingTitles() {
+  void canGetPrecedingTitles() {
     var set = getInstance6("precedingTitles=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "precedingTitles"));
     var ids = ids(set, "precedingTitles", "precedingInstanceId");
@@ -196,7 +193,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetSucceedingTitles() {
+  void canGetSucceedingTitles() {
     var set = getInstance6("succeedingTitles=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "succeedingTitles"));
     var ids = ids(set, "succeedingTitles", "succeedingInstanceId");
@@ -204,7 +201,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetSuperInstanceRelationships() {
+  void canGetSuperInstanceRelationships() {
     var set = getInstance6("superInstanceRelationships=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "superInstanceRelationships"));
     var ids = ids(set, "superInstanceRelationships", "superInstanceId");
@@ -212,7 +209,7 @@ public class InstanceSetTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetSubInstanceRelationships() {
+  void canGetSubInstanceRelationships() {
     var set = getInstance6("subInstanceRelationships=true");
     assertThat(set.fieldNames(), containsInAnyOrder("id", "subInstanceRelationships"));
     var ids = ids(set, "subInstanceRelationships", "subInstanceId");

@@ -7,73 +7,69 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.SettingUpdateRequest;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.messages.SettingEventMessageChecks;
 import org.folio.services.domainevent.SettingEvent;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class SettingStorageTest extends TestBaseWithInventoryUtil {
+class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   private final SettingEventMessageChecks settingEventMessageChecks =
     new SettingEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     // Prepare consortium tenants for testing
     prepareTenant(CONSORTIUM_CENTRAL_TENANT, false);
     prepareTenant(CONSORTIUM_MEMBER_TENANT, false);
-
-    mockUserTenantsForNonConsortiumMember();
-    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
-    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
-    mockConsortiumTenants();
   }
 
   @SneakyThrows
-  @AfterClass
-  public static void afterClass() {
+  @AfterAll
+  static void afterClass() {
     removeTenant(CONSORTIUM_CENTRAL_TENANT);
     removeTenant(CONSORTIUM_MEMBER_TENANT);
   }
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
+    mockUserTenantsForNonConsortiumMember();
+    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
+    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
+    mockConsortiumTenants();
     KAFKA_CONSUMER.discardAllMessages();
   }
 
   @Test
   @SneakyThrows
-  public void canGetSettingByKey() {
+  void canGetSettingByKey() {
     var response = getSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue());
 
     // Assert
     assertThat(response.getStatusCode(), is(HttpURLConnection.HTTP_OK));
     JsonObject setting = response.getJson();
     assertThat(setting.getString("key"), is(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue()));
-    assertThat(setting.getString("value"), is(notNullValue()));
+    assertNotNull(setting.getString("value"));
     assertThat(setting.getString("type"), is("BOOLEAN"));
   }
 
   @Test
   @SneakyThrows
-  public void cannotGetNonExistentSetting() {
+  void cannotGetNonExistentSetting() {
     // Arrange
     var nonExistentKey = "NON_EXISTENT_SETTING_KEY";
 
@@ -86,7 +82,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canUpdateSettingValue() {
+  void canUpdateSettingValue() {
     // Get the setting ID first
     var initialResponse = getSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue());
     var settingId = initialResponse.getJson().getString("id");
@@ -124,7 +120,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void cannotUpdateSettingWithInvalidType() {
+  void cannotUpdateSettingWithInvalidType() {
     // Act
     var settingRequest = new JsonObject(JsonObject.mapFrom(new SettingUpdateRequest()
       .withValue("not a boolean")).encode());
@@ -139,7 +135,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canRetrieveSettingWithCorrectFields() {
+  void canRetrieveSettingWithCorrectFields() {
     // Act
     var response = getSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue());
 
@@ -157,7 +153,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void settingTypeIsConsistent() {
+  void settingTypeIsConsistent() {
     // Act
     var response1 = getSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue());
     var response2 = getSettingByKey(INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue());
@@ -166,12 +162,12 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
     var setting1 = response1.getJson();
     var setting2 = response2.getJson();
 
-    assertThat(setting1.getString("type"), is(equalTo(setting2.getString("type"))));
+    assertEquals(setting1.getString("type"), setting2.getString("type"));
   }
 
   @Test
   @SneakyThrows
-  public void canUpdateSettingAndPublishEventForNonConsortiumTenant() {
+  void canUpdateSettingAndPublishEventForNonConsortiumTenant() {
     var key = INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue();
     var initialResponse = getSettingByKey(key);
     var settingId = initialResponse.getJson().getString("id");
@@ -193,7 +189,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
   @Test
   @SneakyThrows
   @SuppressWarnings("checkstyle:MethodLength")
-  public void canUpdateSettingMultipleTimes() {
+  void canUpdateSettingMultipleTimes() {
     // This test verifies that multiple setting updates work correctly
     // and each update publishes a setting event to Kafka
 
@@ -248,7 +244,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void cannotUpdateNonExistentSetting() {
+  void cannotUpdateNonExistentSetting() {
     var settingRequest = new JsonObject(JsonObject.mapFrom(new SettingUpdateRequest()
       .withValue(true)).encode());
     var headers = new HashMap<String, String>();
@@ -262,7 +258,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void updateSettingWithNullValueShouldFail() {
+  void updateSettingWithNullValueShouldFail() {
     var settingRequest = new JsonObject().putNull("value");
     var headers = new HashMap<String, String>();
     headers.put(XOkapiHeaders.TENANT, TENANT_ID);
@@ -275,7 +271,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void settingIdShouldRemainConstantAfterUpdate() {
+  void settingIdShouldRemainConstantAfterUpdate() {
     var key = INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue();
 
     // Get setting before update
@@ -298,7 +294,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void canUpdateSettingAndPublishEventForConsortiumCentralTenant() {
+  void canUpdateSettingAndPublishEventForConsortiumCentralTenant() {
     // This test verifies that when a setting is updated by the central tenant,
     // a setting event is published to Kafka
 
@@ -331,7 +327,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void cannotUpdateSettingFromConsortiumMemberTenant() {
+  void cannotUpdateSettingFromConsortiumMemberTenant() {
     // This test verifies that when a setting is centrally managed,
     // a member tenant cannot update it directly (only central tenant can)
 
@@ -355,7 +351,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void settingEventContainsCorrectTenantIdForCentralTenant() {
+  void settingEventContainsCorrectTenantIdForCentralTenant() {
     // This test verifies that the setting event contains the correct tenant ID
     // when updated by the central tenant
 
@@ -380,7 +376,7 @@ public class SettingStorageTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void settingEventContainsCorrectTenantIdForMemberTenant() {
+  void settingEventContainsCorrectTenantIdForMemberTenant() {
     // This test verifies that when the central tenant updates a centrally managed setting,
     // the setting event propagated to member tenant contains the correct member tenant ID
 

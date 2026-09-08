@@ -31,14 +31,14 @@ import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
+class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     deleteAllById(boundWithClient);
     clearData();
 
@@ -51,13 +51,13 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
     mockUserTenantsForNonConsortiumMember();
   }
 
-  @After
-  public void afterEach() {
+  @AfterEach
+  void afterEach() {
     deleteAllById(boundWithClient);
   }
 
   @Test
-  public void shouldReturnInstanceSummary() {
+  void shouldReturnInstanceSummary() {
     UUID instanceId = randomUUID();
     createInstanceRecord(instance(instanceId));
 
@@ -79,7 +79,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnVisibilityAwareRecordCountsAndAggregates() {
+  void shouldReturnVisibilityAwareRecordCountsAndAggregates() {
     UUID instanceId = randomUUID();
     createInstanceRecord(instance(instanceId));
     createMixedVisibilityInventoryHoldingAndItem(instanceId);
@@ -104,7 +104,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldSummarizeBoundWithItems() {
+  void shouldSummarizeBoundWithItems() {
     UUID instanceId = randomUUID();
     UUID boundItemInstanceId = randomUUID();
     createInstanceRecord(instance(instanceId));
@@ -126,7 +126,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldAggregateElectronicAccessByVisibilityScope() {
+  void shouldAggregateElectronicAccessByVisibilityScope() {
     UUID instanceId = randomUUID();
     createInstanceRecord(withElectronicAccess(instance(instanceId),
       "https://example.org/instance", "https://example.org/duplicate"));
@@ -145,7 +145,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceReferenceValues() {
+  void shouldReturnInstanceReferenceValues() {
     String suffix = randomUUID().toString();
     UUID audioFormatId = createInstanceFormat("Audio carrier " + suffix);
     UUID textFormatId = createInstanceFormat("Text carrier " + suffix);
@@ -170,7 +170,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnSummaryForInstanceWithoutHoldingsOrItems() {
+  void shouldReturnSummaryForInstanceWithoutHoldingsOrItems() {
     UUID instanceId = randomUUID();
     createInstanceRecord(instance(instanceId));
 
@@ -186,7 +186,7 @@ public class InstanceSummaryStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnNotFoundWhenInstanceDoesNotExist() {
+  void shouldReturnNotFoundWhenInstanceDoesNotExist() {
     Response response = getSummaryText(randomUUID());
 
     assertThat(response.getStatusCode(), is(HTTP_NOT_FOUND));

@@ -1,19 +1,18 @@
 package org.folio.rest.support;
 
 import static org.folio.rest.support.InstanceBulkProcessingUtil.copyNonMarcControlledFields;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonObject;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.rest.jaxrs.model.Instance;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class InstanceBulkProcessingUtilTest {
+class InstanceBulkProcessingUtilTest {
 
   private static final String INSTANCE_JSON_PATH =
     "src/test/resources/instances/bulk/bulkInstanceRepresentation.json";
@@ -21,7 +20,7 @@ public class InstanceBulkProcessingUtilTest {
     "src/test/resources/instances/bulk/expectedInstance.json";
 
   @Test
-  public void shouldMapBulkInstanceRepresentationToInstanceEntity() throws IOException {
+  void shouldMapBulkInstanceRepresentationToInstanceEntity() throws Exception {
     JsonObject instanceJson = new JsonObject(Files.readString(Path.of(INSTANCE_JSON_PATH)));
     Instance expectedInstance = new JsonObject(Files.readString(Path.of(EXPECTED_INSTANCE_PATH)))
       .mapTo(Instance.class);
@@ -32,7 +31,7 @@ public class InstanceBulkProcessingUtilTest {
   }
 
   @Test
-  public void shouldPopulateFieldsNotControlledByMarc() {
+  void shouldPopulateFieldsNotControlledByMarc() {
     Instance targetInstance = new Instance();
     Instance sourceInstance = new Instance()
       .withDiscoverySuppress(Boolean.TRUE)

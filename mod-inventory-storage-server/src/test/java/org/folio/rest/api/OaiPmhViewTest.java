@@ -17,14 +17,15 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.sqlclient.Row;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -52,12 +53,12 @@ import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
+@ExtendWith(VertxExtension.class)
+class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
 
   private static final PostgresClient POSTGRES_CLIENT = PostgresClientFactory
@@ -70,8 +71,9 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   private Map<String, String> params;
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
+    mockUserTenantsForNonConsortiumMember();
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
     deleteAll(instancesStorageUrl(""));
@@ -88,8 +90,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestOaiPmhViewWithoutParameters()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestOaiPmhViewWithoutParameters()
+    throws Exception {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -108,7 +110,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestOaiPmhViewWhenEmptyDb() throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestOaiPmhViewWhenEmptyDb() throws Exception {
     // given
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
@@ -126,7 +128,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException {
+  void deletedRecordSupport() throws Exception {
     // given
     itemsClient.deleteAll();
     holdingsClient.deleteAll();
@@ -157,7 +159,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDates() throws InterruptedException, ExecutionException, TimeoutException {
+  void filterByDates() throws Exception {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
 
     // Test with start date in past (2000) - should return results
@@ -221,7 +223,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
    * By default we skip discovery suppressed records.
    */
   @Test
-  public void canGetFromOaiPmhViewShowingSuppressedRecords() throws Exception {
+  void canGetFromOaiPmhViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
     super.createItem(
@@ -261,8 +263,8 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestOaiPmhViewWithOrderedElectronicAccess()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void canRequestOaiPmhViewWithOrderedElectronicAccess()
+    throws Exception {
     var instanceId = UUID.fromString(instancesClient.getAll().getFirst().getString("id"));
     var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
       "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");
@@ -296,37 +298,31 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
    * The decode exception is thrown when we try to parse the response,
    * but the only relevant thing is the correct response status of 400.
    */
-  @Test(expected = DecodeException.class)
-  public void testResponseStatus400WhenRequestingWithInvalidDates()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    // given
-    // one instance, 1 holding, 2 items
-    // when
+  @Test
+  void responseStatus400WhenRequestingWithInvalidDates() {
     params.put("startDate", "invalidDate");
-    // then
-    requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400)));
+    assertThrows(DecodeException.class, () ->
+      requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400))));
+    assertThrows(DecodeException.class, () ->
 
-    // The same call using newly added API
-    // then
-    getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
+      // The same call using newly added API
+      // then
+      getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400))));
   }
 
   /**
    * The decode exception is thrown when we try to parse the response,
    * but the only relevant thing is the correct response status of 400.
    */
-  @Test(expected = DecodeException.class)
-  public void testResponseStatus400WhenRequestingWithInvalidUntilDate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    // given
-    // one instance, 1 holding, 2 items
-    // when
+  @Test
+  void responseStatus400WhenRequestingWithInvalidUntilDate() {
     params.put("endDate", "invalidDate");
-    // then
-    requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400)));
+    assertThrows(DecodeException.class, () ->
+      requestOaiPmhView(params, response -> assertThat(response.getStatusCode(), is(400))));
+    assertThrows(DecodeException.class, () ->
 
-    // The same call using newly added API
-    getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
+      // The same call using newly added API
+      getOiaPmhViewInstances(params, response -> assertThat(response.getStatusCode(), is(400))));
   }
 
   void clearAuditTables() {
@@ -353,7 +349,7 @@ public class OaiPmhViewTest extends TestBaseWithInventoryUtil {
     throws InterruptedException, ExecutionException, TimeoutException {
 
     // Get updated instances ids
-    List<JsonObject> updatedInstanceData = requestOaiPmhViewUpdatedInstanceIds(queryParams);
+    List<JsonObject> updatedInstanceData = requestOaiPmhViewUpdatedInstanceIds(queryParams, responseMatcher);
 
     // Extract instances ids
     UUID[] instanceIds = updatedInstanceData.stream()

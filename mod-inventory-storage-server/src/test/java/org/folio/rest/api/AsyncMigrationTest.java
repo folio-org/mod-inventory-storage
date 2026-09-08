@@ -14,12 +14,11 @@ import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -39,7 +38,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.IntStream;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.persist.AsyncMigrationJobRepository;
@@ -56,37 +54,35 @@ import org.folio.services.migration.MigrationName;
 import org.folio.services.migration.async.AsyncMigrationContext;
 import org.folio.services.migration.async.AsyncMigrationJobRunner;
 import org.folio.services.migration.async.ItemOrderMigrationJobRunner;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
+class AsyncMigrationTest extends TestBaseWithInventoryUtil {
 
   private final AsyncMigrationJobRepository repository = getRepository();
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
   }
 
   @Test
-  public void canMigrateItemsForPopulateOrders() {
+  void canMigrateItemsForPopulateOrders() {
     testMigration(ITEM_ORDER_MIGRATION, 1);
   }
 
   @Test
-  public void canGetAvailableMigrations() {
+  void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
     assertEquals(Integer.valueOf(1), migrations.getTotalRecords());
   }
 
   @Test
-  public void canGetAllAvailableMigrationJobs() {
+  void canGetAllAvailableMigrationJobs() {
     asyncMigration.postMigrationJob(new AsyncMigrationJobRequest()
       .withMigrations(List.of(ITEM_ORDER_MIGRATION.getValue())));
     AsyncMigrationJobCollection migrations = asyncMigration.getAllMigrationJobs();
@@ -95,7 +91,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCancelMigration() {
+  void canCancelMigration() {
     var rowStream = new TestRowStream(5_000_000);
     var migrationJob = migrationJob();
     var postgresClient = spy(getPostgresClient());
@@ -124,7 +120,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     var job = asyncMigration.getMigrationJob(migrationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
-    assertThat(job.getPublished().getFirst().getCount(), greaterThanOrEqualTo(1000));
+    assertTrue(job.getPublished().getFirst().getCount() >= 1000);
   }
 
   private void testMigration(MigrationName migration, int expectedCount) {
@@ -150,7 +146,7 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
     assertThat(job.getProcessed().stream().map(AsyncMigrationJobCounts::getCount)
       .mapToInt(Integer::intValue).sum(), is(expectedCount));
     assertThat(job.getJobStatus(), is(AsyncMigrationJob.JobStatus.COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
+    assertNotNull(job.getSubmittedDate());
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));

@@ -4,44 +4,41 @@ import static java.util.UUID.randomUUID;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.UUID;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.messages.MaterialTypeEventMessageChecks;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnitParamsRunner.class)
-public class MaterialTypeKafkaEventTest extends TestBaseWithInventoryUtil {
+class MaterialTypeKafkaEventTest extends TestBaseWithInventoryUtil {
   static ResourceClient materialTypesClient = ResourceClient.forMaterialTypes(getClient());
 
   private final MaterialTypeEventMessageChecks materialTypeEventMessageChecks
     = new MaterialTypeEventMessageChecks(KAFKA_CONSUMER);
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     removeAllEvents();
   }
 
   @Test
-  public void shouldPublishKafkaEvent_whenMaterialTypeIsCreated() {
+  void shouldPublishKafkaEvent_whenMaterialTypeIsCreated() {
     var createdMaterialType = materialTypesClient.create(getCreateMaterialTypeRequestBody()).getJson();
-    assertThat(createdMaterialType, notNullValue());
+    assertNotNull(createdMaterialType);
 
     materialTypeEventMessageChecks.createdMessagePublished(createdMaterialType);
   }
 
   @Test
-  public void shouldPublishKafkaEvent_whenMaterialTypeIsUpdated() {
+  void shouldPublishKafkaEvent_whenMaterialTypeIsUpdated() {
     var createdMaterialType = materialTypesClient.create(getCreateMaterialTypeRequestBody()).getJson();
-    assertThat(createdMaterialType, notNullValue());
+    assertNotNull(createdMaterialType);
     var materialTypeId = createdMaterialType.getString("id");
 
     var updateRequestBody = getUpdateMaterialTypeRequestBody(materialTypeId);
@@ -53,9 +50,9 @@ public class MaterialTypeKafkaEventTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldPublishKafkaEvent_whenMaterialTypeIsDeleted() {
+  void shouldPublishKafkaEvent_whenMaterialTypeIsDeleted() {
     var createdMaterialType = materialTypesClient.create(getCreateMaterialTypeRequestBody()).getJson();
-    assertThat(createdMaterialType, notNullValue());
+    assertNotNull(createdMaterialType);
     var materialTypeId = createdMaterialType.getString("id");
 
     var deleteResponse = materialTypesClient.attemptToDelete(UUID.fromString(materialTypeId));

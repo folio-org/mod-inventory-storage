@@ -22,3 +22,4 @@ node_modules
 .vscode/
 .agents/
 skills-lock.json
+.mcp.json

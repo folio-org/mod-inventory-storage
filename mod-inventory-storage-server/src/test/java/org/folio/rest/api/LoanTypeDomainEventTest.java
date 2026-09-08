@@ -3,6 +3,7 @@ package org.folio.rest.api;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -10,28 +11,29 @@ import java.util.UUID;
 import org.folio.rest.support.http.ResourceClient;
 import org.folio.rest.support.messages.LoanTypeEventMessageChecks;
 import org.folio.utility.ModuleUtility;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class LoanTypeDomainEventTest extends TestBase {
+class LoanTypeDomainEventTest extends TestBase {
 
   private final ResourceClient loanTypesClient = ResourceClient.forLoanTypes(ModuleUtility.getClient());
   private final LoanTypeEventMessageChecks loanTypeMessageChecks = new LoanTypeEventMessageChecks(KAFKA_CONSUMER);
 
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     removeAllEvents();
   }
 
   @Test
-  public void createdEventIsSentWhenLoanTypeCreated() {
+  void createdEventIsSentWhenLoanTypeCreated() {
     var createdLoanType = loanTypesClient.create(new JsonObject().put("name", uniqueName())).getJson();
 
+    assertNotNull(createdLoanType);
     loanTypeMessageChecks.createdMessagePublished(createdLoanType);
   }
 
   @Test
-  public void updatedEventIsSentWhenLoanTypeUpdated() {
+  void updatedEventIsSentWhenLoanTypeUpdated() {
     var createdLoanType = loanTypesClient.create(new JsonObject().put("name", uniqueName())).getJson();
     var loanTypeId = createdLoanType.getString("id");
 
@@ -47,7 +49,7 @@ public class LoanTypeDomainEventTest extends TestBase {
   }
 
   @Test
-  public void deletedEventIsSentWhenLoanTypeDeleted() {
+  void deletedEventIsSentWhenLoanTypeDeleted() {
     var createdLoanType = loanTypesClient.create(new JsonObject().put("name", uniqueName())).getJson();
     var loanTypeId = createdLoanType.getString("id");
 
@@ -58,7 +60,7 @@ public class LoanTypeDomainEventTest extends TestBase {
   }
 
   @Test
-  public void eventIsNotSentWhenLoanTypeUpdateFailed() {
+  void eventIsNotSentWhenLoanTypeUpdateFailed() {
     var missingLoanTypeId = UUID.randomUUID().toString();
 
     var updateResponse = loanTypesClient.attemptToReplace(
@@ -69,7 +71,7 @@ public class LoanTypeDomainEventTest extends TestBase {
   }
 
   @Test
-  public void eventIsNotSentWhenLoanTypeDeleteFailed() {
+  void eventIsNotSentWhenLoanTypeDeleteFailed() {
     var missingLoanTypeId = UUID.randomUUID().toString();
 
     var deleteResponse = loanTypesClient.deleteIfPresent(missingLoanTypeId);
@@ -79,7 +81,7 @@ public class LoanTypeDomainEventTest extends TestBase {
   }
 
   @Test
-  public void eventIsNotSentWhenLoanTypeCreateFailed() {
+  void eventIsNotSentWhenLoanTypeCreateFailed() {
     var loanTypeId = UUID.randomUUID().toString();
     var invalidRequest = new JsonObject()
       .put("id", loanTypeId)

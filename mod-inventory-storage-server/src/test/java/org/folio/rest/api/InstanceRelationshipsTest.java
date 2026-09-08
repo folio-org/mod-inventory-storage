@@ -20,16 +20,16 @@ import org.folio.rest.api.entities.Instance;
 import org.folio.rest.api.entities.InstanceRelationship;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
+class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   static final String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
   private static final String INSTANCE_TYPE_ID_TEXT = "6312d172-f0cf-40f6-b27d-9fa8feaf332f";
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -38,7 +38,7 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canCreateInstanceRelationships() throws InterruptedException, ExecutionException, TimeoutException {
+  void canCreateInstanceRelationships() throws Exception {
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
     JsonObject instance2Response = createInstance("Title Two", INSTANCE_TYPE_ID_TEXT);
@@ -56,8 +56,8 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateRelationshipWithNonExistingInstance()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotCreateRelationshipWithNonExistingInstance()
+    throws Exception {
     final String nonExistingInstanceId = "14b65645-2e49-4a85-8dc1-43d444710570";
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);
@@ -79,8 +79,8 @@ public class InstanceRelationshipsTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void cannotCreateRelationshipOfNonExistingRelationshipType()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void cannotCreateRelationshipOfNonExistingRelationshipType()
+    throws Exception {
     final String nonExistingRelationshipTypeId = "28b65645-2e49-4a85-8dc1-43d444710570";
 
     JsonObject instance1Response = createInstance("Title One", INSTANCE_TYPE_ID_TEXT);

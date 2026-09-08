@@ -2,7 +2,7 @@ package org.folio.rest.support.http;
 
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.hamcrest.Matchers.is;
 
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;

@@ -3,10 +3,9 @@ package org.folio.rest;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
@@ -197,7 +196,7 @@ class InstallUpgradeIT {
       .then()
       .statusCode(400);  // tenant hasn't been created
 
-    assertThat(MOD_MIS.getLogs(), containsString("[987654321] [logtenant] [itsme] [mod_inventory_storage]"));
+    assertTrue(MOD_MIS.getLogs().contains("[987654321] [logtenant] [itsme] [mod_inventory_storage]"));
   }
 
   private void setTenant(String tenant) {

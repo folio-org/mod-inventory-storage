@@ -1,7 +1,7 @@
 package org.folio.services.migration.async;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -14,24 +14,23 @@ import io.vertx.sqlclient.RowSet;
 import java.util.Set;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.persist.PostgresClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class ItemOrderMigrationServiceTest {
+class ItemOrderMigrationServiceTest {
 
   private PostgresClient postgresClient;
-  private ItemRepository itemRepository;
   private ItemOrderMigrationService migrationService;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     postgresClient = mock(PostgresClient.class);
-    itemRepository = mock(ItemRepository.class);
+    ItemRepository itemRepository = mock(ItemRepository.class);
     migrationService = new ItemOrderMigrationService(postgresClient, itemRepository);
   }
 
   @Test
-  public void testRunMigrationForIds() {
+  void runMigrationForIds() {
     Set<String> ids = Set.of("holdingsId1", "holdingsId2");
     when(postgresClient.withTrans(any())).thenReturn(Future.succeededFuture());
 
@@ -42,7 +41,7 @@ public class ItemOrderMigrationServiceTest {
   }
 
   @Test
-  public void testProcessItemsForHoldings() {
+  void processItemsForHoldings() {
     String holdingsId = "holdingsId1";
     RowSet<Row> mockRowSet = mock(RowSet.class);
     when(postgresClient.withTrans(any())).thenReturn(Future.succeededFuture(mockRowSet));
@@ -54,7 +53,7 @@ public class ItemOrderMigrationServiceTest {
   }
 
   @Test
-  public void testGetMigrationName() {
+  void getMigrationName() {
     assertEquals("itemOrderMigration", migrationService.getMigrationName());
   }
 }

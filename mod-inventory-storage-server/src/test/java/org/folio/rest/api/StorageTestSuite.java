@@ -12,6 +12,7 @@ import static org.folio.utility.S3Utility.startS3;
 import static org.folio.utility.S3Utility.stopS3;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -23,52 +24,19 @@ import java.util.concurrent.TimeoutException;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.persist.IterationJobRepositoryTest;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.HttpClient;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({
-  AbstractInstanceRecordsApiTest.class,
-  AsyncMigrationTest.class,
-  AuditDeleteTest.class,
-  BoundWithStorageTest.class,
-  DereferencedItemStorageTest.class,
-  HoldingsStorageTest.class,
-  HridSettingsStorageParameterizedTest.class,
-  HridSettingsStorageTest.class,
-  InstanceDomainEventTest.class,
-  InstanceRelationshipsTest.class,
-  InstanceSetTest.class,
-  InstanceSummaryStorageTest.class,
-  InstanceStorageInstancesBulkApiTest.class,
-  InstanceStorageTest.class,
-  InventoryHierarchyViewTest.class,
-  InventoryViewTest.class,
-  ItemEffectiveCallNumberComponentsTest.class,
-  ItemEffectiveLocationTest.class,
-  ItemStorageTest.class,
-  IterationJobRunnerTest.class,
-  IterationJobRepositoryTest.class,
-  NotificationSendingErrorRepositoryTest.class,
-  OaiPmhViewTest.class,
-  PrecedingSucceedingTitleTest.class,
-  RecordBulkTest.class,
-  ReferenceTablesTest.class,
-  ReindexJobRunnerTest.class,
-  SampleDataTest.class,
-  SettingStorageTest.class,
-  SubjectSourceTest.class,
-  SubjectTypeTest.class
-})
+/**
+ * Bootstraps Postgres, Kafka, S3 and the verticle once for the whole {@code rest.api} test run.
+ *
+ * <p>Every {@link TestBase} subclass calls {@link #startupUnlessRunning()} from its own
+ * {@code @BeforeAll}, so this is started lazily by whichever test class runs first (idempotent,
+ * guarded by {@link #running}) rather than by a dedicated suite runner class.
+ */
 public final class StorageTestSuite {
   private static final Logger logger = LogManager.getLogger();
   private static boolean running = false;
@@ -78,9 +46,8 @@ public final class StorageTestSuite {
   }
 
   @SneakyThrows
-  @BeforeClass
-  public static void before() {
-    logger.info("starting @BeforeClass before()");
+  static void before() {
+    logger.info("starting before()");
 
     // tests expect English error messages only, no Danish/German/...
     Locale.setDefault(Locale.US);
@@ -95,16 +62,15 @@ public final class StorageTestSuite {
 
     running = true;
 
-    logger.info("finished @BeforeClass before()");
+    logger.info("finished before()");
   }
 
-  @AfterClass
-  public static void after()
+  static void after()
     throws InterruptedException,
     ExecutionException,
     TimeoutException {
 
-    logger.info("starting @AfterClass after()");
+    logger.info("starting after()");
 
     removeTenant(TENANT_ID);
     stopVerticleAndWebClient();
@@ -115,7 +81,12 @@ public final class StorageTestSuite {
 
     running = false;
 
-    logger.info("finished @AfterClass after()");
+    logger.info("finished after()");
+  }
+
+  @SneakyThrows
+  private static void afterOnShutdown() {
+    after();
   }
 
   /**
@@ -125,6 +96,7 @@ public final class StorageTestSuite {
   public static void startupUnlessRunning() {
     if (!running) {
       before();
+      Runtime.getRuntime().addShutdownHook(new Thread(StorageTestSuite::afterOnShutdown));
     }
   }
 
@@ -144,7 +116,7 @@ public final class StorageTestSuite {
       Response response = TestBase.get(deleteAllFinished);
 
       if (response.getStatusCode() != 204) {
-        Assert.fail("Delete all preparation failed: " + response.getBody());
+        fail("Delete all preparation failed: " + response.getBody());
       }
     } catch (Exception e) {
       throw new RuntimeException("WARNING!!!!! Unable to delete all: " + e.getMessage(), e);

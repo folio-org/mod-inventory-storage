@@ -8,6 +8,7 @@ import static org.folio.utility.ModuleUtility.clearOkapiUrl;
 import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.setOkapiUrl;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
+import static org.folio.utility.RestUtility.CONSORTIUM_ID;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
@@ -16,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
@@ -39,17 +40,11 @@ import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
 import org.folio.rest.support.client.MaterialTypesClient;
 import org.folio.utility.LocationUtility;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class TestBaseWithInventoryUtil extends TestBase {
-
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort()
-    .extensions(HoldingsStorageTest.ConsortiumInstanceSharingTransformer.class));
 
   public static final String MAIN_LIBRARY_LOCATION = "Main Library";
   public static final String SECOND_FLOOR_LOCATION = "Second Floor";
@@ -66,6 +61,16 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static final UUID THIRD_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final UUID FOURTH_FLOOR_LOCATION_ID = UUID.randomUUID();
   public static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+
+  @RegisterExtension
+  public static WireMockExtension mockServer = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
+      .notifier(new ConsoleNotifier(false))
+      .dynamicPort()
+      .extensions(HoldingsStorageTest.ConsortiumInstanceSharingTransformer.class))
+    .configureStaticDsl(true)
+    .build();
+
   protected static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
   protected static final String TEMPORARY_LOCATION_ID_KEY = "temporaryLocationId";
   protected static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
@@ -91,7 +96,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   protected static UUID selectedLoanTypeId;
   protected static String selectedLoanTypeID;
 
-  @BeforeClass
+  @BeforeAll
   public static void testBaseWithInvUtilBeforeClass() {
     logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
 
@@ -117,7 +122,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
   }
 
-  @AfterClass
+  @AfterAll
   public static void testBaseWithInvUtilAfterClass() {
     // Reset so a later class that does not set it up (e.g. a plain TestBase subclass) does not
     // inherit this class's now-stopped WireMock URL.
@@ -137,7 +142,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       .put("userTenants", new JsonArray()
         .add(new JsonObject()
           .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
-          .put("consortiumId", "mobius")));
+          .put("consortiumId", CONSORTIUM_ID)));
     WireMock.stubFor(WireMock.get(USER_TENANTS_PATH)
       .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(tenantId))
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
@@ -152,8 +157,43 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
         .add(new JsonObject()
           .put("id", CONSORTIUM_MEMBER_TENANT)
           .put("isCentral", false)));
-    WireMock.stubFor(WireMock.get("/consortia/mobius/tenants")
+    WireMock.stubFor(WireMock.get("/consortia/" + CONSORTIUM_ID + "/tenants")
       .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
+  }
+
+  public static UUID createInstanceRecord(JsonObject instanceJson) {
+    return instancesClient.create(instanceJson).getId();
+  }
+
+  public static JsonObject createInstanceRequest(
+    UUID id,
+    String source,
+    String title,
+    JsonArray identifiers,
+    JsonArray contributors,
+    UUID instanceTypeId,
+    JsonArray tags) {
+
+    JsonObject instanceToCreate = new JsonObject();
+
+    if (id != null) {
+      instanceToCreate.put("id", id.toString());
+    }
+
+    instanceToCreate.put("title", title);
+    instanceToCreate.put("source", source);
+    instanceToCreate.put("identifiers", identifiers);
+    instanceToCreate.put("contributors", contributors);
+    if (instanceTypeId != null) {
+      instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
+    }
+    instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
+    instanceToCreate.put("_version", 1);
+    return instanceToCreate;
+  }
+
+  public Response deleteInstanceRecord(UUID id) {
+    return instancesClient.attemptToDelete(id);
   }
 
   protected static void setupMaterialTypes() {
@@ -233,9 +273,9 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
                                       UUID holdingsTemporaryLocationId,
                                       List<String> electronicAccessUrls) {
     var electronicAccessArray = electronicAccessUrls == null ? null
-      : electronicAccessUrls.stream()
-      .map(url -> new JsonObject().put("uri", url))
-      .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+                                                             : electronicAccessUrls.stream()
+                                  .map(url -> new JsonObject().put("uri", url))
+                                  .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
     return createHoldingRecord(
       new HoldingRequestBuilder()
         .withId(UUID.randomUUID())
@@ -309,14 +349,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
       putResponse.getStatusCode(), is(HttpURLConnection.HTTP_NO_CONTENT));
   }
 
-  public static UUID createInstanceRecord(JsonObject instanceJson) {
-    return instancesClient.create(instanceJson).getId();
-  }
-
-  public Response deleteInstanceRecord(UUID id) {
-    return instancesClient.attemptToDelete(id);
-  }
-
   protected static JsonObject instance(UUID id) {
     return createInstanceRequest(
       id,
@@ -362,11 +394,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     }
   }
 
-  private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
-    Response response = instanceTypesClient.getById(id);
-    return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
-  }
-
   protected static JsonObject identifier(UUID identifierTypeId, String value) {
     return new JsonObject()
       .put("identifierTypeId", identifierTypeId.toString())
@@ -377,33 +404,6 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     return new JsonObject()
       .put("contributorNameTypeId", contributorNameTypeId.toString())
       .put("name", name);
-  }
-
-  public static JsonObject createInstanceRequest(
-    UUID id,
-    String source,
-    String title,
-    JsonArray identifiers,
-    JsonArray contributors,
-    UUID instanceTypeId,
-    JsonArray tags) {
-
-    JsonObject instanceToCreate = new JsonObject();
-
-    if (id != null) {
-      instanceToCreate.put("id", id.toString());
-    }
-
-    instanceToCreate.put("title", title);
-    instanceToCreate.put("source", source);
-    instanceToCreate.put("identifiers", identifiers);
-    instanceToCreate.put("contributors", contributors);
-    if (instanceTypeId != null) {
-      instanceToCreate.put("instanceTypeId", instanceTypeId.toString());
-    }
-    instanceToCreate.put("tags", new JsonObject().put("tagList", tags));
-    instanceToCreate.put("_version", 1);
-    return instanceToCreate;
   }
 
   protected static Response updateSettingByKey(String key, boolean value) {
@@ -446,6 +446,11 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   IndividualResource getOtherInstanceType() {
     return getInstanceStatusByCode("other");
+  }
+
+  private static boolean instanceTypeDoesNotAlreadyExist(UUID id) {
+    Response response = instanceTypesClient.getById(id);
+    return response.getStatusCode() == HttpStatus.HTTP_NOT_FOUND.toInt();
   }
 
   private IndividualResource getInstanceStatusByCode(String code) {

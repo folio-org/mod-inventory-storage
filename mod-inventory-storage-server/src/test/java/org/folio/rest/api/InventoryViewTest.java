@@ -5,8 +5,8 @@ import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
@@ -19,11 +19,12 @@ import org.folio.rest.support.IndividualResource;
 import org.folio.util.StringUtil;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class InventoryViewTest extends TestBaseWithInventoryUtil {
+class InventoryViewTest extends TestBaseWithInventoryUtil {
+
   @Test
-  public void shouldReturnInstanceWithRecords() {
+  void shouldReturnInstanceWithRecords() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var holdingsForOne = createTwoHoldingsForInstance(instanceOne.getId());
     var itemsForOne = createItemsForHoldings(holdingsForOne);
@@ -69,7 +70,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceEvenIfNoItems() {
+  void shouldReturnInstanceEvenIfNoItems() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var holdingForOne = createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null);
 
@@ -95,7 +96,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceEvenIfNoHoldings() {
+  void shouldReturnInstanceEvenIfNoHoldings() {
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var instanceTwo = instancesClient.create(instance(randomUUID()));
 
@@ -118,7 +119,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceWithBoundedItemsRecords_whenWithBoundedItemsTrue() {
+  void shouldReturnInstanceWithBoundedItemsRecords_whenWithBoundedItemsTrue() {
     //given
     var testData = createTestDataWithBoundedItems();
 
@@ -168,7 +169,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceEvenIfNoItems_whenWithBoundedItemsTrue() {
+  void shouldReturnInstanceEvenIfNoItems_whenWithBoundedItemsTrue() {
     //given
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var holdingForOne = createHolding(instanceOne.getId(), MAIN_LIBRARY_LOCATION_ID, null);
@@ -200,7 +201,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnInstanceEvenIfNoHoldings_whenWithBoundedItemsTrue() {
+  void shouldReturnInstanceEvenIfNoHoldings_whenWithBoundedItemsTrue() {
     //given
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var instanceTwo = instancesClient.create(instance(randomUUID()));
@@ -229,7 +230,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldReturnNotSuppressedInstanceEvenIfNoHoldings_whenWithBoundedItemsTrue() {
+  void shouldReturnNotSuppressedInstanceEvenIfNoHoldings_whenWithBoundedItemsTrue() {
     //given
     var instanceOne = instancesClient.create(instance(randomUUID()));
     var instanceTwo = instancesClient.create(instance(randomUUID()));
@@ -278,7 +279,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
   }
 
   private void isNonNullEmpty(List<?> list) {
-    assertThat(list, notNullValue());
+    assertNotNull(list);
     assertThat(list.size(), is(0));
   }
 
@@ -289,7 +290,7 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       .findFirst()
       .orElse(null);
 
-    assertThat("Instance not found", instance, is(notNullValue()));
+    assertNotNull(instance, "Instance not found");
 
     return instance;
   }

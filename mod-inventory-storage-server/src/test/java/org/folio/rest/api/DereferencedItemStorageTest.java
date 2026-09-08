@@ -11,7 +11,7 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import io.vertx.core.json.JsonObject;
 import java.util.UUID;
@@ -22,17 +22,17 @@ import org.folio.rest.jaxrs.model.DereferencedItem;
 import org.folio.rest.jaxrs.model.DereferencedItems;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
+class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   private static final UUID SMALL_ANGRY_PLANET_ID = UUID.randomUUID();
   private static final UUID UPROOTED_ID = UUID.randomUUID();
 
   @SneakyThrows
-  @BeforeClass
-  public static void beforeAll() {
+  @BeforeAll
+  static void beforeClass() {
     TestBase.beforeAll();
 
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
@@ -50,8 +50,8 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
     postItem(uprooted);
   }
 
-  @AfterClass
-  public static void cleanUpDatabase() {
+  @AfterAll
+  static void cleanUpDatabase() {
     StorageTestSuite.deleteAll(itemsStorageUrl(""));
     StorageTestSuite.deleteAll(holdingsStorageUrl(""));
     StorageTestSuite.deleteAll(instancesStorageUrl(""));
@@ -109,7 +109,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetRecordByBarcode() {
+  void canGetRecordByBarcode() {
     String queryString = "barcode==036000291452";
     String queryString2 = "barcode==657670342075";
 
@@ -131,14 +131,14 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void resturnsAllRecordsWhenNoCqlQuery() {
+  void resturnsAllRecordsWhenNoCqlQuery() {
     DereferencedItems items = getAll();
 
     assertThat(items.getTotalRecords(), is(3));
   }
 
   @Test
-  public void returnsEmptyCollectionWhenNoItemsFound() {
+  void returnsEmptyCollectionWhenNoItemsFound() {
     String queryString = "barcode==647671342075";
 
     DereferencedItems items = findByCql(queryString);
@@ -147,7 +147,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void returns400WhenCqlSearchInvalid() {
+  void returns400WhenCqlSearchInvalid() {
     String queryString = "barcode&647671342075";
 
     Response response = attemptFindByCql(queryString);
@@ -156,14 +156,14 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canGetRecordById() {
+  void canGetRecordById() {
     testSmallAngryPlanet(findById(SMALL_ANGRY_PLANET_ID.toString()));
 
     testUprooted(findById(UPROOTED_ID.toString()));
   }
 
   @Test
-  public void returns404WhenNoItemFoundForId() {
+  void returns404WhenNoItemFoundForId() {
     String id = UUID.randomUUID().toString();
 
     Response response = attemptFindById(id);
@@ -172,7 +172,7 @@ public class DereferencedItemStorageTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void returns400WhenInvalidUuid() {
+  void returns400WhenInvalidUuid() {
     String id = "w325b3dc4";
 
     Response response = attemptFindById(id);

@@ -23,9 +23,9 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -36,46 +36,43 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import junitparams.JUnitParamsRunner;
 import lombok.SneakyThrows;
 import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.utility.ModuleUtility;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.runner.RunWith;
 
-@RunWith(JUnitParamsRunner.class)
-public class ReferenceTablesTest extends TestBase {
+class ReferenceTablesTest extends TestBase {
 
   @Test
-  public void alternativeTitleTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void alternativeTitleTypesLoaded()
+    throws Exception {
     URL apiUrl = alternativeTitleTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("alternative title types", searchResponse, 11, 40);
   }
 
   @Test
-  public void callNumberTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void callNumberTypesLoaded()
+    throws Exception {
     URL apiUrl = callNumberTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("call number types", searchResponse, 5, 40);
   }
 
   @Test
-  public void classificationTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void classificationTypesLoaded()
+    throws Exception {
     URL apiUrl = classificationTypesUrl("");
     Response searchResponse = getReferenceRecords(apiUrl);
     validateNumberOfReferenceRecords("classification types", searchResponse, 2, 20);
   }
 
   @Test
-  public void contributorNameTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void contributorNameTypesLoaded()
+    throws Exception {
     URL apiUrl = contributorNameTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -83,8 +80,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void contributorTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void contributorTypesLoaded()
+    throws Exception {
     URL apiUrl = contributorTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -92,8 +89,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void electronicAccessRelationshipsLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void electronicAccessRelationshipsLoaded()
+    throws Exception {
     URL apiUrl = electronicAccessRelationshipsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -101,8 +98,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void holdingsNoteTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void holdingsNoteTypesLoaded()
+    throws Exception {
     URL apiUrl = holdingsNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -110,8 +107,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void holdingsTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void holdingsTypesLoaded()
+    throws Exception {
     URL apiUrl = holdingsTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -119,8 +116,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void identifierTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void identifierTypesLoaded()
+    throws Exception {
     URL apiUrl = identifierTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -128,8 +125,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void illPoliciesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void illPoliciesLoaded()
+    throws Exception {
     URL apiUrl = illPoliciesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -137,8 +134,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceFormatsLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void instanceFormatsLoaded()
+    throws Exception {
     URL apiUrl = instanceFormatsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -146,8 +143,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void natureOfContentTermsLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void natureOfContentTermsLoaded()
+    throws Exception {
     URL apiUrl = natureOfContentTermsUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -155,8 +152,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceStatusesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void instanceStatusesLoaded()
+    throws Exception {
     URL apiUrl = instanceStatusesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -164,8 +161,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void instanceTypesLoaded()
+    throws Exception {
     URL apiUrl = instanceTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -173,8 +170,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void itemNoteTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void itemNoteTypesLoaded()
+    throws Exception {
     URL apiUrl = itemNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -182,8 +179,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void instanceNoteTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void instanceNoteTypesLoaded()
+    throws Exception {
     URL apiUrl = instanceNoteTypesUrl("");
 
     Response searchResponse = getReferenceRecords(apiUrl);
@@ -191,8 +188,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void statisticalCodeTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void statisticalCodeTypesLoaded()
+    throws Exception {
     URL statisticalCodeTypesUrl = statisticalCodeTypesUrl("");
 
     Response searchResponseCodeTypes = getReferenceRecords(statisticalCodeTypesUrl);
@@ -200,8 +197,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void statisticalCodesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void statisticalCodesLoaded()
+    throws Exception {
     URL statisticalCodesUrl = statisticalCodesUrl("");
 
     Response searchResponseCodes = getReferenceRecords(statisticalCodesUrl);
@@ -209,8 +206,8 @@ public class ReferenceTablesTest extends TestBase {
   }
 
   @Test
-  public void loanTypesLoaded()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void loanTypesLoaded()
+    throws Exception {
     URL loanTypesStorageUrl = loanTypesStorageUrl("");
 
     Response searchResponseCodes = getReferenceRecords(loanTypesStorageUrl);
@@ -225,7 +222,7 @@ public class ReferenceTablesTest extends TestBase {
   @ParameterizedTest
   @CsvSource({"1.0.0, 28.1.0"})
   @SneakyThrows
-  public void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
+  void authorizedStaffServicePointIsLoadedFromReferenceData(String moduleFrom, String moduleTo) {
     ModuleUtility.prepareTenant(TENANT_ID, moduleFrom, moduleTo, false);
     int statusCode = servicePointsClient.getById(
         UUID.fromString("32c6f0c7-26e4-4350-8c29-1e11c2e3efc4"))
@@ -244,10 +241,10 @@ public class ReferenceTablesTest extends TestBase {
 
   private void validateNumberOfReferenceRecords(String dataDescription, Response searchResponse, int min, int max) {
     Integer totalRecords = searchResponse.getJson().getInteger("totalRecords");
-    assertNotNull(String.format("Could not retrieve record count for %s", dataDescription), totalRecords);
-    assertTrue(String.format("Expected <=%s \"%s\", found %s, response:%n %s", max, dataDescription, totalRecords,
-      searchResponse.getJson().encode()), max >= totalRecords);
-    assertTrue(String.format("Expected >=%s \"%s\", found %s, response:%n %s", min, dataDescription, totalRecords,
-      searchResponse.getJson().encode()), min <= totalRecords);
+    assertNotNull(totalRecords, String.format("Could not retrieve record count for %s", dataDescription));
+    assertTrue(max >= totalRecords, String.format("Expected <=%s \"%s\", found %s, response:%n %s",
+      max, dataDescription, totalRecords, searchResponse.getJson().encode()));
+    assertTrue(min <= totalRecords, String.format("Expected >=%s \"%s\", found %s, response:%n %s",
+      min, dataDescription, totalRecords, searchResponse.getJson().encode()));
   }
 }

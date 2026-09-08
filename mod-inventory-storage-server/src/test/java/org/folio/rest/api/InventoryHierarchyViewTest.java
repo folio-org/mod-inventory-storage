@@ -32,19 +32,19 @@ import static org.folio.utility.ModuleUtility.getClient;
 import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Handler;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.sqlclient.Row;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -76,12 +76,12 @@ import org.folio.rest.support.Response;
 import org.folio.rest.support.ResponseHandler;
 import org.folio.rest.support.builders.BoundWithPartBuilder;
 import org.folio.rest.support.builders.ItemRequestBuilder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
+@ExtendWith(VertxExtension.class)
+class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private static final Logger log = LogManager.getLogger();
   private static final String QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS =
     "skipSuppressedFromDiscoveryRecords";
@@ -93,8 +93,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   private JsonObject predefinedHoldings;
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     deleteAll(TENANT_ID, "bound_with_part");
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
@@ -115,7 +115,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void serverErrorWrittenOutOnDatabaseError() throws Exception {
+  void serverErrorWrittenOutOnDatabaseError() throws Exception {
 
     withFaultyViewFunction(() -> {
       params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
@@ -128,16 +128,16 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
       requestInventoryHierarchyItemsAndHoldingsViewInstance(instanceIds, false, response -> {
         assertThat(response.getStatusCode(), is(HttpStatus.HTTP_INTERNAL_SERVER_ERROR.toInt()));
-        assertThat(response.getBody(),
-          containsString("function get_items_and_holdings_view(unknown, unknown) does not exist"));
+        assertTrue(response.getBody()
+          .contains("function get_items_and_holdings_view(unknown, unknown) does not exist"));
       });
       return null;
     });
   }
 
   @Test
-  public void canRequestInventoryHierarchyInstanceWithoutParameters()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestInventoryHierarchyInstanceWithoutParameters()
+    throws Exception {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -154,8 +154,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyHoldingsWithoutParameters()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestInventoryHierarchyHoldingsWithoutParameters()
+    throws Exception {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -176,8 +176,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void holdingsEffectiveLocationIsTemporaryLocationWhenTempLocationSet()
+    throws Exception {
 
     UUID sourceId = UUID.randomUUID();
     holdingsSourceClient.create(new JsonObject()
@@ -208,8 +208,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyItemsWithoutParametersWithoutSource()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestInventoryHierarchyItemsWithoutParametersWithoutSource()
+    throws Exception {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -220,8 +220,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyItemsWithoutParametersWithSource()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestInventoryHierarchyItemsWithoutParametersWithSource()
+    throws Exception {
     // given
     // one instance, 1 holding, 2 items
     // when
@@ -233,8 +233,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void canRequestInventoryHierarchyViewWhenEmptyDb()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canRequestInventoryHierarchyViewWhenEmptyDb()
+    throws Exception {
     // given
     deleteAll(itemsStorageUrl(""));
     deleteAll(holdingsStorageUrl(""));
@@ -248,7 +248,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testDeletedRecordSupport() throws InterruptedException, TimeoutException, ExecutionException {
+  void deletedRecordSupport() throws Exception {
     // given
     itemsClient.deleteAll();
     holdingsClient.deleteAll();
@@ -268,7 +268,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDatesWithSource() throws InterruptedException, ExecutionException, TimeoutException {
+  void filterByDatesWithSource() throws Exception {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     params.put("source", "TEST");
     // given
@@ -285,7 +285,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDatesWithoutSource() throws InterruptedException, ExecutionException, TimeoutException {
+  void filterByDatesWithoutSource() throws Exception {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     // given
     // one instance, 1 holding, 2 items
@@ -298,8 +298,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void testFilterByDatesWithNonExistingSource()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void filterByDatesWithNonExistingSource()
+    throws Exception {
     params.put(QUERY_PARAM_NAME_SKIP_SUPPRESSED_FROM_DISCOVERY_RECORDS, "false");
     // In case of invalid source parameter it will be used as null, i.e. all the records will be returned.
     params.put("source", "invalid");
@@ -318,7 +318,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
    * By default we skip discovery suppressed records.
    */
   @Test
-  public void canGetFromInventoryHierarchyViewShowingSuppressedRecords() throws Exception {
+  void canGetFromInventoryHierarchyViewShowingSuppressedRecords() throws Exception {
     // given
     // one instance, 1 holding, 2 not suppressed items, 1 suppressed item
     var itemRequest = createItemRequest(THIRD_FLOOR_LOCATION_ID, 3, "item barcode 3", "item effective call number 3",
@@ -351,8 +351,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void shouldRetrieveInstanceWhenOnlyItemsDeletedWithinSpecificPeriodOfTime()
+    throws Exception {
     var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
     Awaitility.await().until(() -> {
       // To make sure the last updated date for instance
@@ -374,8 +374,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void shouldRetrieveInstanceWhenOnlyHoldingDeletedWithinSpecificPeriodOfTime()
+    throws Exception {
     // given
     var instanceId = UUID.fromString(instancesClient.getAll().getFirst().getString("id"));
     var holdingUuid = createHolding(instanceId, MAIN_LIBRARY_LOCATION_ID, MAIN_LIBRARY_LOCATION_ID);
@@ -400,8 +400,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void shouldRetrieveInstanceWhenItemsAndHoldingsDeletedWithinSpecificPeriodOfTime()
+    throws Exception {
     var timeWhenRecordsCreated = LocalDateTime.now(ZoneOffset.UTC);
     Awaitility.await().until(() -> {
       // To make sure the last updated date for instance
@@ -425,7 +425,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldRetrieveBoundWithItems() {
+  void shouldRetrieveBoundWithItems() {
     var instanceId = UUID.fromString(predefinedInstance.getString("id"));
 
     var holdingsId = createInstanceAndHolding(MAIN_LIBRARY_LOCATION_ID);
@@ -450,7 +450,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldHaveLocationNameInItemsAndHoldingsLocations() {
+  void shouldHaveLocationNameInItemsAndHoldingsLocations() {
     var instanceId = UUID.fromString(predefinedInstance.getString("id"));
 
     requestInventoryHierarchyItemsAndHoldingsViewInstance(new UUID[] {instanceId}, false, response -> {
@@ -464,7 +464,7 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
 
   @Test
   @SneakyThrows
-  public void shouldHaveHrIdInItemsAndHoldings() {
+  void shouldHaveHrIdInItemsAndHoldings() {
     var instanceId = UUID.fromString(predefinedInstance.getString("id"));
     var expectedHoldingsHrid = predefinedHoldings.getString("hrid");
 
@@ -475,8 +475,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
       assertThat(items.size(), is(2));
       assertThat(holdings.size(), is(1));
       items.stream().map(JsonObject.class::cast).forEach(
-        item -> assertThat("item hrId is declared by the response schema and should be populated",
-          item.getString("hrId"), notNullValue()));
+        item -> assertNotNull(item.getString("hrId"),
+          "item hrId is declared by the response schema and should be populated"));
       assertThat("holdings hrId is declared by the response schema and should match the stored record",
         holdings.getJsonObject(0).getString("hrId"), is(expectedHoldingsHrid));
     });
@@ -510,35 +510,29 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
    * The decode exception is thrown when we try to parse the response,
    * but the only relevant thing is the correct response status of 400.
    */
-  @Test(expected = DecodeException.class)
-  public void testResponseStatus400WhenRequestingWithInvalidDates()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    // given
-    // one instance, 1 holding, 2 items
-    // when
+  @Test
+  void responseStatus400WhenRequestingWithInvalidDates() {
     params.put("startDate", "invalidDate");
-    // then
-    getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
+    assertThrows(DecodeException.class, () ->
+      // then
+      getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400))));
   }
 
   /**
    * The decode exception is thrown when we try to parse the response,
    * but the only relevant thing is the correct response status of 400.
    */
-  @Test(expected = DecodeException.class)
-  public void testResponseStatus400WhenRequestingWithInvalidUntilDate()
-    throws InterruptedException, ExecutionException, TimeoutException {
-    // given
-    // one instance, 1 holding, 2 items
-    // when
+  @Test
+  void responseStatus400WhenRequestingWithInvalidUntilDate() {
     params.put("endDate", "invalidDate");
-    // then
-    getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400)));
+    assertThrows(DecodeException.class, () ->
+      // then
+      getInventoryHierarchyInstances(params, response -> assertThat(response.getStatusCode(), is(400))));
   }
 
   @Test
-  public void canGetHoldingWhenAllItemForItAreSuppressed()
-    throws InterruptedException, ExecutionException, TimeoutException {
+  void canGetHoldingWhenAllItemForItAreSuppressed()
+    throws Exception {
     // given
     // one instance, 1 holding with 2 not suppressed items, 1 holding with 1 suppressed item
 
@@ -565,8 +559,8 @@ public class InventoryHierarchyViewTest extends TestBaseWithInventoryUtil {
   }
 
   @Test
-  public void shouldRetrieveHierarchyWithOrderedElectronicAccess()
-    throws InterruptedException, TimeoutException, ExecutionException {
+  void shouldRetrieveHierarchyWithOrderedElectronicAccess()
+    throws Exception {
     var instanceId = UUID.fromString(predefinedInstance.getString("id"));
     var electronicAccessUrls = List.of("http://electronicAccess-c-entered-first",
       "http://electronicAccess-z-entered-second", "http://electronicAccess-a-entered-third");

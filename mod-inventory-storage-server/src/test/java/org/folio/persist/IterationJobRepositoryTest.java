@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
 import java.util.Map;
 import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
@@ -28,12 +28,12 @@ import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class IterationJobRepositoryTest extends TestBase {
+@ExtendWith(VertxExtension.class)
+class IterationJobRepositoryTest extends TestBase {
 
   private static final String JOB_ID = "test-job-id";
 
@@ -41,8 +41,8 @@ public class IterationJobRepositoryTest extends TestBase {
   private IterationJobRepository repository;
   private Conn conn;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     postgresClient = mock(PostgresClient.class);
     conn = mock(Conn.class);
     try (var pgUtilMock = mockStatic(PgUtil.class)) {
@@ -52,7 +52,7 @@ public class IterationJobRepositoryTest extends TestBase {
   }
 
   @Test
-  public void fetchAndUpdateIterationJob_ShouldReturnJob_WhenStatusIsCompleted() {
+  void fetchAndUpdateIterationJob_ShouldReturnJob_WhenStatusIsCompleted() {
     // Arrange
     when(conn.getByIdForUpdate(anyString(), anyString(), eq(IterationJob.class)))
       .thenReturn(Future.succeededFuture(new IterationJob().withId(JOB_ID).withJobStatus(COMPLETED)));
@@ -72,7 +72,7 @@ public class IterationJobRepositoryTest extends TestBase {
   }
 
   @Test
-  public void fetchAndUpdateIterationJob_ShouldUpdateJob_WhenStatusIsNotCompleted() {
+  void fetchAndUpdateIterationJob_ShouldUpdateJob_WhenStatusIsNotCompleted() {
     // Arrange
     var updatedJob = new IterationJob().withId(JOB_ID)
       .withJobStatus(IN_PROGRESS)
@@ -98,7 +98,7 @@ public class IterationJobRepositoryTest extends TestBase {
   }
 
   @Test
-  public void fetchAndUpdateIterationJob_ShouldFail_WhenFetchFails() {
+  void fetchAndUpdateIterationJob_ShouldFail_WhenFetchFails() {
     // Arrange
     when(conn.getByIdForUpdate(anyString(), anyString(), eq(IterationJob.class)))
       .thenReturn(Future.failedFuture(new RuntimeException("Fetch failed")));
@@ -117,7 +117,7 @@ public class IterationJobRepositoryTest extends TestBase {
   }
 
   @Test
-  public void fetchAndUpdateIterationJob_ShouldFail_WhenUpdateFails() {
+  void fetchAndUpdateIterationJob_ShouldFail_WhenUpdateFails() {
     // Arrange
     when(conn.getByIdForUpdate(anyString(), anyString(), eq(IterationJob.class)))
       .thenReturn(Future.succeededFuture(new IterationJob().withId(JOB_ID).withJobStatus(IN_PROGRESS)));

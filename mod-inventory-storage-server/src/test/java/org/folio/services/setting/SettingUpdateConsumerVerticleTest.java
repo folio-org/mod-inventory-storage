@@ -2,7 +2,7 @@ package org.folio.services.setting;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
@@ -37,7 +37,7 @@ class SettingUpdateConsumerVerticleTest {
   void getDeploymentOptionsShouldReturnCorrectOptions() {
     var options = SettingUpdateConsumerVerticle.getDeploymentOptions();
 
-    assertThat(options, is(notNullValue()));
+    assertNotNull(options);
     assertThat(options.getThreadingModel(), is(ThreadingModel.WORKER));
     assertThat(options.getInstances(), is(1));
   }
@@ -46,7 +46,7 @@ class SettingUpdateConsumerVerticleTest {
   void constructorShouldCreateVerticleWithCache() {
     var verticle = new SettingUpdateConsumerVerticle(cache);
 
-    assertThat(verticle, is(notNullValue()));
+    assertNotNull(verticle);
   }
 
   @Test
@@ -73,8 +73,8 @@ class SettingUpdateConsumerVerticleTest {
     var options1 = SettingUpdateConsumerVerticle.getDeploymentOptions();
     var options2 = SettingUpdateConsumerVerticle.getDeploymentOptions();
 
-    assertThat(options1, is(notNullValue()));
-    assertThat(options2, is(notNullValue()));
+    assertNotNull(options1);
+    assertNotNull(options2);
     assertThat(options1 != options2, is(true));
   }
 }

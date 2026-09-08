@@ -15,7 +15,8 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,11 +35,11 @@ import org.folio.rest.support.fixtures.InstanceIterationFixture;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.iteration.IterationJobRunner;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class IterationJobRunnerTest {
+class IterationJobRunnerTest {
 
   // use usual instance topic for testing purposes, because it doesn't matter
   // what the topic is for testing. this also prevents from adding changes to
@@ -52,16 +53,16 @@ public class IterationJobRunnerTest {
   private InstanceRepository instanceRepository;
   private IterationJobRunner jobRunner;
 
-  @BeforeClass
-  public static void beforeClass() {
+  @BeforeAll
+  static void beforeClass() {
     TestBase.beforeAll();
 
     instanceIteration = new InstanceIterationFixture(getClient());
   }
 
   @SneakyThrows
-  @Before
-  public void beforeEach() {
+  @BeforeEach
+  void beforeEach() {
     jobRepository = new IterationJobRepository(getContext(), okapiHeaders());
     instanceRepository = mock(InstanceRepository.class);
 
@@ -73,7 +74,7 @@ public class IterationJobRunnerTest {
   }
 
   @Test
-  public void canIterateInstances() {
+  void canIterateInstances() {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var iterationJob = iterationJob();
@@ -92,7 +93,7 @@ public class IterationJobRunnerTest {
 
     assertThat(job.getMessagesPublished(), is(numberOfRecords));
     assertThat(job.getJobStatus(), is(COMPLETED));
-    assertThat(job.getSubmittedDate(), notNullValue());
+    assertNotNull(job.getSubmittedDate());
 
     // Should be a single iteration message for each instance ID generated in the row stream
     instanceMessageChecks.countOfAllPublishedInstancesIs(
@@ -100,7 +101,7 @@ public class IterationJobRunnerTest {
   }
 
   @Test
-  public void canCancelIteration() {
+  void canCancelIteration() {
     var rowStream = new TestRowStream(10_000_000);
     var iterationJob = iterationJob();
 
@@ -122,7 +123,7 @@ public class IterationJobRunnerTest {
     var job = instanceIteration.getIterationJob(iterationJob.getId());
 
     assertThat(job.getJobStatus(), is(CANCELLED));
-    assertThat(job.getMessagesPublished(), greaterThanOrEqualTo(1000));
+    assertTrue(job.getMessagesPublished() >= 1000);
   }
 
   private static IterationJob iterationJob() {
