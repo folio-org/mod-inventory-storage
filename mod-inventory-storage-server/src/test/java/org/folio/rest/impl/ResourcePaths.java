@@ -11,6 +11,7 @@ final class ResourcePaths {
   static final String INSTANCE_RELATIONSHIP_TYPES = "/instance-relationship-types";
   static final String INSTANCES = "/instance-storage/instances";
   static final String INSTANCE_RELATIONSHIPS = "/instance-storage/instance-relationships";
+  static final String PRECEDING_SUCCEEDING_TITLES = "/preceding-succeeding-titles";
 
   private ResourcePaths() {
   }
