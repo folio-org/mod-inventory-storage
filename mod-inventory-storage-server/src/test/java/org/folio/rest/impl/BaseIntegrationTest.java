@@ -2,23 +2,18 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToIgnoreCase;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static java.time.Duration.ofMinutes;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.awaitility.Awaitility.await;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -32,30 +27,33 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.folio.HttpStatus;
+import org.folio.dataimport.testsupport.kafka.KafkaExtension;
+import org.folio.dataimport.testsupport.postgres.PostgresExtension;
+import org.folio.dataimport.testsupport.rest.SharedRestVerticleSupport;
+import org.folio.dataimport.testsupport.rest.SharedRestVerticleSupport.SharedRestVerticle;
+import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.postgres.testing.PostgresTesterContainer;
-import org.folio.rest.RestVerticle;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.extension.EnableTenant;
 import org.folio.rest.support.extension.Tenants;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
-import org.folio.rest.tools.utils.Envs;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.folio.utility.KafkaUtility;
 import org.folio.utility.S3Utility;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @EnableTenant
-@Testcontainers(parallel = true)
 @ExtendWith(VertxExtension.class)
 public abstract class BaseIntegrationTest {
 
@@ -67,16 +65,19 @@ public abstract class BaseIntegrationTest {
     .build();
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
-  @Container
-  private static final PostgreSQLContainer POSTGRESQL_CONTAINER =
-    new PostgreSQLContainer(PostgresTesterContainer.getImageName())
-      .withDatabaseName("folio")
-      .withUsername("admin_user")
-      .withPassword("admin_password");
+  @RegisterExtension
+  private static final PostgresExtension POSTGRES = new PostgresExtension();
 
-  @Container
-  private static final KafkaContainer KAFKA_CONTAINER = new KafkaContainer(KafkaUtility.getImageName())
-    .withStartupAttempts(3);
+  @RegisterExtension
+  private static final KafkaExtension KAFKA = new KafkaExtension();
+
+  private static final String MODULE_ID = "mod-inventory-storage-1.0.0";
+
+  private static final List<String> MIGRATION_SEEDED_TABLES =
+    List.of("hrid_settings", "instance_date_type", "subject_source", "subject_type");
+
+  @RegisterExtension
+  private static final SharedVerticleExtension SHARED_VERTICLE = new SharedVerticleExtension();
 
   private static int port;
 
@@ -154,81 +155,62 @@ public abstract class BaseIntegrationTest {
   }
 
   @BeforeAll
-  static void beforeAll(Vertx vertx, VertxTestContext ctx, @Tenants List<String> tenants) throws Throwable {
-    setupContainersAndEnvironment();
-
-    DeploymentOptions options = new DeploymentOptions();
-    options.setConfig(new JsonObject().put("http.port", port));
-    HttpClient client = vertx.createHttpClient();
-
-    vertx.deployVerticle(RestVerticle.class, options)
-      .compose(s -> enableTenantsSequentially(tenants, ctx, client));
-
-    assertTrue(ctx.awaitCompletion(65, TimeUnit.SECONDS));
-    if (ctx.failed()) {
-      throw ctx.causeOfFailure();
+  static void beforeAll(Vertx vertx, @Tenants List<String> tenants) {
+    port = SHARED_VERTICLE.shared.getPort();
+    for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
+      SHARED_VERTICLE.shared.enableTenantIfAbsent(tenant, null, tenantAttributes());
     }
 
     KAFKA_CONSUMER.discardAllMessages();
-    KAFKA_CONSUMER.consume(vertx);
-    await().atMost(ofMinutes(1)).until(KAFKA_CONTAINER::isRunning);
     mockUserTenantsForNonConsortiumMember();
+  }
+
+  private static TenantAttributes tenantAttributes() {
+    return new TenantAttributes()
+      .withModuleTo(MODULE_ID)
+      .withParameters(TenantTestSupport.dataLoadingParameters(false, false));
+  }
+
+  /**
+   * Truncates every table in the default tenant's schema once this class's tests are done,
+   * except the tables a Liquibase migration seeds exactly once when the schema is first
+   * created ({@link #MIGRATION_SEEDED_TABLES}) — nothing re-seeds those afterwards, so wiping
+   * them would break any later class relying on their default rows (e.g. {@code hrid_settings},
+   * which {@code HridManager} expects to always exist).
+   *
+   * <p>The shared verticle and its Postgres/Kafka containers now live for the whole JVM (see
+   * {@link SharedVerticleExtension}), so a class can no longer rely on getting a freshly
+   * provisioned, empty database the way it could when each class deployed its own throwaway
+   * stack. This restores that same starting point for whichever class runs next, without
+   * hand-maintaining a per-table list of what *to* clear (the {@code pg_tables} lookup covers
+   * every table but the excluded ones, unlike the legacy stack's {@code TestBase.clearData()}).
+   */
+  @AfterAll
+  static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
+    truncateAllTables(TENANT_ID);
+  }
+
+  private static void truncateAllTables(String tenantId)
+    throws InterruptedException, ExecutionException, TimeoutException {
+
+    String schema = tenantId + "_mod_inventory_storage";
+    String excluded = MIGRATION_SEEDED_TABLES.stream()
+      .map(table -> "'" + table + "'")
+      .collect(Collectors.joining(", "));
+    String sql = "DO $$ DECLARE r RECORD; BEGIN "
+      + "FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = '" + schema + "' "
+      + "AND tablename NOT IN (" + excluded + ")) LOOP "
+      + "EXECUTE 'TRUNCATE TABLE " + schema + ".' || quote_ident(r.tablename) || ' CASCADE'; "
+      + "END LOOP; END $$;";
+    PostgresClient.getInstance(SHARED_VERTICLE.shared.getVertx(), tenantId)
+      .execute(sql)
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get(30, TimeUnit.SECONDS);
   }
 
   public static JsonObject pojo2JsonObject(Object entity) {
     return TestBase.pojo2JsonObject(entity);
-  }
-
-  private static void setupContainersAndEnvironment() {
-    port = NetworkUtils.nextFreePort();
-    System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
-    System.setProperty("kafka-port", String.valueOf(KAFKA_CONTAINER.getFirstMappedPort()));
-    System.setProperty("kafka-host", KAFKA_CONTAINER.getHost());
-    KAFKA_CONTAINER.start();
-    S3Utility.startS3();
-
-    Envs.setEnv(POSTGRESQL_CONTAINER.getHost(),
-      POSTGRESQL_CONTAINER.getFirstMappedPort(),
-      POSTGRESQL_CONTAINER.getUsername(),
-      POSTGRESQL_CONTAINER.getPassword(),
-      POSTGRESQL_CONTAINER.getDatabaseName());
-  }
-
-  private static Future<?> enableTenantsSequentially(List<String> tenants, VertxTestContext ctx,
-                                                      HttpClient client) {
-    var future = Future.succeededFuture();
-    for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
-      future = future.eventually(() -> enableTenant(tenant, ctx, client));
-    }
-    return future.onComplete(event -> ctx.completeNow());
-  }
-
-  private static Future<TestResponse> enableTenant(String tenant, VertxTestContext ctx, HttpClient client) {
-    return doPost(client, "/_/tenant", tenant, BaseIntegrationTest.getJob(false))
-      .map(buffer -> buffer.jsonBody().getString("id"))
-      .compose(id -> doGet(client, "/_/tenant/" + id + "?wait=60000", tenant))
-      .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
-        assertEquals(HttpStatus.HTTP_OK.toInt(), response.status());
-        assertFalse(response.body().toJsonObject().containsKey("error"));
-      })));
-  }
-
-  private static JsonObject getJob(String moduleFrom, String moduleTo, boolean loadReference) {
-    JsonArray ar = new JsonArray();
-    ar.add(new JsonObject().put("key", "loadReference").put("value", Boolean.toString(loadReference)));
-    ar.add(new JsonObject().put("key", "loadSample").put("value", "false"));
-
-    JsonObject jo = new JsonObject();
-    jo.put("parameters", ar);
-    if (moduleFrom != null) {
-      jo.put("module_from", moduleFrom);
-    }
-    jo.put("module_to", moduleTo);
-    return jo;
-  }
-
-  private static JsonObject getJob(boolean loadSample) {
-    return BaseIntegrationTest.getJob(null, "mod-inventory-storage-1.0.0", loadSample);
   }
 
   private static HttpClientRequest addDefaultHeaders(HttpClientRequest request, String tenantId) {
@@ -251,6 +233,45 @@ public abstract class BaseIntegrationTest {
 
     public <T> T bodyAsClass(Class<T> targetClass) {
       return jsonBody().mapTo(targetClass);
+    }
+  }
+
+  /**
+   * Resolves the {@link SharedRestVerticle} for {@link #MODULE_ID} in a {@code beforeAll}
+   * callback, where (unlike a plain {@code @BeforeAll} method) JUnit provides the
+   * {@link ExtensionContext} needed to look it up in the JVM-wide store.
+   *
+   * <p>Also bridges the {@link KafkaExtension}-managed broker (published under its own
+   * {@code KAFKA_HOST}/{@code KAFKA_PORT} property names) to the {@code kafka-host}/
+   * {@code kafka-port} properties this module reads, and starts S3 — both need to be ready
+   * before the shared verticle deploys, which is why this runs here rather than in the
+   * {@code @BeforeAll} method: {@code @RegisterExtension} callbacks are guaranteed to run
+   * before it, in field declaration order, so {@link #POSTGRES} and {@link #KAFKA} are already
+   * up by the time this executes.
+   *
+   * <p>Also starts {@link #KAFKA_CONSUMER} exactly once, on the shared verticle's own
+   * long-lived {@link Vertx} rather than the per-class one JUnit injects into
+   * {@code @BeforeAll}: that per-class {@code Vertx} is closed when its class finishes, which
+   * would silently kill the underlying Kafka consumer for every class after the first.
+   */
+  private static final class SharedVerticleExtension implements BeforeAllCallback {
+
+    private SharedRestVerticle shared;
+    private boolean kafkaConsumerStarted;
+
+    @Override
+    public void beforeAll(ExtensionContext context) {
+      System.setProperty("KAFKA_DOMAIN_TOPIC_NUM_PARTITIONS", "1");
+      System.setProperty("kafka-host", KAFKA.getSupport().getHost());
+      System.setProperty("kafka-port", String.valueOf(KAFKA.getSupport().getPort()));
+      S3Utility.startS3();
+
+      shared = SharedRestVerticleSupport.getOrCreate(context, MODULE_ID);
+
+      if (!kafkaConsumerStarted) {
+        KAFKA_CONSUMER.consume(shared.getVertx());
+        kafkaConsumerStarted = true;
+      }
     }
   }
 }

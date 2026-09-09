@@ -95,30 +95,35 @@ class InstanceDateTypesIT extends BaseReferenceDataIntegrationTest<InstanceDateT
   @Test
   void getCollection_shouldReturn200AndEmptyCollection(Vertx vertx, VertxTestContext ctx) {
     Assertions.assertTrue(true);
+    ctx.completeNow();
   }
 
   @Override
   @Test
   void get_shouldReturn200AndRecordById(Vertx vertx, VertxTestContext ctx) {
     Assertions.assertTrue(true);
+    ctx.completeNow();
   }
 
   @Override
   @Test
   void post_shouldReturn201AndCreatedRecord(Vertx vertx, VertxTestContext ctx) {
     Assertions.assertTrue(true);
+    ctx.completeNow();
   }
 
   @Override
   @Test
   void put_shouldReturn204AndRecordIsUpdated(Vertx vertx, VertxTestContext ctx) {
     Assertions.assertTrue(true);
+    ctx.completeNow();
   }
 
   @Override
   @Test
   void delete_shouldReturn204AndRecordIsDeleted(Vertx vertx, VertxTestContext ctx) {
     Assertions.assertTrue(true);
+    ctx.completeNow();
   }
 
   @BeforeEach

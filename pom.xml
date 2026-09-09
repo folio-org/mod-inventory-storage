@@ -47,6 +47,7 @@
     <awaitility.version>4.3.0</awaitility.version>
     <assertj.version>3.27.7</assertj.version>
     <archunit.version>1.4.1</archunit.version>
+    <data-import-test-support.version>3.0.0-SNAPSHOT</data-import-test-support.version>
     <system-stubs.version>2.1.8</system-stubs.version>
 
     <!-- Plugin versions -->
