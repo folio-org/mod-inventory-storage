@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Mechanically enforces the docs/testing.md rule that unit-layer tests (org.folio.services..)
- * must not depend on the integration-layer org.folio.rest.api.TestBase (the F5 cross-layer
- * coupling documented in docs/test-quality-improvement-plan.md).
+ * must not depend on the integration-layer org.folio.rest.api.TestBase.
  */
 class TestLayeringTest {
 

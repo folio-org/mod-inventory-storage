@@ -285,8 +285,7 @@ This module's [API documentation](https://dev.folio.org/reference/api/#mod-inven
 ### Testing
 
 See [docs/testing.md](docs/testing.md) for this repo's test naming, structure, and
-assertion conventions, and [docs/test-quality-improvement-plan.md](docs/test-quality-improvement-plan.md)
-for the findings and cleanup plan behind them.
+assertion conventions.
 
 ### Download and configuration
 

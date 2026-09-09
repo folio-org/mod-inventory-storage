@@ -2,9 +2,7 @@
 
 This is the house standard for tests in this repo: how to name, structure, and assert
 in **new tests and tests you're already touching for another reason**. It is not a
-mandate to retroactively rewrite the existing ~217 test files (41.8k LOC). For the
-findings behind these rules and the multi-workstream cleanup plan, see
-[`docs/test-quality-improvement-plan.md`](test-quality-improvement-plan.md).
+mandate to retroactively rewrite the existing ~217 test files (41.8k LOC).
 
 We adopt the FOLIO data-import test conventions standard (the house standard used
 across `lib/data-import-processing-core`, `mod-data-import`, `mod-inventory`,
