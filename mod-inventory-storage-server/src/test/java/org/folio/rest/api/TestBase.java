@@ -42,9 +42,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
- * When not run from StorageTestSuite then this class invokes StorageTestSuite.before() and
- * StorageTestSuite.after() to allow to run a single test class, for example from within an
- * IDE during development.
+ * Every subclass calls {@link StorageTestSuite#startupUnlessRunning()} from its own
+ * {@code @BeforeAll}, so the shared Postgres/Kafka/S3/verticle stack is started lazily by
+ * whichever test class runs first, whether that is the full suite or a single class run
+ * from an IDE during development.
  */
 public abstract class TestBase {
   /**
@@ -78,7 +79,7 @@ public abstract class TestBase {
 
   @BeforeAll
   public static void beforeAll() {
-    logger.info("starting @BeforeClass testBaseBeforeClass()");
+    logger.info("starting @BeforeAll testBaseBeforeClass()");
 
     StorageTestSuite.startupUnlessRunning();
 
@@ -91,7 +92,7 @@ public abstract class TestBase {
     KAFKA_CONSUMER.discardAllMessages();
     KAFKA_CONSUMER.consume(getVertx());
 
-    logger.info("finishing @BeforeClass testBaseBeforeClass()");
+    logger.info("finishing @BeforeAll testBaseBeforeClass()");
   }
 
   private static void initializeResourceClients() {

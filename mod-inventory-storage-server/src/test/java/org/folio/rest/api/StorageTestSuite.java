@@ -93,7 +93,7 @@ public final class StorageTestSuite {
    * Setup Postgres, Kafka, Verticle if needed. To be used when directly running one or more test classes
    * (IDE or mvn test -Dtest=FooTest,BarTest), when not running the complete StorageTestSuite.
    */
-  public static void startupUnlessRunning() {
+  public static synchronized void startupUnlessRunning() {
     if (!running) {
       before();
       Runtime.getRuntime().addShutdownHook(new Thread(StorageTestSuite::afterOnShutdown));

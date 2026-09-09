@@ -53,7 +53,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static final String THIRD_FLOOR_LOCATION = "Third Floor";
   public static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
   // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
-  // that JUnit calls *before* the @BeforeClass beforeAny() method.
+  // that JUnit calls *before* the @BeforeAll beforeAny() method.
   public static final UUID MAIN_LIBRARY_LOCATION_ID = UUID.randomUUID();
   public static final UUID ANNEX_LIBRARY_LOCATION_ID = UUID.randomUUID();
   public static final UUID ONLINE_LOCATION_ID = UUID.randomUUID();
@@ -98,7 +98,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
 
   @BeforeAll
   public static void testBaseWithInvUtilBeforeClass() {
-    logger.info("starting @BeforeClass testBaseWithInvUtilBeforeClass()");
+    logger.info("starting @BeforeAll testBaseWithInvUtilBeforeClass()");
 
     StorageTestSuite.deleteAll(TENANT_ID, "preceding_succeeding_title");
     StorageTestSuite.deleteAll(TENANT_ID, "instance_relationship");
@@ -119,7 +119,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
 
-    logger.info("finishing @BeforeClass testBaseWithInvUtilBeforeClass()");
+    logger.info("finishing @BeforeAll testBaseWithInvUtilBeforeClass()");
   }
 
   @AfterAll

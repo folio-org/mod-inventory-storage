@@ -164,6 +164,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
@@ -397,6 +403,11 @@
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
           -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+          <!-- StorageTestSuite bootstraps one JVM-wide Postgres/Kafka/S3/verticle stack shared by
+               every org.folio.rest.api test class. That singleton is only safe under a single,
+               reused fork, so pin both explicitly instead of relying on surefire's defaults. -->
+          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
         </configuration>
       </plugin>
 
