@@ -25,6 +25,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -75,16 +77,22 @@ public abstract class BaseIntegrationTest {
   private static final String MODULE_ID = "mod-inventory-storage-1.0.0";
 
   private static final List<String> MIGRATION_SEEDED_TABLES =
-    List.of("hrid_settings", "instance_date_type", "subject_source", "subject_type");
+    List.of("hrid_settings", "instance_date_type", "subject_source", "subject_type", "settings");
 
   @RegisterExtension
   private static final SharedVerticleExtension SHARED_VERTICLE = new SharedVerticleExtension();
 
   private static int port;
 
+  /**
+   * {@link WireMockExtension} resets all stub mappings before every test method (not just once
+   * per class), so the stub registered in {@link #beforeAll} would otherwise only survive the
+   * first test method of each class — re-register it here so every test sees it.
+   */
   @BeforeEach
   public void removeAllEvents() {
     KAFKA_CONSUMER.discardAllMessages();
+    mockUserTenantsForNonConsortiumMember();
   }
 
   protected static Future<TestResponse> doGet(HttpClient client, String requestUri) {
@@ -181,7 +189,6 @@ public abstract class BaseIntegrationTest {
     }
 
     KAFKA_CONSUMER.discardAllMessages();
-    mockUserTenantsForNonConsortiumMember();
   }
 
   private static TenantAttributes tenantAttributes() {
@@ -230,6 +237,14 @@ public abstract class BaseIntegrationTest {
 
   public static JsonObject pojo2JsonObject(Object entity) {
     return TestBase.pojo2JsonObject(entity);
+  }
+
+  /**
+   * Runs a raw SQL query against the default tenant's schema on the shared verticle's
+   * Postgres client, e.g. for asserting on tables (like audit tables) with no REST endpoint.
+   */
+  protected static RowSet<Row> runQuery(String sql) {
+    return get(PostgresClient.getInstance(SHARED_VERTICLE.shared.getVertx(), TENANT_ID).select(sql));
   }
 
   private static HttpClientRequest addDefaultHeaders(HttpClientRequest request, String tenantId) {

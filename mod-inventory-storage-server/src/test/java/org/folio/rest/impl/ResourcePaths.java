@@ -12,6 +12,16 @@ final class ResourcePaths {
   static final String INSTANCES = "/instance-storage/instances";
   static final String INSTANCE_RELATIONSHIPS = "/instance-storage/instance-relationships";
   static final String PRECEDING_SUCCEEDING_TITLES = "/preceding-succeeding-titles";
+  static final String LOCATION_UNITS_INSTITUTIONS = "/location-units/institutions";
+  static final String LOCATION_UNITS_CAMPUSES = "/location-units/campuses";
+  static final String LOCATION_UNITS_LIBRARIES = "/location-units/libraries";
+  static final String LOCATIONS = "/locations";
+  static final String SERVICE_POINTS = "/service-points";
+  static final String MATERIAL_TYPES = "/material-types";
+  static final String LOAN_TYPES = "/loan-types";
+  static final String HOLDINGS_SOURCES = "/holdings-sources";
+  static final String HOLDINGS = "/holdings-storage/holdings";
+  static final String ITEMS = "/item-storage/items";
 
   private ResourcePaths() {
   }
