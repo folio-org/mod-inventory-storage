@@ -40,6 +40,9 @@ class InstanceSetTest extends TestBaseWithInventoryUtil {
   private static final UUID ITEM_ID_611 = UUID.fromString("61100000-0000-4000-8000-000000000000");
   private static final UUID ITEM_ID_612 = UUID.fromString("61200000-0000-4000-8000-000000000000");
   private static final UUID ITEM_ID_621 = UUID.fromString("62100000-0000-4000-8000-000000000000");
+  // reference-data UUID for the "bound-with" instance relationship type,
+  // see reference-data/instance-relationship-types/bound-with.json
+  private static final String INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH = "758f13db-ffb4-440e-bb10-8a364aa6cb4a";
 
   @BeforeAll
   static void beforeClass() {
@@ -103,7 +106,7 @@ class InstanceSetTest extends TestBaseWithInventoryUtil {
     instanceRelationshipsClient.create(new JsonObject()
       .put("superInstanceId", superInstanceId.toString())
       .put("subInstanceId", subInstanceId.toString())
-      .put("instanceRelationshipTypeId", InstanceRelationshipsTest.INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH));
+      .put("instanceRelationshipTypeId", INSTANCE_RELATIONSHIP_TYPE_ID_BOUNDWITH));
   }
 
   @Test

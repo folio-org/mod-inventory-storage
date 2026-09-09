@@ -88,8 +88,7 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
   }
 
   @Test
-  void getCollection_shouldReturn200AndEmptyCollection(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
+  void getCollection_shouldReturn200AndEmptyCollection(VertxTestContext ctx) {
     doGet(client, resourceUrl())
       .onComplete(verifyStatus(ctx, HTTP_OK))
       .onComplete(ctx.succeeding(response -> ctx.verify(() -> {
@@ -106,19 +105,17 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void getCollection_shouldReturn200AndRecordCollectionBasedOnQuery(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
 
     postgresClient.save(referenceTable(), newRecord)
-      .compose(s -> executeQueriesAndVerifyResults(client, ctx, newRecord))
+      .compose(s -> executeQueriesAndVerifyResults(ctx, newRecord))
       .onFailure(ctx::failNow)
       .onSuccess(event -> ctx.completeNow());
   }
 
-  private Future<?> executeQueriesAndVerifyResults(
-    io.vertx.core.http.HttpClient client, VertxTestContext ctx, T newRecord) {
+  private Future<?> executeQueriesAndVerifyResults(VertxTestContext ctx, T newRecord) {
     List<Future<TestResponse>> futures = new ArrayList<>();
     for (String query : queries()) {
       var testResponseFuture = doGet(client, resourceUrl() + "?query=" + query + "&limit=500")
@@ -147,7 +144,6 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void get_shouldReturn200AndRecordById(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -167,7 +163,6 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void post_shouldReturn201AndCreatedRecord(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -207,7 +202,6 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void put_shouldReturn204AndRecordIsUpdated(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();
@@ -230,7 +224,6 @@ abstract class BaseReferenceDataIntegrationTest<T, C> extends BaseIntegrationTes
 
   @Test
   void delete_shouldReturn204AndRecordIsDeleted(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
 
     var newRecord = sampleRecord();

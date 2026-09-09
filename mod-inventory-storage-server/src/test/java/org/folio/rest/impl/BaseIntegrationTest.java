@@ -63,6 +63,7 @@ public abstract class BaseIntegrationTest {
     .options(wireMockConfig().dynamicPort()
       .notifier(new ConsoleNotifier(true)))
     .build();
+  protected static HttpClient client;
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @RegisterExtension
@@ -142,6 +143,23 @@ public abstract class BaseIntegrationTest {
       });
   }
 
+  /**
+   * Blocks the calling (test) thread until {@code future} completes and returns its result.
+   * Safe to use freely in test bodies: it blocks only the test's own thread, never the
+   * module's event loop. Wraps checked exceptions into an unchecked one so callers don't
+   * need their own try/catch.
+   */
+  protected static <T> T get(Future<T> future) {
+    try {
+      return future.toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while awaiting " + future, e);
+    } catch (ExecutionException | TimeoutException e) {
+      throw new IllegalStateException("Future did not complete in time: " + future, e);
+    }
+  }
+
   public static void mockUserTenantsForNonConsortiumMember() {
     var emptyUserTenantsCollection = new JsonObject()
       .put("userTenants", JsonArray.of());
@@ -157,6 +175,7 @@ public abstract class BaseIntegrationTest {
   @BeforeAll
   static void beforeAll(Vertx vertx, @Tenants List<String> tenants) {
     port = SHARED_VERTICLE.shared.getPort();
+    client = vertx.createHttpClient();
     for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
       SHARED_VERTICLE.shared.enableTenantIfAbsent(tenant, null, tenantAttributes());
     }

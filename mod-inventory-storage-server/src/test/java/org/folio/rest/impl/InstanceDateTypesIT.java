@@ -93,7 +93,7 @@ class InstanceDateTypesIT extends BaseReferenceDataIntegrationTest<InstanceDateT
 
   @Override
   @Test
-  void getCollection_shouldReturn200AndEmptyCollection(Vertx vertx, VertxTestContext ctx) {
+  void getCollection_shouldReturn200AndEmptyCollection(VertxTestContext ctx) {
     Assertions.assertTrue(true);
     ctx.completeNow();
   }
