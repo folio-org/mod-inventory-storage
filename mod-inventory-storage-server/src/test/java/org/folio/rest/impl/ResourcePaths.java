@@ -24,6 +24,7 @@ final class ResourcePaths {
   static final String ITEMS = "/item-storage/items";
   static final String SUBJECT_TYPES = "/subject-types";
   static final String SUBJECT_SOURCES = "/subject-sources";
+  static final String INSTANCE_ITERATION = "/instance-storage/instances/iteration";
 
   private ResourcePaths() {
   }
