@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 
 import io.vertx.core.json.JsonObject;
+import java.net.URL;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,8 +31,18 @@ public class InstanceEventMessageChecks {
   private final FakeKafkaConsumer kafkaConsumer;
 
   public InstanceEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
+    this(kafkaConsumer, okapiUrl());
+  }
+
+  /**
+   * For callers whose module instance isn't reachable at the legacy {@code rest.api} stack's
+   * own {@code okapiUrl()} (e.g. the shared {@code rest.impl} verticle, reachable via its own
+   * WireMock URL) — events carry whichever URL was sent as the {@code X-Okapi-Url} header on
+   * the originating request, so the expected value here must match that.
+   */
+  public InstanceEventMessageChecks(FakeKafkaConsumer kafkaConsumer, URL expectedUrl) {
     this.kafkaConsumer = kafkaConsumer;
-    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, okapiUrl());
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, expectedUrl);
   }
 
   private static String getId(JsonObject json) {
