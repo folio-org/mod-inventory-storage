@@ -19,15 +19,10 @@
       "description": "Text to display when rendering the instance custom link",
       "maxLength": 40
     },
-    "baseUrl": {
+    "link": {
       "type": "string",
       "description": "The base URL including scheme and host for rendering the instance custom link",
       "maxLength": 1000
-    },
-    "queryString": {
-      "type": "string",
-      "description": "The templated path or query string to append to the base URL when rendering the instance custom link",
-      "maxLength": 150
     },
     "show": {
       "type": "boolean",
@@ -50,7 +45,7 @@
   "required": [
     "name",
     "linkText",
-    "baseUrl",
+    "link",
     "source"
   ]
 }

@@ -4,15 +4,14 @@
       "id": "a3300f00-1d30-440d-a475-a5c8fad7ba7e",
       "name": "OPAC",
       "linkText": "Locate",
-      "baseUrl": "https://www.locate.library.com",
-      "queryString": "/items/{UUID}.html",
+      "link": "https://www.locate.library.com/items/{UUID}.html",
       "show": true
     },
     {
       "id": "a63a2d8c-22a4-4bfc-9d8d-5ade3b5154fa",
       "name": "archival",
       "linkText": "Old OPAC",
-      "baseUrl": "https://old-opac.library.com",
+      "link": "https://old-opac.library.com",
       "show": false
     }
   ],

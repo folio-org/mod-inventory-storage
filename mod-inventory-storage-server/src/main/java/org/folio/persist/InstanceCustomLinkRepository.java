@@ -25,7 +25,7 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
       COUNT(*) AS total_count,
       COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'name')) = lower(f_unaccent($1))) AS name_count,
       COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'linkText')) = lower(f_unaccent($2))) AS linktext_count,
-      COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'baseUrl')) = lower(f_unaccent($3))) AS baseurl_count
+      COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'link')) = lower(f_unaccent($3))) AS link_count
     FROM
       """ + INSTANCE_CUSTOM_LINK_TABLE;
 
@@ -37,9 +37,9 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
         AND id != $4
       ) AS linktext_count,
       COUNT(*) FILTER (WHERE
-        lower(f_unaccent(jsonb ->> 'baseUrl')) = lower(f_unaccent($3))
+        lower(f_unaccent(jsonb ->> 'link')) = lower(f_unaccent($3))
         AND id != $4
-      ) AS baseurl_count
+      ) AS link_count
     FROM
       """ + INSTANCE_CUSTOM_LINK_TABLE;
 
@@ -56,7 +56,7 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
   }
 
   private Future<String> validateAndSave(Conn conn, String id, InstanceCustomLink entity, boolean create) {
-    var queryTuple = Tuple.of(entity.getName(), entity.getLinkText(), entity.getBaseUrl());
+    var queryTuple = Tuple.of(entity.getName(), entity.getLinkText(), entity.getLink());
     if (!create) {
       queryTuple.addString(id);
     }
@@ -89,8 +89,8 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
     if (row.getInteger("linktext_count") > 0) {
       errors.add(uniqueError("linkText", entity.getLinkText()));
     }
-    if (row.getInteger("baseurl_count") > 0) {
-      errors.add(uniqueError("baseUrl", entity.getBaseUrl()));
+    if (row.getInteger("link_count") > 0) {
+      errors.add(uniqueError("link", entity.getLink()));
     }
     return errors;
   }

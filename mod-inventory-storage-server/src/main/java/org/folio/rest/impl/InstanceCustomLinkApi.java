@@ -28,7 +28,7 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
 
   public static final String INSTANCE_CUSTOM_LINK_TYPE_TABLE = "instance_custom_link";
 
-  private static final String FIELD_BASE_URL = "baseUrl";
+  private static final String FIELD_LINK = "link";
   private static final List<String> QUERY_TOKENS = List.of("{{UUID}}", "{{HRID}}", "{{indexTitle}}");
 
   @Validate
@@ -131,40 +131,34 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
   private List<Error> validate(InstanceCustomLink entity) {
     List<Error> errors = new ArrayList<>();
 
-    errors.addAll(validateQueryString(entity));
-    errors.addAll(validateBaseUrl(entity));
+    errors.addAll(validateLink(entity));
 
     return errors;
   }
 
-  private List<Error> validateQueryString(InstanceCustomLink entity) {
+  private List<Error> validateLink(InstanceCustomLink entity) {
     List<Error> errors = new ArrayList<>();
 
-    if (entity.getQueryString() != null) {
-      var queryString = entity.getQueryString();
-      if (QUERY_TOKENS.stream().noneMatch(queryString::contains)) {
-        errors.add(fieldError("missingToken", "queryString",
-          "must contain at least one of: " + QUERY_TOKENS, queryString));
+    if (entity.getLink() != null) {
+      var link = entity.getLink();
+
+      // Check if any matches to tokens and any unrecognized tokens
+      if (QUERY_TOKENS.stream().noneMatch(link::contains) && link.contains("{{") && link.contains("}}")) {
+        errors.add(fieldError("missingToken", FIELD_LINK,
+          "when tokens present, must be one of: " + QUERY_TOKENS, link));
       }
-    }
 
-    return errors;
-  }
-
-  private List<Error> validateBaseUrl(InstanceCustomLink entity) {
-    List<Error> errors = new ArrayList<>();
-
-    if (entity.getBaseUrl() != null) {
-      var baseUrl = entity.getBaseUrl();
+      // To check for URL validity, substitute known tokens with a valid URI character
+      var substituted = QUERY_TOKENS.stream().reduce(link, (intermediate, token) -> intermediate.replace(token, "a"));
       try {
-        var baseUri = new URI(baseUrl);
-        baseUri.toURL();
-        var baseScheme = baseUri.getScheme();
-        if (!"http".equalsIgnoreCase(baseScheme) && !"https".equalsIgnoreCase(baseScheme)) {
-          errors.add(fieldError("invalidScheme", FIELD_BASE_URL, "does not start with http or https", baseUrl));
+        var linkUri = new URI(substituted);
+        linkUri.toURL();
+        var linkScheme = linkUri.getScheme();
+        if (!"http".equalsIgnoreCase(linkScheme) && !"https".equalsIgnoreCase(linkScheme)) {
+          errors.add(fieldError("invalidScheme", FIELD_LINK, "does not start with http or https", link));
         }
       } catch (URISyntaxException | MalformedURLException | IllegalArgumentException e) {
-        errors.add(fieldError("invalidUrl", FIELD_BASE_URL, "not a valid URL", baseUrl));
+        errors.add(fieldError("invalidUrl", FIELD_LINK, "not a valid URL", link));
       }
     }
 

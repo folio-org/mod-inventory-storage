@@ -242,7 +242,7 @@
           "tOps": "ADD"
         },
         {
-          "fieldName": "baseUrl",
+          "fieldName": "link",
           "tOps": "ADD"
         }
       ]

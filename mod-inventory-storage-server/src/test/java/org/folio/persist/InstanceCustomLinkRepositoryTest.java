@@ -36,6 +36,7 @@ class InstanceCustomLinkRepositoryTest {
   InstanceCustomLinkRepository repository;
 
   @BeforeEach
+  @SuppressWarnings("unchecked")
   void setUp() {
     conn = mock(Conn.class);
     entity = mock(InstanceCustomLink.class);
@@ -91,12 +92,13 @@ class InstanceCustomLinkRepositoryTest {
     verify(conn).update(eq(INSTANCE_CUSTOM_LINK_TABLE), any(), any());
   }
 
-  private void setupQueryReturn(int totalCount, int nameCount, int linkTextCount, int baseUrlCount) {
+  @SuppressWarnings("unchecked")
+  private void setupQueryReturn(int totalCount, int nameCount, int linkTextCount, int linkCount) {
     var row = mock(Row.class);
     when(row.getInteger("total_count")).thenReturn(totalCount);
     when(row.getInteger("name_count")).thenReturn(nameCount);
     when(row.getInteger("linktext_count")).thenReturn(linkTextCount);
-    when(row.getInteger("baseurl_count")).thenReturn(baseUrlCount);
+    when(row.getInteger("link_count")).thenReturn(linkCount);
 
     var rowIter = mock(RowIterator.class);
     var listIter = List.of(row).iterator();

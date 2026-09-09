@@ -57,8 +57,8 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
     return new InstanceCustomLink()
       .withName("sample")
       .withSource(InstanceCustomLink.Source.LOCAL)
-      .withBaseUrl("http://localhost")
-      .withLinkText("Sample OPAC");
+      .withLinkText("Sample OPAC")
+      .withLink("http://localhost");
   }
 
   @Override
@@ -69,10 +69,9 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   @Override
   protected List<Function<InstanceCustomLink, Object>> recordFieldExtractors() {
     return List.of(
-      InstanceCustomLink::getBaseUrl,
+      InstanceCustomLink::getLink,
       InstanceCustomLink::getLinkText,
       InstanceCustomLink::getName,
-      InstanceCustomLink::getQueryString,
       InstanceCustomLink::getShow,
       InstanceCustomLink::getSource
     );
@@ -107,40 +106,51 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   }
 
   @Test
-  void createWithValidQueryString(Vertx vertx, VertxTestContext ctx) {
+  void createWithValidLinkWithTokens(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req = new JsonObject()
       .put("name", "name")
-      .put("baseUrl", "https://base.host")
       .put("linkText", "link text")
-      .put("source", "local")
-      .put("queryString", "{{UUID}}/{{HRID}}/{{indexTitle}}");
+      .put("link", "https://base.host/{{UUID}}/{{HRID}}/{{indexTitle}}")
+      .put("source", "local");
     doPost(client, resourceUrl(), req)
       .onComplete(verifyStatus(ctx, HTTP_CREATED))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
-  
+
   @Test
-  void cannotCreateWithMissingTokensInQueryString(Vertx vertx, VertxTestContext ctx) {
+  void createWithValidLinkWithoutTokens(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req = new JsonObject()
       .put("name", "name")
-      .put("baseUrl", "https://base.host")
       .put("linkText", "link text")
-      .put("source", "local")
-      .put("queryString", "no-valid-tokens");
+      .put("link", "https://base.host/just-a-link")
+      .put("source", "local");
+    doPost(client, resourceUrl(), req)
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  @Test
+  void cannotCreateWithInvalidTokensInLink(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var req = new JsonObject()
+      .put("name", "name")
+      .put("linkText", "link text")
+      .put("link", "https://base.host/{{token-but-invalid}}")
+      .put("source", "local");
     doPost(client, resourceUrl(), req)
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
 
   @Test
-  void cannotCreateWithInvalidBaseUrl(Vertx vertx, VertxTestContext ctx) {
+  void cannotCreateWithInvalidLinkProtocol(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req = new JsonObject()
       .put("name", "name")
-      .put("baseUrl", "ftp://base.host")
       .put("linkText", "link text")
+      .put("link", "ftp://base.host")
       .put("source", "local");
     doPost(client, resourceUrl(), req)
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
@@ -153,16 +163,16 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
     for (var i = 1; i <= 10; i++) {
       var req = new JsonObject()
         .put("name", "name " + i)
-        .put("baseUrl", "https://base.host/" + i)
         .put("linkText", "link text " + i)
+        .put("link", "https://base.host/" + i)
         .put("source", "local");
       doPost(client, resourceUrl(), req)
         .onComplete(verifyStatus(ctx, HTTP_CREATED));
     }
     var overLimit = new JsonObject()
       .put("name", "name 11")
-      .put("baseUrl", "https://base.host/11")
       .put("linkText", "link text 11")
+      .put("link", "https://base.host/11")
       .put("source", "local");
     doPost(client, resourceUrl(), overLimit)
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
@@ -186,20 +196,18 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   }
 
   @Test
-  void updateWithValidQueryString(Vertx vertx, VertxTestContext ctx) {
+  void updateWithValidLink(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req1 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
       .put("linkText", "link text 1")
-      .put("source", "local")
-      .put("queryString", "/{{UUID}}");
+      .put("link", "https://base1.host/{{UUID}}")
+      .put("source", "local");
     var req2 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
       .put("linkText", "link text 1")
-      .put("source", "local")
-      .put("queryString", "/{{HRID}}");
+      .put("link", "https://base1.host/{{HRID}}")
+      .put("source", "local");
     doPost(client, resourceUrl(), req1)
       .onComplete(ctx.succeeding(response1 -> {
         var id = response1.jsonBody().getString("id");
@@ -211,20 +219,18 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   }
 
   @Test
-  void cannotUpdateWithMissingTokensInQueryString(Vertx vertx, VertxTestContext ctx) {
+  void cannotUpdateWithMissingTokensInLink(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req1 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
       .put("linkText", "link text 1")
-      .put("source", "local")
-      .put("queryString", "/{{UUID}}");
+      .put("link", "https://base1.host/{{UUID}}")
+      .put("source", "local");
     var req2 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
       .put("linkText", "link text 1")
-      .put("source", "local")
-      .put("queryString", "/{{not-a-token}}");
+      .put("link", "https://base1.host/{{not-a-token}}")
+      .put("source", "local");
     doPost(client, resourceUrl(), req1)
       .onComplete(ctx.succeeding(response1 -> {
         var id = response1.jsonBody().getString("id");
@@ -236,17 +242,17 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   }
 
   @Test
-  void cannotUpdateWithInvalidBaseUrl(Vertx vertx, VertxTestContext ctx) {
+  void cannotUpdateWithInvalidLink(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
     var req1 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "https://base1.host")
       .put("linkText", "link text 1")
+      .put("link", "https://base1.host")
       .put("source", "local");
     var req2 = new JsonObject()
       .put("name", "name 1")
-      .put("baseUrl", "uri:urn:base")
       .put("linkText", "link text 1")
+      .put("link", "uri:urn:base")
       .put("source", "local");
     doPost(client, resourceUrl(), req1)
       .onComplete(ctx.succeeding(response1 -> {
@@ -305,41 +311,41 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       arguments(
         new JsonObject()
           .put("name", "duplicate name")
-          .put("baseUrl", "https://base1.host")
           .put("linkText", "link text 1")
+          .put("link", "https://base1.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "duplicate name")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         "name"
       ),
       arguments(
         new JsonObject()
           .put("name", "name 1")
-          .put("baseUrl", "https://base1.host")
           .put("linkText", "duplicate text")
+          .put("link", "https://base1.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "duplicate text")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         "linkText"
       ),
       arguments(
         new JsonObject()
           .put("name", "name 1")
-          .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 1")
+          .put("link", "https://duplicate")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 2")
+          .put("link", "https://duplicate")
           .put("source", "local"),
-        "baseUrl"
+        "link"
       )
     );
   }
@@ -350,56 +356,56 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       arguments(
         new JsonObject()
           .put("name", "duplicate name")
-          .put("baseUrl", "https://base1.host")
           .put("linkText", "link text 1")
+          .put("link", "https://base1.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "duplicate name")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         "name"
       ),
       arguments(
         new JsonObject()
           .put("name", "name 1")
-          .put("baseUrl", "https://base1.host")
           .put("linkText", "duplicate text")
+          .put("link", "https://base1.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "duplicate text")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         "linkText"
       ),
       arguments(
         new JsonObject()
           .put("name", "name 1")
-          .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 1")
+          .put("link", "https://duplicate")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://base2.host")
           .put("linkText", "link text 2")
+          .put("link", "https://base2.host")
           .put("source", "local"),
         new JsonObject()
           .put("name", "name 2")
-          .put("baseUrl", "https://duplicate")
           .put("linkText", "link text 2")
+          .put("link", "https://duplicate")
           .put("source", "local"),
-        "baseUrl"
+        "link"
       )
     );
   }
