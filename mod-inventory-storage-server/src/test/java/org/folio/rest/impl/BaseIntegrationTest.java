@@ -7,6 +7,9 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
+import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
+import static org.folio.utility.RestUtility.CONSORTIUM_ID;
+import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -83,6 +86,7 @@ public abstract class BaseIntegrationTest {
   private static final SharedVerticleExtension SHARED_VERTICLE = new SharedVerticleExtension();
 
   private static int port;
+  private static List<String> enabledTenants;
 
   /**
    * {@link WireMockExtension} resets all stub mappings before every test method (not just once
@@ -176,6 +180,26 @@ public abstract class BaseIntegrationTest {
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
   }
 
+  protected static void mockUserTenantsForConsortiumMember(String tenantId) {
+    var userTenantsCollection = new JsonObject()
+      .put("userTenants", new JsonArray()
+        .add(new JsonObject()
+          .put("centralTenantId", CONSORTIUM_CENTRAL_TENANT)
+          .put("consortiumId", CONSORTIUM_ID)));
+    wm.stubFor(WireMock.get(USER_TENANTS_PATH)
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(tenantId))
+      .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
+  }
+
+  protected static void mockConsortiumTenants() {
+    var tenantsCollection = new JsonObject()
+      .put("tenants", new JsonArray()
+        .add(new JsonObject().put("id", CONSORTIUM_CENTRAL_TENANT).put("isCentral", true))
+        .add(new JsonObject().put("id", CONSORTIUM_MEMBER_TENANT).put("isCentral", false)));
+    wm.stubFor(WireMock.get("/consortia/" + CONSORTIUM_ID + "/tenants")
+      .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
+  }
+
   protected static Handler<AsyncResult<TestResponse>> verifyStatus(VertxTestContext ctx, HttpStatus expectedStatus) {
     return ctx.succeeding(response -> ctx.verify(() -> assertEquals(expectedStatus.toInt(), response.status())));
   }
@@ -184,7 +208,8 @@ public abstract class BaseIntegrationTest {
   static void beforeAll(Vertx vertx, @Tenants List<String> tenants) {
     port = SHARED_VERTICLE.shared.getPort();
     client = vertx.createHttpClient();
-    for (String tenant : tenants.isEmpty() ? List.of(TENANT_ID) : tenants) {
+    enabledTenants = tenants.isEmpty() ? List.of(TENANT_ID) : tenants;
+    for (String tenant : enabledTenants) {
       SHARED_VERTICLE.shared.enableTenantIfAbsent(tenant, null, tenantAttributes());
     }
 
@@ -198,11 +223,11 @@ public abstract class BaseIntegrationTest {
   }
 
   /**
-   * Truncates every table in the default tenant's schema once this class's tests are done,
-   * except the tables a Liquibase migration seeds exactly once when the schema is first
-   * created ({@link #MIGRATION_SEEDED_TABLES}) — nothing re-seeds those afterwards, so wiping
-   * them would break any later class relying on their default rows (e.g. {@code hrid_settings},
-   * which {@code HridManager} expects to always exist).
+   * Truncates every table in each tenant's schema this class enabled (see {@link #beforeAll})
+   * once its tests are done, except the tables a Liquibase migration seeds exactly once when the
+   * schema is first created ({@link #MIGRATION_SEEDED_TABLES}) — nothing re-seeds those
+   * afterwards, so wiping them would break any later class relying on their default rows (e.g.
+   * {@code hrid_settings}, which {@code HridManager} expects to always exist).
    *
    * <p>The shared verticle and its Postgres/Kafka containers now live for the whole JVM (see
    * {@link SharedVerticleExtension}), so a class can no longer rely on getting a freshly
@@ -213,7 +238,9 @@ public abstract class BaseIntegrationTest {
    */
   @AfterAll
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    truncateAllTables(TENANT_ID);
+    for (String tenant : enabledTenants) {
+      truncateAllTables(tenant);
+    }
   }
 
   private static void truncateAllTables(String tenantId)

@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 class InstanceDateTypesEcsIT extends BaseIntegrationTest {
 
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
-  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants".formatted(CONSORTIUM_ID);
 
   @BeforeEach
   void beforeEach() {
@@ -109,18 +108,5 @@ class InstanceDateTypesEcsIT extends BaseIntegrationTest {
           .put("consortiumId", CONSORTIUM_ID)));
     wm.stubFor(WireMock.get(USER_TENANTS_PATH)
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
-  }
-
-  private static void mockConsortiumTenants() {
-    JsonObject tenantsCollection = new JsonObject()
-      .put("tenants", new JsonArray()
-        .add(new JsonObject()
-          .put("id", CONSORTIUM_CENTRAL_TENANT)
-          .put("isCentral", true))
-        .add(new JsonObject()
-          .put("id", CONSORTIUM_MEMBER_TENANT)
-          .put("isCentral", false)));
-    wm.stubFor(WireMock.get(CONSORTIUM_TENANTS_PATH)
-      .willReturn(WireMock.ok().withBody(tenantsCollection.encodePrettily())));
   }
 }

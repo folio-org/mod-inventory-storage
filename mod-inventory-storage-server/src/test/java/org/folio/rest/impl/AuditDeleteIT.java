@@ -1,5 +1,6 @@
 package org.folio.rest.impl;
 
+import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createHolding;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createItem;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createLoanType;
@@ -53,11 +54,11 @@ class AuditDeleteIT extends BaseIntegrationTest {
 
     var item = get(doGet(client, ResourcePaths.ITEMS + "/" + itemId)).jsonBody();
     item.remove("yearCaption");
-    assertEquals(204, get(doPut(client, ResourcePaths.ITEMS + "/" + itemId, item)).status());
+    assertEquals(SC_NO_CONTENT, get(doPut(client, ResourcePaths.ITEMS + "/" + itemId, item)).status());
 
     assertEquals(0, countAuditRecords(AUDIT_ITEM));
 
-    assertEquals(204, get(doDelete(client, ResourcePaths.ITEMS + "/" + itemId)).status());
+    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.ITEMS + "/" + itemId)).status());
 
     assertEquals(itemId, singleAuditRecordId(AUDIT_ITEM));
   }
@@ -66,12 +67,13 @@ class AuditDeleteIT extends BaseIntegrationTest {
   void shouldStoreOnlyDeletedInstancesInAuditTable() {
     var instance = get(doGet(client, ResourcePaths.INSTANCES + "/" + instanceId)).jsonBody();
     instance.remove("notes");
-    assertEquals(204, get(doPut(client, ResourcePaths.INSTANCES + "/" + instanceId, instance)).status());
+    var putResponse = get(doPut(client, ResourcePaths.INSTANCES + "/" + instanceId, instance));
+    assertEquals(SC_NO_CONTENT, putResponse.status());
 
     assertEquals(0, countAuditRecords(AUDIT_INSTANCE));
 
-    assertEquals(204, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
-    assertEquals(204, get(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId)).status());
+    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
+    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId)).status());
 
     assertEquals(instanceId, singleAuditRecordId(AUDIT_INSTANCE));
   }
@@ -81,11 +83,12 @@ class AuditDeleteIT extends BaseIntegrationTest {
     var newLocationId = createLocation(client);
     var holding = get(doGet(client, ResourcePaths.HOLDINGS + "/" + holdingId)).jsonBody();
     holding.put("permanentLocationId", newLocationId);
-    assertEquals(204, get(doPut(client, ResourcePaths.HOLDINGS + "/" + holdingId, holding)).status());
+    var putResponse = get(doPut(client, ResourcePaths.HOLDINGS + "/" + holdingId, holding));
+    assertEquals(SC_NO_CONTENT, putResponse.status());
 
     assertEquals(0, countAuditRecords(AUDIT_HOLDINGS_RECORD));
 
-    assertEquals(204, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
+    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
 
     assertEquals(holdingId, singleAuditRecordId(AUDIT_HOLDINGS_RECORD));
   }
