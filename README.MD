@@ -36,6 +36,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
     * [ModuleDescriptor](#moduledescriptor)
     * [API documentation](#api-documentation)
     * [Code analysis](#code-analysis)
+    * [Testing](#testing)
     * [Download and configuration](#download-and-configuration)
 * [Appendix 1 - Docker Information](#appendix-1---docker-information)
   * [When Using the Modules as Docker Containers](#when-using-the-modules-as-docker-containers)
@@ -280,6 +281,12 @@ This module's [API documentation](https://dev.folio.org/reference/api/#mod-inven
 ### Code analysis
 
 [SonarQube analysis](https://sonarcloud.io/dashboard?id=org.folio%3Amod-inventory-storage).
+
+### Testing
+
+See [docs/testing.md](docs/testing.md) for this repo's test naming, structure, and
+assertion conventions, and [docs/test-quality-improvement-plan.md](docs/test-quality-improvement-plan.md)
+for the findings and cleanup plan behind them.
 
 ### Download and configuration
 
