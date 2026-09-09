@@ -8,17 +8,28 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 
 import io.vertx.core.json.JsonObject;
+import java.net.URL;
 import org.folio.rest.support.kafka.FakeKafkaConsumer;
 import org.folio.rest.support.messages.matchers.EventMessageMatchers;
 
 public class LoanTypeEventMessageChecks {
 
   private final FakeKafkaConsumer kafkaConsumer;
-  private final EventMessageMatchers eventMessageMatchers = new EventMessageMatchers(
-    TENANT_ID, okapiUrl());
+  private final EventMessageMatchers eventMessageMatchers;
 
   public LoanTypeEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
+    this(kafkaConsumer, okapiUrl());
+  }
+
+  /**
+   * For callers whose module instance isn't reachable at the legacy {@code rest.api} stack's
+   * own {@code okapiUrl()} (e.g. the shared {@code rest.impl} verticle, reachable via its own
+   * WireMock URL) — events carry whichever URL was sent as the {@code X-Okapi-Url} header on
+   * the originating request, so the expected value here must match that.
+   */
+  public LoanTypeEventMessageChecks(FakeKafkaConsumer kafkaConsumer, URL expectedUrl) {
     this.kafkaConsumer = kafkaConsumer;
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, expectedUrl);
   }
 
   public void noMessagesPublished(String loanTypeId) {
