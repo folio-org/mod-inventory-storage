@@ -26,6 +26,11 @@ final class ResourcePaths {
   static final String HOLDINGS_RETRIEVE = "/holdings-storage/holdings/retrieve";
   static final String CALL_NUMBER_TYPES = "/call-number-types";
   static final String ITEMS = "/item-storage/items";
+  static final String ITEMS_RETRIEVE = "/item-storage/items/retrieve";
+  static final String ITEMS_SYNC = "/item-storage/batch/synchronous";
+  static final String ITEMS_SYNC_UNSAFE = "/item-storage/batch/synchronous-unsafe";
+  static final String STATISTICAL_CODE_TYPES = "/statistical-code-types";
+  static final String STATISTICAL_CODES = "/statistical-codes";
   static final String SUBJECT_TYPES = "/subject-types";
   static final String SUBJECT_SOURCES = "/subject-sources";
   static final String INSTANCE_ITERATION = "/instance-storage/instances/iteration";

@@ -1,6 +1,6 @@
 package org.folio.rest.api;
 
-import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
+import static org.folio.rest.api.ItemStorageTestFixtures.nodWithNoBarcode;
 import static org.folio.rest.support.matchers.ItemMatchers.effectiveCallNumberComponents;
 import static org.folio.rest.support.matchers.ItemMatchers.hasCallNumber;
 import static org.folio.rest.support.matchers.ItemMatchers.hasPrefix;

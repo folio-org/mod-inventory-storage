@@ -1,7 +1,7 @@
 package org.folio.rest.api;
 
 import static java.util.UUID.randomUUID;
-import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
+import static org.folio.rest.api.ItemStorageTestFixtures.nodWithNoBarcode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
