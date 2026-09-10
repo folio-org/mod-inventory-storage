@@ -45,6 +45,7 @@ final class ResourcePaths {
   static final String INSTANCES_SYNC_UNSAFE = "/instance-storage/batch/synchronous-unsafe";
   static final String INSTANCES_RETRIEVE = "/instance-storage/instances/retrieve";
   static final String BOUND_WITH_PARTS = "/inventory-storage/bound-with-parts";
+  static final String BOUND_WITHS = "/inventory-storage/bound-withs";
   static final String INVENTORY_HIERARCHY_UPDATED_INSTANCE_IDS = "/inventory-hierarchy/updated-instance-ids";
   static final String INVENTORY_HIERARCHY_ITEMS_AND_HOLDINGS = "/inventory-hierarchy/items-and-holdings";
   static final String OAI_PMH_VIEW_INSTANCES = "/oai-pmh-view/instances";

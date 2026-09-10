@@ -6,6 +6,7 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.allOf;
 
 import io.vertx.core.json.JsonObject;
+import java.net.URL;
 import java.util.UUID;
 import org.folio.rest.support.IndividualResource;
 import org.folio.rest.support.Response;
@@ -16,12 +17,17 @@ import org.hamcrest.Matcher;
 import org.jetbrains.annotations.NotNull;
 
 public class BoundWithEventMessageChecks {
-  private final EventMessageMatchers eventMessageMatchers
-    = new EventMessageMatchers(TENANT_ID, okapiUrl());
+  private final EventMessageMatchers eventMessageMatchers;
   private final FakeKafkaConsumer kafkaConsumer;
 
   public BoundWithEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
     this.kafkaConsumer = kafkaConsumer;
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, okapiUrl());
+  }
+
+  public BoundWithEventMessageChecks(FakeKafkaConsumer kafkaConsumer, URL expectedUrl) {
+    this.kafkaConsumer = kafkaConsumer;
+    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, expectedUrl);
   }
 
   public void createdMessagePublished(IndividualResource boundW, UUID instanceId) {
