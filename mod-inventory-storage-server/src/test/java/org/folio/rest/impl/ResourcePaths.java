@@ -29,6 +29,12 @@ final class ResourcePaths {
   static final String HRID_SETTINGS = "/hrid-settings-storage/hrid-settings";
   static final String MIGRATIONS = "/inventory-storage/migrations";
   static final String MIGRATION_JOBS = "/inventory-storage/migrations/jobs";
+  static final String IDENTIFIER_TYPES = "/identifier-types";
+  static final String CONTRIBUTOR_NAME_TYPES = "/contributor-name-types";
+  static final String INSTANCE_STATUSES = "/instance-statuses";
+  static final String INSTANCES_SYNC = "/instance-storage/batch/synchronous";
+  static final String INSTANCES_SYNC_UNSAFE = "/instance-storage/batch/synchronous-unsafe";
+  static final String INSTANCES_RETRIEVE = "/instance-storage/instances/retrieve";
 
   private ResourcePaths() {
   }
