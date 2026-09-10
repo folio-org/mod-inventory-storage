@@ -21,6 +21,10 @@ final class ResourcePaths {
   static final String LOAN_TYPES = "/loan-types";
   static final String HOLDINGS_SOURCES = "/holdings-sources";
   static final String HOLDINGS = "/holdings-storage/holdings";
+  static final String HOLDINGS_SYNC = "/holdings-storage/batch/synchronous";
+  static final String HOLDINGS_SYNC_UNSAFE = "/holdings-storage/batch/synchronous-unsafe";
+  static final String HOLDINGS_RETRIEVE = "/holdings-storage/holdings/retrieve";
+  static final String CALL_NUMBER_TYPES = "/call-number-types";
   static final String ITEMS = "/item-storage/items";
   static final String SUBJECT_TYPES = "/subject-types";
   static final String SUBJECT_SOURCES = "/subject-sources";

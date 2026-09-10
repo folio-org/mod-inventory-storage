@@ -2,6 +2,7 @@ package org.folio.rest.impl;
 
 import io.vertx.core.http.HttpClient;
 import java.util.UUID;
+import org.folio.rest.jaxrs.model.CallNumberType;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HoldingsRecordsSource;
 import org.folio.rest.jaxrs.model.Item;
@@ -60,6 +61,20 @@ final class HoldingsStorageFixtures {
     var response = BaseIntegrationTest.get(BaseIntegrationTest.doPost(client, ResourcePaths.HOLDINGS, request));
 
     return response.bodyAsClass(HoldingsRecord.class).getId();
+  }
+
+  /**
+   * Seeds a {@code call-number-types} row with an explicit id, for tests that need one of the
+   * fixed reference-data ids production code keys shelf-key logic off (see
+   * {@code CallNumberUtils.LC_CN_TYPE_ID}), rather than a fresh random one.
+   */
+  static String createCallNumberType(HttpClient client, String id, String name) {
+    var callNumberType = new CallNumberType().withId(id).withName(name).withSource("folio");
+
+    BaseIntegrationTest.get(BaseIntegrationTest.doPost(
+      client, ResourcePaths.CALL_NUMBER_TYPES, BaseIntegrationTest.pojo2JsonObject(callNumberType)));
+
+    return id;
   }
 
   static String createItem(HttpClient client, String holdingId, String materialTypeId, String permanentLoanTypeId) {

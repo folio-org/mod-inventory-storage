@@ -67,7 +67,7 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
     .options(WireMockConfiguration.wireMockConfig()
       .notifier(new ConsoleNotifier(false))
       .dynamicPort()
-      .extensions(HoldingsStorageTest.ConsortiumInstanceSharingTransformer.class))
+      .extensions(ConsortiumInstanceSharingTransformer.class))
     .configureStaticDsl(true)
     .build();
 

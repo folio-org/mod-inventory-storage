@@ -56,6 +56,19 @@ final class InstanceStorageFixtures {
     return response.bodyAsClass(Instance.class).getId();
   }
 
+  static String createInstance(HttpClient client, String title, String instanceTypeId, String tenantId) {
+    var request = new InstanceRequestBuilder()
+      .withTitle(title)
+      .withSource("TEST")
+      .withInstanceTypeId(UUID.fromString(instanceTypeId))
+      .create();
+
+    var response = BaseIntegrationTest.get(
+      BaseIntegrationTest.doPost(client, ResourcePaths.INSTANCES, tenantId, request));
+
+    return response.bodyAsClass(Instance.class).getId();
+  }
+
   static BaseIntegrationTest.TestResponse createInstanceRelationship(
     HttpClient client, String superInstanceId, String subInstanceId, String relationshipTypeId) {
 
