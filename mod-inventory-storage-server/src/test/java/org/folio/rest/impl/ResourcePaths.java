@@ -26,6 +26,7 @@ final class ResourcePaths {
   static final String SUBJECT_SOURCES = "/subject-sources";
   static final String INSTANCE_ITERATION = "/instance-storage/instances/iteration";
   static final String INSTANCE_REINDEX = "/instance-storage/reindex";
+  static final String HRID_SETTINGS = "/hrid-settings-storage/hrid-settings";
 
   private ResourcePaths() {
   }
