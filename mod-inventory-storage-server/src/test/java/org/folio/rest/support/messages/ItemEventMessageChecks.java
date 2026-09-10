@@ -3,12 +3,7 @@ package org.folio.rest.support.messages;
 import static java.util.UUID.fromString;
 import static org.folio.rest.api.TestBase.holdingsClient;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
-import static org.folio.utility.ModuleUtility.okapiUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasProperty;
 
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
@@ -22,11 +17,6 @@ public class ItemEventMessageChecks {
   private final EventMessageMatchers eventMessageMatchers;
   private final FakeKafkaConsumer kafkaConsumer;
 
-  public ItemEventMessageChecks(FakeKafkaConsumer kafkaConsumer) {
-    this.kafkaConsumer = kafkaConsumer;
-    this.eventMessageMatchers = new EventMessageMatchers(TENANT_ID, okapiUrl());
-  }
-
   public ItemEventMessageChecks(FakeKafkaConsumer kafkaConsumer, String urlHeader) {
     this.kafkaConsumer = kafkaConsumer;
     try {
@@ -34,19 +24,6 @@ public class ItemEventMessageChecks {
     } catch (MalformedURLException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public void createdMessagePublished(JsonObject item) {
-    final var itemId = getId(item);
-    final var instanceId = getInstanceIdForItem(item);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      eventMessageMatchers.hasCreateEventMessageFor(addInstanceIdToItem(item, instanceId)));
-  }
-
-  public void createdMessagePublished(String itemId) {
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      hasItem(hasProperty("type", is("CREATE"))));
   }
 
   public void updatedMessagePublished(JsonObject oldItem, JsonObject newItem) {
@@ -58,27 +35,25 @@ public class ItemEventMessageChecks {
   public void updatedMessagePublished(JsonObject oldItem,
                                       JsonObject newItem, String oldInstanceId) {
 
-    final var itemId = getId(newItem);
     final var newInstanceId = getInstanceIdForItem(newItem);
+
+    updatedMessagePublished(oldItem, newItem, oldInstanceId, newInstanceId);
+  }
+
+  /**
+   * Same as {@link #updatedMessagePublished(JsonObject, JsonObject, String)}, but with both
+   * instance ids supplied explicitly rather than resolved via {@code holdingsClient} - which is
+   * only initialized on the legacy {@code rest.api} stack, not the shared {@code *IT} verticle.
+   */
+  public void updatedMessagePublished(JsonObject oldItem,
+                                      JsonObject newItem, String oldInstanceId, String newInstanceId) {
+
+    final var itemId = getId(newItem);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
       eventMessageMatchers.hasUpdateEventMessageFor(
         addInstanceIdToItem(oldItem, oldInstanceId),
         addInstanceIdToItem(newItem, newInstanceId)));
-  }
-
-  public void deletedMessagePublished(JsonObject item) {
-    final var itemId = getId(item);
-    final var instanceId = getInstanceIdForItem(item);
-
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
-      eventMessageMatchers.hasDeleteEventMessageFor(addInstanceIdToItem(item, instanceId)));
-  }
-
-  public void allItemsDeletedMessagePublished() {
-    awaitAtMost()
-      .until(() -> kafkaConsumer.getMessagesForItemWithInstanceIdKey(NULL_ID, null),
-        eventMessageMatchers.hasDeleteAllEventMessage());
   }
 
   private static String getId(JsonObject item) {

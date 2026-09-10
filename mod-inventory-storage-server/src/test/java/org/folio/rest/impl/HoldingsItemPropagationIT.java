@@ -13,10 +13,14 @@ import static org.folio.rest.impl.LocationStorageFixtures.createLocation;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
+import org.folio.rest.support.messages.HoldingsEventMessageChecks;
+import org.folio.rest.support.messages.ItemEventMessageChecks;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,12 +37,21 @@ import org.junit.jupiter.params.provider.MethodSource;
  * belong to it: effective location, effective call number components and shelving order, and
  * item-vs-holding metadata/version bumps. Split out of {@link HoldingsStorageIT} because this
  * cluster of tests is large and shares a distinct "holding change -> item side effect" concern.
+ *
+ * <p>Also covers the {@code effectiveLocationId} trigger logic itself (the {@code
+ * update_effective_location}/{@code update_item_references} triggers on {@code holdings_record}
+ * and {@code item}, see {@code itemEffectiveLocation.sql}) across the full matrix of permanent
+ * vs. temporary location permutations at both the holding and item level - merged in from the
+ * legacy {@code ItemEffectiveLocationTest} since both concerns are "how a holding's location
+ * change reaches its items".
  */
 class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   // The exact reference-data ids CallNumberUtils/tests key off; cannot be fresh/random ids.
   private static final String LC_CALL_NUMBER_TYPE_ID = "95467209-6d7b-468b-94df-0f5d7ad2747d";
   private static final String DEWEY_CALL_NUMBER_TYPE_ID = "03dd64d0-5626-4ecd-8ece-4531e0069f35";
+  private static final String NLM_CALL_NUMBER_TYPE_ID = "054d460d-d6b9-4469-9e37-7a78a2266655";
+  private static final String MOYS_CALL_NUMBER_TYPE_ID = "828ae637-dfa3-4265-a1af-5279c436edff";
   private static final String EFFECTIVE_CALL_NUMBER_COMPONENTS_KEY = "effectiveCallNumberComponents";
   private static final String EFFECTIVE_LOCATION_ID_KEY = "effectiveLocationId";
   private static final String PERMANENT_LOCATION_ID_KEY = "permanentLocationId";
@@ -50,8 +63,19 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   private static String loanTypeId;
   private static String mainLibraryLocationId;
   private static String annexLibraryLocationId;
+  private static String onlineLocationId;
+  private static String secondFloorLocationId;
+  private static String thirdFloorLocationId;
+  private static String fourthFloorLocationId;
   private static String lcCallNumberTypeId;
   private static String deweyCallNumberTypeId;
+  private static String moysCallNumberTypeId;
+  private static String nlmCallNumberTypeId;
+
+  private final HoldingsEventMessageChecks holdingsMessageChecks
+    = new HoldingsEventMessageChecks(KAFKA_CONSUMER, wm.baseUrl());
+  private final ItemEventMessageChecks itemMessageChecks
+    = new ItemEventMessageChecks(KAFKA_CONSUMER, wm.baseUrl());
 
   @BeforeAll
   static void seedReferenceData() {
@@ -60,8 +84,14 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     loanTypeId = createLoanType(client);
     mainLibraryLocationId = createLocation(client);
     annexLibraryLocationId = createLocation(client);
+    onlineLocationId = createLocation(client);
+    secondFloorLocationId = createLocation(client);
+    thirdFloorLocationId = createLocation(client);
+    fourthFloorLocationId = createLocation(client);
     lcCallNumberTypeId = createCallNumberType(client, LC_CALL_NUMBER_TYPE_ID, "Library of Congress classification");
     deweyCallNumberTypeId = createCallNumberType(client, DEWEY_CALL_NUMBER_TYPE_ID, "Dewey Decimal classification");
+    nlmCallNumberTypeId = createCallNumberType(client, NLM_CALL_NUMBER_TYPE_ID, "NLM classification");
+    moysCallNumberTypeId = createCallNumberType(client, MOYS_CALL_NUMBER_TYPE_ID, "MOYS classification");
   }
 
   @BeforeEach
@@ -77,7 +107,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should change the effective location when the permanent location changes and no "
-    + "temporary location is set")
+               + "temporary location is set")
   void shouldChangeEffectiveLocation_whenPermanentLocationChangesAndNoTemporarySet() {
     var holding = createHolding(holdingRequest(createInstanceRecord()));
     assertThat(holding.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(mainLibraryLocationId);
@@ -91,13 +121,12 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should not change the effective location when the permanent location changes but a "
-    + "temporary location is set")
+               + "temporary location is set")
   void shouldNotChangeEffectiveLocation_whenPermanentLocationChangesButTemporarySet() {
     var holding = createHolding(holdingRequest(createInstanceRecord())
       .withTemporaryLocation(UUID.fromString(annexLibraryLocationId)));
     assertThat(holding.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(annexLibraryLocationId);
 
-    var secondFloorLocationId = createLocation(client);
     holding.put(PERMANENT_LOCATION_ID_KEY, secondFloorLocationId);
     updateHoldingExpectNoContent(holding);
 
@@ -112,7 +141,6 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     final var holdingId = holding.getString("id");
     assertThat(holding.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(mainLibraryLocationId);
 
-    final var secondFloorLocationId = createLocation(client);
     holding.put(TEMPORARY_LOCATION_ID_KEY, annexLibraryLocationId);
     updateHoldingExpectNoContent(holding);
     var afterFirstUpdate = getHoldingById(holdingId);
@@ -174,7 +202,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   void shouldUpdateItemEffectiveCallNumber_forAllItems_whenHoldingCallNumberChanges() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withCallNumber("testCallNumber"));
     var itemIds = new String[] {createItem(holding.getString("id")).getString("id"),
-      createItem(holding.getString("id")).getString("id")};
+                                createItem(holding.getString("id")).getString("id")};
     assertItemsHaveCallNumber(itemIds, "testCallNumber");
 
     holding.put("callNumber", "updatedCallNumber");
@@ -215,7 +243,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   void shouldUpdateItemEffectiveCallNumberSuffix_forAllItems_whenHoldingSuffixChanges() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withCallNumberSuffix("testCallNumberSuffix"));
     var itemIds = new String[] {createItem(holding.getString("id")).getString("id"),
-      createItem(holding.getString("id")).getString("id")};
+                                createItem(holding.getString("id")).getString("id")};
     assertItemsHaveEffectiveComponent(itemIds, "suffix", "testCallNumberSuffix");
 
     holding.put("callNumberSuffix", "updatedCallNumberSuffix");
@@ -258,7 +286,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   void shouldUpdateItemEffectiveCallNumberPrefix_forAllItems_whenHoldingPrefixChanges() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withCallNumberPrefix("testCallNumberPrefix"));
     var itemIds = new String[] {createItem(holding.getString("id")).getString("id"),
-      createItem(holding.getString("id")).getString("id")};
+                                createItem(holding.getString("id")).getString("id")};
     assertItemsHaveEffectiveComponent(itemIds, "prefix", "testCallNumberPrefix");
 
     holding.put("callNumberPrefix", "updatedCallNumberPrefix");
@@ -339,7 +367,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number "
-    + "prefix changes")
+               + "prefix changes")
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberPrefixChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -353,7 +381,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number "
-    + "suffix changes")
+               + "suffix changes")
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberSuffixChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -428,7 +456,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number and metadata when the holding's call number "
-    + "and notes change")
+               + "and notes change")
   void shouldUpdateItemEffectiveComponentsAndNote_whenHoldingCallNumberAndNotesChange() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -613,6 +641,303 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     assertThat(updatedItem.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(annexLibraryLocationId);
   }
 
+  // -- effective-location trigger matrix (merged from the legacy ItemEffectiveLocationTest) --
+
+  @ParameterizedTest
+  @MethodSource("itemUpdateEffectiveLocationParams")
+  @DisplayName("should calculate item effective location on item update across permanent/temporary "
+               + "location permutations")
+  void shouldCalculateItemEffectiveLocation_onItemUpdate(
+    PermTemp holdingLoc, PermTemp itemStartLoc, PermTemp itemEndLoc) {
+    var holdingId = createHolding(holdingRequestWithLocations(createInstanceRecord(), holdingLoc)).getString("id");
+
+    var item = createItem(itemRequestWithLocations(holdingId, itemStartLoc));
+    assertThat(item.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(effectiveLocation(holdingLoc, itemStartLoc));
+
+    setPermanentTemporaryLocation(item, itemEndLoc);
+    updateItemExpectNoContent(item);
+
+    var updatedItem = getItemById(item.getString("id"));
+    assertThat(updatedItem.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(effectiveLocation(holdingLoc, itemEndLoc));
+  }
+
+  @ParameterizedTest
+  @MethodSource("holdingUpdateEffectiveLocationParams")
+  @DisplayName("should calculate item effective location on holding update across permanent/temporary "
+               + "location permutations")
+  void shouldCalculateItemEffectiveLocation_onHoldingUpdate(
+    PermTemp itemLoc, PermTemp holdingStartLoc, PermTemp holdingEndLoc) {
+    var instanceId = createInstanceRecord();
+    var holding = createHolding(holdingRequestWithLocations(instanceId, holdingStartLoc));
+    var holdingId = holding.getString("id");
+
+    var item = createItem(itemRequestWithLocations(holdingId, itemLoc));
+    assertThat(item.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(effectiveLocation(holdingStartLoc, itemLoc));
+
+    var holdingToUpdate = holding.copy();
+    setPermanentTemporaryLocation(holdingToUpdate, holdingEndLoc);
+    var locationsChanged = !locationsEqual(holding, holdingToUpdate);
+    updateHoldingExpectNoContent(holdingToUpdate);
+
+    var updatedItem = getItemById(item.getString("id"));
+    assertThat(updatedItem.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(effectiveLocation(holdingEndLoc, itemLoc));
+
+    var updatedHolding = getHoldingById(holdingId);
+    if (locationsChanged) {
+      // the item's own holding doesn't change here, so old and new instanceId are the same;
+      // pass both explicitly rather than resolving via TestBase.holdingsClient, which is only
+      // initialized on the legacy rest.api stack, not the shared *IT verticle.
+      itemMessageChecks.updatedMessagePublished(item, updatedItem, instanceId, instanceId);
+    }
+    holdingsMessageChecks.updatedMessagePublished(holding, updatedHolding);
+  }
+
+  @Test
+  @DisplayName("should fall back all items to the holding's permanent location when its temporary "
+               + "location is removed")
+  void shouldFallBackAllItemsToHoldingPermanentLocation_whenHoldingTemporaryLocationRemoved() {
+    var holding = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId)));
+    var holdingId = holding.getString("id");
+    var itemIds = new String[] {
+      createItem(itemRequest(holdingId)).getString("id"),
+      createItem(itemRequest(holdingId)).getString("id"),
+      createItem(itemRequest(holdingId)).getString("id")};
+    for (var itemId : itemIds) {
+      assertThat(getItemById(itemId).getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(annexLibraryLocationId);
+    }
+
+    holding.remove(TEMPORARY_LOCATION_ID_KEY);
+    updateHoldingExpectNoContent(holding);
+
+    for (var itemId : itemIds) {
+      assertThat(getItemById(itemId).getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(mainLibraryLocationId);
+    }
+  }
+
+  @Test
+  @DisplayName("should only update items without their own location override when the holding's "
+               + "temporary location changes")
+  void shouldOnlyUpdateItemsWithoutOwnLocationOverride_whenHoldingTemporaryLocationChanges() {
+    var holding = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(mainLibraryLocationId, null)));
+    var holdingId = holding.getString("id");
+    var itemWithOwnPermLocationId = createItem(itemRequestWithLocations(holdingId,
+      new PermTemp(onlineLocationId, null))).getString("id");
+    final var itemWithNoOverrideId = createItem(itemRequest(holdingId)).getString("id");
+    final var itemWithOwnTempLocationId = createItem(itemRequestWithLocations(holdingId,
+      new PermTemp(null, annexLibraryLocationId))).getString("id");
+
+    holding.put(TEMPORARY_LOCATION_ID_KEY, secondFloorLocationId);
+    updateHoldingExpectNoContent(holding);
+
+    assertThat(getItemById(itemWithOwnPermLocationId).getString(EFFECTIVE_LOCATION_ID_KEY))
+      .isEqualTo(onlineLocationId);
+    assertThat(getItemById(itemWithNoOverrideId).getString(EFFECTIVE_LOCATION_ID_KEY))
+      .isEqualTo(secondFloorLocationId);
+    assertThat(getItemById(itemWithOwnTempLocationId).getString(EFFECTIVE_LOCATION_ID_KEY))
+      .isEqualTo(annexLibraryLocationId);
+  }
+
+  @Test
+  @DisplayName("should move an item's effective location when it's moved to another holding and has "
+               + "no location of its own")
+  void shouldMoveItemEffectiveLocation_whenItemWithoutOwnLocationMovedToAnotherHolding() {
+    var firstHoldingId = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId))).getString("id");
+    var secondHoldingId = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(onlineLocationId, secondFloorLocationId))).getString("id");
+    var item = createItem(itemRequest(firstHoldingId));
+    assertThat(item.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(annexLibraryLocationId);
+
+    item.put("holdingsRecordId", secondHoldingId);
+    updateItemExpectNoContent(item);
+
+    assertThat(getItemById(item.getString("id")).getString(EFFECTIVE_LOCATION_ID_KEY))
+      .isEqualTo(secondFloorLocationId);
+  }
+
+  @Test
+  @DisplayName("should keep an item's own effective location when it's moved to another holding")
+  void shouldKeepItemEffectiveLocation_whenItemWithOwnPermanentLocationMovedToAnotherHolding() {
+    var firstHoldingId = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId))).getString("id");
+    var secondHoldingId = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(secondFloorLocationId, null))).getString("id");
+    var item = createItem(itemRequestWithLocations(firstHoldingId, new PermTemp(onlineLocationId, null)));
+    assertThat(item.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(onlineLocationId);
+
+    item.put("holdingsRecordId", secondHoldingId);
+    updateItemExpectNoContent(item);
+
+    assertThat(getItemById(item.getString("id")).getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(onlineLocationId);
+  }
+
+  @Test
+  @DisplayName("should set both the jsonb and the column effective location on item update")
+  void shouldSetBothJsonbAndColumnEffectiveLocationId_onItemUpdate() {
+    var holdingId = createHolding(holdingRequestWithLocations(createInstanceRecord(),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId))).getString("id");
+    var item = createItem(itemRequestWithLocations(holdingId, new PermTemp(onlineLocationId, null)));
+
+    item.put(TEMPORARY_LOCATION_ID_KEY, secondFloorLocationId);
+    updateItemExpectNoContent(item);
+
+    var row = runQuery("SELECT jsonb, effectivelocationid FROM item WHERE id='"
+                       + item.getString("id") + "'").iterator().next();
+    var jsonb = (JsonObject) row.getValue(0);
+    assertThat(jsonb.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(secondFloorLocationId);
+    assertThat(row.getUUID(1).toString()).isEqualTo(secondFloorLocationId);
+  }
+
+  @ParameterizedTest(name = "[{index}]: {arguments}")
+  @MethodSource("effectiveCallNumberPropertiesOnCreateParams")
+  @DisplayName("should calculate the effective call number component on item creation")
+  void shouldCalculateEffectiveCallNumberComponent_onItemCreate(
+    CallNumberComponentPropertyNames callNumberProperties,
+    String holdingsPropertyValue,
+    String itemPropertyValue) {
+
+    var holding = createHoldingWithCallNumberProperty(
+      callNumberProperties.holdingsPropertyName(), holdingsPropertyValue);
+    var item = createItem(itemRequest(holding.getString("id"))
+      .put(callNumberProperties.itemPropertyName(), itemPropertyValue));
+
+    assertThat(getEffectiveComponent(item, callNumberProperties.effectivePropertyName()))
+      .isEqualTo(firstNonBlank(itemPropertyValue, holdingsPropertyValue));
+  }
+
+  @ParameterizedTest(name = "[{index}]: {arguments}")
+  @MethodSource("effectiveCallNumberPropertiesOnUpdateParams")
+  @DisplayName("should calculate the effective call number component on update")
+  void shouldCalculateEffectiveCallNumberComponent_onUpdate(
+    CallNumberComponentPropertyNames callNumberProperties,
+    String holdingsInitValue,
+    String holdingsTargetValue,
+    String itemInitValue,
+    String itemTargetValue) {
+
+    var holding = createHoldingWithCallNumberProperty(
+      callNumberProperties.holdingsPropertyName(), holdingsInitValue);
+    var item = createItem(itemRequest(holding.getString("id"))
+      .put(callNumberProperties.itemPropertyName(), itemInitValue));
+
+    assertThat(getEffectiveComponent(item, callNumberProperties.effectivePropertyName()))
+      .isEqualTo(firstNonBlank(itemInitValue, holdingsInitValue));
+
+    var holdingToUpdate = getHoldingById(holding.getString("id"))
+      .put(callNumberProperties.holdingsPropertyName(), holdingsTargetValue);
+    updateHoldingExpectNoContent(holdingToUpdate);
+
+    if (!Objects.equals(itemInitValue, itemTargetValue)) {
+      var itemToUpdate = getItemById(item.getString("id"))
+        .put(callNumberProperties.itemPropertyName(), itemTargetValue);
+      updateItemExpectNoContent(itemToUpdate);
+    }
+
+    var updatedItem = getItemById(item.getString("id"));
+    assertThat(getEffectiveComponent(updatedItem, callNumberProperties.effectivePropertyName()))
+      .isEqualTo(firstNonBlank(itemTargetValue, holdingsTargetValue));
+  }
+
+  private static Stream<Arguments> itemUpdateEffectiveLocationParams() {
+    var holdingLocations = List.of(
+      new PermTemp(mainLibraryLocationId, null),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId));
+    var itemStartLocations = List.of(
+      new PermTemp(null, null),
+      new PermTemp(null, onlineLocationId),
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId));
+    var itemEndLocations = List.of(
+      new PermTemp(null, null),
+      new PermTemp(null, onlineLocationId),
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId),
+      new PermTemp(null, thirdFloorLocationId),
+      new PermTemp(thirdFloorLocationId, null),
+      new PermTemp(thirdFloorLocationId, fourthFloorLocationId));
+
+    return holdingLocations.stream().flatMap(holdingLoc -> itemStartLocations.stream()
+      .flatMap(itemStart -> itemEndLocations.stream().map(itemEnd -> Arguments.of(holdingLoc, itemStart, itemEnd))));
+  }
+
+  private static Stream<Arguments> holdingUpdateEffectiveLocationParams() {
+    var itemLocations = List.of(
+      new PermTemp(null, null),
+      new PermTemp(null, mainLibraryLocationId),
+      new PermTemp(mainLibraryLocationId, null),
+      new PermTemp(mainLibraryLocationId, annexLibraryLocationId));
+    var holdingStartLocations = List.of(
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId));
+    var holdingEndLocations = List.of(
+      new PermTemp(onlineLocationId, null),
+      new PermTemp(onlineLocationId, secondFloorLocationId),
+      new PermTemp(thirdFloorLocationId, null),
+      new PermTemp(thirdFloorLocationId, fourthFloorLocationId));
+
+    return itemLocations.stream().flatMap(itemLoc -> holdingStartLocations.stream()
+      .flatMap(holdingStart -> holdingEndLocations.stream()
+        .map(holdingEnd -> Arguments.of(itemLoc, holdingStart, holdingEnd))));
+  }
+
+  private static JsonObject holdingRequestWithLocations(String instanceId, PermTemp locations) {
+    var builder = new HoldingRequestBuilder()
+      .forInstance(UUID.fromString(instanceId))
+      .withSource(UUID.fromString(createHoldingsRecordsSource(client)))
+      .withPermanentLocation(UUID.fromString(locations.perm()));
+    if (locations.temp() != null) {
+      builder = builder.withTemporaryLocation(UUID.fromString(locations.temp()));
+    }
+    return builder.create();
+  }
+
+  private static JsonObject itemRequestWithLocations(String holdingId, PermTemp locations) {
+    var request = itemRequest(holdingId);
+    setPermanentTemporaryLocation(request, locations);
+    return request;
+  }
+
+  private static void setPermanentTemporaryLocation(JsonObject json, PermTemp locations) {
+    if (locations.perm() == null) {
+      json.remove(PERMANENT_LOCATION_ID_KEY);
+    } else {
+      json.put(PERMANENT_LOCATION_ID_KEY, locations.perm());
+    }
+    if (locations.temp() == null) {
+      json.remove(TEMPORARY_LOCATION_ID_KEY);
+    } else {
+      json.put(TEMPORARY_LOCATION_ID_KEY, locations.temp());
+    }
+  }
+
+  // No NPE: a holding's own permanentLocationId is required, so the chain always bottoms out.
+  private static String effectiveLocation(PermTemp holdingLocations, PermTemp itemLocations) {
+    if (itemLocations.temp() != null) {
+      return itemLocations.temp();
+    }
+    if (itemLocations.perm() != null) {
+      return itemLocations.perm();
+    }
+    if (holdingLocations.temp() != null) {
+      return holdingLocations.temp();
+    }
+    return holdingLocations.perm();
+  }
+
+  private static boolean locationsEqual(JsonObject firstHolding, JsonObject secondHolding) {
+    return Objects.equals(firstHolding.getString(PERMANENT_LOCATION_ID_KEY),
+      secondHolding.getString(PERMANENT_LOCATION_ID_KEY))
+           && Objects.equals(firstHolding.getString(TEMPORARY_LOCATION_ID_KEY),
+      secondHolding.getString(TEMPORARY_LOCATION_ID_KEY));
+  }
+
+  private static void updateItemExpectNoContent(JsonObject item) {
+    var response = get(doPut(client, ResourcePaths.ITEMS + "/" + item.getString("id"), item));
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+  }
+
   private static Stream<Arguments> relatedHoldingFields() {
     return Stream.of(
       Arguments.of("callNumberTypeId", lcCallNumberTypeId, deweyCallNumberTypeId, "typeId"),
@@ -651,8 +976,8 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   }
 
   private static void assertItemHasEffectiveComponents(JsonObject item, String expectedVersion,
-                                                        String callNumber, String prefix, String suffix,
-                                                        String typeId) {
+                                                       String callNumber, String prefix, String suffix,
+                                                       String typeId) {
     assertThat(item.getString(VERSION_KEY)).isEqualTo(expectedVersion);
     var components = item.getJsonObject(EFFECTIVE_CALL_NUMBER_COMPONENTS_KEY);
     assertThat(components.getString("callNumber")).isEqualTo(callNumber);
@@ -662,7 +987,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   }
 
   private static void assertItemsHaveExpectedCallNumberComponents(String itemId, String callNumber, String prefix,
-                                                                   String suffix) {
+                                                                  String suffix) {
     var item = getItemById(itemId);
     assertThat(getEffectiveComponent(item, "callNumber")).isEqualTo(callNumber);
     assertThat(getEffectiveComponent(item, "prefix")).isEqualTo(prefix);
@@ -675,6 +1000,8 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     }
   }
 
+  // -- effective call-number component coverage (migrated from ItemEffectiveCallNumberComponentsTest) --
+
   private static void assertItemsHaveEffectiveComponent(String[] itemIds, String componentName,
                                                         String expectedValue) {
     for (var itemId : itemIds) {
@@ -686,11 +1013,120 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     return item.getJsonObject(EFFECTIVE_CALL_NUMBER_COMPONENTS_KEY).getString(componentName);
   }
 
-  // -- shared helpers --
+  private static Stream<Arguments> effectiveCallNumberPropertiesOnCreateParams() {
+    return Stream.of(
+      // Call number
+      Arguments.of(forProperty("callNumber"), "hrCallNumber", "itCallNumber"),
+      Arguments.of(forProperty("callNumber"), null, "itCallNumber"),
+      Arguments.of(forProperty("callNumber"), "hrCallNumber", null),
+      Arguments.of(forProperty("callNumber"), null, null),
+
+      // Call number suffix
+      Arguments.of(forProperty("suffix"), "hrCNSuffix", "itCNSuffix"),
+      Arguments.of(forProperty("suffix"), "hrCNSuffix", null),
+      Arguments.of(forProperty("suffix"), null, "itCNSuffix"),
+      Arguments.of(forProperty("suffix"), null, null),
+
+      // Call number prefix
+      Arguments.of(forProperty("prefix"), "hrCNPrefix", "itCNPrefix"),
+      Arguments.of(forProperty("prefix"), "hrCNPrefix", null),
+      Arguments.of(forProperty("prefix"), null, "itCNPrefix"),
+      Arguments.of(forProperty("prefix"), null, null),
+
+      // Call number type
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, LC_CALL_NUMBER_TYPE_ID),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null),
+      Arguments.of(forProperty("typeId"), null, LC_CALL_NUMBER_TYPE_ID),
+      Arguments.of(forProperty("typeId"), null, null)
+    );
+  }
+
+  private static Stream<Arguments> effectiveCallNumberPropertiesOnUpdateParams() {
+    return Stream.of(
+      // Call number
+      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", "targetItCN"),
+      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", "targetItCN"),
+      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", null),
+      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", null),
+      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", "initItCN"),
+      Arguments.of(forProperty("callNumber"), "initHrCN", "initHrCN", "initItCN", null),
+      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", null, null),
+      Arguments.of(forProperty("callNumber"), null, "targetHrCN", "initItCN", null),
+
+      // Call number suffix
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", "targetItCNSuffix"),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "targetItCNSuffix"),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", null),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", null),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "initItCNSuffix"),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "initHrCNSuffix", "initItCNSuffix", null),
+      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", null, null),
+      Arguments.of(forProperty("suffix"), null, "targetHrCNSuffix", "initItCNSuffix", null),
+
+      // Call number prefix
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", "targetItCNPrefix"),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "targetItCNPrefix"),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", null),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", null),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "initItCNPrefix"),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "initHrCNPrefix", "initItCNPrefix", null),
+      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", null, null),
+      Arguments.of(forProperty("prefix"), null, "targetHrCNPrefix", "initItCNPrefix", null),
+
+      // Call number type
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+        LC_CALL_NUMBER_TYPE_ID, MOYS_CALL_NUMBER_TYPE_ID),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+        LC_CALL_NUMBER_TYPE_ID, MOYS_CALL_NUMBER_TYPE_ID),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+        LC_CALL_NUMBER_TYPE_ID, null),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+        LC_CALL_NUMBER_TYPE_ID, null),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+        LC_CALL_NUMBER_TYPE_ID, LC_CALL_NUMBER_TYPE_ID),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, DEWEY_CALL_NUMBER_TYPE_ID,
+        LC_CALL_NUMBER_TYPE_ID, null),
+      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+        null, null),
+      Arguments.of(forProperty("typeId"), null, NLM_CALL_NUMBER_TYPE_ID,
+        LC_CALL_NUMBER_TYPE_ID, null)
+    );
+  }
+
+  private static JsonObject createHoldingWithCallNumberProperty(String propertyName, String propertyValue) {
+    var request = holdingRequest(createInstanceRecord()).create();
+    if (propertyValue == null) {
+      request.remove(propertyName);
+    } else {
+      request.put(propertyName, propertyValue);
+    }
+    return createHolding(request);
+  }
+
+  private static String firstNonBlank(String first, String second) {
+    return first != null && !first.isBlank() ? first : second;
+  }
+
+  private static CallNumberComponentPropertyNames forProperty(String effectivePropertyName) {
+    return switch (effectivePropertyName) {
+      case "callNumber" -> new CallNumberComponentPropertyNames(
+        "callNumber", "itemLevelCallNumber", "callNumber");
+      case "suffix" -> new CallNumberComponentPropertyNames(
+        "callNumberSuffix", "itemLevelCallNumberSuffix", "suffix");
+      case "prefix" -> new CallNumberComponentPropertyNames(
+        "callNumberPrefix", "itemLevelCallNumberPrefix", "prefix");
+      case "typeId" -> new CallNumberComponentPropertyNames(
+        "callNumberTypeId", "itemLevelCallNumberTypeId", "typeId");
+      default -> throw new IllegalArgumentException(
+        "Unknown effective call number property: " + effectivePropertyName);
+    };
+  }
 
   private static String createInstanceRecord() {
     return createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
   }
+
+  // -- shared helpers --
 
   private static HoldingRequestBuilder holdingRequest(String instanceId) {
     return new HoldingRequestBuilder()
@@ -784,6 +1220,15 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     return get(doGet(client, ResourcePaths.ITEMS + "/" + id)).jsonBody();
   }
 
+  private record CallNumberComponentPropertyNames(
+    String holdingsPropertyName,
+    String itemPropertyName,
+    String effectivePropertyName) {
+  }
+
   private record HoldingAndItem(JsonObject holding, String itemId) {
+  }
+
+  private record PermTemp(String perm, String temp) {
   }
 }

@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * {@code nodWithNoBarcode} and its dependencies, extracted out of {@code ItemStorageTest} (now
  * migrated to {@code org.folio.rest.impl.ItemStorageIT}) because {@link InventoryViewTest} and
- * {@link ItemEffectiveCallNumberComponentsTest} still depend on it on the legacy stack.
+ * still depend on it on the legacy stack.
  */
 final class ItemStorageTestFixtures {
 
