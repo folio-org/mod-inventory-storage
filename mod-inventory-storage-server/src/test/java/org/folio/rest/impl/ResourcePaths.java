@@ -50,6 +50,7 @@ final class ResourcePaths {
   static final String OAI_PMH_VIEW_INSTANCES = "/oai-pmh-view/instances";
   static final String OAI_PMH_VIEW_UPDATED_INSTANCE_IDS = "/oai-pmh-view/updatedInstanceIds";
   static final String OAI_PMH_VIEW_ENRICHED_INSTANCES = "/oai-pmh-view/enrichedInstances";
+  static final String INVENTORY_SETTINGS = "/inventory-settings";
 
   private ResourcePaths() {
   }
