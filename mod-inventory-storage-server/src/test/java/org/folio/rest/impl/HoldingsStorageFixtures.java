@@ -64,6 +64,18 @@ final class HoldingsStorageFixtures {
   }
 
   /**
+   * Creates a holding from a fully assembled builder, for callers that need fields the
+   * simpler {@link #createHolding(HttpClient, String, String)} overload doesn't expose
+   * (e.g. a temporary location or electronic access entries).
+   */
+  static String createHolding(HttpClient client, HoldingRequestBuilder builder) {
+    var response = BaseIntegrationTest.get(
+      BaseIntegrationTest.doPost(client, ResourcePaths.HOLDINGS, builder.create()));
+
+    return response.bodyAsClass(HoldingsRecord.class).getId();
+  }
+
+  /**
    * Seeds a {@code call-number-types} row with an explicit id, for tests that need one of the
    * fixed reference-data ids production code keys shelf-key logic off (see
    * {@code CallNumberUtils.LC_CN_TYPE_ID}), rather than a fresh random one.
