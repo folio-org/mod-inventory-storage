@@ -69,7 +69,7 @@ final class LocationStorageFixtures {
     var location = new Location().withId(id).withName("test location " + id)
       .withCode(id.substring(0, 8)).withInstitutionId(institutionId).withCampusId(campusId)
       .withLibraryId(libraryId).withPrimaryServicePoint(UUID.fromString(servicePointId))
-      .withServicePointIds(List.of(UUID.fromString(servicePointId)));
+      .withServicePointIds(List.of(UUID.fromString(servicePointId))).withIsActive(true);
 
     BaseIntegrationTest.get(BaseIntegrationTest.doPost(
       client, ResourcePaths.LOCATIONS, BaseIntegrationTest.pojo2JsonObject(location)));

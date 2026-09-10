@@ -47,6 +47,9 @@ final class ResourcePaths {
   static final String BOUND_WITH_PARTS = "/inventory-storage/bound-with-parts";
   static final String INVENTORY_HIERARCHY_UPDATED_INSTANCE_IDS = "/inventory-hierarchy/updated-instance-ids";
   static final String INVENTORY_HIERARCHY_ITEMS_AND_HOLDINGS = "/inventory-hierarchy/items-and-holdings";
+  static final String OAI_PMH_VIEW_INSTANCES = "/oai-pmh-view/instances";
+  static final String OAI_PMH_VIEW_UPDATED_INSTANCE_IDS = "/oai-pmh-view/updatedInstanceIds";
+  static final String OAI_PMH_VIEW_ENRICHED_INSTANCES = "/oai-pmh-view/enrichedInstances";
 
   private ResourcePaths() {
   }
