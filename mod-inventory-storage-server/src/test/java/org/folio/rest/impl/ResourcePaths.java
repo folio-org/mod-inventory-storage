@@ -27,6 +27,8 @@ final class ResourcePaths {
   static final String INSTANCE_ITERATION = "/instance-storage/instances/iteration";
   static final String INSTANCE_REINDEX = "/instance-storage/reindex";
   static final String HRID_SETTINGS = "/hrid-settings-storage/hrid-settings";
+  static final String MIGRATIONS = "/inventory-storage/migrations";
+  static final String MIGRATION_JOBS = "/inventory-storage/migrations/jobs";
 
   private ResourcePaths() {
   }
