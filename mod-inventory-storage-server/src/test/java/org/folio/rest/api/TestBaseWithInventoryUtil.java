@@ -52,8 +52,8 @@ public abstract class TestBaseWithInventoryUtil extends TestBase {
   public static final String ONLINE_LOCATION = "Online";
   public static final String THIRD_FLOOR_LOCATION = "Third Floor";
   public static final String FOURTH_FLOOR_LOCATION = "Fourth Floor";
-  // Creating the UUIDs here because they are used in ItemEffectiveLocationTest.parameters()
-  // that JUnit calls *before* the @BeforeAll beforeAny() method.
+  // Creating the UUIDs here because they are used by @MethodSource parameter providers in
+  // several legacy tests, which JUnit calls *before* the @BeforeAll beforeAny() method.
   public static final UUID MAIN_LIBRARY_LOCATION_ID = UUID.randomUUID();
   public static final UUID ANNEX_LIBRARY_LOCATION_ID = UUID.randomUUID();
   public static final UUID ONLINE_LOCATION_ID = UUID.randomUUID();

@@ -10,6 +10,7 @@ import static org.folio.rest.impl.HoldingsStorageFixtures.createMaterialType;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstance;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceType;
 import static org.folio.rest.impl.LocationStorageFixtures.createLocation;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.folio.rest.support.builders.HoldingRequestBuilder;
 import org.folio.rest.support.messages.HoldingsEventMessageChecks;
@@ -69,8 +71,6 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   private static String fourthFloorLocationId;
   private static String lcCallNumberTypeId;
   private static String deweyCallNumberTypeId;
-  private static String moysCallNumberTypeId;
-  private static String nlmCallNumberTypeId;
 
   private final HoldingsEventMessageChecks holdingsMessageChecks
     = new HoldingsEventMessageChecks(KAFKA_CONSUMER, wm.baseUrl());
@@ -90,8 +90,8 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     fourthFloorLocationId = createLocation(client);
     lcCallNumberTypeId = createCallNumberType(client, LC_CALL_NUMBER_TYPE_ID, "Library of Congress classification");
     deweyCallNumberTypeId = createCallNumberType(client, DEWEY_CALL_NUMBER_TYPE_ID, "Dewey Decimal classification");
-    nlmCallNumberTypeId = createCallNumberType(client, NLM_CALL_NUMBER_TYPE_ID, "NLM classification");
-    moysCallNumberTypeId = createCallNumberType(client, MOYS_CALL_NUMBER_TYPE_ID, "MOYS classification");
+    createCallNumberType(client, NLM_CALL_NUMBER_TYPE_ID, "NLM classification");
+    createCallNumberType(client, MOYS_CALL_NUMBER_TYPE_ID, "MOYS classification");
   }
 
   @BeforeEach
@@ -859,7 +859,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
       new PermTemp(thirdFloorLocationId, fourthFloorLocationId));
 
     return holdingLocations.stream().flatMap(holdingLoc -> itemStartLocations.stream()
-      .flatMap(itemStart -> itemEndLocations.stream().map(itemEnd -> Arguments.of(holdingLoc, itemStart, itemEnd))));
+      .flatMap(itemStart -> itemEndLocations.stream().map(itemEnd -> arguments(holdingLoc, itemStart, itemEnd))));
   }
 
   private static Stream<Arguments> holdingUpdateEffectiveLocationParams() {
@@ -879,7 +879,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
     return itemLocations.stream().flatMap(itemLoc -> holdingStartLocations.stream()
       .flatMap(holdingStart -> holdingEndLocations.stream()
-        .map(holdingEnd -> Arguments.of(itemLoc, holdingStart, holdingEnd))));
+        .map(holdingEnd -> arguments(itemLoc, holdingStart, holdingEnd))));
   }
 
   private static JsonObject holdingRequestWithLocations(String instanceId, PermTemp locations) {
@@ -940,11 +940,11 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   private static Stream<Arguments> relatedHoldingFields() {
     return Stream.of(
-      Arguments.of("callNumberTypeId", lcCallNumberTypeId, deweyCallNumberTypeId, "typeId"),
-      Arguments.of("callNumberPrefix", null, "new prefix", "prefix"),
-      Arguments.of("callNumber", "initial call number", "updated call number", "callNumber"),
-      Arguments.of("callNumberSuffix", null, "new suffix", "suffix"),
-      Arguments.of(TEMPORARY_LOCATION_ID_KEY, null, annexLibraryLocationId, null));
+      arguments("callNumberTypeId", lcCallNumberTypeId, deweyCallNumberTypeId, "typeId"),
+      arguments("callNumberPrefix", null, "new prefix", "prefix"),
+      arguments("callNumber", "initial call number", "updated call number", "callNumber"),
+      arguments("callNumberSuffix", null, "new suffix", "suffix"),
+      arguments(TEMPORARY_LOCATION_ID_KEY, null, annexLibraryLocationId, null));
   }
 
   private static String createHoldingWithField(String holdingField, String initialValue) {
@@ -1016,81 +1016,94 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   private static Stream<Arguments> effectiveCallNumberPropertiesOnCreateParams() {
     return Stream.of(
       // Call number
-      Arguments.of(forProperty("callNumber"), "hrCallNumber", "itCallNumber"),
-      Arguments.of(forProperty("callNumber"), null, "itCallNumber"),
-      Arguments.of(forProperty("callNumber"), "hrCallNumber", null),
-      Arguments.of(forProperty("callNumber"), null, null),
+      arguments(forProperty("callNumber"), "hrCallNumber", "itCallNumber"),
+      arguments(forProperty("callNumber"), null, "itCallNumber"),
+      arguments(forProperty("callNumber"), "hrCallNumber", null),
+      arguments(forProperty("callNumber"), null, null),
 
       // Call number suffix
-      Arguments.of(forProperty("suffix"), "hrCNSuffix", "itCNSuffix"),
-      Arguments.of(forProperty("suffix"), "hrCNSuffix", null),
-      Arguments.of(forProperty("suffix"), null, "itCNSuffix"),
-      Arguments.of(forProperty("suffix"), null, null),
+      arguments(forProperty("suffix"), "hrCNSuffix", "itCNSuffix"),
+      arguments(forProperty("suffix"), "hrCNSuffix", null),
+      arguments(forProperty("suffix"), null, "itCNSuffix"),
+      arguments(forProperty("suffix"), null, null),
 
       // Call number prefix
-      Arguments.of(forProperty("prefix"), "hrCNPrefix", "itCNPrefix"),
-      Arguments.of(forProperty("prefix"), "hrCNPrefix", null),
-      Arguments.of(forProperty("prefix"), null, "itCNPrefix"),
-      Arguments.of(forProperty("prefix"), null, null),
+      arguments(forProperty("prefix"), "hrCNPrefix", "itCNPrefix"),
+      arguments(forProperty("prefix"), "hrCNPrefix", null),
+      arguments(forProperty("prefix"), null, "itCNPrefix"),
+      arguments(forProperty("prefix"), null, null),
 
       // Call number type
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, LC_CALL_NUMBER_TYPE_ID),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null),
-      Arguments.of(forProperty("typeId"), null, LC_CALL_NUMBER_TYPE_ID),
-      Arguments.of(forProperty("typeId"), null, null)
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, LC_CALL_NUMBER_TYPE_ID),
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null),
+      arguments(forProperty("typeId"), null, LC_CALL_NUMBER_TYPE_ID),
+      arguments(forProperty("typeId"), null, null)
     );
   }
 
   private static Stream<Arguments> effectiveCallNumberPropertiesOnUpdateParams() {
     return Stream.of(
-      // Call number
-      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", "targetItCN"),
-      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", "targetItCN"),
-      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", null),
-      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", null),
-      Arguments.of(forProperty("callNumber"), "initHrCN", null, "initItCN", "initItCN"),
-      Arguments.of(forProperty("callNumber"), "initHrCN", "initHrCN", "initItCN", null),
-      Arguments.of(forProperty("callNumber"), "initHrCN", "targetHrCN", null, null),
-      Arguments.of(forProperty("callNumber"), null, "targetHrCN", "initItCN", null),
+        callNumberUpdateParams(),
+        suffixUpdateParams(),
+        prefixUpdateParams(),
+        typeIdUpdateParams())
+      .flatMap(Function.identity());
+  }
 
-      // Call number suffix
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", "targetItCNSuffix"),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "targetItCNSuffix"),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", null),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", null),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "initItCNSuffix"),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "initHrCNSuffix", "initItCNSuffix", null),
-      Arguments.of(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", null, null),
-      Arguments.of(forProperty("suffix"), null, "targetHrCNSuffix", "initItCNSuffix", null),
+  private static Stream<Arguments> callNumberUpdateParams() {
+    return Stream.of(
+      arguments(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", "targetItCN"),
+      arguments(forProperty("callNumber"), "initHrCN", null, "initItCN", "targetItCN"),
+      arguments(forProperty("callNumber"), "initHrCN", "targetHrCN", "initItCN", null),
+      arguments(forProperty("callNumber"), "initHrCN", null, "initItCN", null),
+      arguments(forProperty("callNumber"), "initHrCN", null, "initItCN", "initItCN"),
+      arguments(forProperty("callNumber"), "initHrCN", "initHrCN", "initItCN", null),
+      arguments(forProperty("callNumber"), "initHrCN", "targetHrCN", null, null),
+      arguments(forProperty("callNumber"), null, "targetHrCN", "initItCN", null));
+  }
 
-      // Call number prefix
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", "targetItCNPrefix"),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "targetItCNPrefix"),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", null),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", null),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "initItCNPrefix"),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "initHrCNPrefix", "initItCNPrefix", null),
-      Arguments.of(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", null, null),
-      Arguments.of(forProperty("prefix"), null, "targetHrCNPrefix", "initItCNPrefix", null),
+  private static Stream<Arguments> suffixUpdateParams() {
+    return Stream.of(
+      arguments(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", "targetItCNSuffix"),
+      arguments(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "targetItCNSuffix"),
+      arguments(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", "initItCNSuffix", null),
+      arguments(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", null),
+      arguments(forProperty("suffix"), "initHrCNSuffix", null, "initItCNSuffix", "initItCNSuffix"),
+      arguments(forProperty("suffix"), "initHrCNSuffix", "initHrCNSuffix", "initItCNSuffix", null),
+      arguments(forProperty("suffix"), "initHrCNSuffix", "targetHrCNSuffix", null, null),
+      arguments(forProperty("suffix"), null, "targetHrCNSuffix", "initItCNSuffix", null));
+  }
 
-      // Call number type
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+  private static Stream<Arguments> prefixUpdateParams() {
+    return Stream.of(
+      arguments(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", "targetItCNPrefix"),
+      arguments(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "targetItCNPrefix"),
+      arguments(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", "initItCNPrefix", null),
+      arguments(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", null),
+      arguments(forProperty("prefix"), "initHrCNPrefix", null, "initItCNPrefix", "initItCNPrefix"),
+      arguments(forProperty("prefix"), "initHrCNPrefix", "initHrCNPrefix", "initItCNPrefix", null),
+      arguments(forProperty("prefix"), "initHrCNPrefix", "targetHrCNPrefix", null, null),
+      arguments(forProperty("prefix"), null, "targetHrCNPrefix", "initItCNPrefix", null));
+  }
+
+  private static Stream<Arguments> typeIdUpdateParams() {
+    return Stream.of(
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
         LC_CALL_NUMBER_TYPE_ID, MOYS_CALL_NUMBER_TYPE_ID),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
         LC_CALL_NUMBER_TYPE_ID, MOYS_CALL_NUMBER_TYPE_ID),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
         LC_CALL_NUMBER_TYPE_ID, null),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
         LC_CALL_NUMBER_TYPE_ID, null),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, null,
         LC_CALL_NUMBER_TYPE_ID, LC_CALL_NUMBER_TYPE_ID),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, DEWEY_CALL_NUMBER_TYPE_ID,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, DEWEY_CALL_NUMBER_TYPE_ID,
         LC_CALL_NUMBER_TYPE_ID, null),
-      Arguments.of(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
+      arguments(forProperty("typeId"), DEWEY_CALL_NUMBER_TYPE_ID, NLM_CALL_NUMBER_TYPE_ID,
         null, null),
-      Arguments.of(forProperty("typeId"), null, NLM_CALL_NUMBER_TYPE_ID,
-        LC_CALL_NUMBER_TYPE_ID, null)
-    );
+      arguments(forProperty("typeId"), null, NLM_CALL_NUMBER_TYPE_ID,
+        LC_CALL_NUMBER_TYPE_ID, null));
   }
 
   private static JsonObject createHoldingWithCallNumberProperty(String propertyName, String propertyValue) {
