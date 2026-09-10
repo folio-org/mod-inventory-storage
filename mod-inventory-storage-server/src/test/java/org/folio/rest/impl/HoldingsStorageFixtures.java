@@ -23,7 +23,17 @@ final class HoldingsStorageFixtures {
 
   static String createMaterialType(HttpClient client) {
     var id = UUID.randomUUID().toString();
-    var materialType = new MaterialType().withId(id).withName("test material type " + id);
+    return createMaterialType(client, "test material type " + id);
+  }
+
+  /**
+   * Seeds a material type with an explicit name, for tests that assert on the name itself
+   * (e.g. distinguishing "book" from "journal" in an aggregation response) rather than just
+   * needing a valid id.
+   */
+  static String createMaterialType(HttpClient client, String name) {
+    var id = UUID.randomUUID().toString();
+    var materialType = new MaterialType().withId(id).withName(name);
 
     BaseIntegrationTest.get(BaseIntegrationTest.doPost(
       client, ResourcePaths.MATERIAL_TYPES, BaseIntegrationTest.pojo2JsonObject(materialType)));
