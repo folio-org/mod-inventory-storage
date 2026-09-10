@@ -55,6 +55,7 @@ final class ResourcePaths {
   static final String INSTANCE_FORMATS = "/instance-formats";
   static final String NATURE_OF_CONTENT_TERMS = "/nature-of-content-terms";
   static final String MODES_OF_ISSUANCE = "/modes-of-issuance";
+  static final String RECORD_BULK_IDS = "/record-bulk/ids";
 
   private ResourcePaths() {
   }
