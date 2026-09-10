@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createHolding;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createItem;
 import static org.folio.rest.impl.HoldingsStorageFixtures.createLoanType;
@@ -8,11 +9,11 @@ import static org.folio.rest.impl.HoldingsStorageFixtures.createMaterialType;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstance;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceType;
 import static org.folio.rest.impl.LocationStorageFixtures.createLocation;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.pointer.JsonPointer;
 import io.vertx.sqlclient.Row;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -49,48 +50,56 @@ class AuditDeleteIT extends BaseIntegrationTest {
   }
 
   @Test
+  @DisplayName("should store an item in the audit table only when it is deleted, not updated")
   void shouldStoreOnlyDeletedItemsInAuditTable() {
     var itemId = createItem(client, holdingId, materialTypeId, loanTypeId);
 
     var item = get(doGet(client, ResourcePaths.ITEMS + "/" + itemId)).jsonBody();
     item.remove("yearCaption");
-    assertEquals(SC_NO_CONTENT, get(doPut(client, ResourcePaths.ITEMS + "/" + itemId, item)).status());
+    var updateResponse = get(doPut(client, ResourcePaths.ITEMS + "/" + itemId, item));
+    assertThat(updateResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(0, countAuditRecords(AUDIT_ITEM));
+    assertThat(countAuditRecords(AUDIT_ITEM)).isZero();
 
-    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.ITEMS + "/" + itemId)).status());
+    var deleteResponse = get(doDelete(client, ResourcePaths.ITEMS + "/" + itemId));
+    assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(itemId, singleAuditRecordId(AUDIT_ITEM));
+    assertThat(singleAuditRecordId(AUDIT_ITEM)).isEqualTo(itemId);
   }
 
   @Test
+  @DisplayName("should store an instance in the audit table only when it is deleted, not updated")
   void shouldStoreOnlyDeletedInstancesInAuditTable() {
     var instance = get(doGet(client, ResourcePaths.INSTANCES + "/" + instanceId)).jsonBody();
     instance.remove("notes");
     var putResponse = get(doPut(client, ResourcePaths.INSTANCES + "/" + instanceId, instance));
-    assertEquals(SC_NO_CONTENT, putResponse.status());
+    assertThat(putResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(0, countAuditRecords(AUDIT_INSTANCE));
+    assertThat(countAuditRecords(AUDIT_INSTANCE)).isZero();
 
-    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
-    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId)).status());
+    var deleteHoldingResponse = get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId));
+    assertThat(deleteHoldingResponse.status()).isEqualTo(SC_NO_CONTENT);
+    var deleteInstanceResponse = get(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId));
+    assertThat(deleteInstanceResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(instanceId, singleAuditRecordId(AUDIT_INSTANCE));
+    assertThat(singleAuditRecordId(AUDIT_INSTANCE)).isEqualTo(instanceId);
   }
 
   @Test
+  @DisplayName("should store a holding in the audit table only when it is deleted, not updated")
   void shouldStoreOnlyDeletedHoldingsInAuditTable() {
     var newLocationId = createLocation(client);
     var holding = get(doGet(client, ResourcePaths.HOLDINGS + "/" + holdingId)).jsonBody();
     holding.put("permanentLocationId", newLocationId);
     var putResponse = get(doPut(client, ResourcePaths.HOLDINGS + "/" + holdingId, holding));
-    assertEquals(SC_NO_CONTENT, putResponse.status());
+    assertThat(putResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(0, countAuditRecords(AUDIT_HOLDINGS_RECORD));
+    assertThat(countAuditRecords(AUDIT_HOLDINGS_RECORD)).isZero();
 
-    assertEquals(SC_NO_CONTENT, get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId)).status());
+    var deleteResponse = get(doDelete(client, ResourcePaths.HOLDINGS + "/" + holdingId));
+    assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    assertEquals(holdingId, singleAuditRecordId(AUDIT_HOLDINGS_RECORD));
+    assertThat(singleAuditRecordId(AUDIT_HOLDINGS_RECORD)).isEqualTo(holdingId);
   }
 
   private static int countAuditRecords(String table) {

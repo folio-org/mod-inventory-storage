@@ -28,6 +28,7 @@ import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.iteration.IterationJobRunner;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class IterationJobRunnerIT extends BaseIntegrationTest {
@@ -39,7 +40,8 @@ class IterationJobRunnerIT extends BaseIntegrationTest {
   private final InstanceEventMessageChecks eventChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
   @Test
-  void canIterateInstances(Vertx vertx) {
+  @DisplayName("should iterate over all instances and publish a message for each")
+  void shouldIterateInstances_andPublishMessageForEach(Vertx vertx) {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var iterationJob = iterationJob();
@@ -66,7 +68,8 @@ class IterationJobRunnerIT extends BaseIntegrationTest {
   }
 
   @Test
-  void canCancelIteration(Vertx vertx) {
+  @DisplayName("should cancel an in-progress iteration")
+  void shouldCancelIteration_whenInProgress(Vertx vertx) {
     var rowStream = new TestRowStream(10_000_000);
     var iterationJob = iterationJob();
     var instanceRepository = mock(InstanceRepository.class);

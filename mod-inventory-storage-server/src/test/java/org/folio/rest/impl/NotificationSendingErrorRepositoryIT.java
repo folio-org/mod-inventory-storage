@@ -12,12 +12,14 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 import org.folio.rest.persist.PgUtil;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class NotificationSendingErrorRepositoryIT extends BaseIntegrationTest {
 
   @Test
-  void canSaveNotificationError(Vertx vertx) {
+  @DisplayName("should save and retrieve a notification sending error")
+  void shouldSaveAndRetrieveNotificationError(Vertx vertx) {
     var repository = createRepository(vertx);
     var originalError = new NotificationSendingError(UUID.randomUUID().toString(),
       "topic", "key", "value", "error\nerror2", new Date());

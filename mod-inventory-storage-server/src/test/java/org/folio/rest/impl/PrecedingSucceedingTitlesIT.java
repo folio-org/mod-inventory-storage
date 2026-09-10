@@ -1,17 +1,15 @@
 package org.folio.rest.impl;
 
-import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_CREATED;
-import static org.folio.HttpStatus.HTTP_NOT_FOUND;
-import static org.folio.HttpStatus.HTTP_NO_CONTENT;
-import static org.folio.HttpStatus.HTTP_OK;
-import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_CREATED;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstance;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceType;
 import static org.folio.rest.impl.ResourcePaths.PRECEDING_SUCCEEDING_TITLES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -116,8 +114,8 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
     var created = createTitle(null, instanceId, TITLE, HRID, List.of(identifier("9781473619777")));
     var id = created.getString("id");
 
-    assertEquals(HTTP_NO_CONTENT.toInt(), get(doDelete(client, titleByIdPath(id))).status());
-    assertEquals(HTTP_NOT_FOUND.toInt(), get(doGet(client, titleByIdPath(id))).status());
+    assertThat(get(doDelete(client, titleByIdPath(id))).status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(get(doGet(client, titleByIdPath(id))).status()).isEqualTo(SC_NOT_FOUND);
   }
 
   @DisplayName("should find a preceding/succeeding title by query")
@@ -130,10 +128,10 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
     var created = createTitle(precedingId, succeedingId, TITLE, HRID, identifiers);
 
     var response = get(doGet(client, PRECEDING_SUCCEEDING_TITLES + "?query=succeedingInstanceId=" + succeedingId));
-    assertEquals(HTTP_OK.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_OK);
 
     var titles = response.jsonBody().getJsonArray("precedingSucceedingTitles");
-    assertEquals(1, titles.size());
+    assertThat(titles).hasSize(1);
     assertTitle(titles.getJsonObject(0), created.getString("id"), precedingId, succeedingId, TITLE, HRID,
       identifiers);
   }
@@ -146,7 +144,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = postTitle(nonExistingInstanceId, instanceId, null, null, List.of());
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertErrorMessage(response, "Cannot set preceding_succeeding_title.precedinginstanceid = "
       + nonExistingInstanceId + " because it does not exist in instance.id.");
   }
@@ -159,7 +157,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = postTitle(instanceId, nonExistingInstanceId, TITLE, HRID, List.of(identifier("9781473619777")));
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertErrorMessage(response, "Cannot set preceding_succeeding_title.succeedinginstanceid = "
       + nonExistingInstanceId + " because it does not exist in instance.id.");
   }
@@ -169,7 +167,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
   void shouldReturn422_whenBothInstanceIdsAreEmpty() {
     var response = postTitle(null, null, TITLE, HRID, List.of(identifier("9781473619777")));
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertErrorMessage(response, "The precedingInstanceId and succeedingInstanceId can't be empty at the same time");
   }
 
@@ -178,7 +176,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
   void shouldReturn422_whenGettingByInvalidId() {
     var response = get(doGet(client, titleByIdPath("abc")));
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertErrorMessage(response, INVALID_UUID_ERROR_MESSAGE);
   }
 
@@ -193,7 +191,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = get(doPut(client, titleByIdPath("abc"), pojo2JsonObject(title)));
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertErrorMessage(response, INVALID_UUID_ERROR_MESSAGE);
   }
 
@@ -202,8 +200,8 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
   void shouldReturn400_whenDeletingByInvalidId() {
     var response = get(doDelete(client, titleByIdPath("abc")));
 
-    assertEquals(HTTP_BAD_REQUEST.toInt(), response.status());
-    assertEquals(INVALID_UUID_ERROR_MESSAGE, response.body().toString());
+    assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
+    assertThat(response.body().toString()).isEqualTo(INVALID_UUID_ERROR_MESSAGE);
   }
 
   @DisplayName("should update the preceding/succeeding titles connected to an instance")
@@ -222,17 +220,17 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = get(doPut(client, PRECEDING_SUCCEEDING_TITLES + "/instances/" + instanceId,
       pojo2JsonObject(updated)));
-    assertEquals(HTTP_NO_CONTENT.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
 
     var found = get(doGet(client, PRECEDING_SUCCEEDING_TITLES
       + "?query=succeedingInstanceId==(" + instanceId + ")+or+precedingInstanceId==(" + instanceId + ")"))
       .jsonBody().getJsonArray("precedingSucceedingTitles");
 
-    assertEquals(2, found.size());
+    assertThat(found).hasSize(2);
     found.forEach(entry -> {
       var json = (JsonObject) entry;
-      assertEquals(instanceId, json.getString("succeedingInstanceId"));
-      assertNull(json.getString("precedingInstanceId"));
+      assertThat(json.getString("succeedingInstanceId")).isEqualTo(instanceId);
+      assertThat(json.getString("precedingInstanceId")).isNull();
     });
   }
 
@@ -249,8 +247,8 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
     var response = get(doPut(client, PRECEDING_SUCCEEDING_TITLES + "/instances/" + missingInstanceId,
       pojo2JsonObject(updated)));
 
-    assertEquals(HTTP_NOT_FOUND.toInt(), response.status());
-    assertEquals("Instance not found", response.body().toString());
+    assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(response.body().toString()).isEqualTo("Instance not found");
   }
 
   @DisplayName("should return 422 when a title in the collection is missing the instance id")
@@ -264,15 +262,15 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
     var response = get(doPut(client, PRECEDING_SUCCEEDING_TITLES + "/instances/" + instanceId,
       pojo2JsonObject(updated)));
 
-    assertEquals(HTTP_UNPROCESSABLE_ENTITY.toInt(), response.status());
-    assertTrue(response.body().toString()
-      .contains("The precedingInstanceId or succeedingInstanceId should contain instanceId"));
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.body().toString())
+      .contains("The precedingInstanceId or succeedingInstanceId should contain instanceId");
   }
 
   private JsonObject createTitle(String precedingId, String succeedingId, String title, String hrid,
                                   List<Identifier> identifiers) {
     var response = postTitle(precedingId, succeedingId, title, hrid, identifiers);
-    assertEquals(HTTP_CREATED.toInt(), response.status());
+    assertThat(response.status()).isEqualTo(SC_CREATED);
     return response.jsonBody();
   }
 
@@ -296,7 +294,8 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
       .withHrid(hrid)
       .withIdentifiers(identifiers);
 
-    assertEquals(HTTP_NO_CONTENT.toInt(), get(doPut(client, titleByIdPath(id), pojo2JsonObject(request))).status());
+    var response = get(doPut(client, titleByIdPath(id), pojo2JsonObject(request)));
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   private JsonObject getTitleById(String id) {
@@ -315,20 +314,20 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
   private void assertTitle(JsonObject actual, String id, String precedingId, String succeedingId, String title,
                             String hrid, List<Identifier> identifiers) {
-    assertEquals(id, actual.getString("id"));
-    assertEquals(precedingId, actual.getString("precedingInstanceId"));
-    assertEquals(succeedingId, actual.getString("succeedingInstanceId"));
-    assertEquals(title, actual.getString("title"));
-    assertEquals(hrid, actual.getString("hrid"));
+    assertThat(actual.getString("id")).isEqualTo(id);
+    assertThat(actual.getString("precedingInstanceId")).isEqualTo(precedingId);
+    assertThat(actual.getString("succeedingInstanceId")).isEqualTo(succeedingId);
+    assertThat(actual.getString("title")).isEqualTo(title);
+    assertThat(actual.getString("hrid")).isEqualTo(hrid);
 
     var expectedIdentifiers = new JsonArray(identifiers.stream()
       .map(BaseIntegrationTest::pojo2JsonObject)
       .toList());
-    assertEquals(expectedIdentifiers, actual.getJsonArray("identifiers"));
+    assertThat(actual.getJsonArray("identifiers")).isEqualTo(expectedIdentifiers);
   }
 
   private void assertErrorMessage(TestResponse response, String message) {
     var errors = response.bodyAsClass(Errors.class);
-    assertEquals(message, errors.getErrors().getFirst().getMessage());
+    assertThat(errors.getErrors().getFirst().getMessage()).isEqualTo(message);
   }
 }

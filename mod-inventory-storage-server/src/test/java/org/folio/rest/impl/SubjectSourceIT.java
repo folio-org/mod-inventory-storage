@@ -5,11 +5,10 @@ import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceType;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.TENANT_ID;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,6 +17,7 @@ import org.folio.rest.jaxrs.model.Subject;
 import org.folio.rest.support.builders.InstanceRequestBuilder;
 import org.folio.rest.support.extension.EnableTenant;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -49,21 +49,23 @@ class SubjectSourceIT extends BaseIntegrationTest {
   }
 
   @Test
-  void cannotCreateSubjectSourceWithDuplicateName() {
+  @DisplayName("should fail to create a subject source when the name is a duplicate")
+  void shouldFailToCreateSubjectSource_whenNameIsDuplicate() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectSource(subjectSource);
 
     var response = get(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertTrue(errors.getJsonObject(0).getString(MESSAGE_FIELD)
-      .contains("(jsonb ->> 'name'::text)) value already exists"));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .contains("(jsonb ->> 'name'::text)) value already exists");
   }
 
   @Test
-  void cannotCreateSubjectSourceWithDuplicateCode() {
+  @DisplayName("should fail to create a subject source when the code is a duplicate")
+  void shouldFailToCreateSubjectSource_whenCodeIsDuplicate() {
     var code = UUID.randomUUID().toString().substring(0, 8);
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(CODE_FIELD, code)
       .put(SOURCE_FIELD, SOURCE_LOCAL);
@@ -71,73 +73,80 @@ class SubjectSourceIT extends BaseIntegrationTest {
 
     var response = get(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource.put(NAME_FIELD, randomName())));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertTrue(errors.getJsonObject(0).getString(MESSAGE_FIELD)
-      .contains("(jsonb ->> 'code'::text)) value already exists"));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .contains("(jsonb ->> 'code'::text)) value already exists");
   }
 
   @Test
-  void cannotCreateSubjectSourceWithSourceFolio() {
+  @DisplayName("should fail to create a subject source when the source is folio")
+  void shouldFailToCreateSubjectSource_whenSourceIsFolio() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_FOLIO);
 
     var response = get(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertEquals("Illegal operation: Source field cannot be set to folio",
-      errors.getJsonObject(0).getString(MESSAGE_FIELD));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .isEqualTo("Illegal operation: Source field cannot be set to folio");
   }
 
   @Test
-  void cannotCreateSubjectSourceWithSourceConsortiumAtNonEcs() {
+  @DisplayName("should fail to create a subject source when the source is consortium at a non-consortium tenant")
+  void shouldFailToCreateSubjectSource_whenSourceIsConsortiumAtNonConsortiumTenant() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
     var response = get(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertEquals("Illegal operation: Source consortium cannot be applied at non-consortium tenant",
-      errors.getJsonObject(0).getString(MESSAGE_FIELD));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .isEqualTo("Illegal operation: Source consortium cannot be applied at non-consortium tenant");
   }
 
   @Test
-  void canCreateSubjectSourceWithSourceConsortiumAtEcs() {
+  @DisplayName("should create a subject source when the source is consortium at the consortium central tenant")
+  void shouldCreateSubjectSource_whenSourceIsConsortiumAtConsortiumCentralTenant() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
     var response = get(doPost(client, ResourcePaths.SUBJECT_SOURCES, CONSORTIUM_CENTRAL_TENANT, subjectSource));
 
-    assertEquals(SC_CREATED, response.status());
+    assertThat(response.status()).isEqualTo(SC_CREATED);
   }
 
   @Test
-  void cannotUpdateNonExistingSubjectSource() {
+  @DisplayName("should return 404 when updating a subject source that does not exist")
+  void shouldReturn404_whenUpdatingNonExistingSubjectSource() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     var id = UUID.randomUUID().toString();
 
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, subjectSource));
 
-    assertEquals(SC_NOT_FOUND, response.status());
-    assertEquals("SubjectSource was not found", response.body().toString());
+    assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(response.body().toString()).isEqualTo("SubjectSource was not found");
   }
 
   @Test
-  void cannotUpdateSubjectSourceWithSourceFolio() {
+  @DisplayName("should fail to update the folio subject source")
+  void shouldFailToUpdateSubjectSource_whenSourceIsFolio() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
 
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + FOLIO_SUBJECT_SOURCE_ID, subjectSource));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertEquals("Illegal operation: Source folio cannot be updated", errors.getJsonObject(0).getString(MESSAGE_FIELD));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .isEqualTo("Illegal operation: Source folio cannot be updated");
   }
 
   @Test
-  void cannotUpdateSubjectSourceToFolio() {
+  @DisplayName("should fail to update a subject source when changing its source to folio")
+  void shouldFailToUpdateSubjectSource_whenChangingSourceToFolio() {
     var id = UUID.randomUUID().toString();
     var subjectSource = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
@@ -146,15 +155,17 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id,
       subjectSource.put(SOURCE_FIELD, SOURCE_FOLIO)));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertEquals("Illegal operation: Source field cannot be set to folio",
-      errors.getJsonObject(0).getString(MESSAGE_FIELD));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .isEqualTo("Illegal operation: Source field cannot be set to folio");
   }
 
   @Test
-  void cannotUpdateSubjectSourceToConsortiumAtNonEcs() {
+  @DisplayName("should fail to update a subject source when changing its source to consortium at a "
+    + "non-consortium tenant")
+  void shouldFailToUpdateSubjectSource_whenChangingSourceToConsortiumAtNonConsortiumTenant() {
     var id = UUID.randomUUID().toString();
     var subjectSource = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
@@ -163,15 +174,17 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id,
       subjectSource.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
-    assertEquals(SC_UNPROCESSABLE_ENTITY, response.status());
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
-    assertEquals(1, errors.size());
-    assertEquals("Illegal operation: Source field cannot be updated at non-consortium tenant",
-      errors.getJsonObject(0).getString(MESSAGE_FIELD));
+    assertThat(errors).hasSize(1);
+    assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
+      .isEqualTo("Illegal operation: Source field cannot be updated at non-consortium tenant");
   }
 
   @Test
-  void canUpdateSubjectSourceToConsortiumAtEcs() {
+  @DisplayName("should update a subject source when changing its source to consortium at the consortium "
+    + "central tenant")
+  void shouldUpdateSubjectSource_whenChangingSourceToConsortiumAtConsortiumCentralTenant() {
     var id = UUID.randomUUID().toString();
     var subjectSource = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
@@ -180,11 +193,12 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
       subjectSource.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
-    assertEquals(SC_NO_CONTENT, response.status());
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   @Test
-  void canUpdateSubjectSourceToLocalAtEcs() {
+  @DisplayName("should update a subject source when changing its source to local at the consortium central tenant")
+  void shouldUpdateSubjectSource_whenChangingSourceToLocalAtConsortiumCentralTenant() {
     var id = UUID.randomUUID().toString();
     var subjectSource = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_CONSORTIUM);
@@ -193,19 +207,20 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var response = get(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
       subjectSource.put(SOURCE_FIELD, SOURCE_LOCAL)));
 
-    assertEquals(SC_NO_CONTENT, response.status());
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   @Test
-  void cannotDeleteSubjectSourceLinkedToInstance() {
+  @DisplayName("should fail to delete a subject source when it is linked to an instance")
+  void shouldFailToDeleteSubjectSource_whenLinkedToInstance() {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     var subjectSourceId = createSubjectSource(subjectSource).jsonBody().getString(ID_FIELD);
     createInstanceWithSubject(subjectSourceId, randomSubjectTypeId());
 
     var response = get(doDelete(client, ResourcePaths.SUBJECT_SOURCES + "/" + subjectSourceId));
 
-    assertEquals(SC_BAD_REQUEST, response.status());
-    assertTrue(response.body().toString().contains("id is still referenced from table instance_subject_source"));
+    assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
+    assertThat(response.body().toString()).contains("id is still referenced from table instance_subject_source");
   }
 
   private TestResponse createSubjectSource(JsonObject subjectSource) {

@@ -1,12 +1,12 @@
 package org.folio.rest.impl;
 
-import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
-import static org.folio.HttpStatus.HTTP_CREATED;
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_CREATED;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstance;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceRelationship;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceRelationshipType;
 import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,10 +31,10 @@ class InstanceRelationshipsIT extends BaseIntegrationTest {
     var instance2Id = createInstance(client, "Title Two", instanceTypeId);
     var instance3Id = createInstance(client, "Title Three", instanceTypeId);
 
-    assertEquals(HTTP_CREATED.toInt(),
-      createInstanceRelationship(client, instance1Id, instance2Id, relationshipTypeId).status());
-    assertEquals(HTTP_CREATED.toInt(),
-      createInstanceRelationship(client, instance1Id, instance3Id, relationshipTypeId).status());
+    assertThat(createInstanceRelationship(client, instance1Id, instance2Id, relationshipTypeId).status())
+      .isEqualTo(SC_CREATED);
+    assertThat(createInstanceRelationship(client, instance1Id, instance3Id, relationshipTypeId).status())
+      .isEqualTo(SC_CREATED);
   }
 
   @DisplayName("should return 400 when the referenced instance does not exist")
@@ -43,8 +43,8 @@ class InstanceRelationshipsIT extends BaseIntegrationTest {
     var instance1Id = createInstance(client, "Title One", instanceTypeId);
     var nonExistingInstanceId = UUID.randomUUID().toString();
 
-    assertEquals(HTTP_BAD_REQUEST.toInt(),
-      createInstanceRelationship(client, instance1Id, nonExistingInstanceId, relationshipTypeId).status());
+    assertThat(createInstanceRelationship(client, instance1Id, nonExistingInstanceId, relationshipTypeId).status())
+      .isEqualTo(SC_BAD_REQUEST);
   }
 
   @DisplayName("should return 400 when the relationship type does not exist")
@@ -54,7 +54,7 @@ class InstanceRelationshipsIT extends BaseIntegrationTest {
     var instance2Id = createInstance(client, "Title Two", instanceTypeId);
     var nonExistingRelationshipTypeId = UUID.randomUUID().toString();
 
-    assertEquals(HTTP_BAD_REQUEST.toInt(),
-      createInstanceRelationship(client, instance1Id, instance2Id, nonExistingRelationshipTypeId).status());
+    assertThat(createInstanceRelationship(client, instance1Id, instance2Id, nonExistingRelationshipTypeId).status())
+      .isEqualTo(SC_BAD_REQUEST);
   }
 }

@@ -40,6 +40,7 @@ import org.folio.rest.support.messages.InstanceEventMessageChecks;
 import org.folio.rest.support.sql.TestRowStream;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ReindexJobRunnerIT extends BaseIntegrationTest {
@@ -47,7 +48,8 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
   private final InstanceEventMessageChecks eventChecks = new InstanceEventMessageChecks(KAFKA_CONSUMER);
 
   @Test
-  void canReindexInstances(Vertx vertx) {
+  @DisplayName("should reindex all instances and publish a message for each")
+  void shouldReindexInstances_andPublishMessageForEach(Vertx vertx) {
     var numberOfRecords = 1100;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
@@ -74,7 +76,8 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
   }
 
   @Test
-  void canGetAllInstancesReindexJobs(Vertx vertx) {
+  @DisplayName("should get all instance reindex jobs")
+  void shouldGetAllInstanceReindexJobs(Vertx vertx) {
     var numberOfRecords = 2;
     var rowStream = new TestRowStream(numberOfRecords);
     var reindexJob = instanceReindexJob();
@@ -97,7 +100,8 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
   }
 
   @Test
-  void canStartInstanceReindex() {
+  @DisplayName("should start an instance reindex job")
+  void shouldStartInstanceReindex() {
     var job = postReindexJob(instanceReindexJob());
 
     assertThat(job).isNotNull();
@@ -105,7 +109,8 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
   }
 
   @Test
-  void canCancelReindex(Vertx vertx) {
+  @DisplayName("should cancel an in-progress reindex")
+  void shouldCancelReindex_whenInProgress(Vertx vertx) {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = instanceReindexJob();
 

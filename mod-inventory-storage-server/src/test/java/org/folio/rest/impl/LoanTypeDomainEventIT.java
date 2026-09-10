@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 import org.folio.rest.support.messages.LoanTypeEventMessageChecks;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class LoanTypeDomainEventIT extends BaseIntegrationTest {
@@ -20,14 +21,16 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
   private final LoanTypeEventMessageChecks eventChecks = eventMessageChecks();
 
   @Test
-  void createdEventIsSentWhenLoanTypeCreated() {
+  @DisplayName("should publish a Kafka event when a loan type is created")
+  void shouldPublishCreatedEvent_whenLoanTypeIsCreated() {
     var createdLoanType = createLoanType();
 
     eventChecks.createdMessagePublished(createdLoanType);
   }
 
   @Test
-  void updatedEventIsSentWhenLoanTypeUpdated() {
+  @DisplayName("should publish a Kafka event when a loan type is updated")
+  void shouldPublishUpdatedEvent_whenLoanTypeIsUpdated() {
     var createdLoanType = createLoanType();
     var loanTypeId = createdLoanType.getString(ID_FIELD);
 
@@ -40,7 +43,8 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void deletedEventIsSentWhenLoanTypeDeleted() {
+  @DisplayName("should publish a Kafka event when a loan type is deleted")
+  void shouldPublishDeletedEvent_whenLoanTypeIsDeleted() {
     var createdLoanType = createLoanType();
     var loanTypeId = createdLoanType.getString(ID_FIELD);
 
@@ -51,7 +55,8 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenLoanTypeUpdateFailed() {
+  @DisplayName("should not publish an update event when a loan type update fails")
+  void shouldNotPublishUpdatedEvent_whenLoanTypeUpdateFailed() {
     var missingLoanTypeId = UUID.randomUUID().toString();
 
     var updateResponse = get(doPut(client, ResourcePaths.LOAN_TYPES + "/" + missingLoanTypeId,
@@ -62,7 +67,8 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenLoanTypeDeleteFailed() {
+  @DisplayName("should not publish a delete event when a loan type delete fails")
+  void shouldNotPublishDeletedEvent_whenLoanTypeDeleteFailed() {
     var missingLoanTypeId = UUID.randomUUID().toString();
 
     var deleteResponse = get(doDelete(client, ResourcePaths.LOAN_TYPES + "/" + missingLoanTypeId));
@@ -72,7 +78,8 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenLoanTypeCreateFailed() {
+  @DisplayName("should not publish any event when a loan type create fails")
+  void shouldNotPublishAnyEvent_whenLoanTypeCreateFailed() {
     var loanTypeId = UUID.randomUUID().toString();
     var invalidRequest = new JsonObject()
       .put(ID_FIELD, loanTypeId)

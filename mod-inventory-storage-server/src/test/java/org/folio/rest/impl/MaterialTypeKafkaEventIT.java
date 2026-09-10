@@ -2,13 +2,13 @@ package org.folio.rest.impl;
 
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.UUID;
 import org.folio.rest.support.messages.MaterialTypeEventMessageChecks;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class MaterialTypeKafkaEventIT extends BaseIntegrationTest {
@@ -20,6 +20,7 @@ class MaterialTypeKafkaEventIT extends BaseIntegrationTest {
   private final MaterialTypeEventMessageChecks eventChecks = eventMessageChecks();
 
   @Test
+  @DisplayName("should publish a Kafka event when a material type is created")
   void shouldPublishKafkaEvent_whenMaterialTypeIsCreated() {
     var createdMaterialType = createMaterialType();
 
@@ -27,6 +28,7 @@ class MaterialTypeKafkaEventIT extends BaseIntegrationTest {
   }
 
   @Test
+  @DisplayName("should publish a Kafka event when a material type is updated")
   void shouldPublishKafkaEvent_whenMaterialTypeIsUpdated() {
     var createdMaterialType = createMaterialType();
     var materialTypeId = createdMaterialType.getString(ID_FIELD);
@@ -36,19 +38,20 @@ class MaterialTypeKafkaEventIT extends BaseIntegrationTest {
       .put(NAME_FIELD, "updated-" + UUID.randomUUID())
       .put(SOURCE_FIELD, "local");
     var updateResponse = get(doPut(client, ResourcePaths.MATERIAL_TYPES + "/" + materialTypeId, updateRequestBody));
-    assertEquals(SC_NO_CONTENT, updateResponse.status());
+    assertThat(updateResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     var updatedMaterialType = get(doGet(client, ResourcePaths.MATERIAL_TYPES + "/" + materialTypeId)).jsonBody();
     eventChecks.updatedMessagePublished(createdMaterialType, updatedMaterialType);
   }
 
   @Test
+  @DisplayName("should publish a Kafka event when a material type is deleted")
   void shouldPublishKafkaEvent_whenMaterialTypeIsDeleted() {
     var createdMaterialType = createMaterialType();
     var materialTypeId = createdMaterialType.getString(ID_FIELD);
 
     var deleteResponse = get(doDelete(client, ResourcePaths.MATERIAL_TYPES + "/" + materialTypeId));
-    assertEquals(SC_NO_CONTENT, deleteResponse.status());
+    assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     eventChecks.deletedMessagePublished(createdMaterialType);
   }

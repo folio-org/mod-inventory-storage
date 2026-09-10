@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.UUID;
 import org.folio.rest.support.builders.InstanceRequestBuilder;
 import org.folio.rest.support.messages.InstanceEventMessageChecks;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class InstanceDomainEventIT extends BaseIntegrationTest {
@@ -19,7 +20,8 @@ class InstanceDomainEventIT extends BaseIntegrationTest {
   private final InstanceEventMessageChecks eventChecks = eventMessageChecks();
 
   @Test
-  void eventIsNotSentWhenUpdateFailed() {
+  @DisplayName("should not publish an update event when an instance update fails")
+  void shouldNotPublishUpdatedEvent_whenInstanceUpdateFailed() {
     var instanceTypeId = createInstanceType(client);
     var instanceId = createInstance(client, "an instance", instanceTypeId);
 
@@ -34,7 +36,8 @@ class InstanceDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenCreateFailed() {
+  @DisplayName("should not publish any event when an instance create fails")
+  void shouldNotPublishAnyEvent_whenInstanceCreateFailed() {
     var instanceId = UUID.randomUUID().toString();
     var instance = new InstanceRequestBuilder()
       .withId(UUID.fromString(instanceId)).withTitle("an instance").withSource("TEST")
@@ -49,7 +52,8 @@ class InstanceDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenRemoveFailed() {
+  @DisplayName("should not publish a delete event when an instance delete fails")
+  void shouldNotPublishDeletedEvent_whenInstanceDeleteFailed() {
     var instanceTypeId = createInstanceType(client);
     var instanceId = createInstance(client, "an instance", instanceTypeId);
     // create a holding so that the instance is not allowed to be removed
@@ -62,7 +66,8 @@ class InstanceDomainEventIT extends BaseIntegrationTest {
   }
 
   @Test
-  void eventIsNotSentWhenRemoveAllFailed() {
+  @DisplayName("should not publish a delete event when a delete-all instances request fails")
+  void shouldNotPublishDeletedEvent_whenDeleteAllInstancesFailed() {
     var instanceTypeId = createInstanceType(client);
     var instanceId = createInstance(client, "an instance", instanceTypeId);
     createInstance(client, "another instance", instanceTypeId);
