@@ -45,9 +45,7 @@ import org.folio.dataimport.testsupport.rest.SharedRestVerticleSupport.SharedRes
 import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.TestBase;
-import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.extension.EnableTenant;
 import org.folio.rest.support.extension.Tenants;
@@ -202,10 +200,10 @@ public abstract class BaseIntegrationTest {
    * application code invoked while a sample-data record is being created - e.g.
    * {@code ConsortiumDataCache}, which holdings/item creation calls to check consortium
    * membership - reads plain {@code X-Okapi-Url} off that generated request instead. Without
-   * this, both headers default to the same value from a single-argument {@link TenantClient},
-   * so that consortium check misroutes to the module's own port (a bare 404, since it defines no
-   * such endpoint) instead of this WireMock instance, and every holdings/item sample record
-   * silently fails to load.
+   * this, both headers default to the same value from a bare {@code WebClient}, so that
+   * consortium check misroutes to the module's own port (a bare 404, since it defines no such
+   * endpoint) instead of this WireMock instance, and every holdings/item sample record silently
+   * fails to load.
    */
   protected static void installTenant(String tenantId, TenantAttributes attributes) {
     var connectionUrl = SHARED_VERTICLE.shared.getConnectionUrl();
@@ -216,12 +214,7 @@ public abstract class BaseIntegrationTest {
       context.next();
     });
 
-    var client = new TenantClient(connectionUrl, tenantId, null, webClient);
-    get(client.postTenant(attributes)
-      .compose(response -> {
-        var job = response.bodyAsJson(TenantJob.class);
-        return client.getTenantByOperationId(job.getId(), 60_000);
-      }));
+    get(TenantTestSupport.enableTenant(webClient, connectionUrl, tenantId, null, attributes));
   }
 
   protected static void mockUserTenantsForConsortiumMember(String tenantId) {
