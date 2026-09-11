@@ -57,6 +57,7 @@ final class ResourcePaths {
   static final String MODES_OF_ISSUANCE = "/modes-of-issuance";
   static final String RECORD_BULK_IDS = "/record-bulk/ids";
   static final String INVENTORY_VIEW_INSTANCES = "/inventory-view/instances";
+  static final String INVENTORY_VIEW_INSTANCE_SET = "/inventory-view/instance-set";
   static final String INSTANCES_BULK = "/instance-storage/instances/bulk";
 
   private ResourcePaths() {
