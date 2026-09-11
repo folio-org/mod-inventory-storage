@@ -65,8 +65,19 @@ final class LocationStorageFixtures {
 
   static String createLocation(HttpClient client, String institutionId, String campusId, String libraryId,
                                 String servicePointId) {
+    return createLocation(client, "test location " + UUID.randomUUID(),
+      institutionId, campusId, libraryId, servicePointId);
+  }
+
+  /**
+   * Same as {@link #createLocation(HttpClient, String, String, String, String)}, but with an
+   * explicit name, for tests that assert on the location name itself rather than just needing
+   * a valid id.
+   */
+  static String createLocation(HttpClient client, String name, String institutionId, String campusId,
+                                String libraryId, String servicePointId) {
     var id = UUID.randomUUID().toString();
-    var location = new Location().withId(id).withName("test location " + id)
+    var location = new Location().withId(id).withName(name)
       .withCode(id.substring(0, 8)).withInstitutionId(institutionId).withCampusId(campusId)
       .withLibraryId(libraryId).withPrimaryServicePoint(UUID.fromString(servicePointId))
       .withServicePointIds(List.of(UUID.fromString(servicePointId))).withIsActive(true);
@@ -82,11 +93,19 @@ final class LocationStorageFixtures {
    * for tests that only need a valid location id and don't care about the chain itself.
    */
   static String createLocation(HttpClient client) {
+    return createLocation(client, "test location " + UUID.randomUUID());
+  }
+
+  /**
+   * Same as {@link #createLocation(HttpClient)}, but with an explicit name, for tests that
+   * assert on the location name itself rather than just needing a valid id.
+   */
+  static String createLocation(HttpClient client, String name) {
     var institutionId = createInstitution(client);
     var campusId = createCampus(client, institutionId);
     var libraryId = createLibrary(client, campusId);
     var servicePointId = createServicePoint(client);
 
-    return createLocation(client, institutionId, campusId, libraryId, servicePointId);
+    return createLocation(client, name, institutionId, campusId, libraryId, servicePointId);
   }
 }

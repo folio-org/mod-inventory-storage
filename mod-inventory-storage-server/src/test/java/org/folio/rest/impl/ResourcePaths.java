@@ -59,6 +59,7 @@ final class ResourcePaths {
   static final String INVENTORY_VIEW_INSTANCES = "/inventory-view/instances";
   static final String INVENTORY_VIEW_INSTANCE_SET = "/inventory-view/instance-set";
   static final String INSTANCES_BULK = "/instance-storage/instances/bulk";
+  static final String DEREFERENCED_ITEMS = "/item-storage-dereferenced/items";
 
   private ResourcePaths() {
   }

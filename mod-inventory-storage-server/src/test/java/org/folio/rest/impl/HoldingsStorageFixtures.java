@@ -43,7 +43,16 @@ final class HoldingsStorageFixtures {
 
   static String createLoanType(HttpClient client) {
     var id = UUID.randomUUID().toString();
-    var loanType = new LoanType().withId(id).withName("test loan type " + id);
+    return createLoanType(client, "test loan type " + id);
+  }
+
+  /**
+   * Seeds a loan type with an explicit name, for tests that assert on the name itself rather
+   * than just needing a valid id.
+   */
+  static String createLoanType(HttpClient client, String name) {
+    var id = UUID.randomUUID().toString();
+    var loanType = new LoanType().withId(id).withName(name);
 
     BaseIntegrationTest.get(BaseIntegrationTest.doPost(
       client, ResourcePaths.LOAN_TYPES, BaseIntegrationTest.pojo2JsonObject(loanType)));
@@ -107,6 +116,17 @@ final class HoldingsStorageFixtures {
       .create();
 
     var response = BaseIntegrationTest.get(BaseIntegrationTest.doPost(client, ResourcePaths.ITEMS, request));
+
+    return response.bodyAsClass(Item.class).getId();
+  }
+
+  /**
+   * Creates an item from a fully assembled builder, for callers that need fields the simpler
+   * {@link #createItem(HttpClient, String, String, String)} overload doesn't expose (e.g. a
+   * barcode or a temporary location).
+   */
+  static String createItem(HttpClient client, ItemRequestBuilder builder) {
+    var response = BaseIntegrationTest.get(BaseIntegrationTest.doPost(client, ResourcePaths.ITEMS, builder.create()));
 
     return response.bodyAsClass(Item.class).getId();
   }
