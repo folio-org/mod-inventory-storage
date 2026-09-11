@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,11 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.kafka.KafkaProducerManager;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 class SettingEventPublisherTest {
 
@@ -34,7 +30,6 @@ class SettingEventPublisherTest {
 
   private KafkaProducerManager producerManager;
   private KafkaProducer<String, String> kafkaProducer;
-  private MockedStatic<KafkaEnvironmentProperties> mockedKafkaEnvProperties;
   private Map<String, String> okapiHeaders;
 
   @BeforeEach
@@ -45,18 +40,9 @@ class SettingEventPublisherTest {
 
     when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
 
-    mockedKafkaEnvProperties = mockStatic(KafkaEnvironmentProperties.class);
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::host).thenReturn("localhost");
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::port).thenReturn("9092");
-
     okapiHeaders = new HashMap<>();
     okapiHeaders.put(TENANT, TENANT_ID);
     okapiHeaders.put(USER_ID, "00000000-0000-0000-0000-000000000000");
-  }
-
-  @AfterEach
-  void tearDown() {
-    mockedKafkaEnvProperties.close();
   }
 
   @Test

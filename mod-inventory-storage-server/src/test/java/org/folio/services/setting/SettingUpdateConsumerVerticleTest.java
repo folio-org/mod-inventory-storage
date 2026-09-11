@@ -4,33 +4,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 
 import io.vertx.core.ThreadingModel;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.services.caches.SettingCache;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 
 class SettingUpdateConsumerVerticleTest {
 
   private SettingCache cache;
-  private MockedStatic<KafkaEnvironmentProperties> mockedKafkaEnvProperties;
 
   @BeforeEach
   void setUp() {
     cache = mock(SettingCache.class);
-    mockedKafkaEnvProperties = mockStatic(KafkaEnvironmentProperties.class);
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::environment).thenReturn("test-env");
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::host).thenReturn("localhost");
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::port).thenReturn("9092");
-  }
-
-  @AfterEach
-  void tearDown() {
-    mockedKafkaEnvProperties.close();
   }
 
   @Test

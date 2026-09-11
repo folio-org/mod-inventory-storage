@@ -28,10 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
-@MockitoSettings(strictness = Strictness.WARN)
 @ExtendWith(MockitoExtension.class)
 class ReindexExportOrchestratorTest {
 
@@ -62,6 +59,13 @@ class ReindexExportOrchestratorTest {
     orchestrator = new ReindexExportOrchestrator(vertxContext,
       new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       postgresClient, s3Client, BUCKET, eventPublisher);
+    when(postgresClient.withTrans(any())).thenAnswer(inv -> {
+      var fn = inv.<Function<Conn, Future<?>>>getArgument(0);
+      return fn.apply(conn);
+    });
+  }
+
+  private void stubExecuteBlocking() {
     when(vertxContext.<Object>executeBlocking(any())).thenAnswer(inv -> {
       try {
         return succeededFuture(inv.<java.util.concurrent.Callable<Object>>getArgument(0).call());
@@ -69,14 +73,11 @@ class ReindexExportOrchestratorTest {
         return failedFuture(e);
       }
     });
-    when(postgresClient.withTrans(any())).thenAnswer(inv -> {
-      var fn = inv.<Function<Conn, Future<?>>>getArgument(0);
-      return fn.apply(conn);
-    });
   }
 
   @Test
   void export_noRows_writesEmptyFileViaSinglePutAndPublishesEvent() {
+    stubExecuteBlocking();
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     await(orchestrator.export(buildRequest(TRACE_ID),
@@ -91,6 +92,7 @@ class ReindexExportOrchestratorTest {
 
   @Test
   void export_rowsPresent_singlePutAndEventPublished() {
+    stubExecuteBlocking();
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     await(orchestrator.export(buildRequest(TRACE_ID),
@@ -107,6 +109,7 @@ class ReindexExportOrchestratorTest {
 
   @Test
   void export_blankTraceId_eventStillPublished() {
+    stubExecuteBlocking();
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
     await(orchestrator.export(buildRequest(""),

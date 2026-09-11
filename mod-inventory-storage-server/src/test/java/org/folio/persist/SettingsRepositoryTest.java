@@ -26,7 +26,6 @@ import java.util.UUID;
 import org.folio.rest.jaxrs.model.Setting;
 import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -38,24 +37,19 @@ class SettingsRepositoryTest {
 
   private SettingsRepository repository;
   private PostgresClient postgresClient;
-  private MockedStatic<PgUtil> mockedPgUtil;
 
   @BeforeEach
   void setUp() {
     postgresClient = mock(PostgresClient.class);
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
-    mockedPgUtil = mockStatic(PgUtil.class);
-    mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
-      .thenReturn(postgresClient);
 
     Vertx vertx = Vertx.vertx();
     Context context = vertx.getOrCreateContext();
-    repository = new SettingsRepository(context, Map.of("X-Okapi-Tenant", TENANT_ID));
-  }
-
-  @AfterEach
-  void tearDown() {
-    mockedPgUtil.close();
+    try (MockedStatic<PgUtil> mockedPgUtil = mockStatic(PgUtil.class)) {
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
+        .thenReturn(postgresClient);
+      repository = new SettingsRepository(context, Map.of("X-Okapi-Tenant", TENANT_ID));
+    }
   }
 
   @Test
