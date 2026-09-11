@@ -4,7 +4,7 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.USER_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -63,7 +63,7 @@ class SettingEventPublisherTest {
   void constructorWithProducerManagerShouldCreatePublisher() {
     var publisher = new SettingEventPublisher(producerManager);
 
-    assertThat(publisher, is(notNullValue()));
+    assertNotNull(publisher);
   }
 
   @Test

@@ -1,6 +1,0 @@
-[
-  {
-    "id": "${artifactId}-${version}",
-    "action": "enable"
-  }
-]

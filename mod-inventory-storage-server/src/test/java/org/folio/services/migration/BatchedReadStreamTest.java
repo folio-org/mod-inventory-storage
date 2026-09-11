@@ -1,7 +1,6 @@
 package org.folio.services.migration;
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,14 +17,15 @@ import io.vertx.sqlclient.Row;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import org.folio.rest.support.sql.TestRowStream;
-import org.junit.Test;
+import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
+import org.folio.support.sql.TestRowStream;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class BatchedReadStreamTest {
+class BatchedReadStreamTest {
   @Test
   @SuppressWarnings("unchecked")
-  public void shouldProcessRecordsByBatch() {
+  void shouldProcessRecordsByBatch() {
     var numberOfRecords = 410;
     var batchSize = 100;
     var numberOfBatches = 5;
@@ -40,7 +40,7 @@ public class BatchedReadStreamTest {
       .exceptionHandler(promise::tryFail);
 
     // Wait until completed
-    get(promise.future());
+    VertxTestUtil.await(promise.future());
 
     ArgumentCaptor<List<Row>> captor = ArgumentCaptor.forClass(List.class);
     verify(handler, times(numberOfBatches)).handle(captor.capture());
@@ -59,7 +59,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldClearOnDelegateIfNullHandler() {
+  void shouldClearOnDelegateIfNullHandler() {
     var rowStream = mockStream();
     var batchedReadStream = new BatchedReadStream<>(rowStream);
 
@@ -69,7 +69,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDelegateCallForExceptionHandler() {
+  void shouldDelegateCallForExceptionHandler() {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
@@ -79,7 +79,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDelegateCallForEndHandler() {
+  void shouldDelegateCallForEndHandler() {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
@@ -90,7 +90,7 @@ public class BatchedReadStreamTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void shouldHandleErrorWhenOccurredOnRemainingChunk() {
+  void shouldHandleErrorWhenOccurredOnRemainingChunk() {
     var delegate = new TestRowStream(1);
     var batchedReadStream = new BatchedReadStream<>(delegate);
     Handler<Void> endHandler = mock(Handler.class);
@@ -112,7 +112,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDelegateCallForPause() {
+  void shouldDelegateCallForPause() {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
@@ -122,7 +122,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDelegateCallForResume() {
+  void shouldDelegateCallForResume() {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 
@@ -132,7 +132,7 @@ public class BatchedReadStreamTest {
   }
 
   @Test
-  public void shouldDelegateCallForFetch() {
+  void shouldDelegateCallForFetch() {
     var delegate = mockStream();
     var batchedReadStream = new BatchedReadStream<>(delegate);
 

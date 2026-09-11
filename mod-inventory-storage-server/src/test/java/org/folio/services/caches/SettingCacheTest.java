@@ -1,24 +1,24 @@
 package org.folio.services.caches;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.Checkpoint;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiFunction;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(VertxUnitRunner.class)
-public class SettingCacheTest {
+@ExtendWith(VertxExtension.class)
+class SettingCacheTest {
 
   private static final String TEST_CACHE_KEY = "test:SETTING_KEY";
   private static final String TEST_CACHE_VALUE = "test_value";
@@ -26,15 +26,14 @@ public class SettingCacheTest {
   private Vertx vertx;
   private SettingCache settingCache;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     vertx = Vertx.vertx();
     settingCache = new SettingCache(vertx);
   }
 
   @Test
-  public void shouldRetrieveValueFromCacheUsingMappingFunction(TestContext context) {
-    Async async = context.async();
+  void shouldRetrieveValueFromCacheUsingMappingFunction(VertxTestContext context) {
     // Arrange
     BiFunction<String, Executor, CompletableFuture<String>> mappingFunction = (key, executor) ->
       CompletableFuture.completedFuture(TEST_CACHE_VALUE);
@@ -44,15 +43,16 @@ public class SettingCacheTest {
 
     // Assert
     result.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(TEST_CACHE_VALUE, ar.result());
-      async.complete();
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertEquals(TEST_CACHE_VALUE, ar.result());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldCallMappingFunctionWhenKeyNotInCache(TestContext context) {
-    Async async = context.async();
+  void shouldCallMappingFunctionWhenKeyNotInCache(VertxTestContext context) {
     // Arrange
     String[] mappingFunctionCalled = {null};
     BiFunction<String, Executor, CompletableFuture<String>> mappingFunction = (key, executor) -> {
@@ -65,15 +65,17 @@ public class SettingCacheTest {
 
     // Assert
     result.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertNotNull(mappingFunctionCalled[0]);
-      context.assertEquals(TEST_CACHE_KEY, mappingFunctionCalled[0]);
-      async.complete();
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertNotNull(mappingFunctionCalled[0]);
+        assertEquals(TEST_CACHE_KEY, mappingFunctionCalled[0]);
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldThrowExceptionWhenKeyIsNull() {
+  void shouldThrowExceptionWhenKeyIsNull() {
     // Arrange
     BiFunction<String, Executor, CompletableFuture<String>> mappingFunction =
       (key, executor) -> CompletableFuture.completedFuture(TEST_CACHE_VALUE);
@@ -85,7 +87,7 @@ public class SettingCacheTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenMappingFunctionIsNull() {
+  void shouldThrowExceptionWhenMappingFunctionIsNull() {
     // Act & Assert
     assertThrows(
       NullPointerException.class,
@@ -93,8 +95,7 @@ public class SettingCacheTest {
   }
 
   @Test
-  public void shouldStoreValueInCache(TestContext context) {
-    Async async = context.async();
+  void shouldStoreValueInCache(VertxTestContext context) {
     // Arrange
     CompletableFuture<String> valueFuture = CompletableFuture.completedFuture(TEST_CACHE_VALUE);
 
@@ -106,15 +107,16 @@ public class SettingCacheTest {
       CompletableFuture.completedFuture("should_not_use_this"));
 
     result.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(TEST_CACHE_VALUE, ar.result());
-      async.complete();
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertEquals(TEST_CACHE_VALUE, ar.result());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldCacheCompletedFutureValue(TestContext context) {
-    Async async = context.async();
+  void shouldCacheCompletedFutureValue(VertxTestContext context) {
     // Arrange
     String expectedValue = "cache_test_value";
     CompletableFuture<String> valueFuture = CompletableFuture.completedFuture(expectedValue);
@@ -127,14 +129,16 @@ public class SettingCacheTest {
       CompletableFuture.completedFuture("should_not_use_this"));
 
     result.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(expectedValue, ar.result());
-      async.complete();
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertEquals(expectedValue, ar.result());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldThrowExceptionWhenValueFutureIsNull() {
+  void shouldThrowExceptionWhenValueFutureIsNull() {
     // Act & Assert
     assertThrows(
       NullPointerException.class,
@@ -142,8 +146,7 @@ public class SettingCacheTest {
   }
 
   @Test
-  public void shouldReturnFutureObject(TestContext context) {
-    Async async = context.async();
+  void shouldReturnFutureObject(VertxTestContext context) {
     // Arrange
     BiFunction<String, Executor, CompletableFuture<String>> mappingFunction = (key, executor) ->
       CompletableFuture.completedFuture(TEST_CACHE_VALUE);
@@ -152,14 +155,12 @@ public class SettingCacheTest {
     Future<String> result = settingCache.get(TEST_CACHE_KEY, mappingFunction);
 
     // Assert
-    context.assertNotNull(result);
-    assertThat(result, is(notNullValue()));
-    async.complete();
+    assertNotNull(result);
+    context.completeNow();
   }
 
   @Test
-  public void shouldMappingFunctionReceiveCorrectKey(TestContext context) {
-    Async async = context.async();
+  void shouldMappingFunctionReceiveCorrectKey(VertxTestContext context) {
     // Arrange
     String[] passedKey = {null};
     BiFunction<String, Executor, CompletableFuture<String>> mappingFunction = (key, executor) -> {
@@ -172,15 +173,16 @@ public class SettingCacheTest {
 
     // Assert
     result.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(TEST_CACHE_KEY, passedKey[0]);
-      async.complete();
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertEquals(TEST_CACHE_KEY, passedKey[0]);
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldMultiplePutsAndGetsWorkIndependently(TestContext context) {
-    Async async = context.async();
+  void shouldMultiplePutsAndGetsWorkIndependently(VertxTestContext context) {
     // Arrange
     String key1 = "cache:key1";
     String key2 = "cache:key2";
@@ -197,15 +199,19 @@ public class SettingCacheTest {
     Future<String> result2 = settingCache.get(key2, (key, executor) ->
       CompletableFuture.failedFuture(new RuntimeException("Should use cached value")));
 
-    result1.onComplete(ar1 -> {
-      context.assertTrue(ar1.succeeded());
-      context.assertEquals(value1, ar1.result());
-      async.complete();
-    });
-    result2.onComplete(ar2 -> {
-      context.assertTrue(ar2.succeeded());
-      context.assertEquals(value2, ar2.result());
-      async.complete();
+    var checkpoint = context.checkpoint(2);
+    assertCachedValue(context, checkpoint, result1, value1);
+    assertCachedValue(context, checkpoint, result2, value2);
+  }
+
+  private void assertCachedValue(VertxTestContext context, Checkpoint checkpoint,
+                                  Future<String> result, String expectedValue) {
+    result.onComplete(ar -> {
+      context.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertEquals(expectedValue, ar.result());
+      });
+      checkpoint.flag();
     });
   }
 }

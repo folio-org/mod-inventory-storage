@@ -1,11 +1,12 @@
 package org.folio.services.reindex;
 
-import static org.folio.rest.api.TestBase.get;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -20,9 +21,9 @@ import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ReindexServiceTest {
+class ReindexServiceTest {
 
   private final ReindexJobRunner runner = mock(ReindexJobRunner.class);
   private final PostgresClient postgresClient = mock(PostgresClient.class);
@@ -31,34 +32,34 @@ public class ReindexServiceTest {
   private final Conn connection = mock(Conn.class);
 
   @Test
-  public void canSubmitReindex() {
+  void canSubmitReindex() {
     when(postgresClient.save(any(), any(), any(ReindexJob.class)))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
-    var reindexJob = get(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
+    var reindexJob = await(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
 
     assertThat(reindexJob.getJobStatus(), is(IN_PROGRESS));
-    assertThat(reindexJob.getId(), notNullValue());
+    assertNotNull(reindexJob.getId());
     assertThat(reindexJob.getPublished(), is(0));
-    assertThat(reindexJob.getSubmittedDate(), notNullValue());
+    assertNotNull(reindexJob.getSubmittedDate());
 
     verify(runner, times(1)).startReindex(any());
   }
 
-  @Test(expected = RuntimeException.class)
-  public void cannotCancelFinishedJob() {
+  @Test
+  void cannotCancelFinishedJob() {
     var reindexJob = new ReindexJob();
     reindexJob.withId(UUID.randomUUID().toString());
     reindexJob.withJobStatus(IDS_PUBLISHED);
-
     when(postgresClient.withTrans(any()))
-      .thenAnswer(invocationOnMock -> {
-        var function = invocationOnMock.<Function<Conn, Future<ReindexJob>>>getArgument(0);
-        return function.apply(connection);
-      });
+        .thenAnswer(invocationOnMock -> {
+          var function = invocationOnMock.<Function<Conn, Future<ReindexJob>>>getArgument(0);
+          return function.apply(connection);
+        });
     when(connection.getByIdForUpdate(any(), eq(reindexJob.getId()), eq(ReindexJob.class)))
-      .thenReturn(Future.succeededFuture(reindexJob));
+        .thenReturn(Future.succeededFuture(reindexJob));
+    assertThrows(RuntimeException.class, () ->
 
-    get(reindexService.cancelReindex(reindexJob.getId()));
+      await(reindexService.cancelReindex(reindexJob.getId())));
   }
 }

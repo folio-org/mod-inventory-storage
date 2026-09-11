@@ -1,11 +1,11 @@
 package org.folio.services.iteration;
 
-import static org.folio.rest.api.TestBase.get;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -20,24 +20,24 @@ import java.util.function.UnaryOperator;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class IterationServiceTest {
+class IterationServiceTest {
 
   private IterationJobRepository repository;
   private IterationJobRunner runner;
   private IterationService service;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     repository = mock(IterationJobRepository.class);
     runner = mock(IterationJobRunner.class);
     service = new IterationService(repository, runner);
   }
 
   @Test
-  public void canSubmitIteration() {
+  void canSubmitIteration() {
     when(repository.save(any(), any()))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
@@ -45,12 +45,12 @@ public class IterationServiceTest {
       .withEventType("ITERATE")
       .withTopicName("inventory.instance.iteration");
 
-    var job = get(service.submitIteration(jobParams));
+    var job = await(service.submitIteration(jobParams));
 
-    assertThat(job.getId(), notNullValue());
+    assertNotNull(job.getId());
     assertThat(job.getJobStatus(), is(IN_PROGRESS));
     assertThat(job.getMessagesPublished(), is(0));
-    assertThat(job.getSubmittedDate(), notNullValue());
+    assertNotNull(job.getSubmittedDate());
     assertThat(job.getJobParams(), is(jobParams));
 
     verify(runner, times(1)).startIteration(any());
@@ -58,39 +58,39 @@ public class IterationServiceTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void canCancelIteration() {
+  void canCancelIteration() {
     var jobId = UUID.randomUUID().toString();
 
     when(repository.fetchAndUpdate(eq(jobId), isA(UnaryOperator.class)))
       .thenReturn(Future.succeededFuture());
 
-    var result = get(service.cancelIteration(jobId));
+    var result = await(service.cancelIteration(jobId));
 
-    assertThat(result, nullValue());
+    assertNull(result);
   }
 
   @Test
-  public void canGetIteration() {
+  void canGetIteration() {
     var jobId = UUID.randomUUID().toString();
     IterationJob existing = new IterationJob().withId(jobId);
 
     when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(existing));
 
-    var job = get(service.getIteration(jobId));
+    var job = await(service.getIteration(jobId));
 
     assertThat(job.isPresent(), is(true));
     assertThat(job.get(), is(existing));
   }
 
   @Test
-  public void canGetEmptyIteration() {
+  void canGetEmptyIteration() {
     var jobId = UUID.randomUUID().toString();
 
     when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(null));
 
-    var job = get(service.getIteration(jobId));
+    var job = await(service.getIteration(jobId));
 
     assertThat(job.isPresent(), is(false));
   }

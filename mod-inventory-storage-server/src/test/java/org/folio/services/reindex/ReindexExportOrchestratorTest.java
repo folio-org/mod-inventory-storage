@@ -2,9 +2,9 @@ package org.folio.services.reindex;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.TestBase.get;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -21,16 +21,19 @@ import org.folio.rest.jaxrs.model.RecordIdsRange;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.sql.TestRowStream;
 import org.folio.s3.client.FolioS3Client;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.folio.support.sql.TestRowStream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReindexExportOrchestratorTest {
+@MockitoSettings(strictness = Strictness.WARN)
+@ExtendWith(MockitoExtension.class)
+class ReindexExportOrchestratorTest {
 
   private static final String TENANT_ID = "test-tenant";
   private static final String FROM_ID = "00000000-0000-0000-0000-000000000000";
@@ -54,8 +57,8 @@ public class ReindexExportOrchestratorTest {
 
   private ReindexExportOrchestrator orchestrator;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp() {
     orchestrator = new ReindexExportOrchestrator(vertxContext,
       new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
       postgresClient, s3Client, BUCKET, eventPublisher);
@@ -73,10 +76,10 @@ public class ReindexExportOrchestratorTest {
   }
 
   @Test
-  public void export_noRows_writesEmptyFileViaSinglePutAndPublishesEvent() {
+  void export_noRows_writesEmptyFileViaSinglePutAndPublishesEvent() {
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
-    get(orchestrator.export(buildRequest(TRACE_ID),
+    await(orchestrator.export(buildRequest(TRACE_ID),
       c -> succeededFuture(new TestRowStream(0))));
 
     verify(s3Client).write(any(), any(), eq(0L));
@@ -87,10 +90,10 @@ public class ReindexExportOrchestratorTest {
   }
 
   @Test
-  public void export_rowsPresent_singlePutAndEventPublished() {
+  void export_rowsPresent_singlePutAndEventPublished() {
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
-    get(orchestrator.export(buildRequest(TRACE_ID),
+    await(orchestrator.export(buildRequest(TRACE_ID),
       c -> succeededFuture(new TestRowStream(2))));
 
     // 2 rows produce well under the 16 MB part-size threshold, so the
@@ -103,20 +106,20 @@ public class ReindexExportOrchestratorTest {
   }
 
   @Test
-  public void export_blankTraceId_eventStillPublished() {
+  void export_blankTraceId_eventStillPublished() {
     when(eventPublisher.publish(any())).thenReturn(succeededFuture());
 
-    get(orchestrator.export(buildRequest(""),
+    await(orchestrator.export(buildRequest(""),
       c -> succeededFuture(new TestRowStream(0))));
 
     verify(eventPublisher).publish(any());
   }
 
   @Test
-  public void export_streamProviderFails_futureFailedAndEventNotPublished() {
+  void export_streamProviderFails_futureFailedAndEventNotPublished() {
     var futureResult = orchestrator.export(buildRequest(TRACE_ID),
       c -> failedFuture("stream error"));
-    assertThrows(RuntimeException.class, () -> get(futureResult));
+    assertThrows(RuntimeException.class, () -> await(futureResult));
 
     verify(eventPublisher, never()).publish(any());
   }

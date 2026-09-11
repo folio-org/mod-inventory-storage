@@ -3,14 +3,14 @@ package org.folio.rest.support;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.support.CompletableFutureUtil.mapFutureResultToJavaFuture;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.CompletableFuture;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CompletableFutureUtilTest {
+class CompletableFutureUtilTest {
   @Test
-  public void shouldReturnSuccess() {
+  void shouldReturnSuccess() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     mapFutureResultToJavaFuture(future).handle(succeededFuture());
@@ -19,7 +19,7 @@ public class CompletableFutureUtilTest {
   }
 
   @Test
-  public void shouldReturnFailureWhenHandlerFailed() {
+  void shouldReturnFailureWhenHandlerFailed() {
     final CompletableFuture<Void> future = new CompletableFuture<>();
 
     mapFutureResultToJavaFuture(future).handle(failedFuture("error"));

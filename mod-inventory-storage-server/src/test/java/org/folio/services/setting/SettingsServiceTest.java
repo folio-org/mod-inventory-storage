@@ -1,10 +1,10 @@
 package org.folio.services.setting;
 
 import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -98,7 +98,7 @@ class SettingsServiceTest {
     var result = settingsService.getSettingByKey(key);
 
     assertThat(result.succeeded(), is(true));
-    assertThat(result.result(), is(notNullValue()));
+    assertNotNull(result.result());
     assertThat(result.result().getKey(), is(key));
   }
 
@@ -110,7 +110,7 @@ class SettingsServiceTest {
     var result = settingsService.getSettingByKey(key);
 
     assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(NotFoundException.class));
+    assertInstanceOf(NotFoundException.class, result.cause());
   }
 
   @Test
@@ -133,7 +133,7 @@ class SettingsServiceTest {
     var result = settingsService.updateSetting(key, "not-an-integer", okapiHeaders);
 
     assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(SettingsValidationException.class));
+    assertInstanceOf(SettingsValidationException.class, result.cause());
   }
 
   @Test
@@ -186,7 +186,7 @@ class SettingsServiceTest {
     var result = settingsService.updateSetting(key, true, okapiHeaders);
 
     assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(BadRequestException.class));
+    assertInstanceOf(BadRequestException.class, result.cause());
   }
 
   private void setupQueryMock(Setting setting) {
