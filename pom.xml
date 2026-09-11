@@ -67,6 +67,12 @@
     <maven-failsafe-plugin.version>3.5.6</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+    <!-- WS6 step 2 ratchet: measured baseline (combined unit+IT line coverage was 59.51%
+         - covered=10863, missed=7390 - as of the commit that introduced this), not an
+         absolute target - only meant to catch a regression, so keep raising it to match
+         as coverage genuinely improves. Set a little below the exact measurement to avoid
+         failing the build over immaterial noise. -->
+    <jacoco.line.ratchet>0.59</jacoco.line.ratchet>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <jsonschema2pojo-maven-plugin.version>1.3.3</jsonschema2pojo-maven-plugin.version>
   </properties>
