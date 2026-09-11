@@ -4,7 +4,6 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.awaitility.Awaitility.await;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
-import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -16,14 +15,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Map;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.support.sql.TestRowStream;
+import org.folio.support.sql.TestRowStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,8 +63,8 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenReturn(succeededFuture());
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
 
-    var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> builderWithValue(""), notUsed -> succeededFuture()));
+    var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
+      row -> builderWithValue(""), notUsed -> Future.succeededFuture()));
 
     assertThat(recordsPublished, is(6L));
 
@@ -102,8 +103,8 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any()))
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
-    var recordsPublished = get(eventPublisher.publishStream(stream,
-      row -> builderWithValue(""), records -> succeededFuture()));
+    var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
+      row -> builderWithValue(""), records -> Future.succeededFuture()));
 
     assertThat(recordsPublished, is(2L));
     verify(failureHandler, times(2)).handleFailure(any(), any());
@@ -137,7 +138,7 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenReturn(failedFuture(causeError));
 
     var future = eventPublisher.publishAllRecordsRemoved();
-    var e = assertThrows(RuntimeException.class, () -> get(future));
+    var e = assertThrows(RuntimeException.class, () -> VertxTestUtil.await(future));
     assertInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
 
     verify(failureHandler, times(1)).handleFailure(eq(causeError), any());

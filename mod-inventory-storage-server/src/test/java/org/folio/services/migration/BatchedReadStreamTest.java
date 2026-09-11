@@ -1,7 +1,6 @@
 package org.folio.services.migration;
 
 import static org.awaitility.Awaitility.await;
-import static org.folio.rest.api.TestBase.get;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,7 +17,8 @@ import io.vertx.sqlclient.Row;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import org.folio.rest.support.sql.TestRowStream;
+import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
+import org.folio.support.sql.TestRowStream;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -40,7 +40,7 @@ class BatchedReadStreamTest {
       .exceptionHandler(promise::tryFail);
 
     // Wait until completed
-    get(promise.future());
+    VertxTestUtil.await(promise.future());
 
     ArgumentCaptor<List<Row>> captor = ArgumentCaptor.forClass(List.class);
     verify(handler, times(numberOfBatches)).handle(captor.capture());

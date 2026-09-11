@@ -1,6 +1,6 @@
 package org.folio.services.reindex;
 
-import static org.folio.rest.api.TestBase.get;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -36,7 +36,7 @@ class ReindexServiceTest {
     when(postgresClient.save(any(), any(), any(ReindexJob.class)))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
-    var reindexJob = get(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
+    var reindexJob = await(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
 
     assertThat(reindexJob.getJobStatus(), is(IN_PROGRESS));
     assertNotNull(reindexJob.getId());
@@ -60,6 +60,6 @@ class ReindexServiceTest {
         .thenReturn(Future.succeededFuture(reindexJob));
     assertThrows(RuntimeException.class, () ->
 
-      get(reindexService.cancelReindex(reindexJob.getId())));
+      await(reindexService.cancelReindex(reindexJob.getId())));
   }
 }

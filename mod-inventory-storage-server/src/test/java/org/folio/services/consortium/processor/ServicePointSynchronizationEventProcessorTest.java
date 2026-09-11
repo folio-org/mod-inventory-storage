@@ -32,8 +32,8 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldFailToCreateEventDueToProcessEventException(VertxTestContext testContext) {
-    var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(createEvent(
-      new ServicePoint(), TENANT));
+    var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
+      createEvent(new ServicePoint(), TENANT));
     processEventToThrowException(createEventProcessor, testContext);
   }
 

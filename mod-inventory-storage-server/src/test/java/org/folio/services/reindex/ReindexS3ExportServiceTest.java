@@ -3,7 +3,7 @@ package org.folio.services.reindex;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.rest.api.TestBase.get;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -16,9 +16,9 @@ import static org.mockito.Mockito.when;
 import io.vertx.core.Context;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import org.folio.rest.support.sql.TestRowStream;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.exception.S3ClientException;
+import org.folio.support.sql.TestRowStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +71,7 @@ class ReindexS3ExportServiceTest {
 
   @Test
   void exportToS3_noRows_writesEmptyFileViaSinglePutWithoutMultipart() {
-    get(exportService.exportToS3(new TestRowStream(0), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(0), S3_KEY));
 
     verify(s3Client).write(eq(S3_KEY), any(), eq(0L));
     verify(s3Client, never()).initiateMultipartUpload(any());
@@ -83,7 +83,7 @@ class ReindexS3ExportServiceTest {
   void exportToS3_noRows_writesEmptyFileWithResettableStream() {
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
 
-    get(exportService.exportToS3(new TestRowStream(0), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(0), S3_KEY));
 
     verify(s3Client).write(eq(S3_KEY), streamCaptor.capture(), eq(0L));
     InputStream captured = streamCaptor.getValue();
@@ -98,7 +98,7 @@ class ReindexS3ExportServiceTest {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
 
-    get(exportService.exportToS3(new TestRowStream(1), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(1), S3_KEY));
 
     verify(s3Client).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
     verify(s3Client, never()).abortMultipartUpload(any(), any());
@@ -109,7 +109,7 @@ class ReindexS3ExportServiceTest {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
 
-    get(exportService.exportToS3(new TestRowStream(3), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(3), S3_KEY));
 
     verify(s3Client).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
     verify(s3Client, never()).abortMultipartUpload(any(), any());
@@ -121,7 +121,7 @@ class ReindexS3ExportServiceTest {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(cause);
 
     var exportFuture = exportService.exportToS3(new TestRowStream(1), S3_KEY);
-    assertThrows(RuntimeException.class, () -> get(exportFuture));
+    assertThrows(RuntimeException.class, () -> await(exportFuture));
 
     verify(s3Client, never()).abortMultipartUpload(any(), any());
   }
@@ -137,7 +137,7 @@ class ReindexS3ExportServiceTest {
       .thenReturn(UPLOAD_ID);     // attempt 3: success
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
 
-    get(exportService.exportToS3(new TestRowStream(1), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(1), S3_KEY));
 
     verify(s3Client, times(3)).initiateMultipartUpload(S3_KEY);
     verify(s3Client).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
@@ -151,7 +151,7 @@ class ReindexS3ExportServiceTest {
       .doNothing()
       .when(s3Client).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
 
-    get(exportService.exportToS3(new TestRowStream(1), S3_KEY));
+    await(exportService.exportToS3(new TestRowStream(1), S3_KEY));
 
     verify(s3Client, times(2)).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
     verify(s3Client, never()).abortMultipartUpload(any(), any());
@@ -162,7 +162,7 @@ class ReindexS3ExportServiceTest {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(slowDown503());
 
     var exportFuture = exportService.exportToS3(new TestRowStream(1), S3_KEY);
-    assertThrows(RuntimeException.class, () -> get(exportFuture));
+    assertThrows(RuntimeException.class, () -> await(exportFuture));
 
     // 5 attempts as configured in setUp
     verify(s3Client, times(5)).initiateMultipartUpload(S3_KEY);
@@ -176,7 +176,7 @@ class ReindexS3ExportServiceTest {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenThrow(authError);
 
     var exportFuture = exportService.exportToS3(new TestRowStream(1), S3_KEY);
-    assertThrows(RuntimeException.class, () -> get(exportFuture));
+    assertThrows(RuntimeException.class, () -> await(exportFuture));
 
     verify(s3Client, times(1)).initiateMultipartUpload(S3_KEY);
   }

@@ -2,8 +2,8 @@ package org.folio.services.reindex;
 
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.api.TestBase.get;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -39,7 +39,7 @@ class ReindexFileReadyEventPublisherTest {
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.close()).thenReturn(succeededFuture());
 
-    get(publisher.publish(buildEvent()));
+    await(publisher.publish(buildEvent()));
 
     verify(producer).send(any());
   }
@@ -54,7 +54,7 @@ class ReindexFileReadyEventPublisherTest {
     when(producer.close()).thenReturn(succeededFuture());
 
     var publishResult = publisher.publish(buildEvent());
-    assertThrows(RuntimeException.class, () -> get(publishResult));
+    assertThrows(RuntimeException.class, () -> await(publishResult));
   }
 
   private static Map<String, String> okapiHeaders() {

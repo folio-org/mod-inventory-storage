@@ -1,6 +1,6 @@
 package org.folio.services.iteration;
 
-import static org.folio.rest.api.TestBase.get;
+import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -45,7 +45,7 @@ class IterationServiceTest {
       .withEventType("ITERATE")
       .withTopicName("inventory.instance.iteration");
 
-    var job = get(service.submitIteration(jobParams));
+    var job = await(service.submitIteration(jobParams));
 
     assertNotNull(job.getId());
     assertThat(job.getJobStatus(), is(IN_PROGRESS));
@@ -64,7 +64,7 @@ class IterationServiceTest {
     when(repository.fetchAndUpdate(eq(jobId), isA(UnaryOperator.class)))
       .thenReturn(Future.succeededFuture());
 
-    var result = get(service.cancelIteration(jobId));
+    var result = await(service.cancelIteration(jobId));
 
     assertNull(result);
   }
@@ -77,7 +77,7 @@ class IterationServiceTest {
     when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(existing));
 
-    var job = get(service.getIteration(jobId));
+    var job = await(service.getIteration(jobId));
 
     assertThat(job.isPresent(), is(true));
     assertThat(job.get(), is(existing));
@@ -90,7 +90,7 @@ class IterationServiceTest {
     when(repository.getById(jobId))
       .thenReturn(Future.succeededFuture(null));
 
-    var job = get(service.getIteration(jobId));
+    var job = await(service.getIteration(jobId));
 
     assertThat(job.isPresent(), is(false));
   }
