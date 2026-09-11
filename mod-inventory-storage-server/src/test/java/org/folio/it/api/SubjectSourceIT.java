@@ -4,33 +4,36 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.List;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.support.extension.EnableTenant;
 import org.folio.utility.RestUtility;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * The migration-seeded "folio" subject source row (id {@link #FOLIO_SUBJECT_SOURCE_ID}) is
- * excluded from {@link BaseIntegrationTest}'s per-class table truncation (see
- * {@code MIGRATION_SEEDED_TABLES}), so it's always present to exercise the "cannot touch the
- * folio source" rules against.
+ * {@code subject_source} is one of {@link BaseIntegrationTest}'s {@code MIGRATION_SEEDED_TABLES}:
+ * a Liquibase migration seeds the "folio" row (id {@link #FOLIO_SUBJECT_SOURCE_ID}) once, and it's
+ * excluded from per-class table truncation, so it's always present - both to exercise the "cannot
+ * touch the folio source" rules against, and as the reason this class doesn't extend the generic
+ * {@code BaseReferenceDataIntegrationTest} (whose {@code getCollection_shouldReturn200AndEmptyCollection}
+ * test and whole-table {@code @AfterEach} wipe both assume an empty, freely-truncatable table,
+ * which would delete that seeded row for every other {@code *IT} class sharing the JVM). Every
+ * test here instead creates its own uniquely-named/coded record and queries or acts on it
+ * specifically, so nothing needs to assume - or reset - the table's total contents.
  */
-@EnableTenant(tenants = {TENANT_ID, CONSORTIUM_CENTRAL_TENANT})
 class SubjectSourceIT extends BaseIntegrationTest {
 
   private static final String FOLIO_SUBJECT_SOURCE_ID = "e894d0dc-621d-4b1d-98f6-6f7120eb0d40";
@@ -41,15 +44,89 @@ class SubjectSourceIT extends BaseIntegrationTest {
   private static final String ID_FIELD = "id";
   private static final String ERRORS_FIELD = "errors";
   private static final String MESSAGE_FIELD = "message";
+  private static final String TOTAL_RECORDS_FIELD = "totalRecords";
+  private static final String SUBJECT_SOURCES_FIELD = "subjectSources";
 
   private static final String SOURCE_LOCAL = "local";
   private static final String SOURCE_FOLIO = "folio";
   private static final String SOURCE_CONSORTIUM = "consortium";
 
-  @BeforeEach
-  void mockConsortiumMembership() {
-    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
-    mockConsortiumTenants();
+  @Test
+  @DisplayName("should create a subject source when posting valid data")
+  void shouldCreateSubjectSource_whenPostingValidData() {
+    var name = randomName();
+    var code = randomCode();
+    var subjectSource = new JsonObject().put(NAME_FIELD, name).put(CODE_FIELD, code).put(SOURCE_FIELD, SOURCE_LOCAL);
+
+    var response = await(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource));
+
+    assertThat(response.status()).isEqualTo(SC_CREATED);
+    var created = response.jsonBody();
+    assertThat(created.getString(NAME_FIELD)).isEqualTo(name);
+    assertThat(created.getString(CODE_FIELD)).isEqualTo(code);
+    assertThat(created.getString(SOURCE_FIELD)).isEqualTo(SOURCE_LOCAL);
+    assertThat(created.getString(ID_FIELD)).isNotNull();
+  }
+
+  @Test
+  @DisplayName("should return a subject source collection matching a name or code query")
+  void shouldReturnRecordCollection_whenQueryingByNameOrCode() {
+    var name = randomName();
+    var code = randomCode();
+    var subjectSource = new JsonObject().put(NAME_FIELD, name).put(CODE_FIELD, code).put(SOURCE_FIELD, SOURCE_LOCAL);
+    createSubjectSource(subjectSource);
+
+    for (var query : List.of("name==" + name, "code==" + code)) {
+      var response = await(doGet(client, ResourcePaths.SUBJECT_SOURCES + "?query=" + query));
+
+      assertThat(response.status()).as("query: %s", query).isEqualTo(SC_OK);
+      var collection = response.jsonBody();
+      assertThat(collection.getInteger(TOTAL_RECORDS_FIELD)).as("query: %s", query).isEqualTo(1);
+      var found = collection.getJsonArray(SUBJECT_SOURCES_FIELD).getJsonObject(0);
+      assertThat(found.getString(NAME_FIELD)).isEqualTo(name);
+      assertThat(found.getString(CODE_FIELD)).isEqualTo(code);
+    }
+  }
+
+  @Test
+  @DisplayName("should return a subject source by id")
+  void shouldReturnRecord_whenGettingById() {
+    var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
+    var id = createSubjectSource(subjectSource).jsonBody().getString(ID_FIELD);
+
+    var response = await(doGet(client, ResourcePaths.SUBJECT_SOURCES + "/" + id));
+
+    assertThat(response.status()).isEqualTo(SC_OK);
+    assertThat(response.jsonBody().getString(ID_FIELD)).isEqualTo(id);
+  }
+
+  @Test
+  @DisplayName("should update a subject source when putting valid data")
+  void shouldUpdateSubjectSource_whenPuttingValidData() {
+    var id = UUID.randomUUID().toString();
+    var subjectSource = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
+      .put(SOURCE_FIELD, SOURCE_LOCAL);
+    createSubjectSource(subjectSource);
+    var updatedName = randomName();
+
+    var response = await(
+      doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, subjectSource.put(NAME_FIELD, updatedName)));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    var updated = await(doGet(client, ResourcePaths.SUBJECT_SOURCES + "/" + id)).jsonBody();
+    assertThat(updated.getString(NAME_FIELD)).isEqualTo(updatedName);
+  }
+
+  @Test
+  @DisplayName("should delete a subject source")
+  void shouldDeleteSubjectSource_whenDeleting() {
+    var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
+    var id = createSubjectSource(subjectSource).jsonBody().getString(ID_FIELD);
+
+    var response = await(doDelete(client, ResourcePaths.SUBJECT_SOURCES + "/" + id));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(await(doGet(client, ResourcePaths.SUBJECT_SOURCES + "/" + id)).status()).isEqualTo(SC_NOT_FOUND);
   }
 
   @Test
@@ -70,7 +147,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should fail to create a subject source when the code is a duplicate")
   void shouldFailToCreateSubjectSource_whenCodeIsDuplicate() {
-    var code = UUID.randomUUID().toString().substring(0, 8);
+    var code = randomCode();
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(CODE_FIELD, code)
       .put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectSource(subjectSource);
@@ -133,7 +210,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var response = await(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, subjectSource));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
-    assertThat(response.body().toString()).isEqualTo("SubjectSource was not found");
+    assertThat(response.body()).hasToString("SubjectSource was not found");
   }
 
   @Test
@@ -238,6 +315,10 @@ class SubjectSourceIT extends BaseIntegrationTest {
 
   private static String randomName() {
     return "a subject source " + UUID.randomUUID();
+  }
+
+  private static String randomCode() {
+    return UUID.randomUUID().toString().substring(0, 8);
   }
 
   private static String randomSubjectTypeId() {

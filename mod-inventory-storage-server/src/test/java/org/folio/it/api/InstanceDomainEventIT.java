@@ -9,7 +9,8 @@ import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.it.LocationStorageFixtures.createLocation;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.support.ResourcePaths;
@@ -85,8 +86,8 @@ class InstanceDomainEventIT extends BaseIntegrationTest {
 
   private static InstanceEventMessageChecks eventMessageChecks() {
     try {
-      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

@@ -4,12 +4,12 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,19 +18,21 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.support.extension.EnableTenant;
 import org.folio.utility.RestUtility;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * The migration-seeded "folio" subject type row (id {@link #FOLIO_SUBJECT_TYPE_ID}) is excluded
- * from {@link BaseIntegrationTest}'s per-class table truncation (see
- * {@code MIGRATION_SEEDED_TABLES}), so it's always present to exercise the "cannot touch the
- * folio type" rules against.
+ * {@code subject_type} is one of {@link BaseIntegrationTest}'s {@code MIGRATION_SEEDED_TABLES}: a
+ * Liquibase migration seeds the "folio" row (id {@link #FOLIO_SUBJECT_TYPE_ID}) once, and it's
+ * excluded from per-class table truncation, so it's always present - both to exercise the "cannot
+ * touch the folio type" rules against, and as the reason this class doesn't extend the generic
+ * {@code BaseReferenceDataIntegrationTest} (whose {@code getCollection_shouldReturn200AndEmptyCollection}
+ * test and whole-table {@code @AfterEach} wipe both assume an empty, freely-truncatable table,
+ * which would delete that seeded row for every other {@code *IT} class sharing the JVM). Every
+ * test here instead creates its own uniquely-named record and queries or acts on it specifically,
+ * so nothing needs to assume - or reset - the table's total contents.
  */
-@EnableTenant(tenants = {TENANT_ID, CONSORTIUM_CENTRAL_TENANT})
 class SubjectTypeIT extends BaseIntegrationTest {
 
   private static final String FOLIO_SUBJECT_TYPE_ID = "d6488f88-1e74-40ce-81b5-b19a928ff5b1";
@@ -40,15 +42,83 @@ class SubjectTypeIT extends BaseIntegrationTest {
   private static final String ID_FIELD = "id";
   private static final String ERRORS_FIELD = "errors";
   private static final String MESSAGE_FIELD = "message";
+  private static final String TOTAL_RECORDS_FIELD = "totalRecords";
+  private static final String SUBJECT_TYPES_FIELD = "subjectTypes";
 
   private static final String SOURCE_LOCAL = "local";
   private static final String SOURCE_FOLIO = "folio";
   private static final String SOURCE_CONSORTIUM = "consortium";
 
-  @BeforeEach
-  void mockConsortiumMembership() {
-    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
-    mockConsortiumTenants();
+  @Test
+  @DisplayName("should create a subject type when posting valid data")
+  void shouldCreateSubjectType_whenPostingValidData() {
+    var name = randomName();
+    var subjectType = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, SOURCE_LOCAL);
+
+    var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+
+    assertThat(response.status()).isEqualTo(SC_CREATED);
+    var created = response.jsonBody();
+    assertThat(created.getString(NAME_FIELD)).isEqualTo(name);
+    assertThat(created.getString(SOURCE_FIELD)).isEqualTo(SOURCE_LOCAL);
+    assertThat(created.getString(ID_FIELD)).isNotNull();
+  }
+
+  @Test
+  @DisplayName("should return a subject type collection matching a name query")
+  void shouldReturnRecordCollection_whenQueryingByName() {
+    var name = randomName();
+    var subjectType = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, SOURCE_LOCAL);
+    createSubjectType(subjectType);
+
+    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "?query=name==" + name));
+
+    assertThat(response.status()).isEqualTo(SC_OK);
+    var collection = response.jsonBody();
+    assertThat(collection.getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(1);
+    var found = collection.getJsonArray(SUBJECT_TYPES_FIELD).getJsonObject(0);
+    assertThat(found.getString(NAME_FIELD)).isEqualTo(name);
+  }
+
+  @Test
+  @DisplayName("should return a subject type by id")
+  void shouldReturnRecord_whenGettingById() {
+    var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
+    var id = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
+
+    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id));
+
+    assertThat(response.status()).isEqualTo(SC_OK);
+    assertThat(response.jsonBody().getString(ID_FIELD)).isEqualTo(id);
+  }
+
+  @Test
+  @DisplayName("should update a subject type when putting valid data")
+  void shouldUpdateSubjectType_whenPuttingValidData() {
+    var id = UUID.randomUUID().toString();
+    var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
+      .put(SOURCE_FIELD, SOURCE_LOCAL);
+    createSubjectType(subjectType);
+    var updatedName = randomName();
+
+    var response = await(
+      doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, subjectType.put(NAME_FIELD, updatedName)));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    var updated = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id)).jsonBody();
+    assertThat(updated.getString(NAME_FIELD)).isEqualTo(updatedName);
+  }
+
+  @Test
+  @DisplayName("should delete a subject type")
+  void shouldDeleteSubjectType_whenDeleting() {
+    var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
+    var id = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
+
+    var response = await(doDelete(client, ResourcePaths.SUBJECT_TYPES + "/" + id));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id)).status()).isEqualTo(SC_NOT_FOUND);
   }
 
   @Test
@@ -111,7 +181,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
-    assertThat(response.body().toString()).isEqualTo("SubjectType was not found");
+    assertThat(response.body()).hasToString("SubjectType was not found");
   }
 
   @Test
@@ -148,7 +218,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should fail to update a subject type when changing its source to consortium at a "
-               + "non-consortium tenant")
+    + "non-consortium tenant")
   void shouldFailToUpdateSubjectType_whenChangingSourceToConsortiumAtNonConsortiumTenant() {
     var id = UUID.randomUUID().toString();
     var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
@@ -167,7 +237,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update a subject type when changing its source to consortium at the consortium "
-               + "central tenant")
+    + "central tenant")
   void shouldUpdateSubjectType_whenChangingSourceToConsortiumAtConsortiumCentralTenant() {
     var id = UUID.randomUUID().toString();
     var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())

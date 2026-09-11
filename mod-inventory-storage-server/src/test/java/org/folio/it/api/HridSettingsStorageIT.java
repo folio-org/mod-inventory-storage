@@ -264,8 +264,8 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withHoldings(new HridSetting().withStartNumber(200L))
       .withItems(new HridSetting().withStartNumber(999_999_999_999L));
 
-    assertThatThrownBy(() -> await(hridManager.updateHridSettings(newHridSettings)))
-      .isInstanceOf(IllegalStateException.class);
+    var future = hridManager.updateHridSettings(newHridSettings);
+    assertThatThrownBy(() -> await(future)).isInstanceOf(IllegalStateException.class);
 
     var currentHridSettings = await(hridManager.getHridSettings());
     assertThat(currentHridSettings.getId()).isEqualTo(originalHridSettings.getId());
@@ -316,9 +316,9 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   @ParameterizedTest(name = "{index}: should reject {6}.{7} = {8}")
   @DisplayName("should return 422 when an hrid settings field is invalid")
   void shouldReturn422_whenHridSettingsFieldIsInvalid(String instancePrefix, long instanceStartNumber,
-                                                       String holdingPrefix, long holdingStartNumber,
-                                                       String itemPrefix, long itemStartNumber, String keyPart,
-                                                       String testField, String expectedValue) {
+                                                      String holdingPrefix, long holdingStartNumber,
+                                                      String itemPrefix, long itemStartNumber, String keyPart,
+                                                      String testField, String expectedValue) {
     var newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withPrefix(instancePrefix).withStartNumber(instanceStartNumber))
       .withHoldings(new HridSetting().withPrefix(holdingPrefix).withStartNumber(holdingStartNumber))

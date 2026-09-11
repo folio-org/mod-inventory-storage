@@ -49,8 +49,6 @@ import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.support.extension.EnableTenant;
-import org.folio.support.extension.Tenants;
 import org.folio.support.kafka.FakeKafkaConsumer;
 import org.folio.utility.S3Utility;
 import org.junit.jupiter.api.AfterAll;
@@ -61,7 +59,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@EnableTenant
 @ExtendWith(VertxExtension.class)
 public abstract class BaseIntegrationTest {
 
@@ -84,12 +81,13 @@ public abstract class BaseIntegrationTest {
 
   private static final List<String> MIGRATION_SEEDED_TABLES =
     List.of("hrid_settings", "instance_date_type", "subject_source", "subject_type", "settings");
+  private static final List<String> ALL_TENANTS =
+    List.of(TENANT_ID, CONSORTIUM_CENTRAL_TENANT, CONSORTIUM_MEMBER_TENANT);
 
   @RegisterExtension
   private static final SharedVerticleExtension SHARED_VERTICLE = new SharedVerticleExtension();
 
   private static int port;
-  private static List<String> enabledTenants;
 
   @SneakyThrows
   public static JsonObject pojo2JsonObject(Object entity) {
@@ -105,6 +103,9 @@ public abstract class BaseIntegrationTest {
   public void removeAllEvents() {
     KAFKA_CONSUMER.discardAllMessages();
     mockUserTenantsForNonConsortiumMember();
+    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
+    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
+    mockConsortiumTenants();
   }
 
   protected static URL vertxUrl() {
@@ -249,11 +250,10 @@ public abstract class BaseIntegrationTest {
   }
 
   @BeforeAll
-  static void beforeAll(Vertx vertx, @Tenants List<String> tenants) {
+  static void beforeAll(Vertx vertx) {
     port = SHARED_VERTICLE.shared.getPort();
     client = vertx.createHttpClient();
-    enabledTenants = tenants.isEmpty() ? List.of(TENANT_ID) : tenants;
-    for (String tenant : enabledTenants) {
+    for (String tenant : ALL_TENANTS) {
       SHARED_VERTICLE.shared.enableTenantIfAbsent(tenant, null, tenantAttributes());
     }
 
@@ -261,11 +261,11 @@ public abstract class BaseIntegrationTest {
   }
 
   /**
-   * Truncates every table in each tenant's schema this class enabled (see {@link #beforeAll})
-   * once its tests are done, except the tables a Liquibase migration seeds exactly once when the
-   * schema is first created ({@link #MIGRATION_SEEDED_TABLES}) — nothing re-seeds those
-   * afterwards, so wiping them would break any later class relying on their default rows (e.g.
-   * {@code hrid_settings}, which {@code HridManager} expects to always exist).
+   * Truncates every table in each of {@link #ALL_TENANTS}' schemas once this class's tests are
+   * done, except the tables a Liquibase migration seeds exactly once when the schema is first
+   * created ({@link #MIGRATION_SEEDED_TABLES}) — nothing re-seeds those afterwards, so wiping them
+   * would break any later class relying on their default rows (e.g. {@code hrid_settings}, which
+   * {@code HridManager} expects to always exist).
    *
    * <p>The shared verticle and its Postgres/Kafka containers now live for the whole JVM (see
    * {@link SharedVerticleExtension}), so a class can no longer rely on getting a freshly
@@ -276,7 +276,7 @@ public abstract class BaseIntegrationTest {
    */
   @AfterAll
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
-    for (String tenant : enabledTenants) {
+    for (String tenant : ALL_TENANTS) {
       truncateAllTables(tenant);
     }
   }

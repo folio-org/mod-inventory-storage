@@ -15,11 +15,9 @@ import io.vertx.core.json.JsonObject;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.services.domainevent.SettingEvent;
 import org.folio.support.ResourcePaths;
-import org.folio.support.extension.EnableTenant;
 import org.folio.support.messages.SettingEventMessageChecks;
 import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +26,6 @@ import org.junit.jupiter.api.Test;
  * {@code inventory.optimize-updates.enabled} setting: plain CRUD, validation, and how a
  * centrally-managed setting propagates from a consortium's central tenant to its members.
  */
-@EnableTenant(tenants = {TENANT_ID, CONSORTIUM_CENTRAL_TENANT, CONSORTIUM_MEMBER_TENANT})
 class SettingStorageIT extends BaseIntegrationTest {
 
   private static final String SETTING_KEY = "inventory.optimize-updates.enabled";
@@ -48,13 +45,6 @@ class SettingStorageIT extends BaseIntegrationTest {
   private static final boolean DEFAULT_SETTING_VALUE = false;
 
   private final SettingEventMessageChecks settingEventMessageChecks = new SettingEventMessageChecks(KAFKA_CONSUMER);
-
-  @BeforeEach
-  void mockConsortiumSetup() {
-    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
-    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
-    mockConsortiumTenants();
-  }
 
   @AfterEach
   void restoreSettingValue() {

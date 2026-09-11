@@ -72,6 +72,7 @@ public final class ResourcePaths {
   public static final String ITEM_DAMAGED_STATUSES = "/item-damaged-statuses";
   public static final String INSTANCE_NOTE_TYPES = "/instance-note-types";
   public static final String ITEM_NOTE_TYPES = "/item-note-types";
+  public static final String INSTANCE_DATE_TYPES = "/instance-date-types";
 
   private ResourcePaths() {
   }

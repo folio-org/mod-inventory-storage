@@ -14,7 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -129,7 +130,7 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
 
     // No domain-event assertion for instance1 here: see the note on updatedMessagePublished's
     // removal in verifyBulkUpdate below - the same gap applies to the partial-success case.
-    assertThat(getInstanceById(instanceIds.get(0)).getInteger("_version")).isEqualTo(2);
+    assertThat(getInstanceById(instanceIds.getFirst()).getInteger("_version")).isEqualTo(2);
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getString(ID_FIELD));
   }
 
@@ -155,8 +156,17 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
     assertInstancesNotUpdated(instanceIds, existingInstance1, existingInstance2);
   }
 
+  @Test
+  @DisplayName("should return 422 when the records file name is not specified")
+  void shouldReturn422_whenRecordsFileNameIsNotSpecified() {
+    var response =
+      await(doPost(client, ResourcePaths.INSTANCES_BULK, pojo2JsonObject(new BulkUpsertRequest())));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+  }
+
   private void assertErrorFilesContainForeignKeyViolations(String bulkFilePath, String expectedErrorRecordsFileName,
-                                                             String expectedErrorsFileName) throws IOException {
+                                                           String expectedErrorsFileName) throws IOException {
     var filesList = s3Client.list(BULK_FILE_TO_UPLOAD);
     assertThat(filesList).containsExactlyInAnyOrder(bulkFilePath, expectedErrorRecordsFileName,
       expectedErrorsFileName);
@@ -169,7 +179,7 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
   }
 
   private void assertInstancesNotUpdated(List<String> instanceIds, JsonObject existingInstance1,
-                                          JsonObject existingInstance2) {
+                                         JsonObject existingInstance2) {
     var instance1 = getInstanceById(instanceIds.get(0));
     var instance2 = getInstanceById(instanceIds.get(1));
     assertThat(instance1.getInteger("_version")).isEqualTo(1);
@@ -179,15 +189,6 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
 
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance1.getString(ID_FIELD));
     instanceMessageChecks.noUpdatedMessagePublished(existingInstance2.getString(ID_FIELD));
-  }
-
-  @Test
-  @DisplayName("should return 422 when the records file name is not specified")
-  void shouldReturn422_whenRecordsFileNameIsNotSpecified() {
-    var response =
-      await(doPost(client, ResourcePaths.INSTANCES_BULK, pojo2JsonObject(new BulkUpsertRequest())));
-
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
 
   /**
@@ -308,7 +309,7 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
 
   private List<JsonObject> getPrecedingSucceedingTitlesFor(String instanceId) {
     var query = "?query=" + SUCCEEDING_INSTANCE_ID_FIELD + "==" + instanceId
-      + "+or+" + PRECEDING_INSTANCE_ID_FIELD + "==" + instanceId;
+                + "+or+" + PRECEDING_INSTANCE_ID_FIELD + "==" + instanceId;
     var titles = await(doGet(client, ResourcePaths.PRECEDING_SUCCEEDING_TITLES + query))
       .jsonBody().getJsonArray("precedingSucceedingTitles");
     return titles.stream().map(JsonObject.class::cast).toList();
@@ -342,8 +343,8 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
 
   private static InstanceEventMessageChecks eventMessageChecks() {
     try {
-      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

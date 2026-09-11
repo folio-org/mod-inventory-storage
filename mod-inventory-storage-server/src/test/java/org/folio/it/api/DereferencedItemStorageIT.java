@@ -91,7 +91,7 @@ class DereferencedItemStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return an empty collection when no items are found")
   void shouldReturnEmptyCollection_whenNoItemsFound() {
-    assertThat(findByCql("barcode==647671342075").getTotalRecords()).isEqualTo(0);
+    assertThat(findByCql("barcode==647671342075").getTotalRecords()).isZero();
   }
 
   @Test

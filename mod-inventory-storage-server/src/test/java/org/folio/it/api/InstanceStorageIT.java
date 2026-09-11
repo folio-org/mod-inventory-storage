@@ -12,13 +12,25 @@ import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
+import static org.folio.support.ResourcePaths.CONTRIBUTOR_NAME_TYPES;
+import static org.folio.support.ResourcePaths.HOLDINGS;
+import static org.folio.support.ResourcePaths.IDENTIFIER_TYPES;
+import static org.folio.support.ResourcePaths.INSTANCES;
+import static org.folio.support.ResourcePaths.INSTANCES_RETRIEVE;
+import static org.folio.support.ResourcePaths.INSTANCES_SYNC;
+import static org.folio.support.ResourcePaths.INSTANCES_SYNC_UNSAFE;
+import static org.folio.support.ResourcePaths.INSTANCE_STATUSES;
+import static org.folio.support.ResourcePaths.ITEMS;
+import static org.folio.support.ResourcePaths.SUBJECT_SOURCES;
+import static org.folio.support.ResourcePaths.SUBJECT_TYPES;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +49,6 @@ import org.folio.rest.jaxrs.model.InstanceDates;
 import org.folio.rest.jaxrs.model.InstanceNote;
 import org.folio.rest.jaxrs.model.MarcJson;
 import org.folio.rest.jaxrs.model.Subject;
-import org.folio.support.ResourcePaths;
 import org.folio.support.messages.InstanceEventMessageChecks;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -100,9 +111,9 @@ class InstanceStorageIT extends BaseIntegrationTest {
     personalNameTypeId = createContributorNameType("Personal name");
     catalogedStatusId = createInstanceStatus("cat", "Cataloged");
     otherStatusId = createInstanceStatus("other", "Other");
-    subjectSourceId = await(doPost(client, ResourcePaths.SUBJECT_SOURCES,
+    subjectSourceId = await(doPost(client, SUBJECT_SOURCES,
       new JsonObject().put("name", "a subject source").put("source", "local"))).jsonBody().getString("id");
-    subjectTypeId = await(doPost(client, ResourcePaths.SUBJECT_TYPES,
+    subjectTypeId = await(doPost(client, SUBJECT_TYPES,
       new JsonObject().put("name", "a subject type").put("source", "local"))).jsonBody().getString("id");
   }
 
@@ -128,7 +139,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .put(DATES_KEY, pojo2JsonObject(dates))
       .put(SUBJECTS_KEY, new JsonArray().add(pojo2JsonObject(subject)));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
     assertThat(response.status()).isEqualTo(SC_CREATED);
 
     var instance = response.jsonBody();
@@ -146,19 +157,10 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertDatesAndSubjectStored(instance, subjectSourceId, subjectTypeId);
   }
 
-  private static void assertDatesAndSubjectStored(JsonObject instance, String subjectSourceId, String subjectTypeId) {
-    var storedDates = instance.getJsonObject(DATES_KEY).mapTo(InstanceDates.class);
-    assertThat(storedDates.getDate1()).isEqualTo("2023");
-    assertThat(storedDates.getDate2()).isEqualTo("2024");
-    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
-    assertThat(storedSubject.getSourceId()).isEqualTo(subjectSourceId);
-    assertThat(storedSubject.getTypeId()).isEqualTo(subjectTypeId);
-  }
-
   @Test
   @DisplayName("should create an instance without providing an id")
   void shouldCreateInstance_withoutProvidingId() {
-    var response = await(doPost(client, ResourcePaths.INSTANCES, smallAngryPlanet(null)));
+    var response = await(doPost(client, INSTANCES, smallAngryPlanet(null)));
     assertThat(response.status()).isEqualTo(SC_CREATED);
 
     var instance = response.jsonBody();
@@ -184,7 +186,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .put("contributors", new JsonArray().add(contributor(personalNameTypeId, "Chambers, Becky")))
       .put("instanceTypeId", instanceTypeId);
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.body().toString()).contains("must match");
@@ -195,7 +197,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldReturn400_whenStatisticalCodeIdIsInvalid() {
     var instanceToCreate = smallAngryPlanet(null).put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString()).contains(INVALID_TYPE_ERROR_MESSAGE);
@@ -223,7 +225,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .withValue("subject");
     var instanceToCreate = smallAngryPlanet(null).put(SUBJECTS_KEY, new JsonArray().add(pojo2JsonObject(subject)));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
   }
@@ -268,7 +270,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   @DisplayName("should return 404 when putting an instance at a location that does not exist")
   void shouldReturn404_whenPuttingInstanceAtNonExistingLocation() {
     var id = UUID.randomUUID();
-    var path = ResourcePaths.INSTANCES + "/" + id;
+    var path = INSTANCES + "/" + id;
 
     var response = await(doPut(client, path, nod(id)));
 
@@ -283,7 +285,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var instanceToCreate = smallAngryPlanet(id)
       .put("notes", new JsonArray().add(new InstanceNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1))));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
@@ -295,7 +297,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var instanceToCreate = smallAngryPlanet(id)
       .put("administrativeNotes", new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
@@ -377,7 +379,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldReturn422_whenInstanceHasAdditionalProperty() {
     var request = nod(UUID.randomUUID()).put("somethingAdditional", "foo");
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, request));
+    var response = await(doPost(client, INSTANCES, request));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
@@ -390,7 +392,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var request = nod(UUID.randomUUID());
     request.getJsonArray("identifiers").add(identifier(isbnTypeId, "5645678432576").put("somethingAdditional", "foo"));
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES, request));
+    var response = await(doPost(client, INSTANCES, request));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
@@ -409,7 +411,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .put("title", "A Long Way to a Small Angry Planet")
       .put("administrativeNotes", new JsonArray().add(adminNote));
 
-    var putResponse = await(doPut(client, ResourcePaths.INSTANCES + "/" + id, replacement));
+    var putResponse = await(doPut(client, INSTANCES + "/" + id, replacement));
     assertThat(putResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     var updatedInstance = getById(id);
@@ -429,7 +431,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldDeleteInstance() {
     var id = UUID.randomUUID();
     var createdInstance = createInstance(smallAngryPlanet(id));
-    var path = ResourcePaths.INSTANCES + "/" + id;
+    var path = INSTANCES + "/" + id;
 
     var deleteResponse = await(doDelete(client, path));
 
@@ -441,7 +443,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 404 when deleting an instance that does not exist")
   void shouldReturn404_whenDeletingInstanceThatDoesNotExist() {
-    var response = await(doDelete(client, ResourcePaths.INSTANCES + "/" + UUID.randomUUID()));
+    var response = await(doDelete(client, INSTANCES + "/" + UUID.randomUUID()));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
   }
@@ -458,7 +460,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     putMarcJson(id5, marcJson);
     final var instance5 = getById(id5).jsonBody();
 
-    var response = await(doDelete(client, ResourcePaths.INSTANCES + "?query=hrid==12*"));
+    var response = await(doDelete(client, INSTANCES + "?query=hrid==12*"));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
     assertExists(instance2);
@@ -476,7 +478,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 400 when deleting instances with an empty CQL query")
   void shouldReturn400_whenDeletingInstancesWithEmptyCql() {
-    var response = await(doDelete(client, ResourcePaths.INSTANCES + "?query="));
+    var response = await(doDelete(client, INSTANCES + "?query="));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString()).contains("empty");
@@ -505,7 +507,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     createInstance(smallAngryPlanet(firstInstanceId));
     createInstance(nod(secondInstanceId));
 
-    var responseBody = await(doGet(client, ResourcePaths.INSTANCES)).jsonBody();
+    var responseBody = await(doGet(client, INSTANCES)).jsonBody();
     var allInstances = responseBody.getJsonArray(INSTANCES_KEY);
 
     assertThat(allInstances).hasSize(2);
@@ -524,8 +526,8 @@ class InstanceStorageIT extends BaseIntegrationTest {
     createInstance(smallAngryPlanet(firstInstanceId));
     createInstance(nod(secondInstanceId));
 
-    var allInstancesResponse = await(doPost(client, ResourcePaths.INSTANCES_RETRIEVE, new JsonObject())).jsonBody();
-    var sortedResponse = await(doPost(client, ResourcePaths.INSTANCES_RETRIEVE,
+    var allInstancesResponse = await(doPost(client, INSTANCES_RETRIEVE, new JsonObject())).jsonBody();
+    var sortedResponse = await(doPost(client, INSTANCES_RETRIEVE,
       new JsonObject().put("query", "(cql.allRecords=1) sortBy title"))).jsonBody();
 
     var allInstances = allInstancesResponse.getJsonArray(INSTANCES_KEY);
@@ -578,8 +580,8 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldPageThroughAllInstances() {
     create5instances();
 
-    var firstPage = await(doGet(client, ResourcePaths.INSTANCES + "?limit=3")).jsonBody();
-    var secondPage = await(doGet(client, ResourcePaths.INSTANCES + "?limit=3&offset=3")).jsonBody();
+    var firstPage = await(doGet(client, INSTANCES + "?limit=3")).jsonBody();
+    var secondPage = await(doGet(client, INSTANCES + "?limit=3&offset=3")).jsonBody();
 
     assertThat(firstPage.getJsonArray(INSTANCES_KEY)).hasSize(3);
     assertThat(firstPage.getInteger(TOTAL_RECORDS_KEY)).isEqualTo(5);
@@ -592,7 +594,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldReturnNoResults_forLargePageOffsetAndLimit() {
     create5instances();
 
-    var page = await(doGet(client, ResourcePaths.INSTANCES + "?limit=5000&offset=5000")).jsonBody();
+    var page = await(doGet(client, INSTANCES + "?limit=5000&offset=5000")).jsonBody();
 
     assertThat(page.getJsonArray(INSTANCES_KEY)).isEmpty();
   }
@@ -650,7 +652,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(getSourceRecordFormat(id)).isEqualTo("MARC-JSON");
 
     var deleteResponse =
-      await(doDelete(client, ResourcePaths.INSTANCES + "/" + id + "/source-record/marc-json"));
+      await(doDelete(client, INSTANCES + "/" + id + "/source-record/marc-json"));
     assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
     assertThat(getSourceRecordFormat(id)).isNull();
     assertMarcJsonNotFound(id);
@@ -666,7 +668,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     putMarcJson(id, marcJson);
     assertThat(getSourceRecordFormat(id)).isEqualTo("MARC-JSON");
 
-    var deleteResponse = await(doDelete(client, ResourcePaths.INSTANCES + "/" + id + "/source-record"));
+    var deleteResponse = await(doDelete(client, INSTANCES + "/" + id + "/source-record"));
     assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
     assertThat(getSourceRecordFormat(id)).isNull();
     assertMarcJsonNotFound(id);
@@ -679,7 +681,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     createInstance(smallAngryPlanet(id));
     putMarcJson(id, marcJson);
 
-    var deleteResponse = await(doDelete(client, ResourcePaths.INSTANCES + "/" + id));
+    var deleteResponse = await(doDelete(client, INSTANCES + "/" + id));
     assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     assertMarcJsonNotFound(id);
@@ -690,7 +692,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldReturn404_whenCreatingSourceRecordWithoutInstance() {
     var id = UUID.randomUUID();
 
-    var response = await(doPut(client, ResourcePaths.INSTANCES + "/" + id + "/source-record/marc-json",
+    var response = await(doPut(client, INSTANCES + "/" + id + "/source-record/marc-json",
       JsonObject.mapFrom(marcJson)));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
@@ -703,10 +705,10 @@ class InstanceStorageIT extends BaseIntegrationTest {
     createInstance(nod(UUID.randomUUID()));
     createInstance(uprooted(UUID.randomUUID()));
 
-    var deleteResponse = await(doDelete(client, ResourcePaths.INSTANCES + "?query=cql.allRecords=1"));
+    var deleteResponse = await(doDelete(client, INSTANCES + "?query=cql.allRecords=1"));
     assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    var responseBody = await(doGet(client, ResourcePaths.INSTANCES)).jsonBody();
+    var responseBody = await(doGet(client, INSTANCES)).jsonBody();
     assertThat(responseBody.getJsonArray(INSTANCES_KEY)).isEmpty();
     assertThat(responseBody.getInteger(TOTAL_RECORDS_KEY)).isZero();
 
@@ -716,28 +718,28 @@ class InstanceStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 400 when the tenant is missing when creating an instance")
   void shouldReturn400_whenTenantMissingForCreatingInstance() {
-    var response = await(doPost(client, ResourcePaths.INSTANCES, null, nod(UUID.randomUUID())));
+    var response = await(doPost(client, INSTANCES, null, nod(UUID.randomUUID())));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
   @DisplayName("should return 400 when the tenant is missing when getting an instance")
   void shouldReturn400_whenTenantMissingForGettingInstance() {
-    var response = await(doGet(client, ResourcePaths.INSTANCES + "/" + UUID.randomUUID(), null));
+    var response = await(doGet(client, INSTANCES + "/" + UUID.randomUUID(), null));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
   @DisplayName("should return 400 when the tenant is missing when getting all instances")
   void shouldReturn400_whenTenantMissingForGettingAllInstances() {
-    var response = await(doGet(client, ResourcePaths.INSTANCES, null));
+    var response = await(doGet(client, INSTANCES, null));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
@@ -829,7 +831,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldGiveInstancesCreatedInSynchronousBatch_metadata() {
     var instanceCollection = requestForMultipleInstances(2);
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES_SYNC, instanceCollection));
+    var response = await(doPost(client, INSTANCES_SYNC, instanceCollection));
     assertThat(response.status()).isEqualTo(SC_CREATED);
 
     instanceCollection.getJsonArray(INSTANCES_KEY).stream().map(JsonObject.class::cast).forEach(instance -> {
@@ -850,7 +852,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .put(SUBJECTS_KEY, new JsonArray().add(pojo2JsonObject(subject)));
     instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES_SYNC, instanceCollection));
+    var response = await(doPost(client, INSTANCES_SYNC, instanceCollection));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
@@ -864,7 +866,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var instanceToCreate = smallAngryPlanet(UUID.randomUUID()).put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
     instanceCollection.getJsonArray(INSTANCES_KEY).add(instanceToCreate);
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES_SYNC, instanceCollection));
+    var response = await(doPost(client, INSTANCES_SYNC, instanceCollection));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString()).contains(INVALID_TYPE_ERROR_MESSAGE);
@@ -883,33 +885,19 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
       .contains("Unrecognized field \"invalidPropertyName\"");
     instancesArray.forEach(instance ->
-      assertGetNotFound(ResourcePaths.INSTANCES + "/" + ((JsonObject) instance).getString("id")));
+      assertGetNotFound(INSTANCES + "/" + ((JsonObject) instance).getString("id")));
   }
 
   @Test
   @DisplayName("should return 422 when a synchronous batch reuses an existing id without upsert")
   void shouldReturn422_whenSynchronousBatchReusesExistingIdWithoutUpsert() {
-    assertReturns422ForExistingId(ResourcePaths.INSTANCES_SYNC);
+    assertReturns422ForExistingId(INSTANCES_SYNC);
   }
 
   @Test
   @DisplayName("should return 422 when a synchronous batch reuses an existing id with upsert=false")
   void shouldReturn422_whenSynchronousBatchReusesExistingIdWithUpsertFalse() {
-    assertReturns422ForExistingId(ResourcePaths.INSTANCES_SYNC + "?upsert=false");
-  }
-
-  private void assertReturns422ForExistingId(String path) {
-    var duplicateId = UUID.randomUUID();
-    var instancesArray = new JsonArray()
-      .add(uprooted(UUID.randomUUID())).add(smallAngryPlanet(duplicateId)).add(temeraire(UUID.randomUUID()));
-    createInstance(instancesArray.getJsonObject(1));
-
-    var response = await(doPost(client, path, new JsonObject().put(INSTANCES_KEY, instancesArray)));
-
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
-    assertGetNotFound(ResourcePaths.INSTANCES + "/" + instancesArray.getJsonObject(0).getString("id"));
-    assertExists(instancesArray.getJsonObject(1));
-    assertGetNotFound(ResourcePaths.INSTANCES + "/" + instancesArray.getJsonObject(2).getString("id"));
+    assertReturns422ForExistingId(INSTANCES_SYNC + "?upsert=false");
   }
 
   @Test
@@ -922,7 +910,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var secondInstanceToCreate = temeraire(UUID.randomUUID());
     var instancesArray = new JsonArray().add(firstInstanceToCreate).add(instanceToUpdate).add(secondInstanceToCreate);
 
-    var response = await(doPost(client, ResourcePaths.INSTANCES_SYNC + "?upsert=true",
+    var response = await(doPost(client, INSTANCES_SYNC + "?upsert=true",
       new JsonObject().put(INSTANCES_KEY, instancesArray)));
 
     assertThat(response.status()).isEqualTo(SC_CREATED);
@@ -941,27 +929,13 @@ class InstanceStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should create an instance without an id via a synchronous batch with upsert=true")
   void shouldCreateInstanceWithoutId_viaSynchronousBatchWithUpsertTrue() {
-    assertCreatesInstanceWithoutId(ResourcePaths.INSTANCES_SYNC + "?upsert=true");
+    assertCreatesInstanceWithoutId(INSTANCES_SYNC + "?upsert=true");
   }
 
   @Test
   @DisplayName("should create an instance without an id via a synchronous batch without upsert")
   void shouldCreateInstanceWithoutId_viaSynchronousBatchWithoutUpsert() {
-    assertCreatesInstanceWithoutId(ResourcePaths.INSTANCES_SYNC);
-  }
-
-  private void assertCreatesInstanceWithoutId(String path) {
-    var instanceRecord = new JsonObject()
-      .put("source", "MARC").put("title", "Test-Instance").put("instanceTypeId", instanceTypeId).put("_version", 1);
-
-    var response = await(
-      doPost(client, path, new JsonObject().put(INSTANCES_KEY, new JsonArray().add(instanceRecord))));
-    assertThat(response.status()).isEqualTo(SC_CREATED);
-
-    var found = searchForInstances("title=Test-Instance").getJsonArray(INSTANCES_KEY).getJsonObject(0);
-    assertThat(found.getString("id")).isNotNull();
-    assertThat(found.getString("title")).isEqualTo("Test-Instance");
-    instanceMessageChecks.createdMessagePublished(getById(found.getString("id")).jsonBody());
+    assertCreatesInstanceWithoutId(INSTANCES_SYNC);
   }
 
   @Test
@@ -975,7 +949,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     instancesArray.forEach(instance ->
-      assertGetNotFound(ResourcePaths.INSTANCES + "/" + ((JsonObject) instance).getString("id")));
+      assertGetNotFound(INSTANCES + "/" + ((JsonObject) instance).getString("id")));
   }
 
   @Test
@@ -1024,10 +998,10 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(getById(id).jsonBody().getString("hrid")).isEqualTo("in00000000001");
 
     var duplicate = nod(UUID.randomUUID()).put("hrid", "in00000000001");
-    var response = await(doPost(client, ResourcePaths.INSTANCES, duplicate));
+    var response = await(doPost(client, INSTANCES, duplicate));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("HRID value already exists in table instance: in00000000001");
+    assertThat(response.body()).hasToString("HRID value already exists in table instance: in00000000001");
   }
 
   @Test
@@ -1042,7 +1016,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
 
     var instanceToFail = nod(UUID.randomUUID());
     instanceToFail.remove("hrid");
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToFail));
+    var response = await(doPost(client, INSTANCES, instanceToFail));
 
     assertThat(response.status()).isEqualTo(SC_INTERNAL_SERVER_ERROR);
     assertThat(response.body().toString()).contains("hrid_instances_seq");
@@ -1060,11 +1034,11 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(instance.getString("hrid")).isEqualTo("in00000000001");
     instance.put("hrid", "testHRID");
 
-    var response = await(doPut(client, ResourcePaths.INSTANCES + "/" + id, instance));
+    var response = await(doPut(client, INSTANCES + "/" + id, instance));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString())
-      .isEqualTo("The hrid field cannot be changed: new=testHRID, old=in00000000001");
+    assertThat(response.body())
+      .hasToString("The hrid field cannot be changed: new=testHRID, old=in00000000001");
   }
 
   @Test
@@ -1088,14 +1062,14 @@ class InstanceStorageIT extends BaseIntegrationTest {
     instanceRequest.remove("hrid");
     setInstanceSequence(1000L);
 
-    var firstAllocation = await(doPost(client, ResourcePaths.INSTANCES, instanceRequest)).jsonBody();
+    var firstAllocation = await(doPost(client, INSTANCES, instanceRequest)).jsonBody();
     assertThat(firstAllocation.getString("hrid")).isEqualTo("in00000001000");
 
     setInstanceSequence(1000L);
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceRequest));
+    var response = await(doPost(client, INSTANCES, instanceRequest));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("HRID value already exists in table instance: in00000001000");
+    assertThat(response.body()).hasToString("HRID value already exists in table instance: in00000001000");
   }
 
   @Test
@@ -1110,10 +1084,10 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(instance.getString("hrid")).isEqualTo("in00000000001");
     instance.remove("hrid");
 
-    var response = await(doPut(client, ResourcePaths.INSTANCES + "/" + id, instance));
+    var response = await(doPut(client, INSTANCES + "/" + id, instance));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("The hrid field cannot be changed: new=null, old=in00000000001");
+    assertThat(response.body()).hasToString("The hrid field cannot be changed: new=null, old=in00000000001");
   }
 
   @Test
@@ -1153,7 +1127,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(getById(ids[3]).jsonBody().getString("hrid")).isEqualTo("bar");
     assertThat(getById(ids[4]).jsonBody().getString("hrid")).isEqualTo("in00000000003");
 
-    var nextHrid = await(doPost(client, ResourcePaths.INSTANCES, uprooted(UUID.randomUUID())))
+    var nextHrid = await(doPost(client, INSTANCES, uprooted(UUID.randomUUID())))
       .jsonBody().getString("hrid");
     assertThat(nextHrid).isEqualTo("in00000000004");
   }
@@ -1198,11 +1172,11 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertThat(getById(id).jsonBody().getString("matchKey")).isEqualTo("match_key");
 
     var duplicate = nod(UUID.randomUUID()).put("matchKey", "match_key");
-    var response = await(doPost(client, ResourcePaths.INSTANCES, duplicate));
+    var response = await(doPost(client, INSTANCES, duplicate));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already "
-      + "exists in table instance: match_key");
+    assertThat(response.body()).hasToString("lower(f_unaccent(jsonb ->> 'matchKey'::text)) value already "
+                                            + "exists in table instance: match_key");
   }
 
   @Test
@@ -1286,7 +1260,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
 
     var patchJson = new JsonObject().put("id", newId).put("_version", 1).put("title", "New Title");
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
@@ -1297,7 +1271,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var newId = createInstance(smallAngryPlanet(UUID.randomUUID())).getString("id");
     var patchJson = new JsonObject().put("id", newId).put("_version", 1).put("hrid", "12345");
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
   }
@@ -1309,7 +1283,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var existingHrid = getById(newId).jsonBody().getString("hrid");
     var patchJson = new JsonObject().put("id", newId).put("_version", 1).put("hrid", existingHrid);
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
@@ -1319,11 +1293,11 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldReturn409_whenPatchingInstanceWithStaleVersion() {
     var newId = createInstance(smallAngryPlanet(UUID.randomUUID())).getString("id");
     var firstPatch = new JsonObject().put("id", newId).put("_version", 1).put("title", "new title");
-    assertThat(await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, firstPatch)).status())
+    assertThat(await(doPatch(client, INSTANCES + "/" + newId, firstPatch)).status())
       .isEqualTo(SC_NO_CONTENT);
 
     var stalePatch = new JsonObject().put("id", newId).put("_version", 1).put("title", "new title");
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, stalePatch));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, stalePatch));
 
     assertThat(response.status()).isEqualTo(SC_CONFLICT);
   }
@@ -1334,7 +1308,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var id = UUID.randomUUID();
     var patchJson = new JsonObject().put("id", id.toString()).put("_version", 1).put("title", "new title");
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + id, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + id, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
   }
@@ -1346,7 +1320,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var patchJson = new JsonObject()
       .put("administrativeNotes", new JsonArray().add(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1)));
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
@@ -1360,12 +1334,10 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .withNote(StringUtils.repeat("a", MAX_NOTE_LENGTH + 1));
     var patchJson = new JsonObject().put("notes", new JsonArray().add(pojo2JsonObject(longNote)));
 
-    var response = await(doPatch(client, ResourcePaths.INSTANCES + "/" + newId, patchJson));
+    var response = await(doPatch(client, INSTANCES + "/" + newId, patchJson));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
-
-  // -- search / CQL --------------------------------------------------------------------------
 
   @Test
   @DisplayName("should search for instances by title")
@@ -1384,6 +1356,8 @@ class InstanceStorageIT extends BaseIntegrationTest {
   void shouldSearchForInstances_byTitleAdj() {
     canSort("title adj \"Upro*\"", "Uprooted");
   }
+
+  // -- search / CQL --------------------------------------------------------------------------
 
   @Test
   @DisplayName("should search for instances using a query similar to the UI look-ahead search")
@@ -1597,9 +1571,46 @@ class InstanceStorageIT extends BaseIntegrationTest {
     assertCrossTableQuery("title=cql.allRecords=1 sortBy title", 3, "TEST1");
     assertCrossTableQuery("holdingsRecords.permanentLocationId=" + loc2 + " sortBy title", 2, "TEST2");
     assertCrossTableQuery("title=cql.allRecords=1 and holdingsRecords.permanentLocationId="
-      + loc2 + " sortby title", 2, null);
+                          + loc2 + " sortby title", 2, null);
     assertCrossTableQuery("title=cql.allRecords=1 and holdingsRecords.permanentLocationId=abc* sortby"
-      + " holdingsRecords.permanentLocationId", 0, null);
+                          + " holdingsRecords.permanentLocationId", 0, null);
+  }
+
+  private static void assertDatesAndSubjectStored(JsonObject instance, String subjectSourceId, String subjectTypeId) {
+    var storedDates = instance.getJsonObject(DATES_KEY).mapTo(InstanceDates.class);
+    assertThat(storedDates.getDate1()).isEqualTo("2023");
+    assertThat(storedDates.getDate2()).isEqualTo("2024");
+    var storedSubject = instance.getJsonArray(SUBJECTS_KEY).getJsonObject(0).mapTo(Subject.class);
+    assertThat(storedSubject.getSourceId()).isEqualTo(subjectSourceId);
+    assertThat(storedSubject.getTypeId()).isEqualTo(subjectTypeId);
+  }
+
+  private void assertReturns422ForExistingId(String path) {
+    var duplicateId = UUID.randomUUID();
+    var instancesArray = new JsonArray()
+      .add(uprooted(UUID.randomUUID())).add(smallAngryPlanet(duplicateId)).add(temeraire(UUID.randomUUID()));
+    createInstance(instancesArray.getJsonObject(1));
+
+    var response = await(doPost(client, path, new JsonObject().put(INSTANCES_KEY, instancesArray)));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertGetNotFound(INSTANCES + "/" + instancesArray.getJsonObject(0).getString("id"));
+    assertExists(instancesArray.getJsonObject(1));
+    assertGetNotFound(INSTANCES + "/" + instancesArray.getJsonObject(2).getString("id"));
+  }
+
+  private void assertCreatesInstanceWithoutId(String path) {
+    var instanceRecord = new JsonObject()
+      .put("source", "MARC").put("title", "Test-Instance").put("instanceTypeId", instanceTypeId).put("_version", 1);
+
+    var response = await(
+      doPost(client, path, new JsonObject().put(INSTANCES_KEY, new JsonArray().add(instanceRecord))));
+    assertThat(response.status()).isEqualTo(SC_CREATED);
+
+    var found = searchForInstances("title=Test-Instance").getJsonArray(INSTANCES_KEY).getJsonObject(0);
+    assertThat(found.getString("id")).isNotNull();
+    assertThat(found.getString("title")).isEqualTo("Test-Instance");
+    instanceMessageChecks.createdMessagePublished(getById(found.getString("id")).jsonBody());
   }
 
   private void assertCrossTableQuery(String cql, int expectedCount, String expectedFirstSource) {
@@ -1618,18 +1629,17 @@ class InstanceStorageIT extends BaseIntegrationTest {
     if (id != null) {
       request.put("id", id);
     }
-    var response = await(doPost(client, ResourcePaths.IDENTIFIER_TYPES, request));
+    var response = await(doPost(client, IDENTIFIER_TYPES, request));
     return response.jsonBody().getString("id");
   }
 
   private static String createContributorNameType(String name) {
-    var response =
-      await(doPost(client, ResourcePaths.CONTRIBUTOR_NAME_TYPES, new JsonObject().put("name", name)));
+    var response = await(doPost(client, CONTRIBUTOR_NAME_TYPES, new JsonObject().put("name", name)));
     return response.jsonBody().getString("id");
   }
 
   private static String createInstanceStatus(String code, String name) {
-    var response = await(doPost(client, ResourcePaths.INSTANCE_STATUSES,
+    var response = await(doPost(client, INSTANCE_STATUSES,
       new JsonObject().put("code", code).put("name", name).put("source", "folio")));
     return response.jsonBody().getString("id");
   }
@@ -1647,7 +1657,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   }
 
   private static JsonObject instanceRequest(UUID id, String source, String title, JsonArray identifiers,
-                                             JsonArray contributors, JsonArray tags) {
+                                            JsonArray contributors, JsonArray tags) {
     var instance = new JsonObject();
     if (id != null) {
       instance.put("id", id.toString());
@@ -1716,17 +1726,17 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var request = new org.folio.support.builders.HoldingRequestBuilder()
       .withId(holdingId).withSource(UUID.fromString(sourceId))
       .withPermanentLocation(UUID.fromString(createLocationId())).forInstance(instanceId).create();
-    var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
+    var response = await(doPost(client, HOLDINGS, request));
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
 
   private static void createHoldingsWithLocationAndItem(UUID holdingId, UUID instanceId, String locationId,
-                                                         String barcode) {
+                                                        String barcode) {
     var sourceId = HoldingsStorageFixtures.createHoldingsRecordsSource(client);
     var request = new org.folio.support.builders.HoldingRequestBuilder()
       .withId(holdingId).withSource(UUID.fromString(sourceId))
       .withPermanentLocation(UUID.fromString(locationId)).forInstance(instanceId).create();
-    var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
+    var response = await(doPost(client, HOLDINGS, request));
     assertThat(response.status()).isEqualTo(SC_CREATED);
     createItemWithBarcode(holdingId, barcode);
   }
@@ -1737,7 +1747,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
     var request = new org.folio.support.builders.ItemRequestBuilder()
       .forHolding(holdingId).withBarcode(barcode)
       .withPermanentLoanType(UUID.fromString(loanTypeId)).withMaterialType(UUID.fromString(materialTypeId)).create();
-    var response = await(doPost(client, ResourcePaths.ITEMS, request));
+    var response = await(doPost(client, ITEMS, request));
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
 
@@ -1748,28 +1758,28 @@ class InstanceStorageIT extends BaseIntegrationTest {
       .put("instanceId", instanceId.toString())
       .put("sourceId", sourceId)
       .put("permanentLocationId", locationId);
-    var response = await(doPost(client, ResourcePaths.HOLDINGS, holding));
+    var response = await(doPost(client, HOLDINGS, holding));
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
 
   private static JsonObject createInstance(JsonObject instanceToCreate) {
-    var response = await(doPost(client, ResourcePaths.INSTANCES, instanceToCreate));
+    var response = await(doPost(client, INSTANCES, instanceToCreate));
     assertThat(response.status()).isEqualTo(SC_CREATED);
     return response.jsonBody();
   }
 
   private static TestResponse syncBatch(JsonArray instancesArray) {
-    return await(doPost(client, ResourcePaths.INSTANCES_SYNC, new JsonObject().put(INSTANCES_KEY, instancesArray)));
+    return await(doPost(client, INSTANCES_SYNC, new JsonObject().put(INSTANCES_KEY, instancesArray)));
   }
 
   private static TestResponse syncBatchUnsafe(JsonArray instancesArray) {
-    return await(doPost(client, ResourcePaths.INSTANCES_SYNC_UNSAFE,
+    return await(doPost(client, INSTANCES_SYNC_UNSAFE,
       new JsonObject().put(INSTANCES_KEY, instancesArray)));
   }
 
   private static TestResponse update(JsonObject instance) {
     var id = instance.getString("id");
-    return await(doPut(client, ResourcePaths.INSTANCES + "/" + id, instance));
+    return await(doPut(client, INSTANCES + "/" + id, instance));
   }
 
   private static JsonObject updateInstance(JsonObject instance) {
@@ -1783,7 +1793,7 @@ class InstanceStorageIT extends BaseIntegrationTest {
   }
 
   private static TestResponse getById(String id) {
-    return await(doGet(client, ResourcePaths.INSTANCES + "/" + id));
+    return await(doGet(client, INSTANCES + "/" + id));
   }
 
   private static void assertGetNotFound(String path) {
@@ -1797,11 +1807,11 @@ class InstanceStorageIT extends BaseIntegrationTest {
   }
 
   private static void assertNotExists(JsonObject instance) {
-    assertGetNotFound(ResourcePaths.INSTANCES + "/" + instance.getString("id"));
+    assertGetNotFound(INSTANCES + "/" + instance.getString("id"));
   }
 
   private static JsonObject searchForInstances(String cql) {
-    var response = await(doGet(client, ResourcePaths.INSTANCES + "?query=" + urlEncode(cql)));
+    var response = await(doGet(client, INSTANCES + "?query=" + urlEncode(cql)));
     assertThat(response.status()).isEqualTo(SC_OK);
     return response.jsonBody();
   }
@@ -1863,17 +1873,17 @@ class InstanceStorageIT extends BaseIntegrationTest {
     // JsonObject.mapFrom (not pojo2JsonObject) - RMB's ObjectMapperTool has no module for Vert.x's
     // JsonObject/JsonArray, so it would serialize the nested JsonObject fields via their "map"
     // getter instead of as plain JSON objects.
-    var response = await(doPut(client, ResourcePaths.INSTANCES + "/" + id + "/source-record/marc-json",
+    var response = await(doPut(client, INSTANCES + "/" + id + "/source-record/marc-json",
       JsonObject.mapFrom(marcJson)));
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   private static TestResponse getMarcJson(UUID id) {
-    return await(doGet(client, ResourcePaths.INSTANCES + "/" + id + "/source-record/marc-json"));
+    return await(doGet(client, INSTANCES + "/" + id + "/source-record/marc-json"));
   }
 
   private static void assertMarcJsonNotFound(UUID id) {
-    assertGetNotFound(ResourcePaths.INSTANCES + "/" + id + "/source-record/marc-json");
+    assertGetNotFound(INSTANCES + "/" + id + "/source-record/marc-json");
   }
 
   private static String getSourceRecordFormat(UUID id) {
@@ -1890,8 +1900,8 @@ class InstanceStorageIT extends BaseIntegrationTest {
 
   private static InstanceEventMessageChecks eventMessageChecks() {
     try {
-      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new InstanceEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

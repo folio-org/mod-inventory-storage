@@ -188,10 +188,11 @@ class ItemPatchIT extends BaseIntegrationTest {
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var errors = response.jsonBody().getJsonArray("errors");
-    assertThat(errors).hasSize(2);
-    assertThat(errors).containsExactlyInAnyOrder(
-      requiredFieldsError(itemId1, List.of("materialTypeId", "permanentLoanTypeId", "status.name")),
-      requiredFieldsError(itemId2, List.of("holdingsRecordId", STATUS_KEY)));
+    assertThat(errors)
+      .hasSize(2)
+      .containsExactlyInAnyOrder(
+        requiredFieldsError(itemId1, List.of("materialTypeId", "permanentLoanTypeId", "status.name")),
+        requiredFieldsError(itemId2, List.of("holdingsRecordId", STATUS_KEY)));
   }
 
   @Test

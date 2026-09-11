@@ -40,7 +40,6 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.support.ResourcePaths;
-import org.folio.support.extension.EnableTenant;
 import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -60,7 +59,6 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
  * on end-to-end domain-event timing from a plain POST/PUT/DELETE) to exercise the verticle's own
  * consumption logic in isolation, exactly like the legacy test this migrates.
  */
-@EnableTenant(tenants = {CONSORTIUM_CENTRAL_TENANT, CONSORTIUM_MEMBER_TENANT})
 @ExtendWith(SystemStubsExtension.class)
 class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
 
@@ -110,9 +108,6 @@ class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
   @BeforeEach
   void setUp() {
     servicePointId = UUID.randomUUID().toString();
-    mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
-    mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
-    mockConsortiumTenants();
   }
 
   @AfterEach

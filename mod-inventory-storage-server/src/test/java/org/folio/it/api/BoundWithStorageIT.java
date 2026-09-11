@@ -13,16 +13,19 @@ import static org.folio.it.HoldingsStorageFixtures.createMaterialType;
 import static org.folio.it.InstanceStorageFixtures.createInstance;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.it.LocationStorageFixtures.createLocation;
+import static org.folio.support.ResourcePaths.BOUND_WITHS;
+import static org.folio.support.ResourcePaths.BOUND_WITH_PARTS;
+import static org.folio.support.ResourcePaths.ITEMS;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.support.ResourcePaths;
 import org.folio.support.messages.BoundWithEventMessageChecks;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,8 +76,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var secondPart = createBoundWithPart(anotherHoldingId, itemId);
     final var thirdPart = createBoundWithPart(thirdHoldingId, itemId);
 
-    var getById =
-      await(doGet(client, ResourcePaths.BOUND_WITH_PARTS + "/" + secondPart.getString(ID_FIELD)));
+    var getById = await(doGet(client, BOUND_WITH_PARTS + "/" + secondPart.getString(ID_FIELD)));
     var allPartsForItem = getPartsByItemId(itemId);
 
     assertThat(getById.status()).isEqualTo(SC_OK);
@@ -96,7 +98,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     createBoundWithPart(holding1Id, itemId);
     createBoundWithPart(holding2Id, itemId);
 
-    var response = await(doDelete(client, ResourcePaths.ITEMS + "/" + itemId));
+    var response = await(doDelete(client, ITEMS + "/" + itemId));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
   }
@@ -119,14 +121,14 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var instance3Id = createInstance(client, "Instance 3", instanceTypeId);
     var holding3Id = createHolding(client, instance3Id, locationId);
     var partTwoId = partTwoCreated.getString(ID_FIELD);
-    var replaceResponse = await(doPut(client, ResourcePaths.BOUND_WITH_PARTS + "/" + partTwoId,
+    var replaceResponse = await(doPut(client, BOUND_WITH_PARTS + "/" + partTwoId,
       createBoundWithPartJson(holding3Id, itemId)));
     assertThat(replaceResponse.status()).isEqualTo(SC_NO_CONTENT);
 
-    final var partTwoUpdated = await(doGet(client, ResourcePaths.BOUND_WITH_PARTS + "/" + partTwoId));
+    final var partTwoUpdated = await(doGet(client, BOUND_WITH_PARTS + "/" + partTwoId));
 
     assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(2);
-    assertThat(getPartsByHoldingsRecordId(holding2Id).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByHoldingsRecordId(holding2Id).getInteger(TOTAL_RECORDS_FIELD)).isZero();
     assertThat(getPartsByHoldingsRecordId(holding3Id).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(1);
 
     boundWithEventMessageChecks.createdMessagePublished(partOneCreated, instance1Id);
@@ -166,7 +168,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var response = putCompositeBoundWith(createBoundWithCompositeJson(itemId, List.of()));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
   }
 
   @Test
@@ -182,7 +184,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var response = putCompositeBoundWith(createBoundWithCompositeJson(itemId, List.of(holding1Id)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
   }
 
   @Test
@@ -192,12 +194,12 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var holding1Id = createHolding(client, instance1Id, locationId);
     var itemId = createItem(client, holding1Id, materialTypeId, loanTypeId);
 
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
 
     var response = putCompositeBoundWith(createBoundWithCompositeJson(itemId, List.of(holding1Id)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
   }
 
   @Test
@@ -207,12 +209,12 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var holding1Id = createHolding(client, instance1Id, locationId);
     var itemId = createItem(client, holding1Id, materialTypeId, loanTypeId);
 
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
 
     var response = putCompositeBoundWith(createBoundWithCompositeJson(itemId, List.of()));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
   }
 
   @Test
@@ -233,7 +235,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     assertThat(itemError.getMessage()).isEqualTo("Item not found.");
     assertThat(itemError.getParameters().getFirst().getKey()).isEqualTo(ITEM_ID_FIELD);
     assertThat(itemError.getParameters().getFirst().getValue()).isEqualTo(nonExistentItemId);
-    assertThat(getPartsByItemId(nonExistentItemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(nonExistentItemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
 
     var nonExistentHoldingsId = UUID.randomUUID().toString();
     var responseForNonExistentHoldings = putCompositeBoundWith(createBoundWithCompositeJson(
@@ -244,7 +246,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     assertThat(holdingsError.getMessage()).isEqualTo("Holdings record not found.");
     assertThat(holdingsError.getParameters().getFirst().getKey()).isEqualTo(HOLDINGS_RECORD_ID_FIELD);
     assertThat(holdingsError.getParameters().getFirst().getValue()).isEqualTo(nonExistentHoldingsId);
-    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isEqualTo(0);
+    assertThat(getPartsByItemId(itemId).getInteger(TOTAL_RECORDS_FIELD)).isZero();
   }
 
   /**
@@ -252,7 +254,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
    * takes no id on the path - the request body identifies the item and its full set of parts.
    */
   private BaseIntegrationTest.TestResponse putCompositeBoundWith(JsonObject body) {
-    return await(doPut(client, ResourcePaths.BOUND_WITHS, body));
+    return await(doPut(client, BOUND_WITHS, body));
   }
 
   private void putCompositeBoundWithAndVerify(String itemId, List<String> holdingsRecordIds, int expectedParts) {
@@ -264,19 +266,19 @@ class BoundWithStorageIT extends BaseIntegrationTest {
 
   private JsonObject getPartsByItemId(String itemId) {
     return await(
-        doGet(client, ResourcePaths.BOUND_WITH_PARTS + "?query=" + ITEM_ID_FIELD + "==" + itemId))
+      doGet(client, BOUND_WITH_PARTS + "?query=" + ITEM_ID_FIELD + "==" + itemId))
       .jsonBody();
   }
 
   private JsonObject getPartsByHoldingsRecordId(String holdingsRecordId) {
     return await(doGet(client,
-        ResourcePaths.BOUND_WITH_PARTS + "?query=" + HOLDINGS_RECORD_ID_FIELD + "==" + holdingsRecordId))
+      BOUND_WITH_PARTS + "?query=" + HOLDINGS_RECORD_ID_FIELD + "==" + holdingsRecordId))
       .jsonBody();
   }
 
   private JsonObject createBoundWithPart(String holdingsRecordId, String itemId) {
     return await(
-        doPost(client, ResourcePaths.BOUND_WITH_PARTS, createBoundWithPartJson(holdingsRecordId, itemId)))
+      doPost(client, BOUND_WITH_PARTS, createBoundWithPartJson(holdingsRecordId, itemId)))
       .jsonBody();
   }
 
@@ -297,8 +299,8 @@ class BoundWithStorageIT extends BaseIntegrationTest {
 
   private static BoundWithEventMessageChecks eventMessageChecks() {
     try {
-      return new BoundWithEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new BoundWithEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

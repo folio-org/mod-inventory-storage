@@ -16,7 +16,6 @@ import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
 import static org.folio.it.InstanceStorageFixtures.createInstance;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.it.LocationStorageFixtures.createLocation;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 
 import io.vertx.core.json.JsonArray;
@@ -25,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.apache.http.HttpStatus;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
 import org.folio.rest.jaxrs.model.Errors;
@@ -268,7 +268,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString().trim())
       .isEqualTo("'limit' parameter is incorrect. parameter value {-3} is not valid: "
-        + "must be greater than or equal to 0");
+                 + "must be greater than or equal to 0");
   }
 
   @Test
@@ -281,7 +281,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString().trim())
       .isEqualTo("'offset' parameter is incorrect. parameter value {-3} is not valid: "
-        + "must be greater than or equal to 0");
+                 + "must be greater than or equal to 0");
   }
 
   @Test
@@ -349,7 +349,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var response = await(doPost(client, ResourcePaths.HOLDINGS, null, request));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
@@ -358,7 +358,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var response = await(doGet(client, ResourcePaths.HOLDINGS + "/" + UUID.randomUUID(), null));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
@@ -367,7 +367,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var response = await(doGet(client, ResourcePaths.HOLDINGS, null));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("Unable to process request Tenant must be set");
+    assertThat(response.body()).hasToString("Unable to process request Tenant must be set");
   }
 
   @Test
@@ -515,7 +515,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var duplicate = withHrid(holdingRequest(instanceId), "ho00000000001").create();
     var response = await(doPost(client, ResourcePaths.HOLDINGS, duplicate));
 
-    assertHridError(response, SC_UNPROCESSABLE_ENTITY, "holdings_record", "ho00000000001");
+    assertHridError(response, "ho00000000001");
   }
 
   @Test
@@ -544,7 +544,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     setHoldingsSequence(1000L);
     var response = await(doPost(client, ResourcePaths.HOLDINGS, holdingRequest(instanceId).create()));
 
-    assertHridError(response, SC_UNPROCESSABLE_ENTITY, "holdings_record", "ho00000001000");
+    assertHridError(response, "ho00000001000");
   }
 
   @Test
@@ -557,7 +557,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var response = updateHolding(holding);
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("The hrid field cannot be changed: new=ABC123, old=ho00000000001");
+    assertThat(response.body()).hasToString("The hrid field cannot be changed: new=ABC123, old=ho00000000001");
   }
 
   @Test
@@ -570,7 +570,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     var response = updateHolding(holding);
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("The hrid field cannot be changed: new=null, old=ho00000000001");
+    assertThat(response.body()).hasToString("The hrid field cannot be changed: new=null, old=ho00000000001");
   }
 
   @Test
@@ -589,7 +589,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @DisplayName("should generate hrids for a synchronous batch")
   void shouldGenerateHrids_forSynchronousBatch() {
     setHoldingsSequence(1);
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
 
     assertThat(syncBatch(holdingsArray).status()).isEqualTo(SC_CREATED);
 
@@ -605,7 +605,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   void shouldGenerateHrids_forHoldingsMissingOneInBatch() {
     setHoldingsSequence(1);
     var hrid = "ABC123";
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     holdingsArray.getJsonObject(1).put("hrid", hrid);
 
     assertThat(syncBatch(holdingsArray).status()).isEqualTo(SC_CREATED);
@@ -623,12 +623,12 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   void shouldReturn422_whenBatchHasDuplicateHrids() {
     setHoldingsSequence(1);
     var duplicateHrid = "ho00000000001";
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     holdingsArray.getJsonObject(1).put("hrid", duplicateHrid);
 
     var response = syncBatch(holdingsArray);
 
-    assertHridError(response, SC_UNPROCESSABLE_ENTITY, "holdings_record", duplicateHrid);
+    assertHridError(response, duplicateHrid);
     holdingsArray.forEach(holding ->
       assertGetNotFound(ResourcePaths.HOLDINGS + "/" + ((JsonObject) holding).getString("id")));
   }
@@ -637,7 +637,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @DisplayName("should return 500 when hrid generation fails for a synchronous batch")
   void shouldReturn500_whenBatchHridGenerationFails() {
     setHoldingsSequence(99_999_999_999L);
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
 
     var response = syncBatch(holdingsArray);
 
@@ -651,7 +651,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @DisplayName("should return 413 when an unsafe synchronous batch is not allowed")
   void shouldReturn413_whenUnsafeBatchNotAllowed() {
     // not allowed because DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING is not configured
-    var response = syncBatchUnsafe(threeHoldingsRequest(TENANT_ID));
+    var response = syncBatchUnsafe(threeHoldingsRequest());
 
     assertThat(response.status()).isEqualTo(SC_REQUEST_TOO_LONG);
   }
@@ -661,7 +661,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   void shouldAllowUnsafeBatchUpdate_whenConfigured() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     assertThat(syncBatchUnsafe(holdingsArray).status()).isEqualTo(SC_CREATED);
 
     holdingsArray.getJsonObject(1).put("copyNumber", "456");
@@ -677,7 +677,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   void shouldReturn400_whenUnsafeBatchHasInvalidStatisticalCodeId() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     holdingsArray.getJsonObject(1).put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
 
     var response = syncBatchUnsafe(holdingsArray);
@@ -689,7 +689,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 400 when a synchronous batch has an invalid statistical code id")
   void shouldReturn400_whenBatchHasInvalidStatisticalCodeId() {
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     holdingsArray.getJsonObject(1).put(STATISTICAL_CODE_IDS_KEY, Set.of(INVALID_VALUE));
 
     var response = syncBatch(holdingsArray);
@@ -701,11 +701,11 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should create holdings via a synchronous batch")
   void shouldCreateHoldings_viaSynchronousBatch() {
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
 
     assertThat(syncBatch(holdingsArray).status()).isEqualTo(SC_CREATED);
 
-    holdingsArray.forEach(holding -> assertExists((JsonObject) holding, TENANT_ID));
+    holdingsArray.forEach(holding -> assertExists((JsonObject) holding));
   }
 
   @Test
@@ -729,7 +729,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should return 422 when a synchronous batch references a non-existing instance at a "
-    + "non-consortium tenant")
+               + "non-consortium tenant")
   void shouldReturn422_whenBatchInstanceDoesNotExist() {
     var holdingsArray = threeHoldingsRequestWithoutInstance();
 
@@ -738,7 +738,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
     assertThat(error.getMessage()).matches("Cannot set holdings_record.instanceid = \\S+ "
-      + "because it does not exist in instance.id.");
+                                           + "because it does not exist in instance.id.");
     assertThat(error.getParameters().getFirst().getKey()).isEqualTo("holdings_record.instanceid");
     holdingsArray.forEach(holding ->
       assertGetNotFound(ResourcePaths.HOLDINGS + "/" + ((JsonObject) holding).getString("id")));
@@ -747,7 +747,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 422 when a synchronous batch has a duplicate id")
   void shouldReturn422_whenBatchHasDuplicateId() {
-    var holdingsArray = threeHoldingsRequest(TENANT_ID);
+    var holdingsArray = threeHoldingsRequest();
     var duplicateId = holdingsArray.getJsonObject(0).getString("id");
     holdingsArray.getJsonObject(1).put("id", duplicateId);
 
@@ -768,16 +768,6 @@ class HoldingsStorageIT extends BaseIntegrationTest {
   @DisplayName("should return 422 when a synchronous batch reuses an existing id with upsert=false")
   void shouldReturn422_whenBatchReusesExistingId_withUpsertFalse() {
     assertReturns422ForExistingId("?upsert=false");
-  }
-
-  private void assertReturns422ForExistingId(String queryParams) {
-    var holdingsArray1 = threeHoldingsRequest(TENANT_ID);
-    var holdingsArray2 = threeHoldingsRequest(TENANT_ID);
-    var existingId = holdingsArray1.getJsonObject(1).getString("id");
-    holdingsArray2.getJsonObject(1).put("id", existingId);
-
-    assertThat(syncBatch(queryParams, holdingsArray1).status()).isEqualTo(SC_CREATED);
-    assertThat(syncBatch(queryParams, holdingsArray2).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
 
   @Test
@@ -907,17 +897,6 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertHoldingStatement(holding.getJsonArray("holdingsStatementsForSupplements").getJsonObject(0));
   }
 
-  private static JsonObject holdingStatement() {
-    return new JsonObject().put("statement", "Test statement").put("note", "Test note")
-      .put("staffNote", "Test staff note");
-  }
-
-  private static void assertHoldingStatement(JsonObject statement) {
-    assertThat(statement.getString("statement")).isEqualTo("Test statement");
-    assertThat(statement.getString("note")).isEqualTo("Test note");
-    assertThat(statement.getString("staffNote")).isEqualTo("Test staff note");
-  }
-
   @Test
   @DisplayName("should return 422 when an additional call number is missing its call number")
   void shouldReturn422_whenAdditionalCallNumberMissingCallNumber() {
@@ -1042,6 +1021,27 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertThat(patchHolding(holdingId, patch).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
   }
 
+  private void assertReturns422ForExistingId(String queryParams) {
+    var holdingsArray1 = threeHoldingsRequest();
+    var holdingsArray2 = threeHoldingsRequest();
+    var existingId = holdingsArray1.getJsonObject(1).getString("id");
+    holdingsArray2.getJsonObject(1).put("id", existingId);
+
+    assertThat(syncBatch(queryParams, holdingsArray1).status()).isEqualTo(SC_CREATED);
+    assertThat(syncBatch(queryParams, holdingsArray2).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+  }
+
+  private static JsonObject holdingStatement() {
+    return new JsonObject().put("statement", "Test statement").put("note", "Test note")
+      .put("staffNote", "Test staff note");
+  }
+
+  private static void assertHoldingStatement(JsonObject statement) {
+    assertThat(statement.getString("statement")).isEqualTo("Test statement");
+    assertThat(statement.getString("note")).isEqualTo("Test note");
+    assertThat(statement.getString("staffNote")).isEqualTo("Test staff note");
+  }
+
   // -- shared helpers --
 
   private static String createInstanceRecord() {
@@ -1100,9 +1100,8 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     assertThat(await(doGet(client, path)).status()).isEqualTo(SC_NOT_FOUND);
   }
 
-  private static void assertExists(JsonObject expectedHolding, String tenantId) {
-    var response =
-      await(doGet(client, ResourcePaths.HOLDINGS + "/" + expectedHolding.getString("id"), tenantId));
+  private static void assertExists(JsonObject expectedHolding) {
+    var response = await(doGet(client, ResourcePaths.HOLDINGS + "/" + expectedHolding.getString("id")));
     assertThat(response.status()).isEqualTo(SC_OK);
     assertThat(response.body().toString()).contains(expectedHolding.getString("instanceId"));
   }
@@ -1134,10 +1133,10 @@ class HoldingsStorageIT extends BaseIntegrationTest {
       new JsonObject().put(HOLDINGS_RECORDS_KEY, holdingsArray)));
   }
 
-  private static JsonArray threeHoldingsRequest(String tenantId) {
+  private static JsonArray threeHoldingsRequest() {
     var holdingsArray = new JsonArray();
     for (int i = 0; i < 3; i++) {
-      var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId, tenantId);
+      var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
       holdingsArray.add(new JsonObject()
         .put("id", UUID.randomUUID().toString())
         .put("instanceId", instanceId)
@@ -1161,10 +1160,10 @@ class HoldingsStorageIT extends BaseIntegrationTest {
     return holdingsArray;
   }
 
-  private static void assertHridError(TestResponse response, int expectedStatus, String table, String hrid) {
-    assertThat(response.status()).isEqualTo(expectedStatus);
+  private static void assertHridError(TestResponse response, String hrid) {
+    assertThat(response.status()).isEqualTo(HttpStatus.SC_UNPROCESSABLE_ENTITY);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
-    assertThat(error.getMessage()).contains("HRID value already exists in table " + table + ": " + hrid);
+    assertThat(error.getMessage()).contains("HRID value already exists in table holdings_record: " + hrid);
     var parameter = error.getParameters().getFirst();
     assertThat(parameter.getKey()).isEqualTo("lower(f_unaccent(jsonb ->> 'hrid'::text))");
     assertThat(parameter.getValue()).isEqualTo(hrid);
@@ -1183,7 +1182,7 @@ class HoldingsStorageIT extends BaseIntegrationTest {
 
   private static List<String> searchByCallNumberEyeReadable(String searchTerm) {
     var cql = "fullCallNumber==\"" + searchTerm + "\" OR callNumberAndSuffix==\"" + searchTerm
-      + "\" OR callNumber==\"" + searchTerm + "\"";
+              + "\" OR callNumber==\"" + searchTerm + "\"";
     return idsOf(searchForHoldings(cql));
   }
 

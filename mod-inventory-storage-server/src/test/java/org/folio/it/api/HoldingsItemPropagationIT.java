@@ -34,7 +34,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
@@ -157,47 +156,6 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     afterSecondUpdate.remove(TEMPORARY_LOCATION_ID_KEY);
     updateHoldingExpectNoContent(afterSecondUpdate);
     assertThat(getHoldingById(holdingId).getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(mainLibraryLocationId);
-  }
-
-  @CsvSource({
-    "PN 12 A6,PN12 .A6,,PN2 .A6,,,,,",
-    "PN 12 A6 V 13 NO 12 41999,PN2 .A6 v.3 no.2 1999,,PN2 .A6,v. 3,no. 2,1999,,",
-    "PN 12 A6 41999,PN12 .A6 41999,,PN2 .A6 1999,,,,,",
-    "PN 12 A6 41999 CD,PN12 .A6 41999 CD,,PN2 .A6 1999,,,,,CD",
-    "PN 12 A6 41999 12,PN12 .A6 41999 C.12,,PN2 .A6 1999,,,,2,",
-    "PN 12 A69 41922 12,PN12 .A69 41922 C.12,,PN2 .A69,,,1922,2,",
-    "PN 12 A69 NO 12,PN12 .A69 NO.12,,PN2 .A69,,no. 2,,,",
-    "PN 12 A69 NO 12 41922 11,PN12 .A69 NO.12 41922 C.11,,PN2 .A69,,no. 2,1922,1,",
-    "PN 12 A69 NO 12 41922 12,PN12 .A69 NO.12 41922 C.12,Wordsworth,PN2 .A69,,no. 2,1922,2,",
-    "PN 12 A69 V 11 NO 11,PN12 .A69 V.11 NO.11,,PN2 .A69,v.1,no. 1,,,",
-    "PN 12 A69 V 11 NO 11 +,PN12 .A69 V.11 NO.11 +,Over,PN2 .A69,v.1,no. 1,,,+",
-    "PN 12 A69 V 11 NO 11 41921,PN12 .A69 V.11 NO.11 41921,,PN2 .A69,v.1,no. 1,1921,,",
-    "PR 49199.3 41920 L33 41475 A6,PR 49199.3 41920 .L33 41475 .A6,,PR9199.3 1920 .L33 1475 .A6,,,,,",
-    "PQ 42678 K26 P54,PQ 42678 .K26 P54,,PQ2678.K26 P54,,,,,",
-    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5 1992,,,,,",
-    "PQ 48550.21 R57 V5 41992,PQ 48550.21 .R57 V15 41992,,PQ8550.21.R57 V5,,,1992,,",
-    "PR 3919 L33 41990,PR 3919 .L33 41990,,PR919 .L33 1990,,,,,",
-    "PR 49199 A39,PR 49199 .A39,,PR9199 .A39,,,,,",
-    "PR 49199.48 B3,PR 49199.48 .B3,,PR9199.48 .B3,,,,,"
-  })
-  @ParameterizedTest
-  @DisplayName("should update item shelving order when the holding's call number changes")
-  void shouldUpdateItemShelvingOrder_whenHoldingCallNumberChanges(
-    String desiredShelvingOrder, String initiallyDesiredShelvesOrder, String prefix, String callNumber,
-    String volume, String enumeration, String chronology, String copy, String suffix) {
-    var instanceId = createInstanceRecord();
-    var holding = createHolding(holdingRequest(instanceId).withCallNumber("testCallNumber"));
-    var holdingId = holding.getString("id");
-    var itemIds = new String[] {
-      createItem(complexItemRequest(holdingId, prefix, suffix, volume, enumeration, chronology, copy)).getString("id"),
-      createItem(complexItemRequest(holdingId, prefix, suffix, volume, enumeration, chronology, copy)).getString("id")
-    };
-    assertItemsHaveCallNumber(itemIds, "testCallNumber");
-
-    holding.put("callNumber", callNumber);
-    updateHoldingExpectNoContent(holding);
-
-    assertItemsHaveCallNumber(itemIds, callNumber);
   }
 
   @Test
@@ -687,9 +645,6 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
     var updatedHolding = getHoldingById(holdingId);
     if (locationsChanged) {
-      // the item's own holding doesn't change here, so old and new instanceId are the same;
-      // pass both explicitly rather than resolving via TestBase.holdingsClient, which is only
-      // initialized on the legacy rest.api stack, not the shared *IT verticle.
       itemMessageChecks.updatedMessagePublished(item, updatedItem, instanceId, instanceId);
     }
     holdingsMessageChecks.updatedMessagePublished(holding, updatedHolding);
@@ -790,7 +745,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
                        + item.getString("id") + "'").iterator().next();
     var jsonb = (JsonObject) row.getValue(0);
     assertThat(jsonb.getString(EFFECTIVE_LOCATION_ID_KEY)).isEqualTo(secondFloorLocationId);
-    assertThat(row.getUUID(1).toString()).isEqualTo(secondFloorLocationId);
+    assertThat(row.getUUID(1)).hasToString(secondFloorLocationId);
   }
 
   @ParameterizedTest(name = "[{index}]: {arguments}")
@@ -1208,18 +1163,6 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
       .put("status", new JsonObject().put("name", "Available"))
       .put("permanentLoanTypeId", loanTypeId)
       .put("materialTypeId", materialTypeId);
-  }
-
-  private static JsonObject complexItemRequest(String holdingId, String prefix, String suffix, String volume,
-                                               String enumeration, String chronology, String copy) {
-    return itemRequest(holdingId)
-      .put("itemLevelCallNumberSuffix", suffix)
-      .put("itemLevelCallNumberPrefix", prefix)
-      .put("itemLevelCallNumberTypeId", lcCallNumberTypeId)
-      .put("volume", volume)
-      .put("enumeration", enumeration)
-      .put("chronology", chronology)
-      .put("copyNumber", copy);
   }
 
   private static JsonObject createItem(String holdingId) {

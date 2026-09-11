@@ -205,7 +205,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
     var response = await(doDelete(client, titleByIdPath("abc")));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo(INVALID_UUID_ERROR_MESSAGE);
+    assertThat(response.body()).hasToString(INVALID_UUID_ERROR_MESSAGE);
   }
 
   @DisplayName("should update the preceding/succeeding titles connected to an instance")
@@ -255,7 +255,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
         pojo2JsonObject(updated)));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
-    assertThat(response.body().toString()).isEqualTo("Instance not found");
+    assertThat(response.body()).hasToString("Instance not found");
   }
 
   @DisplayName("should return 422 when a title in the collection is missing the instance id")

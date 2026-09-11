@@ -1,5 +1,6 @@
 package org.folio.it.api;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_CONFLICT;
 import static org.apache.http.HttpStatus.SC_CREATED;
@@ -285,7 +286,8 @@ class ItemStorageIT extends BaseIntegrationTest {
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.body().toString()).contains(("Cannot set item.itemlevelcallnumbertypeid = %s "
-      + "because it does not exist in call_number_type.id.").formatted(nonExistingTypeId));
+                                                     + "because it does not exist in call_number_type.id.").formatted(
+      nonExistingTypeId));
   }
 
   @Test
@@ -615,7 +617,7 @@ class ItemStorageIT extends BaseIntegrationTest {
     var response = updateItem(item);
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("The hrid field cannot be changed: new=ABC123, old=it00000000001");
+    assertThat(response.body()).hasToString("The hrid field cannot be changed: new=ABC123, old=it00000000001");
   }
 
   @Test
@@ -631,7 +633,7 @@ class ItemStorageIT extends BaseIntegrationTest {
     var response = updateItem(item);
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo("The hrid field cannot be changed: new=null, old=it00000000001");
+    assertThat(response.body()).hasToString("The hrid field cannot be changed: new=null, old=it00000000001");
   }
 
   @Test
@@ -1309,7 +1311,8 @@ class ItemStorageIT extends BaseIntegrationTest {
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
     assertThat(response.body().toString()).contains(("Cannot set item.statistical_code_id = %s "
-      + "because it does not exist in statistical_code.id.").formatted(nonExistingStatisticalCodeId));
+                                                     + "because it does not exist in statistical_code.id.").formatted(
+      nonExistingStatisticalCodeId));
   }
 
   @Test
@@ -1366,8 +1369,9 @@ class ItemStorageIT extends BaseIntegrationTest {
     var response = updateItem(item);
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString()).isEqualTo(("Cannot set item statistical_code_id = %s "
-      + "because it does not exist in statistical_code.id.").formatted(nonExistingStatisticalCodeId));
+    assertThat(response.body()).hasToString(("Cannot set item statistical_code_id = %s "
+                                             + "because it does not exist in statistical_code.id.").formatted(
+      nonExistingStatisticalCodeId));
   }
 
   @Test
@@ -1589,7 +1593,7 @@ class ItemStorageIT extends BaseIntegrationTest {
   void shouldReturn400_whenDeletingItemsWithoutCql(String query) {
     var response = await(doDelete(client, ResourcePaths.ITEMS + query));
 
-    assertThat(response.body().toString()).isEqualTo("Expected CQL but query parameter is empty");
+    assertThat(response.body()).hasToString("Expected CQL but query parameter is empty");
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
   }
 
@@ -1639,8 +1643,8 @@ class ItemStorageIT extends BaseIntegrationTest {
   }
 
   private static JsonObject itemRequestWithCallNumberComponents(String holdingId, String prefix, String callNumber,
-                                                                  String volume, String enumeration,
-                                                                  String chronology, String copy, String suffix) {
+                                                                String volume, String enumeration,
+                                                                String chronology, String copy, String suffix) {
     return minimalItemRequest(UUID.randomUUID(), holdingId).put("barcode", "565578437802")
       .put("temporaryLocationId", annexLibraryLocationId).put("tags", tags(TAG_VALUE))
       .put("itemLevelCallNumber", callNumber).put("itemLevelCallNumberSuffix", suffix)
@@ -1650,7 +1654,7 @@ class ItemStorageIT extends BaseIntegrationTest {
   }
 
   private static JsonObject detailedItemRequest(UUID id, String holdingId, String adminNote, String displaySummary,
-                                                 String inTransitServicePointId, String statisticalCodeId) {
+                                                String inTransitServicePointId, String statisticalCodeId) {
     return minimalItemRequest(id, holdingId).put(ORDER_FIELD, 100)
       .put("administrativeNotes", new JsonArray().add(adminNote)).put("barcode", "565578437802")
       .put("displaySummary", displaySummary).put("temporaryLocationId", annexLibraryLocationId)
@@ -1661,8 +1665,8 @@ class ItemStorageIT extends BaseIntegrationTest {
   }
 
   private static void assertDetailedItem(JsonObject item, UUID id, String adminNote, String holdingId,
-                                          String displaySummary, String inTransitServicePointId,
-                                          String statisticalCodeId) {
+                                         String displaySummary, String inTransitServicePointId,
+                                         String statisticalCodeId) {
     assertThat(item.getString("id")).isEqualTo(id.toString());
     assertThat(item.getInteger(ORDER_FIELD)).isEqualTo(100);
     assertThat(item.getJsonArray("administrativeNotes")).contains(adminNote);
@@ -1712,7 +1716,7 @@ class ItemStorageIT extends BaseIntegrationTest {
   }
 
   private static JsonObject itemRequestForLoanTypes(String holdingId, String permanentLoanTypeId,
-                                                     String temporaryLoanTypeId) {
+                                                    String temporaryLoanTypeId) {
     var item = new JsonObject().put(STATUS_KEY, new JsonObject().put("name", "Available"))
       .put("holdingsRecordId", holdingId).put("barcode", UUID.randomUUID().toString())
       .put("materialTypeId", materialTypeId);
@@ -1853,7 +1857,7 @@ class ItemStorageIT extends BaseIntegrationTest {
   }
 
   private static String urlEncode(String value) {
-    return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    return java.net.URLEncoder.encode(value, UTF_8);
   }
 
   private static List<TestResponse> runConcurrentPosts(Map<UUID, JsonObject> items) {

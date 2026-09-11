@@ -36,7 +36,6 @@ import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.support.extension.EnableTenant;
 import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +53,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * with a synthetic Kafka record, exactly like the legacy test this migrates, rather than
  * publishing a real Kafka message and waiting for a consumer to pick it up.
  */
-@EnableTenant(tenants = {TENANT_ID, CONSORTIUM_CENTRAL_TENANT})
 @ExtendWith(MockitoExtension.class)
 class ShadowInstanceSynchronizationHandlerIT extends BaseIntegrationTest {
 
