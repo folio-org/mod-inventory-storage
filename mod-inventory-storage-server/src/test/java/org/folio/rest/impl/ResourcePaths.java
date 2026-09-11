@@ -60,6 +60,16 @@ final class ResourcePaths {
   static final String INVENTORY_VIEW_INSTANCE_SET = "/inventory-view/instance-set";
   static final String INSTANCES_BULK = "/instance-storage/instances/bulk";
   static final String DEREFERENCED_ITEMS = "/item-storage-dereferenced/items";
+  static final String ALTERNATIVE_TITLE_TYPES = "/alternative-title-types";
+  static final String CLASSIFICATION_TYPES = "/classification-types";
+  static final String CONTRIBUTOR_TYPES = "/contributor-types";
+  static final String ELECTRONIC_ACCESS_RELATIONSHIPS = "/electronic-access-relationships";
+  static final String HOLDINGS_NOTE_TYPES = "/holdings-note-types";
+  static final String HOLDINGS_TYPES = "/holdings-types";
+  static final String ILL_POLICIES = "/ill-policies";
+  static final String ITEM_DAMAGED_STATUSES = "/item-damaged-statuses";
+  static final String INSTANCE_NOTE_TYPES = "/instance-note-types";
+  static final String ITEM_NOTE_TYPES = "/item-note-types";
 
   private ResourcePaths() {
   }

@@ -69,6 +69,7 @@ public abstract class BaseIntegrationTest {
       .notifier(new ConsoleNotifier(true)))
     .build();
   protected static HttpClient client;
+  protected static final String MODULE_ID = "mod-inventory-storage-1.0.0";
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
 
   @RegisterExtension
@@ -76,8 +77,6 @@ public abstract class BaseIntegrationTest {
 
   @RegisterExtension
   private static final KafkaExtension KAFKA = new KafkaExtension();
-
-  private static final String MODULE_ID = "mod-inventory-storage-1.0.0";
 
   private static final List<String> MIGRATION_SEEDED_TABLES =
     List.of("hrid_settings", "instance_date_type", "subject_source", "subject_type", "settings");
@@ -173,11 +172,28 @@ public abstract class BaseIntegrationTest {
   }
 
   public static void mockUserTenantsForNonConsortiumMember() {
+    mockUserTenantsForNonConsortiumMember(TENANT_ID);
+  }
+
+  protected static void mockUserTenantsForNonConsortiumMember(String tenantId) {
     var emptyUserTenantsCollection = new JsonObject()
       .put("userTenants", JsonArray.of());
     wm.stubFor(WireMock.get(USER_TENANTS_PATH)
-      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(TENANT_ID))
+      .withHeader(XOkapiHeaders.TENANT, equalToIgnoreCase(tenantId))
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
+  }
+
+  /**
+   * Installs {@code tenantId} on the shared verticle with custom attributes, bypassing the
+   * "already enabled, never touch again" tracking {@link SharedRestVerticle#enableTenantIfAbsent}
+   * keeps for the default per-class tenant install in {@link #beforeAll} - for a tenant id owned
+   * entirely by one test class, e.g. to install with {@code loadReference=true} (the shared
+   * {@code TENANT_ID} tenant always installs with {@code loadReference=false}) or to replay a
+   * {@code moduleFrom}/{@code moduleTo} upgrade, neither of which the default install supports.
+   */
+  protected static void installTenant(String tenantId, TenantAttributes attributes) {
+    get(TenantTestSupport.enableTenant(
+      SHARED_VERTICLE.shared.getVertx(), SHARED_VERTICLE.shared.getConnectionUrl(), tenantId, null, attributes));
   }
 
   protected static void mockUserTenantsForConsortiumMember(String tenantId) {
