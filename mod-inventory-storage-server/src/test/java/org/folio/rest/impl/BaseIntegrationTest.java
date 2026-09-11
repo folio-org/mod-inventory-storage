@@ -26,6 +26,7 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Row;
@@ -44,7 +45,9 @@ import org.folio.dataimport.testsupport.rest.SharedRestVerticleSupport.SharedRes
 import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.api.TestBase;
+import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.extension.EnableTenant;
 import org.folio.rest.support.extension.Tenants;
@@ -190,10 +193,35 @@ public abstract class BaseIntegrationTest {
    * entirely by one test class, e.g. to install with {@code loadReference=true} (the shared
    * {@code TENANT_ID} tenant always installs with {@code loadReference=false}) or to replay a
    * {@code moduleFrom}/{@code moduleTo} upgrade, neither of which the default install supports.
+   *
+   * <p>Sends both {@code X-Okapi-Url} (this WireMock instance) and {@code X-Okapi-Url-to} (the
+   * shared verticle's own address) on the {@code POST /_/tenant} call, matching what the legacy
+   * {@code rest.api} stack's {@code HttpClient} always sent. {@code TenantLoading} (RMB, the
+   * class that actually loads reference/sample data during tenant install) prefers
+   * {@code X-Okapi-Url-to} for routing its own generated requests to the real module, but any
+   * application code invoked while a sample-data record is being created - e.g.
+   * {@code ConsortiumDataCache}, which holdings/item creation calls to check consortium
+   * membership - reads plain {@code X-Okapi-Url} off that generated request instead. Without
+   * this, both headers default to the same value from a single-argument {@link TenantClient},
+   * so that consortium check misroutes to the module's own port (a bare 404, since it defines no
+   * such endpoint) instead of this WireMock instance, and every holdings/item sample record
+   * silently fails to load.
    */
   protected static void installTenant(String tenantId, TenantAttributes attributes) {
-    get(TenantTestSupport.enableTenant(
-      SHARED_VERTICLE.shared.getVertx(), SHARED_VERTICLE.shared.getConnectionUrl(), tenantId, null, attributes));
+    var connectionUrl = SHARED_VERTICLE.shared.getConnectionUrl();
+    var webClient = WebClient.create(SHARED_VERTICLE.shared.getVertx());
+    webClient.addInterceptor(context -> {
+      context.request().putHeader(XOkapiHeaders.URL, wm.baseUrl());
+      context.request().putHeader(XOkapiHeaders.URL_TO, connectionUrl);
+      context.next();
+    });
+
+    var client = new TenantClient(connectionUrl, tenantId, null, webClient);
+    get(client.postTenant(attributes)
+      .compose(response -> {
+        var job = response.bodyAsJson(TenantJob.class);
+        return client.getTenantByOperationId(job.getId(), 60_000);
+      }));
   }
 
   protected static void mockUserTenantsForConsortiumMember(String tenantId) {
