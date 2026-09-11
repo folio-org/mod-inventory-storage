@@ -3,7 +3,6 @@ package org.folio.persist;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
-import static org.folio.utility.ModuleUtility.getVertx;
 import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,13 +16,12 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import java.util.Map;
 import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.folio.rest.api.TestBase;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PgUtil;
@@ -33,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(VertxExtension.class)
-class IterationJobRepositoryTest extends TestBase {
+class IterationJobRepositoryTest {
 
   private static final String JOB_ID = "test-job-id";
 
@@ -42,12 +40,12 @@ class IterationJobRepositoryTest extends TestBase {
   private Conn conn;
 
   @BeforeEach
-  void setUp() {
+  void setUp(Vertx vertx) {
     postgresClient = mock(PostgresClient.class);
     conn = mock(Conn.class);
     try (var pgUtilMock = mockStatic(PgUtil.class)) {
       pgUtilMock.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(postgresClient);
-      repository = spy(new IterationJobRepository(getContext(), okapiHeaders()));
+      repository = spy(new IterationJobRepository(vertx.getOrCreateContext(), okapiHeaders()));
     }
   }
 
@@ -139,9 +137,5 @@ class IterationJobRepositoryTest extends TestBase {
 
   private static Map<String, String> okapiHeaders() {
     return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
-  }
-
-  private static Context getContext() {
-    return getVertx().getOrCreateContext();
   }
 }

@@ -4,7 +4,6 @@ import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.api.entities.Instance.STATISTICAL_CODE_IDS_KEY;
 import static org.folio.rest.impl.InstanceTypeApi.INSTANCE_TYPE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeApi.STATISTICAL_CODE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeTypeApi.STATISTICAL_CODE_TYPE_TABLE;
@@ -12,12 +11,12 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.assertj.core.api.Assertions;
-import org.folio.rest.api.entities.Instance;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.StatisticalCode;
@@ -126,9 +125,9 @@ class StatisticalCodesIT extends BaseReferenceDataIntegrationTest<StatisticalCod
     postgresClient.save(referenceTable(), newRecord)
       .compose(statisticalCodeId -> postgresClient.save(INSTANCE_TYPE_TABLE, instanceType)
         .compose(instanceTypeId -> doPost(client, "/instance-storage/instances",
-          new Instance("test-instance", "folio", instanceTypeId)
-            .put(STATISTICAL_CODE_IDS_KEY, List.of(statisticalCodeId))
-            .getJson())
+          new JsonObject().put("title", "test-instance").put("source", "folio")
+            .put("instanceTypeId", instanceTypeId)
+            .put("statisticalCodeIds", List.of(statisticalCodeId)))
           .onComplete(verifyStatus(ctx, HTTP_CREATED))
           .compose(v -> doDelete(client, resourceUrlById(statisticalCodeId))
             .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))

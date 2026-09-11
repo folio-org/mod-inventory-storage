@@ -22,7 +22,7 @@ import java.util.Map;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
-import org.folio.rest.api.entities.Instance;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.support.sql.TestRowStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

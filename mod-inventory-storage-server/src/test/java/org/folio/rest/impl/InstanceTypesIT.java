@@ -7,12 +7,12 @@ import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.assertj.core.api.Assertions;
-import org.folio.rest.api.entities.Instance;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InstanceTypes;
 import org.folio.rest.jaxrs.model.Metadata;
@@ -86,7 +86,7 @@ class InstanceTypesIT extends BaseReferenceDataIntegrationTest<InstanceType, Ins
 
     postgresClient.save(referenceTable(), newRecord)
       .compose(id -> doPost(client, "/instance-storage/instances",
-        new Instance("test-instance", "folio", id).getJson())
+        new JsonObject().put("title", "test-instance").put("source", "folio").put("instanceTypeId", id))
         .onComplete(verifyStatus(ctx, HTTP_CREATED))
         .compose(v -> doDelete(client, resourceUrlById(id))
           .onComplete(verifyStatus(ctx, HTTP_BAD_REQUEST))
