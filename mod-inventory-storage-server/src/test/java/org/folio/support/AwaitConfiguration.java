@@ -20,6 +20,14 @@ public final class AwaitConfiguration {
     return await().atMost(5, SECONDS);
   }
 
+  public static ConditionFactory awaitAtMost(long timeout, TimeUnit unit) {
+    // For checks with a legitimately longer completion time than the common case above
+    // (e.g. waiting on a bulk operation to publish hundreds of Kafka messages) - still
+    // routes through here rather than a bespoke Awaitility.await() call, so every such
+    // exception is discoverable in one place.
+    return await().atMost(timeout, unit);
+  }
+
   public static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {
     // Uses longer at most than during to avoid known failures
     // this means that it is always possible for a condition to only apply for part of the duration

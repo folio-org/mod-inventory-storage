@@ -1,7 +1,6 @@
 package org.folio.support.messages;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.support.AwaitConfiguration.awaitDuring;
@@ -106,7 +105,8 @@ public class InstanceEventMessageChecks {
   }
 
   public void countOfAllPublishedInstancesIs(Matcher<Integer> matcher) {
-    await().atMost(15, SECONDS)
-      .until(kafkaConsumer::getAllPublishedInstanceIdsCount, matcher);
+    // Callers check this after bulk operations (e.g. reindexing hundreds of instances),
+    // which can legitimately take longer than the default awaitAtMost() to fully publish.
+    awaitAtMost(15, SECONDS).until(kafkaConsumer::getAllPublishedInstanceIdsCount, matcher);
   }
 }
