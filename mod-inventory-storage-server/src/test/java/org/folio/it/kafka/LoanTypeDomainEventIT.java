@@ -8,7 +8,8 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.support.ResourcePaths;
@@ -97,7 +98,7 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
 
   private static JsonObject createLoanType() {
     var response = await(
-        doPost(client, ResourcePaths.LOAN_TYPES, new JsonObject().put(NAME_FIELD, uniqueName())))
+      doPost(client, ResourcePaths.LOAN_TYPES, new JsonObject().put(NAME_FIELD, uniqueName())))
       .jsonBody();
     assertThat(response).isNotNull();
     return response;
@@ -109,8 +110,8 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
 
   private static LoanTypeEventMessageChecks eventMessageChecks() {
     try {
-      return new LoanTypeEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new LoanTypeEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

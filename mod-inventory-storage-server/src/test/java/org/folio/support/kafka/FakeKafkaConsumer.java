@@ -1,97 +1,68 @@
 package org.folio.support.kafka;
 
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
+import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.folio.InventoryKafkaTopic;
+import org.folio.dataimport.testsupport.kafka.KafkaTestEventCollector;
 import org.folio.support.messages.EventMessage;
-import org.jetbrains.annotations.NotNull;
 
+/**
+ * Wraps a {@link KafkaTestEventCollector} - which continuously drains the broker into an
+ * in-memory per-topic index in the background, so an already-arrived message matches on the
+ * first check instead of a test waiting out a broker-poll timeout - and layers this module's
+ * per-entity message grouping on top, the way {@code docs/test-quality-improvement-plan.md}'s
+ * WS2 Tier 2 describes.
+ *
+ * <p>Subscribes to every {@link InventoryKafkaTopic} for each of the given {@code tenants},
+ * using {@link InventoryKafkaTopic#fullTopicName(String)} - the same topic-naming function
+ * production code uses - rather than a separately-maintained set of topic name strings, so the
+ * two can never drift out of sync.
+ *
+ * <p>One instance lives for the whole JVM (constructed once from
+ * {@link org.folio.it.BaseIntegrationTest}); {@link #discardAllMessages()} doesn't reset the
+ * underlying collector (it has no such operation, and recreating a consumer group before every
+ * test risks reintroducing flakiness via partition-assignment lag) - it just records a cutoff
+ * timestamp that every accessor filters on, so "discarded" messages are simply ignored rather
+ * than actually removed.
+ */
 public final class FakeKafkaConsumer {
-  // These definitions are deliberately separate to the production definitions
-  // This is so these can be changed independently to demonstrate
-  // tests failing for the right reason prior to changing the production code
-  static final String INSTANCE_TOPIC_NAME = "folio.test.inventory.instance";
-  static final String HOLDINGS_TOPIC_NAME = "folio.test.inventory.holdings-record";
-  static final String ITEM_TOPIC_NAME = "folio.test.inventory.item";
-  static final String LOAN_TYPE_TOPIC_NAME = "folio.test.inventory.loan-type";
-  static final String BOUND_WITH_TOPIC_NAME = "folio.test.inventory.bound-with";
-  static final String SERVICE_POINT_TOPIC_NAME = "folio.test.inventory.service-point";
-  static final String MATERIAL_TYPE_TOPIC_NAME = "folio.test.inventory.material-type";
-  static final String REINDEX_RECORDS_TOPIC_NAME = "folio.test.inventory.reindex-records";
-  static final String REINDEX_FILE_READY_TOPIC_NAME = "folio.test.inventory.reindex.file-ready";
-  static final String SETTING_TOPIC_NAME = "folio.test.inventory.setting";
-  static final String SETTING_TOPIC_NAME_CENTRAL_TENANT = "folio.central.inventory.setting";
-  static final String SETTING_TOPIC_NAME_MEMBER_TENANT = "folio.member.inventory.setting";
 
-  static final String HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT =
-    "folio.consortium.inventory.holdings-record";
+  private final List<String> tenants;
+  private final KafkaTestEventCollector collector;
+  private volatile long discardedBeforeEpochMillis = System.currentTimeMillis();
 
-  private final GroupedCollectedMessages collectedInstanceMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedHoldingsMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedItemMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedLoanTypeMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedBoundWithMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedServicePointMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedMaterialTypeMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedReindexRecordsMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedReindexFileReadyMessages = new GroupedCollectedMessages();
-  private final GroupedCollectedMessages collectedSettingMessages = new GroupedCollectedMessages();
-
-  private final VertxMessageCollectingTopicConsumer consumer = createConsumer();
-
-  private static String instanceAndIdKey(String instanceId, String itemId) {
-    return instanceId + "_" + itemId;
-  }
-
-  private static String instanceAndIdKey(KafkaConsumerRecord<String, JsonObject> message) {
-    final JsonObject payload = message.value();
-    final var oldOrNew = payload.containsKey("new")
-                         ? payload.getJsonObject("new") : payload.getJsonObject("old");
-
-    final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
-
-    return instanceAndIdKey(message.key(), id);
-  }
-
-  public void consume(Vertx vertx) {
-    consumer.subscribe(vertx);
-  }
-
-  public void unsubscribe() {
-    consumer.unsubscribe();
+  public FakeKafkaConsumer(String bootstrapServers, List<String> tenants) {
+    this.tenants = tenants;
+    var topics = Arrays.stream(InventoryKafkaTopic.values())
+      .flatMap(topic -> tenants.stream().map(topic::fullTopicName))
+      .toList();
+    collector = new KafkaTestEventCollector(bootstrapServers, "fake-kafka-consumer-" + UUID.randomUUID(), topics);
   }
 
   public void discardAllMessages() {
-    collectedInstanceMessages.empty();
-    collectedHoldingsMessages.empty();
-    collectedItemMessages.empty();
-    collectedLoanTypeMessages.empty();
-    collectedBoundWithMessages.empty();
-    collectedServicePointMessages.empty();
-    collectedMaterialTypeMessages.empty();
-    collectedReindexRecordsMessages.empty();
-    collectedReindexFileReadyMessages.empty();
-    collectedSettingMessages.empty();
+    discardedBeforeEpochMillis = System.currentTimeMillis();
   }
 
   public int getAllPublishedInstanceIdsCount() {
-    return collectedInstanceMessages.groupCount();
+    return (int) recordsSince(InventoryKafkaTopic.INSTANCE).map(ConsumerRecord::key).distinct().count();
   }
 
   public Collection<EventMessage> getMessagesForInstance(String instanceId) {
-    return collectedInstanceMessages.messagesByGroupKey(instanceId);
+    return messagesFor(InventoryKafkaTopic.INSTANCE, message -> instanceId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForReindexRecord(String id) {
-    return collectedReindexRecordsMessages.messagesByGroupKey(id);
+    return messagesFor(InventoryKafkaTopic.REINDEX_RECORDS, message -> id.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForReindexFileReady(String rangeId) {
-    return collectedReindexFileReadyMessages.messagesByGroupKey(rangeId);
+    return messagesFor(InventoryKafkaTopic.REINDEX_FILE_READY, message -> rangeId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForInstances(List<String> instanceIds) {
@@ -102,94 +73,65 @@ public final class FakeKafkaConsumer {
   }
 
   public Collection<EventMessage> getMessagesForHoldings(String holdingsId) {
-    return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(holdingsId, holdingsId));
+    final var key = instanceAndIdKey(holdingsId, holdingsId);
+    return messagesFor(InventoryKafkaTopic.HOLDINGS_RECORD, message -> key.equals(instanceAndIdKey(message)));
   }
 
   public Collection<EventMessage> getMessagesForDeleteAllHoldings(String instanceId, String holdingsId) {
-    return collectedHoldingsMessages.messagesByGroupKey(instanceAndIdKey(instanceId, holdingsId));
+    final var key = instanceAndIdKey(instanceId, holdingsId);
+    return messagesFor(InventoryKafkaTopic.HOLDINGS_RECORD, message -> key.equals(instanceAndIdKey(message)));
   }
 
   public Collection<EventMessage> getMessagesForItem(String itemId) {
-    return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(itemId, itemId));
-  }
-
-  public Collection<EventMessage> getMessagesForItemWithInstanceIdKey(String instanceId, String itemId) {
-    return collectedItemMessages.messagesByGroupKey(instanceAndIdKey(instanceId, itemId));
+    final var key = instanceAndIdKey(itemId, itemId);
+    return messagesFor(InventoryKafkaTopic.ITEM, message -> key.equals(instanceAndIdKey(message)));
   }
 
   public Collection<EventMessage> getMessagesForLoanType(String loanTypeId) {
-    return collectedLoanTypeMessages.messagesByGroupKey(loanTypeId);
+    return messagesFor(InventoryKafkaTopic.LOAN_TYPE, message -> loanTypeId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForBoundWith(String instanceId) {
-    return collectedBoundWithMessages.messagesByGroupKey(instanceId);
+    return messagesFor(InventoryKafkaTopic.BOUND_WITH, message -> instanceId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForServicePoint(String servicePointId) {
-    return collectedServicePointMessages.messagesByGroupKey(servicePointId);
+    return messagesFor(InventoryKafkaTopic.SERVICE_POINT, message -> servicePointId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForMaterialType(String materialTypeId) {
-    return collectedMaterialTypeMessages.messagesByGroupKey(materialTypeId);
+    return messagesFor(InventoryKafkaTopic.MATERIAL_TYPE, message -> materialTypeId.equals(message.key()));
   }
 
   public Collection<EventMessage> getMessagesForSetting(String settingId) {
-    return collectedSettingMessages.messagesByGroupKey(settingId);
+    return messagesFor(InventoryKafkaTopic.SETTING, message -> settingId.equals(message.key()));
   }
 
-  private VertxMessageCollectingTopicConsumer createConsumer() {
-    return new VertxMessageCollectingTopicConsumer(
-      subscribedTopics(),
-      eventMessageCollector());
+  private static String instanceAndIdKey(String instanceId, String itemId) {
+    return instanceId + "_" + itemId;
   }
 
-  private Set<String> subscribedTopics() {
-    return Set.of(
-      INSTANCE_TOPIC_NAME, HOLDINGS_TOPIC_NAME, ITEM_TOPIC_NAME, LOAN_TYPE_TOPIC_NAME,
-      BOUND_WITH_TOPIC_NAME, SERVICE_POINT_TOPIC_NAME, MATERIAL_TYPE_TOPIC_NAME,
-      HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-      REINDEX_RECORDS_TOPIC_NAME, REINDEX_FILE_READY_TOPIC_NAME, SETTING_TOPIC_NAME,
-      SETTING_TOPIC_NAME_CENTRAL_TENANT, SETTING_TOPIC_NAME_MEMBER_TENANT);
+  private static String instanceAndIdKey(ConsumerRecord<String, String> message) {
+    final JsonObject payload = new JsonObject(message.value());
+    final var oldOrNew = payload.getJsonObject(payload.containsKey("new") ? "new" : "old");
+    final var id = oldOrNew != null ? oldOrNew.getString("id") : null;
+
+    return instanceAndIdKey(message.key(), id);
   }
 
-  @SuppressWarnings("checkstyle:MethodLength")
-  private AggregateMessageCollector eventMessageCollector() {
-    return new AggregateMessageCollector(
-      filteredAndGroupedCollector(INSTANCE_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedInstanceMessages),
-      filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME,
-        FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
-      filteredAndGroupedCollector(ITEM_TOPIC_NAME,
-        FakeKafkaConsumer::instanceAndIdKey, collectedItemMessages),
-      filteredAndGroupedCollector(LOAN_TYPE_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedLoanTypeMessages),
-      filteredAndGroupedCollector(BOUND_WITH_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedBoundWithMessages),
-      filteredAndGroupedCollector(SERVICE_POINT_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedServicePointMessages),
-      filteredAndGroupedCollector(MATERIAL_TYPE_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedMaterialTypeMessages),
-      filteredAndGroupedCollector(HOLDINGS_TOPIC_NAME_CONSORTIUM_MEMBER_TENANT,
-        FakeKafkaConsumer::instanceAndIdKey, collectedHoldingsMessages),
-      filteredAndGroupedCollector(REINDEX_RECORDS_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedReindexRecordsMessages),
-      filteredAndGroupedCollector(REINDEX_FILE_READY_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedReindexFileReadyMessages),
-      filteredAndGroupedCollector(SETTING_TOPIC_NAME,
-        KafkaConsumerRecord::key, collectedSettingMessages),
-      filteredAndGroupedCollector(SETTING_TOPIC_NAME_CENTRAL_TENANT,
-        KafkaConsumerRecord::key, collectedSettingMessages),
-      filteredAndGroupedCollector(SETTING_TOPIC_NAME_MEMBER_TENANT,
-        KafkaConsumerRecord::key, collectedSettingMessages));
+  private Collection<EventMessage> messagesFor(InventoryKafkaTopic topic,
+                                               Predicate<ConsumerRecord<String, String>> matches) {
+
+    return recordsSince(topic)
+      .filter(matches)
+      .map(EventMessage::fromConsumerRecord)
+      .toList();
   }
 
-  @NotNull
-  private TopicFilterIngMessageCollector filteredAndGroupedCollector(
-    String topicName,
-    Function<KafkaConsumerRecord<String, JsonObject>, String> groupKeyMap,
-    GroupedCollectedMessages collectedMessages) {
-
-    return new TopicFilterIngMessageCollector(topicName,
-      new GroupedMessageCollector(groupKeyMap, collectedMessages));
+  private Stream<ConsumerRecord<String, String>> recordsSince(InventoryKafkaTopic topic) {
+    return tenants.stream()
+      .map(topic::fullTopicName)
+      .flatMap(topicName -> collector.received(topicName).stream())
+      .filter(message -> message.timestamp() >= discardedBeforeEpochMillis);
   }
 }

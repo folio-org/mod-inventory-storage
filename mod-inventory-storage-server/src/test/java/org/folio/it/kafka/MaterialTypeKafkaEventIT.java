@@ -6,7 +6,8 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonObject;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.support.ResourcePaths;
@@ -71,8 +72,8 @@ class MaterialTypeKafkaEventIT extends BaseIntegrationTest {
 
   private static MaterialTypeEventMessageChecks eventMessageChecks() {
     try {
-      return new MaterialTypeEventMessageChecks(KAFKA_CONSUMER, new URL(wm.baseUrl()));
-    } catch (MalformedURLException e) {
+      return new MaterialTypeEventMessageChecks(KAFKA_CONSUMER, new URI(wm.baseUrl()).toURL());
+    } catch (MalformedURLException | URISyntaxException e) {
       throw new IllegalStateException(e);
     }
   }

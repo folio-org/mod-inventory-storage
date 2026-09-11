@@ -70,7 +70,7 @@ public abstract class BaseIntegrationTest {
       .notifier(new ConsoleNotifier(true)))
     .build();
   protected static HttpClient client;
-  protected static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
+  protected static FakeKafkaConsumer KAFKA_CONSUMER;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
   @RegisterExtension
@@ -342,10 +342,10 @@ public abstract class BaseIntegrationTest {
    * before it, in field declaration order, so {@link #POSTGRES} and {@link #KAFKA} are already
    * up by the time this executes.
    *
-   * <p>Also starts {@link #KAFKA_CONSUMER} exactly once, on the shared verticle's own
-   * long-lived {@link Vertx} rather than the per-class one JUnit injects into
-   * {@code @BeforeAll}: that per-class {@code Vertx} is closed when its class finishes, which
-   * would silently kill the underlying Kafka consumer for every class after the first.
+   * <p>Also constructs {@link #KAFKA_CONSUMER} exactly once: it's backed by its own background
+   * polling thread (not a {@link Vertx} instance), so - unlike the shared verticle - it doesn't
+   * need to be anchored to anything JVM-long-lived here; it just shouldn't be constructed more
+   * than once.
    */
   private static final class SharedVerticleExtension implements BeforeAllCallback {
 
@@ -362,7 +362,7 @@ public abstract class BaseIntegrationTest {
       shared = SharedRestVerticleSupport.getOrCreate(context, MODULE_ID);
 
       if (!kafkaConsumerStarted) {
-        KAFKA_CONSUMER.consume(shared.getVertx());
+        KAFKA_CONSUMER = new FakeKafkaConsumer(KAFKA.getBootstrapServers(), ALL_TENANTS);
         kafkaConsumerStarted = true;
       }
     }

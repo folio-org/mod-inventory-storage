@@ -1,11 +1,12 @@
 package org.folio.support.messages;
 
-import static org.folio.kafka.KafkaHeaderUtils.kafkaHeadersToMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.vertx.core.json.JsonObject;
-import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.Value;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 @Value
 public class EventMessage {
@@ -16,10 +17,8 @@ public class EventMessage {
   JsonObject body;
   Map<String, String> headers;
 
-  public static EventMessage fromConsumerRecord(
-    KafkaConsumerRecord<String, JsonObject> consumerRecord) {
-
-    final var value = consumerRecord.value();
+  public static EventMessage fromConsumerRecord(ConsumerRecord<String, String> consumerRecord) {
+    final var value = new JsonObject(consumerRecord.value());
 
     return new EventMessage(
       value.getString("type"),
@@ -27,6 +26,12 @@ public class EventMessage {
       value.getJsonObject("new"),
       value.getJsonObject("old"),
       value,
-      kafkaHeadersToMap(consumerRecord.headers()));
+      rawHeadersToMap(consumerRecord));
+  }
+
+  private static Map<String, String> rawHeadersToMap(ConsumerRecord<String, String> consumerRecord) {
+    final Map<String, String> headers = new HashMap<>();
+    consumerRecord.headers().forEach(header -> headers.put(header.key(), new String(header.value(), UTF_8)));
+    return headers;
   }
 }
