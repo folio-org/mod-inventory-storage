@@ -11,9 +11,13 @@ public final class AwaitConfiguration {
   private AwaitConfiguration() { }
 
   public static ConditionFactory awaitAtMost() {
-    // Timeout was gradually extended to try to alleviate instability
-    // Attempts should be made to reduce this value
-    return await().atMost(20, SECONDS);
+    // Was 20s, gradually extended to alleviate instability from the old FakeKafkaConsumer, which
+    // only updated its in-memory index on demand within each poll. Now that it's backed by
+    // KafkaTestEventCollector's continuously-draining background thread, an
+    // already-arrived message matches on the first poll regardless of this timeout, so it no
+    // longer needs to be long enough to also cover broker-poll latency - only genuine
+    // publish-to-consume lag.
+    return await().atMost(5, SECONDS);
   }
 
   public static ConditionFactory awaitDuring(int timeout, TimeUnit unit) {
