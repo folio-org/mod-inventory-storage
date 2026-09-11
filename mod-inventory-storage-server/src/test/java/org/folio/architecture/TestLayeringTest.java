@@ -27,7 +27,6 @@ class TestLayeringTest {
     "org.folio.services.reindex.ReindexExportOrchestratorTest",
     "org.folio.services.reindex.ReindexFileReadyEventPublisherTest",
     "org.folio.services.reindex.ReindexS3ExportServiceTest",
-    "org.folio.services.consortium.ShadowInstanceSynchronizationHandlerTest",
     "org.folio.services.domainevent.CommonDomainEventPublisherTest"
   );
 

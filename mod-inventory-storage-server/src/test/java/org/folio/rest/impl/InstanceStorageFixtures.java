@@ -21,15 +21,30 @@ final class InstanceStorageFixtures {
   }
 
   static String createInstanceType(HttpClient client) {
-    var id = UUID.randomUUID().toString();
+    return createInstanceType(client, null);
+  }
+
+  static String createInstanceType(HttpClient client, String tenantId) {
+    return createInstanceType(client, tenantId, UUID.randomUUID().toString());
+  }
+
+  /**
+   * Seeds an instance type with the given {@code id}, for callers that need the same instance
+   * type to exist under the same id across more than one tenant's schema (e.g. a shadow-instance
+   * update copies its source instance's {@code instanceTypeId} verbatim onto the target tenant,
+   * which only satisfies that foreign key if the same id was seeded there too).
+   */
+  static String createInstanceType(HttpClient client, String tenantId, String id) {
     var instanceType = new InstanceType()
       .withId(id)
       .withName("test instance type " + id)
       .withCode(id.substring(0, 8))
       .withSource("local");
+    var body = BaseIntegrationTest.pojo2JsonObject(instanceType);
 
-    BaseIntegrationTest.get(BaseIntegrationTest.doPost(
-      client, ResourcePaths.INSTANCE_TYPES, BaseIntegrationTest.pojo2JsonObject(instanceType)));
+    BaseIntegrationTest.get(tenantId == null
+      ? BaseIntegrationTest.doPost(client, ResourcePaths.INSTANCE_TYPES, body)
+      : BaseIntegrationTest.doPost(client, ResourcePaths.INSTANCE_TYPES, tenantId, body));
 
     return id;
   }
