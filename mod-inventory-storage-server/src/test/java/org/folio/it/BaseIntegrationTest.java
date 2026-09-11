@@ -250,9 +250,9 @@ public abstract class BaseIntegrationTest {
   }
 
   @BeforeAll
-  static void beforeAll(Vertx vertx) {
+  static void beforeAll() {
     port = SHARED_VERTICLE.shared.getPort();
-    client = vertx.createHttpClient();
+    client = SHARED_VERTICLE.shared.getVertx().createHttpClient();
     for (String tenant : ALL_TENANTS) {
       SHARED_VERTICLE.shared.enableTenantIfAbsent(tenant, null, tenantAttributes());
     }

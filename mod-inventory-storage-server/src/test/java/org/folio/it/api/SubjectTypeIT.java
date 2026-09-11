@@ -13,12 +13,13 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -71,7 +72,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectType(subjectType);
 
-    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "?query=name==" + name));
+    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "?query=name==" + urlEncode(name)));
 
     assertThat(response.status()).isEqualTo(SC_OK);
     var collection = response.jsonBody();
@@ -167,7 +168,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
     var response = await(
-      doPost(client, ResourcePaths.SUBJECT_TYPES, RestUtility.CONSORTIUM_CENTRAL_TENANT, subjectType));
+      doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
@@ -218,7 +219,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should fail to update a subject type when changing its source to consortium at a "
-    + "non-consortium tenant")
+               + "non-consortium tenant")
   void shouldFailToUpdateSubjectType_whenChangingSourceToConsortiumAtNonConsortiumTenant() {
     var id = UUID.randomUUID().toString();
     var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
@@ -237,7 +238,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update a subject type when changing its source to consortium at the consortium "
-    + "central tenant")
+               + "central tenant")
   void shouldUpdateSubjectType_whenChangingSourceToConsortiumAtConsortiumCentralTenant() {
     var id = UUID.randomUUID().toString();
     var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
@@ -245,7 +246,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     await(doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
     var response =
-      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, RestUtility.CONSORTIUM_CENTRAL_TENANT,
+      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
         subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
@@ -260,7 +261,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     await(doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
     var response =
-      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, RestUtility.CONSORTIUM_CENTRAL_TENANT,
+      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
         subjectType.put(SOURCE_FIELD, SOURCE_LOCAL)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
@@ -299,6 +300,10 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
   private static String randomName() {
     return "a subject type " + UUID.randomUUID();
+  }
+
+  private static String urlEncode(String value) {
+    return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 
   private static String randomSubjectSourceId() {

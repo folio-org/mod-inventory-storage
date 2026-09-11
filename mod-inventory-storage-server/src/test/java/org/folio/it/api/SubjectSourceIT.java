@@ -13,6 +13,8 @@ import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
@@ -76,7 +78,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var subjectSource = new JsonObject().put(NAME_FIELD, name).put(CODE_FIELD, code).put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectSource(subjectSource);
 
-    for (var query : List.of("name==" + name, "code==" + code)) {
+    for (var query : List.of("name==" + urlEncode(name), "code==" + urlEncode(code))) {
       var response = await(doGet(client, ResourcePaths.SUBJECT_SOURCES + "?query=" + query));
 
       assertThat(response.status()).as("query: %s", query).isEqualTo(SC_OK);
@@ -319,6 +321,10 @@ class SubjectSourceIT extends BaseIntegrationTest {
 
   private static String randomCode() {
     return UUID.randomUUID().toString().substring(0, 8);
+  }
+
+  private static String urlEncode(String value) {
+    return URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
 
   private static String randomSubjectTypeId() {
