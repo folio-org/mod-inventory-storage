@@ -2,8 +2,8 @@ package org.folio.rest.impl;
 
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
-import static org.folio.rest.api.TestBaseWithInventoryUtil.createInstanceRequest;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
+import static org.folio.rest.impl.InstanceStorageFixtures.createInstanceRequest;
 import static org.folio.rest.support.AwaitConfiguration.awaitAtMost;
 import static org.folio.utility.ModuleUtility.vertxUrl;
 import static org.folio.utility.RestUtility.TENANT_ID;

@@ -6,7 +6,6 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.folio.rest.api.TestBaseWithInventoryUtil.USER_TENANTS_PATH;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 import static org.folio.utility.RestUtility.CONSORTIUM_ID;
 import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
@@ -72,6 +71,7 @@ public abstract class BaseIntegrationTest {
   protected static HttpClient client;
   protected static final String MODULE_ID = "mod-inventory-storage-1.0.0";
   static final FakeKafkaConsumer KAFKA_CONSUMER = new FakeKafkaConsumer();
+  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
   @RegisterExtension
   private static final PostgresExtension POSTGRES = new PostgresExtension();
