@@ -480,6 +480,16 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco-maven-plugin.version}</version>
+        <configuration>
+          <!-- Applies as the default for every report/check execution below (prepare-agent*
+               and merge ignore it, as they don't operate on per-class data). RAML-generated
+               JAXRS model/resource classes are pure data holders and interfaces with no
+               logic to cover, so counting them would understate real coverage and dilute
+               the ratchet's signal. -->
+          <excludes>
+            <exclude>org/folio/rest/jaxrs/**</exclude>
+          </excludes>
+        </configuration>
         <executions>
           <execution>
             <id>prepare-agent</id>
@@ -498,8 +508,7 @@
           </execution>
           <execution>
             <!-- Bound earlier than report's own default (verify) so the report is still
-                 written if failsafe:verify then fails the build over a test failure -
-                 e.g. the pre-existing, unrelated IterationJobRunnerIT flake. -->
+                 written if failsafe:verify then fails the build over a test failure. -->
             <id>report</id>
             <phase>prepare-package</phase>
             <goals>
@@ -549,7 +558,7 @@
             </configuration>
           </execution>
           <execution>
-            <!-- Ratchet (WS6 step 2): fail the build only if overall line coverage drops
+            <!-- Ratchet: fail the build only if overall line coverage drops
                  below the measured baseline, not against an arbitrary absolute target. Bound
                  to post-integration-test for the same reason as the report executions above. -->
             <id>check</id>
