@@ -1,6 +1,5 @@
 package org.folio.persist;
 
-import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
@@ -135,6 +134,6 @@ class IterationJobRepositoryTest {
   }
 
   private static Map<String, String> okapiHeaders() {
-    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), TENANT_ID));
+    return new CaseInsensitiveMap<>(Map.of(TENANT.toLowerCase(), "test"));
   }
 }

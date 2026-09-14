@@ -1,6 +1,5 @@
 package org.folio.persist;
 
-import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -36,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SettingsRepositoryTest {
 
+  private static final String TENANT_ID = "test";
   private static final String TEST_KEY = "test_key";
   private static final String USER_ID = "00000000-0000-0000-0000-000000000000";
 

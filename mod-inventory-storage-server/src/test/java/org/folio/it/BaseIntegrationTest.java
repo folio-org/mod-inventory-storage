@@ -58,10 +58,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @ExtendWith(VertxExtension.class)
 public abstract class BaseIntegrationTest {
 
+  public static final String TENANT_ID = "test";
   protected static final String CONSORTIUM_ID = "0060045d-35a6-4935-a923-641bc135a47d";
   protected static final String CONSORTIUM_CENTRAL_TENANT = "central";
   protected static final String CONSORTIUM_MEMBER_TENANT = "member";
-  protected static final String TENANT_ID = "test";
 
   protected static final String USER_ID = UUID.randomUUID().toString();
   protected static final String MODULE_ID = "mod-inventory-storage-1.0.0";
