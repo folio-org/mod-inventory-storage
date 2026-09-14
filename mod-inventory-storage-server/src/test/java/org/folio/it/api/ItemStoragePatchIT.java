@@ -1,32 +1,21 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CONFLICT;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CONFLICT;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
-import static org.folio.it.HoldingsStorageFixtures.createCallNumberType;
-import static org.folio.it.HoldingsStorageFixtures.createLoanType;
-import static org.folio.it.HoldingsStorageFixtures.createMaterialType;
-import static org.folio.it.InstanceStorageFixtures.createInstance;
-import static org.folio.it.InstanceStorageFixtures.createInstanceType;
-import static org.folio.it.LocationStorageFixtures.createLocation;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
-import org.folio.it.BaseIntegrationTest;
-import org.folio.it.HoldingsStorageFixtures;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.ItemRequestBuilder;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -36,35 +25,7 @@ import org.junit.jupiter.api.Test;
  * field updates through PATCH specifically (as opposed to PUT). Split out of {@link
  * ItemStorageIT} because this is a large, cohesive concern in its own right.
  */
-class ItemPatchIT extends BaseIntegrationTest {
-
-  private static final String ITEMS_KEY = "items";
-  private static final String STATUS_KEY = "status";
-  // The itemLevelCallNumberTypeId this class's call-number-field patch test keys off; cannot be
-  // a fresh/random id (see HoldingsStorageFixtures.createCallNumberType).
-  private static final String DEWEY_CALL_NUMBER_TYPE_ID = "03dd64d0-5626-4ecd-8ece-4531e0069f35";
-
-  private static String instanceTypeId;
-  private static String materialTypeId;
-  private static String loanTypeId;
-  private static String mainLibraryLocationId;
-  private static String annexLibraryLocationId;
-  private static String deweyCallNumberTypeId;
-
-  @BeforeAll
-  static void seedReferenceData() {
-    instanceTypeId = createInstanceType(client);
-    materialTypeId = createMaterialType(client);
-    loanTypeId = createLoanType(client);
-    mainLibraryLocationId = createLocation(client);
-    annexLibraryLocationId = createLocation(client);
-    deweyCallNumberTypeId = createCallNumberType(client, DEWEY_CALL_NUMBER_TYPE_ID, "Dewey Decimal classification");
-  }
-
-  @BeforeEach
-  void clearItems() {
-    runQuery("TRUNCATE TABLE instance, holdings_record, item CASCADE");
-  }
+class ItemStoragePatchIT extends ItemStorageTestBase {
 
   @Test
   @DisplayName("should update an item via a bulk patch")
@@ -121,7 +82,7 @@ class ItemPatchIT extends BaseIntegrationTest {
 
     var response = patchItems(new JsonArray().add(patchItem));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.body().toString()).contains("Cannot set item.statistical_code_id")
       .contains("it does not exist in statistical_code.id");
   }
@@ -186,7 +147,7 @@ class ItemPatchIT extends BaseIntegrationTest {
 
     var response = patchItems(new JsonArray().add(patch1).add(patch2));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray("errors");
     assertThat(errors)
       .hasSize(2)
@@ -313,25 +274,10 @@ class ItemPatchIT extends BaseIntegrationTest {
 
   // -- shared helpers --
 
-  private static String createHoldingRecord() {
-    var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
-    return HoldingsStorageFixtures.createHolding(client, instanceId, mainLibraryLocationId);
-  }
-
   private static JsonObject itemRequest(UUID id, String holdingId) {
     return new ItemRequestBuilder().withId(id).forHolding(UUID.fromString(holdingId))
       .withMaterialType(UUID.fromString(materialTypeId)).withPermanentLoanType(UUID.fromString(loanTypeId))
       .create();
-  }
-
-  private static JsonObject createItem(JsonObject request) {
-    var response = await(doPost(client, ResourcePaths.ITEMS, request));
-    assertThat(response.status()).isEqualTo(SC_CREATED);
-    return response.jsonBody();
-  }
-
-  private static JsonObject getItemJsonById(String id) {
-    return await(doGet(client, ResourcePaths.ITEMS + "/" + id)).jsonBody();
   }
 
   private static TestResponse patchItems(JsonArray items) {

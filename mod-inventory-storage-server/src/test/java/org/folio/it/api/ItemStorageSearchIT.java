@@ -1,27 +1,18 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
-import static org.folio.it.HoldingsStorageFixtures.createLoanType;
-import static org.folio.it.HoldingsStorageFixtures.createMaterialType;
 import static org.folio.it.InstanceStorageFixtures.createInstance;
-import static org.folio.it.InstanceStorageFixtures.createInstanceType;
-import static org.folio.it.LocationStorageFixtures.createLocation;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
-import org.folio.it.BaseIntegrationTest;
-import org.folio.it.HoldingsStorageFixtures;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.HoldingRequestBuilder;
 import org.folio.support.builders.ItemRequestBuilder;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,34 +22,10 @@ import org.junit.jupiter.api.Test;
  * indexes. Split out of {@link ItemStorageIT} because this cluster of tests is large and shares
  * a distinct "find items by X" concern.
  */
-class ItemSearchIT extends BaseIntegrationTest {
+class ItemStorageSearchIT extends ItemStorageTestBase {
 
   private static final String DISCOVERY_SUPPRESS = "discoverySuppress";
   private static final String ITEMS_KEY = "items";
-
-  private static String instanceTypeId;
-  private static String materialTypeId;
-  private static String loanTypeId;
-  private static String mainLibraryLocationId;
-  private static String annexLibraryLocationId;
-  private static String onlineLocationId;
-  private static String secondFloorLocationId;
-
-  @BeforeAll
-  static void seedReferenceData() {
-    instanceTypeId = createInstanceType(client);
-    materialTypeId = createMaterialType(client);
-    loanTypeId = createLoanType(client);
-    mainLibraryLocationId = createLocation(client);
-    annexLibraryLocationId = createLocation(client);
-    onlineLocationId = createLocation(client);
-    secondFloorLocationId = createLocation(client);
-  }
-
-  @BeforeEach
-  void clearItems() {
-    runQuery("TRUNCATE TABLE instance, holdings_record, item CASCADE");
-  }
 
   @Test
   @DisplayName("should search for items by barcode with a leading zero")
@@ -145,7 +112,7 @@ class ItemSearchIT extends BaseIntegrationTest {
 
     // StackOverflowError in java.util.regex.Pattern https://issues.folio.org/browse/CIRC-119
     var response = searchForItems("barcode==(a or b or c or d or e or f or g or h or j or k or l or m or n or o "
-      + "or p or q or s or t or u or v or w or x or y or z or 673274826203)");
+                                  + "or p or q or s or t or u or v or w or x or y or z or 673274826203)");
 
     var foundItems = response.getJsonArray(ITEMS_KEY);
     assertThat(foundItems).hasSize(1);
@@ -276,13 +243,8 @@ class ItemSearchIT extends BaseIntegrationTest {
 
   // -- shared helpers --
 
-  private static String createHoldingRecord(String locationId) {
-    var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
-    return HoldingsStorageFixtures.createHolding(client, instanceId, locationId);
-  }
-
   private static String createHoldingRecordWithTemporaryLocation(String permanentLocationId,
-                                                                   String temporaryLocationId) {
+                                                                 String temporaryLocationId) {
     var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
     var request = new HoldingRequestBuilder().forInstance(UUID.fromString(instanceId))
       .withSource(UUID.fromString(createHoldingsRecordsSource(client)))
@@ -310,12 +272,6 @@ class ItemSearchIT extends BaseIntegrationTest {
     return builder.create();
   }
 
-  private static JsonObject createItem(JsonObject request) {
-    var response = await(doPost(client, ResourcePaths.ITEMS, request));
-    assertThat(response.status()).isEqualTo(SC_CREATED);
-    return response.jsonBody();
-  }
-
   private static JsonObject searchForItems(String cql) {
     return await(doGet(client, ResourcePaths.ITEMS + "?query=" + urlEncode(cql))).jsonBody();
   }
@@ -336,7 +292,7 @@ class ItemSearchIT extends BaseIntegrationTest {
 
   private static List<String> searchByCallNumberEyeReadable(String searchTerm) {
     var cql = "fullCallNumber==\"" + searchTerm + "\" OR callNumberAndSuffix==\"" + searchTerm
-      + "\" OR effectiveCallNumberComponents.callNumber==\"" + searchTerm + "\"";
+              + "\" OR effectiveCallNumberComponents.callNumber==\"" + searchTerm + "\"";
     return idsOf(searchForItems(cql));
   }
 
