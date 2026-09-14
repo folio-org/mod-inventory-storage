@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.junit5.VertxExtension;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,17 +21,18 @@ import org.folio.services.BulkProcessingContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+@ExtendWith(VertxExtension.class)
 class BulkProcessingErrorFileWriterTest {
 
   private static final String BULK_INSTANCES_FILE_PATH = "/parent-folder/bulkInstances";
 
-  private final Vertx vertx = Vertx.vertx();
   private BulkProcessingContext bulkContext;
   private BulkProcessingErrorFileWriter writer;
 
   @BeforeEach
-  void setUp() {
+  void setUp(Vertx vertx) {
     var request = new BulkUpsertRequest().withRecordsFileName(BULK_INSTANCES_FILE_PATH);
     bulkContext = new BulkProcessingContext(request);
     writer = new BulkProcessingErrorFileWriter(vertx, bulkContext);
@@ -64,8 +66,9 @@ class BulkProcessingErrorFileWriterTest {
   @Test
   void shouldThrowExceptionOnWriteIfWriterIsNotInitialized() {
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
+    var testError = new RuntimeException("Test error");
     assertThrows(IllegalStateException.class, () ->
-      writer.write(instance, Instance::getId, new RuntimeException("Test error")));
+      writer.write(instance, Instance::getId, testError));
   }
 
   private void assertFileContentEquals(String filePath, String expectedContent) throws IOException {

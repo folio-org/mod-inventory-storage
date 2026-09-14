@@ -202,7 +202,7 @@ class SettingsServiceTest {
 
   private void withSettingsService(Consumer<SettingsService> testBody) {
     try (MockedStatic<PgUtil> mockedPgUtil = mockStatic(PgUtil.class)) {
-      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any()))
         .thenReturn(postgresClient);
       testBody.accept(new SettingsService(context, okapiHeaders));
     }
@@ -221,6 +221,7 @@ class SettingsServiceTest {
     });
   }
 
+  @SuppressWarnings("unchecked")
   private RowSet<Row> buildRowSet(Setting setting) {
     RowSet<Row> rowSet = mock(RowSet.class);
     RowIterator<Row> iterator = mock(RowIterator.class);

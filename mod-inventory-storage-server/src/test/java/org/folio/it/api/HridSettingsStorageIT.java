@@ -7,7 +7,6 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;

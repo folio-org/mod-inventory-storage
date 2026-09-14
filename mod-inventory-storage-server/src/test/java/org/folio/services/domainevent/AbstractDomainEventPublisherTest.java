@@ -22,17 +22,22 @@ import org.folio.persist.AbstractRepository;
 import org.folio.services.batch.BatchOperationContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class AbstractDomainEventPublisherTest {
 
   private static final int CREATED = 201;
   private static final int NO_CONTENT = 204;
   private static final int BAD_REQUEST = 400;
 
-  @SuppressWarnings("unchecked")
-  private final AbstractRepository<String> repository = mock(AbstractRepository.class);
-  private final CommonDomainEventPublisher<TestEvent> domainEventService = mock(CommonDomainEventPublisher.class);
-  private final TestPublisher publisher = new TestPublisher(repository, domainEventService);
+  private @Mock AbstractRepository<String> repository;
+  private @Mock CommonDomainEventPublisher<TestEvent> domainEventService;
+
+  private @InjectMocks TestPublisher publisher;
 
   @Test
   @DisplayName("should skip publishing when the create response is not a success")
@@ -152,7 +157,7 @@ class AbstractDomainEventPublisherTest {
   @Test
   @DisplayName("should skip publishing when the batch update response is not a success")
   void shouldSkipPublishing_whenBatchUpdateResponseIsNotSuccess() {
-    var batch = new BatchOperationContext<>(List.<String>of(), List.of("old-1"), true);
+    var batch = new BatchOperationContext<>(List.of(), List.of("old-1"), true);
 
     publisher.publishUpdated(batch).handle(responseWithStatus(BAD_REQUEST));
 
@@ -162,7 +167,7 @@ class AbstractDomainEventPublisherTest {
   @Test
   @DisplayName("should skip publishing when the batch update disables events")
   void shouldSkipPublishing_whenBatchUpdateDisablesEvents() {
-    var batch = new BatchOperationContext<>(List.<String>of(), List.of("old-1"), false);
+    var batch = new BatchOperationContext<>(List.of(), List.of("old-1"), false);
 
     publisher.publishUpdated(batch).handle(responseWithStatus(NO_CONTENT));
 
@@ -209,7 +214,8 @@ class AbstractDomainEventPublisherTest {
    * publishRecordRemoved overload.
    */
   private static final class TestPublisher extends AbstractDomainEventPublisher<String, TestEvent> {
-    private TestPublisher(AbstractRepository<String> repository, CommonDomainEventPublisher<TestEvent> service) {
+
+    TestPublisher(AbstractRepository<String> repository, CommonDomainEventPublisher<TestEvent> service) {
       super(repository, service);
     }
 

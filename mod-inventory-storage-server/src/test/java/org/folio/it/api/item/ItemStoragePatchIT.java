@@ -22,8 +22,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Bulk PATCH ({@code /item-storage/items}) tests: applying a batch of partial item updates,
  * validation/error scenarios, read-only field stripping, and call-number/effective-location
- * field updates through PATCH specifically (as opposed to PUT). Split out of {@link
- * ItemStorageIT} because this is a large, cohesive concern in its own right.
+ * field updates through PATCH specifically (as opposed to PUT).
  */
 class ItemStoragePatchIT extends ItemStorageTestBase {
 

@@ -75,6 +75,7 @@ class HoldingsEventPublisherTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   @DisplayName("should partition new holdings into created and treat old holdings as existing records")
   void shouldPartitionNewHoldingsIntoCreatedAndOldHoldingsIntoExisting() {
     var existingOld = new HoldingsRecord().withId("h-1");
@@ -88,7 +89,6 @@ class HoldingsEventPublisherTest {
         List.of(updatedNew, createdNew), Map.of("h-1", existingOld), Map.of());
 
       verify(handler).handle(any(Response.class));
-      @SuppressWarnings("unchecked")
       var captor = ArgumentCaptor.forClass(BatchOperationContext.class);
       verify(holdingPublisher).publishCreatedOrUpdated(captor.capture());
       var batch = (BatchOperationContext<HoldingsRecord>) captor.getValue();
@@ -157,7 +157,7 @@ class HoldingsEventPublisherTest {
   @Test
   @DisplayName("should delegate to the holding publisher when publishing a created-or-updated batch")
   void shouldDelegateToHoldingPublisher_whenPublishingCreatedOrUpdatedBatch() {
-    var batch = new BatchOperationContext<>(List.<HoldingsRecord>of(), List.<HoldingsRecord>of(), true);
+    var batch = new BatchOperationContext<>(List.of(), List.<HoldingsRecord>of(), true);
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
       publisher.publishCreatedOrUpdated(batch);
@@ -203,7 +203,7 @@ class HoldingsEventPublisherTest {
       var context = Vertx.vertx().getOrCreateContext();
       var publisher = new HoldingsEventPublisher(context, OKAPI_HEADERS);
 
-      body.run(publisher, holdingCtor.constructed().get(0), itemCtor.constructed().get(0));
+      body.run(publisher, holdingCtor.constructed().getFirst(), itemCtor.constructed().getFirst());
     }
   }
 

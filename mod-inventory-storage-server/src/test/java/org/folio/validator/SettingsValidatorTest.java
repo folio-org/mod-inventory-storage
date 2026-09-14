@@ -18,10 +18,6 @@ class SettingsValidatorTest {
 
   private final SettingsValidator settingsValidator = new SettingsValidator();
 
-  // ============================
-  // STRING TYPE
-  // ============================
-
   @ParameterizedTest
   @ValueSource(strings = {
     "test_string_value",
@@ -50,10 +46,6 @@ class SettingsValidatorTest {
     );
   }
 
-  // ============================
-  // INTEGER TYPE
-  // ============================
-
   @ParameterizedTest
   @ValueSource(ints = {42, 0, -100})
   void validateIntegerTypeShouldAcceptIntegerValues(Integer value) {
@@ -80,10 +72,6 @@ class SettingsValidatorTest {
     );
   }
 
-  // ============================
-  // BOOLEAN TYPE
-  // ============================
-
   @ParameterizedTest
   @MethodSource("validBooleanValues")
   void validateBooleanTypeShouldAcceptValidValues(Object value) {
@@ -108,10 +96,6 @@ class SettingsValidatorTest {
   static Stream<Object> invalidBooleanValues() {
     return Stream.of("true true", 1, 0);
   }
-
-  // ============================
-  // NULLS
-  // ============================
 
   @ParameterizedTest
   @MethodSource("nullArguments")

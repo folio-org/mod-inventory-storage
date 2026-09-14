@@ -10,7 +10,6 @@ import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -27,12 +26,13 @@ import java.util.Set;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.services.KafkaAdminClientService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, MockitoExtension.class})
 class KafkaAdminClientServiceTest {
   private static final String STUB_TENANT = "foo-tenant";
 
@@ -58,14 +58,9 @@ class KafkaAdminClientServiceTest {
     "folio.foo-tenant.inventory.instance-date-type",
     "folio.foo-tenant.inventory.call-number-type",
     "folio.foo-tenant.inventory.setting");
-  private KafkaAdminClient mockClient;
-  private Vertx vertx;
 
-  @BeforeEach
-  void setUp() {
-    vertx = mock(Vertx.class);
-    mockClient = mock(KafkaAdminClient.class);
-  }
+  private @Mock KafkaAdminClient mockClient;
+  private @Mock Vertx vertx;
 
   @Test
   void shouldCreateTopicIfAlreadyExist(VertxTestContext testContext) {

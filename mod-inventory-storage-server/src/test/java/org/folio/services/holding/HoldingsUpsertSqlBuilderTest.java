@@ -20,14 +20,12 @@ class HoldingsUpsertSqlBuilderTest {
   private static final String HOLDINGS_TABLE = "diku_mod_inventory_storage.holdings_record";
   private static final String ITEMS_TABLE = "diku_mod_inventory_storage.item";
 
-  private HoldingsRepository holdingsRepository;
-  private ItemRepository itemRepository;
   private HoldingsUpsertSqlBuilder builder;
 
   @BeforeEach
   void setUp() {
-    holdingsRepository = mock(HoldingsRepository.class);
-    itemRepository = mock(ItemRepository.class);
+    var holdingsRepository = mock(HoldingsRepository.class);
+    var itemRepository = mock(ItemRepository.class);
     when(holdingsRepository.getFullTableName()).thenReturn(HOLDINGS_TABLE);
     when(itemRepository.getFullTableName()).thenReturn(ITEMS_TABLE);
     builder = new HoldingsUpsertSqlBuilder(holdingsRepository, itemRepository);
@@ -93,7 +91,7 @@ class HoldingsUpsertSqlBuilderTest {
 
   @Test
   @DisplayName("should return the serialization error instead of sql when a holding cannot be serialized")
-  void shouldReturnSerializationError_whenHoldingCannotBeSerialized() throws JsonProcessingException {
+  void shouldReturnSerializationError_whenHoldingCannotBeSerialized() {
     var holding = new HoldingsRecord().withId("id-1");
     var cause = mock(JsonProcessingException.class);
     try (var pgClientMock = mockStatic(PostgresClient.class)) {

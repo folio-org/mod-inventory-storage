@@ -23,12 +23,10 @@ class SettingCacheTest {
   private static final String TEST_CACHE_KEY = "test:SETTING_KEY";
   private static final String TEST_CACHE_VALUE = "test_value";
 
-  private Vertx vertx;
   private SettingCache settingCache;
 
   @BeforeEach
-  void setUp() {
-    vertx = Vertx.vertx();
+  void setUp(Vertx vertx) {
     settingCache = new SettingCache(vertx);
   }
 
@@ -205,7 +203,7 @@ class SettingCacheTest {
   }
 
   private void assertCachedValue(VertxTestContext context, Checkpoint checkpoint,
-                                  Future<String> result, String expectedValue) {
+                                 Future<String> result, String expectedValue) {
     result.onComplete(ar -> {
       context.verify(() -> {
         assertTrue(ar.succeeded());

@@ -22,7 +22,7 @@
 
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Migrate tests to Junit 6 and improve coverage ([MODINVSTOR-1594](https://folio-org.atlassian.net/browse/MODINVSTOR-1594))
 
 ### Dependencies
 * Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`

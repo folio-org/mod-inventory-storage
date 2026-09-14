@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class DomainEventRawTest {
 
   @Test
-  void deleteEventIncludesOldRecordRespresentationAndEventTypeAndTenant() {
+  void deleteEventIncludesOldRecordRepresentationAndEventTypeAndTenant() {
     assertTrue(DomainEventRaw.deleteEvent("myold", "mytenant").toString()
       .endsWith("[oldEntity=myold,newEntity=<null>,type=DELETE,tenant=mytenant]"));
   }

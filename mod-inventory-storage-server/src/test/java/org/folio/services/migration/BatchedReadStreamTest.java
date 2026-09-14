@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class BatchedReadStreamTest {
+
   @Test
   @SuppressWarnings("unchecked")
   void shouldProcessRecordsByBatch() {

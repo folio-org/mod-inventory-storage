@@ -8,7 +8,6 @@ import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.location.LocationService.LOCATION_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
 import static org.folio.services.locationunit.LibraryService.LIBRARY_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Future;

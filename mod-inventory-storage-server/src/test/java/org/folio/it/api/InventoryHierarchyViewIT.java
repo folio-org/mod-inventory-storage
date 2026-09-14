@@ -17,7 +17,6 @@ import static org.folio.it.LocationStorageFixtures.createInstitution;
 import static org.folio.it.LocationStorageFixtures.createLibrary;
 import static org.folio.it.LocationStorageFixtures.createLocation;
 import static org.folio.it.LocationStorageFixtures.createServicePoint;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

@@ -3,7 +3,6 @@ package org.folio.it.api;
 import static org.folio.HttpStatus.HTTP_BAD_REQUEST;
 import static org.folio.HttpStatus.HTTP_CREATED;
 import static org.folio.rest.impl.InstanceTypeApi.INSTANCE_TYPE_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;

@@ -170,7 +170,7 @@ class HoldingsServiceTest {
   void shouldExtractInstanceIdAndSortFields_whenQueryMatches() throws Exception {
     var service = uninitializedService();
     var holdingsRepository = mock(HoldingsRepository.class);
-    setField(service, "holdingsRepository", holdingsRepository);
+    injectRepository(service, holdingsRepository);
     var row = mock(io.vertx.sqlclient.Row.class);
     when(row.getString("holdings")).thenReturn("[]");
     when(row.getLong("total_records")).thenReturn(0L);
@@ -178,7 +178,7 @@ class HoldingsServiceTest {
     // splitting on runs of spaces yields a leading empty element - documenting current
     // behavior, not asserting it's ideal.
     when(holdingsRepository.getByInstanceId(
-      "11111111-1111-1111-1111-111111111111", new String[]{"", "callNumber", "callNumberSuffix"}, 0, 10))
+      "11111111-1111-1111-1111-111111111111", new String[] {"", "callNumber", "callNumberSuffix"}, 0, 10))
       .thenReturn(io.vertx.core.Future.succeededFuture(row));
 
     var result = service.getByInstanceId(0, 10,
@@ -204,22 +204,22 @@ class HoldingsServiceTest {
 
   private static boolean shouldUpdateItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     return invokePrivate(uninitializedService(), "shouldUpdateItems",
-      new Class<?>[]{HoldingsRecord.class, HoldingsRecord.class}, oldHoldings, newHoldings);
+      new Class<?>[] {HoldingsRecord.class, HoldingsRecord.class}, oldHoldings, newHoldings);
   }
 
   private static String calculateEffectiveLocation(HoldingsRecord holding) {
     return invokePrivate(uninitializedService(), "calculateEffectiveLocation",
-      new Class<?>[]{HoldingsRecord.class}, holding);
+      new Class<?>[] {HoldingsRecord.class}, holding);
   }
 
   private static void ensureHoldingsHaveIds(List<HoldingsRecord> holdings) {
-    invokePrivate(uninitializedService(), "ensureHoldingsHaveIds", new Class<?>[]{List.class}, holdings);
+    invokePrivate(uninitializedService(), "ensureHoldingsHaveIds", new Class<?>[] {List.class}, holdings);
   }
 
   private static io.vertx.core.Future<javax.ws.rs.core.Response> handleOptimisticLocking(
     List<HoldingsRecord> holdings, boolean optimisticLocking) {
     return invokePrivate(uninitializedService(), "handleOptimisticLocking",
-      new Class<?>[]{List.class, boolean.class}, holdings, optimisticLocking);
+      new Class<?>[] {List.class, boolean.class}, holdings, optimisticLocking);
   }
 
   @SuppressWarnings("unchecked")
@@ -235,8 +235,8 @@ class HoldingsServiceTest {
     }
   }
 
-  private static void setField(Object target, String fieldName, Object value) throws ReflectiveOperationException {
-    Field field = target.getClass().getDeclaredField(fieldName);
+  private static void injectRepository(Object target, Object value) throws ReflectiveOperationException {
+    Field field = target.getClass().getDeclaredField("holdingsRepository");
     field.setAccessible(true);
     field.set(target, value);
   }

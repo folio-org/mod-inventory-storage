@@ -1,6 +1,7 @@
 package org.folio.services.item;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -189,7 +190,7 @@ class ItemServiceTest {
   @Test
   @DisplayName("should do nothing when the patch has no additional properties")
   void shouldDoNothing_whenPatchHasNoAdditionalProperties() {
-    removeReadOnlyFields(new ItemPatchRequest());
+    assertDoesNotThrow(() -> removeReadOnlyFields(new ItemPatchRequest()));
   }
 
   @Test
@@ -199,7 +200,7 @@ class ItemServiceTest {
 
     var result = populateCirculationNoteId(item);
 
-    assertThat(UUID.fromString(result.result().getCirculationNotes().get(0).getId())).isNotNull();
+    assertThat(UUID.fromString(result.result().getCirculationNotes().getFirst().getId())).isNotNull();
   }
 
   @Test
@@ -209,7 +210,7 @@ class ItemServiceTest {
 
     var result = populateCirculationNoteId(item);
 
-    assertThat(result.result().getCirculationNotes().get(0).getId()).isEqualTo("existing-note-id");
+    assertThat(result.result().getCirculationNotes().getFirst().getId()).isEqualTo("existing-note-id");
   }
 
   @Test
@@ -224,23 +225,23 @@ class ItemServiceTest {
 
   private static boolean isItemFieldsAffected(HoldingsRecord holdings, Item item) {
     return invokeStaticPrivate("isItemFieldsAffected",
-      new Class<?>[]{HoldingsRecord.class, Item.class}, holdings, item);
+      new Class<?>[] {HoldingsRecord.class, Item.class}, holdings, item);
   }
 
   private static Response putFailure(Throwable throwable) {
-    return invokeStaticPrivate("putFailure", new Class<?>[]{Throwable.class}, throwable);
+    return invokeStaticPrivate("putFailure", new Class<?>[] {Throwable.class}, throwable);
   }
 
   private static void ensureItemsHaveIds(List<Item> items) {
-    invokePrivate(uninitializedService(), "ensureItemsHaveIds", new Class<?>[]{List.class}, items);
+    invokePrivate(uninitializedService(), "ensureItemsHaveIds", new Class<?>[] {List.class}, items);
   }
 
   private static void removeReadOnlyFields(ItemPatchRequest itemPatch) {
-    invokePrivate(uninitializedService(), "removeReadOnlyFields", new Class<?>[]{ItemPatchRequest.class}, itemPatch);
+    invokePrivate(uninitializedService(), "removeReadOnlyFields", new Class<?>[] {ItemPatchRequest.class}, itemPatch);
   }
 
   private static io.vertx.core.Future<Item> populateCirculationNoteId(Item item) {
-    return invokePrivate(uninitializedService(), "populateCirculationNoteId", new Class<?>[]{Item.class}, item);
+    return invokePrivate(uninitializedService(), "populateCirculationNoteId", new Class<?>[] {Item.class}, item);
   }
 
   private static ItemService uninitializedService() {

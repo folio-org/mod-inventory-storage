@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.Row;
 import java.lang.reflect.Constructor;
@@ -15,26 +17,39 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ReindexJobRunnerTest {
 
   private static final String JOB_ID = "job-1";
   private static final String TENANT_ID = "diku";
 
-  @SuppressWarnings("unchecked")
-  private final PostgresClient postgresClient = mock(PostgresClient.class);
-  private final ReindexJobRepository reindexJobRepository = mock(ReindexJobRepository.class);
-  @SuppressWarnings("unchecked")
-  private final CommonDomainEventPublisher<Instance> instanceEventPublisher = mock(CommonDomainEventPublisher.class);
-  private final ReindexJobRunner runner = new ReindexJobRunner(postgresClient, reindexJobRepository,
-    Vertx.vertx().getOrCreateContext(), instanceEventPublisher, TENANT_ID);
+  private @Mock PostgresClient postgresClient;
+  private @Mock ReindexJobRepository reindexJobRepository;
+  private @Mock CommonDomainEventPublisher<Instance> instanceEventPublisher;
+  private @Captor ArgumentCaptor<UnaryOperator<ReindexJob>> reindexJobCaptor;
+
+  private ReindexJobRunner runner;
+
+  @BeforeEach
+  void setUp() {
+    runner = new ReindexJobRunner(postgresClient, reindexJobRepository,
+      Vertx.vertx().getOrCreateContext(), instanceEventPublisher, TENANT_ID);
+  }
 
   @Test
   @DisplayName("should not log job details when the record count is not a multiple of the log interval")
@@ -62,7 +77,7 @@ class ReindexJobRunnerTest {
     var result = logJobDetails(1L, context);
 
     assertThat(result.result()).isNotNull();
-    verify(reindexJobRepository, org.mockito.Mockito.never()).fetchAndUpdate(any(), any());
+    verify(reindexJobRepository, never()).fetchAndUpdate(any(), any());
   }
 
   @Test
@@ -110,14 +125,12 @@ class ReindexJobRunnerTest {
   void shouldMarkJobFailed_whenFailedJobWasNotPendingCancellation() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var inProgress = new ReindexJob().withId(JOB_ID).withJobStatus(ReindexJob.JobStatus.IN_PROGRESS);
-    @SuppressWarnings("unchecked")
-    var updatedJobCaptor = org.mockito.ArgumentCaptor.forClass(UnaryOperator.class);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), updatedJobCaptor.capture()))
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture()))
       .thenReturn(succeededFuture(inProgress));
 
     logFailedJob(context);
 
-    var result = (ReindexJob) updatedJobCaptor.getValue().apply(inProgress);
+    var result = reindexJobCaptor.getValue().apply(inProgress);
     assertThat(result.getJobStatus()).isEqualTo(ReindexJob.JobStatus.ID_PUBLISHING_FAILED);
   }
 
@@ -126,14 +139,12 @@ class ReindexJobRunnerTest {
   void shouldMarkReindexCompleted_withPublishedCount() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var updatedJob = new ReindexJob().withId(JOB_ID);
-    @SuppressWarnings("unchecked")
-    var updaterCaptor = org.mockito.ArgumentCaptor.forClass(UnaryOperator.class);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), updaterCaptor.capture()))
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture()))
       .thenReturn(succeededFuture(updatedJob));
 
     logReindexCompleted(42L, context);
 
-    var result = (ReindexJob) updaterCaptor.getValue().apply(new ReindexJob());
+    var result = reindexJobCaptor.getValue().apply(new ReindexJob());
     assertThat(result.getPublished()).isEqualTo(42);
     assertThat(result.getJobStatus()).isEqualTo(ReindexJob.JobStatus.IDS_PUBLISHED);
   }
@@ -167,25 +178,25 @@ class ReindexJobRunnerTest {
     }
   }
 
-  private io.vertx.core.Future<ReindexJob> logJobDetails(Long records, Object context) {
-    return invokePrivate("logJobDetails", new Class<?>[]{Long.class, context.getClass()}, records, context);
+  private Future<ReindexJob> logJobDetails(Long records, Object context) {
+    return invokePrivate("logJobDetails", new Class<?>[] {Long.class, context.getClass()}, records, context);
   }
 
   private void logFailedJob(Object context) {
-    invokePrivate("logFailedJob", new Class<?>[]{context.getClass()}, context);
+    invokePrivate("logFailedJob", new Class<?>[] {context.getClass()}, context);
   }
 
   private void logReindexCompleted(Long recordsPublished, Object context) {
-    invokePrivate("logReindexCompleted", new Class<?>[]{Long.class, context.getClass()}, recordsPublished, context);
+    invokePrivate("logReindexCompleted", new Class<?>[] {Long.class, context.getClass()}, recordsPublished, context);
   }
 
-  private org.folio.kafka.services.KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(
+  private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(
     Row row, Object context) {
-    return invokePrivate("rowToInstanceProducerRecord", new Class<?>[]{Row.class, context.getClass()}, row, context);
+    return invokePrivate("rowToInstanceProducerRecord", new Class<?>[] {Row.class, context.getClass()}, row, context);
   }
 
   private boolean shouldLogJobDetails(long records) {
-    return invokePrivate("shouldLogJobDetails", new Class<?>[]{long.class}, records);
+    return invokePrivate("shouldLogJobDetails", new Class<?>[] {long.class}, records);
   }
 
   @SuppressWarnings("unchecked")

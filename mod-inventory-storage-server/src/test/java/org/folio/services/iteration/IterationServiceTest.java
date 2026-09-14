@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -22,17 +21,19 @@ import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class IterationServiceTest {
 
-  private IterationJobRepository repository;
-  private IterationJobRunner runner;
+  private @Mock IterationJobRepository repository;
+  private @Mock IterationJobRunner runner;
   private IterationService service;
 
   @BeforeEach
   void setUp() {
-    repository = mock(IterationJobRepository.class);
-    runner = mock(IterationJobRunner.class);
     service = new IterationService(repository, runner);
   }
 

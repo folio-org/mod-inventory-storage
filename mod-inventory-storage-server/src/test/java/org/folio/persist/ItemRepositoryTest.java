@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -29,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
@@ -36,20 +38,25 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ItemRepositoryTest {
+
+  private @Mock PostgresClient postgresClient;
 
   private ItemRepository itemRepository;
 
   @BeforeEach
   @SuppressWarnings("unchecked")
   void setUp() {
-    var postgresClient = mock(PostgresClient.class);
-    when(postgresClient.getTenantId()).thenReturn("test_tenant");
+    lenient().when(postgresClient.getTenantId()).thenReturn("test_tenant");
     var context = Vertx.vertx().getOrCreateContext();
-    var okapiHeaders = Map.of("X-Okapi-Tenant", "test_tenant");
+    var okapiHeaders = Map.of(XOkapiHeaders.TENANT, "test_tenant");
 
     try (var pgUtilMock = mockStatic(PgUtil.class)) {
       pgUtilMock.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))

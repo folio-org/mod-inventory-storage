@@ -2,7 +2,6 @@ package org.folio.it.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import java.util.Date;

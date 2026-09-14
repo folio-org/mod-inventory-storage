@@ -19,8 +19,7 @@ import org.junit.jupiter.api.Test;
 /**
  * CQL search/filter tests for {@code /item-storage/items}: barcode, tags, status,
  * discovery-suppress, effective location, call number, and purchase-order-line-identifier
- * indexes. Split out of {@link ItemStorageIT} because this cluster of tests is large and shares
- * a distinct "find items by X" concern.
+ * indexes.
  */
 class ItemStorageSearchIT extends ItemStorageTestBase {
 

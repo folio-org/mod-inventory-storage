@@ -17,7 +17,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.nio.file.Path;
 import org.folio.okapi.common.XOkapiHeaders;
-import org.folio.utility.KafkaUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,8 +58,8 @@ class InstallUpgradeIT {
   private static final Network NETWORK = Network.newNetwork();
 
   @Container
-  private static final KafkaContainer KAFKA =
-    new KafkaContainer(KafkaUtility.getImageName())
+  private static final KafkaContainer KAFKA
+    = new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
       .withNetwork(NETWORK)
       .withNetworkAliases("mykafka")
       .withListener("mykafka:19092")

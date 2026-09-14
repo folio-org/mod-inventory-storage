@@ -9,8 +9,6 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -36,7 +34,6 @@ import org.folio.services.domainevent.DomainEvent;
 import org.folio.services.domainevent.DomainEventType;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -173,7 +170,8 @@ class ShadowInstanceSynchronizationHandlerIT extends BaseIntegrationTest {
     var event = DomainEvent.updateEvent(instance, instance, CONSORTIUM_CENTRAL_TENANT);
     var kafkaRecord = buildKafkaRecord(instance.getId(), event);
 
-    assertThatThrownBy(() -> await(synchronizationHandler.handle(kafkaRecord)))
+    var futureResult = synchronizationHandler.handle(kafkaRecord);
+    assertThatThrownBy(() -> await(futureResult))
       .isInstanceOf(IllegalStateException.class);
 
     wm.verify(1, WireMock.getRequestedFor(WireMock.urlPathMatching(SHARING_JOBS_PATH)));
@@ -193,7 +191,7 @@ class ShadowInstanceSynchronizationHandlerIT extends BaseIntegrationTest {
 
   private Instance getInstanceById(String instanceId) {
     var response =
-      await(doGet(client, ResourcePaths.INSTANCES + "/" + instanceId, RestUtility.TENANT_ID));
+      await(doGet(client, ResourcePaths.INSTANCES + "/" + instanceId, BaseIntegrationTest.TENANT_ID));
     return response.bodyAsClass(Instance.class);
   }
 

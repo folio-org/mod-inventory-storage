@@ -5,7 +5,6 @@ import static org.folio.it.InstanceStorageFixtures.createInstanceRequest;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;

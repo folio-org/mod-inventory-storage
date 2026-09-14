@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,24 +22,24 @@ import java.util.UUID;
 import org.folio.kafka.KafkaProducerManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SettingEventPublisherTest {
 
   private static final String TENANT_ID = "test-tenant";
   private static final String SETTING_KEY = "inventory.optimize-updates.enabled";
   private static final String SETTING_VALUE = "true";
 
-  private KafkaProducerManager producerManager;
-  private KafkaProducer<String, String> kafkaProducer;
+  private @Mock KafkaProducerManager producerManager;
+  private @Mock KafkaProducer<String, String> kafkaProducer;
   private Map<String, String> okapiHeaders;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
-    producerManager = mock(KafkaProducerManager.class);
-    kafkaProducer = mock(KafkaProducer.class);
-
-    when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
+    lenient().when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
 
     okapiHeaders = new HashMap<>();
     okapiHeaders.put(TENANT, TENANT_ID);

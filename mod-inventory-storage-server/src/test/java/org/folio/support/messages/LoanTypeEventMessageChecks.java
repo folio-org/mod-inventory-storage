@@ -1,8 +1,8 @@
 package org.folio.support.messages;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
 

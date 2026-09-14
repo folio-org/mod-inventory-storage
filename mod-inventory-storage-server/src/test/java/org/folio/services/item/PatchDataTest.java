@@ -13,7 +13,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@DisplayName("PatchData Tests")
 class PatchDataTest {
 
   private PatchData patchData;
@@ -40,7 +39,7 @@ class PatchDataTest {
 
     // When
     var hasChanges = patchData.hasChanges();
-    
+
     // Then
     assertFalse(hasChanges, description);
   }
@@ -57,7 +56,7 @@ class PatchDataTest {
 
     // When
     var hasChanges = patchData.hasChanges();
-    
+
     // Then
     assertTrue(hasChanges, description);
   }

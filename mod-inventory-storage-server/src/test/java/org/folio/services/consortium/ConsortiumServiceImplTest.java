@@ -12,9 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -24,30 +21,21 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.dataimport.testsupport.rest.BaseWireMockTest;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.consortium.entities.SharingStatus;
 import org.folio.services.consortium.exceptions.ConsortiumException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith({VertxExtension.class, MockitoExtension.class})
-class ConsortiumServiceImplTest {
-
-  @RegisterExtension
-  static WireMockExtension mockServer = WireMockExtension.newInstance()
-    .options(WireMockConfiguration.wireMockConfig()
-      .notifier(new ConsoleNotifier(false))
-      .dynamicPort())
-    .configureStaticDsl(true)
-    .build();
+class ConsortiumServiceImplTest extends BaseWireMockTest {
 
   private static final String TENANT_ID = "diku";
   private static final String CENTRAL_TENANT_ID = "mobius";
@@ -63,11 +51,11 @@ class ConsortiumServiceImplTest {
   private static final String INSTANCE_SHARE_PATH = String.format("/consortia/%s/sharing/instances",
     CONSORTIUM_ID);
 
-  private ConsortiumServiceImpl consortiumServiceImpl;
-  private Map<String, String> okapiHeaders;
-
   @Mock
   private ConsortiumDataCache consortiumDataCache;
+
+  private ConsortiumServiceImpl consortiumServiceImpl;
+  private Map<String, String> okapiHeaders;
 
   @BeforeEach
   void setUp(Vertx vertx) {
@@ -75,12 +63,7 @@ class ConsortiumServiceImplTest {
     okapiHeaders = Map.of(
       XOkapiHeaders.TENANT, TENANT_ID,
       XOkapiHeaders.TOKEN, TOKEN,
-      XOkapiHeaders.URL, mockServer.baseUrl());
-  }
-
-  @AfterEach
-  void reset() {
-    WireMock.reset();
+      XOkapiHeaders.URL, WIRE_MOCK.baseUrl());
   }
 
   @Test
@@ -93,7 +76,7 @@ class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "COMPLETE");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstance.encodePrettily())));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
@@ -123,7 +106,7 @@ class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "ERROR");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstance.encodePrettily())));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
@@ -142,7 +125,7 @@ class ConsortiumServiceImplTest {
   void shouldReturnFailureForErrorOnSharing(VertxTestContext context) {
     ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH).willReturn(WireMock.serverError()));
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH).willReturn(WireMock.serverError()));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
 
@@ -169,7 +152,7 @@ class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "COMPLETE");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstanceResult.encodePrettily())));
 
     consortiumServiceImpl.shareInstance(CONSORTIUM_ID, sharingInstance, okapiHeaders).onComplete(ar -> {
@@ -177,7 +160,7 @@ class ConsortiumServiceImplTest {
         verify(postRequestedFor(urlMatching(INSTANCE_SHARE_PATH))
           .withHeader(XOkapiHeaders.TENANT, equalTo(TENANT_ID))
           .withHeader(XOkapiHeaders.TOKEN, equalTo(TOKEN))
-          .withHeader(XOkapiHeaders.URL, WireMock.equalTo(mockServer.baseUrl())));
+          .withHeader(XOkapiHeaders.URL, WireMock.equalTo(WIRE_MOCK.baseUrl())));
         assertTrue(ar.succeeded());
         assertEquals(SharingStatus.COMPLETE, ar.result().getStatus());
       });
@@ -205,6 +188,6 @@ class ConsortiumServiceImplTest {
     verify(postRequestedFor(urlMatching(INSTANCE_SHARE_PATH))
       .withHeader(XOkapiHeaders.TENANT, equalTo(CENTRAL_TENANT_ID))
       .withHeader(XOkapiHeaders.TOKEN, equalTo(TOKEN))
-      .withHeader(XOkapiHeaders.URL, WireMock.equalTo(mockServer.baseUrl())));
+      .withHeader(XOkapiHeaders.URL, WireMock.equalTo(WIRE_MOCK.baseUrl())));
   }
 }

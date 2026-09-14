@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -45,25 +46,13 @@ class ReindexS3ExportServiceTest {
     // 1-byte threshold forces a part upload after every row.
     // 5 retry attempts with 1ms base delay so transient-failure tests are fast.
     exportService = new ReindexS3ExportService(vertxContext, s3Client, 1L, 5, 1L);
-    when(vertxContext.<Object>executeBlocking(any())).thenAnswer(inv -> {
+    when(vertxContext.executeBlocking(any())).thenAnswer(inv -> {
       try {
         return succeededFuture(inv.<java.util.concurrent.Callable<Object>>getArgument(0).call());
       } catch (Exception e) {
         return failedFuture(e);
       }
     });
-  }
-
-  private static S3ClientException slowDown503() {
-    return new S3ClientException(
-      "Error initiating multipart upload",
-      new RuntimeException("Non-XML response from server. Response code: 503, Content-Type: application/xml"));
-  }
-
-  private static S3ClientException internalError500() {
-    return new S3ClientException(
-      "Error completing multipart upload",
-      new RuntimeException("ErrorResponse(code = InternalError, message = We encountered an internal error.)"));
   }
 
   @Test
@@ -123,9 +112,6 @@ class ReindexS3ExportServiceTest {
     verify(s3Client, never()).abortMultipartUpload(any(), any());
   }
 
-  // ---- Retry behaviour (regression: folio-s3-lib AwsS3Client doesn't override
-  // multipart methods, so we wrap them with our own backoff retry) ----
-
   @Test
   void exportToS3_initiateMultipart_retriesOnTransient503() {
     when(s3Client.initiateMultipartUpload(S3_KEY))
@@ -144,7 +130,7 @@ class ReindexS3ExportServiceTest {
   void exportToS3_completeMultipart_retriesOnTransient500InternalError() {
     when(s3Client.initiateMultipartUpload(S3_KEY)).thenReturn(UPLOAD_ID);
     when(s3Client.uploadMultipartPart(eq(S3_KEY), eq(UPLOAD_ID), anyInt(), any())).thenReturn(ETAG);
-    org.mockito.Mockito.doThrow(internalError500())
+    doThrow(internalError500())
       .doNothing()
       .when(s3Client).completeMultipartUpload(eq(S3_KEY), eq(UPLOAD_ID), any());
 
@@ -176,5 +162,17 @@ class ReindexS3ExportServiceTest {
     assertThrows(RuntimeException.class, () -> await(exportFuture));
 
     verify(s3Client, times(1)).initiateMultipartUpload(S3_KEY);
+  }
+
+  private static S3ClientException slowDown503() {
+    return new S3ClientException(
+      "Error initiating multipart upload",
+      new RuntimeException("Non-XML response from server. Response code: 503, Content-Type: application/xml"));
+  }
+
+  private static S3ClientException internalError500() {
+    return new S3ClientException(
+      "Error completing multipart upload",
+      new RuntimeException("ErrorResponse(code = InternalError, message = We encountered an internal error.)"));
   }
 }

@@ -7,10 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.CONSORTIUM_ID;
-import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -62,13 +58,20 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @ExtendWith(VertxExtension.class)
 public abstract class BaseIntegrationTest {
 
+  protected static final String CONSORTIUM_ID = "0060045d-35a6-4935-a923-641bc135a47d";
+  protected static final String CONSORTIUM_CENTRAL_TENANT = "central";
+  protected static final String CONSORTIUM_MEMBER_TENANT = "member";
+  protected static final String TENANT_ID = "test";
+
   protected static final String USER_ID = UUID.randomUUID().toString();
   protected static final String MODULE_ID = "mod-inventory-storage-1.0.0";
+
   @RegisterExtension
   protected static WireMockExtension wm = WireMockExtension.newInstance()
     .options(wireMockConfig().dynamicPort()
       .notifier(new ConsoleNotifier(true)))
     .build();
+
   protected static HttpClient client;
   protected static FakeKafkaConsumer KAFKA_CONSUMER;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
@@ -172,7 +175,7 @@ public abstract class BaseIntegrationTest {
       });
   }
 
-  public static void mockUserTenantsForNonConsortiumMember() {
+  protected static void mockUserTenantsForNonConsortiumMember() {
     mockUserTenantsForNonConsortiumMember(TENANT_ID);
   }
 

@@ -17,8 +17,6 @@ import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
 import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_CREATED;
 import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_DELETED;
 import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_UPDATED;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -40,7 +38,6 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.support.ResourcePaths;
-import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -209,7 +206,7 @@ class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
       .put(HOLD_SHELF_EXPIRY_PERIOD_FIELD, JsonObject.mapFrom(createHoldShelfExpiryPeriod()));
 
     var response =
-      VertxTestUtil.await(doPost(client, ResourcePaths.SERVICE_POINTS, RestUtility.CONSORTIUM_CENTRAL_TENANT, request));
+      VertxTestUtil.await(doPost(client, ResourcePaths.SERVICE_POINTS, CONSORTIUM_CENTRAL_TENANT, request));
     assertThat(response.status()).isEqualTo(SC_CREATED);
     return response.bodyAsClass(ServicePoint.class);
   }

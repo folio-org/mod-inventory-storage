@@ -39,8 +39,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 /**
  * Covers how changes to a holdings record propagate (or deliberately don't) to the items that
  * belong to it: effective location, effective call number components and shelving order, and
- * item-vs-holding metadata/version bumps. Split out of {@link HoldingsStorageIT} because this
- * cluster of tests is large and shares a distinct "holding change -> item side effect" concern.
+ * item-vs-holding metadata/version bumps.
  *
  * <p>Also covers the {@code effectiveLocationId} trigger logic itself (the {@code
  * update_effective_location}/{@code update_item_references} triggers on {@code holdings_record}
@@ -538,7 +537,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should not update an item when a patch changes an unrelated holding field")
   void shouldNotUpdateItem_whenPatchChangesUnrelatedField() {
-    var holding = createHolding(withHrid(holdingRequest(createInstanceRecord()), "hrid")
+    var holding = createHolding(holdingRequest(createInstanceRecord()).withHrid("hrid")
       .withPermanentLocation(UUID.fromString(annexLibraryLocationId)));
     var item = createItem(holding.getString("id"));
 
@@ -1097,17 +1096,11 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
     return createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
   }
 
-  // -- shared helpers --
-
   private static HoldingRequestBuilder holdingRequest(String instanceId) {
     return new HoldingRequestBuilder()
       .forInstance(UUID.fromString(instanceId))
       .withSource(UUID.fromString(createHoldingsRecordsSource(client)))
       .withPermanentLocation(UUID.fromString(mainLibraryLocationId));
-  }
-
-  private static HoldingRequestBuilder withHrid(HoldingRequestBuilder builder, String hrid) {
-    return builder.withHrid(hrid);
   }
 
   private static JsonObject holdingRequestWithAllCallNumberComponents(String instanceId, String callNumber,

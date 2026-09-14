@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.withSettings;
 
+import io.vertx.core.json.JsonObject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -19,6 +20,7 @@ import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.caches.ConsortiumData;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -92,7 +94,7 @@ class InstanceServiceTest {
   @Test
   @DisplayName("should do nothing when the instance list is null")
   void shouldDoNothing_whenInstanceListIsNull() {
-    setMissingInstanceIds(null);
+    Assertions.assertDoesNotThrow(() -> setMissingInstanceIds(null));
   }
 
   @Test
@@ -116,7 +118,7 @@ class InstanceServiceTest {
 
   @Test
   @DisplayName("should unset the placeholder version when optimistic locking is requested")
-  void shouldUnsetPlaceholderVersion_whenOptimisticLockingRequested() throws Exception {
+  void shouldUnsetPlaceholderVersion_whenOptimisticLockingRequested() {
     var instance = new Instance().withVersion(-1);
 
     var result = handleInstanceOptimisticLocking(List.of(instance), true);
@@ -127,7 +129,7 @@ class InstanceServiceTest {
 
   @Test
   @DisplayName("should mark every instance with the suppression sentinel when locking is disabled and allowed")
-  void shouldMarkSuppressionSentinel_whenLockingDisabledAndAllowed() throws Exception {
+  void shouldMarkSuppressionSentinel_whenLockingDisabledAndAllowed() {
     var instance = new Instance();
     try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
       lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(true);
@@ -141,7 +143,7 @@ class InstanceServiceTest {
 
   @Test
   @DisplayName("should reject the request when locking is disabled but suppression is not allowed")
-  void shouldRejectRequest_whenLockingDisabledButSuppressionNotAllowed() throws Exception {
+  void shouldRejectRequest_whenLockingDisabledButSuppressionNotAllowed() {
     var instance = new Instance();
     try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
       lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(false);
@@ -160,7 +162,7 @@ class InstanceServiceTest {
       .withMetadata(new Metadata().withUpdatedDate(new Date(0)));
     var patch = new InstancePatchRequest();
 
-    var result = applyPatch(instance, io.vertx.core.json.JsonObject.mapFrom(patch), "user-1");
+    var result = applyPatch(instance, JsonObject.mapFrom(patch), "user-1");
 
     assertThat(result.result().getMetadata().getUpdatedByUserId()).isEqualTo("user-1");
     assertThat(result.result().getMetadata().getUpdatedDate()).isNotEqualTo(new Date(0));
@@ -178,32 +180,32 @@ class InstanceServiceTest {
 
   private static io.vertx.core.Future<Instance> validateHridChange(Instance oldInstance, Instance newInstance) {
     return invokePrivate(uninitializedService(), "validateHridChange",
-      new Class<?>[]{Instance.class, Instance.class}, oldInstance, newInstance);
+      new Class<?>[] {Instance.class, Instance.class}, oldInstance, newInstance);
   }
 
   private static boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
     return invokePrivate(uninitializedService(), "isCentralTenantId",
-      new Class<?>[]{String.class, ConsortiumData.class}, tenantId, consortiumData);
+      new Class<?>[] {String.class, ConsortiumData.class}, tenantId, consortiumData);
   }
 
   private static void setMissingInstanceIds(List<Instance> instances) {
-    invokePrivate(uninitializedService(), "setMissingInstanceIds", new Class<?>[]{List.class}, instances);
+    invokePrivate(uninitializedService(), "setMissingInstanceIds", new Class<?>[] {List.class}, instances);
   }
 
   private static io.vertx.core.Future<Response> validateInstancesSize(List<Instance> instances) {
-    return invokePrivate(uninitializedService(), "validateInstancesSize", new Class<?>[]{List.class}, instances);
+    return invokePrivate(uninitializedService(), "validateInstancesSize", new Class<?>[] {List.class}, instances);
   }
 
   private static io.vertx.core.Future<Response> handleInstanceOptimisticLocking(
     List<Instance> instances, boolean optimisticLocking) {
     return invokePrivate(uninitializedService(), "handleInstanceOptimisticLocking",
-      new Class<?>[]{List.class, boolean.class}, instances, optimisticLocking);
+      new Class<?>[] {List.class, boolean.class}, instances, optimisticLocking);
   }
 
   private static io.vertx.core.Future<Instance> applyPatch(
-    Instance instance, io.vertx.core.json.JsonObject patchJson, String userId) {
+    Instance instance, JsonObject patchJson, String userId) {
     return invokePrivate(uninitializedService(), "applyPatch",
-      new Class<?>[]{Instance.class, io.vertx.core.json.JsonObject.class, String.class}, instance, patchJson, userId);
+      new Class<?>[] {Instance.class, JsonObject.class, String.class}, instance, patchJson, userId);
   }
 
   private static InstanceService uninitializedService() {

@@ -25,8 +25,8 @@ class ServicePointSynchronizationEventProcessorTest {
 
   @Test
   void shouldFailToUpdateEventDueToProcessEventException(VertxTestContext testContext) {
-    var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(updateEvent(
-      new ServicePoint(), new ServicePoint(), TENANT));
+    var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
+      updateEvent(new ServicePoint(), new ServicePoint(), TENANT));
     processEventToThrowException(updateEventProcessor, testContext);
   }
 
@@ -45,13 +45,6 @@ class ServicePointSynchronizationEventProcessorTest {
       updateEvent(oldServicepoint, newServicepoint, tenant));
 
     assertFalse(updateEventProcessor.validateEventEntity());
-  }
-
-  static Stream<Arguments> servicePointProvider() {
-    return Stream.of(
-      Arguments.of(null, null),
-      Arguments.of(null, new ServicePoint()),
-      Arguments.of(new ServicePoint(), null));
   }
 
   @Test
@@ -110,6 +103,13 @@ class ServicePointSynchronizationEventProcessorTest {
 
     assertFalse(updateEventProcessor.validateEventEntity());
     assertFalse(createEventProcessor.validateEventEntity());
+  }
+
+  private static Stream<Arguments> servicePointProvider() {
+    return Stream.of(
+      Arguments.of(null, null),
+      Arguments.of(null, new ServicePoint()),
+      Arguments.of(new ServicePoint(), null));
   }
 
   private void processEventToThrowException(ServicePointSynchronizationEventProcessor processor,

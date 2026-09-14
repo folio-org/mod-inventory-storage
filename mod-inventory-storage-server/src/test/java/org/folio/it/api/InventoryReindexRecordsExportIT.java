@@ -3,7 +3,6 @@ package org.folio.it.api;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.folio.utility.S3Utility.REINDEX_BUCKET;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +40,7 @@ class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
   private static FolioS3Client s3Client;
 
   @BeforeAll
-  static void beforeAll() {
+  static void setupS3Client() {
     s3Client = FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX);
     s3Client.createBucketIfNotExists();
   }

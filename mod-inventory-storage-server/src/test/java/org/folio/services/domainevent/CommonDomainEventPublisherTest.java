@@ -19,7 +19,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import java.util.Map;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
@@ -42,13 +41,17 @@ class CommonDomainEventPublisherTest {
   private KafkaProducerManager producerManager;
   @Mock
   private FailureHandler failureHandler;
+
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   @BeforeEach
   void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      new CaseInsensitiveMap<>(Map.of()), INSTANCE.fullTopicName(TENANT_ID),
-      producerManager, failureHandler);
+      Map.of(),
+      INSTANCE.fullTopicName(TENANT_ID),
+      producerManager,
+      failureHandler
+    );
   }
 
   @Test
@@ -61,7 +64,7 @@ class CommonDomainEventPublisherTest {
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
 
     var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
-      row -> builderWithValue(""), notUsed -> Future.succeededFuture()));
+      row -> builderWithValue(), notUsed -> Future.succeededFuture()));
 
     assertThat(recordsPublished, is(6L));
 
@@ -78,7 +81,7 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenReturn(succeededFuture());
 
     var future = eventPublisher.publishStream(stream,
-      row -> builderWithValue(""),
+      row -> builderWithValue(),
       records -> records > 3 ? failedFuture("stream failed") : succeededFuture());
 
     await().until(future::isComplete);
@@ -101,7 +104,7 @@ class CommonDomainEventPublisherTest {
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
     var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
-      row -> builderWithValue(""), records -> Future.succeededFuture()));
+      row -> builderWithValue(), records -> Future.succeededFuture()));
 
     assertThat(recordsPublished, is(2L));
     verify(failureHandler, times(2)).handleFailure(any(), any());
@@ -115,7 +118,7 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
 
     var future = eventPublisher.publishStream(stream,
-      row -> builderWithValue(""), records -> succeededFuture());
+      row -> builderWithValue(), records -> succeededFuture());
 
     await().until(future::isComplete);
 
@@ -143,13 +146,11 @@ class CommonDomainEventPublisherTest {
 
   @SuppressWarnings("unchecked")
   private Void drainHandler(InvocationOnMock invocationOnMock) {
-    invocationOnMock.getArgument(0, Handler.class)
-      .handle(null);
-
+    invocationOnMock.getArgument(0, Handler.class).handle(null);
     return null;
   }
 
-  private KafkaProducerRecordBuilder<String, Object> builderWithValue(Object value) {
-    return new KafkaProducerRecordBuilder<String, Object>(TENANT_ID).value(value);
+  private KafkaProducerRecordBuilder<String, Object> builderWithValue() {
+    return new KafkaProducerRecordBuilder<String, Object>(TENANT_ID).value("");
   }
 }

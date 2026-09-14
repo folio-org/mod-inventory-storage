@@ -7,7 +7,6 @@ import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.InstanceTypeApi.INSTANCE_TYPE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeApi.STATISTICAL_CODE_TABLE;
 import static org.folio.rest.impl.StatisticalCodeTypeApi.STATISTICAL_CODE_TYPE_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Vertx;

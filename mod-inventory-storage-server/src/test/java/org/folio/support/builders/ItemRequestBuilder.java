@@ -33,23 +33,22 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       null, null, null, null, null, null, null, null, new ArrayList<>(), false, new ArrayList<>());
   }
 
-  private ItemRequestBuilder(
-    UUID id,
-    UUID holdingId,
-    Integer order,
-    String barcode,
-    String status,
-    UUID temporaryLocationId,
-    UUID materialTypeId,
-    UUID permanentLoanTypeId,
-    UUID temporaryLoanTypeId,
-    String itemLevelCallNumberPrefix,
-    String itemLevelCallNumber,
-    String itemLevelCallNumberSuffix,
-    String itemLevelCallNumberTypeId,
-    List<EffectiveCallNumberComponents> additionalCallNumbers,
-    boolean discoverySuppress,
-    List<UUID> statisticalCodeIds) {
+  private ItemRequestBuilder(UUID id,
+                             UUID holdingId,
+                             Integer order,
+                             String barcode,
+                             String status,
+                             UUID temporaryLocationId,
+                             UUID materialTypeId,
+                             UUID permanentLoanTypeId,
+                             UUID temporaryLoanTypeId,
+                             String itemLevelCallNumberPrefix,
+                             String itemLevelCallNumber,
+                             String itemLevelCallNumberSuffix,
+                             String itemLevelCallNumberTypeId,
+                             List<EffectiveCallNumberComponents> additionalCallNumbers,
+                             boolean discoverySuppress,
+                             List<UUID> statisticalCodeIds) {
 
     this.id = id;
     this.holdingId = holdingId;
@@ -241,26 +240,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       this.statisticalCodeIds);
   }
 
-  public ItemRequestBuilder withPermanentLoanTypeId(UUID permanentLoanTypeId) {
-    return new ItemRequestBuilder(
-      this.id,
-      this.holdingId,
-      this.order,
-      this.barcode,
-      this.status,
-      this.temporaryLocationId,
-      this.materialTypeId,
-      permanentLoanTypeId,
-      this.temporaryLoanTypeId,
-      this.itemLevelCallNumberPrefix,
-      this.itemLevelCallNumber,
-      this.itemLevelCallNumberSuffix,
-      this.itemLevelCallNumberTypeId,
-      this.additionalCallNumbers,
-      this.discoverySuppress,
-      this.statisticalCodeIds);
-  }
-
   public ItemRequestBuilder withPermanentLoanType(UUID loanTypeId) {
     return new ItemRequestBuilder(
       this.id,
@@ -357,27 +336,6 @@ public class ItemRequestBuilder extends JsonRequestBuilder implements Builder {
       suffix,
       this.itemLevelCallNumberTypeId,
       this.additionalCallNumbers,
-      this.discoverySuppress,
-      this.statisticalCodeIds);
-  }
-
-  public ItemRequestBuilder withAdditionalCallNumbers(
-    List<EffectiveCallNumberComponents> additionalCallNumbers) {
-    return new ItemRequestBuilder(
-      this.id,
-      this.holdingId,
-      this.order,
-      this.barcode,
-      this.status,
-      this.temporaryLocationId,
-      this.materialTypeId,
-      this.permanentLoanTypeId,
-      this.temporaryLoanTypeId,
-      this.itemLevelCallNumberPrefix,
-      this.itemLevelCallNumber,
-      this.itemLevelCallNumberSuffix,
-      this.itemLevelCallNumberTypeId,
-      additionalCallNumbers,
       this.discoverySuppress,
       this.statisticalCodeIds);
   }

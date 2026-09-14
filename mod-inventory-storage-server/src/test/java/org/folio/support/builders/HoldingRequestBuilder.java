@@ -52,26 +52,25 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       new ArrayList<>());
   }
 
-  private HoldingRequestBuilder(
-    UUID id,
-    UUID instanceId,
-    UUID permanentLocationId,
-    UUID temporaryLocationId,
-    JsonObject tags,
-    String callNumber,
-    String callNumberPrefix,
-    String callNumberSuffix,
-    String callNumberTypeId,
-    String hrid,
-    Boolean discoverySuppress,
-    List<EffectiveCallNumberComponents> additionalCallNumbers,
-    JsonArray holdingsStatements,
-    JsonArray holdingsStatementsForIndexes,
-    JsonArray holdingsStatementsForSupplements,
-    JsonArray electronicAccess,
-    List<UUID> statsticalCodeIds,
-    UUID sourceId,
-    List<String> administrativeNotes) {
+  private HoldingRequestBuilder(UUID id,
+                                UUID instanceId,
+                                UUID permanentLocationId,
+                                UUID temporaryLocationId,
+                                JsonObject tags,
+                                String callNumber,
+                                String callNumberPrefix,
+                                String callNumberSuffix,
+                                String callNumberTypeId,
+                                String hrid,
+                                Boolean discoverySuppress,
+                                List<EffectiveCallNumberComponents> additionalCallNumbers,
+                                JsonArray holdingsStatements,
+                                JsonArray holdingsStatementsForIndexes,
+                                JsonArray holdingsStatementsForSupplements,
+                                JsonArray electronicAccess,
+                                List<UUID> statisticalCodeIds,
+                                UUID sourceId,
+                                List<String> administrativeNotes) {
 
     this.id = id;
     this.instanceId = instanceId;
@@ -89,7 +88,7 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
     this.holdingsStatementsForIndexes = holdingsStatementsForIndexes;
     this.holdingsStatementsForSupplements = holdingsStatementsForSupplements;
     this.electronicAccess = electronicAccess;
-    this.statisticalCodeIds = statsticalCodeIds;
+    this.statisticalCodeIds = statisticalCodeIds;
     this.sourceId = sourceId;
     this.administrativeNotes = administrativeNotes;
   }
@@ -374,99 +373,6 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.administrativeNotes);
   }
 
-  public HoldingRequestBuilder withAdditionalCallNumbers(List<EffectiveCallNumberComponents> additionalCallNumbers) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      additionalCallNumbers,
-      this.holdingsStatements,
-      this.holdingsStatementsForIndexes,
-      this.holdingsStatementsForSupplements,
-      this.electronicAccess,
-      this.statisticalCodeIds,
-      this.sourceId,
-      this.administrativeNotes
-    );
-  }
-
-  public HoldingRequestBuilder withHoldingsStatements(JsonArray holdingsStatements) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      this.additionalCallNumbers,
-      holdingsStatements,
-      this.holdingsStatementsForIndexes,
-      this.holdingsStatementsForSupplements,
-      this.electronicAccess,
-      this.statisticalCodeIds,
-      this.sourceId,
-      this.administrativeNotes);
-  }
-
-  public HoldingRequestBuilder withHoldingsStatementsForIndexes(JsonArray holdingsStatementsForIndexes) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      this.additionalCallNumbers,
-      this.holdingsStatements,
-      holdingsStatementsForIndexes,
-      this.holdingsStatementsForSupplements,
-      this.electronicAccess,
-      this.statisticalCodeIds,
-      this.sourceId,
-      this.administrativeNotes);
-  }
-
-  public HoldingRequestBuilder withHoldingsStatementsForSupplements(JsonArray holdingsStatementsForSupplements) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      this.additionalCallNumbers,
-      this.holdingsStatements,
-      this.holdingsStatementsForIndexes,
-      holdingsStatementsForSupplements,
-      this.electronicAccess,
-      this.statisticalCodeIds,
-      this.sourceId,
-      this.administrativeNotes);
-  }
-
   public HoldingRequestBuilder withElectronicAccess(JsonArray electronicAccess) {
     return new HoldingRequestBuilder(
       this.id,
@@ -486,29 +392,6 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.holdingsStatementsForSupplements,
       electronicAccess,
       this.statisticalCodeIds,
-      this.sourceId,
-      this.administrativeNotes);
-  }
-
-  public HoldingRequestBuilder withStatisticalCodeIds(List<UUID> statisticalCodeIds) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      this.additionalCallNumbers,
-      this.holdingsStatements,
-      this.holdingsStatementsForIndexes,
-      this.holdingsStatementsForSupplements,
-      this.electronicAccess,
-      statisticalCodeIds,
       this.sourceId,
       this.administrativeNotes);
   }
@@ -534,28 +417,5 @@ public class HoldingRequestBuilder extends JsonRequestBuilder implements Builder
       this.statisticalCodeIds,
       holdingsRecordsSourceId,
       this.administrativeNotes);
-  }
-
-  public HoldingRequestBuilder withAdministrativeNotes(List<String> administrativeNotes) {
-    return new HoldingRequestBuilder(
-      this.id,
-      this.instanceId,
-      this.permanentLocationId,
-      this.temporaryLocationId,
-      this.tags,
-      this.callNumber,
-      this.callNumberPrefix,
-      this.callNumberSuffix,
-      this.callNumberTypeId,
-      this.hrid,
-      this.discoverySuppress,
-      this.additionalCallNumbers,
-      this.holdingsStatements,
-      this.holdingsStatementsForIndexes,
-      this.holdingsStatementsForSupplements,
-      this.electronicAccess,
-      this.statisticalCodeIds,
-      this.sourceId,
-      administrativeNotes);
   }
 }

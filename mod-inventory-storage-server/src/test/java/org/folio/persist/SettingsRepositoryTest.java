@@ -1,6 +1,6 @@
 package org.folio.persist;
 
-import static org.folio.utility.RestUtility.TENANT_ID;
+import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -28,25 +28,30 @@ import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SettingsRepositoryTest {
 
   private static final String TEST_KEY = "test_key";
   private static final String USER_ID = "00000000-0000-0000-0000-000000000000";
 
+  private @Mock PostgresClient postgresClient;
+  private @Mock RowIterator<Row> iterator;
+  private @Mock RowSet<Row> rowSet;
   private SettingsRepository repository;
-  private PostgresClient postgresClient;
 
   @BeforeEach
   void setUp() {
-    postgresClient = mock(PostgresClient.class);
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
 
     Vertx vertx = Vertx.vertx();
     Context context = vertx.getOrCreateContext();
     try (MockedStatic<PgUtil> mockedPgUtil = mockStatic(PgUtil.class)) {
-      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any()))
         .thenReturn(postgresClient);
       repository = new SettingsRepository(context, Map.of("X-Okapi-Tenant", TENANT_ID));
     }
@@ -67,13 +72,9 @@ class SettingsRepositoryTest {
     when(row.getUUID("updated_by_user_id")).thenReturn(setting.getUpdatedByUserId());
     when(row.getLocalDateTime("updated_date")).thenReturn(LocalDateTime.now());
 
-    RowIterator<Row> iterator = mock(RowIterator.class);
     when(iterator.hasNext()).thenReturn(true, false);
     when(iterator.next()).thenReturn(row);
-
-    RowSet<Row> rowSet = mock(RowSet.class);
     when(rowSet.iterator()).thenReturn(iterator);
-
     when(postgresClient.execute(anyString(), any(Tuple.class))).thenReturn(Future.succeededFuture(rowSet));
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
 
@@ -86,10 +87,7 @@ class SettingsRepositoryTest {
 
   @Test
   void findByKey_returnsNull_whenNotFound() {
-    RowIterator<Row> iterator = mock(RowIterator.class);
     when(iterator.hasNext()).thenReturn(false);
-
-    RowSet<Row> rowSet = mock(RowSet.class);
     when(rowSet.iterator()).thenReturn(iterator);
 
     when(postgresClient.execute(anyString(), any(Tuple.class)))
@@ -119,11 +117,7 @@ class SettingsRepositoryTest {
     when(row.getUUID("updated_by_user_id")).thenReturn(setting.getUpdatedByUserId());
     when(row.getLocalDateTime("updated_date")).thenReturn(LocalDateTime.now());
 
-    RowIterator<Row> iterator = mock(RowIterator.class);
-    when(iterator.hasNext()).thenReturn(true, false);
     when(iterator.next()).thenReturn(row);
-
-    RowSet<Row> rowSet = mock(RowSet.class);
     when(rowSet.iterator()).thenReturn(iterator);
     when(postgresClient.execute(anyString(), any(Tuple.class))).thenReturn(Future.succeededFuture(rowSet));
 

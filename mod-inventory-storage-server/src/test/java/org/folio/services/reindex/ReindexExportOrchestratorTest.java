@@ -38,8 +38,6 @@ class ReindexExportOrchestratorTest {
   private static final String RANGE_ID = "550e8400-e29b-41d4-a716-446655440000";
   private static final String TRACE_ID = "660e8400-e29b-41d4-a716-446655440000";
   private static final String BUCKET = "test-bucket";
-  private static final String UPLOAD_ID = "upload-id";
-  private static final String ETAG = "etag-1";
 
   @Mock
   private Context vertxContext;
@@ -62,16 +60,6 @@ class ReindexExportOrchestratorTest {
     when(postgresClient.withTrans(any())).thenAnswer(inv -> {
       var fn = inv.<Function<Conn, Future<?>>>getArgument(0);
       return fn.apply(conn);
-    });
-  }
-
-  private void stubExecuteBlocking() {
-    when(vertxContext.<Object>executeBlocking(any())).thenAnswer(inv -> {
-      try {
-        return succeededFuture(inv.<java.util.concurrent.Callable<Object>>getArgument(0).call());
-      } catch (Exception e) {
-        return failedFuture(e);
-      }
     });
   }
 
@@ -125,6 +113,16 @@ class ReindexExportOrchestratorTest {
     assertThrows(RuntimeException.class, () -> await(futureResult));
 
     verify(eventPublisher, never()).publish(any());
+  }
+
+  private void stubExecuteBlocking() {
+    when(vertxContext.<Object>executeBlocking(any())).thenAnswer(inv -> {
+      try {
+        return succeededFuture(inv.<java.util.concurrent.Callable<Object>>getArgument(0).call());
+      } catch (Exception e) {
+        return failedFuture(e);
+      }
+    });
   }
 
   private static ReindexRecordsRequest buildRequest(String traceId) {

@@ -7,16 +7,12 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.services.domainevent.SettingEvent;
 import org.folio.support.ResourcePaths;
 import org.folio.support.messages.SettingEventMessageChecks;
-import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -202,17 +198,17 @@ class SettingStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should update the setting and publish an event for the consortium central tenant")
   void shouldUpdateSettingAndPublishEvent_forConsortiumCentralTenant() {
-    var initial = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT));
+    var initial = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT));
     assertThat(initial.status()).isEqualTo(SC_OK);
     var settingId = initial.jsonBody().getString(ID_FIELD);
     var newValue = !"true".equals(initial.jsonBody().getString(VALUE_FIELD));
 
     var updateResponse = await(
-      doPatch(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
+      doPatch(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
     assertThat(updateResponse.status()).isEqualTo(SC_NO_CONTENT);
     settingEventMessageChecks.settingEventPublished(settingId);
 
-    var getResponse = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT));
+    var getResponse = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT));
     assertThat(getResponse.status()).isEqualTo(SC_OK);
     assertThat(getResponse.jsonBody().getString(VALUE_FIELD)).isEqualTo(String.valueOf(newValue));
   }
@@ -220,16 +216,16 @@ class SettingStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should return 400 when a consortium member tenant tries to update a centrally-managed setting")
   void shouldReturn400_whenUpdatingFromConsortiumMemberTenant() {
-    var initial = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_MEMBER_TENANT));
+    var initial = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_MEMBER_TENANT));
     assertThat(initial.status()).isEqualTo(SC_OK);
     var initialValue = initial.jsonBody().getString(VALUE_FIELD);
     var newValue = !"true".equals(initialValue);
 
     var updateResponse =
-      await(doPatch(client, SETTING_PATH, RestUtility.CONSORTIUM_MEMBER_TENANT, updateRequest(newValue)));
+      await(doPatch(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_MEMBER_TENANT, updateRequest(newValue)));
     assertThat(updateResponse.status()).isEqualTo(SC_BAD_REQUEST);
 
-    var getResponse = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_MEMBER_TENANT));
+    var getResponse = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_MEMBER_TENANT));
     assertThat(getResponse.status()).isEqualTo(SC_OK);
     assertThat(getResponse.jsonBody().getString(VALUE_FIELD)).isEqualTo(initialValue);
   }
@@ -237,12 +233,12 @@ class SettingStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should publish an event with the central tenant id when the central tenant updates")
   void shouldPublishEvent_withCentralTenantId_whenCentralTenantUpdates() {
-    var initial = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT)).jsonBody();
+    var initial = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT)).jsonBody();
     var settingId = initial.getString(ID_FIELD);
     var newValue = !"true".equals(initial.getString(VALUE_FIELD));
 
     var updateResponse = await(
-      doPatch(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
+      doPatch(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
     assertThat(updateResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     settingEventMessageChecks.settingEventPublishedForTenant(settingId, CONSORTIUM_CENTRAL_TENANT);
@@ -251,14 +247,14 @@ class SettingStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should publish an event for the member tenant when the central tenant updates")
   void shouldPublishEventForMemberTenant_whenCentralTenantUpdates() {
-    var memberSettingId = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_MEMBER_TENANT))
+    var memberSettingId = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_MEMBER_TENANT))
       .jsonBody().getString(ID_FIELD);
-    var central = await(doGet(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT)).jsonBody();
+    var central = await(doGet(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT)).jsonBody();
     var centralSettingId = central.getString(ID_FIELD);
     var newValue = !"true".equals(central.getString(VALUE_FIELD));
 
     var updateResponse = await(
-      doPatch(client, SETTING_PATH, RestUtility.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
+      doPatch(client, SETTING_PATH, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT, updateRequest(newValue)));
     assertThat(updateResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     // the central tenant's update propagates to the member tenant, publishing an event for each

@@ -7,7 +7,6 @@ import static org.folio.HttpStatus.HTTP_NOT_FOUND;
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.LocationUnitApi.CAMPUS_TABLE;
 import static org.folio.services.locationunit.InstitutionService.INSTITUTION_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;

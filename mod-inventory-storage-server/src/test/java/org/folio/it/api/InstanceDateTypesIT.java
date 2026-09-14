@@ -6,9 +6,6 @@ import static org.folio.HttpStatus.SC_OK;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.services.instance.InstanceDateTypeService.INSTANCE_DATE_TYPE_TABLE;
 import static org.folio.support.ResourcePaths.INSTANCE_DATE_TYPES;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
-import static org.folio.utility.RestUtility.CONSORTIUM_MEMBER_TENANT;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.Vertx;
 import java.util.concurrent.TimeUnit;

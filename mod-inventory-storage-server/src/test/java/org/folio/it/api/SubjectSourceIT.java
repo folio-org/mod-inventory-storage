@@ -9,7 +9,6 @@ import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
-import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -21,7 +20,6 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Subject;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
-import org.folio.utility.RestUtility;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -198,7 +196,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
     var subjectSource = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
     var response = await(
-      doPost(client, ResourcePaths.SUBJECT_SOURCES, RestUtility.CONSORTIUM_CENTRAL_TENANT, subjectSource));
+      doPost(client, ResourcePaths.SUBJECT_SOURCES, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT, subjectSource));
 
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
@@ -277,7 +275,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
     await(doPost(client, ResourcePaths.SUBJECT_SOURCES, CONSORTIUM_CENTRAL_TENANT, subjectSource));
 
     var response =
-      await(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, RestUtility.CONSORTIUM_CENTRAL_TENANT,
+      await(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT,
         subjectSource.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
@@ -292,7 +290,7 @@ class SubjectSourceIT extends BaseIntegrationTest {
     await(doPost(client, ResourcePaths.SUBJECT_SOURCES, CONSORTIUM_CENTRAL_TENANT, subjectSource));
 
     var response =
-      await(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, RestUtility.CONSORTIUM_CENTRAL_TENANT,
+      await(doPut(client, ResourcePaths.SUBJECT_SOURCES + "/" + id, BaseIntegrationTest.CONSORTIUM_CENTRAL_TENANT,
         subjectSource.put(SOURCE_FIELD, SOURCE_LOCAL)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);

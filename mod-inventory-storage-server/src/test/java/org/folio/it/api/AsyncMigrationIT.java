@@ -14,7 +14,6 @@ import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IN_PROGRESS;
 import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -70,7 +69,7 @@ class AsyncMigrationIT extends BaseIntegrationTest {
     var loanTypeId = createLoanType(client);
 
     for (int i = 0; i < numberOfItems; i++) {
-      createItemWithCallNumber(holdingId, materialTypeId, loanTypeId, "K1 .M44");
+      createItemWithCallNumber(holdingId, materialTypeId, loanTypeId);
     }
 
     var migrationJob = postMigrationJob();
@@ -137,16 +136,15 @@ class AsyncMigrationIT extends BaseIntegrationTest {
     assertThat(job.getPublished().getFirst().getCount()).isGreaterThanOrEqualTo(1000);
   }
 
-  private static void createItemWithCallNumber(String holdingId, String materialTypeId, String loanTypeId,
-                                                String callNumber) {
+  private static void createItemWithCallNumber(String holdingId, String materialTypeId, String loanTypeId) {
     var request = new ItemRequestBuilder()
       .forHolding(UUID.fromString(holdingId))
       .withMaterialType(UUID.fromString(materialTypeId))
       .withPermanentLoanType(UUID.fromString(loanTypeId))
-      .withItemLevelCallNumber(callNumber)
+      .withItemLevelCallNumber("K1 .M44")
       .create()
       .put("effectiveCallNumberComponents", pojo2JsonObject(
-        new EffectiveCallNumberComponents().withCallNumber(callNumber)));
+        new EffectiveCallNumberComponents().withCallNumber("K1 .M44")));
 
     VertxTestUtil.await(doPost(client, ResourcePaths.ITEMS, request));
   }

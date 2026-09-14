@@ -1,7 +1,7 @@
 package org.folio.support.messages;
 
+import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
-import static org.folio.utility.RestUtility.TENANT_ID;
 
 import io.vertx.core.json.JsonObject;
 import java.net.URL;

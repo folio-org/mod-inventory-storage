@@ -3,21 +3,18 @@ package org.folio.services.setting;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
 
 import io.vertx.core.ThreadingModel;
 import org.folio.services.caches.SettingCache;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SettingUpdateConsumerVerticleTest {
 
-  private SettingCache cache;
-
-  @BeforeEach
-  void setUp() {
-    cache = mock(SettingCache.class);
-  }
+  private @Mock SettingCache cache;
 
   @Test
   void getDeploymentOptionsShouldReturnCorrectOptions() {

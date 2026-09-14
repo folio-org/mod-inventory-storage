@@ -1,15 +1,14 @@
 package org.folio.persist;
 
+import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -29,20 +28,20 @@ import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(VertxExtension.class)
+@ExtendWith({VertxExtension.class, MockitoExtension.class})
 class IterationJobRepositoryTest {
 
   private static final String JOB_ID = "test-job-id";
 
-  private PostgresClient postgresClient;
+  private @Mock PostgresClient postgresClient;
+  private @Mock Conn conn;
   private IterationJobRepository repository;
-  private Conn conn;
 
   @BeforeEach
   void setUp(Vertx vertx) {
-    postgresClient = mock(PostgresClient.class);
-    conn = mock(Conn.class);
     try (var pgUtilMock = mockStatic(PgUtil.class)) {
       pgUtilMock.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(postgresClient);
       repository = spy(new IterationJobRepository(vertx.getOrCreateContext(), okapiHeaders()));

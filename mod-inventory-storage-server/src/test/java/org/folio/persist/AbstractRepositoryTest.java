@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +12,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
+import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.util.List;
@@ -24,27 +24,24 @@ import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.interfaces.Results;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class AbstractRepositoryTest {
 
   private static final String TABLE_NAME = "settings";
   private static final String TENANT_ID = "diku";
   private static final UUID ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-  private PostgresClient postgresClient;
-  private Conn conn;
-  private TestRepository repository;
-
-  @BeforeEach
-  void setUp() {
-    postgresClient = mock(PostgresClient.class);
-    conn = mock(Conn.class);
-    when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
-    repository = new TestRepository(postgresClient);
-  }
+  private @Mock PostgresClient postgresClient;
+  private @Mock Conn conn;
+  private @Mock RowSet<Row> rowSet;
+  private @InjectMocks TestRepository repository;
 
   @Test
   @DisplayName("should delegate to postgresClient when saving")
@@ -147,7 +144,6 @@ class AbstractRepositoryTest {
   @DisplayName("should delegate to postgresClient when updating by id")
   void shouldDelegateToPostgresClient_whenUpdatingById() {
     var setting = new Setting().withId(ID);
-    var rowSet = mock(RowSet.class);
     when(postgresClient.update(TABLE_NAME, setting, "id-1")).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.update("id-1", setting);
@@ -159,7 +155,6 @@ class AbstractRepositoryTest {
   @DisplayName("should delegate to the connection when updating with a connection")
   void shouldDelegateToConnection_whenUpdatingWithConnection() {
     var setting = new Setting().withId(ID);
-    var rowSet = mock(RowSet.class);
     when(conn.update(TABLE_NAME, setting, "id-1")).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.update(conn, "id-1", setting);
@@ -171,7 +166,6 @@ class AbstractRepositoryTest {
   @DisplayName("should delegate to the connection when upserting a batch")
   void shouldDelegateToConnection_whenUpsertingBatch() {
     var records = List.of(new Setting().withId(ID));
-    var rowSet = mock(RowSet.class);
     when(conn.upsertBatch(TABLE_NAME, records)).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.upsertBatch(records, conn);
@@ -183,7 +177,6 @@ class AbstractRepositoryTest {
   @DisplayName("should delegate to the connection when updating a batch")
   void shouldDelegateToConnection_whenUpdatingBatch() {
     var records = List.of(new Setting().withId(ID));
-    var rowSet = mock(RowSet.class);
     when(conn.updateBatch(TABLE_NAME, records)).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.updateBatch(records, conn);
@@ -197,7 +190,7 @@ class AbstractRepositoryTest {
     var existing = new Setting().withId(ID).withValue("false");
     var updated = new Setting().withId(ID).withValue("true");
     when(conn.getByIdForUpdate(TABLE_NAME, "id-1", Setting.class)).thenReturn(Future.succeededFuture(existing));
-    when(conn.update(TABLE_NAME, updated, "id-1")).thenReturn(Future.succeededFuture(mock(RowSet.class)));
+    when(conn.update(TABLE_NAME, updated, "id-1")).thenReturn(Future.succeededFuture(rowSet));
     stubWithTrans();
 
     var result = repository.fetchAndUpdate("id-1", setting -> setting.withValue("true"));
@@ -209,7 +202,6 @@ class AbstractRepositoryTest {
   @Test
   @DisplayName("should delegate to postgresClient when deleting all records")
   void shouldDelegateToPostgresClient_whenDeletingAllRecords() {
-    var rowSet = mock(RowSet.class);
     when(postgresClient.delete(eq(TABLE_NAME), any(Criterion.class))).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.deleteAll();
@@ -220,7 +212,6 @@ class AbstractRepositoryTest {
   @Test
   @DisplayName("should delegate to postgresClient when deleting by id")
   void shouldDelegateToPostgresClient_whenDeletingById() {
-    var rowSet = mock(RowSet.class);
     when(postgresClient.delete(TABLE_NAME, "id-1")).thenReturn(Future.succeededFuture(rowSet));
 
     var result = repository.deleteById("id-1");
@@ -232,6 +223,7 @@ class AbstractRepositoryTest {
   @Test
   @DisplayName("should prefix the converted tenant schema when given an explicit table name")
   void shouldPrefixConvertedTenantSchema_whenGivenExplicitTableName() {
+    when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
     assertThat(repository.getFullTableName("other_table"))
       .isEqualTo(PostgresClient.convertToPsqlStandard(TENANT_ID) + ".other_table");
   }
@@ -239,6 +231,7 @@ class AbstractRepositoryTest {
   @Test
   @DisplayName("should use its own table name when none is given")
   void shouldUseOwnTableName_whenNoneIsGiven() {
+    when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
     assertThat(repository.getFullTableName())
       .isEqualTo(PostgresClient.convertToPsqlStandard(TENANT_ID) + "." + TABLE_NAME);
   }
@@ -265,7 +258,6 @@ class AbstractRepositoryTest {
   }
 
   private void stubExists(int rowCount) {
-    var rowSet = mock(RowSet.class);
     when(rowSet.rowCount()).thenReturn(rowCount);
     when(postgresClient.getSchemaName()).thenReturn("diku_mod_inventory_storage");
     when(postgresClient.execute(
@@ -280,7 +272,6 @@ class AbstractRepositoryTest {
     });
   }
 
-  @SuppressWarnings("unchecked")
   private void stubGetByIds(Map<String, Setting> toReturn) {
     doAnswer(invocation -> {
       Handler<AsyncResult<Map<String, Setting>>> handler = invocation.getArgument(3);
@@ -289,7 +280,6 @@ class AbstractRepositoryTest {
     }).when(postgresClient).getById(eq(TABLE_NAME), any(JsonArray.class), eq(Setting.class), any());
   }
 
-  @SuppressWarnings("unchecked")
   private void stubGetByIdsCapturingIds(Map<String, Setting> toReturn) {
     doAnswer(invocation -> {
       JsonArray ids = invocation.getArgument(1);
@@ -301,7 +291,7 @@ class AbstractRepositoryTest {
   }
 
   private static final class TestRepository extends AbstractRepository<Setting> {
-    private TestRepository(PostgresClient postgresClient) {
+    TestRepository(PostgresClient postgresClient) {
       super(postgresClient, TABLE_NAME, Setting.class);
     }
   }

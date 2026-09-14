@@ -25,8 +25,7 @@ class ItemOrderMigrationServiceTest {
   @BeforeEach
   void setUp() {
     postgresClient = mock(PostgresClient.class);
-    ItemRepository itemRepository = mock(ItemRepository.class);
-    migrationService = new ItemOrderMigrationService(postgresClient, itemRepository);
+    migrationService = new ItemOrderMigrationService(postgresClient, mock(ItemRepository.class));
   }
 
   @Test

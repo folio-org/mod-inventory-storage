@@ -2,7 +2,6 @@ package org.folio.it.api;
 
 import static org.folio.HttpStatus.HTTP_UNPROCESSABLE_ENTITY;
 import static org.folio.rest.impl.HoldingsTypeApi.HOLDINGS_TYPE_TABLE;
-import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
