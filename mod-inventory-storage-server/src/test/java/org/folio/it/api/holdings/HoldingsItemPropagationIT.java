@@ -25,6 +25,7 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.HoldingRequestBuilder;
+import org.folio.support.integration.TestRailCase;
 import org.folio.support.messages.HoldingsEventMessageChecks;
 import org.folio.support.messages.ItemEventMessageChecks;
 import org.junit.jupiter.api.AfterEach;
@@ -313,6 +314,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number type changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberTypeChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -328,6 +330,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number "
                + "prefix changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberPrefixChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -342,6 +345,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number "
                + "suffix changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberSuffixChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -355,6 +359,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number components when the holding's call number changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -368,6 +373,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective location when the holding's permanent location changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingPermanentLocationChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -382,6 +388,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective location when the holding's temporary location changes")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingTemporaryLocationChanges() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -396,6 +403,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's call numbers and effective location when several holding fields change")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumbersAndLocationsChange() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -417,6 +425,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should update the item's effective call number and metadata when the holding's call number "
                + "and notes change")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponentsAndNote_whenHoldingCallNumberAndNotesChange() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -434,6 +443,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update the item's effective call number when the holding's call number is deleted")
+  @TestRailCase(388502)
   void shouldUpdateItemEffectiveComponents_whenHoldingCallNumberDeleted() {
     var effectiveComponents = createHoldingAndItemWithAllCallNumberComponents();
 
@@ -475,6 +485,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update an item when a synchronous batch changes a related holding field")
+  @TestRailCase(1282782)
   void shouldUpdateItem_whenSyncBatchChangesRelatedField() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withCallNumberPrefix("call number prefix"));
     var item = createItem(holding.getString("id"));
@@ -490,6 +501,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should not update an item when a synchronous batch changes an unrelated holding field")
+  @TestRailCase(1282786)
   void shouldNotUpdateItem_whenSyncBatchChangesUnrelatedField() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withCallNumberPrefix("call number prefix"));
     var item = createItem(holding.getString("id"));
@@ -502,6 +514,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should update an item when an unsafe synchronous batch changes a related holding field")
+  @TestRailCase(1282782)
   void shouldUpdateItem_whenUnsafeBatchChangesRelatedField() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
@@ -521,6 +534,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should not update an item when an unsafe synchronous batch changes an unrelated holding field")
+  @TestRailCase(1282786)
   void shouldNotUpdateItem_whenUnsafeBatchChangesUnrelatedField() {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(
       Map.of(OptimisticLockingUtil.DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING, "9999-12-31T23:59:59Z"));
@@ -536,6 +550,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
   @Test
   @DisplayName("should not update an item when a patch changes an unrelated holding field")
+  @TestRailCase(1282783)
   void shouldNotUpdateItem_whenPatchChangesUnrelatedField() {
     var holding = createHolding(holdingRequest(createInstanceRecord()).withHrid("hrid")
       .withPermanentLocation(UUID.fromString(annexLibraryLocationId)));
@@ -552,6 +567,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @ParameterizedTest
   @MethodSource("relatedHoldingFields")
   @DisplayName("should update an item when a patch changes a related holding field")
+  @TestRailCase(1282781)
   void shouldUpdateItem_whenPatchChangesRelatedField(String holdingField, String initialValue, String newValue,
                                                      String expectedComponentSubField) {
     var holdingId = createHoldingWithField(holdingField, initialValue);
@@ -568,6 +584,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
   @ParameterizedTest
   @MethodSource("relatedHoldingFields")
   @DisplayName("should update an item when a synchronous batch upsert changes a related holding field")
+  @TestRailCase(1282782)
   void shouldUpdateItem_whenSyncBatchUpsertChangesRelatedField(String holdingField, String initialValue,
                                                                String newValue, String expectedComponentSubField) {
     var holdingId = createHoldingWithField(holdingField, initialValue);
