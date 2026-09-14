@@ -27,11 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
- * Shared reference data, lifecycle, and request/assertion helpers for the
- * {@code HoldingsStorage*IT} classes (split by feature from the former monolithic
- * {@code HoldingsStorageIT} - see docs/test-quality-improvement-plan.md WS5). None of
- * this is feature-specific: every helper here is used by at least two of the split
- * classes, so it lives here rather than being duplicated or guessed at per class.
+ * Shared reference data, lifecycle, and request/assertion helpers for the {@code HoldingsStorage*IT} classes.
  */
 abstract class HoldingsStorageTestBase extends BaseIntegrationTest {
 

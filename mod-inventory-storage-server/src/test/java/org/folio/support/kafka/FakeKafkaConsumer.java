@@ -16,8 +16,7 @@ import org.folio.support.messages.EventMessage;
  * Wraps a {@link KafkaTestEventCollector} - which continuously drains the broker into an
  * in-memory per-topic index in the background, so an already-arrived message matches on the
  * first check instead of a test waiting out a broker-poll timeout - and layers this module's
- * per-entity message grouping on top, the way {@code docs/test-quality-improvement-plan.md}'s
- * WS2 Tier 2 describes.
+ * per-entity message grouping on top.
  *
  * <p>Subscribes to every {@link InventoryKafkaTopic} for each of the given {@code tenants},
  * using {@link InventoryKafkaTopic#fullTopicName(String)} - the same topic-naming function

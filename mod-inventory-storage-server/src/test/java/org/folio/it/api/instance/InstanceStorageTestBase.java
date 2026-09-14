@@ -31,11 +31,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
- * Shared reference data, lifecycle, and request/assertion helpers for the
- * {@code InstanceStorage*IT} classes (split by feature from the former monolithic
- * {@code InstanceStorageIT} - see docs/test-quality-improvement-plan.md WS5). Only helpers
- * used by two or more of the split classes live here; a helper used by exactly one split
- * class stays local to that class instead.
+ * Shared reference data, lifecycle, and request/assertion helpers for the {@code InstanceStorage*IT} classes.
  */
 abstract class InstanceStorageTestBase extends BaseIntegrationTest {
 
