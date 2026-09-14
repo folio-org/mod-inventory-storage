@@ -1,8 +1,8 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.validator.NotesValidators.MAX_NOTE_LENGTH;
 
@@ -24,7 +24,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
 
     var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
     assertThat(error.getMessage()).contains("must match");
     assertThat(error.getParameters().getFirst().getKey()).isEqualTo("id");
@@ -64,7 +64,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
     holding.putNull("sourceId").put("callNumber", "updatedTestCallNumber");
     var response = updateHolding(holding);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var updated = getHoldingById(holding.getString("id")).jsonBody();
     assertThat(updated.getString("callNumber")).isEqualTo("testCallNumber");
   }
@@ -77,7 +77,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
 
     var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 
   @Test
@@ -88,7 +88,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
 
     var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 
   @Test
@@ -97,7 +97,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
     var holding = createHolding(holdingRequest(createInstanceRecord()));
     holding.put(ADMINISTRATIVE_NOTES_KEY, new JsonArray().add("x".repeat(MAX_NOTE_LENGTH + 1)));
 
-    assertThat(updateHolding(holding).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(updateHolding(holding).status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 
   @Test
@@ -107,7 +107,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
     holding.put("notes", new JsonArray()
       .add(pojo2JsonObject(new HoldingsNote().withNote("x".repeat(MAX_NOTE_LENGTH + 1)))));
 
-    assertThat(updateHolding(holding).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(updateHolding(holding).status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 
   @Test
@@ -118,7 +118,7 @@ class HoldingsStorageValidationIT extends HoldingsStorageTestBase {
 
     var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
     assertThat(error.getMessage()).containsAnyOf("may not be null", "must not be null");
     assertThat(error.getParameters().getFirst().getKey()).isEqualTo(PERMANENT_LOCATION_ID_KEY);

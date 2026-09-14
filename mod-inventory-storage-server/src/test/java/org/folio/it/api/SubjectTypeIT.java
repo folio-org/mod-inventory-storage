@@ -1,12 +1,12 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
 import static org.folio.utility.RestUtility.CONSORTIUM_CENTRAL_TENANT;
@@ -130,7 +130,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
     var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.jsonBody().getJsonArray(ERRORS_FIELD)).hasSize(1);
   }
 
@@ -141,7 +141,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
     var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
     assertThat(errors).hasSize(1);
     assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
@@ -155,7 +155,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
     var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
     assertThat(errors).hasSize(1);
     assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
@@ -192,7 +192,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
 
     var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + FOLIO_SUBJECT_TYPE_ID, subjectType));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
     assertThat(errors).hasSize(1);
     assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
@@ -210,7 +210,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id,
       subjectType.put(SOURCE_FIELD, SOURCE_FOLIO)));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
     assertThat(errors).hasSize(1);
     assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))
@@ -229,7 +229,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id,
       subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
     assertThat(errors).hasSize(1);
     assertThat(errors.getJsonObject(0).getString(MESSAGE_FIELD))

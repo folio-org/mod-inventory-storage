@@ -1,10 +1,10 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonObject;

@@ -1,11 +1,11 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.support.ResourcePaths.INSTANCES;
 
@@ -197,7 +197,7 @@ class InstanceStorageHridIT extends InstanceStorageTestBase {
 
     var response = syncBatch(instancesArray);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().mapTo(Errors.class);
     assertThat(errors.getErrors()).hasSize(1);
     var parameter = errors.getErrors().getFirst().getParameters().getFirst();

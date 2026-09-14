@@ -1,9 +1,9 @@
 package org.folio.it.api;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;

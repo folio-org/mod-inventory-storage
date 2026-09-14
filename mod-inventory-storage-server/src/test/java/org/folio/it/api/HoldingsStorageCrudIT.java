@@ -1,10 +1,10 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
 
@@ -117,7 +117,7 @@ class HoldingsStorageCrudIT extends HoldingsStorageTestBase {
 
     var response = await(doPost(client, ResourcePaths.HOLDINGS, request));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.body().toString()).contains(
       "Cannot set holdings_record.instanceid = " + instanceId + " because it does not exist in instance.id.");
   }
@@ -322,6 +322,6 @@ class HoldingsStorageCrudIT extends HoldingsStorageTestBase {
 
     var patch = new JsonObject().put("id", holdingId).put("_version", 1).putNull("sourceId");
 
-    assertThat(patchHolding(holdingId, patch).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(patchHolding(holdingId, patch).status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 }

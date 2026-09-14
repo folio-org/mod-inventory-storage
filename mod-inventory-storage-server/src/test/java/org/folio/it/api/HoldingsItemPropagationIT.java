@@ -1,8 +1,8 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createCallNumberType;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;

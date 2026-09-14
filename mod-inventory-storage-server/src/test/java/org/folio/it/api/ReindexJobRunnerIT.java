@@ -1,9 +1,9 @@
 package org.folio.it.api;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;

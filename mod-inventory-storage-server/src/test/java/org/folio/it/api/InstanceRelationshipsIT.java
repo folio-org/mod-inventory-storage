@@ -1,8 +1,8 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
 import static org.folio.it.InstanceStorageFixtures.createInstance;
 import static org.folio.it.InstanceStorageFixtures.createInstanceRelationship;
 import static org.folio.it.InstanceStorageFixtures.createInstanceRelationshipType;

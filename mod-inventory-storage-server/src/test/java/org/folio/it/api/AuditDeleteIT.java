@@ -1,7 +1,7 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createHolding;
 import static org.folio.it.HoldingsStorageFixtures.createItem;
@@ -44,12 +44,6 @@ class AuditDeleteIT extends BaseIntegrationTest {
     loanTypeId = createLoanType(client);
     instanceId = createInstance(client, "an instance", instanceTypeId);
     holdingId = createHolding(client, instanceId, createLocation(client));
-  }
-
-  private static void clearAuditTables() {
-    runQuery("DELETE FROM " + AUDIT_INSTANCE);
-    runQuery("DELETE FROM " + AUDIT_HOLDINGS_RECORD);
-    runQuery("DELETE FROM " + AUDIT_ITEM);
   }
 
   @Test
@@ -103,6 +97,12 @@ class AuditDeleteIT extends BaseIntegrationTest {
     assertThat(deleteResponse.status()).isEqualTo(SC_NO_CONTENT);
 
     assertThat(singleAuditRecordId(AUDIT_HOLDINGS_RECORD)).isEqualTo(holdingId);
+  }
+
+  private static void clearAuditTables() {
+    runQuery("DELETE FROM " + AUDIT_INSTANCE);
+    runQuery("DELETE FROM " + AUDIT_HOLDINGS_RECORD);
+    runQuery("DELETE FROM " + AUDIT_ITEM);
   }
 
   private static int countAuditRecords(String table) {

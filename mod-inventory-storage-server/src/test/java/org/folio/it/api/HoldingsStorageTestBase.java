@@ -1,10 +1,10 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createCallNumberType;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
@@ -194,7 +194,7 @@ abstract class HoldingsStorageTestBase extends BaseIntegrationTest {
   }
 
   static void assertHridError(TestResponse response, String hrid) {
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
     assertThat(error.getMessage()).contains("HRID value already exists in table holdings_record: " + hrid);
     var parameter = error.getParameters().getFirst();

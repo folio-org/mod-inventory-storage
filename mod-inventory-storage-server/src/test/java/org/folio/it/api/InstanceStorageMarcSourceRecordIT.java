@@ -1,9 +1,9 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.support.ResourcePaths.INSTANCES;
 

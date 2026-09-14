@@ -1,11 +1,11 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CONFLICT;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_REQUEST_TOO_LONG;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CONFLICT;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_REQUEST_TOO_LONG;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
 
@@ -109,7 +109,7 @@ class HoldingsStorageBatchIT extends HoldingsStorageTestBase {
 
     var response = syncBatch(holdingsArray);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var error = response.jsonBody().mapTo(Errors.class).getErrors().getFirst();
     assertThat(error.getMessage()).matches("Cannot set holdings_record.instanceid = \\S+ "
                                            + "because it does not exist in instance.id.");
@@ -127,7 +127,7 @@ class HoldingsStorageBatchIT extends HoldingsStorageTestBase {
 
     var response = syncBatch(holdingsArray);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     holdingsArray.forEach(holding ->
       assertGetNotFound(ResourcePaths.HOLDINGS + "/" + ((JsonObject) holding).getString("id")));
   }
@@ -151,6 +151,6 @@ class HoldingsStorageBatchIT extends HoldingsStorageTestBase {
     holdingsArray2.getJsonObject(1).put("id", existingId);
 
     assertThat(syncBatch(queryParams, holdingsArray1).status()).isEqualTo(SC_CREATED);
-    assertThat(syncBatch(queryParams, holdingsArray2).status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(syncBatch(queryParams, holdingsArray2).status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 }

@@ -1,8 +1,8 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.services.instance.InstanceDateTypeService.INSTANCE_DATE_TYPE_TABLE;
 import static org.folio.support.ResourcePaths.INSTANCE_DATE_TYPES;

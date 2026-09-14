@@ -1,8 +1,8 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_CONFLICT;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_CONFLICT;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.it.HoldingsStorageFixtures.createHoldingsRecordsSource;
 
 import java.util.Map;

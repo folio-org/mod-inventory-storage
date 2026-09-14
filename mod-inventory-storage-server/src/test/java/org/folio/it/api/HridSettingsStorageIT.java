@@ -1,11 +1,11 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.utility.RestUtility.TENANT_ID;
 
@@ -383,7 +383,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   }
 
   private void assertValidationError(TestResponse response, String expectedKey, String expectedValue) {
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
 
     var errors = response.jsonBody().mapTo(Errors.class);
     assertThat(errors.getErrors()).isNotEmpty();

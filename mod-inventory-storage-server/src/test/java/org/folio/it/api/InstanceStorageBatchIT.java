@@ -1,10 +1,10 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_REQUEST_TOO_LONG;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_REQUEST_TOO_LONG;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.support.ResourcePaths.INSTANCES;
 import static org.folio.support.ResourcePaths.INSTANCES_SYNC;
@@ -82,7 +82,7 @@ class InstanceStorageBatchIT extends InstanceStorageTestBase {
 
     var response = await(doPost(client, INSTANCES_SYNC, instanceCollection));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
       .contains(invalidSubjectId);
   }
@@ -109,7 +109,7 @@ class InstanceStorageBatchIT extends InstanceStorageTestBase {
 
     var response = syncBatch(instancesArray);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.jsonBody().mapTo(Errors.class).getErrors().getFirst().getMessage())
       .contains("Unrecognized field \"invalidPropertyName\"");
     instancesArray.forEach(instance ->
@@ -175,7 +175,7 @@ class InstanceStorageBatchIT extends InstanceStorageTestBase {
 
     var response = syncBatch(instancesArray);
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     instancesArray.forEach(instance ->
       assertGetNotFound(INSTANCES + "/" + ((JsonObject) instance).getString("id")));
   }
@@ -215,7 +215,7 @@ class InstanceStorageBatchIT extends InstanceStorageTestBase {
 
     var response = await(doPost(client, path, new JsonObject().put(INSTANCES_KEY, instancesArray)));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertGetNotFound(INSTANCES + "/" + instancesArray.getJsonObject(0).getString("id"));
     assertExists(instancesArray.getJsonObject(1));
     assertGetNotFound(INSTANCES + "/" + instancesArray.getJsonObject(2).getString("id"));

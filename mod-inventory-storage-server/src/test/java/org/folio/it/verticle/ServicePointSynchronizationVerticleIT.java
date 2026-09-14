@@ -1,13 +1,13 @@
 package org.folio.it.verticle;
 
 import static java.lang.String.format;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG;
 import static org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_OK;
 import static org.folio.it.api.ServicePointsIT.createHoldShelfExpiryPeriod;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.environment;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.host;

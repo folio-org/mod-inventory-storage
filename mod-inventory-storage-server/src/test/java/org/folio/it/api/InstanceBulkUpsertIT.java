@@ -1,9 +1,9 @@
 package org.folio.it.api;
 
 import static org.apache.commons.io.FileUtils.openInputStream;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonArray;
@@ -162,7 +162,7 @@ class InstanceBulkUpsertIT extends BaseIntegrationTest {
     var response =
       await(doPost(client, ResourcePaths.INSTANCES_BULK, pojo2JsonObject(new BulkUpsertRequest())));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
   }
 
   private void assertErrorFilesContainForeignKeyViolations(String bulkFilePath, String expectedErrorRecordsFileName,

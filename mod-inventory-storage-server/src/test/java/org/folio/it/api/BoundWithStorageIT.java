@@ -1,10 +1,10 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.HoldingsStorageFixtures.createHolding;
 import static org.folio.it.HoldingsStorageFixtures.createItem;
@@ -230,7 +230,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var responseForNonExistentItem = putCompositeBoundWith(
       createBoundWithCompositeJson(nonExistentItemId, List.of(holding1Id, holding2Id)));
 
-    assertThat(responseForNonExistentItem.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(responseForNonExistentItem.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var itemError = responseForNonExistentItem.bodyAsClass(Errors.class).getErrors().getFirst();
     assertThat(itemError.getMessage()).isEqualTo("Item not found.");
     assertThat(itemError.getParameters().getFirst().getKey()).isEqualTo(ITEM_ID_FIELD);
@@ -241,7 +241,7 @@ class BoundWithStorageIT extends BaseIntegrationTest {
     var responseForNonExistentHoldings = putCompositeBoundWith(createBoundWithCompositeJson(
       itemId, List.of(holding1Id, nonExistentHoldingsId, holding1Id)));
 
-    assertThat(responseForNonExistentHoldings.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(responseForNonExistentHoldings.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var holdingsError = responseForNonExistentHoldings.bodyAsClass(Errors.class).getErrors().getFirst();
     assertThat(holdingsError.getMessage()).isEqualTo("Holdings record not found.");
     assertThat(holdingsError.getParameters().getFirst().getKey()).isEqualTo(HOLDINGS_RECORD_ID_FIELD);

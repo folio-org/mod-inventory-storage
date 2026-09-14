@@ -1,12 +1,12 @@
 package org.folio.it.api;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_CREATED;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstance;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
@@ -148,7 +148,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = postTitle(nonExistingInstanceId, instanceId, null, null, List.of());
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertErrorMessage(response, "Cannot set preceding_succeeding_title.precedinginstanceid = "
       + nonExistingInstanceId + " because it does not exist in instance.id.");
   }
@@ -161,7 +161,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = postTitle(instanceId, nonExistingInstanceId, TITLE, HRID, List.of(identifier("9781473619777")));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertErrorMessage(response, "Cannot set preceding_succeeding_title.succeedinginstanceid = "
       + nonExistingInstanceId + " because it does not exist in instance.id.");
   }
@@ -171,7 +171,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
   void shouldReturn422_whenBothInstanceIdsAreEmpty() {
     var response = postTitle(null, null, TITLE, HRID, List.of(identifier("9781473619777")));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertErrorMessage(response, "The precedingInstanceId and succeedingInstanceId can't be empty at the same time");
   }
 
@@ -180,7 +180,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
   void shouldReturn422_whenGettingByInvalidId() {
     var response = await(doGet(client, titleByIdPath("abc")));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertErrorMessage(response, INVALID_UUID_ERROR_MESSAGE);
   }
 
@@ -195,7 +195,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
 
     var response = await(doPut(client, titleByIdPath("abc"), pojo2JsonObject(title)));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertErrorMessage(response, INVALID_UUID_ERROR_MESSAGE);
   }
 
@@ -270,7 +270,7 @@ class PrecedingSucceedingTitlesIT extends BaseIntegrationTest {
       await(doPut(client, ResourcePaths.PRECEDING_SUCCEEDING_TITLES + "/instances/" + instanceId,
         pojo2JsonObject(updated)));
 
-    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.body().toString())
       .contains("The precedingInstanceId or succeedingInstanceId should contain instanceId");
   }

@@ -1,9 +1,9 @@
 package org.folio.it.kafka;
 
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_UNPROCESSABLE_ENTITY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
+import static org.folio.HttpStatus.SC_NO_CONTENT;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonObject;
@@ -91,7 +91,7 @@ class LoanTypeDomainEventIT extends BaseIntegrationTest {
       .put("additional", "invalid");
 
     var createResponse = await(doPost(client, ResourcePaths.LOAN_TYPES, invalidRequest));
-    assertThat(createResponse.status()).isEqualTo(SC_UNPROCESSABLE_ENTITY);
+    assertThat(createResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
 
     eventChecks.noMessagesPublished(loanTypeId);
   }
