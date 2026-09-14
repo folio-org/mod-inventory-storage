@@ -1,4 +1,4 @@
-package org.folio.it.api;
+package org.folio.it.api.holdings;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CREATED;

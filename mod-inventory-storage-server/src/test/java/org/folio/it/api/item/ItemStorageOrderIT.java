@@ -1,4 +1,4 @@
-package org.folio.it.api;
+package org.folio.it.api.item;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CREATED;
@@ -30,7 +30,8 @@ class ItemStorageOrderIT extends ItemStorageTestBase {
     var responses = runConcurrentPosts(Map.of(id1, minimalItemRequest(id1, holdingId),
       id2, minimalItemRequest(id2, holdingId)));
 
-    assertThat(responses).allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
+    assertThat(responses).isNotEmpty()
+      .allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
     var order1 = getItemJsonById(id1.toString()).getInteger(ORDER_FIELD);
     var order2 = getItemJsonById(id2.toString()).getInteger(ORDER_FIELD);
     assertThat(order1).isIn(1, 2);
@@ -50,7 +51,8 @@ class ItemStorageOrderIT extends ItemStorageTestBase {
     var responses = runConcurrentPosts(Map.of(id1, minimalItemRequest(id1, holdingId), id2, item2,
       id3, minimalItemRequest(id3, holdingId)));
 
-    assertThat(responses).allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
+    assertThat(responses).isNotEmpty()
+      .allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
     assertThat(getItemJsonById(id2.toString()).getInteger(ORDER_FIELD)).isEqualTo(6);
     var order1 = getItemJsonById(id1.toString()).getInteger(ORDER_FIELD);
     var order3 = getItemJsonById(id3.toString()).getInteger(ORDER_FIELD);
@@ -72,7 +74,8 @@ class ItemStorageOrderIT extends ItemStorageTestBase {
 
     var responses = runConcurrentPosts(Map.of(id1, minimalItemRequest(id1, holdingId).put(ORDER_FIELD, 1000),
       id2, minimalItemRequest(id2, holdingId).put(ORDER_FIELD, 10)));
-    assertThat(responses).allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
+    assertThat(responses).isNotEmpty()
+      .allSatisfy(response -> assertThat(response.status()).isEqualTo(SC_CREATED));
 
     var item3 = createItem(minimalItemRequest(UUID.randomUUID(), holdingId));
 

@@ -1,4 +1,4 @@
-package org.folio.it.api;
+package org.folio.it.api.instance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CREATED;
@@ -38,9 +38,8 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
 
   @Test
   @DisplayName("should search using the metadata date-updated index")
-  void shouldSearchUsingMetadataDateUpdatedIndex() throws InterruptedException {
+  void shouldSearchUsingMetadataDateUpdatedIndex() {
     createInstance(smallAngryPlanet(UUID.randomUUID()));
-    Thread.sleep(2000); // ensure a different "updatedDate" than the first instance
     var second = createInstance(nod(UUID.randomUUID()));
 
     var metadata = second.getJsonObject(METADATA_KEY);
