@@ -1,14 +1,14 @@
 package org.folio.rest.support;
 
 import static org.folio.rest.support.CollectionUtil.deepCopy;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CollectionUtilTest {
+class CollectionUtilTest {
   @Test
-  public void shouldThrowIllegalArgumentExceptionWhenCannotSerializeToJson() {
+  void shouldThrowIllegalArgumentExceptionWhenCannotSerializeToJson() {
     var collection = List.of(new Object());
     assertThrows(IllegalArgumentException.class, () -> deepCopy(collection, Object.class));
   }

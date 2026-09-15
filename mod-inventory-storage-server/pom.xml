@@ -91,11 +91,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>${joda-time.version}</version>
@@ -123,26 +118,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.junit.vintage</groupId>
-      <artifactId>junit-vintage-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit4.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-inline</artifactId>
       <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>pl.pragmatists</groupId>
-      <artifactId>JUnitParams</artifactId>
-      <version>${JUnitParams.version}</version>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -180,6 +164,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>data-import-test-support</artifactId>
+      <version>${data-import-test-support.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
@@ -191,8 +187,8 @@
     </dependency>
     <dependency>  <!-- for mocking env variable -->
       <groupId>uk.org.webcompere</groupId>
-      <artifactId>system-stubs-junit4</artifactId>
-      <version>${system-stubs-junit4.version}</version>
+      <artifactId>system-stubs-jupiter</artifactId>
+      <version>${system-stubs.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -408,18 +404,16 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire-plugin.version}</version>
         <configuration>
-          <excludes>
-            <exclude>org/folio/rest/api/*Test.java</exclude>
-          </excludes>
-          <includes>
-            <include>org/folio/rest/api/StorageTestSuite.java</include>
-            <include>**/*Test.java</include>
-          </includes>
-          <!-- 3 tests of ItemStorageTest fail when run with de (= German) locale because
+          <!-- Some legacy rest.api tests fail when run with de (= German) locale because
                of translated error messages.
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
           -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+          <!-- StorageTestSuite bootstraps one JVM-wide Postgres/Kafka/S3/verticle stack shared by
+               every org.folio.rest.api test class. That singleton is only safe under a single,
+               reused fork, so pin both explicitly instead of relying on surefire's defaults. -->
+          <forkCount>1</forkCount>
+          <reuseForks>true</reuseForks>
         </configuration>
       </plugin>
 
@@ -469,12 +463,124 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${maven-failsafe-plugin.version}</version>
+        <configuration>
+          <argLine>@{failsafeArgLine}</argLine>
+        </configuration>
           <executions>
             <execution>
               <goals>
                 <goal>integration-test</goal>
                 <goal>verify</goal>
               </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
+        <configuration>
+          <!-- Applies as the default for every report/check execution below (prepare-agent*
+               and merge ignore it, as they don't operate on per-class data). RAML-generated
+               JAXRS model/resource classes are pure data holders and interfaces with no
+               logic to cover, so counting them would understate real coverage and dilute
+               the ratchet's signal. -->
+          <excludes>
+            <exclude>org/folio/rest/jaxrs/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>prepare-agent-integration</id>
+            <goals>
+              <goal>prepare-agent-integration</goal>
+            </goals>
+            <configuration>
+              <propertyName>failsafeArgLine</propertyName>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Bound earlier than report's own default (verify) so the report is still
+                 written if failsafe:verify then fails the build over a test failure. -->
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- Runs right after the IT tests (integration-test phase), before
+                 failsafe:verify (verify phase) gets a chance to fail the build - same
+                 reasoning as the report execution above. -->
+            <id>report-integration</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>report-integration</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- Combines the unit and IT exec data - most of this module's coverage comes
+                 from IT tests, so a report scoped to only one or the other understates the
+                 real picture. -->
+            <id>merge-results</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>merge</goal>
+            </goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <directory>${project.build.directory}</directory>
+                  <includes>
+                    <include>*.exec</include>
+                  </includes>
+                </fileSet>
+              </fileSets>
+              <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>report-merged</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Ratchet: fail the build only if overall line coverage drops
+                 below the measured baseline, not against an arbitrary absolute target. Bound
+                 to post-integration-test for the same reason as the report executions above. -->
+            <id>check</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>${jacoco.line.ratchet}</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
           </execution>
         </executions>
       </plugin>

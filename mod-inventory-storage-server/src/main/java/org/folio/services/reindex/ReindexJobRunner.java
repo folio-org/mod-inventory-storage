@@ -31,12 +31,12 @@ public class ReindexJobRunner {
   public static final String REINDEX_JOB_ID_HEADER = "reindex-job-id";
   private static final Logger log = LogManager.getLogger(ReindexJobRunner.class);
   private static final int POOL_SIZE = 2;
-  private static volatile WorkerExecutor workerExecutor;
 
   private final PostgresClient postgresClient;
   private final ReindexJobRepository reindexJobRepository;
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher;
   private final String tenantId;
+  private final WorkerExecutor workerExecutor;
 
   public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
     this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
@@ -55,8 +55,10 @@ public class ReindexJobRunner {
     this.reindexJobRepository = repository;
     this.instanceEventPublisher = domainEventPublisher;
     this.tenantId = tenantId;
-
-    initWorker(vertxContext);
+    // createSharedWorkerExecutor already shares the underlying pool by name within one Vertx
+    // instance's lifetime, so no extra caching is needed here - see IterationJobRunner for why
+    // caching this in a static field (as this used to) is actively wrong across Vertx instances.
+    this.workerExecutor = vertxContext.owner().createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
   }
 
   public void startReindex(ReindexJob reindexJob) {
@@ -73,17 +75,6 @@ public class ReindexJobRunner {
           }
         })
       .map(notUsed -> null);
-  }
-
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (ReindexJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("inventory-reindex", POOL_SIZE);
-        }
-      }
-    }
   }
 
   private Future<Long> streamInstanceIds(ReindexContext context) {

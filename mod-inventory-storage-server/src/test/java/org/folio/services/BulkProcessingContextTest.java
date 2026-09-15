@@ -1,19 +1,16 @@
 package org.folio.services;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
-@RunWith(JUnit4.class)
-public class BulkProcessingContextTest {
+class BulkProcessingContextTest {
 
   private static final String BULK_INSTANCES_FILE_PATH = "/parent-folder/bulkInstances";
 
   @Test
-  public void shouldReturnFilesPaths() {
+  void shouldReturnFilesPaths() {
     var request = new BulkUpsertRequest().withRecordsFileName(BULK_INSTANCES_FILE_PATH);
     var context = new BulkProcessingContext(request);
 

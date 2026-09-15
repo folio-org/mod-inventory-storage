@@ -1,10 +1,10 @@
 package org.folio.services.setting;
 
 import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE_UPDATES_ENABLED;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.exceptions.NotFoundException;
 import org.folio.rest.exceptions.SettingsValidationException;
@@ -52,10 +53,9 @@ class SettingsServiceTest {
   private static final String CONSORTIUM_ID = "consortium_id";
 
   private SettingCache cache;
-  private SettingsService settingsService;
+  private Context context;
   private Map<String, String> okapiHeaders;
   private PostgresClient postgresClient;
-  private MockedStatic<PgUtil> mockedPgUtil;
   private MockedConstruction<SettingEventPublisher> mockedPublisherConstruction;
   private ConsortiumDataCache consortiumDataCache;
 
@@ -63,7 +63,7 @@ class SettingsServiceTest {
   void setUp() {
     postgresClient = mock(PostgresClient.class);
     cache = mock(SettingCache.class);
-    var context = mock(Context.class);
+    context = mock(Context.class);
     var httpClient = mock(HttpClientAgent.class);
     consortiumDataCache = mock(ConsortiumDataCache.class);
     var vertx = mock(Vertx.class);
@@ -73,20 +73,15 @@ class SettingsServiceTest {
     when(context.get(SettingCache.class.getName())).thenReturn(cache);
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
 
-    mockedPgUtil = mockStatic(PgUtil.class);
-    mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
-      .thenReturn(postgresClient);
     mockedPublisherConstruction = mockConstruction(SettingEventPublisher.class,
       (mock, ctx) -> when(mock.publish(any(), anyString(), anyMap()))
         .thenReturn(Future.succeededFuture()));
     okapiHeaders = new HashMap<>(Map.of("X-Okapi-Tenant", TENANT_ID, "X-Okapi-User-Id", USER_ID));
-    settingsService = new SettingsService(context, okapiHeaders);
   }
 
   @AfterEach
   void tearDown() {
     mockedPublisherConstruction.close();
-    mockedPgUtil.close();
   }
 
   @Test
@@ -95,11 +90,13 @@ class SettingsServiceTest {
     var expectedSetting = createTestSetting(key, "true", Setting.Type.BOOLEAN);
     setupQueryMock(expectedSetting);
 
-    var result = settingsService.getSettingByKey(key);
+    withSettingsService(settingsService -> {
+      var result = settingsService.getSettingByKey(key);
 
-    assertThat(result.succeeded(), is(true));
-    assertThat(result.result(), is(notNullValue()));
-    assertThat(result.result().getKey(), is(key));
+      assertThat(result.succeeded(), is(true));
+      assertNotNull(result.result());
+      assertThat(result.result().getKey(), is(key));
+    });
   }
 
   @Test
@@ -107,10 +104,12 @@ class SettingsServiceTest {
     var key = INVENTORY_OPTIMIZE_UPDATES_ENABLED.getValue();
     setupQueryMock(null);
 
-    var result = settingsService.getSettingByKey(key);
+    withSettingsService(settingsService -> {
+      var result = settingsService.getSettingByKey(key);
 
-    assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(NotFoundException.class));
+      assertThat(result.failed(), is(true));
+      assertInstanceOf(NotFoundException.class, result.cause());
+    });
   }
 
   @Test
@@ -119,9 +118,11 @@ class SettingsServiceTest {
     var setting = createTestSetting(key, "false", Setting.Type.BOOLEAN);
     setupQueryMock(setting);
 
-    var result = settingsService.updateSetting(key, true, okapiHeaders);
+    withSettingsService(settingsService -> {
+      var result = settingsService.updateSetting(key, true, okapiHeaders);
 
-    assertThat(result.succeeded(), is(true));
+      assertThat(result.succeeded(), is(true));
+    });
   }
 
   @Test
@@ -130,28 +131,34 @@ class SettingsServiceTest {
     var setting = createTestSetting(key, "any value", Setting.Type.INTEGER);
     setupQueryMock(setting);
 
-    var result = settingsService.updateSetting(key, "not-an-integer", okapiHeaders);
+    withSettingsService(settingsService -> {
+      var result = settingsService.updateSetting(key, "not-an-integer", okapiHeaders);
 
-    assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(SettingsValidationException.class));
+      assertThat(result.failed(), is(true));
+      assertInstanceOf(SettingsValidationException.class, result.cause());
+    });
   }
 
   @Test
   void isOptimizeUpdatesEnabledShouldReturnTrueWhenEnabled() {
     when(cache.get(anyString(), any())).thenReturn(Future.succeededFuture("true"));
 
-    Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
+    withSettingsService(settingsService -> {
+      Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
 
-    assertThat(result.result(), is(true));
+      assertThat(result.result(), is(true));
+    });
   }
 
   @Test
   void isOptimizeUpdatesEnabledShouldReturnFalseWhenDisabled() {
     when(cache.get(anyString(), any())).thenReturn(Future.succeededFuture("false"));
 
-    Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
+    withSettingsService(settingsService -> {
+      Future<Boolean> result = settingsService.isOptimizeUpdatesEnabled(TENANT_ID);
 
-    assertThat(result.result(), is(false));
+      assertThat(result.result(), is(false));
+    });
   }
 
   @Test
@@ -166,9 +173,11 @@ class SettingsServiceTest {
         Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, List.of(MEMBER_TENANT_ID)))
       ));
 
-    var result = settingsService.updateSetting(key, true, okapiHeaders);
+    withSettingsService(settingsService -> {
+      var result = settingsService.updateSetting(key, true, okapiHeaders);
 
-    assertThat(result.succeeded(), is(true));
+      assertThat(result.succeeded(), is(true));
+    });
   }
 
   @Test
@@ -183,10 +192,20 @@ class SettingsServiceTest {
         Optional.of(new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, List.of(MEMBER_TENANT_ID)))
       ));
 
-    var result = settingsService.updateSetting(key, true, okapiHeaders);
+    withSettingsService(settingsService -> {
+      var result = settingsService.updateSetting(key, true, okapiHeaders);
 
-    assertThat(result.failed(), is(true));
-    assertThat(result.cause(), instanceOf(BadRequestException.class));
+      assertThat(result.failed(), is(true));
+      assertInstanceOf(BadRequestException.class, result.cause());
+    });
+  }
+
+  private void withSettingsService(Consumer<SettingsService> testBody) {
+    try (MockedStatic<PgUtil> mockedPgUtil = mockStatic(PgUtil.class)) {
+      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any()))
+        .thenReturn(postgresClient);
+      testBody.accept(new SettingsService(context, okapiHeaders));
+    }
   }
 
   private void setupQueryMock(Setting setting) {
@@ -202,6 +221,7 @@ class SettingsServiceTest {
     });
   }
 
+  @SuppressWarnings("unchecked")
   private RowSet<Row> buildRowSet(Setting setting) {
     RowSet<Row> rowSet = mock(RowSet.class);
     RowIterator<Row> iterator = mock(RowIterator.class);

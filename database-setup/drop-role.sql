@@ -1,1 +1,0 @@
-DROP ROLE IF EXISTS user_name;

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class DomainEventTest {
 
   @Test
-  void testCreateEvent() {
+  void createEvent() {
     String newEntity = "newEntity";
     String tenant = "tenant";
     DomainEvent<String> event = DomainEvent.createEvent(newEntity, tenant);
@@ -23,7 +23,7 @@ class DomainEventTest {
   }
 
   @Test
-  void testUpdateEvent() {
+  void updateEvent() {
     String oldEntity = "oldEntity";
     String newEntity = "newEntity";
     String tenant = "tenant";
@@ -38,7 +38,7 @@ class DomainEventTest {
   }
 
   @Test
-  void testDeleteEvent() {
+  void deleteEvent() {
     String oldEntity = "oldEntity";
     String tenant = "tenant";
     DomainEvent<String> event = DomainEvent.deleteEvent(oldEntity, tenant);
@@ -52,7 +52,7 @@ class DomainEventTest {
   }
 
   @Test
-  void testDeleteAllEvent() {
+  void deleteAllEvent() {
     String tenant = "tenant";
     DomainEvent<String> event = DomainEvent.deleteAllEvent(tenant);
 
@@ -65,7 +65,7 @@ class DomainEventTest {
   }
 
   @Test
-  void testReindexEvent() {
+  void reindexEvent() {
     String tenant = "tenant";
     DomainEvent<String> event = DomainEvent.reindexEvent(tenant);
 
@@ -78,7 +78,7 @@ class DomainEventTest {
   }
 
   @Test
-  void testAsyncMigrationEvent() {
+  void asyncMigrationEvent() {
     String job = "job";
     String tenant = "tenant";
     DomainEvent<String> event = DomainEvent.asyncMigrationEvent(job, tenant);

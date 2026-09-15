@@ -2,52 +2,50 @@ package org.folio.rest.support;
 
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.junit5.VertxExtension;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.BulkProcessingContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@RunWith(JUnit4.class)
-public class BulkProcessingErrorFileWriterTest {
+@ExtendWith(VertxExtension.class)
+class BulkProcessingErrorFileWriterTest {
 
   private static final String BULK_INSTANCES_FILE_PATH = "/parent-folder/bulkInstances";
 
-  private final Vertx vertx = Vertx.vertx();
   private BulkProcessingContext bulkContext;
   private BulkProcessingErrorFileWriter writer;
 
-  @Before
-  public void setUp() {
+  @BeforeEach
+  void setUp(Vertx vertx) {
     var request = new BulkUpsertRequest().withRecordsFileName(BULK_INSTANCES_FILE_PATH);
     bulkContext = new BulkProcessingContext(request);
     writer = new BulkProcessingErrorFileWriter(vertx, bulkContext);
   }
 
-  @After
-  public void tearDown() throws Exception {
+  @AfterEach
+  void tearDown() throws Exception {
     FileUtils.deleteDirectory(Path.of(bulkContext.getErrorsFileLocalPath()).getName(0).toFile());
   }
 
   @Test
-  public void shouldWriteEntityAndErrorMessageToFiles()
-    throws ExecutionException, InterruptedException, TimeoutException, IOException {
+  void shouldWriteEntityAndErrorMessageToFiles()
+    throws Exception {
     // given
     String errorMessage = "Test error";
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
@@ -65,10 +63,12 @@ public class BulkProcessingErrorFileWriterTest {
     assertFileContentEquals(bulkContext.getErrorsFileLocalPath(), expectedErrorFileRecord);
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void shouldThrowExceptionOnWriteIfWriterIsNotInitialized() {
+  @Test
+  void shouldThrowExceptionOnWriteIfWriterIsNotInitialized() {
     Instance instance = new Instance().withId(UUID.randomUUID().toString());
-    writer.write(instance, Instance::getId, new RuntimeException("Test error"));
+    var testError = new RuntimeException("Test error");
+    assertThrows(IllegalStateException.class, () ->
+      writer.write(instance, Instance::getId, testError));
   }
 
   private void assertFileContentEquals(String filePath, String expectedContent) throws IOException {

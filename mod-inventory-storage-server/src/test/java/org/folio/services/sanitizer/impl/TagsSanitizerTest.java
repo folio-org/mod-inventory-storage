@@ -52,10 +52,10 @@ class TagsSanitizerTest {
         Arrays.asList("tag1", "", "tag2", "  ", "tag3"),
         Arrays.asList("tag1", "tag2", "tag3")
       ),
-      Arguments.of(null, Arrays.asList()),
-      Arguments.of(new ArrayList<>(), Arrays.asList()),
-      Arguments.of(Arrays.asList("valid tag", "\t", "\n", "   "), Arrays.asList("valid tag")),
-      Arguments.of(Arrays.asList("", "  ", "\t", "\n"), Arrays.asList()),
+      Arguments.of(null, List.of()),
+      Arguments.of(new ArrayList<>(), List.of()),
+      Arguments.of(Arrays.asList("valid tag", "\t", "\n", "   "), List.of("valid tag")),
+      Arguments.of(Arrays.asList("", "  ", "\t", "\n"), List.of()),
       Arguments.of(Arrays.asList("tag1", "tag2", "tag3"), Arrays.asList("tag1", "tag2", "tag3")),
       Arguments.of(
         Arrays.asList("urgent", "", "   ", "important", "\t\n", "review"),

@@ -36,6 +36,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
     * [ModuleDescriptor](#moduledescriptor)
     * [API documentation](#api-documentation)
     * [Code analysis](#code-analysis)
+    * [Testing](#testing)
     * [Download and configuration](#download-and-configuration)
 * [Appendix 1 - Docker Information](#appendix-1---docker-information)
   * [When Using the Modules as Docker Containers](#when-using-the-modules-as-docker-containers)
@@ -77,11 +78,6 @@ To initialise these please run `git submodule init && git submodule update` in t
 If these are not initialised, the module will fail to build correctly, and other operations may also fail.
 
 More information is available on the [developer site](https://dev.folio.org/guides/developer-setup/#update-git-submodules).
-
-## Postgres
-
-Run the `setup-test-db.sh` script in the root directory to setup Postgres with a database to be used in tests.
-This is only required to run tests against an external Postgres instance, the default is to use an embedded Postgres instance.
 
 ## Kafka
 
@@ -134,8 +130,6 @@ Changing maximum message size for kafka producer:
 # Building
 
 run `mvn install` from the root directory.
-
-To run the tests against both embedded and external databases, run `./build.sh` from the root directory.
 
 # Environment Variables
 
@@ -245,56 +239,6 @@ Execute `docker compose down` to stop the infrastructure containers
 The GitHub Actions file [.github/workflows/mac.yml](.github/workflows/mac.yml) for macOS uses Homebrew
 to setup the infrastructure, run the module, and install and check sample data.
 
-# Running
-
-## Preparation
-
-## Running Okapi
-
-Make sure that [Okapi](https://github.com/folio-org/okapi) is running on its default port of 9130 (see the [guide](https://github.com/folio-org/okapi/blob/master/doc/guide.md) for instructions).
-
-A script for building and running Okapi is provided. Run `../mod-inventory-storage/start-okapi.sh` from the root of the Okapi source.
-
-As this runs Okapi using Postgres storage, some database preparation is required. This can be achieved by running `./create-okapi-database.sh` from the root of this repository.
-
-## Registration
-
-To register the module with deployment instructions and activate it for a demo tenant, run `./start-managed-demo.sh` from the root directory.
-
-To deactivate and unregister the module, run `./stop-managed-demo.sh` from the root directory.
-
-## Tenant Initialization
-
-The module supports v2.0 of the Okapi `_tenant` interface. This version of the interface allows Okapi to pass tenant initialization parameters using the `tenantParameters` key. Currently, the only parameters supported are the `loadReference` and `loadSample` keys, which will cause the module to load reference data and sample data respectively for the tenant if set to `true`.  Here is an example of passing the `loadReference` parameter to the module via Okapi's `/_/proxy/tenants/<tenantId>/install` endpoint:
-
-    curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue
-
-This results in a post to the module's `_tenant` API with the following structure:
-
-```json
-{
-  "module_to": "mod-inventory-storage-14.1.0",
-  "parameters": [
-    {
-      "key": "loadReference",
-      "value": "true"
-    }
-  ]
-}
-```
-
-See the section [Install modules per tenant|https://github.com/folio-org/okapi/blob/master/doc/guide.md#install-modules-per-tenant] in the Okapi guide for more information.
-
-## Sample Data
-
-To load some sample data, the `loadSample` tenant initialization parameter can be passed when installing the module:
-
-    curl -w '\n' -X POST -d '[ { "id": "mod-inventory-storage-14.1.0", "action": "enable" } ]' http://localhost:9130/_/proxy/tenants/my-test-tenant/install?tenantParameters=loadReference%3Dtrue%2CloadSample%3Dtrue
-
-Please note that loading sample data will not work without also loading reference data.
-
-The sample data that would be loaded can be found in the `sample-data/` folder in the root directory.
-
 # Making Requests
 
 These modules provide HTTP based APIs rather than any UI themselves.
@@ -338,6 +282,11 @@ This module's [API documentation](https://dev.folio.org/reference/api/#mod-inven
 
 [SonarQube analysis](https://sonarcloud.io/dashboard?id=org.folio%3Amod-inventory-storage).
 
+### Testing
+
+See [docs/testing.md](docs/testing.md) for this repo's test naming, structure, and
+assertion conventions.
+
 ### Download and configuration
 
 The built artifacts for this module are available.
@@ -345,14 +294,6 @@ See [configuration](https://dev.folio.org/download/artifacts) for repository acc
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-inventory-storage/).
 
 # Appendix 1 - Docker Information
-
-## When Using the Modules as Docker Containers
-
-For the modules to communicate via Okapi Proxy, when running in Docker containers, the address for Okapi Proxy needs to be routable from inside the container.
-
-This can be achieved by passing a parameter to the script used to start Okapi, as follows `../mod-metadata/start-okapi.sh http://192.168.X.X:9130`
-
-Where 192.168.X.X is a routable IP address for the host from container instances and both repository clones are at the same directory level on your machine.
 
 ### Finding a Routable Address
 
