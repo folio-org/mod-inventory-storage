@@ -24,6 +24,7 @@
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
 * Migrate tests to Junit 6 and improve coverage ([MODINVSTOR-1594](https://folio-org.atlassian.net/browse/MODINVSTOR-1594))
+* Add test for updating subject type with duplicate name ([MODINVSTOR-1595](https://folio-org.atlassian.net/browse/MODINVSTOR-1595))
 
 ### Dependencies
 * Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
