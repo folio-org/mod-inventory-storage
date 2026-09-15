@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An instance custom link",
+  "javaType": "org.folio.rest.jaxrs.model.InstanceCustomLink",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique ID of the instance custom link; UUID",
+      "$ref": "../common/uuid.json"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the instance custom link",
+      "maxLength": 150
+    },
+    "linkText": {
+      "type": "string",
+      "description": "Text to display when rendering the instance custom link",
+      "maxLength": 40
+    },
+    "link": {
+      "type": "string",
+      "description": "The base URL including scheme and host for rendering the instance custom link",
+      "maxLength": 1000
+    },
+    "show": {
+      "type": "boolean",
+      "description": "Whether to show this instance custom link"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "local",
+        "consortium"
+      ],
+      "description": "The instance custom link source"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "../../raml-util/schemas/metadata.schema",
+      "readonly": true
+    }
+  },
+  "required": [
+    "name",
+    "linkText",
+    "link",
+    "source"
+  ]
+}
