@@ -16,6 +16,7 @@ import org.folio.persist.HoldingsRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.support.integration.TestRailCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -60,6 +61,16 @@ class HoldingsServiceTest {
     var newHolding = new HoldingsRecord().withCallNumber("A2");
 
     assertThat(shouldUpdateItems(oldHolding, newHolding)).isTrue();
+  }
+
+  @Test
+  @TestRailCase(388513)
+  @DisplayName("should not require an item update when only the ILL policy or acquisition method changed")
+  void shouldNotRequireItemUpdate_whenOnlyIllPolicyOrAcquisitionMethodChanged() {
+    var oldHolding = identicalHoldingPair().withIllPolicyId("ill-policy-1").withAcquisitionMethod("gift");
+    var newHolding = identicalHoldingPair().withIllPolicyId("ill-policy-2").withAcquisitionMethod("purchase");
+
+    assertThat(shouldUpdateItems(oldHolding, newHolding)).isFalse();
   }
 
   @Test
