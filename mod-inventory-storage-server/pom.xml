@@ -80,20 +80,8 @@
     </dependency>
     <dependency>
       <groupId>org.folio</groupId>
-      <artifactId>postgres-testing</artifactId>
-      <version>${raml-module-builder-version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.folio.okapi</groupId>
-      <artifactId>okapi-testing</artifactId>
-      <version>${okapi-testing.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>${joda-time.version}</version>
+      <artifactId>data-import-test-support</artifactId>
+      <version>${data-import-test-support.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -115,12 +103,6 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-inline</artifactId>
-      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -170,12 +152,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.folio</groupId>
-      <artifactId>data-import-test-support</artifactId>
-      <version>${data-import-test-support.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>testcontainers-junit-jupiter</artifactId>
       <scope>test</scope>
@@ -183,12 +159,6 @@
     <dependency>  <!-- for testcontainers -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>  <!-- for mocking env variable -->
-      <groupId>uk.org.webcompere</groupId>
-      <artifactId>system-stubs-jupiter</artifactId>
-      <version>${system-stubs.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -408,7 +378,7 @@
                of translated error messages.
                https://stackoverflow.com/questions/23190107/cannot-use-jacoco-jvm-args-and-surefire-jvm-args-together-in-maven
           -->
-          <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+          <argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar -Duser.language=en -Duser.region=US @{argLine}</argLine>
           <!-- StorageTestSuite bootstraps one JVM-wide Postgres/Kafka/S3/verticle stack shared by
                every org.folio.rest.api test class. That singleton is only safe under a single,
                reused fork, so pin both explicitly instead of relying on surefire's defaults. -->
