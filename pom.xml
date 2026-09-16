@@ -41,7 +41,8 @@
     <data-import-test-support.version>3.0.0-SNAPSHOT</data-import-test-support.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <hamcrest.version>3.0</hamcrest.version>
-    <mockito.version>5.2.0</mockito.version>
+    <mockito.version>5.23.0</mockito.version>
+    <byte-buddy.version>1.17.7</byte-buddy.version>
     <wiremock.version>3.13.2</wiremock.version>
     <rest-assured.version>6.0.1</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
@@ -105,6 +106,18 @@
         <version>${jackson.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- keep in lockstep with the byte-buddy-agent version mockito-core pulls in,
+           otherwise the mismatched pair breaks Mockito's inline MockMaker plugin -->
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>${byte-buddy.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>${byte-buddy.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
