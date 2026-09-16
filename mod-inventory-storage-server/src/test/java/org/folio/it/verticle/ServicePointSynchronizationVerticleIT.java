@@ -44,10 +44,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 /**
  * Covers {@code ServicePointSynchronizationVerticle}, which consumes service-point domain events
@@ -56,7 +52,6 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
  * on end-to-end domain-event timing from a plain POST/PUT/DELETE) to exercise the verticle's own
  * consumption logic in isolation, exactly like the legacy test this migrates.
  */
-@ExtendWith(SystemStubsExtension.class)
 class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
 
   private static final String SERVICE_POINT_TOPIC =
@@ -79,9 +74,6 @@ class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
   private static KafkaProducer<String, JsonObject> producer;
   private static KafkaAdminClient adminClient;
 
-  @SystemStub
-  private final EnvironmentVariables env = new EnvironmentVariables(ECS_TLR_FEATURE_ENABLED, "true");
-
   // Generated fresh per test rather than once for the class: reusing a fixed id let a still-
   // draining async propagation from a previous test race the next test's own create with a
   // duplicate-key error.
@@ -95,10 +87,15 @@ class ServicePointSynchronizationVerticleIT extends BaseIntegrationTest {
     producerConfig.put(ACKS_CONFIG, "1");
     producer = KafkaProducer.create(vertx, producerConfig, String.class, JsonObject.class);
     adminClient = KafkaAdminClient.create(vertx, Map.of(BOOTSTRAP_SERVERS_CONFIG, kafkaServerUrl));
+    // Environment.getBoolValue reads a system property before falling back to the real env var
+    // (see Environment#getValue), so setting the property here is enough to drive the verticle's
+    // feature check without touching the process environment.
+    System.setProperty(ECS_TLR_FEATURE_ENABLED, "true");
   }
 
   @AfterAll
   static void tearDownKafka() {
+    System.clearProperty(ECS_TLR_FEATURE_ENABLED);
     VertxTestUtil.await(producer.close().compose(v -> adminClient.close()));
   }
 
