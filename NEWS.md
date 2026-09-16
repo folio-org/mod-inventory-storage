@@ -1,9 +1,10 @@
-## v30.1.0 YYYY-mm-DD
+## v31.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Remove oaipmhview interface as deprecated ([MODINVSTOR-563](https://folio-org.atlassian.net/browse/MODINVSTOR-563))
 
 ### New APIs versions
 * Provides `settings v1.0`
+* Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 
 ### Features

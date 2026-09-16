@@ -50,9 +50,6 @@ public final class ResourcePaths {
   public static final String BOUND_WITHS = "/inventory-storage/bound-withs";
   public static final String INVENTORY_HIERARCHY_UPDATED_INSTANCE_IDS = "/inventory-hierarchy/updated-instance-ids";
   public static final String INVENTORY_HIERARCHY_ITEMS_AND_HOLDINGS = "/inventory-hierarchy/items-and-holdings";
-  public static final String OAI_PMH_VIEW_INSTANCES = "/oai-pmh-view/instances";
-  public static final String OAI_PMH_VIEW_UPDATED_INSTANCE_IDS = "/oai-pmh-view/updatedInstanceIds";
-  public static final String OAI_PMH_VIEW_ENRICHED_INSTANCES = "/oai-pmh-view/enrichedInstances";
   public static final String INVENTORY_SETTINGS = "/inventory-settings";
   public static final String INSTANCE_FORMATS = "/instance-formats";
   public static final String NATURE_OF_CONTENT_TERMS = "/nature-of-content-terms";
