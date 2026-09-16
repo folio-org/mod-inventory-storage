@@ -9,6 +9,9 @@ import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.it.InstanceStorageFixtures.createInstanceType;
+import static org.folio.support.ResourcePaths.INSTANCES;
+import static org.folio.support.ResourcePaths.SUBJECT_SOURCES;
+import static org.folio.support.ResourcePaths.SUBJECT_TYPES;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,8 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.Subject;
-import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
+import org.folio.support.integration.TestRailCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -55,7 +58,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var name = randomName();
     var subjectType = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, SOURCE_LOCAL);
 
-    var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+    var response = await(doPost(client, SUBJECT_TYPES, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_CREATED);
     var created = response.jsonBody();
@@ -71,7 +74,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, name).put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectType(subjectType);
 
-    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "?query=name==" + urlEncode(name)));
+    var response = await(doGet(client, SUBJECT_TYPES + "?query=name==" + urlEncode(name)));
 
     assertThat(response.status()).isEqualTo(SC_OK);
     var collection = response.jsonBody();
@@ -86,7 +89,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     var id = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
 
-    var response = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id));
+    var response = await(doGet(client, SUBJECT_TYPES + "/" + id));
 
     assertThat(response.status()).isEqualTo(SC_OK);
     assertThat(response.jsonBody().getString(ID_FIELD)).isEqualTo(id);
@@ -102,10 +105,10 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var updatedName = randomName();
 
     var response = await(
-      doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, subjectType.put(NAME_FIELD, updatedName)));
+      doPut(client, SUBJECT_TYPES + "/" + id, subjectType.put(NAME_FIELD, updatedName)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    var updated = await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id)).jsonBody();
+    var updated = await(doGet(client, SUBJECT_TYPES + "/" + id)).jsonBody();
     assertThat(updated.getString(NAME_FIELD)).isEqualTo(updatedName);
   }
 
@@ -115,19 +118,20 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     var id = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
 
-    var response = await(doDelete(client, ResourcePaths.SUBJECT_TYPES + "/" + id));
+    var response = await(doDelete(client, SUBJECT_TYPES + "/" + id));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(await(doGet(client, ResourcePaths.SUBJECT_TYPES + "/" + id)).status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(await(doGet(client, SUBJECT_TYPES + "/" + id)).status()).isEqualTo(SC_NOT_FOUND);
   }
 
   @Test
+  @TestRailCase({543862, 543863})
   @DisplayName("should fail to create a subject type when the name is a duplicate")
   void shouldFailToCreateSubjectType_whenNameIsDuplicate() {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectType(subjectType);
 
-    var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+    var response = await(doPost(client, SUBJECT_TYPES, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(response.jsonBody().getJsonArray(ERRORS_FIELD)).hasSize(1);
@@ -138,7 +142,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
   void shouldFailToCreateSubjectType_whenSourceIsFolio() {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_FOLIO);
 
-    var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+    var response = await(doPost(client, SUBJECT_TYPES, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
@@ -152,7 +156,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
   void shouldFailToCreateSubjectType_whenSourceIsConsortiumAtNonConsortiumTenant() {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
-    var response = await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+    var response = await(doPost(client, SUBJECT_TYPES, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
@@ -166,8 +170,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
   void shouldCreateSubjectType_whenSourceIsConsortiumAtConsortiumCentralTenant() {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_CONSORTIUM);
 
-    var response = await(
-      doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
+    var response = await(doPost(client, SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_CREATED);
   }
@@ -178,10 +181,29 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
     var id = UUID.randomUUID().toString();
 
-    var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, subjectType));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(response.body()).hasToString("SubjectType was not found");
+  }
+
+  @Test
+  @TestRailCase(543865)
+  @DisplayName("should fail to update a subject type when the name is a duplicate")
+  void shouldFailToUpdateSubjectType_whenNameIsDuplicate() {
+    var existingName = randomName();
+    createSubjectType(new JsonObject().put(NAME_FIELD, existingName).put(SOURCE_FIELD, SOURCE_LOCAL));
+
+    var id = UUID.randomUUID().toString();
+    var subjectType = new JsonObject().put(ID_FIELD, id)
+      .put(NAME_FIELD, randomName())
+      .put(SOURCE_FIELD, SOURCE_LOCAL);
+    createSubjectType(subjectType);
+
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, subjectType.put(NAME_FIELD, existingName)));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(response.jsonBody().getJsonArray(ERRORS_FIELD)).hasSize(1);
   }
 
   @Test
@@ -189,7 +211,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
   void shouldFailToUpdateSubjectType_whenSourceIsFolio() {
     var subjectType = new JsonObject().put(NAME_FIELD, randomName()).put(SOURCE_FIELD, SOURCE_LOCAL);
 
-    var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + FOLIO_SUBJECT_TYPE_ID, subjectType));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + FOLIO_SUBJECT_TYPE_ID, subjectType));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
@@ -202,12 +224,12 @@ class SubjectTypeIT extends BaseIntegrationTest {
   @DisplayName("should fail to update a subject type when changing its source to folio")
   void shouldFailToUpdateSubjectType_whenChangingSourceToFolio() {
     var id = UUID.randomUUID().toString();
-    var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
+    var subjectType = new JsonObject().put(ID_FIELD, id)
+      .put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectType(subjectType);
 
-    var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id,
-      subjectType.put(SOURCE_FIELD, SOURCE_FOLIO)));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, subjectType.put(SOURCE_FIELD, SOURCE_FOLIO)));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
@@ -221,12 +243,12 @@ class SubjectTypeIT extends BaseIntegrationTest {
                + "non-consortium tenant")
   void shouldFailToUpdateSubjectType_whenChangingSourceToConsortiumAtNonConsortiumTenant() {
     var id = UUID.randomUUID().toString();
-    var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
+    var subjectType = new JsonObject().put(ID_FIELD, id)
+      .put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
     createSubjectType(subjectType);
 
-    var response = await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id,
-      subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     var errors = response.jsonBody().getJsonArray(ERRORS_FIELD);
@@ -240,13 +262,13 @@ class SubjectTypeIT extends BaseIntegrationTest {
                + "central tenant")
   void shouldUpdateSubjectType_whenChangingSourceToConsortiumAtConsortiumCentralTenant() {
     var id = UUID.randomUUID().toString();
-    var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
+    var subjectType = new JsonObject().put(ID_FIELD, id)
+      .put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
-    await(doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
+    await(doPost(client, SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
-    var response =
-      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
-        subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
+      subjectType.put(SOURCE_FIELD, SOURCE_CONSORTIUM)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
@@ -257,11 +279,10 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var id = UUID.randomUUID().toString();
     var subjectType = new JsonObject().put(ID_FIELD, id).put(NAME_FIELD, randomName())
       .put(SOURCE_FIELD, SOURCE_CONSORTIUM);
-    await(doPost(client, ResourcePaths.SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
+    await(doPost(client, SUBJECT_TYPES, CONSORTIUM_CENTRAL_TENANT, subjectType));
 
-    var response =
-      await(doPut(client, ResourcePaths.SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
-        subjectType.put(SOURCE_FIELD, SOURCE_LOCAL)));
+    var response = await(doPut(client, SUBJECT_TYPES + "/" + id, CONSORTIUM_CENTRAL_TENANT,
+      subjectType.put(SOURCE_FIELD, SOURCE_LOCAL)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
@@ -273,12 +294,12 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectTypeId = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
     var instanceId = createInstanceWithSubject(randomSubjectSourceId(), subjectTypeId);
 
-    var response = await(doDelete(client, ResourcePaths.SUBJECT_TYPES + "/" + subjectTypeId));
+    var response = await(doDelete(client, SUBJECT_TYPES + "/" + subjectTypeId));
 
     assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
     assertThat(response.body().toString()).contains("id is still referenced from table instance_subject_type");
 
-    await(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId));
+    await(doDelete(client, INSTANCES + "/" + instanceId));
   }
 
   @Test
@@ -288,13 +309,13 @@ class SubjectTypeIT extends BaseIntegrationTest {
     var subjectTypeId = createSubjectType(subjectType).jsonBody().getString(ID_FIELD);
     var instanceId = createInstanceWithSubject(randomSubjectSourceId(), subjectTypeId);
 
-    var response = await(doDelete(client, ResourcePaths.INSTANCES + "/" + instanceId));
+    var response = await(doDelete(client, INSTANCES + "/" + instanceId));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   private TestResponse createSubjectType(JsonObject subjectType) {
-    return await(doPost(client, ResourcePaths.SUBJECT_TYPES, subjectType));
+    return await(doPost(client, SUBJECT_TYPES, subjectType));
   }
 
   private static String randomName() {
@@ -308,7 +329,7 @@ class SubjectTypeIT extends BaseIntegrationTest {
   private static String randomSubjectSourceId() {
     var subjectSource = new JsonObject().put(NAME_FIELD, "a subject source " + UUID.randomUUID())
       .put(SOURCE_FIELD, SOURCE_LOCAL);
-    return await(doPost(client, ResourcePaths.SUBJECT_SOURCES, subjectSource)).jsonBody().getString(ID_FIELD);
+    return await(doPost(client, SUBJECT_SOURCES, subjectSource)).jsonBody().getString(ID_FIELD);
   }
 
   private static String createInstanceWithSubject(String subjectSourceId, String subjectTypeId) {
@@ -319,6 +340,6 @@ class SubjectTypeIT extends BaseIntegrationTest {
       .create()
       .put("subjects", JsonArray.of(pojo2JsonObject(subject)));
 
-    return await(doPost(client, ResourcePaths.INSTANCES, instance)).jsonBody().getString(ID_FIELD);
+    return await(doPost(client, INSTANCES, instance)).jsonBody().getString(ID_FIELD);
   }
 }
