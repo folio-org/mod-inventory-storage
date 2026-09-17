@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
@@ -28,6 +29,8 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
 
   public static final String INSTANCE_CUSTOM_LINK_TYPE_TABLE = "instance_custom_link";
 
+  private static final String FIELD_NAME = "name";
+  private static final String FIELD_LINK_TEXT = "linkText";
   private static final String FIELD_LINK = "link";
   private static final List<String> QUERY_TOKENS = List.of("{{UUID}}", "{{HRID}}", "{{indexTitle}}");
 
@@ -131,7 +134,37 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
   private List<Error> validate(InstanceCustomLink entity) {
     List<Error> errors = new ArrayList<>();
 
+    errors.addAll(validateName(entity));
+    errors.addAll(validateLinkText(entity));
     errors.addAll(validateLink(entity));
+
+    return errors;
+  }
+
+  private List<Error> validateName(InstanceCustomLink entity) {
+    List<Error> errors = new ArrayList<>();
+
+    if (entity.getName() != null) {
+      var name = entity.getName();
+
+      if (StringUtils.isBlank(name)) {
+        errors.add(fieldError("blankString", FIELD_NAME, "cannot be a blank string", name));
+      }
+    }
+
+    return errors;
+  }
+
+  private List<Error> validateLinkText(InstanceCustomLink entity) {
+    List<Error> errors = new ArrayList<>();
+
+    if (entity.getLinkText() != null) {
+      var linkText = entity.getLinkText();
+
+      if (StringUtils.isBlank(linkText)) {
+        errors.add(fieldError("blankString", FIELD_LINK_TEXT, "cannot be a blank string", linkText));
+      }
+    }
 
     return errors;
   }
