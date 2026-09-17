@@ -238,79 +238,66 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       }));
   }
 
-  @Test
-  void cannotUpdateWithMissingTokensInLink(Vertx vertx, VertxTestContext ctx) {
+  @ParameterizedTest
+  @MethodSource("invalidFieldUpdates")
+  void cannotUpdateWithInvalidFields(JsonObject create, JsonObject update, Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("linkText", "link text 1")
-      .put("link", "https://base1.host/{{UUID}}")
-      .put("source", "local")
-      .put("show", true);
-    var req2 = new JsonObject()
-      .put("name", "name 1")
-      .put("linkText", "link text 1")
-      .put("link", "https://base1.host/{{not-a-token}}")
-      .put("source", "local")
-      .put("show", true);
-    doPost(client, resourceUrl(), req1)
+    doPost(client, resourceUrl(), create)
       .onComplete(ctx.succeeding(response1 -> {
         var id = response1.jsonBody().getString("id");
-        req2.put("id", id);
-        doPut(client, resourceUrlById(id), req2)
+        update.put("id", id);
+        doPut(client, resourceUrlById(id), update)
           .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
           .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
       }));
   }
 
-  @Test
-  void cannotUpdateWithBlankField(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("linkText", "link text 1")
-      .put("link", "https://base1.host/{{UUID}}")
-      .put("source", "local")
-      .put("show", true);
-    var req2 = new JsonObject()
-      .put("name", "")
-      .put("linkText", "link text 1")
-      .put("link", "https://base1.host/{{not-a-token}}")
-      .put("source", "local")
-      .put("show", true);
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        var id = response1.jsonBody().getString("id");
-        req2.put("id", id);
-        doPut(client, resourceUrlById(id), req2)
-          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
-      }));
-  }
-
-  @Test
-  void cannotUpdateWithInvalidLink(Vertx vertx, VertxTestContext ctx) {
-    var client = vertx.createHttpClient();
-    var req1 = new JsonObject()
-      .put("name", "name 1")
-      .put("linkText", "link text 1")
-      .put("link", "https://base1.host")
-      .put("source", "local")
-      .put("show", true);
-    var req2 = new JsonObject()
-      .put("name", "name 1")
-      .put("linkText", "link text 1")
-      .put("link", "uri:urn:base")
-      .put("source", "local")
-      .put("show", true);
-    doPost(client, resourceUrl(), req1)
-      .onComplete(ctx.succeeding(response1 -> {
-        var id = response1.jsonBody().getString("id");
-        req2.put("id", id);
-        doPut(client, resourceUrlById(id), req2)
-          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-          .onComplete(ctx.succeeding(response3 -> ctx.completeNow()));
-      }));
+  @SuppressWarnings("checkstyle:MethodLength")
+  private static Stream<Arguments> invalidFieldUpdates() {
+    return Stream.of(
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("linkText", "link text 1")
+          .put("link", "https://base1.host/{{UUID}}")
+          .put("source", "local")
+          .put("show", true),
+        new JsonObject()
+          .put("name", "name 1")
+          .put("linkText", "link text 1")
+          .put("link", "https://base1.host/{{not-a-token}}")
+          .put("source", "local")
+          .put("show", true)
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("linkText", "link text 1")
+          .put("link", "https://base1.host/{{UUID}}")
+          .put("source", "local")
+          .put("show", true),
+        new JsonObject()
+          .put("name", "")
+          .put("linkText", "link text 1")
+          .put("link", "https://base1.host/{{not-a-token}}")
+          .put("source", "local")
+          .put("show", true)
+      ),
+      arguments(
+        new JsonObject()
+          .put("name", "name 1")
+          .put("linkText", "link text 1")
+          .put("link", "https://base1.host")
+          .put("source", "local")
+          .put("show", true),
+        new JsonObject()
+          .put("name", "name 1")
+          .put("linkText", "link text 1")
+          .put("link", "uri:urn:base")
+          .put("source", "local")
+          .put("show", true)
+      )
+    );
   }
 
   @ParameterizedTest
