@@ -1,3 +1,10 @@
+## In development
+### New API version
+* Provides `inventory-view v3.3`
+
+### Features
+* Add `instanceHrid` CQL index to `inventory-view` API ([MODINREACH-607](https://folio-org.atlassian.net/browse/MODINREACH-607)).
+
 ## v29.0.23 2026-07-24
 ### New APIs versions
 * Provides `settings v1.0`

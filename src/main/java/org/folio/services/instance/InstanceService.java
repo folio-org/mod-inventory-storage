@@ -126,6 +126,11 @@ public class InstanceService {
     return instanceRepository.getInventoryViewInstancesWithBoundedItems(offset, limit, query);
   }
 
+  public Future<Response> getInventoryViewInstanceByHrid(boolean withBoundedItems, String hrid, int limit,
+                                                          int offset) {
+    return instanceRepository.getInventoryViewInstanceByHrid(withBoundedItems, hrid, limit, offset);
+  }
+
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
     return hridManager.populateHrid(entity)
