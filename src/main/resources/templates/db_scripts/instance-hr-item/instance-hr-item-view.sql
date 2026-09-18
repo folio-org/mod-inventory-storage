@@ -14,5 +14,5 @@ SELECT instance.id as id, JSONB_BUILD_OBJECT(
                         JOIN ${myuniversity}_${mymodule}.holdings_record as hr
                           ON hr.id = bw.holdingsrecordid
                         WHERE hr.instanceId = instance.id LIMIT 1))
-	) AS jsonb, lower(cu_mod_inventory_storage.f_unaccent(instance.jsonb->>'hrid')) as instance_hrid
+	) AS jsonb, lower(${myuniversity}_${mymodule}.f_unaccent(instance.jsonb->>'hrid')) as instance_hrid
   FROM ${myuniversity}_${mymodule}.instance;
