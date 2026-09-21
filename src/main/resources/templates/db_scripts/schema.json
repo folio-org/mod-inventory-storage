@@ -1041,7 +1041,7 @@
     {
       "run": "after",
       "snippetPath": "instance-hr-item/instance-hr-item-view.sql",
-      "fromModuleVersion": "23.0.0"
+      "fromModuleVersion": "29.0.24"
     },
     {
       "run": "after",

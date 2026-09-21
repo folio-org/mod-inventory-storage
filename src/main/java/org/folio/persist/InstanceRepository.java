@@ -16,6 +16,7 @@ import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -273,6 +274,36 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
+  }
+
+  public Future<Response> getInventoryViewInstanceByHrid(boolean withBoundedItems, String hrid, int limit, int offset) {
+    try {
+      var sql = buildInventoryViewQueryByHrid(withBoundedItems, limit, offset);
+      return postgresClient.execute(sql, Tuple.of(hrid))
+        .map(this::buildInventoryViewResponse);
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+  }
+
+  private String buildInventoryViewQueryByHrid(boolean withBoundedItems, int limit, int offset) {
+    var sql = new StringBuilder("SELECT ");
+    if (withBoundedItems) {
+      sql.append("JSONB_BUILD_OBJECT(");
+      sql.append("'instanceId', inventory_view.jsonb->>'instanceId', ");
+      sql.append("'isBoundWith', inventory_view.jsonb->'isBoundWith', ");
+      sql.append("'instance', inventory_view.jsonb->'instance', ");
+      sql.append("'holdingsRecords', inventory_view.jsonb->'holdingsRecords', ");
+      sql.append("'items', ").append(selectItemsWithBoundedRecords()).append(") AS jsonb ");
+    } else {
+      sql.append("jsonb ");
+    }
+    sql.append("FROM ");
+    sql.append(postgresClientFuturized.getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
+    sql.append(" AS inventory_view ");
+    sql.append("WHERE inventory_view.instance_hrid = $1 ");
+    sql.append("LIMIT ").append(limit).append(" OFFSET ").append(offset);
+    return sql.toString();
   }
 
   private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {

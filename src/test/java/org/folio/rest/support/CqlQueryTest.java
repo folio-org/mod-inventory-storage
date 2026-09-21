@@ -3,6 +3,7 @@ package org.folio.rest.support;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -29,6 +30,31 @@ public class CqlQueryTest {
   @Test
   public void doesntMatchAllItems(String cql) {
     assertThat(new CqlQuery(cql).isMatchingAll(), is(false));
+  }
+
+  @Parameters({
+    "instanceHrid==123",
+    "INSTANCEHRID==123",
+    "  instanceHrid  ==  123  ",
+  })
+  @Test
+  public void exactMatchTermFindsMatch(String cql) {
+    assertThat(new CqlQuery(cql).exactMatchTerm("instanceHrid"), is(Optional.of("123")));
+  }
+
+  @Parameters({
+    "id==123",
+    "instanceHrid=123",
+    "instanceHrid<>123",
+    "instanceHrid>123",
+    "instanceHrid==123 and id==456",
+    "instanceHrid==123 or id==456",
+    "instanceHrid==123 not id==456",
+    "=",
+  })
+  @Test
+  public void exactMatchTermFindsNoMatch(String cql) {
+    assertThat(new CqlQuery(cql).exactMatchTerm("instanceHrid"), is(Optional.empty()));
   }
 
 }
