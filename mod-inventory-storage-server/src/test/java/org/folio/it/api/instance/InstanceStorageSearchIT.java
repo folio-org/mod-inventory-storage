@@ -104,6 +104,54 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
   }
 
   @Test
+  @DisplayName("should include consortium shadow copies by default when includeShadowCopies is omitted")
+  void shouldIncludeShadowCopies_whenIncludeShadowCopiesParamOmitted() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    var shadowCopy = createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var results = searchForInstances("cql.allRecords=1").getJsonArray(INSTANCES_KEY);
+
+    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
+      .containsExactlyInAnyOrder(local.getString("id"), shadowCopy.getString("id"));
+  }
+
+  @Test
+  @DisplayName("should include consortium shadow copies when includeShadowCopies is true")
+  void shouldIncludeShadowCopies_whenIncludeShadowCopiesIsTrue() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    var shadowCopy = createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var results = searchForInstances("cql.allRecords=1", true).getJsonArray(INSTANCES_KEY);
+
+    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
+      .containsExactlyInAnyOrder(local.getString("id"), shadowCopy.getString("id"));
+  }
+
+  @Test
+  @DisplayName("should exclude consortium shadow copies when includeShadowCopies is false")
+  void shouldExcludeShadowCopies_whenIncludeShadowCopiesIsFalse() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var results = searchForInstances("cql.allRecords=1", false).getJsonArray(INSTANCES_KEY);
+
+    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
+      .containsExactly(local.getString("id"));
+  }
+
+  @Test
+  @DisplayName("should exclude consortium-folio shadow copies too when includeShadowCopies is false")
+  void shouldExcludeConsortiumFolioShadowCopies_whenIncludeShadowCopiesIsFalse() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(consortiumFolioShadowCopy(nod(UUID.randomUUID())));
+
+    var results = searchForInstances("cql.allRecords=1", false).getJsonArray(INSTANCES_KEY);
+
+    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
+      .containsExactly(local.getString("id"));
+  }
+
+  @Test
   @DisplayName("should search for instances by title")
   void shouldSearchForInstances_byTitle() {
     canSort("title=\"Upr*\"", "Uprooted");
@@ -340,6 +388,14 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
 
   private static String createLocationId() {
     return LocationStorageFixtures.createLocation(client);
+  }
+
+  private static JsonObject consortiumMarcShadowCopy(JsonObject instance) {
+    return instance.put("source", "CONSORTIUM-MARC");
+  }
+
+  private static JsonObject consortiumFolioShadowCopy(JsonObject instance) {
+    return instance.put("source", "CONSORTIUM-FOLIO");
   }
 
   private static JsonObject instanceRequest(UUID id, String source, String title) {
