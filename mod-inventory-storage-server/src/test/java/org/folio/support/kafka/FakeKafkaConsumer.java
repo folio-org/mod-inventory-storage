@@ -6,11 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.folio.InventoryKafkaTopic;
 import org.folio.dataimport.testsupport.kafka.KafkaTestEventCollector;
 import org.folio.support.messages.EventMessage;
@@ -34,8 +31,6 @@ import org.folio.support.messages.EventMessage;
  * than actually removed.
  */
 public final class FakeKafkaConsumer {
-
-  private static final Logger LOG = LogManager.getLogger(FakeKafkaConsumer.class);
 
   private final List<String> tenants;
   private final KafkaTestEventCollector collector;
@@ -78,18 +73,6 @@ public final class FakeKafkaConsumer {
 
   public Collection<EventMessage> getMessagesForHoldings(String holdingsId) {
     final var key = instanceAndIdKey(holdingsId, holdingsId);
-    // Temporary, for MODINVSTOR-1608 CI diagnosis: shows every raw record currently visible on the
-    // holdings topic (its Kafka key, event type, and computed instanceAndIdKey) alongside the
-    // lookup key we're matching against, so a CI-only miss can be told apart from "never arrived"
-    // vs. "arrived but didn't match this key". Remove once root-caused.
-    if (LOG.isDebugEnabled()) {
-      var seen = recordsSince(InventoryKafkaTopic.HOLDINGS_RECORD)
-        .map(message -> "key=" + message.key() + " computedKey=" + instanceAndIdKey(message)
-          + " type=" + new JsonObject(message.value()).getString("type"))
-        .collect(Collectors.joining(", "));
-      LOG.debug("getMessagesForHoldings:: holdingsId={} lookupKey={} allHoldingsTopicRecords=[{}]",
-        holdingsId, key, seen);
-    }
     return messagesFor(InventoryKafkaTopic.HOLDINGS_RECORD, message -> key.equals(instanceAndIdKey(message)));
   }
 

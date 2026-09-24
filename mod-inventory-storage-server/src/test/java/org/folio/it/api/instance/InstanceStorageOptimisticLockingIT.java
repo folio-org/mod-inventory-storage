@@ -8,12 +8,24 @@ import static org.folio.support.ResourcePaths.INSTANCES;
 
 import io.vertx.core.json.JsonObject;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class InstanceStorageOptimisticLockingIT extends InstanceStorageTestBase {
 
   private static final String OPTIMIZE_UPDATES_SETTING_KEY = "inventory.optimize-updates.enabled";
+
+  @AfterEach
+  void resetOptimizeUpdatesSetting() {
+    // shouldNotUpdateInstance_whenNoChangesAndOptimizeUpdatesEnabled() leaves this tenant-wide
+    // setting at true; JUnit doesn't guarantee method execution order within a class, so it must
+    // be reset unconditionally after every test here rather than relying on some other test in
+    // this class happening to run afterward and setting it back to false. Left enabled, it silently
+    // changes update/event-publishing behavior for every later test in the whole suite that assumes
+    // the default (false).
+    updateOptimizeUpdatesSetting(false);
+  }
 
   @Test
   @DisplayName("should enforce optimistic locking on instance version")

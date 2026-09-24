@@ -197,8 +197,6 @@ public class CommonDomainEventPublisher<T> {
     KafkaProducer<String, String> producer = getOrCreateProducer(topic);
 
     return producer.send(producerRecord)
-      .onSuccess(metadata -> log.debug("Sent domain event [{}] to topic [{}] partition [{}] offset [{}]",
-        key, topic, metadata.getPartition(), metadata.getOffset()))
       .<Void>mapEmpty()
       .eventually(() -> producer.flush())
       .eventually(() -> producer.close())
