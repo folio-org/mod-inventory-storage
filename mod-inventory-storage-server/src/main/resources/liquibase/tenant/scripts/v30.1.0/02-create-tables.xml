@@ -339,7 +339,7 @@
       <and>
         <sequenceExists sequenceName="hrid_instances_seq"/>
         <sequenceExists sequenceName="hrid_holdings_seq"/>
-        <sequenceExists sequenceName="hrid_holdings_seq"/>
+        <sequenceExists sequenceName="hrid_items_seq"/>
       </and>
     </preConditions>
     <comment>Add HRID sequences and hrid_settings_view</comment>
@@ -357,7 +357,7 @@
         <and>
           <sequenceExists sequenceName="hrid_instances_seq"/>
           <sequenceExists sequenceName="hrid_holdings_seq"/>
-          <sequenceExists sequenceName="hrid_holdings_seq"/>
+          <sequenceExists sequenceName="hrid_items_seq"/>
         </and>
       </not>
     </preConditions>
