@@ -197,6 +197,31 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
   }
 
+  @Test
+  void cannotCreateWithDuplicateId(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var id = "668c45B3-c23e-4dea-9ff1-054671decab7";
+    var first = new JsonObject()
+      .put("id", id)
+      .put("name", "first name")
+      .put("linkText", "first link text")
+      .put("link", "http://first.base.host")
+      .put("source", "local")
+      .put("show", false);
+    var second = new JsonObject()
+      .put("id", id)
+      .put("name", "second name")
+      .put("linkText", "second link text")
+      .put("link", "http://second.base.host")
+      .put("source", "local")
+      .put("show", false);
+    doPost(client, resourceUrl(), first)
+      .onComplete(ctx.succeeding(response1 ->
+        doPost(client, resourceUrl(), second)
+          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+          .onComplete(ctx.succeeding(response3 -> ctx.completeNow()))));
+  }
+
   @ParameterizedTest
   @MethodSource("duplicateFieldValueCreates")
   void cannotReuseDuplicateFieldValueOnCreate(JsonObject first, JsonObject second, String duplicatedField,

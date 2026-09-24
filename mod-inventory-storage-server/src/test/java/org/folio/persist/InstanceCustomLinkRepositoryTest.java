@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -45,7 +46,7 @@ class InstanceCustomLinkRepositoryTest {
     repository = new InstanceCustomLinkRepository(context, headers);
     lenient().when(conn.execute(argThat(sql -> sql.startsWith("LOCK TABLE"))))
       .thenReturn(Future.succeededFuture(mock(RowSet.class)));
-    lenient().when(conn.save(eq(INSTANCE_CUSTOM_LINK_TABLE), any()))
+    lenient().when(conn.save(eq(INSTANCE_CUSTOM_LINK_TABLE), any(), any()))
       .thenReturn(Future.succeededFuture(MOCK_ID));
     lenient().when(conn.update(eq(INSTANCE_CUSTOM_LINK_TABLE), any(), eq(MOCK_ID)))
       .thenReturn(Future.succeededFuture(mock(RowSet.class)));
@@ -58,7 +59,29 @@ class InstanceCustomLinkRepositoryTest {
     Future<String> result = repository.create(conn, entity);
 
     assertTrue(result.succeeded());
-    verify(conn).save(eq(INSTANCE_CUSTOM_LINK_TABLE), any());
+    verify(conn).save(eq(INSTANCE_CUSTOM_LINK_TABLE), any(), any());
+  }
+
+  @Test
+  void createEntityUsesSuppliedId() {
+    setupQueryReturn(9, 0, 0, 0);
+    when(entity.getId()).thenReturn(MOCK_ID);
+
+    Future<String> result = repository.create(conn, entity);
+
+    assertTrue(result.succeeded());
+    verify(conn).save(INSTANCE_CUSTOM_LINK_TABLE, MOCK_ID, entity);
+  }
+
+  @Test
+  void createEntityGeneratesIdWhenNotSupplied() {
+    setupQueryReturn(9, 0, 0, 0);
+    when(entity.getId()).thenReturn(null);
+
+    Future<String> result = repository.create(conn, entity);
+
+    assertTrue(result.succeeded());
+    verify(conn).save(eq(INSTANCE_CUSTOM_LINK_TABLE), isNull(), eq(entity));
   }
 
   @Test
@@ -69,7 +92,7 @@ class InstanceCustomLinkRepositoryTest {
 
     assertTrue(result.failed());
     assertInstanceOf(ValidationException.class, result.cause());
-    verify(conn, never()).save(any(), any());
+    verify(conn, never()).save(any(), any(), any());
   }
 
   @Test
