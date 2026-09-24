@@ -83,6 +83,11 @@ abstract class ItemStorageTestBase extends BaseIntegrationTest {
     OptimisticLockingUtil.configureAllowSuppressOptimisticLocking(Map.of());
   }
 
+  static TestResponse updateOptimizeUpdatesSetting(boolean value) {
+    return await(doPatch(client, "/inventory-settings/inventory.optimize-updates.enabled",
+      new JsonObject().put("value", value)));
+  }
+
   static String createHoldingRecord() {
     return createHoldingRecord(mainLibraryLocationId);
   }
