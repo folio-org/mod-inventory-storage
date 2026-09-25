@@ -182,7 +182,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.4",
+      "version": "11.5",
       "handlers": [
         {
           "methods": ["GET"],

@@ -1,6 +1,7 @@
 package org.folio.support.messages;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 import static org.folio.it.BaseIntegrationTest.TENANT_ID;
 import static org.folio.services.domainevent.CommonDomainEventPublisher.NULL_ID;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
@@ -55,7 +56,7 @@ public class HoldingsEventMessageChecks {
     newHoldings.remove("holdingsItems");
     newHoldings.remove("bareHoldingsItems");
 
-    awaitAtMost().until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
+    await().atMost(15, SECONDS).until(() -> kafkaConsumer.getMessagesForHoldings(holdingsId),
       eventMessageMatchers.hasUpdateEventMessageFor(oldHoldings, newHoldings));
   }
 

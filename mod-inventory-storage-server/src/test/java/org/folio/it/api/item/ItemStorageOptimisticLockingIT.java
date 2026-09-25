@@ -3,9 +3,7 @@ package org.folio.it.api.item;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CONFLICT;
 import static org.folio.HttpStatus.SC_NO_CONTENT;
-import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
-import io.vertx.core.json.JsonObject;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.rest.tools.utils.OptimisticLockingUtil;
@@ -56,10 +54,5 @@ class ItemStorageOptimisticLockingIT extends ItemStorageTestBase {
     assertThat(updateItem(item).status()).isEqualTo(SC_NO_CONTENT);
 
     assertThat(getItemJsonById(item.getString("id")).getString("_version")).isEqualTo("2");
-  }
-
-  private static TestResponse updateOptimizeUpdatesSetting(boolean value) {
-    return await(doPatch(client, "/inventory-settings/inventory.optimize-updates.enabled",
-      new JsonObject().put("value", value)));
   }
 }

@@ -31,6 +31,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -45,6 +46,7 @@ import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.services.caches.SettingCache;
 import org.folio.support.kafka.FakeKafkaConsumer;
 import org.folio.utility.S3Utility;
 import org.junit.jupiter.api.AfterAll;
@@ -75,6 +77,10 @@ public abstract class BaseIntegrationTest {
   protected static HttpClient client;
   protected static FakeKafkaConsumer KAFKA_CONSUMER;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
+
+  // Persisted, tenant-wide setting that some *IT classes leave at true; reset before every test
+  // so a leak can't change behavior of later tests (cause of flaky HoldingsItemPropagationIT).
+  private static final String OPTIMIZE_UPDATES_SETTING_KEY = "inventory.optimize-updates.enabled";
 
   @RegisterExtension
   private static final PostgresExtension POSTGRES = new PostgresExtension();
@@ -109,6 +115,7 @@ public abstract class BaseIntegrationTest {
     mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
     mockConsortiumTenants();
+    resetOptimizeUpdatesSetting();
   }
 
   protected static URL vertxUrl() {
@@ -281,6 +288,21 @@ public abstract class BaseIntegrationTest {
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
     for (String tenant : ALL_TENANTS) {
       truncateAllTables(tenant);
+    }
+  }
+
+  /**
+   * See the field comment on {@link #OPTIMIZE_UPDATES_SETTING_KEY} for why this exists. The setting
+   * is reset straight in the db, bypassing the API, so no SettingEvent is published; the
+   * SettingCache entry that SettingsService reads is therefore overwritten here as well, otherwise
+   * it would keep serving the leaked value.
+   */
+  private void resetOptimizeUpdatesSetting() {
+    var updated = runQuery("UPDATE " + TENANT_ID + "_mod_inventory_storage.settings SET value = 'false' "
+                           + "WHERE key = '" + OPTIMIZE_UPDATES_SETTING_KEY + "' AND value <> 'false'");
+    if (updated.rowCount() > 0) {
+      SettingCache.getInstance(SHARED_VERTICLE.shared.getVertx()).put(TENANT_ID + ":" + OPTIMIZE_UPDATES_SETTING_KEY,
+        CompletableFuture.completedFuture("false"));
     }
   }
 

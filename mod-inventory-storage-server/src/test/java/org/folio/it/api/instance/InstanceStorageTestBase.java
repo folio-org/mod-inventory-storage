@@ -219,6 +219,13 @@ abstract class InstanceStorageTestBase extends BaseIntegrationTest {
     return response.jsonBody();
   }
 
+  static JsonObject searchForInstances(String cql, boolean includeShadowCopies) {
+    var response = await(doGet(client,
+      INSTANCES + "?query=" + urlEncode(cql) + "&includeShadowCopies=" + includeShadowCopies));
+    assertThat(response.status()).isEqualTo(SC_OK);
+    return response.jsonBody();
+  }
+
   static String urlEncode(String value) {
     return java.net.URLEncoder.encode(value, StandardCharsets.UTF_8);
   }
