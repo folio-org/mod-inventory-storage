@@ -334,7 +334,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-alter-sequence-for-hrid-settings" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-alter-sequence-for-hrid-settings" author="folio" runOnChange="true">
     <preConditions onFail="MARK_RAN">
       <and>
         <sequenceExists sequenceName="hrid_instances_seq"/>
@@ -351,7 +351,7 @@
     </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-sequence-for-hrid-settings" author="folio">
+  <changeSet id="MODINVSTOR-1051@@schema-create-sequence-for-hrid-settings" author="folio" runOnChange="true">
     <preConditions onFail="MARK_RAN">
       <not>
         <and>
