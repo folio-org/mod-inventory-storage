@@ -4,6 +4,7 @@
 
 ### New APIs versions
 * Provides `settings v1.0`
+* Provides `instance-storage v11.5`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 
