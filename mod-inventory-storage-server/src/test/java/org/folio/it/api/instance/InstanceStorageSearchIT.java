@@ -2,12 +2,15 @@ package org.folio.it.api.instance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_OK;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 import static org.folio.support.ResourcePaths.HOLDINGS;
+import static org.folio.support.ResourcePaths.INSTANCES;
 import static org.folio.support.ResourcePaths.ITEMS;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.List;
 import java.util.UUID;
 import org.folio.it.HoldingsStorageFixtures;
 import org.folio.it.LocationStorageFixtures;
@@ -15,10 +18,14 @@ import org.folio.support.builders.HoldingRequestBuilder;
 import org.folio.support.builders.ItemRequestBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class InstanceStorageSearchIT extends InstanceStorageTestBase {
 
   private static final String STAFF_SUPPRESS = "staffSuppress";
+  private static final String ID_KEY = "id";
+  private static final String SOURCE_KEY = "source";
 
   @Test
   @DisplayName("should search by classification number without an array modifier")
@@ -109,10 +116,9 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
     var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
     var shadowCopy = createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
 
-    var results = searchForInstances("cql.allRecords=1").getJsonArray(INSTANCES_KEY);
+    var results = searchForInstances("cql.allRecords=1");
 
-    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
-      .containsExactlyInAnyOrder(local.getString("id"), shadowCopy.getString("id"));
+    assertThat(instanceIds(results)).containsExactlyInAnyOrder(local.getString(ID_KEY), shadowCopy.getString(ID_KEY));
   }
 
   @Test
@@ -121,10 +127,9 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
     var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
     var shadowCopy = createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
 
-    var results = searchForInstances("cql.allRecords=1", true).getJsonArray(INSTANCES_KEY);
+    var results = searchForInstances("cql.allRecords=1", true);
 
-    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
-      .containsExactlyInAnyOrder(local.getString("id"), shadowCopy.getString("id"));
+    assertThat(instanceIds(results)).containsExactlyInAnyOrder(local.getString(ID_KEY), shadowCopy.getString(ID_KEY));
   }
 
   @Test
@@ -133,10 +138,9 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
     var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
 
-    var results = searchForInstances("cql.allRecords=1", false).getJsonArray(INSTANCES_KEY);
+    var results = searchForInstances("cql.allRecords=1", false);
 
-    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
-      .containsExactly(local.getString("id"));
+    assertThat(instanceIds(results)).containsExactly(local.getString(ID_KEY));
   }
 
   @Test
@@ -145,10 +149,70 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
     var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
     createInstance(consortiumFolioShadowCopy(nod(UUID.randomUUID())));
 
-    var results = searchForInstances("cql.allRecords=1", false).getJsonArray(INSTANCES_KEY);
+    var results = searchForInstances("cql.allRecords=1", false);
 
-    assertThat(results.stream().map(o -> ((JsonObject) o).getString("id")).toList())
-      .containsExactly(local.getString("id"));
+    assertThat(instanceIds(results)).containsExactly(local.getString(ID_KEY));
+  }
+
+  @Test
+  @DisplayName("should exclude shadow copies when includeShadowCopies is false and no query is given")
+  void shouldExcludeShadowCopies_whenIncludeShadowCopiesIsFalseAndQueryIsMissing() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var response = await(doGet(client, INSTANCES + "?includeShadowCopies=false"));
+
+    assertThat(response.status()).isEqualTo(SC_OK);
+    assertThat(instanceIds(response.jsonBody())).containsExactly(local.getString(ID_KEY));
+  }
+
+  @Test
+  @DisplayName("should apply the shadow copy exclusion to the whole query when it contains an or")
+  void shouldExcludeShadowCopies_whenQueryContainsOr() {
+    var local = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var results = searchForInstances("title=\"Long Way to a Small Angry Planet\" or title=\"Nod\"", false);
+
+    assertThat(instanceIds(results)).containsExactly(local.getString(ID_KEY));
+  }
+
+  @Test
+  @DisplayName("should keep the caller's filter when includeShadowCopies is false")
+  void shouldApplyQueryFilter_whenIncludeShadowCopiesIsFalse() {
+    var matchingLocal = createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(nod(UUID.randomUUID()));
+    createInstance(consortiumMarcShadowCopy(smallAngryPlanet(UUID.randomUUID())));
+
+    var results = searchForInstances("title=\"Long Way to a Small Angry Planet\"", false);
+
+    assertThat(instanceIds(results)).containsExactly(matchingLocal.getString(ID_KEY));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"FOLIO", "MARC", "LINKED_DATA"})
+  @DisplayName("should keep instances with a non-consortium source when includeShadowCopies is false")
+  void shouldKeepInstance_whenSourceIsNotConsortiumAndIncludeShadowCopiesIsFalse(String source) {
+    var instance = createInstance(smallAngryPlanet(UUID.randomUUID()).put(SOURCE_KEY, source));
+
+    var results = searchForInstances("cql.allRecords=1", false);
+
+    assertThat(instanceIds(results)).containsExactly(instance.getString(ID_KEY));
+  }
+
+  @Test
+  @DisplayName("should count and page only non-shadow instances when includeShadowCopies is false")
+  void shouldCountAndPageWithoutShadowCopies_whenIncludeShadowCopiesIsFalse() {
+    createInstance(smallAngryPlanet(UUID.randomUUID()));
+    createInstance(uprooted(UUID.randomUUID()));
+    createInstance(consortiumMarcShadowCopy(nod(UUID.randomUUID())));
+
+    var response = await(doGet(client, INSTANCES + "?limit=1&includeShadowCopies=false&query="
+      + urlEncode("cql.allRecords=1")));
+
+    assertThat(response.status()).isEqualTo(SC_OK);
+    assertThat(response.jsonBody().getInteger(TOTAL_RECORDS_KEY)).isEqualTo(2);
+    assertThat(response.jsonBody().getJsonArray(INSTANCES_KEY)).hasSize(1);
   }
 
   @Test
@@ -391,11 +455,17 @@ class InstanceStorageSearchIT extends InstanceStorageTestBase {
   }
 
   private static JsonObject consortiumMarcShadowCopy(JsonObject instance) {
-    return instance.put("source", "CONSORTIUM-MARC");
+    return instance.put(SOURCE_KEY, "CONSORTIUM-MARC");
   }
 
   private static JsonObject consortiumFolioShadowCopy(JsonObject instance) {
-    return instance.put("source", "CONSORTIUM-FOLIO");
+    return instance.put(SOURCE_KEY, "CONSORTIUM-FOLIO");
+  }
+
+  private static List<String> instanceIds(JsonObject searchResult) {
+    return searchResult.getJsonArray(INSTANCES_KEY).stream()
+      .map(instance -> ((JsonObject) instance).getString(ID_KEY))
+      .toList();
   }
 
   private static JsonObject instanceRequest(UUID id, String source, String title) {

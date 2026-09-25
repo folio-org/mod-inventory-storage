@@ -31,6 +31,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -45,10 +46,8 @@ import org.folio.dataimport.testsupport.tenant.TenantTestSupport;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.services.domainevent.SettingEvent;
-import org.folio.support.ResourcePaths;
+import org.folio.services.caches.SettingCache;
 import org.folio.support.kafka.FakeKafkaConsumer;
-import org.folio.support.messages.SettingEventMessageChecks;
 import org.folio.utility.S3Utility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -79,17 +78,9 @@ public abstract class BaseIntegrationTest {
   protected static FakeKafkaConsumer KAFKA_CONSUMER;
   private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
 
-  // inventory.optimize-updates.enabled is a persisted, tenant-wide setting (not per-test state)
-  // that several *IT classes toggle to true to test the optimize-updates behavior. Several relied
-  // on a sibling test happening to run afterward and setting it back to false, but JUnit doesn't
-  // guarantee method execution order - left at true, it silently changes update/event-publishing
-  // behavior for every later test in the whole suite that assumes the default (false), which is
-  // exactly what made HoldingsItemPropagationIT flaky in CI (MODINVSTOR-1608). Resetting it here,
-  // unconditionally before every single test in the module, is the only place that can guarantee
-  // no test ever starts with it in a leaked state, regardless of which other *IT class ran before.
+  // Persisted, tenant-wide setting that some *IT classes leave at true; reset before every test
+  // so a leak can't change behavior of later tests (cause of flaky HoldingsItemPropagationIT).
   private static final String OPTIMIZE_UPDATES_SETTING_KEY = "inventory.optimize-updates.enabled";
-  private static final String OPTIMIZE_UPDATES_SETTING_PATH =
-    ResourcePaths.INVENTORY_SETTINGS + "/" + OPTIMIZE_UPDATES_SETTING_KEY;
 
   @RegisterExtension
   private static final PostgresExtension POSTGRES = new PostgresExtension();
@@ -124,29 +115,7 @@ public abstract class BaseIntegrationTest {
     mockUserTenantsForConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     mockUserTenantsForConsortiumMember(CONSORTIUM_MEMBER_TENANT);
     mockConsortiumTenants();
-  }
-
-  /**
-   * See the field comment on {@link #OPTIMIZE_UPDATES_SETTING_KEY} for why this exists. The GET
-   * check keeps this a no-op (a single cheap read) for the overwhelming majority of tests, which
-   * never touch the setting; only a test that runs right after one that left it at true pays for
-   * the PATCH and the await below - which is not just fire-and-forget: SettingsService's read of
-   * this setting is served from a cache that's only ever refreshed reactively, by consuming the
-   * SettingEvent this PATCH publishes, never invalidated synchronously by the PATCH itself. Not
-   * waiting for that event to actually be observed would reopen the exact race this method exists
-   * to close.
-   */
-  @BeforeEach
-  public void resetOptimizeUpdatesSetting() {
-    var setting = await(doGet(client, OPTIMIZE_UPDATES_SETTING_PATH)).jsonBody();
-    if (!Boolean.parseBoolean(setting.getString("value"))) {
-      return;
-    }
-    var settingId = setting.getString("id");
-    KAFKA_CONSUMER.discardAllMessages();
-    await(doPatch(client, OPTIMIZE_UPDATES_SETTING_PATH, new JsonObject().put("value", false)));
-    new SettingEventMessageChecks(KAFKA_CONSUMER).settingEventPublished(
-      new SettingEvent(settingId, OPTIMIZE_UPDATES_SETTING_KEY, false, TENANT_ID));
+    resetOptimizeUpdatesSetting();
   }
 
   protected static URL vertxUrl() {
@@ -319,6 +288,21 @@ public abstract class BaseIntegrationTest {
   static void afterAll() throws InterruptedException, ExecutionException, TimeoutException {
     for (String tenant : ALL_TENANTS) {
       truncateAllTables(tenant);
+    }
+  }
+
+  /**
+   * See the field comment on {@link #OPTIMIZE_UPDATES_SETTING_KEY} for why this exists. The setting
+   * is reset straight in the db, bypassing the API, so no SettingEvent is published; the
+   * SettingCache entry that SettingsService reads is therefore overwritten here as well, otherwise
+   * it would keep serving the leaked value.
+   */
+  private void resetOptimizeUpdatesSetting() {
+    var updated = runQuery("UPDATE " + TENANT_ID + "_mod_inventory_storage.settings SET value = 'false' "
+                           + "WHERE key = '" + OPTIMIZE_UPDATES_SETTING_KEY + "' AND value <> 'false'");
+    if (updated.rowCount() > 0) {
+      SettingCache.getInstance(SHARED_VERTICLE.shared.getVertx()).put(TENANT_ID + ":" + OPTIMIZE_UPDATES_SETTING_KEY,
+        CompletableFuture.completedFuture("false"));
     }
   }
 

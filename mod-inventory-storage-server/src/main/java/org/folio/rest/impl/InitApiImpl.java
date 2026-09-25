@@ -136,7 +136,7 @@ public class InitApiImpl implements InitAPI {
   }
 
   private void initSettingCache(Vertx vertx, Context context) {
-    SettingCache settingCache = new SettingCache(vertx);
+    SettingCache settingCache = SettingCache.getInstance(vertx);
     context.put(SettingCache.class.getName(), settingCache);
   }
 
