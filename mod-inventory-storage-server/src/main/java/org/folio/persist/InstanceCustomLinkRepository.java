@@ -48,7 +48,7 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
   }
 
   public Future<String> create(Conn conn, InstanceCustomLink entity) {
-    return validateAndSave(conn, null, entity, true);
+    return validateAndSave(conn, entity.getId(), entity, true);
   }
 
   public Future<String> modify(Conn conn, String id, InstanceCustomLink entity) {
@@ -74,7 +74,7 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
           return Future.failedFuture(new ValidationException(new Errors().withErrors(errors)));
         }
         if (create) {
-          return conn.save(INSTANCE_CUSTOM_LINK_TABLE, entity);
+          return conn.save(INSTANCE_CUSTOM_LINK_TABLE, id, entity);
         } else {
           return conn.update(INSTANCE_CUSTOM_LINK_TABLE, entity, id).map(y -> id);
         }

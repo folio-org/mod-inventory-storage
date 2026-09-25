@@ -23,6 +23,7 @@
 * Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
 * HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
+* Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
 
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))

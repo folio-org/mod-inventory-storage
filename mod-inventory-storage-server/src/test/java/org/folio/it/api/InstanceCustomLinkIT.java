@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import java.util.List;
@@ -162,25 +163,35 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
   @Test
   void cannotCreateBeyondLinkCountLimit(Vertx vertx, VertxTestContext ctx) {
     var client = vertx.createHttpClient();
-    for (var i = 1; i <= 10; i++) {
-      var req = new JsonObject()
-        .put("name", "name " + i)
-        .put("linkText", "link text " + i)
-        .put("link", "https://base.host/" + i)
+    createLinkAndThen(client, 1, ctx, () -> {
+      var overLimit = new JsonObject()
+        .put("name", "name 11")
+        .put("linkText", "link text 11")
+        .put("link", "https://base.host/11")
         .put("source", "local")
         .put("show", true);
-      doPost(client, resourceUrl(), req)
-        .onComplete(verifyStatus(ctx, HTTP_CREATED));
-    }
-    var overLimit = new JsonObject()
-      .put("name", "name 11")
-      .put("linkText", "link text 11")
-      .put("link", "https://base.host/11")
+      doPost(client, resourceUrl(), overLimit)
+        .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+        .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
+    });
+  }
+
+  private void createLinkAndThen(HttpClient client, int i, VertxTestContext ctx, Runnable onDone) {
+    var req = new JsonObject()
+      .put("name", "name " + i)
+      .put("linkText", "link text " + i)
+      .put("link", "https://base.host/" + i)
       .put("source", "local")
       .put("show", true);
-    doPost(client, resourceUrl(), overLimit)
-      .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
-      .onComplete(ctx.succeeding(response2 -> ctx.completeNow()));
+    doPost(client, resourceUrl(), req)
+      .onComplete(verifyStatus(ctx, HTTP_CREATED))
+      .onComplete(ctx.succeeding(response -> {
+        if (i < 10) {
+          createLinkAndThen(client, i + 1, ctx, onDone);
+        } else {
+          onDone.run();
+        }
+      }));
   }
 
   @Test
@@ -195,6 +206,31 @@ class InstanceCustomLinkIT extends BaseReferenceDataIntegrationTest<InstanceCust
     doPost(client, resourceUrl(), req)
       .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+  }
+
+  @Test
+  void cannotCreateWithDuplicateId(Vertx vertx, VertxTestContext ctx) {
+    var client = vertx.createHttpClient();
+    var id = "668c45B3-c23e-4dea-9ff1-054671decab7";
+    var first = new JsonObject()
+      .put("id", id)
+      .put("name", "first name")
+      .put("linkText", "first link text")
+      .put("link", "http://first.base.host")
+      .put("source", "local")
+      .put("show", false);
+    var second = new JsonObject()
+      .put("id", id)
+      .put("name", "second name")
+      .put("linkText", "second link text")
+      .put("link", "http://second.base.host")
+      .put("source", "local")
+      .put("show", false);
+    doPost(client, resourceUrl(), first)
+      .onComplete(ctx.succeeding(response1 ->
+        doPost(client, resourceUrl(), second)
+          .onComplete(verifyStatus(ctx, HTTP_UNPROCESSABLE_ENTITY))
+          .onComplete(ctx.succeeding(response2 -> ctx.completeNow()))));
   }
 
   @ParameterizedTest
