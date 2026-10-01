@@ -191,22 +191,6 @@ resourceTypes:
             collection-item:
               exampleItem: !include examples/marc.json
               schema: marcJson
-        /mods:
-          displayName: MODS source record - not implemented yet
-          get:
-            responses:
-              500:
-                description: "Not implemented yet"
-                body:
-                  text/plain:
-                    example: "Not implemented yet"
-          put:
-            responses:
-              500:
-                description: "Not implemented yet"
-                body:
-                  text/plain:
-                    example: "Not implemented yet"
     /retrieve:
       post:
         is: [ validate ]
