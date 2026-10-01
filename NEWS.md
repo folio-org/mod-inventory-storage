@@ -26,6 +26,7 @@
 * Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
 
 ### Tech Dept
+* Delete unimplemented `/instance-storage/{id}/source-record/mods` endpoints ([MODINVSTOR-1609](https://folio-org.atlassian.net/browse/MODINVSTOR-1609))
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
 * Migrate tests to Junit 6 and improve coverage ([MODINVSTOR-1594](https://folio-org.atlassian.net/browse/MODINVSTOR-1594))
 * Add test for updating subject type with duplicate name ([MODINVSTOR-1595](https://folio-org.atlassian.net/browse/MODINVSTOR-1595))
