@@ -272,34 +272,6 @@ public class InstanceStorageApi implements InstanceStorage {
       });
   }
 
-  /**
-   * Example stub showing how other formats might get implemented.
-   */
-  @Validate
-  @Override
-  public void getInstanceStorageInstancesSourceRecordModsByInstanceId(String instanceId,
-                                                                      Map<String, String> okapiHeaders,
-                                                                      Handler<AsyncResult<Response>> handler,
-                                                                      Context vertxContext) {
-    handler.handle(succeededFuture(GetInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
-      .respond500WithTextPlain("Not implemented yet.")));
-  }
-
-  /**
-   * Example stub showing how other formats might get implemented.
-   */
-  @Validate
-  @Override
-  public void putInstanceStorageInstancesSourceRecordModsByInstanceId(String instanceId,
-                                                                      Map<String, String> okapiHeaders,
-                                                                      Handler<AsyncResult<Response>> handler,
-                                                                      Context vertxContext) {
-
-    handler.handle(succeededFuture(
-      PutInstanceStorageInstancesSourceRecordModsByInstanceIdResponse
-        .respond500WithTextPlain("Not implemented yet.")));
-  }
-
   @Validate
   @Override
   public void postInstanceStorageInstancesRetrieve(RetrieveEntitiesRequest entity,

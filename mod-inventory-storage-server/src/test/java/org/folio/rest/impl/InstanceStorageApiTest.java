@@ -59,7 +59,6 @@ class InstanceStorageApiTest {
   private static final int LIMIT = 10;
   private static final String INSTANCE_ID = "6b4a1a8e-0f0d-4f0b-a4a0-6a0d2c1d9e11";
   private static final String RELATIONSHIP_ID = "0d0a8a2e-6b1c-4d6a-9d0e-5c6f7a8b9c10";
-  private static final String NOT_IMPLEMENTED = "Not implemented yet.";
   private static final int SC_OK = 200;
   private static final int SC_CREATED = 201;
   private static final int SC_NO_CONTENT = 204;
@@ -354,24 +353,6 @@ class InstanceStorageApiTest {
       pgUtil.verify(() -> PgUtil.getById(eq("instance_source_marc"), eq(MarcJson.class), eq(INSTANCE_ID),
         eq(okapiHeaders), eq(vertxContext), any(), eq(handler)));
     }
-  }
-
-  @Test
-  @DisplayName("should respond 500 not implemented when getting the mods source record")
-  void shouldReturn500_whenGettingModsSourceRecord() {
-    api.getInstanceStorageInstancesSourceRecordModsByInstanceId(INSTANCE_ID, okapiHeaders, handler, vertxContext);
-
-    assertThat(captured.get().getStatus()).isEqualTo(SC_SERVER_ERROR);
-    assertThat(captured.get().getEntity()).isEqualTo(NOT_IMPLEMENTED);
-  }
-
-  @Test
-  @DisplayName("should respond 500 not implemented when putting the mods source record")
-  void shouldReturn500_whenPuttingModsSourceRecord() {
-    api.putInstanceStorageInstancesSourceRecordModsByInstanceId(INSTANCE_ID, okapiHeaders, handler, vertxContext);
-
-    assertThat(captured.get().getStatus()).isEqualTo(SC_SERVER_ERROR);
-    assertThat(captured.get().getEntity()).isEqualTo(NOT_IMPLEMENTED);
   }
 
   @Test
