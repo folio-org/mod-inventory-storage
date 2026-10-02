@@ -25,6 +25,7 @@
 * HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 * Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
+* Fix tenant install failing with "sequence must have same owner as table it is linked to" when the shared DB pool is used ([MODINVSTOR-1611](https://folio-org.atlassian.net/browse/MODINVSTOR-1611))
 
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
@@ -33,6 +34,7 @@
 
 ### Dependencies
 * Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
+* Bump `folio-liquibase-util` from `1.11.0` to `1.12.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 
