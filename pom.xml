@@ -32,7 +32,7 @@
     <folio-liquibase-util.version>1.12.0-SNAPSHOT</folio-liquibase-util.version>
     <caffeine.version>3.3.0</caffeine.version>
     <lombok.version>1.18.48</lombok.version>
-    <commons-lang3.version>3.20.0</commons-lang3.version>
+    <commons-lang3.version>3.21.0</commons-lang3.version>
     <log4j.version>2.26.1</log4j.version>
     <folio-s3-client.version>3.0.2</folio-s3-client.version>
     <jackson.version>2.22.3</jackson.version>
@@ -48,7 +48,7 @@
     <rest-assured.version>6.0.1</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <assertj.version>3.27.7</assertj.version>
-    <archunit.version>1.5.0</archunit.version>
+    <archunit.version>1.5.1</archunit.version>
 
     <!-- Plugin versions -->
     <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
@@ -62,7 +62,7 @@
     <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
-    <checkstyle.version>14.1.0</checkstyle.version>
+    <checkstyle.version>14.3.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
     <versions-maven-plugin.version>2.22.0</versions-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
