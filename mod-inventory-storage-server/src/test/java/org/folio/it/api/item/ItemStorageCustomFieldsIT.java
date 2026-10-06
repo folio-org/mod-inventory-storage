@@ -6,7 +6,6 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
@@ -36,8 +35,6 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   @BeforeEach
   void setUp() {
-    // folio-custom-fields looks the requesting user up before it writes a definition
-    wm.stubFor(WireMock.get("/users/" + USER_ID).willReturn(WireMock.okJson(user().encode())));
     runQuery("TRUNCATE TABLE custom_fields");
     holdingId = createHoldingRecord();
     textboxField = customField(TEXTBOX, "TEXTBOX_SHORT", null);
@@ -145,14 +142,6 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return new JsonObject()
       .put("multiSelect", multiSelect)
       .put("options", new JsonObject().put("values", values));
-  }
-
-  private static JsonObject user() {
-    return new JsonObject()
-      .put("id", USER_ID)
-      .put("username", "jhandey")
-      .put("active", true)
-      .put("personal", new JsonObject().put("lastName", "Handey").put("firstName", "Jack"));
   }
 
   private static void createCustomField(JsonObject field) {
