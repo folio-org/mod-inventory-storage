@@ -3,12 +3,12 @@
 * Remove oaipmhview interface as deprecated ([MODINVSTOR-563](https://folio-org.atlassian.net/browse/MODINVSTOR-563))
 
 ### New APIs versions
+* Provides `custom-fields v3.2`
 * Provides `settings v1.0`
 * Provides `instance-storage v11.5`
+* Provides `item-storage v11.3`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
-* Provides `item-storage v11.3`
-* Provides `custom-fields v3.1`
 
 ### Features
 * Delete unimplemented `GET /instance-storage/instances/{id}/source-record/mods` and `PUT /instance-storage/instances/{id}/source-record/mods` endpoint definitions ([MODINVSTOR-1609](https://folio-org.atlassian.net/browse/MODINVSTOR-1609))
