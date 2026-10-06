@@ -28,6 +28,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
+import io.vertx.sqlclient.Tuple;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
@@ -84,6 +85,8 @@ public class InstanceService {
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
   private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
+  private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid) AS summary";
+  private static final String NOT_FOUND = "Not found";
   private final HridManager hridManager;
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
@@ -119,6 +122,23 @@ public class InstanceService {
           return GetInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain(null);
         }
         return GetInstanceStorageInstancesByInstanceIdResponse.respond200WithApplicationJson(instance);
+      });
+  }
+
+  public Future<Response> getInstanceSummary(String id) {
+    return postgresClient.execute(GET_INSTANCE_SUMMARY_SQL, Tuple.of(id))
+      .map(rows -> {
+        var iterator = rows.iterator();
+        if (!iterator.hasNext()) {
+          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
+        }
+
+        JsonObject summary = iterator.next().getJsonObject("summary");
+        if (summary == null) {
+          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
+        }
+
+        return Response.ok(summary.encode(), "application/json").build();
       });
   }
 

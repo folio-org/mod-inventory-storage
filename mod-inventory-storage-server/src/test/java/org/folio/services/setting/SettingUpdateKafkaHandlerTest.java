@@ -15,7 +15,6 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.producer.KafkaHeader;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import org.folio.services.caches.SettingCache;
 import org.folio.services.domainevent.SettingEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +41,6 @@ class SettingUpdateKafkaHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void handleShouldSuccessfullyProcessValidKafkaRecord() {
     var eventId = UUID.randomUUID().toString();
     var event = new SettingEvent(eventId, SETTING_KEY, SETTING_VALUE, TENANT_ID);
@@ -52,11 +50,10 @@ class SettingUpdateKafkaHandlerTest {
 
     assertThat(result.succeeded(), is(true));
     assertThat(result.result(), is(RECORD_KEY));
-    verify(cache).put(anyString(), any(CompletableFuture.class));
+    verify(cache).put(anyString(), any());
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   void handleShouldPutCorrectKeyInCache() {
     var eventId = UUID.randomUUID().toString();
     var event = new SettingEvent(eventId, SETTING_KEY, SETTING_VALUE, TENANT_ID);
@@ -65,7 +62,7 @@ class SettingUpdateKafkaHandlerTest {
     handler.handle(kafkaRecord);
 
     // Verify cache.put is called (key format is tenant:settingKey)
-    verify(cache).put(anyString(), any(CompletableFuture.class));
+    verify(cache).put(anyString(), any());
   }
 
   @Test

@@ -4,11 +4,11 @@ import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.USER_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,50 +20,37 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.kafka.KafkaProducerManager;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SettingEventPublisherTest {
 
   private static final String TENANT_ID = "test-tenant";
   private static final String SETTING_KEY = "inventory.optimize-updates.enabled";
   private static final String SETTING_VALUE = "true";
 
-  private KafkaProducerManager producerManager;
-  private KafkaProducer<String, String> kafkaProducer;
-  private MockedStatic<KafkaEnvironmentProperties> mockedKafkaEnvProperties;
+  private @Mock KafkaProducerManager producerManager;
+  private @Mock KafkaProducer<String, String> kafkaProducer;
   private Map<String, String> okapiHeaders;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
-    producerManager = mock(KafkaProducerManager.class);
-    kafkaProducer = mock(KafkaProducer.class);
-
-    when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
-
-    mockedKafkaEnvProperties = mockStatic(KafkaEnvironmentProperties.class);
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::host).thenReturn("localhost");
-    mockedKafkaEnvProperties.when(KafkaEnvironmentProperties::port).thenReturn("9092");
+    lenient().when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
 
     okapiHeaders = new HashMap<>();
     okapiHeaders.put(TENANT, TENANT_ID);
     okapiHeaders.put(USER_ID, "00000000-0000-0000-0000-000000000000");
   }
 
-  @AfterEach
-  void tearDown() {
-    mockedKafkaEnvProperties.close();
-  }
-
   @Test
   void constructorWithProducerManagerShouldCreatePublisher() {
     var publisher = new SettingEventPublisher(producerManager);
 
-    assertThat(publisher, is(notNullValue()));
+    assertNotNull(publisher);
   }
 
   @Test

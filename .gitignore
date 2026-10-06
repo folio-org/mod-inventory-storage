@@ -22,3 +22,6 @@ node_modules
 .vscode/
 .agents/
 skills-lock.json
+.mcp.json
+CLAUDE.md
+/mod-inventory-storage-server/dependency-reduced-pom.xml

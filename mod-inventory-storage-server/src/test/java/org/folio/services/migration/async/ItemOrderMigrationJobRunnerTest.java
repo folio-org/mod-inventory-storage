@@ -28,19 +28,19 @@ class ItemOrderMigrationJobRunnerTest {
   }
 
   @Test
-  void testGetMigrationName() {
+  void getMigrationName() {
     assertEquals("itemOrderMigration", jobRunner.getMigrationName());
   }
 
   @Test
-  void testGetAffectedEntities() {
+  void getAffectedEntities() {
     List<AffectedEntity> affectedEntities = jobRunner.getAffectedEntities();
     assertEquals(1, affectedEntities.size());
-    assertEquals(AffectedEntity.ITEM, affectedEntities.get(0));
+    assertEquals(AffectedEntity.ITEM, affectedEntities.getFirst());
   }
 
   @Test
-  void testOpenStream() {
+  void openStream() {
     String schemaName = "test_schema";
     when(mockConnection.selectStream(anyString(), any(Tuple.class), any())).thenReturn(Future.succeededFuture());
 

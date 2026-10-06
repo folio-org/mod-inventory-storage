@@ -1,15 +1,20 @@
-## v30.1.0 YYYY-mm-DD
+## v31.0.0 YYYY-mm-DD
 ### Breaking changes
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Remove oaipmhview interface as deprecated ([MODINVSTOR-563](https://folio-org.atlassian.net/browse/MODINVSTOR-563))
 
 ### New APIs versions
 * Provides `settings v1.0`
+* Provides `instance-storage v11.5`
+* Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 * Provides `item-storage v11.3`
 * Provides `custom-fields v3.1`
 
 ### Features
+* Delete unimplemented `GET /instance-storage/instances/{id}/source-record/mods` and `PUT /instance-storage/instances/{id}/source-record/mods` endpoint definitions ([MODINVSTOR-1609](https://folio-org.atlassian.net/browse/MODINVSTOR-1609))
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
+* Create instance custom link setting ([MODINVSTOR-1600](https://folio-org.atlassian.net/browse/MODINVSTOR-1600))
+* Add `includeShadowCopies` query parameter to `GET /instance-storage/instances` ([MODINVSTOR-1608](https://folio-org.atlassian.net/browse/MODINVSTOR-1608))
 * Integrate folio-custom-fields for item ([MODINVSTOR-1446](https://folio-org.atlassian.net/browse/MODINVSTOR-1446))
 
 ### Bug fixes
@@ -22,12 +27,17 @@
 * Add full-text index for `formerIds` to improve item lookup via `formerIds` field ([MODINVSTOR-1579](https://folio-org.atlassian.net/browse/MODINVSTOR-1579))
 * HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
+* Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
+* Fix tenant install failing with "sequence must have same owner as table it is linked to" when the shared DB pool is used ([MODINVSTOR-1611](https://folio-org.atlassian.net/browse/MODINVSTOR-1611))
 
 ### Tech Dept
-* Description ([ISSUE](https://folio-org.atlassian.net/browse/ISSUE))
+* Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
+* Migrate tests to Junit 6 and improve coverage ([MODINVSTOR-1594](https://folio-org.atlassian.net/browse/MODINVSTOR-1594))
+* Add test for updating subject type with duplicate name ([MODINVSTOR-1595](https://folio-org.atlassian.net/browse/MODINVSTOR-1595))
 
 ### Dependencies
 * Bump `folio-kafka-wrapper` from `4.0.0` to `4.1.0`
+* Bump `folio-liquibase-util` from `1.11.0` to `1.12.0`
 * Add `LIB_NAME VERSION`
 * Remove `LIB_NAME`
 

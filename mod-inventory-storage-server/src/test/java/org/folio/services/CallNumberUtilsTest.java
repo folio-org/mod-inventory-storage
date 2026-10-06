@@ -93,7 +93,7 @@ class CallNumberUtilsTest {
   }
 
   @Test
-  void testSuDocSortingOrder() {
+  void suDocSortingOrder() {
     var callNumbers = Arrays.asList(
       "J29.2:D84/982",
       "J29.2:D84/2",

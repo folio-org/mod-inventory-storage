@@ -19,7 +19,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeSimpleId() {
+  void randomizeSimpleId() {
     var originalId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     var jsonContent = String.format("{\"id\": \"%s\", \"title\": \"Test Instance\"}", originalId);
 
@@ -32,7 +32,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testHoldingsRecordIdNotRandomized() {
+  void holdingsRecordIdNotRandomized() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
@@ -54,7 +54,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testInstanceIdReferenceMapping() {
+  void instanceIdReferenceMapping() {
     var instanceId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     // First randomize an instance record (creates mapping)
     var instanceJson = String.format("{\"id\": \"%s\", \"title\": \"Test Instance\"}", instanceId);
@@ -77,7 +77,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testFieldsContainingInstanceId() {
+  void fieldsContainingInstanceId() {
     var superInstanceId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     var subInstanceId = "5bf370e0-8cca-4d9c-82e4-5f4988a5e2e1";
 
@@ -108,7 +108,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testNestedObjects() {
+  void nestedObjects() {
     var instanceId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     var jsonContent = String.format("""
       {
@@ -131,7 +131,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testNonInstanceFieldsPreserved() {
+  void nonInstanceFieldsPreserved() {
     var instanceId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     var jsonContent = String.format("""
       {
@@ -156,14 +156,14 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testInvalidJsonReturnsOriginal() {
+  void invalidJsonReturnsOriginal() {
     var invalidJson = "This is not valid JSON";
     var result = randomizer.randomizeInstanceId(invalidJson);
     assertEquals(invalidJson, result);
   }
 
   @Test
-  void testClearMappings() {
+  void clearMappings() {
     var id = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
     var jsonContent = String.format("{\"id\": \"%s\", \"title\": \"Test\"}", id);
 
@@ -182,7 +182,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testConsistentMappingAcrossReferences() {
+  void consistentMappingAcrossReferences() {
     var instanceId = "7fbd5d84-62d1-44c6-9c45-6cb173998bbd";
 
     // Randomize an instance
@@ -207,7 +207,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeHridWithPrefix() {
+  void randomizeHridWithPrefix() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
@@ -232,7 +232,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeHridWithComplexPrefix() {
+  void randomizeHridWithComplexPrefix() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
@@ -253,7 +253,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeHridNoPrefix() {
+  void randomizeHridNoPrefix() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
@@ -274,7 +274,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testHridSuffixConsistentAcrossTenant() {
+  void hridSuffixConsistentAcrossTenant() {
     var randomizer2 = new SampleDataIdRandomizer();
 
     // Process multiple instances and verify the same suffix is used for all
@@ -302,7 +302,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testDifferentTenantsGetDifferentSuffixes() {
+  void differentTenantsGetDifferentSuffixes() {
     var randomizer1 = new SampleDataIdRandomizer();
     var randomizer2 = new SampleDataIdRandomizer();
 
@@ -324,7 +324,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeHridEmptyHrid() {
+  void randomizeHridEmptyHrid() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",
@@ -341,7 +341,7 @@ class SampleDataIdRandomizerTest {
   }
 
   @Test
-  void testRandomizeHridMissingHrid() {
+  void randomizeHridMissingHrid() {
     var jsonContent = """
       {
         "id": "7fbd5d84-62d1-44c6-9c45-6cb173998bbd",

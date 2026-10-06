@@ -182,7 +182,7 @@
     },
     {
       "id": "instance-storage",
-      "version": "11.3",
+      "version": "11.5",
       "handlers": [
         {
           "methods": ["GET"],
@@ -197,6 +197,10 @@
           "methods": ["GET"],
           "pathPattern": "/instance-storage/instances/{id}",
           "permissionsRequired": ["inventory-storage.instances.item.get"]
+        }, {
+          "methods": ["GET"],
+          "pathPattern": "/instance-storage/instances/{id}/summary",
+          "permissionsRequired": ["inventory-storage.instances.summary.get"]
         }, {
           "methods": ["POST"],
           "pathPattern": "/instance-storage/instances",
@@ -1303,26 +1307,6 @@
       ]
     },
     {
-      "id": "oaipmhview",
-      "version": "1.1",
-      "handlers" : [
-        {
-          "methods" : [ "GET" ],
-          "pathPattern" : "/oai-pmh-view/instances",
-          "permissionsRequired": ["inventory-storage.oai-pmh-view.instances.collection.get"]
-        },
-        {
-          "methods" : [ "GET" ],
-          "pathPattern" : "/oai-pmh-view/updatedInstanceIds",
-          "permissionsRequired": ["inventory-storage.oai-pmh-view.updatedinstanceids.collection.get"]
-        }, {
-          "methods" : [ "POST" ],
-          "pathPattern" : "/oai-pmh-view/enrichedInstances",
-          "permissionsRequired": ["inventory-storage.oai-pmh-view.enrichedinstances.collection.post"]
-        }
-      ]
-    },
-    {
       "id": "inventory-hierarchy",
       "version": "0.8",
       "handlers": [
@@ -1531,6 +1515,37 @@
           ]
         }
       ]
+    },
+    {
+      "id": "instance-custom-links",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-custom-links",
+          "permissionsRequired": ["inventory-storage.instance-custom-links.collection.get"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/instance-custom-links",
+          "permissionsRequired": ["inventory-storage.instance-custom-links.item.post"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "permissionsRequired": ["inventory-storage.instance-custom-links.item.get"]
+        },
+        {
+          "methods": ["PUT"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "permissionsRequired": ["inventory-storage.instance-custom-links.item.put"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/instance-custom-links/{id}",
+          "permissionsRequired": ["inventory-storage.instance-custom-links.item.delete"]
+        }
+      ]
     }
   ],
   "optional": [
@@ -1694,6 +1709,11 @@
       "permissionName": "inventory-storage.instances.item.get",
       "displayName": "inventory storage - get individual instance",
       "description": "get individual instance from storage"
+    },
+    {
+      "permissionName": "inventory-storage.instances.summary.get",
+      "displayName": "inventory storage - get individual instance summary",
+      "description": "get individual instance summary from storage"
     },
     {
       "permissionName": "inventory-storage.instances.item.post",
@@ -2638,21 +2658,6 @@
       "description": "modify the HRID settings in storage"
     },
     {
-      "permissionName": "inventory-storage.oai-pmh-view.instances.collection.get",
-      "displayName": "inventory storage - get instances for oai pmh",
-      "description": "get instances for oai pmh"
-    },
-    {
-      "permissionName": "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
-      "displayName": "inventory storage - get updated instances ids for oai pmh",
-      "description": "get updated instances ids for oai pmh"
-    },
-    {
-      "permissionName": "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
-      "displayName": "inventory storage - get enriched instances for oai pmh",
-      "description": "get enriched instances for oai pmh"
-    },
-    {
       "permissionName": "inventory-storage.inventory-hierarchy.updated-instances-ids.collection.get",
       "displayName": "inventory storage - get updated instances ids for inventory storage",
       "description": "get updated instances ids for inventory storage"
@@ -2813,6 +2818,31 @@
       "description": "patch inventory setting"
     },
     {
+      "permissionName": "inventory-storage.instance-custom-links.collection.get",
+      "displayName": "inventory storage - get list of instance custom links",
+      "description": "get list of instance custom links"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.get",
+      "displayName": "inventory storage - get instance custom link",
+      "description": "get instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.post",
+      "displayName": "inventory storage - create instance custom link",
+      "description": "create instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.put",
+      "displayName": "inventory storage - modify an instance custom link",
+      "description": "modify an instance custom link"
+    },
+    {
+      "permissionName": "inventory-storage.instance-custom-links.item.delete",
+      "displayName": "inventory storage - delete an instance custom link",
+      "description": "delete an instance custom link"
+    },
+    {
       "permissionName": "inventory-storage.all",
       "displayName": "inventory storage module - all permissions",
       "description": "Entire set of permissions needed to use the inventory storage module",
@@ -2842,6 +2872,7 @@
         "inventory-storage.instances.collection.get",
         "inventory-storage.instances.retrieve.collection.post",
         "inventory-storage.instances.item.get",
+        "inventory-storage.instances.summary.get",
         "inventory-storage.instances.item.post",
         "inventory-storage.instances.item.put",
         "inventory-storage.instances.item.patch.execute",
@@ -3023,9 +3054,6 @@
         "inventory-storage.preceding-succeeding-titles.item.post",
         "inventory-storage.preceding-succeeding-titles.item.put",
         "inventory-storage.preceding-succeeding-titles.item.delete",
-        "inventory-storage.oai-pmh-view.instances.collection.get",
-        "inventory-storage.oai-pmh-view.updatedinstanceids.collection.get",
-        "inventory-storage.oai-pmh-view.enrichedinstances.collection.post",
         "inventory-storage.holdings-sources.collection.get",
         "inventory-storage.holdings-sources.item.get",
         "inventory-storage.holdings-sources.item.post",
@@ -3060,7 +3088,12 @@
         "inventory-storage.instance-date-types.collection.get",
         "inventory-storage.instance-date-types.item.patch",
         "inventory-storage.settings.item.get",
-        "inventory-storage.settings.item.patch"
+        "inventory-storage.settings.item.patch",
+        "inventory-storage.instance-custom-links.collection.get",
+        "inventory-storage.instance-custom-links.item.get",
+        "inventory-storage.instance-custom-links.item.post",
+        "inventory-storage.instance-custom-links.item.put",
+        "inventory-storage.instance-custom-links.item.delete"
       ]
     }
   ],

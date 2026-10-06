@@ -5,43 +5,37 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.folio.dataimport.testsupport.rest.BaseWireMockTest;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.consortium.entities.SharingStatus;
 import org.folio.services.consortium.exceptions.ConsortiumException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(VertxUnitRunner.class)
-public class ConsortiumServiceImplTest {
-
-  @ClassRule
-  public static WireMockRule mockServer = new WireMockRule(WireMockConfiguration.wireMockConfig()
-    .notifier(new ConsoleNotifier(false))
-    .dynamicPort());
+@ExtendWith({VertxExtension.class, MockitoExtension.class})
+class ConsortiumServiceImplTest extends BaseWireMockTest {
 
   private static final String TENANT_ID = "diku";
   private static final String CENTRAL_TENANT_ID = "mobius";
@@ -57,30 +51,23 @@ public class ConsortiumServiceImplTest {
   private static final String INSTANCE_SHARE_PATH = String.format("/consortia/%s/sharing/instances",
     CONSORTIUM_ID);
 
-  private final Vertx vertx = Vertx.vertx();
-  private ConsortiumServiceImpl consortiumServiceImpl;
-  private Map<String, String> okapiHeaders;
   @Mock
   private ConsortiumDataCache consortiumDataCache;
 
-  @Before
-  public void setUp() {
-    MockitoAnnotations.openMocks(this);
+  private ConsortiumServiceImpl consortiumServiceImpl;
+  private Map<String, String> okapiHeaders;
+
+  @BeforeEach
+  void setUp(Vertx vertx) {
     consortiumServiceImpl = new ConsortiumServiceImpl(vertx.createHttpClient(), consortiumDataCache);
     okapiHeaders = Map.of(
       XOkapiHeaders.TENANT, TENANT_ID,
       XOkapiHeaders.TOKEN, TOKEN,
-      XOkapiHeaders.URL, mockServer.baseUrl());
-  }
-
-  @After
-  public void reset() {
-    WireMock.reset();
+      XOkapiHeaders.URL, WIRE_MOCK.baseUrl());
   }
 
   @Test
-  public void shouldCreateSharedInstance(TestContext context) {
-    Async async = context.async();
+  void shouldCreateSharedInstance(VertxTestContext context) {
     ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
     JsonObject sharingInstance = new JsonObject()
@@ -89,27 +76,28 @@ public class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "COMPLETE");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstance.encodePrettily())));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
 
     future.onComplete(ar -> {
-      verifyShareInstanceCall();
-      context.assertTrue(ar.succeeded());
-      SharingInstance instance = ar.result();
-      context.assertNotNull(instance);
-      context.assertEquals(UUID.fromString(INSTANCE_ID), instance.getInstanceIdentifier());
-      context.assertEquals(TENANT_ID, instance.getTargetTenantId());
-      context.assertEquals(CENTRAL_TENANT_ID, instance.getSourceTenantId());
-      context.assertEquals(SharingStatus.valueOf("COMPLETE"), instance.getStatus());
-      async.complete();
+      context.verify(() -> {
+        verifyShareInstanceCall();
+        assertTrue(ar.succeeded());
+        SharingInstance instance = ar.result();
+        assertNotNull(instance);
+        assertEquals(UUID.fromString(INSTANCE_ID), instance.getInstanceIdentifier());
+        assertEquals(TENANT_ID, instance.getTargetTenantId());
+        assertEquals(CENTRAL_TENANT_ID, instance.getSourceTenantId());
+        assertEquals(SharingStatus.valueOf("COMPLETE"), instance.getStatus());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnFailureForSharingErrorStatus(TestContext context) {
-    Async async = context.async();
+  void shouldReturnFailureForSharingErrorStatus(VertxTestContext context) {
     ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
     JsonObject sharingInstance = new JsonObject()
@@ -118,38 +106,41 @@ public class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "ERROR");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstance.encodePrettily())));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
 
     future.onComplete(ar -> {
-      verifyShareInstanceCall();
-      context.assertTrue(ar.failed());
-      context.assertTrue(ar.cause() instanceof ConsortiumException);
-      async.complete();
+      context.verify(() -> {
+        verifyShareInstanceCall();
+        assertTrue(ar.failed());
+        assertInstanceOf(ConsortiumException.class, ar.cause());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnFailureForErrorOnSharing(TestContext context) {
-    Async async = context.async();
+  void shouldReturnFailureForErrorOnSharing(VertxTestContext context) {
     ConsortiumData data = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH).willReturn(WireMock.serverError()));
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH).willReturn(WireMock.serverError()));
 
     Future<SharingInstance> future = consortiumServiceImpl.createShadowInstance(INSTANCE_ID, data, okapiHeaders);
 
     future.onComplete(ar -> {
-      verifyShareInstanceCall();
-      context.assertTrue(ar.failed());
-      context.assertTrue(ar.cause() instanceof ConsortiumException);
-      async.complete();
+      context.verify(() -> {
+        verifyShareInstanceCall();
+        assertTrue(ar.failed());
+        assertInstanceOf(ConsortiumException.class, ar.cause());
+      });
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldShareInstance(TestContext testContext) {
+  void shouldShareInstance(VertxTestContext testContext) {
     SharingInstance sharingInstance = new SharingInstance();
     sharingInstance.setSourceTenantId(CENTRAL_TENANT_ID);
     sharingInstance.setInstanceIdentifier(UUID.fromString(INSTANCE_ID));
@@ -161,35 +152,35 @@ public class ConsortiumServiceImplTest {
       .put(INSTANCE_ID_FIELD, INSTANCE_ID)
       .put(STATUS_FIELD, "COMPLETE");
 
-    WireMock.stubFor(post(INSTANCE_SHARE_PATH)
+    WIRE_MOCK.stubFor(post(INSTANCE_SHARE_PATH)
       .willReturn(WireMock.created().withBody(sharingInstanceResult.encodePrettily())));
 
-    Async async = testContext.async();
-
     consortiumServiceImpl.shareInstance(CONSORTIUM_ID, sharingInstance, okapiHeaders).onComplete(ar -> {
-      verify(postRequestedFor(urlMatching(INSTANCE_SHARE_PATH))
-        .withHeader(XOkapiHeaders.TENANT, equalTo(TENANT_ID))
-        .withHeader(XOkapiHeaders.TOKEN, equalTo(TOKEN))
-        .withHeader(XOkapiHeaders.URL, WireMock.equalTo(mockServer.baseUrl())));
-      testContext.assertTrue(ar.succeeded());
-      testContext.assertEquals(ar.result().getStatus(), SharingStatus.COMPLETE);
-      async.complete();
+      testContext.verify(() -> {
+        verify(postRequestedFor(urlMatching(INSTANCE_SHARE_PATH))
+          .withHeader(XOkapiHeaders.TENANT, equalTo(TENANT_ID))
+          .withHeader(XOkapiHeaders.TOKEN, equalTo(TOKEN))
+          .withHeader(XOkapiHeaders.URL, WireMock.equalTo(WIRE_MOCK.baseUrl())));
+        assertTrue(ar.succeeded());
+        assertEquals(SharingStatus.COMPLETE, ar.result().getStatus());
+      });
+      testContext.completeNow();
     });
   }
 
   @Test
-  public void shouldGetConsortiumData(TestContext testContext) {
-    Async async = testContext.async();
-
+  void shouldGetConsortiumData(VertxTestContext testContext) {
     ConsortiumData consortiumData = new ConsortiumData(CENTRAL_TENANT_ID, CONSORTIUM_ID, Collections.emptyList());
     when(consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders))
       .thenReturn(Future.succeededFuture(Optional.of(consortiumData)));
 
     consortiumServiceImpl.getConsortiumData(okapiHeaders).onComplete(ar -> {
-      testContext.assertTrue(ar.succeeded());
-      testContext.assertTrue(ar.result().isPresent());
-      testContext.assertEquals(consortiumData, ar.result().get());
-      async.complete();
+      testContext.verify(() -> {
+        assertTrue(ar.succeeded());
+        assertTrue(ar.result().isPresent());
+        assertEquals(consortiumData, ar.result().get());
+      });
+      testContext.completeNow();
     });
   }
 
@@ -197,6 +188,6 @@ public class ConsortiumServiceImplTest {
     verify(postRequestedFor(urlMatching(INSTANCE_SHARE_PATH))
       .withHeader(XOkapiHeaders.TENANT, equalTo(CENTRAL_TENANT_ID))
       .withHeader(XOkapiHeaders.TOKEN, equalTo(TOKEN))
-      .withHeader(XOkapiHeaders.URL, WireMock.equalTo(mockServer.baseUrl())));
+      .withHeader(XOkapiHeaders.URL, WireMock.equalTo(WIRE_MOCK.baseUrl())));
   }
 }

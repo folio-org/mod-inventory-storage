@@ -5,29 +5,35 @@
                    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
                    objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-function-pmh-auxiliary-helpers" author="folio">
-    <comment>Create auxiliary helper functions (strtotimestamp, dateormin, dateormax, getelectronicaccessname, etc.) used by PMH views</comment>
+  <changeSet id="MODINVSTOR-1051@@schema-create-function-auxiliary-helpers" author="folio">
+    <comment>Create auxiliary helper functions (strtotimestamp, dateormin, dateormax, getelectronicaccessname, etc.)</comment>
     <sqlFile path="sql/inventory-hierarchy/create_auxiliary_functions.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-index-pmh-metadata-dates" author="folio">
-    <comment>Create indexes on instance, item, holdings_record and audit tables for PMH createdDate/updatedDate lookups</comment>
-    <sqlFile path="sql/inventory-hierarchy/create_pmh_indexes.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  <changeSet id="MODINVSTOR-1051@@schema-create-index-metadata-dates" author="folio">
+    <comment>Create indexes on instance, item, holdings_record and audit tables for createdDate/updatedDate lookups</comment>
+    <sqlFile path="sql/inventory-hierarchy/create_metadata_indexes.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-function-pmh-view" author="folio">
-    <comment>Create create_pmh_view function</comment>
-    <sqlFile path="sql/inventory-hierarchy/create_pmh_view_function.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  <changeSet id="MODINVSTOR-1051@@schema-drop-function-pmh-view" author="folio">
+    <comment>Drop create_pmh_view function</comment>
+    <sql>
+      DROP FUNCTION IF EXISTS pmh_view_function(timestamp with time zone, timestamp with time zone, boolean, boolean);
+    </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-pmh-get-function-updated-instances-ids" author="folio">
-    <comment>Create create_pmh_get_updated_instances_ids function</comment>
-    <sqlFile path="sql/inventory-hierarchy/create_pmh_get_updated_instances_ids_function.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  <changeSet id="MODINVSTOR-1051@@schema-drop-pmh-get-function-updated-instances-ids" author="folio">
+    <comment>Drop create_pmh_get_updated_instances_ids function</comment>
+    <sql>
+      DROP FUNCTION IF EXISTS pmh_get_updated_instances_ids(timestamp with time zone, timestamp with time zone, boolean, boolean);
+    </sql>
   </changeSet>
 
-  <changeSet id="MODINVSTOR-1051@@schema-create-function-pmh-instance-view" author="folio">
-    <comment>Create pmh_instance_view function</comment>
-    <sqlFile path="sql/inventory-hierarchy/create_pmh_instance_view_function.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  <changeSet id="MODINVSTOR-1051@@schema-drop-function-pmh-instance-view" author="folio">
+    <comment>Drop pmh_instance_view function</comment>
+    <sql>
+      DROP FUNCTION IF EXISTS pmh_instance_view_function(uuid[], boolean);
+    </sql>
   </changeSet>
 
   <changeSet id="MODINVSTOR-1051@@schema-create-function-get-updated-instance-ids-view" author="folio">

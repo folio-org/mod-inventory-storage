@@ -54,7 +54,7 @@ class SanitizerFactoryTest {
   }
 
   @Test
-  void constructorShouldThrowUnsupportedOperationException() throws NoSuchMethodException {
+  void constructorShouldThrowUnsupportedOperationException() throws Exception {
     var constructor = SanitizerFactory.class.getDeclaredConstructor();
     constructor.setAccessible(true);
     var exception = assertThrows(Exception.class, constructor::newInstance);

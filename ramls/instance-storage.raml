@@ -1,6 +1,6 @@
 #%RAML 1.0
 title: Instance Storage
-version: v11.3
+version: v11.5
 protocols: [ HTTP, HTTPS ]
 baseUri: http://localhost
 
@@ -10,6 +10,7 @@ documentation:
 
 types:
   instance: !include schemas/instance-storage/instance.json
+  instanceSummary: !include schemas/instance-storage/instance-summary.json
   instances: !include schemas/instance-storage/instances.json
   marcJson: !include schemas/instance-storage/marc.json
   instanceRelationship: !include schemas/instance-storage/instancerelationship.json
@@ -70,6 +71,12 @@ resourceTypes:
           searchable: {description: "by title (using CQL)",
                         example: "title=\"*uproot*\""},
           ]
+      queryParameters:
+        includeShadowCopies:
+          description: Whether to include consortium shadow copies (instances with source CONSORTIUM-MARC or CONSORTIUM-FOLIO) in the result
+          type: boolean
+          required: false
+          default: true
     post:
     delete:
       is: [searchable: { description: "CQL to select instances to delete, use cql.allRecords=1 to delete all. Deletes connected marc source records.",
@@ -134,6 +141,27 @@ resourceTypes:
               text/plain:
                 example: "internal server error, contact administrator"
 
+      /summary:
+        get:
+          description: |
+            Get a compact summary for an instance, including record counts and aggregate inventory facts.
+          responses:
+            200:
+              body:
+                application/json:
+                  type: instanceSummary
+                  example: !include examples/instance-summary.json
+            404:
+              description: "Instance with a given ID not found"
+              body:
+                text/plain:
+                  example: Not found
+            500:
+              description: "Internal server error, e.g. due to misconfiguration"
+              body:
+                text/plain:
+                  example: "internal server error, contact administrator"
+
       /source-record:
         delete:
           responses:
@@ -163,22 +191,6 @@ resourceTypes:
             collection-item:
               exampleItem: !include examples/marc.json
               schema: marcJson
-        /mods:
-          displayName: MODS source record - not implemented yet
-          get:
-            responses:
-              500:
-                description: "Not implemented yet"
-                body:
-                  text/plain:
-                    example: "Not implemented yet"
-          put:
-            responses:
-              500:
-                description: "Not implemented yet"
-                body:
-                  text/plain:
-                    example: "Not implemented yet"
     /retrieve:
       post:
         is: [ validate ]

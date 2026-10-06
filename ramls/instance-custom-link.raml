@@ -1,0 +1,55 @@
+#%RAML 1.0
+title: Instance Custom Links API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Instances Custom Links API
+    content: This documents the API calls that can be made to query and manage instance custom links
+
+types:
+  instanceCustomLink: !include schemas/instance-custom-links/instanceCustomLink.json
+  instanceCustomLinks: !include schemas/instance-custom-links/instanceCustomLinks.json
+  errors: !include raml-util/schemas/errors.schema
+
+traits:
+  pageable: !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+
+resourceTypes:
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
+
+/instance-custom-links:
+  type:
+    collection:
+      exampleCollection: !include examples/instance-custom-links/instanceCustomLinks.json
+      exampleItem: !include examples/instance-custom-links/instanceCustomLink.json
+      schemaCollection: instanceCustomLinks
+      schemaItem: instanceCustomLink
+  get:
+    is: [
+      searchable: {description: "with valid searchable fields", example: "name=aaa"},
+      pageable
+    ]
+    description: Return a list of instance custom links
+  post:
+    description: Create a new instance custom link
+    is: [validate]
+  /{id}:
+    description: Pass in the instance custom link id
+    type:
+      collection-item:
+        exampleItem: !include examples/instance-custom-links/instanceCustomLink.json
+        schema: instanceCustomLink
+    put:
+        description: Update a instance custom link
+        is: [validate]
+        responses:
+          422:
+            description: "Validation error"
+            body:
+              application/json:
+                type: errors

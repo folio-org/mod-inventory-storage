@@ -1,7 +1,7 @@
 package org.folio.utility;
 
 import static java.time.Duration.ofMinutes;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

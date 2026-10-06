@@ -37,13 +37,13 @@ public class IterationJobRunner {
   private static final Logger log = LogManager.getLogger(IterationJobRunner.class);
   private static final int POOL_SIZE = 2;
   private static final int UPDATE_PUBLISHED_EVERY = 1000;
-  private static volatile WorkerExecutor workerExecutor;
 
   private final Context vertxContext;
   private final Map<String, String> okapiHeaders;
   private final PostgresClient postgresClient;
   private final IterationJobRepository jobRepository;
   private final InstanceRepository instanceRepository;
+  private final WorkerExecutor workerExecutor;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
   public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
@@ -62,8 +62,13 @@ public class IterationJobRunner {
     this.postgresClient = postgresClient;
     this.jobRepository = repository;
     this.instanceRepository = instanceRepository;
-
-    initWorker(vertxContext);
+    // createSharedWorkerExecutor already shares the underlying pool by name within one Vertx
+    // instance's lifetime, so no extra caching is needed here - and caching it in a static
+    // field (as this used to) is actively wrong: it would keep binding every future instance,
+    // regardless of which Vertx owns it, to whichever Vertx happened to construct the first
+    // one, so a closed/replaced Vertx (e.g. between test methods) left later callers executing
+    // against a terminated pool.
+    this.workerExecutor = vertxContext.owner().createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
   }
 
   public void startIteration(IterationJob job) {
@@ -76,17 +81,6 @@ public class IterationJobRunner {
     workerExecutor.executeBlocking(() -> streamInstanceIds(new IterationContext(job)))
       .flatMap(future -> future)
       .map(notUsed -> null);
-  }
-
-  private static void initWorker(Context vertxContext) {
-    if (workerExecutor == null) {
-      synchronized (IterationJobRunner.class) {
-        if (workerExecutor == null) {
-          workerExecutor = vertxContext.owner()
-            .createSharedWorkerExecutor("instance-iteration", POOL_SIZE);
-        }
-      }
-    }
   }
 
   private Future<Long> streamInstanceIds(IterationContext context) {

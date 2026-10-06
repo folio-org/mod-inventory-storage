@@ -22,7 +22,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@DisplayName("ItemUtils Tests")
 class ItemUtilsTest {
 
   @Test
@@ -208,11 +207,13 @@ class ItemUtilsTest {
     assertEquals(true, normalizedProps.get("discoverySuppress"));
 
     // Notes normalization
+    @SuppressWarnings("unchecked")
     var notes = (List<Map<String, Object>>) normalizedProps.get("notes");
     assertEquals(true, notes.getFirst().get("staffOnly"));
     assertEquals(false, notes.get(1).get("staffOnly"));
 
     // Circulation notes normalization
+    @SuppressWarnings("unchecked")
     var circulationNotes = (List<Map<String, Object>>) normalizedProps.get("circulationNotes");
     assertEquals(false, circulationNotes.getFirst().get("staffOnly"));
   }
