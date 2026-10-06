@@ -114,5 +114,9 @@ AFTER DELETE ON ${myuniversity}_${mymodule}.custom_fields
 FOR EACH ROW
 EXECUTE PROCEDURE ${myuniversity}_${mymodule}.custom_fields_drop_idx();
 
+-- index for the statistics and cascade queries of folio-custom-fields (key existence and containment)
+CREATE INDEX IF NOT EXISTS item_customfields_recordservice_idx_gin ON ${myuniversity}_${mymodule}.item
+  USING GIN ((jsonb->'customFields'));
+
 -- create indexes for existing custom fields if they do not exist
 SELECT ${myuniversity}_${mymodule}.create_custom_fields_indexes(jsonb) FROM ${myuniversity}_${mymodule}.custom_fields;

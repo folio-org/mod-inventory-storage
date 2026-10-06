@@ -10,6 +10,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
+import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,17 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     textboxField = customField(TEXTBOX, "TEXTBOX_SHORT", null);
     singleSelectField = customField(SINGLE_SELECT, "SINGLE_SELECT_DROPDOWN", selectField(3, false));
     multiSelectField = customField(MULTI_SELECT, "MULTI_SELECT_DROPDOWN", selectField(4, true));
+  }
+
+  @Test
+  @DisplayName("should index the custom fields of items, per field and for the statistics and cascade queries")
+  void shouldIndexCustomFieldsOfItems() {
+    var refId = createCustomField(textboxField).getString("refId");
+
+    assertThat(indexDefinition("item_customfields_recordservice_idx_gin"))
+      .contains("USING gin (((jsonb -> 'customFields'::text)))");
+    assertThat(indexDefinition("item_custom_fields_" + refId + "_idx_gin"))
+      .contains("'" + refId + "'::text", "gin_trgm_ops");
   }
 
   @Test
@@ -144,9 +156,17 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .put("options", new JsonObject().put("values", values));
   }
 
-  private static void createCustomField(JsonObject field) {
+  private static JsonObject createCustomField(JsonObject field) {
     var response = await(doPost(client, CUSTOM_FIELDS_PATH, field));
     assertThat(response.status()).isEqualTo(SC_CREATED);
+    return response.jsonBody();
+  }
+
+  private static String indexDefinition(String indexName) {
+    var rows = runQuery("SELECT indexdef FROM pg_indexes WHERE schemaname = '"
+      + PostgresClient.convertToPsqlStandard(TENANT_ID) + "' AND indexname = '" + indexName + "'");
+    assertThat(rows.size()).as(indexName).isEqualTo(1);
+    return rows.iterator().next().getString("indexdef");
   }
 
   private static String id(JsonObject field) {
