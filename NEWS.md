@@ -1,3 +1,9 @@
+## v30.0.8 In progress
+### Bug fixes
+* Restore ownership on statistical-code and item_order_tracker tables so tenant permissions are not silently skipped on upgrade ([MODINVSTOR-1612](https://folio-org.atlassian.net/browse/MODINVSTOR-1612))
+
+---
+
 ## v30.0.7 2026-09-18
 ### Bug fixes
 * HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
