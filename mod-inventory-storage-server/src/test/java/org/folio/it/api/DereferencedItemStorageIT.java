@@ -42,6 +42,7 @@ class DereferencedItemStorageIT extends BaseIntegrationTest {
   private static final String SMALL_ANGRY_PLANET_BARCODE = "036000291452";
   private static final String NOD_BARCODE = "565578437802";
   private static final String UPROOTED_BARCODE = "657670342075";
+  private static final String NOD_TEXTBOX_VALUE = "nod text";
 
   private static String smallAngryPlanetId;
   private static String uprootedId;
@@ -80,6 +81,16 @@ class DereferencedItemStorageIT extends BaseIntegrationTest {
 
     assertThat(items.getTotalRecords()).isEqualTo(1);
     assertUprooted(items.getDereferencedItems().getFirst());
+  }
+
+  @Test
+  @DisplayName("should return the custom field values of an item")
+  void shouldReturnCustomFieldValues() {
+    var items = findByCql("barcode==" + NOD_BARCODE);
+
+    assertThat(items.getTotalRecords()).isEqualTo(1);
+    assertThat(items.getDereferencedItems().getFirst().getCustomFields().getAdditionalProperties())
+      .containsEntry("textbox", NOD_TEXTBOX_VALUE);
   }
 
   @Test
@@ -124,7 +135,10 @@ class DereferencedItemStorageIT extends BaseIntegrationTest {
     smallAngryPlanetId = createItemAt(holdingId, SMALL_ANGRY_PLANET_BARCODE, materialTypeId, permanentLoanTypeId,
       permanentLocationId);
 
-    createItemAt(holdingId, NOD_BARCODE, materialTypeId, permanentLoanTypeId, permanentLocationId);
+    var nodRequest = createItemRequest(holdingId, NOD_BARCODE, materialTypeId, permanentLoanTypeId,
+      permanentLocationId)
+      .put("customFields", new JsonObject().put("textbox", NOD_TEXTBOX_VALUE));
+    await(doPost(client, ResourcePaths.ITEMS, nodRequest));
 
     var uprootedRequest = createItemRequest(holdingId, UPROOTED_BARCODE, materialTypeId, permanentLoanTypeId,
       permanentLocationId)
