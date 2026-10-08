@@ -6,7 +6,11 @@
 * Provides `custom-fields v3.2`
 * Provides `settings v1.0`
 * Provides `instance-storage v11.5`
+* Provides `inventory-view v3.3`
+* Provides `inventory-view-instance-set v3.3`
 * Provides `item-storage v11.3`
+* Provides `item-storage-batch-sync v2.1`
+* Provides `item-storage-batch-sync-unsafe v2.1`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 

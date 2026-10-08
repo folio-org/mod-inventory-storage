@@ -81,7 +81,7 @@
     },
     {
       "id": "item-storage-batch-sync",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -92,7 +92,7 @@
     },
     {
       "id": "item-storage-batch-sync-unsafe",
-      "version": "2.0",
+      "version": "2.1",
       "handlers": [
         {
           "methods": ["POST"],
@@ -1323,7 +1323,7 @@
     },
     {
       "id": "inventory-view",
-      "version": "3.2",
+      "version": "3.3",
       "handlers": [
         {
           "methods": ["GET"],
@@ -1334,7 +1334,7 @@
     },
     {
       "id": "inventory-view-instance-set",
-      "version": "3.2",
+      "version": "3.3",
       "handlers": [
         {
           "methods": ["GET"],
