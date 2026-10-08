@@ -292,6 +292,11 @@
       "type": "object",
       "$ref": "../item-storage/itemLastCheckIn.json",
       "description": "The last check-in details for the item."
+    },
+    "customFields": {
+      "description": "Object that contains custom fields",
+      "type": "object",
+      "$ref": "../common/custom_fields.json"
     }
   },
   "additionalProperties": false,

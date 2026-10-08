@@ -11,6 +11,7 @@
 * Provides `item-storage v11.3`
 * Provides `item-storage-batch-sync v2.1`
 * Provides `item-storage-batch-sync-unsafe v2.1`
+* Provides `item-storage-dereferenced v1.3`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 
