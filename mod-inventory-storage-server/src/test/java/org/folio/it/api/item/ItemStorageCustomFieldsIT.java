@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.SC_CREATED;
 import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
+import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.folio.rest.persist.PostgresClient;
@@ -44,14 +46,29 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
-  @DisplayName("should index the custom fields of items, per field and for the statistics and cascade queries")
+  @DisplayName("should index the custom fields of items for the statistics and cascade queries, not per field")
   void shouldIndexCustomFieldsOfItems() {
-    var refId = createCustomField(textboxField).getString("refId");
+    createCustomField(textboxField);
 
     assertThat(indexDefinition("item_customfields_recordservice_idx_gin"))
       .contains("USING gin (((jsonb -> 'customFields'::text)))");
-    assertThat(indexDefinition("item_custom_fields_" + refId + "_idx_gin"))
-      .contains("'" + refId + "'::text", "gin_trgm_ops");
+    assertThat(indexNames("item\\_custom\\_fields\\_%")).isEmpty();
+  }
+
+  @Test
+  @DisplayName("should refuse custom fields of an entity type other than item")
+  void shouldRefuseCustomField_whenEntityTypeIsUnsupported() {
+    var userField = customField(TEXTBOX, "TEXTBOX_SHORT", null).put("entityType", "user");
+
+    var postResponse = await(doPost(client, CUSTOM_FIELDS_PATH, userField));
+    var putResponse = await(doPut(client, CUSTOM_FIELDS_PATH, new JsonObject()
+      .put(CUSTOM_FIELDS, new JsonArray().add(userField))
+      .put("entityType", "user")));
+
+    assertThat(postResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(postResponse.body().toString()).contains("Unsupported entityType 'user', supported: item");
+    assertThat(putResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(customFieldNames()).isEmpty();
   }
 
   @Test
@@ -123,6 +140,24 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
   }
 
+  @Test
+  @DisplayName("should replace the custom field collection when it omits a field and removes an option, both unused")
+  void shouldReplaceCollection_whenOmittedFieldAndRemovedOptionAreUnused() {
+    createCustomField(textboxField);
+    createCustomField(singleSelectField);
+    createCustomField(multiSelectField);
+    var values = new JsonObject().put(TEXTBOX, "text1").put(SINGLE_SELECT, "opt_0");
+    final var item = createItem(itemWithCustomFields(values));
+
+    singleSelectField.put("selectField", selectField(1, false));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(textboxField, singleSelectField)));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
+    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0");
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(values);
+  }
+
   private JsonObject itemWithCustomFields(JsonObject values) {
     return minimalItemRequest(UUID.randomUUID(), holdingId).put(CUSTOM_FIELDS, values);
   }
@@ -167,6 +202,40 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       + PostgresClient.convertToPsqlStandard(TENANT_ID) + "' AND indexname = '" + indexName + "'");
     assertThat(rows.size()).as(indexName).isEqualTo(1);
     return rows.iterator().next().getString("indexdef");
+  }
+
+  private static List<String> indexNames(String pattern) {
+    var rows = runQuery("SELECT indexname FROM pg_indexes WHERE schemaname = '"
+      + PostgresClient.convertToPsqlStandard(TENANT_ID) + "' AND indexname LIKE '" + pattern + "'");
+    var names = new ArrayList<String>();
+    rows.forEach(row -> names.add(row.getString("indexname")));
+    return names;
+  }
+
+  private static JsonObject collection(JsonObject... fields) {
+    return new JsonObject()
+      .put(CUSTOM_FIELDS, new JsonArray(List.of((Object[]) fields)))
+      .put("entityType", ENTITY_TYPE_ITEM);
+  }
+
+  private static List<String> customFieldNames() {
+    var response = await(doGet(client, CUSTOM_FIELDS_PATH));
+    assertThat(response.status()).isEqualTo(SC_OK);
+    return response.jsonBody().getJsonArray(CUSTOM_FIELDS).stream()
+      .map(field -> ((JsonObject) field).getString("name"))
+      .toList();
+  }
+
+  private static JsonObject getCustomField(JsonObject field) {
+    var response = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + id(field)));
+    assertThat(response.status()).isEqualTo(SC_OK);
+    return response.jsonBody();
+  }
+
+  private static List<String> optionIdsOf(JsonObject field) {
+    return field.getJsonObject("selectField").getJsonObject("options").getJsonArray("values").stream()
+      .map(option -> ((JsonObject) option).getString("id"))
+      .toList();
   }
 
   private static String id(JsonObject field) {

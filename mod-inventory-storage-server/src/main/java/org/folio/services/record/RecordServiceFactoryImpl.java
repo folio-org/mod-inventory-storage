@@ -8,10 +8,13 @@ import org.folio.service.spi.RecordServiceFactory;
 
 public class RecordServiceFactoryImpl implements RecordServiceFactory {
 
+  /**
+   * Custom field entity types and the tables holding their values; other entity types are refused.
+   */
+  public static final Map<String, String> ENTITY_TYPE_TABLES = Map.of("item", "item");
+
   @Override
   public RecordService create(Vertx vertx) {
-    return RecordServiceImpl.createForSingleTable(
-      vertx,
-      Map.of("item", "item"));
+    return RecordServiceImpl.createForSingleTable(vertx, ENTITY_TYPE_TABLES);
   }
 }
