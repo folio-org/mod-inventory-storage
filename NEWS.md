@@ -3,8 +3,15 @@
 * Remove oaipmhview interface as deprecated ([MODINVSTOR-563](https://folio-org.atlassian.net/browse/MODINVSTOR-563))
 
 ### New APIs versions
+* Provides `custom-fields v3.2`
 * Provides `settings v1.0`
 * Provides `instance-storage v11.5`
+* Provides `inventory-view v3.3`
+* Provides `inventory-view-instance-set v3.3`
+* Provides `item-storage v11.3`
+* Provides `item-storage-batch-sync v2.1`
+* Provides `item-storage-batch-sync-unsafe v2.1`
+* Provides `item-storage-dereferenced v1.3`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 
@@ -13,6 +20,7 @@
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))
 * Create instance custom link setting ([MODINVSTOR-1600](https://folio-org.atlassian.net/browse/MODINVSTOR-1600))
 * Add `includeShadowCopies` query parameter to `GET /instance-storage/instances` ([MODINVSTOR-1608](https://folio-org.atlassian.net/browse/MODINVSTOR-1608))
+* Integrate folio-custom-fields for item ([MODINVSTOR-1446](https://folio-org.atlassian.net/browse/MODINVSTOR-1446))
 
 ### Bug fixes
 * Populate item and holdings `hrId` in the items-and-holdings view ([MODINVSTOR-1587](https://folio-org.atlassian.net/browse/MODINVSTOR-1587))
