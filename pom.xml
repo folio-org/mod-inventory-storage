@@ -4,7 +4,7 @@
 
   <groupId>org.folio</groupId>
   <artifactId>mod-inventory-storage</artifactId>
-  <version>30.0.8-SNAPSHOT</version>
+  <version>30.0.9-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>mod-inventory-storage</name>
