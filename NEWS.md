@@ -26,6 +26,7 @@
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 * Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
 * Fix tenant install failing with "sequence must have same owner as table it is linked to" when the shared DB pool is used ([MODINVSTOR-1611](https://folio-org.atlassian.net/browse/MODINVSTOR-1611))
+* Improve performance of `GET /inventory-view/instances` lookup by instance HRID by serving a single `instance.hrid` or `instanceHrid` term from the new indexed `instance_hrid` column of `instance_holdings_item_view` ([MODINVSTOR-1615](https://folio-org.atlassian.net/browse/MODINVSTOR-1615))
 
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
