@@ -11,7 +11,6 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
 * [Prerequisites](#prerequisites)
 * [Preparation](#preparation)
   * [Git Submodules](#git-submodules)
-  * [Postgres](#postgres)
   * [Kafka](#kafka)
 * [Building](#building)
 * [Environment Variables](#environment-variables)
@@ -22,12 +21,6 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
   * [Stop the Module](#stop-the-module)
   * [Stop the infrastructure](#stop-the-infrastructure)
 * [Local Deployment using Homebrew on macOS](#local-deployment-using-homebrew-on-macos)
-* [Running](#running)
-  * [Preparation](#preparation-2)
-  * [Running Okapi](#running-okapi)
-  * [Registration](#registration)
-  * [Tenant Initialization](#tenant-initialization)
-  * [Sample Data](#sample-data)
 * [Making Requests](#making-requests)
   * [Okapi Root Address](#okapi-root-address)
 * [Operating System Support](#operating-system-support)
@@ -39,10 +32,13 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
     * [Testing](#testing)
     * [Download and configuration](#download-and-configuration)
 * [Appendix 1 - Docker Information](#appendix-1---docker-information)
-  * [When Using the Modules as Docker Containers](#when-using-the-modules-as-docker-containers)
     * [Finding a Routable Address](#finding-a-routable-address)
 * [HRID Management](#hrid-management)
 * [Inventory view endpoint](#inventory-view-endpoint)
+  * [Lookup by instance HRID (fast path)](#lookup-by-instance-hrid-fast-path)
+    * [Query form](#query-form)
+    * [`=` or `==`?](#-or-)
+    * [When the fast path is NOT used](#when-the-fast-path-is-not-used)
 * [Domain event pattern](#domain-event-pattern)
   * [Domain events for items](#domain-events-for-items)
   * [Domain events for delete all APIs](#domain-events-for-delete-all-apis)
@@ -337,6 +333,67 @@ WARN  CQL2PgJSON           loadDbSchema loadDbSchema(): No configuration for tab
 ```
 
 This is a [known issue caused by RMB](https://issues.folio.org/browse/RMB-909) and can be ignored.
+
+## Lookup by instance HRID (fast path)
+
+`/inventory-view/instances` searches a database view whose JSON document is built on the fly
+from the instance, holdings, items and bound-with parts. A generic CQL condition on this
+document cannot use any database index, so the database has to build the document for
+every instance it examines. On large tenants (millions of instances) a lookup by HRID
+done this way is very slow.
+
+To avoid this, a query that looks up **one instance by its HRID** takes a *fast path*: the
+HRID is compared with the indexed column `instance_hrid` of the view which is served by the unique index
+of the `instance` table. Only the matching instance is built.
+
+### Query form
+
+Recommended (exact field match, `==`):
+
+```
+GET /inventory-view/instances?query=(instance.hrid==in00000000001)&limit=1
+```
+
+The fast path is used when the whole query is **a single term** that has:
+
+| Part     | Accepted                                                             |
+|----------|----------------------------------------------------------------------|
+| Index    | `instance.hrid` or `instanceHrid` (aliases, both use the fast path)  |
+| Relation | `==` (recommended) or `=`                                            |
+| Term     | a non-empty HRID without wildcards, optionally quoted                |
+| Wrapping | optional parentheses, for example `(instance.hrid==in00000000001)`   |
+
+`limit`, `offset` and `withBoundedItems=true` can be combined with the fast path.
+`totalRecords` in the response is the number of instances returned (0 or 1, because an HRID
+is unique).
+
+### `=` or `==`?
+
+Use `==`. On the fast path both are treated the same: an **exact field match** that ignores
+case and accents (for example `IN00000000001` finds `in00000000001`). The partial or
+word matching that `=` normally does in CQL (`instance.hrid=in0000` finding `in00000000001`,
+or `instance.hrid=ab` finding `ab cd`) is **not** applied on the fast path. HRIDs are unique
+and have no spaces, so for real HRIDs `=` and `==` return the same instance. Existing clients
+that send `instance.hrid=<hrid>` (for example mod-inn-reach) keep working and benefit from
+the fast path without any change, but `==` states the intent and is the recommended form.
+
+### When the fast path is NOT used
+
+The query is processed as before (generic CQL on the view, slow on large tenants) when it:
+
+- contains a wildcard or escape in the term: `instance.hrid==in0000*`, `instance.hrid==in??1`;
+- has more than one term: `instance.hrid==in1 and instance.discoverySuppress<>true`,
+  `instance.hrid==in1 or instance.hrid==in2`, `not instance.hrid==in1`;
+- uses another index: `instance.title==x`, `id==<uuid>`, `hrid==in1`;
+- uses another relation: `<>`, `adj`, `all`, `any`, `<`, `>`, `<=`, `>=`;
+- uses relation modifiers, for example `instance.hrid=/respectCase in1`;
+- has an empty term (`instance.hrid==""`) or `cql.allRecords=1`;
+- contains `sortby`, for example `instance.hrid==in1 sortby id`;
+- is not valid CQL (the request fails with HTTP 400 as before).
+
+Queries on other instance fields still scan the whole view. To look up many instances, query
+`id==(<id1> or <id2> ...)`, or use `/inventory-view/instance-set`, whose filters run against
+the indexed `instance` table.
 
 # Domain event pattern
 
