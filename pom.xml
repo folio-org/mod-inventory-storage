@@ -30,7 +30,7 @@
     <aspectj.version>1.9.25.1</aspectj.version>
     <folio-kafka-wrapper.version>4.1.0-SNAPSHOT</folio-kafka-wrapper.version>
     <folio-liquibase-util.version>1.12.0-SNAPSHOT</folio-liquibase-util.version>
-    <caffeine.version>3.3.0</caffeine.version>
+    <caffeine.version>3.3.1</caffeine.version>
     <lombok.version>1.18.48</lombok.version>
     <commons-lang3.version>3.21.0</commons-lang3.version>
     <log4j.version>2.26.1</log4j.version>
@@ -43,9 +43,9 @@
     <testcontainers.version>2.0.5</testcontainers.version>
     <hamcrest.version>3.0</hamcrest.version>
     <mockito.version>5.24.0</mockito.version>
-    <byte-buddy.version>1.18.14</byte-buddy.version>
+    <byte-buddy.version>1.18.15</byte-buddy.version>
     <wiremock.version>3.13.2</wiremock.version>
-    <rest-assured.version>6.0.1</rest-assured.version>
+    <rest-assured.version>6.1.0</rest-assured.version>
     <awaitility.version>4.3.0</awaitility.version>
     <assertj.version>3.27.7</assertj.version>
     <archunit.version>1.5.1</archunit.version>
@@ -64,7 +64,7 @@
     <folio-java-checkstyle.version>1.2.0</folio-java-checkstyle.version>
     <checkstyle.version>14.3.0</checkstyle.version>
     <maven-failsafe-plugin.version>3.6.0</maven-failsafe-plugin.version>
-    <versions-maven-plugin.version>2.22.0</versions-maven-plugin.version>
+    <versions-maven-plugin.version>2.23.0</versions-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
     <jacoco.line.ratchet>0.90</jacoco.line.ratchet>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
