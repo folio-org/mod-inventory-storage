@@ -49,6 +49,7 @@ import org.junit.runners.Suite;
   HridSettingsStorageTest.class,
   InstanceDiscoverySuppressMigrationScriptTest.class,
   InstanceDomainEventTest.class,
+  InstanceHridViewMigrationTest.class,
   InstanceRelationshipsTest.class,
   InstanceSetTest.class,
   InstanceSummaryStorageTest.class,

@@ -1372,6 +1372,11 @@
       "run": "after",
       "snippetPath": "fixStatisticalCodeAndItemOrderTrackerOwnership.sql",
       "fromModuleVersion": "30.0.8"
+    },
+    {
+      "run": "after",
+      "snippetPath": "inventory-hierarchy/addInstanceHridToInstanceHoldingsItemView.sql",
+      "fromModuleVersion": "30.0.9"
     }
   ]
 }

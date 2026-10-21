@@ -16,11 +16,30 @@ import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.support.IndividualResource;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
   private static final String EFFECTIVE_SHELVING_ORDER = "effectiveShelvingOrder";
+  private static final String ADD_INSTANCE_HRID_TO_VIEW_SCRIPT =
+    loadScript("inventory-hierarchy/addInstanceHridToInstanceHoldingsItemView.sql");
   private final AtomicInteger nextPatch = new AtomicInteger(1);
+
+  /**
+   * The tenant upgrade used by these tests re-runs instance-hr-item-view.sql, which recreates
+   * instance_holdings_item_view without the instance_hrid column. CREATE OR REPLACE VIEW cannot drop
+   * a column, so the view is dropped first and the instance_hrid column is restored in {@link #after()}.
+   */
+  @Before
+  public void before() {
+    executeSql("DROP VIEW IF EXISTS " + getSchemaName() + ".instance_holdings_item_view");
+  }
+
+  @After
+  public void after() {
+    executeMultipleSqlStatements(ADD_INSTANCE_HRID_TO_VIEW_SCRIPT);
+  }
 
   @Test
   public void shouldPopulateShelvingOrder() throws Exception {

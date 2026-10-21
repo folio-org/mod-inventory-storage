@@ -158,6 +158,11 @@ public class InstanceService {
     return instanceRepository.getInventoryViewInstancesWithBoundedItems(offset, limit, query);
   }
 
+  public Future<Response> getInventoryViewInstancesByHrid(String hrid, boolean withBoundedItems,
+                                                          int offset, int limit) {
+    return instanceRepository.getInventoryViewInstancesByHrid(hrid, withBoundedItems, offset, limit);
+  }
+
   public Future<Response> createInstance(Instance entity) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
     sanitizer.sanitize(entity);
