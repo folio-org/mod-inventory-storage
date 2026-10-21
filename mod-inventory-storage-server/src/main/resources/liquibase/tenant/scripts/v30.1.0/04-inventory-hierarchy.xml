@@ -51,6 +51,11 @@
     <sqlFile path="sql/inventory-hierarchy/create_instance_holdings_item_view.sql" relativeToChangelogFile="true" splitStatements="false"/>
   </changeSet>
 
+  <changeSet id="MODINVSTOR-1615@@schema-alter-view-instance-holdings-item-add-instance-hrid" author="folio">
+    <comment>Add instance_hrid column (same expression as instance_hrid_idx_unique) to instance_holdings_item view so that lookup by HRID can use the index</comment>
+    <sqlFile path="sql/inventory-hierarchy/add_instance_hrid_to_instance_holdings_item_view.sql" relativeToChangelogFile="true" splitStatements="false"/>
+  </changeSet>
+
   <changeSet id="MODINVSTOR-1051@@schema-create-view-instance-set" author="folio">
     <comment>Create instance_set view</comment>
     <sqlFile path="sql/inventory-hierarchy/create_instance_set_view.sql" relativeToChangelogFile="true" splitStatements="false"/>
