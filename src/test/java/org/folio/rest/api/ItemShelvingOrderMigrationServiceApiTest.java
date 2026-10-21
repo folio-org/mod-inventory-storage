@@ -16,11 +16,33 @@ import java.util.stream.IntStream;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.support.IndividualResource;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ItemShelvingOrderMigrationServiceApiTest extends MigrationTestBase {
   private static final String EFFECTIVE_SHELVING_ORDER = "effectiveShelvingOrder";
   private final AtomicInteger nextPatch = new AtomicInteger(1);
+
+  /**
+   * The tenant upgrade is simulated from module version 20.1.1, which predates the
+   * instance_holdings_item_view. Drop the view so that the upgrade creates it the way it does for a real tenant
+   * of that version, rather than redefining the current view (which has more columns) with the old definition.
+   */
+  @Before
+  public void dropInstanceHoldingsItemView() {
+    executeSql("DROP VIEW IF EXISTS " + getSchemaName() + ".instance_holdings_item_view");
+  }
+
+  /**
+   * The simulated upgrade only reaches 20.2.x, so the view has the old definition afterwards.
+   * Restore the current one for the other tests.
+   */
+  @After
+  public void restoreInstanceHoldingsItemView() {
+    executeMultipleSqlStatements(
+      loadScript("instance-hr-item/addInstanceHridToInstanceHoldingsItemView.sql"));
+  }
 
   @Test
   public void shouldPopulateShelvingOrder() throws Exception {
