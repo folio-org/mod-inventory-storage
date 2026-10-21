@@ -1,4 +1,4 @@
-## v30.0.8 In progress
+## v30.0.8 2026-10-12
 ### Bug fixes
 * Restore ownership on statistical-code and item_order_tracker tables so tenant permissions are not silently skipped on upgrade ([MODINVSTOR-1612](https://folio-org.atlassian.net/browse/MODINVSTOR-1612))
 
