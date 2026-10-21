@@ -13,6 +13,7 @@ import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.jaxrs.resource.InventoryViewInstances;
 import org.folio.rest.support.EndpointHandler;
 import org.folio.services.instance.InstanceService;
+import org.folio.services.instance.InventoryViewHridQuery;
 
 public class InventoryViewApi implements InventoryViewInstances {
   @Validate
@@ -23,7 +24,12 @@ public class InventoryViewApi implements InventoryViewInstances {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var instanceService = new InstanceService(vertxContext, okapiHeaders);
-    if (withBoundedItems) {
+    var hrid = InventoryViewHridQuery.extractHrid(query);
+    if (hrid.isPresent()) {
+      instanceService
+        .getInventoryViewInstancesByHrid(hrid.get(), withBoundedItems, offset, limit)
+        .onComplete(EndpointHandler.handle(asyncResultHandler));
+    } else if (withBoundedItems) {
       instanceService
         .getInventoryViewInstancesWithBoundedItems(offset, limit, query)
         .onComplete(EndpointHandler.handle(asyncResultHandler));

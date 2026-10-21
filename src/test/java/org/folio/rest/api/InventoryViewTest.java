@@ -1,20 +1,26 @@
 package org.folio.rest.api;
 
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.api.ItemStorageTest.nodWithNoBarcode;
+import static org.folio.utility.ModuleUtility.getVertx;
+import static org.folio.utility.RestUtility.TENANT_ID;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertTrue;
 
 import io.vertx.core.json.JsonObject;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.InventoryViewInstance;
 import org.folio.rest.jaxrs.model.Item;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.support.IndividualResource;
 import org.folio.util.StringUtil;
 import org.hamcrest.Matcher;
@@ -241,6 +247,128 @@ public class InventoryViewTest extends TestBaseWithInventoryUtil {
       assertTrue(returnedInstance.getInstanceId().equals(instanceOne.getId().toString())
                  || returnedInstance.getInstanceId().equals(instanceTwo.getId().toString()));
     }
+  }
+
+  private IndividualResource createInstanceWithHrid(String hrid) {
+    return instancesClient.create(instance(randomUUID()).put("hrid", hrid));
+  }
+
+  @Test
+  public void shouldExposeLowerCasedUnaccentedHridInViewColumn() throws Exception {
+    var suffix = randomUUID().toString().substring(0, 8);
+    var instanceId = createInstanceWithHrid("ÉCL-" + suffix).getId();
+
+    var future = new CompletableFuture<String>();
+    PostgresClient.getInstance(getVertx()).select(
+      "SELECT instance_hrid FROM " + TENANT_ID + "_mod_inventory_storage.instance_holdings_item_view"
+        + " WHERE id = '" + instanceId + "'",
+      ar -> {
+        if (ar.failed()) {
+          future.completeExceptionally(ar.cause());
+        } else {
+          future.complete(ar.result().iterator().next().getString("instance_hrid"));
+        }
+      });
+
+    assertThat(future.get(10, SECONDS), is("ecl-" + suffix));
+  }
+
+  @Test
+  public void shouldReturnInstanceWithRecordsWhenQueriedByHrid() {
+    var hridOne = uniqueHrid("in1");
+    var hridTwo = uniqueHrid("in2");
+    var one = createInstanceWithHrid(hridOne);
+    var two = createInstanceWithHrid(hridTwo);
+    var holdings = List.of(
+      createHolding(two.getId(), MAIN_LIBRARY_LOCATION_ID, null),
+      createHolding(two.getId(), SECOND_FLOOR_LOCATION_ID, null));
+    var items = List.of(
+      createItem(nodWithNoBarcode(holdings.get(0))).getString("id"),
+      createItem(nodWithNoBarcode(holdings.get(1))).getString("id"));
+
+    for (var query : List.of("instance.hrid==" + hridTwo, "instance.hrid=" + hridTwo,
+      "instanceHrid==" + hridTwo, "(instance.hrid=" + hridTwo + ")",
+      "instance.hrid==" + hridTwo.toUpperCase())) {
+      for (var withBoundedItems : List.of(false, true)) {
+        var result = inventoryViewClient.getByQuery(hridQueryString(query, withBoundedItems, ""))
+          .stream().map(json -> json.mapTo(InventoryViewInstance.class)).toList();
+
+        assertThat(query, result.size(), is(1));
+        assertThat(query, result.getFirst().getInstanceId(), is(two.getId().toString()));
+        assertThat(query, result.getFirst().getInstanceId(), not(is(one.getId().toString())));
+        assertThat(query, getHoldingIds(result.getFirst()), matchesInAnyOrder(holdings));
+        assertThat(query, getItemIds(result.getFirst()), matchesInAnyOrder(items));
+      }
+    }
+  }
+
+  @Test
+  public void shouldReturnNothingWhenNoInstanceHasHrid() {
+    createInstanceWithHrid(uniqueHrid("in1"));
+
+    assertThat(inventoryViewClient.getByQuery(hridQueryString("instance.hrid==nope-999", false, "")).size(),
+      is(0));
+    assertThat(inventoryViewClient.getByQuery(hridQueryString("instance.hrid==nope-999", true, "")).size(),
+      is(0));
+  }
+
+  @Test
+  public void shouldIgnoreCaseAndAccentsWhenQueriedByHrid() {
+    var suffix = randomUUID().toString().substring(0, 8);
+    var id = createInstanceWithHrid("Éclair-" + suffix).getId();
+
+    var result = inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==eclair-" + suffix, false, ""));
+
+    assertThat(result.size(), is(1));
+    assertThat(result.getFirst().getString("instanceId"), is(id.toString()));
+  }
+
+  @Test
+  public void shouldNotMatchPartialHridWhenQueriedWithWordMatchOperator() {
+    var suffix = randomUUID().toString().substring(0, 8);
+    createInstanceWithHrid("ab" + suffix + " cd");
+
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid=ab" + suffix, false, "")).size(), is(0));
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==\"ab" + suffix + " cd\"", false, "")).size(), is(1));
+  }
+
+  @Test
+  public void shouldHonourOffsetAndLimitWhenQueriedByHrid() {
+    var hrid = uniqueHrid("in1");
+    createInstanceWithHrid(hrid);
+
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==" + hrid, false, "&offset=1")).size(), is(0));
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==" + hrid, false, "&limit=0")).size(), is(0));
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==" + hrid, false, "&limit=1")).size(), is(1));
+  }
+
+  @Test
+  public void shouldKeepGenericBehaviourWhenQueryIsNotSingleHridTerm() {
+    var prefix = "gen" + randomUUID().toString().substring(0, 8);
+    createInstanceWithHrid(prefix + "10");
+    createInstanceWithHrid(prefix + "11");
+    var other = uniqueHrid("gen-other");
+    createInstanceWithHrid(other);
+
+    assertThat(inventoryViewClient.getByQuery(
+      hridQueryString("instance.hrid==" + prefix + "1*", false, "")).size(), is(2));
+    assertThat(inventoryViewClient.getByQuery(hridQueryString(
+      "instance.hrid==" + prefix + "10 or instance.hrid==" + other, false, "")).size(), is(2));
+  }
+
+  private static String uniqueHrid(String prefix) {
+    return prefix + "-" + randomUUID().toString().substring(0, 8);
+  }
+
+  private static String hridQueryString(String cql, boolean withBoundedItems, String extraParams) {
+    return "?query=" + StringUtil.urlEncode(cql) + (withBoundedItems ? "&withBoundedItems=true" : "")
+      + extraParams;
   }
 
   private List<UUID> getHoldingIds(InventoryViewInstance instance) {
