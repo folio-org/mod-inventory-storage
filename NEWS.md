@@ -1,3 +1,7 @@
+## v29.0.24 2026-10-21
+### Bug fixes
+* Improve performance of `GET /inventory-view/instances` lookup by instance HRID by serving a single `instance.hrid` or `instanceHrid` term from the new indexed `instance_hrid` column of `instance_holdings_item_view` ([MODINVSTOR-1616](https://folio-org.atlassian.net/browse/MODINVSTOR-1616))
+
 ## v29.0.23 2026-07-24
 ### New APIs versions
 * Provides `settings v1.0`
