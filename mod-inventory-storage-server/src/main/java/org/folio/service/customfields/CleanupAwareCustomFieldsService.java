@@ -28,23 +28,23 @@ import org.folio.service.CustomFieldsService;
 import org.folio.service.CustomFieldsServiceImpl;
 import org.folio.service.RecordService;
 import org.folio.service.exc.InvalidFieldValueException;
+import org.folio.services.customfields.CustomFieldsValueCleanup;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
- * Guards the custom field definitions against the refId reuse of folio-custom-fields while queued
- * value cleanups are pending: a new field with the name of a deleted one gets the deleted field's
- * refId, so it would silently adopt the values that
- * {@link org.folio.services.customfields.CustomFieldsValueCleanup} has not removed yet. Creating such
- * a field is refused until the cleanup is done, with 400 because the shared interface declares it on
- * every write endpoint. Removing an option is refused while items hold it, before the library writes
- * anything, so a removed option leaves no values to clean up; 422 with the library's error JSON, as
- * its own definition checks answer. The package is dictated by the library's component scan
- * ({@code org.folio.service}).
+ * Keeps the custom field definitions apart from the values that {@link CustomFieldsValueCleanup}
+ * has not removed yet, which the refId reuse of folio-custom-fields would otherwise let a new field
+ * adopt: a new field with the name of a deleted one gets the deleted field's refId, so its creation
+ * is refused until the values are gone (400, the status the shared interface declares on every
+ * write endpoint). Refuses to remove an option while items hold it, before the library writes
+ * anything, so a removed option leaves no values to clean up (422 with the library's error JSON, as
+ * its own definition checks answer). Starts the cleanup after each committed field delete. The
+ * package is dictated by the library's component scan ({@code org.folio.service}).
  */
 @Component
 @Primary
-public class CleanupGuardCustomFieldsService implements CustomFieldsService {
+public class CleanupAwareCustomFieldsService implements CustomFieldsService {
 
   private static final String NAME_PENDING =
     "Custom field '%s' cannot be created while the values of a deleted custom field with the same name"
@@ -58,7 +58,7 @@ public class CleanupGuardCustomFieldsService implements CustomFieldsService {
   private final RecordService recordService;
   private final Vertx vertx;
 
-  public CleanupGuardCustomFieldsService(CustomFieldsServiceImpl delegate, RecordService recordService,
+  public CleanupAwareCustomFieldsService(CustomFieldsServiceImpl delegate, RecordService recordService,
                                          Vertx vertx) {
     this.delegate = delegate;
     this.recordService = recordService;
@@ -92,7 +92,8 @@ public class CleanupGuardCustomFieldsService implements CustomFieldsService {
 
   @Override
   public Future<Void> delete(String id, String tenantId) {
-    return delegate.delete(id, tenantId);
+    return delegate.delete(id, tenantId)
+      .onSuccess(v -> CustomFieldsValueCleanup.kick(vertx, tenantId));
   }
 
   @Override
@@ -102,7 +103,8 @@ public class CleanupGuardCustomFieldsService implements CustomFieldsService {
     return delegate.findByQuery("entityType==\"" + entityType + "\"", 0, Integer.MAX_VALUE, null, tenantId)
       .compose(existing -> pendingRefIds(tenantId)
         .compose(pending -> refuseReplaceAllHazards(existing.getCustomFields(), newFields, pending, tenantId)))
-      .compose(v -> delegate.replaceAll(newFields, entityType, params));
+      .compose(v -> delegate.replaceAll(newFields, entityType, params))
+      .onSuccess(v -> CustomFieldsValueCleanup.kick(vertx, tenantId));
   }
 
   @Override

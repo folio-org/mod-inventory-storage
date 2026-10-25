@@ -290,6 +290,22 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_2"));
   }
 
+  @Test
+  @DisplayName("should queue no value removal when a collection replacement fails after deleting a field")
+  void shouldQueueNothing_whenCollectionReplacementFails() {
+    createCustomField(textboxField);
+    createCustomField(singleSelectField);
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+
+    var typeChanged = singleSelectField.copy().put("type", "RADIO_BUTTON");
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(typeChanged)));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
+    assertThat(cleanupQueueSize()).isZero();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+  }
+
   private static void awaitCleanupDone() {
     Awaitility.await()
       .atMost(Duration.ofSeconds(15))

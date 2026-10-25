@@ -5,7 +5,7 @@ import java.util.Map;
 import org.folio.service.RecordService;
 import org.folio.service.RecordServiceImpl;
 import org.folio.service.spi.RecordServiceFactory;
-import org.folio.services.customfields.CleanupQueueRecordService;
+import org.folio.services.customfields.DeferredCleanupRecordService;
 
 public class RecordServiceFactoryImpl implements RecordServiceFactory {
 
@@ -16,7 +16,6 @@ public class RecordServiceFactoryImpl implements RecordServiceFactory {
 
   @Override
   public RecordService create(Vertx vertx) {
-    return new CleanupQueueRecordService(vertx,
-      RecordServiceImpl.createForSingleTable(vertx, ENTITY_TYPE_TABLES));
+    return new DeferredCleanupRecordService(RecordServiceImpl.createForSingleTable(vertx, ENTITY_TYPE_TABLES));
   }
 }

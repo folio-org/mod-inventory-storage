@@ -17,11 +17,9 @@ import org.folio.utils.Environment;
 /**
  * Removes the values of the deleted custom fields queued in {@code custom_fields_cleanup}, one batch
  * per transaction, so a cleanup of any size never locks items longer than one batch takes. A row is
- * processed only once no definition holds its refId any more: an enqueue can become visible before
- * the definition change commits (the single-field {@code DELETE} runs it on a separate connection),
- * and on a rollback the row must never remove values of a live definition. Skipped rows are retried
- * after a delay. The updates are idempotent, so two module instances processing the same row do no
- * harm.
+ * processed only once no definition holds its refId: the name guards cannot exclude every field
+ * recreated under the same refId, and its values must not be removed. Skipped rows are retried after
+ * a delay. The updates are idempotent, so two module instances processing the same row do no harm.
  */
 public final class CustomFieldsValueCleanup {
 
