@@ -919,6 +919,11 @@
       "run": "after",
       "snippetPath": "create_custom_fields_indexes.sql",
       "fromModuleVersion": "31.0.0"
+    },
+    {
+      "run": "after",
+      "snippetPath": "create_custom_fields_cleanup.sql",
+      "fromModuleVersion": "31.0.0"
     }
   ]
 }

@@ -1,6 +1,8 @@
 package org.folio.it.api.item;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.HttpStatus.SC_BAD_REQUEST;
+import static org.folio.HttpStatus.SC_CONFLICT;
 import static org.folio.HttpStatus.SC_CREATED;
 import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
@@ -9,18 +11,24 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.awaitility.Awaitility;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.services.customfields.CustomFieldsValueCleanup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Custom field definitions ({@code /custom-fields}, provided by folio-custom-fields) and the
- * {@code customFields} values stored on items: a definition change cascades to every item that
- * references the field.
+ * {@code customFields} values stored on items: deleting a field returns once the definition is
+ * gone, the values are removed in the background, and creating a field that would reuse a refId
+ * whose values still exist is refused; removing an option is refused while items hold it.
  */
 class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
@@ -38,7 +46,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   @BeforeEach
   void setUp() {
-    runQuery("TRUNCATE TABLE custom_fields");
+    runQuery("TRUNCATE TABLE custom_fields, custom_fields_cleanup");
     holdingId = createHoldingRecord();
     textboxField = customField(TEXTBOX, "TEXTBOX_SHORT", null);
     singleSelectField = customField(SINGLE_SELECT, "SINGLE_SELECT_DROPDOWN", selectField(3, false));
@@ -46,7 +54,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
-  @DisplayName("should index the custom fields of items for the statistics and cascade queries, not per field")
+  @DisplayName("should index the custom fields of items for the statistics and cleanup queries, not per field")
   void shouldIndexCustomFieldsOfItems() {
     createCustomField(textboxField);
 
@@ -87,75 +95,215 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
-  @DisplayName("should remove the value from the item when the custom field is deleted")
-  void shouldRemoveValueFromItem_whenCustomFieldIsDeleted() {
+  @DisplayName("should delete a custom field immediately and remove its item values in the background")
+  void shouldDeleteCustomField_andRemoveValuesInBackground() {
     createCustomField(textboxField);
-    var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
-    assertThat(customFieldsOf(item).containsKey(TEXTBOX)).isTrue();
-    assertThat(fieldStatisticCount(textboxField)).isEqualTo(1);
+    createCustomField(singleSelectField);
+    final var item = createItem(itemWithCustomFields(
+      new JsonObject().put(TEXTBOX, "text1").put(SINGLE_SELECT, "opt_0")));
 
     var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(customFieldsCount()).isZero();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).containsKey(TEXTBOX)).isFalse();
+    assertThat(customFieldNames()).containsExactly(SINGLE_SELECT);
+    awaitCleanupDone();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
+      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
   }
 
   @Test
-  @DisplayName("should drop removed options from the item when the custom field is updated")
-  void shouldDropRemovedOptionsFromItem_whenCustomFieldIsUpdated() {
-    createCustomField(multiSelectField);
-    var values = new JsonObject().put(MULTI_SELECT, new JsonArray().add("opt_1").add("opt_2"));
-    var item = createItem(itemWithCustomFields(values));
-    assertThat(multiSelectValues(item)).containsExactly("opt_1", "opt_2");
+  @DisplayName("should refuse saving an item retrieved before the cleanup removed a deleted field's value")
+  void shouldRefuseStaleItemSave_afterCleanupRemovedValue() {
+    createCustomField(textboxField);
+    final var staleItem = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
 
-    multiSelectField.put("selectField", selectField(2, true));
-    var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(multiSelectField), multiSelectField));
+    assertThat(await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField))).status())
+      .isEqualTo(SC_NO_CONTENT);
+    awaitCleanupDone();
+    var response = updateItem(staleItem);
 
-    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(multiSelectValues(getItemJsonById(item.getString("id")))).containsExactly("opt_1");
+    assertThat(response.status()).isEqualTo(SC_CONFLICT);
+    var item = getItemJsonById(staleItem.getString("id"));
+    assertThat(item.getInteger("_version")).isEqualTo(staleItem.getInteger("_version") + 1);
+    assertThat(customFieldsOf(item)).isEqualTo(new JsonObject());
   }
 
   @Test
-  @DisplayName("should remove values of omitted fields when the custom field collection is replaced")
-  void shouldRemoveValuesOfOmittedFields_whenCustomFieldCollectionIsReplaced() {
+  @DisplayName("should refuse removing an option that items hold on the field and the collection endpoint")
+  void shouldRefuseOptionRemoval_whenItemsHoldOption() {
     createCustomField(textboxField);
     createCustomField(singleSelectField);
     createCustomField(multiSelectField);
-    var first = createItem(itemWithCustomFields(allValues()));
-    var second = createItem(itemWithCustomFields(allValues()));
-    assertThat(customFieldsOf(first).fieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT, MULTI_SELECT);
-    assertThat(customFieldsOf(second).fieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT, MULTI_SELECT);
+    final var item = createItem(itemWithCustomFields(allValues()));
 
-    var replacement = customField("newMultiselect", "MULTI_SELECT_DROPDOWN", selectField(4, true));
-    var collection = new JsonObject()
-      .put(CUSTOM_FIELDS, new JsonArray().add(replacement).add(textboxField).add(singleSelectField))
-      .put("entityType", ENTITY_TYPE_ITEM);
-    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection));
+    var singleReduced = singleSelectField.copy().put("selectField", new JsonObject()
+      .put("multiSelect", false)
+      .put("options", new JsonObject().put("values", new JsonArray()
+        .add(option("opt_1", "opt1"))
+        .add(option("opt_2", "opt2")))));
+    var multiReduced = multiSelectField.copy().put("selectField", selectField(2, true));
+    var fieldResponse = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleReduced));
+    var collectionResponse = await(doPut(client, CUSTOM_FIELDS_PATH, collection(singleSelectField, multiReduced)));
 
-    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(customFieldsOf(getItemJsonById(first.getString("id"))).fieldNames())
-      .containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
-    assertThat(customFieldsOf(getItemJsonById(second.getString("id"))).fieldNames())
-      .containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
+    assertThat(fieldResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(fieldResponse.body().toString())
+      .contains("Option 'opt0' of custom field 'singleselect' is used by 1 item(s) and cannot be removed");
+    assertThat(collectionResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(collectionResponse.body().toString())
+      .contains("Option 'opt2' of custom field 'multiselect' is used by 1 item(s) and cannot be removed");
+    assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT, MULTI_SELECT);
+    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1", "opt_2");
+    assertThat(optionIdsOf(getCustomField(multiSelectField))).containsExactly("opt_0", "opt_1", "opt_2", "opt_3");
+    assertThat(cleanupQueueSize()).isZero();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(allValues());
   }
 
   @Test
-  @DisplayName("should replace the custom field collection when it omits a field and removes an option, both unused")
-  void shouldReplaceCollection_whenOmittedFieldAndRemovedOptionAreUnused() {
+  @DisplayName("should remove an option that no item holds")
+  void shouldRemoveOption_whenNoItemHoldsIt() {
+    createCustomField(singleSelectField);
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, "opt_0")));
+
+    singleSelectField.put("selectField", selectField(2, false));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleSelectField));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1");
+    assertThat(cleanupQueueSize()).isZero();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
+      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
+  }
+
+  @Test
+  @DisplayName("should delete a field in the background and remove an unused option in one collection replacement")
+  void shouldReplaceCollection_deletingFieldAndRemovingUnusedOption() {
     createCustomField(textboxField);
     createCustomField(singleSelectField);
     createCustomField(multiSelectField);
-    var values = new JsonObject().put(TEXTBOX, "text1").put(SINGLE_SELECT, "opt_0");
-    final var item = createItem(itemWithCustomFields(values));
+    final var item = createItem(itemWithCustomFields(allValues()));
 
-    singleSelectField.put("selectField", selectField(1, false));
-    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(textboxField, singleSelectField)));
+    var reduced = singleSelectField.copy().put("selectField", selectField(2, false));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(reduced, multiSelectField)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
-    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0");
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(values);
+    assertThat(customFieldNames()).containsExactlyInAnyOrder(SINGLE_SELECT, MULTI_SELECT);
+    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1");
+    awaitCleanupDone();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject()
+      .put(SINGLE_SELECT, "opt_0")
+      .put(MULTI_SELECT, new JsonArray().add("opt_1").add("opt_2")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"0", "-1", "x"})
+  @DisplayName("should fall back to the default batch size when the configured one is not a positive number")
+  void shouldUseDefaultBatchSize_whenConfiguredOneIsInvalid(String batchSize) {
+    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, batchSize);
+    try {
+      createCustomField(textboxField);
+      final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+
+      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
+
+      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+      awaitCleanupDone();
+      assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+    } finally {
+      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
+    }
+  }
+
+  @Test
+  @DisplayName("should remove the values of a deleted custom field in batches")
+  void shouldRemoveValuesInBatches() {
+    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, "2");
+    try {
+      createCustomField(textboxField);
+      var items = new ArrayList<String>();
+      for (int i = 0; i < 5; i++) {
+        items.add(createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text" + i))).getString("id"));
+      }
+
+      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
+
+      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+      awaitCleanupDone();
+      for (String itemId : items) {
+        assertThat(customFieldsOf(getItemJsonById(itemId))).isEqualTo(new JsonObject());
+      }
+    } finally {
+      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
+    }
+  }
+
+  @Test
+  @DisplayName("should refuse to create a custom field while the values of a deleted field with the same name remain")
+  void shouldRefuseToCreateField_whileCleanupIsPending() {
+    insertFieldCleanupRow("textbox");
+    insertFieldCleanupRow("singleselect_2");
+
+    var sameName = await(doPost(client, CUSTOM_FIELDS_PATH, textboxField));
+    var suffixedRefId = await(doPost(client, CUSTOM_FIELDS_PATH, singleSelectField));
+
+    assertThat(sameName.status()).isEqualTo(SC_BAD_REQUEST);
+    assertThat(sameName.body().toString()).isEqualTo("Custom field 'textbox' cannot be created while the values"
+      + " of a deleted custom field with the same name are still being removed");
+    assertThat(suffixedRefId.status()).isEqualTo(SC_BAD_REQUEST);
+    assertThat(customFieldNames()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("should refuse to delete and recreate a custom field in one collection replacement")
+  void shouldRefuseToRecreateField_inOneCollectionReplacement() {
+    createCustomField(textboxField);
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+
+    var recreated = customField(TEXTBOX, "TEXTBOX_SHORT", null);
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(recreated)));
+
+    assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
+    assertThat(response.body().toString())
+      .isEqualTo("Custom field 'textbox' cannot be deleted and recreated in one request");
+    assertThat(customFieldNames()).containsExactly(TEXTBOX);
+    assertThat(cleanupQueueSize()).isZero();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+  }
+
+  @Test
+  @DisplayName("should refuse removing the highest option that items hold while adding one, which would take its id")
+  void shouldRefuseRemovingHighestOptionInUse_whileAddingOne() {
+    createCustomField(singleSelectField);
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, "opt_2")));
+
+    var options = new JsonArray()
+      .add(option("opt_0", "opt0"))
+      .add(option("opt_1", "opt1"))
+      .add(new JsonObject().put("value", "new"));
+    singleSelectField.put("selectField", new JsonObject()
+      .put("multiSelect", false)
+      .put("options", new JsonObject().put("values", options)));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleSelectField));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1", "opt_2");
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
+      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_2"));
+  }
+
+  private static void awaitCleanupDone() {
+    Awaitility.await()
+      .atMost(Duration.ofSeconds(15))
+      .pollInterval(Duration.ofMillis(200))
+      .untilAsserted(() -> assertThat(cleanupQueueSize()).isZero());
+  }
+
+  private static long cleanupQueueSize() {
+    return runQuery("SELECT count(*) FROM custom_fields_cleanup").iterator().next().getLong(0);
+  }
+
+  private static void insertFieldCleanupRow(String refId) {
+    runQuery("INSERT INTO custom_fields_cleanup (id, entity_type, ref_id) VALUES ('"
+      + UUID.randomUUID() + "', 'item', '" + refId + "')");
   }
 
   private JsonObject itemWithCustomFields(JsonObject values) {
@@ -191,6 +339,16 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .put("options", new JsonObject().put("values", values));
   }
 
+  private static JsonObject option(String id, String value) {
+    return new JsonObject().put("id", id).put("value", value);
+  }
+
+  private static JsonObject collection(JsonObject... fields) {
+    return new JsonObject()
+      .put(CUSTOM_FIELDS, new JsonArray(List.of((Object[]) fields)))
+      .put("entityType", ENTITY_TYPE_ITEM);
+  }
+
   private static JsonObject createCustomField(JsonObject field) {
     var response = await(doPost(client, CUSTOM_FIELDS_PATH, field));
     assertThat(response.status()).isEqualTo(SC_CREATED);
@@ -212,10 +370,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return names;
   }
 
-  private static JsonObject collection(JsonObject... fields) {
-    return new JsonObject()
-      .put(CUSTOM_FIELDS, new JsonArray(List.of((Object[]) fields)))
-      .put("entityType", ENTITY_TYPE_ITEM);
+  private static String id(JsonObject field) {
+    return field.getString("id");
+  }
+
+  private static JsonObject customFieldsOf(JsonObject item) {
+    return item.getJsonObject(CUSTOM_FIELDS, new JsonObject());
   }
 
   private static List<String> customFieldNames() {
@@ -236,24 +396,6 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return field.getJsonObject("selectField").getJsonObject("options").getJsonArray("values").stream()
       .map(option -> ((JsonObject) option).getString("id"))
       .toList();
-  }
-
-  private static String id(JsonObject field) {
-    return field.getString("id");
-  }
-
-  private static JsonObject customFieldsOf(JsonObject item) {
-    return item.getJsonObject(CUSTOM_FIELDS, new JsonObject());
-  }
-
-  private static List<Object> multiSelectValues(JsonObject item) {
-    return customFieldsOf(item).getJsonArray(MULTI_SELECT).getList();
-  }
-
-  private static int customFieldsCount() {
-    var response = await(doGet(client, CUSTOM_FIELDS_PATH));
-    assertThat(response.status()).isEqualTo(SC_OK);
-    return response.jsonBody().getInteger("totalRecords");
   }
 
   private static int fieldStatisticCount(JsonObject field) {
