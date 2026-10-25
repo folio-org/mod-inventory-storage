@@ -3,6 +3,7 @@
 * Remove oaipmhview interface as deprecated ([MODINVSTOR-563](https://folio-org.atlassian.net/browse/MODINVSTOR-563))
 
 ### New APIs versions
+* Provides `_timer v1.0`
 * Provides `custom-fields v3.2`
 * Provides `settings v1.0`
 * Provides `instance-storage v11.5`

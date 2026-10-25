@@ -1295,6 +1295,20 @@
       ]
     },
     {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/inventory-storage/custom-fields/cleanup",
+          "unit": "minute",
+          "delay": "5",
+          "modulePermissions": []
+        }
+      ]
+    },
+    {
       "id": "_jsonSchemas",
       "version": "1.0",
       "interfaceType" : "multiple",

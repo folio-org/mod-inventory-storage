@@ -4,7 +4,10 @@ CREATE TABLE IF NOT EXISTS ${myuniversity}_${mymodule}.custom_fields_cleanup (
   id uuid PRIMARY KEY,
   entity_type text NOT NULL,
   ref_id text NOT NULL,
-  created_date timestamptz NOT NULL DEFAULT now()
+  created_date timestamptz NOT NULL DEFAULT now(),
+  attempts integer NOT NULL DEFAULT 0,
+  last_error text,
+  last_attempt_date timestamptz
 );
 
 -- The trigger queues a removal in the transaction of the definition delete, so a queue row exists

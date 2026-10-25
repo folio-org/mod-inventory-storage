@@ -1,0 +1,22 @@
+#%RAML 1.0
+title: Custom fields cleanup API
+version: v1.0
+protocols: [ HTTP, HTTPS ]
+baseUri: http://localhost
+
+documentation:
+  - title: Custom fields cleanup API
+    content: Removal of the values that deleted custom fields leave on records
+
+/inventory-storage/custom-fields/cleanup:
+  displayName: Custom fields cleanup
+  post:
+    description: Starts removing the tenant's queued custom field values and returns without waiting; called through the _timer interface
+    responses:
+      204:
+        description: Removal started, or already running
+      500:
+        description: Internal server error
+        body:
+          text/plain:
+            example: Internal server error

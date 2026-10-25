@@ -11,6 +11,9 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.pgclient.PgConnection;
+import io.vertx.sqlclient.Transaction;
+import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   private static final String CUSTOM_FIELDS = "customFields";
   private static final String CUSTOM_FIELDS_PATH = "/custom-fields";
+  private static final String CLEANUP_PATH = "/inventory-storage/custom-fields/cleanup";
   private static final String ENTITY_TYPE_ITEM = "item";
   private static final String TEXTBOX = "textbox";
   private static final String SINGLE_SELECT = "singleselect";
@@ -316,11 +320,175 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
   }
 
+  @Test
+  @DisplayName("should remove queued values when the timer calls the cleanup endpoint")
+  void shouldRemoveQueuedValues_whenTimerCallsCleanupEndpoint() {
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+    insertFieldCleanupRow(TEXTBOX);
+    assertThat(cleanupQueueSize()).isEqualTo(1);
+
+    var response = await(doPost(client, CLEANUP_PATH, null));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    awaitCleanupDone();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+  }
+
+  @Test
+  @DisplayName("should release the refId placeholder when discarding a queued removal of an unsupported entity type")
+  void shouldReleasePlaceholder_whenDiscardingRemovalOfUnsupportedEntityType() {
+    insertPlaceholder(TEXTBOX);
+    insertFieldCleanupRow("unsupported", TEXTBOX);
+
+    var response = await(doPost(client, CLEANUP_PATH, null));
+
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    awaitCleanupDone();
+    assertThat(placeholderCount()).isZero();
+    assertThat(createCustomField(textboxField).getString("refId")).isEqualTo(TEXTBOX);
+  }
+
+  @Test
+  @DisplayName("should keep a failing removal with its error for the next pass and process the rows after it")
+  void shouldKeepFailingRemoval_andProcessRowsAfterIt() {
+    refuseItemUpdatesRemoving("refused");
+    try {
+      final var refusedItem = createItem(itemWithCustomFields(new JsonObject().put("refused", "x")));
+      final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+      insertFieldCleanupRow("refused");
+      insertFieldCleanupRow(TEXTBOX);
+
+      var response = await(doPost(client, CLEANUP_PATH, null));
+
+      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+      awaitCleanupQueueSize(1);
+      var kept = runQuery("SELECT ref_id, attempts, last_error, last_attempt_date FROM custom_fields_cleanup")
+        .iterator().next();
+      assertThat(kept.getString("ref_id")).isEqualTo("refused");
+      assertThat(kept.getInteger("attempts")).isEqualTo(1);
+      assertThat(kept.getString("last_error")).contains("cleanup refused");
+      assertThat(kept.getValue("last_attempt_date")).isNotNull();
+      assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+      assertThat(customFieldsOf(getItemJsonById(refusedItem.getString("id"))).getString("refused")).isEqualTo("x");
+    } finally {
+      runQuery("DROP TRIGGER IF EXISTS fail_cleanup ON item");
+      runQuery("DROP FUNCTION IF EXISTS fail_cleanup()");
+    }
+  }
+
+  @Test
+  @DisplayName("should leave the queue to the instance holding the tenant's lock and process it once released")
+  void shouldLeaveQueue_toInstanceHoldingCleanupLock() {
+    final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+    insertFieldCleanupRow(TEXTBOX);
+    var otherInstance = openConnection();
+    try {
+      holdCleanupLock(otherInstance);
+
+      await(doPost(client, CLEANUP_PATH, null));
+
+      Awaitility.await()
+        .during(Duration.ofSeconds(2))
+        .atMost(Duration.ofSeconds(5))
+        .untilAsserted(() -> assertThat(cleanupQueueSize()).isEqualTo(1));
+      assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+    } finally {
+      releaseCleanupLock(otherInstance);
+      await(otherInstance.close());
+    }
+
+    await(doPost(client, CLEANUP_PATH, null));
+
+    awaitCleanupDone();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+  }
+
+  @Test
+  @DisplayName("should go on removing values when a concurrent write leaves a batch with no record to update")
+  void shouldContinueRemoval_whenConcurrentWriteEmptiesBatch() {
+    var batchSize = 2;
+    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, String.valueOf(batchSize));
+    try {
+      createCustomField(textboxField);
+      var items = new ArrayList<String>();
+      for (int i = 0; i < 5; i++) {
+        items.add(createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text" + i))).getString("id"));
+      }
+
+      deleteFieldWhileFirstBatchIsWrittenConcurrently(textboxField, TEXTBOX, batchSize);
+
+      awaitCleanupDone();
+      for (String itemId : items) {
+        assertThat(customFieldsOf(getItemJsonById(itemId))).isEqualTo(new JsonObject());
+      }
+      assertThat(placeholderCount()).isZero();
+    } finally {
+      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
+    }
+  }
+
+  /**
+   * Deletes the field while a transaction of its own removes the value from the records that the
+   * cleanup's first batch picks, and commits once that batch waits for it, so the batch updates none.
+   */
+  private static void deleteFieldWhileFirstBatchIsWrittenConcurrently(JsonObject field, String refId,
+                                                                      int batchSize) {
+    var writer = openConnection();
+    Transaction transaction = null;
+    try {
+      transaction = await(writer.begin());
+      await(writer.query("UPDATE item SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - '"
+        + refId + "') WHERE id IN (SELECT id FROM item WHERE jsonb->'customFields' ? '" + refId + "' LIMIT "
+        + batchSize + ")").execute());
+      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(field)));
+      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+      awaitWaitingLock();
+      await(transaction.commit());
+      transaction = null;
+    } finally {
+      if (transaction != null) {
+        await(transaction.rollback());
+      }
+      await(writer.close());
+    }
+  }
+
+  /** Takes the lock that a cleanup pass holds on the tenant, as a pass on another instance would. */
+  private static void holdCleanupLock(PgConnection connection) {
+    await(connection.preparedQuery("SELECT pg_advisory_lock(hashtext('custom_fields_cleanup'), hashtext($1))")
+      .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
+  }
+
+  private static void releaseCleanupLock(PgConnection connection) {
+    await(connection.preparedQuery("SELECT pg_advisory_unlock(hashtext('custom_fields_cleanup'), hashtext($1))")
+      .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
+  }
+
+  private static void awaitWaitingLock() {
+    Awaitility.await()
+      .atMost(Duration.ofSeconds(15))
+      .pollInterval(Duration.ofMillis(100))
+      .untilAsserted(() -> assertThat(runQuery("SELECT count(*) FROM pg_locks WHERE NOT granted")
+        .iterator().next().getLong(0)).isPositive());
+  }
+
+  /** Makes every update of an item holding a value of the custom field fail, standing in for any failing removal. */
+  private static void refuseItemUpdatesRemoving(String refId) {
+    runQuery("CREATE FUNCTION fail_cleanup() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'cleanup refused'; END $$"
+      + " LANGUAGE plpgsql");
+    runQuery("CREATE TRIGGER fail_cleanup BEFORE UPDATE ON item FOR EACH ROW"
+      + " WHEN (OLD.jsonb->'customFields' ? '" + refId + "') EXECUTE FUNCTION fail_cleanup()");
+  }
+
   private static void awaitCleanupDone() {
+    awaitCleanupQueueSize(0);
+  }
+
+  private static void awaitCleanupQueueSize(long size) {
     Awaitility.await()
       .atMost(Duration.ofSeconds(15))
       .pollInterval(Duration.ofMillis(200))
-      .untilAsserted(() -> assertThat(cleanupQueueSize()).isZero());
+      .untilAsserted(() -> assertThat(cleanupQueueSize()).isEqualTo(size));
   }
 
   private static long cleanupQueueSize() {
@@ -338,6 +506,15 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       + "', 'name', '" + refId + "', 'refId', '" + refId + "', 'type', 'TEXTBOX_SHORT', 'entityType', '"
       + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "', 'visible', false, 'order', 1))");
     return id;
+  }
+
+  private static void insertFieldCleanupRow(String refId) {
+    insertFieldCleanupRow(ENTITY_TYPE_ITEM, refId);
+  }
+
+  private static void insertFieldCleanupRow(String entityType, String refId) {
+    runQuery("INSERT INTO custom_fields_cleanup (id, entity_type, ref_id) VALUES ('"
+      + UUID.randomUUID() + "', '" + entityType + "', '" + refId + "')");
   }
 
   private JsonObject itemWithCustomFields(JsonObject values) {
