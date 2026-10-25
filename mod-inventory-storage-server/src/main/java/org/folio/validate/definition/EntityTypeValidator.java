@@ -26,8 +26,12 @@ public class EntityTypeValidator implements Validatable {
   public void validateDefinition(CustomField fieldDefinition) {
     var entityType = fieldDefinition.getEntityType();
     if (entityType == null || !ENTITY_TYPE_TABLES.containsKey(entityType)) {
-      throw new IllegalArgumentException(UNSUPPORTED_ENTITY_TYPE.formatted(entityType,
-        ENTITY_TYPE_TABLES.keySet().stream().sorted().collect(joining(", "))));
+      throw new IllegalArgumentException(unsupportedMessage(entityType));
     }
+  }
+
+  public static String unsupportedMessage(String entityType) {
+    return UNSUPPORTED_ENTITY_TYPE.formatted(entityType,
+      ENTITY_TYPE_TABLES.keySet().stream().sorted().collect(joining(", ")));
   }
 }

@@ -2,55 +2,51 @@ package org.folio.service.customfields;
 
 import static java.util.stream.Collectors.toMap;
 import static org.folio.service.CustomFieldUtils.extractOptionIds;
+import static org.folio.services.customfields.CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE;
+import static org.folio.services.record.RecordServiceFactoryImpl.ENTITY_TYPE_TABLES;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import java.nio.charset.StandardCharsets;
-import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
-import javax.ws.rs.BadRequestException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
 import org.folio.common.OkapiParams;
 import org.folio.rest.jaxrs.model.CustomField;
 import org.folio.rest.jaxrs.model.CustomFieldCollection;
 import org.folio.rest.jaxrs.model.CustomFieldOptionStatistic;
 import org.folio.rest.jaxrs.model.CustomFieldStatistic;
 import org.folio.rest.jaxrs.model.SelectFieldOption;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.service.CustomFieldsService;
 import org.folio.service.CustomFieldsServiceImpl;
 import org.folio.service.RecordService;
 import org.folio.service.exc.InvalidFieldValueException;
+import org.folio.service.exc.ServiceExceptions;
 import org.folio.services.customfields.CustomFieldsValueCleanup;
+import org.folio.validate.definition.EntityTypeValidator;
 import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.z3950.zing.cql.CQLNode;
+import org.z3950.zing.cql.CQLNotNode;
+import org.z3950.zing.cql.CQLParseException;
+import org.z3950.zing.cql.CQLParser;
+import org.z3950.zing.cql.CQLRelation;
+import org.z3950.zing.cql.CQLSortNode;
+import org.z3950.zing.cql.CQLTermNode;
+import org.z3950.zing.cql.ModifierSet;
 
 /**
- * Keeps the custom field definitions apart from the values that {@link CustomFieldsValueCleanup}
- * has not removed yet, which the refId reuse of folio-custom-fields would otherwise let a new field
- * adopt: a new field with the name of a deleted one gets the deleted field's refId, so its creation
- * is refused until the values are gone (400, the status the shared interface declares on every
- * write endpoint). Refuses to remove an option while items hold it, before the library writes
- * anything, so a removed option leaves no values to clean up (422 with the library's error JSON, as
- * its own definition checks answer). Starts the cleanup after each committed field delete. The
- * package is dictated by the library's component scan ({@code org.folio.service}).
+ * Hides the refId placeholders of deleted fields from the API, starts the value cleanup after field
+ * deletes, and refuses to remove an option that items hold. The refusal has to come before the library
+ * writes: a single-field update commits before the library calls the RecordService. The package is
+ * dictated by the library's component scan ({@code org.folio.service}).
  */
-@Component
+@Service
 @Primary
 public class CleanupAwareCustomFieldsService implements CustomFieldsService {
 
-  private static final String NAME_PENDING =
-    "Custom field '%s' cannot be created while the values of a deleted custom field with the same name"
-      + " are still being removed";
-  private static final String RECREATE_IN_REQUEST =
-    "Custom field '%s' cannot be deleted and recreated in one request";
   private static final String OPTION_IN_USE =
     "Option '%s' of custom field '%s' is used by %d item(s) and cannot be removed";
 
@@ -67,81 +63,77 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
 
   @Override
   public Future<CustomField> save(CustomField customField, OkapiParams params) {
-    return pendingRefIds(params.getTenant())
-      .compose(pending -> refusePendingName(customField.getName(), pending))
-      .compose(v -> delegate.save(customField, params));
+    return delegate.save(customField, params);
   }
 
   @Override
   public Future<Void> update(String id, CustomField customField, OkapiParams params) {
-    return delegate.findById(id, params.getTenant())
-      .compose(existing -> refuseRemovedOptionsInUse(existing, customField, params.getTenant()))
+    var tenantId = params.getTenant();
+    return findById(id, tenantId)
+      .compose(existing -> refuseRemovedOptionsInUse(existing, customField, tenantId))
       .compose(v -> delegate.update(id, customField, params));
   }
 
   @Override
   public Future<CustomField> findById(String id, String tenantId) {
-    return delegate.findById(id, tenantId);
+    return delegate.findById(id, tenantId)
+      .compose(field -> PLACEHOLDER_ENTITY_TYPE.equals(field.getEntityType())
+                        ? Future.failedFuture(ServiceExceptions.notFound(CustomField.class, id))
+                        : Future.succeededFuture(field));
   }
 
   @Override
   public Future<CustomFieldCollection> findByQuery(String query, int offset, int limit, String lang,
                                                    String tenantId) {
-    return delegate.findByQuery(query, offset, limit, lang, tenantId);
+    return delegate.findByQuery(withoutPlaceholders(query), offset, limit, lang, tenantId);
   }
 
   @Override
   public Future<Void> delete(String id, String tenantId) {
-    return delegate.delete(id, tenantId)
+    return findById(id, tenantId)
+      .compose(field -> delegate.delete(id, tenantId))
       .onSuccess(v -> CustomFieldsValueCleanup.kick(vertx, tenantId));
   }
 
+  /**
+   * The library validates the entity type of the listed fields only, so an empty list of the
+   * placeholder entity type would delete the placeholders and release their refIds early.
+   */
   @Override
   public Future<List<CustomField>> replaceAll(List<CustomField> newFields, String entityType,
                                               OkapiParams params) {
+    if (!ENTITY_TYPE_TABLES.containsKey(entityType)) {
+      return Future.failedFuture(new InvalidFieldValueException("entityType", entityType,
+        EntityTypeValidator.unsupportedMessage(entityType)));
+    }
     var tenantId = params.getTenant();
     return delegate.findByQuery("entityType==\"" + entityType + "\"", 0, Integer.MAX_VALUE, null, tenantId)
-      .compose(existing -> pendingRefIds(tenantId)
-        .compose(pending -> refuseReplaceAllHazards(existing.getCustomFields(), newFields, pending, tenantId)))
+      .compose(existing -> {
+        Map<String, CustomField> existingById = existing.getCustomFields().stream()
+          .collect(toMap(CustomField::getId, Function.identity()));
+        Future<Void> result = Future.succeededFuture();
+        for (var newField : newFields) {
+          var current = existingById.get(newField.getId());
+          if (current != null) {
+            result = result.compose(v -> refuseRemovedOptionsInUse(current, newField, tenantId));
+          }
+        }
+        return result;
+      })
       .compose(v -> delegate.replaceAll(newFields, entityType, params))
       .onSuccess(v -> CustomFieldsValueCleanup.kick(vertx, tenantId));
   }
 
   @Override
   public Future<CustomFieldStatistic> retrieveStatistic(String id, String tenantId) {
-    return delegate.retrieveStatistic(id, tenantId);
+    return findById(id, tenantId)
+      .compose(field -> delegate.retrieveStatistic(id, tenantId));
   }
 
   @Override
   public Future<CustomFieldOptionStatistic> retrieveOptionStatistic(String id, String optId, String tenantId) {
-    return delegate.retrieveOptionStatistic(id, optId, tenantId);
-  }
-
-  private Future<Void> refuseReplaceAllHazards(List<CustomField> existingFields, List<CustomField> newFields,
-                                               List<String> pending, String tenantId) {
-    Map<String, CustomField> existingById = existingFields.stream()
-      .collect(toMap(CustomField::getId, Function.identity()));
-    Set<String> newIds = new HashSet<>();
-    newFields.stream().map(CustomField::getId).filter(StringUtils::isNotBlank).forEach(newIds::add);
-    List<String> removedRefIds = existingFields.stream()
-      .filter(field -> !newIds.contains(field.getId()))
-      .map(CustomField::getRefId)
-      .toList();
-
-    Future<Void> result = Future.succeededFuture();
-    for (var newField : newFields) {
-      var existing = StringUtils.isBlank(newField.getId()) ? null : existingById.get(newField.getId());
-      if (existing == null) {
-        var base = unAccentName(newField.getName());
-        if (removedRefIds.stream().anyMatch(refId -> refIdBase(refId).equals(base))) {
-          return Future.failedFuture(new BadRequestException(RECREATE_IN_REQUEST.formatted(newField.getName())));
-        }
-        result = result.compose(v -> refusePendingName(newField.getName(), pending));
-      } else {
-        result = result.compose(v -> refuseRemovedOptionsInUse(existing, newField, tenantId));
-      }
-    }
-    return result;
+    return findById(id, tenantId)
+      .compose(field -> delegate.retrieveOptionStatistic(id, optId, tenantId));
   }
 
   /**
@@ -171,24 +163,6 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
       });
   }
 
-  private static Future<Void> refusePendingName(String name, List<String> pending) {
-    var base = unAccentName(name);
-    if (pending.stream().anyMatch(refId -> refIdBase(refId).equals(base))) {
-      return Future.failedFuture(new BadRequestException(NAME_PENDING.formatted(name)));
-    }
-    return Future.succeededFuture();
-  }
-
-  private Future<List<String>> pendingRefIds(String tenantId) {
-    return PostgresClient.getInstance(vertx, tenantId)
-      .select("SELECT ref_id FROM " + PostgresClient.convertToPsqlStandard(tenantId) + ".custom_fields_cleanup")
-      .map(rows -> {
-        var pending = new ArrayList<String>();
-        rows.forEach(row -> pending.add(row.getString("ref_id")));
-        return List.copyOf(pending);
-      });
-  }
-
   private static List<String> optionIds(CustomField field) {
     if (field.getSelectField() == null || field.getSelectField().getOptions() == null) {
       return List.of();
@@ -206,26 +180,20 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
       .orElse(optionId);
   }
 
-  /** The refId without the suffix the library appends for repeated names. */
-  private static String refIdBase(String refId) {
-    return refId.replaceFirst("_\\d+$", "");
-  }
-
-  /**
-   * Copy of the library's private {@code CustomFieldsServiceImpl.unAccentName}, which derives the
-   * refId from the field name; must stay identical so the guard predicts the refId a new field
-   * would get.
-   */
-  private static String unAccentName(String customFieldName) {
-    final String capitalizedString = WordUtils.capitalizeFully(customFieldName);
-    final String splitString = Normalizer.normalize(capitalizedString, Normalizer.Form.NFD)
-      .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
-      .replaceAll("[^a-zA-Z\\s]", "")
-      .replaceAll("\\s+", "");
-
-    final String result = StringUtils.uncapitalize(splitString);
-    return StringUtils.isBlank(result)
-      ? Base64.getEncoder().withoutPadding().encodeToString(customFieldName.getBytes(StandardCharsets.UTF_8))
-      : result;
+  /** A query the parser rejects goes on unchanged, for the library to refuse. */
+  private static String withoutPlaceholders(String query) {
+    CQLNode node;
+    try {
+      node = new CQLParser(CQLParser.V1POINT2).parse(StringUtils.isBlank(query) ? "cql.allRecords=1" : query);
+    } catch (CQLParseException | IOException e) {
+      return query;
+    }
+    var placeholders = new CQLTermNode("entityType", new CQLRelation("=="), PLACEHOLDER_ENTITY_TYPE);
+    if (node instanceof CQLSortNode sortNode) {
+      var filtered = new CQLSortNode(new CQLNotNode(sortNode.getSubtree(), placeholders, new ModifierSet("not")));
+      sortNode.getSortIndexes().forEach(filtered::addSortIndex);
+      return filtered.toCQL();
+    }
+    return new CQLNotNode(node, placeholders, new ModifierSet("not")).toCQL();
   }
 }

@@ -1,9 +1,9 @@
 package org.folio.it.api.item;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.HttpStatus.SC_BAD_REQUEST;
 import static org.folio.HttpStatus.SC_CONFLICT;
 import static org.folio.HttpStatus.SC_CREATED;
+import static org.folio.HttpStatus.SC_NOT_FOUND;
 import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
@@ -27,8 +27,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Custom field definitions ({@code /custom-fields}, provided by folio-custom-fields) and the
  * {@code customFields} values stored on items: deleting a field returns once the definition is
- * gone, the values are removed in the background, and creating a field that would reuse a refId
- * whose values still exist is refused; removing an option is refused while items hold it.
+ * gone, the values are removed in the background, and a new field does not take the refId of values
+ * that still exist; removing an option is refused while items hold it.
  */
 class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
@@ -109,6 +109,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     awaitCleanupDone();
     assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
       .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
+    assertThat(placeholderCount()).isZero();
   }
 
   @Test
@@ -237,36 +238,45 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
-  @DisplayName("should refuse to create a custom field while the values of a deleted field with the same name remain")
-  void shouldRefuseToCreateField_whileCleanupIsPending() {
-    insertFieldCleanupRow("textbox");
-    insertFieldCleanupRow("singleselect_2");
+  @DisplayName("should hide the refId placeholder of a deleted field from the API and number a new field past it")
+  void shouldHidePlaceholder_andNumberNewFieldPastIt() {
+    var placeholderId = insertPlaceholder(TEXTBOX);
 
-    var sameName = await(doPost(client, CUSTOM_FIELDS_PATH, textboxField));
-    var suffixedRefId = await(doPost(client, CUSTOM_FIELDS_PATH, singleSelectField));
+    var byQuery = await(doGet(client, CUSTOM_FIELDS_PATH + "?query=name==" + TEXTBOX));
+    var byId = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
+    var statistic = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId + "/stats"));
+    var optionStatistic = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId + "/options/opt_0/stats"));
+    var deleted = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
+    var replaced = await(doPut(client, CUSTOM_FIELDS_PATH, new JsonObject()
+      .put(CUSTOM_FIELDS, new JsonArray())
+      .put("entityType", CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE)));
+    var created = createCustomField(textboxField);
 
-    assertThat(sameName.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(sameName.body().toString()).isEqualTo("Custom field 'textbox' cannot be created while the values"
-      + " of a deleted custom field with the same name are still being removed");
-    assertThat(suffixedRefId.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(customFieldNames()).isEmpty();
+    assertThat(byQuery.jsonBody().getJsonArray(CUSTOM_FIELDS)).isEmpty();
+    assertThat(byId.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(statistic.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(optionStatistic.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(deleted.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(replaced.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(created.getString("refId")).isEqualTo("textbox_2");
+    assertThat(customFieldNames()).containsExactly(TEXTBOX);
+    assertThat(placeholderCount()).isEqualTo(1);
   }
 
   @Test
-  @DisplayName("should refuse to delete and recreate a custom field in one collection replacement")
-  void shouldRefuseToRecreateField_inOneCollectionReplacement() {
+  @DisplayName("should give a field deleted and recreated in one collection replacement the next refId")
+  void shouldRecreateField_withNextRefId_inOneCollectionReplacement() {
     createCustomField(textboxField);
     final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
 
     var recreated = customField(TEXTBOX, "TEXTBOX_SHORT", null);
     var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(recreated)));
 
-    assertThat(response.status()).isEqualTo(SC_BAD_REQUEST);
-    assertThat(response.body().toString())
-      .isEqualTo("Custom field 'textbox' cannot be deleted and recreated in one request");
-    assertThat(customFieldNames()).containsExactly(TEXTBOX);
-    assertThat(cleanupQueueSize()).isZero();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    assertThat(getCustomField(recreated).getString("refId")).isEqualTo("textbox_2");
+    awaitCleanupDone();
+    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+    assertThat(placeholderCount()).isZero();
   }
 
   @Test
@@ -317,9 +327,17 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return runQuery("SELECT count(*) FROM custom_fields_cleanup").iterator().next().getLong(0);
   }
 
-  private static void insertFieldCleanupRow(String refId) {
-    runQuery("INSERT INTO custom_fields_cleanup (id, entity_type, ref_id) VALUES ('"
-      + UUID.randomUUID() + "', 'item', '" + refId + "')");
+  private static long placeholderCount() {
+    return runQuery("SELECT count(*) FROM custom_fields WHERE jsonb->>'entityType' = '"
+      + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "'").iterator().next().getLong(0);
+  }
+
+  private static String insertPlaceholder(String refId) {
+    var id = UUID.randomUUID().toString();
+    runQuery("INSERT INTO custom_fields (id, jsonb) VALUES ('" + id + "', jsonb_build_object('id', '" + id
+      + "', 'name', '" + refId + "', 'refId', '" + refId + "', 'type', 'TEXTBOX_SHORT', 'entityType', '"
+      + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "', 'visible', false, 'order', 1))");
+    return id;
   }
 
   private JsonObject itemWithCustomFields(JsonObject values) {
