@@ -17,7 +17,7 @@ import org.folio.utils.Environment;
  * per transaction, so a cleanup of any size never locks items longer than one batch takes. A row is
  * deleted together with the placeholder that holds its refId (create_custom_fields_cleanup.sql), so
  * a new field can take the refId only once its values are gone. A failed pass is retried after a
- * delay. The updates are idempotent, so two module instances processing the same row do no harm.
+ * delay. Two module instances processing the same row write each record only once.
  */
 public final class CustomFieldsValueCleanup {
 
@@ -93,11 +93,21 @@ public final class CustomFieldsValueCleanup {
 
   private static Future<Void> removeFieldValues(PostgresClient pg, String schema, String table, String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
-    var sql = "UPDATE " + schema + "." + table
-      + " SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
-      + " WHERE id IN (SELECT id FROM " + schema + "." + table
-      + " WHERE jsonb->'customFields' ? $1 LIMIT $2)";
+    var sql = batchUpdate(schema + "." + table,
+      "jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)",
+      "jsonb->'customFields' ? $1", "$2");
     return repeatUntilNoneLeft(pg, sql, Tuple.of(refId, batchSize()));
+  }
+
+  /**
+   * Sets {@code jsonb} on one batch of the records matching the condition. The condition is repeated
+   * outside the subquery: a pass blocked by another pass's batch re-checks only the outer condition
+   * when that batch commits, and would otherwise rewrite the records the other pass cleaned.
+   */
+  private static String batchUpdate(String table, String newJsonb, String condition, String limitParameter) {
+    return "UPDATE " + table + " SET jsonb = " + newJsonb
+      + " WHERE " + condition
+      + " AND id IN (SELECT id FROM " + table + " WHERE " + condition + " LIMIT " + limitParameter + ")";
   }
 
   private static Future<Void> repeatUntilNoneLeft(PostgresClient pg, String sql, Tuple params) {
