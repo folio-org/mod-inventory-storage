@@ -1,3 +1,9 @@
+## v30.0.9 2026-10-27
+### Bug fixes
+* Improve performance of `GET /inventory-view/instances` lookup by instance HRID by serving a single `instance.hrid` or `instanceHrid` term from the new indexed `instance_hrid` column of `instance_holdings_item_view` ([MODINVSTOR-1615](https://folio-org.atlassian.net/browse/MODINVSTOR-1615))
+
+---
+
 ## v30.0.8 2026-10-12
 ### Bug fixes
 * Restore ownership on statistical-code and item_order_tracker tables so tenant permissions are not silently skipped on upgrade ([MODINVSTOR-1612](https://folio-org.atlassian.net/browse/MODINVSTOR-1612))
