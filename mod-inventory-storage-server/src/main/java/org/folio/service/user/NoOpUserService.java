@@ -6,7 +6,7 @@ import java.util.Map;
 import org.folio.model.User;
 import org.folio.service.UserService;
 import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  * Replaces the {@link UserService} of folio-custom-fields, which calls {@code GET /users/{id}} on
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  * <p>Remove this class once FCFIELDS-45 (drop the users lookup from the library) is released and
  * the module uses that library version.
  */
-@Component
+@Service
 @Primary
 public class NoOpUserService extends UserService {
 
