@@ -202,6 +202,9 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
+This environment variable configures the background removal of the values of deleted custom fields:
+* `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` (default value - `1000`) - number of records updated per transaction; an unset, non-numeric or below-1 value falls back to `1000`
+
 # Local Deployment using Docker
 
 ## Preparation
