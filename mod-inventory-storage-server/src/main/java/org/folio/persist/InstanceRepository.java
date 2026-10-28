@@ -16,6 +16,7 @@ import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
+import io.vertx.sqlclient.Tuple;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -303,6 +304,12 @@ public class InstanceRepository extends AbstractRepository<Instance> {
   }
 
   private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {
+    var sql = selectInventoryViewWithBoundedItems();
+    sql.append(appendCqlQuery(query, limit, offset));
+    return sql;
+  }
+
+  private StringBuilder selectInventoryViewWithBoundedItems() {
     var sql = new StringBuilder("SELECT JSONB_BUILD_OBJECT(");
     sql.append("'instanceId', inventory_view.jsonb->>'instanceId', ");
     sql.append("'isBoundWith', inventory_view.jsonb->'isBoundWith', ");
@@ -312,8 +319,25 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     sql.append("FROM ");
     sql.append(getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
     sql.append(" AS inventory_view ");
-    sql.append(appendCqlQuery(query, limit, offset));
     return sql;
+  }
+
+  /**
+   * Looks up inventory view instances by HRID using the indexed {@code instance_hrid} column of the
+   * view, so that only the matching instance is built. The HRID is matched exactly, ignoring case
+   * and accents, the same normalisation as the {@code instance_hrid_idx_unique} index.
+   */
+  public Future<Response> getInventoryViewInstancesByHrid(String hrid, boolean withBoundedItems,
+                                                          int offset, int limit) {
+    var sql = withBoundedItems
+      ? selectInventoryViewWithBoundedItems()
+      : new StringBuilder("SELECT inventory_view.jsonb FROM " + getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW)
+        + " AS inventory_view ");
+    sql.append("WHERE inventory_view.instance_hrid = lower(")
+      .append(getFullTableName("f_unaccent"))
+      .append("($1)) LIMIT $2 OFFSET $3");
+    return postgresClient.execute(sql.toString(), Tuple.of(hrid, limit, offset))
+      .map(this::buildInventoryViewResponse);
   }
 
   private Response buildInventoryViewResponse(RowSet<Row> rowSet) {

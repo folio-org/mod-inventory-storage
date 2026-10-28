@@ -14,16 +14,20 @@ import static org.folio.it.LocationStorageFixtures.createLocation;
 import io.vertx.core.json.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.IntStream;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.InstanceView;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.support.ResourcePaths;
+import org.folio.support.builders.InstanceRequestBuilder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Covers the {@code /inventory-view/instances} rollup endpoint, which returns each matching
@@ -207,6 +211,100 @@ class InventoryViewIT extends BaseIntegrationTest {
     }
   }
 
+  @Test
+  @DisplayName("should expose the indexed lower-cased hrid in the instance_hrid view column")
+  void shouldExposeInstanceHridColumn() {
+    createInstanceWithHrid("ABC-1");
+
+    var rows = runQuery("SELECT instance_hrid FROM " + TENANT_ID
+      + "_mod_inventory_storage.instance_holdings_item_view");
+
+    assertThat(rows.iterator().next().getString("instance_hrid")).isEqualTo("abc-1");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"instance.hrid==in2", "instance.hrid=in2", "instanceHrid==in2",
+    "(instance.hrid=in2)", "instance.hrid==IN2"})
+  @DisplayName("should return the instance with its holdings and items when queried by hrid")
+  void shouldReturnInstance_whenQueriedByHrid(String query) {
+    var one = createInstanceWithHrid("in1");
+    var two = createInstanceWithHrid("in2");
+    var holdings = createHoldings(two, 2);
+    var items = createItemsForHoldings(holdings);
+
+    for (var withBoundedItems : List.of(false, true)) {
+      var instances = getInstanceViews(query, withBoundedItems);
+
+      assertThat(instances).hasSize(1);
+      var instance = instances.get(0);
+      assertThat(instance.getInstanceId()).isEqualTo(two).isNotEqualTo(one);
+      assertThat(getHoldingIds(instance)).containsExactlyInAnyOrderElementsOf(holdings);
+      assertThat(getItemIds(instance)).containsExactlyInAnyOrderElementsOf(items);
+    }
+  }
+
+  @Test
+  @DisplayName("should return no instances when no instance has the hrid")
+  void shouldReturnNoInstances_whenHridDoesNotExist() {
+    createInstanceWithHrid("in1");
+
+    assertThat(getInstanceViews("instance.hrid==in999", false)).isEmpty();
+    assertThat(getInstanceViews("instance.hrid==in999", true)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("should ignore case and accents when queried by hrid")
+  void shouldIgnoreCaseAndAccents_whenQueriedByHrid() {
+    var id = createInstanceWithHrid("Éclair-1");
+
+    assertThat(getInstanceViews("instance.hrid==eclair-1", false))
+      .extracting(InstanceView::getInstanceId).containsExactly(id);
+  }
+
+  @Test
+  @DisplayName("should not match a partial hrid when queried by hrid with the word match operator")
+  void shouldNotMatchPartialHrid_whenQueriedWithWordMatchOperator() {
+    createInstanceWithHrid("ab cd");
+
+    assertThat(getInstanceViews("instance.hrid=ab", false)).isEmpty();
+    assertThat(getInstanceViews("instance.hrid==\"ab cd\"", false)).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("should honour offset and limit when queried by hrid")
+  void shouldHonourOffsetAndLimit_whenQueriedByHrid() {
+    createInstanceWithHrid("in1");
+
+    assertThat(getInstanceViews("instance.hrid==in1", false, "&offset=1")).isEmpty();
+    assertThat(getInstanceViews("instance.hrid==in1", false, "&limit=0")).isEmpty();
+    assertThat(getInstanceViews("instance.hrid==in1", false, "&limit=1")).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("should keep the generic behaviour when the query is not a single hrid term")
+  void shouldKeepGenericBehaviour_whenQueryIsNotSingleHridTerm() {
+    createInstanceWithHrid("in10");
+    createInstanceWithHrid("in11");
+    createInstanceWithHrid("in2");
+
+    assertThat(getInstanceViews("instance.hrid==in1*", false)).hasSize(2);
+    assertThat(getInstanceViews("instance.hrid==in10 or instance.hrid==in2", false)).hasSize(2);
+  }
+
+  private static String createInstanceWithHrid(String hrid) {
+    var id = UUID.randomUUID();
+    var request = new InstanceRequestBuilder()
+      .withId(id)
+      .withTitle("Instance " + hrid)
+      .withSource("TEST")
+      .withInstanceTypeId(UUID.fromString(instanceTypeId))
+      .create()
+      .put("hrid", hrid);
+
+    await(doPost(client, ResourcePaths.INSTANCES, request));
+    return id.toString();
+  }
+
   private static List<String> createHoldings(String instanceId, int count) {
     return IntStream.range(0, count)
       .mapToObj(i -> createHolding(client, instanceId, locationId))
@@ -232,7 +330,13 @@ class InventoryViewIT extends BaseIntegrationTest {
   }
 
   private static List<InstanceView> getInstanceViews(String cqlQuery, boolean withBoundedItems) {
-    var queryString = "?query=" + urlEncode(cqlQuery) + (withBoundedItems ? "&withBoundedItems=true" : "");
+    return getInstanceViews(cqlQuery, withBoundedItems, "");
+  }
+
+  private static List<InstanceView> getInstanceViews(String cqlQuery, boolean withBoundedItems,
+                                                     String extraParams) {
+    var queryString = "?query=" + urlEncode(cqlQuery) + (withBoundedItems ? "&withBoundedItems=true" : "")
+      + extraParams;
     var response = await(doGet(client, ResourcePaths.INVENTORY_VIEW_INSTANCES + queryString));
 
     assertThat(response.status()).isEqualTo(SC_OK);
