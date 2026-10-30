@@ -1,3 +1,9 @@
+## v30.0.10 2026-11-06
+### Bug fixes
+* Fix HttpClient memory leak in `SettingsService`: reuse shared client instead of creating one per request ([MODINVSTOR-1620](https://folio-org.atlassian.net/browse/MODINVSTOR-1620))
+
+---
+
 ## v30.0.9 2026-10-27
 ### Bug fixes
 * Improve performance of `GET /inventory-view/instances` lookup by instance HRID by serving a single `instance.hrid` or `instanceHrid` term from the new indexed `instance_hrid` column of `instance_holdings_item_view` ([MODINVSTOR-1615](https://folio-org.atlassian.net/browse/MODINVSTOR-1615))
