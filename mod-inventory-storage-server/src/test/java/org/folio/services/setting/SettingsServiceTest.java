@@ -8,14 +8,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientAgent;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowIterator;
@@ -40,6 +44,7 @@ import org.folio.services.caches.SettingCache;
 import org.folio.services.domainevent.SettingEventPublisher;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -52,6 +57,7 @@ class SettingsServiceTest {
   private static final String TENANT_ID = "diku";
   private static final String CONSORTIUM_ID = "consortium_id";
 
+  private Vertx vertx;
   private SettingCache cache;
   private Context context;
   private Map<String, String> okapiHeaders;
@@ -64,11 +70,11 @@ class SettingsServiceTest {
     postgresClient = mock(PostgresClient.class);
     cache = mock(SettingCache.class);
     context = mock(Context.class);
-    var httpClient = mock(HttpClientAgent.class);
     consortiumDataCache = mock(ConsortiumDataCache.class);
-    var vertx = mock(Vertx.class);
+    vertx = mock(Vertx.class);
     when(context.owner()).thenReturn(vertx);
-    when(vertx.createHttpClient()).thenReturn(httpClient);
+    var httpClient = mock(HttpClientAgent.class);
+    when(context.get(HttpClient.class.getName())).thenReturn(httpClient);
     when(context.get(ConsortiumDataCache.class.getName())).thenReturn(consortiumDataCache);
     when(context.get(SettingCache.class.getName())).thenReturn(cache);
     when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
@@ -82,6 +88,18 @@ class SettingsServiceTest {
   @AfterEach
   void tearDown() {
     mockedPublisherConstruction.close();
+  }
+
+  @Test
+  @DisplayName("Should reuse the shared HttpClient and never create a new one when constructed repeatedly")
+  void shouldNotCreateHttpClient_whenConstructedRepeatedly() {
+    // SettingsService is built per request; a new client per instance leaks into Vert.x close hooks.
+    for (int i = 0; i < 3; i++) {
+      withSettingsService(settingsService -> { });
+    }
+
+    verify(vertx, never()).createHttpClient();
+    verify(context, atLeast(3)).get(HttpClient.class.getName());
   }
 
   @Test

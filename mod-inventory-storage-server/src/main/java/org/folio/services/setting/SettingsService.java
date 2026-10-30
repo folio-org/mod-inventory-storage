@@ -5,6 +5,7 @@ import static org.folio.services.consortium.entities.Settings.INVENTORY_OPTIMIZE
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpClient;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ public class SettingsService {
   public SettingsService(Context context, Map<String, String> okapiHeaders) {
     this.context = context;
     this.settingsRepository = new SettingsRepository(context, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(context.owner().createHttpClient(),
+    this.consortiumService = new ConsortiumServiceImpl(context.get(HttpClient.class.getName()),
       context.get(ConsortiumDataCache.class.getName()));
     this.cache = context.get(SettingCache.class.getName());
     this.validator = new SettingsValidator();

@@ -25,6 +25,7 @@
 * HttpClient leak: reuse shared client instead of creating per request ([MODINVSTOR-1583](https://folio-org.atlassian.net/browse/MODINVSTOR-1583))
 * Improve performance of /inventory-reindex-records/export api ([MSEARCH-1245](https://folio-org.atlassian.net/browse/MSEARCH-1245))
 * Fix custom link should use ID from new items ([MODINVSTOR-1610](https://folio-org.atlassian.net/browse/MODINVSTOR-1610))
+* Fix HttpClient memory leak in `SettingsService`: reuse shared client instead of creating one per request ([MODINVSTOR-1620](https://folio-org.atlassian.net/browse/MODINVSTOR-1620))
 
 ### Tech Dept
 * Set "permissions: contents: read" in maven.yml ([FOLIO-4553](https://folio-org.atlassian.net/browse/FOLIO-4553))
