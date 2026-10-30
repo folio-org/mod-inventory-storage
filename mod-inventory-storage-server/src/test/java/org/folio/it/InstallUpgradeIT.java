@@ -104,6 +104,7 @@ class InstallUpgradeIT {
       .withEnv("DB_USERNAME", "username")
       .withEnv("DB_PASSWORD", "password")
       .withEnv("DB_DATABASE", "postgres")
+      .withEnv("DB_MAXSHAREDPOOLSIZE", "4")
       .withEnv("KAFKA_HOST", "mykafka")
       .withEnv("KAFKA_PORT", "19092")
       .withEnv("S3_MARC_MIGRATION_URL", "http://s3:4566")
