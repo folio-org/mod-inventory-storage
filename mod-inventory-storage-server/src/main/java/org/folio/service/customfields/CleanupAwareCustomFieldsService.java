@@ -70,7 +70,7 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
   public Future<Void> update(String id, CustomField customField, OkapiParams params) {
     var tenantId = params.getTenant();
     return findById(id, tenantId)
-      .compose(existing -> refuseRemovedOptionsInUse(existing, customField, tenantId))
+      .compose(stored -> refuseRemovedOptionsInUse(stored, customField, tenantId))
       .compose(v -> delegate.update(id, customField, params));
   }
 
@@ -108,18 +108,7 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
     }
     var tenantId = params.getTenant();
     return delegate.findByQuery("entityType==\"" + entityType + "\"", 0, Integer.MAX_VALUE, null, tenantId)
-      .compose(existing -> {
-        Map<String, CustomField> existingById = existing.getCustomFields().stream()
-          .collect(toMap(CustomField::getId, Function.identity()));
-        Future<Void> result = Future.succeededFuture();
-        for (var newField : newFields) {
-          var current = existingById.get(newField.getId());
-          if (current != null) {
-            result = result.compose(v -> refuseRemovedOptionsInUse(current, newField, tenantId));
-          }
-        }
-        return result;
-      })
+      .compose(stored -> refuseRemovedOptionsInUse(fieldsToUpdate(stored.getCustomFields(), newFields), tenantId))
       .compose(v -> delegate.replaceAll(newFields, entityType, params))
       .onSuccess(v -> CustomFieldsValueCleanup.kick(vertx, tenantId));
   }
@@ -137,15 +126,36 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
   }
 
   /**
+   * The stored and the requested version of each field the library updates, matched by id as the library
+   * matches them. Deleted fields need no check, since the value cleanup removes their values, and inserted
+   * fields have no stored options.
+   */
+  private static List<FieldUpdate> fieldsToUpdate(List<CustomField> stored, List<CustomField> requested) {
+    Map<String, CustomField> storedById = stored.stream().collect(toMap(CustomField::getId, Function.identity()));
+    return requested.stream()
+      .filter(field -> storedById.containsKey(field.getId()))
+      .map(field -> new FieldUpdate(storedById.get(field.getId()), field))
+      .toList();
+  }
+
+  private Future<Void> refuseRemovedOptionsInUse(List<FieldUpdate> updates, String tenantId) {
+    Future<Void> result = Future.succeededFuture();
+    for (var update : updates) {
+      result = result.compose(v -> refuseRemovedOptionsInUse(update.stored(), update.requested(), tenantId));
+    }
+    return result;
+  }
+
+  /**
    * Uses the ids in the request: the library gives a new option the id of a removed highest option
    * and then does not see the removal.
    */
-  private Future<Void> refuseRemovedOptionsInUse(CustomField existing, CustomField replacement, String tenantId) {
-    var keptOptionIds = new HashSet<>(optionIds(replacement));
+  private Future<Void> refuseRemovedOptionsInUse(CustomField stored, CustomField requested, String tenantId) {
+    var keptOptionIds = new HashSet<>(optionIds(requested));
     Future<Void> result = Future.succeededFuture();
-    for (var optionId : optionIds(existing)) {
+    for (var optionId : optionIds(stored)) {
       if (!keptOptionIds.contains(optionId)) {
-        result = result.compose(v -> refuseOptionInUse(existing, optionId, tenantId));
+        result = result.compose(v -> refuseOptionInUse(stored, optionId, tenantId));
       }
     }
     return result;
@@ -195,5 +205,8 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
       return filtered.toCQL();
     }
     return new CQLNotNode(node, placeholders, new ModifierSet("not")).toCQL();
+  }
+
+  private record FieldUpdate(CustomField stored, CustomField requested) {
   }
 }
