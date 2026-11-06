@@ -8,6 +8,10 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
+import static org.folio.rest.jaxrs.model.CustomField.Type.MULTI_SELECT_DROPDOWN;
+import static org.folio.rest.jaxrs.model.CustomField.Type.RADIO_BUTTON;
+import static org.folio.rest.jaxrs.model.CustomField.Type.SINGLE_SELECT_DROPDOWN;
+import static org.folio.rest.jaxrs.model.CustomField.Type.TEXTBOX_SHORT;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.awaitility.Awaitility;
+import org.folio.rest.jaxrs.model.CustomField;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.customfields.CustomFieldsValueCleanup;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +41,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   private static final String CUSTOM_FIELDS = "customFields";
+  private static final String ENTITY_TYPE = "entityType";
+  private static final String REF_ID = "refId";
+  private static final String SELECT_FIELD = "selectField";
   private static final String CUSTOM_FIELDS_PATH = "/custom-fields";
   private static final String CLEANUP_PATH = "/inventory-storage/custom-fields/cleanup";
   private static final String ENTITY_TYPE_ITEM = "item";
@@ -52,9 +60,9 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   void setUp() {
     runQuery("TRUNCATE TABLE custom_fields, custom_fields_cleanup");
     holdingId = createHoldingRecord();
-    textboxField = customField(TEXTBOX, "TEXTBOX_SHORT", null);
-    singleSelectField = customField(SINGLE_SELECT, "SINGLE_SELECT_DROPDOWN", selectField(3, false));
-    multiSelectField = customField(MULTI_SELECT, "MULTI_SELECT_DROPDOWN", selectField(4, true));
+    textboxField = customField(TEXTBOX, TEXTBOX_SHORT, null);
+    singleSelectField = customField(SINGLE_SELECT, SINGLE_SELECT_DROPDOWN, selectField(3, false));
+    multiSelectField = customField(MULTI_SELECT, MULTI_SELECT_DROPDOWN, selectField(4, true));
   }
 
   @Test
@@ -70,12 +78,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   @Test
   @DisplayName("should refuse custom fields of an entity type other than item")
   void shouldRefuseCustomField_whenEntityTypeIsUnsupported() {
-    var userField = customField(TEXTBOX, "TEXTBOX_SHORT", null).put("entityType", "user");
+    var userField = customField(TEXTBOX, TEXTBOX_SHORT, null).put(ENTITY_TYPE, "user");
 
     var postResponse = await(doPost(client, CUSTOM_FIELDS_PATH, userField));
     var putResponse = await(doPut(client, CUSTOM_FIELDS_PATH, new JsonObject()
       .put(CUSTOM_FIELDS, new JsonArray().add(userField))
-      .put("entityType", "user")));
+      .put(ENTITY_TYPE, "user")));
 
     assertThat(postResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(postResponse.body().toString()).contains("Unsupported entityType 'user', supported: item");
@@ -111,8 +119,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
     assertThat(customFieldNames()).containsExactly(SINGLE_SELECT);
     awaitCleanupDone();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
-      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
     assertThat(placeholderCount()).isZero();
   }
 
@@ -141,12 +148,10 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     createCustomField(multiSelectField);
     final var item = createItem(itemWithCustomFields(allValues()));
 
-    var singleReduced = singleSelectField.copy().put("selectField", new JsonObject()
-      .put("multiSelect", false)
-      .put("options", new JsonObject().put("values", new JsonArray()
-        .add(option("opt_1", "opt1"))
-        .add(option("opt_2", "opt2")))));
-    var multiReduced = multiSelectField.copy().put("selectField", selectField(2, true));
+    var singleReduced = singleSelectField.copy().put(SELECT_FIELD, selectField(new JsonArray()
+      .add(option("opt_1", "opt1"))
+      .add(option("opt_2", "opt2")), false));
+    var multiReduced = multiSelectField.copy().put(SELECT_FIELD, selectField(2, true));
     var fieldResponse = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleReduced));
     var collectionResponse = await(doPut(client, CUSTOM_FIELDS_PATH, collection(singleSelectField, multiReduced)));
 
@@ -157,10 +162,10 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     assertThat(collectionResponse.body().toString())
       .contains("Option 'opt2' of custom field 'multiselect' is used by 1 item(s) and cannot be removed");
     assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT, MULTI_SELECT);
-    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1", "opt_2");
-    assertThat(optionIdsOf(getCustomField(multiSelectField))).containsExactly("opt_0", "opt_1", "opt_2", "opt_3");
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1", "opt_2");
+    assertThat(storedOptionIdsOf(multiSelectField)).containsExactly("opt_0", "opt_1", "opt_2", "opt_3");
     assertThat(cleanupQueueSize()).isZero();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(allValues());
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(allValues());
   }
 
   @Test
@@ -169,14 +174,13 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     createCustomField(singleSelectField);
     final var item = createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, "opt_0")));
 
-    singleSelectField.put("selectField", selectField(2, false));
+    singleSelectField.put(SELECT_FIELD, selectField(2, false));
     var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleSelectField));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1");
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1");
     assertThat(cleanupQueueSize()).isZero();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
-      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_0"));
   }
 
   @Test
@@ -187,14 +191,14 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     createCustomField(multiSelectField);
     final var item = createItem(itemWithCustomFields(allValues()));
 
-    var reduced = singleSelectField.copy().put("selectField", selectField(2, false));
+    var reduced = singleSelectField.copy().put(SELECT_FIELD, selectField(2, false));
     var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(reduced, multiSelectField)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
     assertThat(customFieldNames()).containsExactlyInAnyOrder(SINGLE_SELECT, MULTI_SELECT);
-    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1");
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1");
     awaitCleanupDone();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject()
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject()
       .put(SINGLE_SELECT, "opt_0")
       .put(MULTI_SELECT, new JsonArray().add("opt_1").add("opt_2")));
   }
@@ -212,7 +216,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
       assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
       awaitCleanupDone();
-      assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+      assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
     } finally {
       System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
     }
@@ -234,7 +238,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
       awaitCleanupDone();
       for (String itemId : items) {
-        assertThat(customFieldsOf(getItemJsonById(itemId))).isEqualTo(new JsonObject());
+        assertThat(storedCustomFieldsOf(itemId)).isEqualTo(new JsonObject());
       }
     } finally {
       System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
@@ -248,12 +252,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
     var byQuery = await(doGet(client, CUSTOM_FIELDS_PATH + "?query=name==" + TEXTBOX));
     var byId = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
-    var statistic = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId + "/stats"));
-    var optionStatistic = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId + "/options/opt_0/stats"));
+    var statistic = await(doGet(client, fieldStatisticPath(placeholderId)));
+    var optionStatistic = await(doGet(client, optionStatisticPath(placeholderId, "opt_0")));
     var deleted = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
     var replaced = await(doPut(client, CUSTOM_FIELDS_PATH, new JsonObject()
       .put(CUSTOM_FIELDS, new JsonArray())
-      .put("entityType", CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE)));
+      .put(ENTITY_TYPE, CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE)));
     var created = createCustomField(textboxField);
 
     assertThat(byQuery.jsonBody().getJsonArray(CUSTOM_FIELDS)).isEmpty();
@@ -262,7 +266,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     assertThat(optionStatistic.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(deleted.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(replaced.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
-    assertThat(created.getString("refId")).isEqualTo("textbox_2");
+    assertThat(created.getString(REF_ID)).isEqualTo("textbox_2");
     assertThat(customFieldNames()).containsExactly(TEXTBOX);
     assertThat(placeholderCount()).isEqualTo(1);
   }
@@ -273,13 +277,13 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     createCustomField(textboxField);
     final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
 
-    var recreated = customField(TEXTBOX, "TEXTBOX_SHORT", null);
-    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(recreated)));
+    var sameNameNewId = customField(TEXTBOX, TEXTBOX_SHORT, null);
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(sameNameNewId)));
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-    assertThat(getCustomField(recreated).getString("refId")).isEqualTo("textbox_2");
+    assertThat(getCustomField(sameNameNewId).getString(REF_ID)).isEqualTo("textbox_2");
     awaitCleanupDone();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
     assertThat(placeholderCount()).isZero();
   }
 
@@ -293,15 +297,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .add(option("opt_0", "opt0"))
       .add(option("opt_1", "opt1"))
       .add(new JsonObject().put("value", "new"));
-    singleSelectField.put("selectField", new JsonObject()
-      .put("multiSelect", false)
-      .put("options", new JsonObject().put("values", options)));
+    singleSelectField.put(SELECT_FIELD, selectField(options, false));
     var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), singleSelectField));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
-    assertThat(optionIdsOf(getCustomField(singleSelectField))).containsExactly("opt_0", "opt_1", "opt_2");
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))))
-      .isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_2"));
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1", "opt_2");
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject().put(SINGLE_SELECT, "opt_2"));
   }
 
   @Test
@@ -311,13 +312,13 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     createCustomField(singleSelectField);
     final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
 
-    var typeChanged = singleSelectField.copy().put("type", "RADIO_BUTTON");
+    var typeChanged = singleSelectField.copy().put("type", RADIO_BUTTON.value());
     var response = await(doPut(client, CUSTOM_FIELDS_PATH, collection(typeChanged)));
 
     assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
     assertThat(customFieldNames()).containsExactlyInAnyOrder(TEXTBOX, SINGLE_SELECT);
     assertThat(cleanupQueueSize()).isZero();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+    assertThat(storedCustomFieldsOf(item).getString(TEXTBOX)).isEqualTo("text1");
   }
 
   @Test
@@ -331,7 +332,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
     awaitCleanupDone();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
   }
 
   @Test
@@ -345,17 +346,18 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
     awaitCleanupDone();
     assertThat(placeholderCount()).isZero();
-    assertThat(createCustomField(textboxField).getString("refId")).isEqualTo(TEXTBOX);
+    assertThat(createCustomField(textboxField).getString(REF_ID)).isEqualTo(TEXTBOX);
   }
 
   @Test
   @DisplayName("should keep a failing removal with its error for the next pass and process the rows after it")
   void shouldKeepFailingRemoval_andProcessRowsAfterIt() {
-    refuseItemUpdatesRemoving("refused");
+    var refusedRefId = "refused";
+    refuseItemUpdatesRemoving(refusedRefId);
     try {
-      final var refusedItem = createItem(itemWithCustomFields(new JsonObject().put("refused", "x")));
+      final var refusedItem = createItem(itemWithCustomFields(new JsonObject().put(refusedRefId, "x")));
       final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
-      insertFieldCleanupRow("refused");
+      insertFieldCleanupRow(refusedRefId);
       insertFieldCleanupRow(TEXTBOX);
 
       var response = await(doPost(client, CLEANUP_PATH, null));
@@ -364,12 +366,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       awaitCleanupQueueSize(1);
       var kept = runQuery("SELECT ref_id, attempts, last_error, last_attempt_date FROM custom_fields_cleanup")
         .iterator().next();
-      assertThat(kept.getString("ref_id")).isEqualTo("refused");
+      assertThat(kept.getString("ref_id")).isEqualTo(refusedRefId);
       assertThat(kept.getInteger("attempts")).isEqualTo(1);
       assertThat(kept.getString("last_error")).contains("cleanup refused");
       assertThat(kept.getValue("last_attempt_date")).isNotNull();
-      assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
-      assertThat(customFieldsOf(getItemJsonById(refusedItem.getString("id"))).getString("refused")).isEqualTo("x");
+      assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
+      assertThat(storedCustomFieldsOf(refusedItem).getString(refusedRefId)).isEqualTo("x");
     } finally {
       runQuery("DROP TRIGGER IF EXISTS fail_cleanup ON item");
       runQuery("DROP FUNCTION IF EXISTS fail_cleanup()");
@@ -391,7 +393,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
         .during(Duration.ofSeconds(2))
         .atMost(Duration.ofSeconds(5))
         .untilAsserted(() -> assertThat(cleanupQueueSize()).isEqualTo(1));
-      assertThat(customFieldsOf(getItemJsonById(item.getString("id"))).getString(TEXTBOX)).isEqualTo("text1");
+      assertThat(storedCustomFieldsOf(item).getString(TEXTBOX)).isEqualTo("text1");
     } finally {
       releaseCleanupLock(otherInstance);
       await(otherInstance.close());
@@ -400,7 +402,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     await(doPost(client, CLEANUP_PATH, null));
 
     awaitCleanupDone();
-    assertThat(customFieldsOf(getItemJsonById(item.getString("id")))).isEqualTo(new JsonObject());
+    assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
   }
 
   @Test
@@ -419,7 +421,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
       awaitCleanupDone();
       for (String itemId : items) {
-        assertThat(customFieldsOf(getItemJsonById(itemId))).isEqualTo(new JsonObject());
+        assertThat(storedCustomFieldsOf(itemId)).isEqualTo(new JsonObject());
       }
       assertThat(placeholderCount()).isZero();
     } finally {
@@ -503,7 +505,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   private static String insertPlaceholder(String refId) {
     var id = UUID.randomUUID().toString();
     runQuery("INSERT INTO custom_fields (id, jsonb) VALUES ('" + id + "', jsonb_build_object('id', '" + id
-      + "', 'name', '" + refId + "', 'refId', '" + refId + "', 'type', 'TEXTBOX_SHORT', 'entityType', '"
+      + "', 'name', '" + refId + "', 'refId', '" + refId + "', 'type', '" + TEXTBOX_SHORT.value() + "', 'entityType', '"
       + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "', 'visible', false, 'order', 1))");
     return id;
   }
@@ -528,26 +530,30 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .put(MULTI_SELECT, new JsonArray().add("opt_1").add("opt_2"));
   }
 
-  private static JsonObject customField(String name, String type, JsonObject selectField) {
+  private static JsonObject customField(String name, CustomField.Type type, JsonObject selectField) {
     var field = new JsonObject()
       .put("id", UUID.randomUUID().toString())
       .put("name", name)
-      .put("type", type)
-      .put("entityType", ENTITY_TYPE_ITEM);
+      .put("type", type.value())
+      .put(ENTITY_TYPE, ENTITY_TYPE_ITEM);
     if (selectField != null) {
-      field.put("selectField", selectField);
+      field.put(SELECT_FIELD, selectField);
     }
     return field;
   }
 
   private static JsonObject selectField(int numberOfOptions, boolean multiSelect) {
-    var values = new JsonArray();
+    var options = new JsonArray();
     for (int i = 0; i < numberOfOptions; i++) {
-      values.add(new JsonObject().put("id", "opt_" + i).put("value", "opt" + i));
+      options.add(option("opt_" + i, "opt" + i));
     }
+    return selectField(options, multiSelect);
+  }
+
+  private static JsonObject selectField(JsonArray options, boolean multiSelect) {
     return new JsonObject()
       .put("multiSelect", multiSelect)
-      .put("options", new JsonObject().put("values", values));
+      .put("options", new JsonObject().put("values", options));
   }
 
   private static JsonObject option(String id, String value) {
@@ -557,7 +563,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   private static JsonObject collection(JsonObject... fields) {
     return new JsonObject()
       .put(CUSTOM_FIELDS, new JsonArray(List.of((Object[]) fields)))
-      .put("entityType", ENTITY_TYPE_ITEM);
+      .put(ENTITY_TYPE, ENTITY_TYPE_ITEM);
   }
 
   private static JsonObject createCustomField(JsonObject field) {
@@ -581,12 +587,20 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return names;
   }
 
-  private static String id(JsonObject field) {
-    return field.getString("id");
+  private static String id(JsonObject json) {
+    return json.getString("id");
   }
 
   private static JsonObject customFieldsOf(JsonObject item) {
     return item.getJsonObject(CUSTOM_FIELDS, new JsonObject());
+  }
+
+  private static JsonObject storedCustomFieldsOf(JsonObject item) {
+    return storedCustomFieldsOf(id(item));
+  }
+
+  private static JsonObject storedCustomFieldsOf(String itemId) {
+    return customFieldsOf(getItemJsonById(itemId));
   }
 
   private static List<String> customFieldNames() {
@@ -603,18 +617,27 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return response.jsonBody();
   }
 
-  private static List<String> optionIdsOf(JsonObject field) {
-    return field.getJsonObject("selectField").getJsonObject("options").getJsonArray("values").stream()
+  private static List<String> storedOptionIdsOf(JsonObject field) {
+    return getCustomField(field).getJsonObject(SELECT_FIELD).getJsonObject("options").getJsonArray("values")
+      .stream()
       .map(option -> ((JsonObject) option).getString("id"))
       .toList();
   }
 
   private static int fieldStatisticCount(JsonObject field) {
-    return statisticCount(CUSTOM_FIELDS_PATH + "/" + id(field) + "/stats");
+    return statisticCount(fieldStatisticPath(id(field)));
   }
 
   private static int optionStatisticCount(JsonObject field, String optionId) {
-    return statisticCount(CUSTOM_FIELDS_PATH + "/" + id(field) + "/options/" + optionId + "/stats");
+    return statisticCount(optionStatisticPath(id(field), optionId));
+  }
+
+  private static String fieldStatisticPath(String fieldId) {
+    return CUSTOM_FIELDS_PATH + "/" + fieldId + "/stats";
+  }
+
+  private static String optionStatisticPath(String fieldId, String optionId) {
+    return CUSTOM_FIELDS_PATH + "/" + fieldId + "/options/" + optionId + "/stats";
   }
 
   private static int statisticCount(String path) {
