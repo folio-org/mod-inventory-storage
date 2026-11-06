@@ -23,12 +23,15 @@ import org.folio.utils.Environment;
  * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}, one batch per
  * transaction, so a cleanup of any size locks items for one batch at a time. A pass starts after each
  * field delete. Each {@code _timer} call starts one for the rows those passes leave behind: after a
- * restart, after a failed row, or when another instance held the tenant's lock.
+ * restart, after a failed row or pass, or when another instance held the tenant's lock.
  */
 public final class CustomFieldsValueCleanup {
 
   public static final String BATCH_SIZE_KEY = "CUSTOM_FIELDS_CLEANUP_BATCH_SIZE";
-  /** The entityType of the refId placeholders, which no client uses. */
+  /**
+   * The entityType of the refId placeholders, which no client uses. The trigger in
+   * {@code create_custom_fields_cleanup.sql} inserts them and explains what they are for.
+   */
   public static final String PLACEHOLDER_ENTITY_TYPE = "pendingValueCleanup";
   private static final int DEFAULT_BATCH_SIZE = 1000;
   private static final String LOCK_KEY = "hashtext('custom_fields_cleanup'), hashtext($1)";
@@ -173,8 +176,9 @@ public final class CustomFieldsValueCleanup {
   }
 
   /**
-   * Runs the step until it yields false. The last step completes the result itself: completing it
-   * through one nested future per step overflows the stack on long runs, and the result never completes.
+   * Runs the step until it yields false. Each step starts the next from its callback, and the last one
+   * completes the returned future. Composing the steps instead would chain one future per step, and
+   * completing that chain on long runs would overflow the stack and leave the future incomplete.
    */
   static Future<Void> whileMore(Supplier<Future<Boolean>> step) {
     Promise<Void> done = Promise.promise();

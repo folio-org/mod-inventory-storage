@@ -40,8 +40,9 @@ import org.z3950.zing.cql.ModifierSet;
 /**
  * Hides the refId placeholders of deleted fields from the API, starts the value cleanup after field
  * deletes, and refuses to remove an option that items hold. The refusal has to come before the library
- * writes: a single-field update commits before the library calls the RecordService. The package is
- * dictated by the library's component scan ({@code org.folio.service}).
+ * writes: the library's own hook for removed options, {@code RecordService.deleteMissedOptionValues},
+ * runs only after a single-field update has committed. The package is dictated by the library's
+ * component scan ({@code org.folio.service}).
  */
 @Service
 @Primary
@@ -96,8 +97,9 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
   }
 
   /**
-   * The library validates the entity type of the listed fields only, so an empty list of the
-   * placeholder entity type would delete the placeholders and release their refIds early.
+   * The library deletes the stored fields of the request's entity type that the list leaves out, but
+   * validates the entity type only on the fields in the list. An empty list with the placeholder entity
+   * type would therefore delete the placeholders and free their refIds while values still exist.
    */
   @Override
   public Future<List<CustomField>> replaceAll(List<CustomField> newFields, String entityType,
@@ -147,8 +149,9 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
   }
 
   /**
-   * Uses the ids in the request: the library gives a new option the id of a removed highest option
-   * and then does not see the removal.
+   * Compares the stored options with the ids as sent. The library numbers new options after the highest
+   * remaining id, so a new option can take the id of a removed highest option, and after the numbering
+   * the removal no longer shows.
    */
   private Future<Void> refuseRemovedOptionsInUse(CustomField stored, CustomField requested, String tenantId) {
     var keptOptionIds = new HashSet<>(optionIds(requested));

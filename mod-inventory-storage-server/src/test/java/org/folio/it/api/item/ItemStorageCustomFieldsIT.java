@@ -35,8 +35,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 /**
  * Custom field definitions ({@code /custom-fields}, provided by folio-custom-fields) and the
  * {@code customFields} values stored on items: deleting a field returns once the definition is
- * gone, the values are removed in the background, and a new field does not take the refId of values
- * that still exist; removing an option is refused while items hold it.
+ * gone, the values are removed in the background, a field created while a deleted field's values
+ * remain gets a new refId, and removing an option is refused while items hold it.
  */
 class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
