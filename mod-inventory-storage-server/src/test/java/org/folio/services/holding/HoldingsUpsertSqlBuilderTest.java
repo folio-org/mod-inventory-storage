@@ -1,12 +1,14 @@
 package org.folio.services.holding;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.List;
+import java.util.Map;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
@@ -26,8 +28,8 @@ class HoldingsUpsertSqlBuilderTest {
   void setUp() {
     var holdingsRepository = mock(HoldingsRepository.class);
     var itemRepository = mock(ItemRepository.class);
-    when(holdingsRepository.getFullTableName()).thenReturn(HOLDINGS_TABLE);
-    when(itemRepository.getFullTableName()).thenReturn(ITEMS_TABLE);
+    when(holdingsRepository.getFullTableName(any())).thenReturn(HOLDINGS_TABLE);
+    when(itemRepository.getFullTableName(any())).thenReturn(ITEMS_TABLE);
     builder = new HoldingsUpsertSqlBuilder(holdingsRepository, itemRepository);
   }
 
@@ -36,7 +38,7 @@ class HoldingsUpsertSqlBuilderTest {
   void shouldBuildSingleUuidJsonbParameterPair_whenGivenOneHolding() {
     var holding = new HoldingsRecord().withId("id-1");
 
-    var result = builder.buildUpsertSqlWithParams(List.of(holding));
+    var result = builder.buildUpsertSqlWithParams(List.of(holding), Map.of());
 
     assertThat(result.getRight()).isNull();
     var sql = result.getLeft().getKey();
@@ -52,7 +54,7 @@ class HoldingsUpsertSqlBuilderTest {
   void shouldJoinRecordsWithUnionAllAndIncrementParams_whenGivenMultipleHoldings() {
     var holdings = List.of(new HoldingsRecord().withId("id-1"), new HoldingsRecord().withId("id-2"));
 
-    var result = builder.buildUpsertSqlWithParams(holdings);
+    var result = builder.buildUpsertSqlWithParams(holdings, Map.of());
 
     assertThat(result.getRight()).isNull();
     var sql = result.getLeft().getKey();
@@ -68,7 +70,7 @@ class HoldingsUpsertSqlBuilderTest {
   void shouldReferenceRepositoriesFullTableNames_whenBuildingQuery() {
     var holding = new HoldingsRecord().withId("id-1");
 
-    var result = builder.buildUpsertSqlWithParams(List.of(holding));
+    var result = builder.buildUpsertSqlWithParams(List.of(holding), Map.of());
 
     var sql = result.getLeft().getKey();
     assertThat(sql)
@@ -83,7 +85,7 @@ class HoldingsUpsertSqlBuilderTest {
   void shouldEndWithSelectOfCombinedResults_whenBuildingQuery() {
     var holding = new HoldingsRecord().withId("id-1");
 
-    var result = builder.buildUpsertSqlWithParams(List.of(holding));
+    var result = builder.buildUpsertSqlWithParams(List.of(holding), Map.of());
 
     assertThat(result.getLeft().getKey())
       .endsWith("SELECT id, old_holdings_content, old_item_content FROM combined_results");
@@ -97,7 +99,7 @@ class HoldingsUpsertSqlBuilderTest {
     try (var pgClientMock = mockStatic(PostgresClient.class)) {
       pgClientMock.when(() -> PostgresClient.pojo2JsonObject(holding)).thenThrow(cause);
 
-      var result = builder.buildUpsertSqlWithParams(List.of(holding));
+      var result = builder.buildUpsertSqlWithParams(List.of(holding), Map.of());
 
       assertThat(result.getLeft()).isNull();
       assertThat(result.getRight()).isSameAs(cause);

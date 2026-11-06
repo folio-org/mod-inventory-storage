@@ -1,72 +1,58 @@
 package org.folio.persist;
 
+import static org.folio.persist.HoldingsRepository.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
-import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
-import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.headersFor201;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond201WithApplicationJson;
-import static org.folio.rest.persist.PgUtil.postgresClient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.tuple.Pair;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.dbschema.ObjectMapperTool;
+import org.folio.persist.entity.DeletedRecord;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.utils.DatabaseUtils;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class InstanceRepository extends AbstractRepository<Instance> {
   public static final String INSTANCE_TABLE = "instance";
-  private static final String INSTANCE_SET_VIEW = "instance_set";
-  private static final String INSTANCE_HOLDINGS_ITEM_VIEW = "instance_holdings_item_view";
-  private static final String INVENTORY_VIEW_JSONB_FIELD = "inventory_view.jsonb";
   private static final String INSTANCE_SUBJECT_SOURCE_TABLE = "instance_subject_source";
   private static final String INSTANCE_SUBJECT_TYPE_TABLE = "instance_subject_type";
 
-  public InstanceRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), INSTANCE_TABLE, Instance.class);
+  public InstanceRepository(Context context) {
+    super(context, INSTANCE_TABLE, Instance.class);
   }
 
-  public Future<RowSet<Row>> unlinkInstanceFromSubjectSource(Conn conn, String instanceId) {
+  public Future<Void> unlinkInstanceFromSubjectSource(Conn conn, String instanceId, String tenantId) {
     try {
-      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId);
-      return conn.execute(sql);
+      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_SOURCE_TABLE, instanceId, tenantId);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<RowSet<Row>> unlinkInstanceFromSubjectType(Conn conn, String instanceId) {
+  public Future<Void> unlinkInstanceFromSubjectType(Conn conn, String instanceId, String tenantId) {
     try {
-      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_TYPE_TABLE, instanceId);
-      return conn.execute(sql);
+      String sql = unlinkInstanceFromSubjectSql(INSTANCE_SUBJECT_TYPE_TABLE, instanceId, tenantId);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<RowSet<Row>> batchLinkSubjectSource(Conn conn, List<Pair<String, String>> sourcePairs) {
+  public Future<Void> batchLinkSubjectSource(Conn conn, List<Pair<String, String>> sourcePairs, String tenantId) {
     try {
       String sql = """
         INSERT INTO %s (instance_id, source_id)
@@ -74,23 +60,34 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         ON CONFLICT DO NOTHING;
         """
         .formatted(
-          getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE, tenantId),
           sourcePairs.stream()
             .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
             .collect(Collectors.joining(", "))
         );
-      return conn.execute(sql);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<Response> createInstance(Conn conn, Instance instance) {
+  public Future<Instance> createInstance(Conn conn, Instance instance) {
     return conn.save(INSTANCE_TABLE, instance.getId(), instance)
-      .map(id -> respond201WithApplicationJson(instance.withId(id), headersFor201()));
+      .map(instance::withId);
   }
 
-  public Future<RowSet<Row>> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs) {
+  /**
+   * Returns the summary of the instance, or null if there is no such instance.
+   */
+  public Future<JsonObject> getInstanceSummary(String id, String tenantId) {
+    return postgresClient(tenantId).execute("SELECT get_instance_summary($1::uuid) AS summary", Tuple.of(id))
+      .map(rows -> {
+        var iterator = rows.iterator();
+        return iterator.hasNext() ? iterator.next().getJsonObject("summary") : null;
+      });
+  }
+
+  public Future<Void> batchLinkSubjectType(Conn conn, List<Pair<String, String>> typePairs, String tenantId) {
     try {
       String sql = """
         INSERT INTO %s (instance_id, type_id)
@@ -98,185 +95,104 @@ public class InstanceRepository extends AbstractRepository<Instance> {
         ON CONFLICT DO NOTHING;
         """
         .formatted(
-          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE, tenantId),
           typePairs.stream()
             .map(pair -> String.format("('%s', '%s')", pair.getKey(), pair.getValue()))
             .collect(Collectors.joining(", "))
         );
-      return conn.execute(sql);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<RowSet<Row>> batchUnlinkSubjectSource(Conn conn, String instanceId, List<String> sourceIds) {
+  public Future<Void> batchUnlinkSubjectSource(Conn conn, String instanceId, List<String> sourceIds, String tenantId) {
     try {
       String sql = """
         DELETE FROM %s WHERE instance_id = '%s' AND source_id IN ( %s );
         """.formatted(
-        getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE),
+        getFullTableName(INSTANCE_SUBJECT_SOURCE_TABLE, tenantId),
         instanceId,
         sourceIds.stream().map(id -> "'" + id + "'").collect(Collectors.joining(", "))
       );
-      return conn.execute(sql);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<RowSet<Row>> batchUnlinkSubjectType(Conn conn, String instanceId, List<String> typeIds) {
+  public Future<Void> batchUnlinkSubjectType(Conn conn, String instanceId, List<String> typeIds, String tenantId) {
     try {
       String sql = """
         DELETE FROM %s WHERE instance_id = '%s' AND type_id IN ( %s );
         """
         .formatted(
-          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE),
+          getFullTableName(INSTANCE_SUBJECT_TYPE_TABLE, tenantId),
           instanceId,
           typeIds.stream().map(id -> "'" + id + "'")
             .collect(Collectors.joining(", "))
         );
-      return conn.execute(sql);
+      return conn.execute(sql).mapEmpty();
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
   }
 
-  public Future<RowStream<Row>> getAllIds(Conn connection) {
-    var query = "SELECT id FROM " + getFullTableName(INSTANCE_TABLE);
+  public Future<RowStream<Row>> getAllIds(Conn connection, String tenantId) {
+    var query = "SELECT id FROM " + getFullTableName(tenantId);
     return DatabaseUtils.selectStream(connection, query);
   }
 
   /**
-   * Delete by CQL. For each deleted record return a {@link Row} with the instance id String
-   * and with the instance jsonb String.
+   * Delete by CQL. For each deleted record return a {@link DeletedRecord} with the instance id
+   * and  the instance jsonb String.
    *
    * <p>This automatically deletes connected marc records because the instance_source_marc foreign
    * key has "ON DELETE CASCADE".
    */
-  public Future<RowSet<Row>> delete(String cql) {
+  public Future<List<DeletedRecord>> delete(String cql, String tenantId) {
     try {
-      CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + getFullTableName(tableName)
+      CQLWrapper cqlWrapper = cqlWrapper(cql);
+      String sql = "DELETE FROM " + getFullTableName(tenantId)
                    + " " + cqlWrapper.getWhereClause()
                    + " RETURNING id::text, jsonb::text";
-      return postgresClient.execute(sql);
+      return postgresClient(tenantId).execute(sql)
+        .map(rows -> {
+          var deleted = new ArrayList<DeletedRecord>(rows.size());
+          rows.forEach(row -> deleted.add(new DeletedRecord(row.getString(0), row.getString(1))));
+          return deleted;
+        });
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
-  }
-
-  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
-  public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
-                                         boolean precedingTitles, boolean succeedingTitles,
-                                         boolean superInstanceRelationships, boolean subInstanceRelationships,
-                                         int offset, int limit, String query) {
-
-    try {
-      var sql = buildInstanceSetQuery(instance, holdingsRecords, items, precedingTitles,
-        succeedingTitles, superInstanceRelationships, subInstanceRelationships, offset, limit, query);
-
-      return postgresClient.select(sql)
-        .map(this::buildInstanceSetResponse);
-    } catch (CQLQueryValidationException e) {
-      return Future.failedFuture(new BadRequestException(e.getMessage()));
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
-  }
-
-  private String buildInstanceSetQuery(boolean instance, boolean holdingsRecords, boolean items,
-                                        boolean precedingTitles, boolean succeedingTitles,
-                                        boolean superInstanceRelationships, boolean subInstanceRelationships,
-                                        int offset, int limit, String query) throws FieldException {
-    var sql = new StringBuilder(200);
-    sql.append("SELECT jsonb_build_object('id', id");
-
-    appendInstanceSetFields(sql, instance, holdingsRecords, items, precedingTitles,
-      succeedingTitles, superInstanceRelationships, subInstanceRelationships);
-
-    sql.append(")::text FROM ")
-      .append(getFullTableName(INSTANCE_SET_VIEW))
-      .append(" JOIN ")
-      .append(getFullTableName(INSTANCE_TABLE))
-      .append(" USING (id) ");
-
-    var field = new CQL2PgJSON(INSTANCE_TABLE + ".jsonb");
-    var cqlWrapper = new CQLWrapper(field, query, limit, offset, "none");
-    sql.append(cqlWrapper);
-
-    return sql.toString();
-  }
-
-  @SuppressWarnings("java:S107") // suppress "Methods should not have too many parameters"
-  private void appendInstanceSetFields(StringBuilder sql, boolean instance, boolean holdingsRecords,
-                                        boolean items, boolean precedingTitles, boolean succeedingTitles,
-                                        boolean superInstanceRelationships, boolean subInstanceRelationships) {
-    if (instance) {
-      sql.append(", 'instance', jsonb");
-    }
-    if (holdingsRecords) {
-      sql.append(", 'holdingsRecords', holdings_records");
-    }
-    if (items) {
-      sql.append(", 'items', items");
-    }
-    if (precedingTitles) {
-      sql.append(", 'precedingTitles', preceding_titles");
-    }
-    if (succeedingTitles) {
-      sql.append(", 'succeedingTitles', succeeding_titles");
-    }
-    if (superInstanceRelationships) {
-      sql.append(", 'superInstanceRelationships', super_instance_relationships");
-    }
-    if (subInstanceRelationships) {
-      sql.append(", 'subInstanceRelationships', sub_instance_relationships");
-    }
-  }
-
-  private Response buildInstanceSetResponse(RowSet<Row> rowSet) {
-    StringBuilder json = new StringBuilder("{\"instanceSets\":[\n");
-    boolean first = true;
-    for (Row row : rowSet) {
-      if (first) {
-        first = false;
-      } else {
-        json.append(",\n");
-      }
-      json.append(row.getString(0));
-    }
-    json.append("\n]}");
-    return Response.ok(json.toString(), MediaType.APPLICATION_JSON_TYPE).build();
   }
 
   public Future<List<Map<String, Object>>> getReindexInstances(String fromId, String toId,
-                                                               boolean notConsortiumRecords) {
-    return postgresClient.select(buildReindexInstancesSql(fromId, toId, notConsortiumRecords))
-      .map(rows -> {
-        var resultList = new LinkedList<Map<String, Object>>();
-        for (var row : rows) {
-          resultList.add(row.getJsonObject(0).getMap());
-        }
-        return resultList;
-      });
+                                                               boolean notConsortiumRecords,
+                                                               String tenantId) {
+    return postgresClient(tenantId)
+      .select(buildReindexInstancesSql(fromId, toId, notConsortiumRecords, tenantId))
+      .map(rows -> rows.stream()
+        .map(row -> row.getJsonObject(0).getMap())
+        .collect(Collectors.toCollection(LinkedList::new)));
   }
 
   public Future<RowStream<Row>> streamReindexInstances(Conn conn, String fromId, String toId,
-                                                       boolean notConsortiumRecords) {
-    return DatabaseUtils.selectStream(conn, buildReindexInstancesSql(fromId, toId, notConsortiumRecords));
+                                                       boolean notConsortiumRecords, String tenantId) {
+    return DatabaseUtils.selectStream(conn, buildReindexInstancesSql(fromId, toId, notConsortiumRecords, tenantId));
   }
 
-  private String buildReindexInstancesSql(String fromId, String toId, boolean notConsortiumRecords) {
+  private String buildReindexInstancesSql(String fromId, String toId, boolean notConsortiumRecords, String tenantId) {
     var sql = new StringBuilder("WITH bound_instances AS MATERIALIZED (");
     sql.append("SELECT DISTINCT hr.instanceId FROM ");
-    sql.append(getFullTableName(BOUND_WITH_TABLE));
+    sql.append(getFullTableName(BOUND_WITH_TABLE, tenantId));
     sql.append(" as bw JOIN ");
-    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
+    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE, tenantId));
     sql.append(" as hr ON hr.id = bw.holdingsrecordid");
     sql.append(" WHERE hr.instanceId >= '").append(fromId).append("' AND hr.instanceId <= '").append(toId).append("'");
     sql.append(") ");
     sql.append("SELECT i.jsonb || jsonb_build_object('isBoundWith', (bi.instanceId IS NOT NULL)) FROM ");
-    sql.append(getFullTableName(INSTANCE_TABLE));
+    sql.append(getFullTableName(tenantId));
     sql.append(" i LEFT JOIN bound_instances bi ON i.id = bi.instanceId");
     sql.append(" WHERE i.id >= '").append(fromId).append("' AND i.id <= '").append(toId).append("'");
     if (notConsortiumRecords) {
@@ -286,133 +202,7 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     return sql.toString();
   }
 
-  public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {
-    try {
-      var sql = buildInventoryViewQueryWithBoundedItems(query, limit, offset);
-      return postgresClient.select(sql.toString())
-        .map(this::buildInventoryViewResponse);
-    } catch (CQLQueryValidationException e) {
-      return Future.failedFuture(new BadRequestException(e.getMessage()));
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
-  }
-
-  private String unlinkInstanceFromSubjectSql(String table, String id) {
-    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ",
-      getFullTableName(table), id);
-  }
-
-  private StringBuilder buildInventoryViewQueryWithBoundedItems(String query, int limit, int offset) {
-    var sql = selectInventoryViewWithBoundedItems();
-    sql.append(appendCqlQuery(query, limit, offset));
-    return sql;
-  }
-
-  private StringBuilder selectInventoryViewWithBoundedItems() {
-    var sql = new StringBuilder("SELECT JSONB_BUILD_OBJECT(");
-    sql.append("'instanceId', inventory_view.jsonb->>'instanceId', ");
-    sql.append("'isBoundWith', inventory_view.jsonb->'isBoundWith', ");
-    sql.append("'instance', inventory_view.jsonb->'instance', ");
-    sql.append("'holdingsRecords', inventory_view.jsonb->'holdingsRecords', ");
-    sql.append("'items', ").append(selectItemsWithBoundedRecords()).append(") AS jsonb ");
-    sql.append("FROM ");
-    sql.append(getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW));
-    sql.append(" AS inventory_view ");
-    return sql;
-  }
-
-  /**
-   * Looks up inventory view instances by HRID using the indexed {@code instance_hrid} column of the
-   * view, so that only the matching instance is built. The HRID is matched exactly, ignoring case
-   * and accents, the same normalisation as the {@code instance_hrid_idx_unique} index.
-   */
-  public Future<Response> getInventoryViewInstancesByHrid(String hrid, boolean withBoundedItems,
-                                                          int offset, int limit) {
-    var sql = withBoundedItems
-      ? selectInventoryViewWithBoundedItems()
-      : new StringBuilder("SELECT inventory_view.jsonb FROM " + getFullTableName(INSTANCE_HOLDINGS_ITEM_VIEW)
-        + " AS inventory_view ");
-    sql.append("WHERE inventory_view.instance_hrid = lower(")
-      .append(getFullTableName("f_unaccent"))
-      .append("($1)) LIMIT $2 OFFSET $3");
-    return postgresClient.execute(sql.toString(), Tuple.of(hrid, limit, offset))
-      .map(this::buildInventoryViewResponse);
-  }
-
-  private Response buildInventoryViewResponse(RowSet<Row> rowSet) {
-    try {
-      var jsonResponse = createInventoryViewJsonResponse(rowSet);
-      return Response.ok(jsonResponse.encode(), MediaType.APPLICATION_JSON_TYPE).build();
-    } catch (JsonProcessingException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
-
-  private JsonObject createInventoryViewJsonResponse(RowSet<Row> rowSet) throws JsonProcessingException {
-    var instances = new JsonArray();
-    rowSet.forEach(row -> {
-      var rowJsonValue = row.getJsonObject(0);
-      instances.add(filterNullFields(rowJsonValue));
-    });
-    var totalRecords = rowSet.size();
-    var resultInfoString = ObjectMapperTool.getMapper().writeValueAsString(
-      new ResultInfo().withTotalRecords(totalRecords));
-    return new JsonObject()
-      .put("instances", instances)
-      .put("totalRecords", totalRecords)
-      .put("resultInfo", new JsonObject(resultInfoString));
-  }
-
-  private StringBuilder selectItemsWithBoundedRecords() {
-    var sql = new StringBuilder("(SELECT jsonb_agg(combined_items.jsonb) FROM (");
-    sql.append(selectItemsByInstance());
-    sql.append(" UNION ");
-    sql.append(selectBoundedItems());
-    sql.append(") AS combined_items)");
-    return sql;
-  }
-
-  private String appendCqlQuery(String query, int limit, int offset) {
-    try {
-      var field = new CQL2PgJSON(INVENTORY_VIEW_JSONB_FIELD);
-      var cqlWrapper = new CQLWrapper(field, query, limit, offset);
-      return cqlWrapper.toString();
-    } catch (FieldException e) {
-      throw new IllegalArgumentException(e);
-    }
-  }
-
-  private StringBuilder selectItemsByInstance() {
-    var sql = new StringBuilder("SELECT item.jsonb FROM ");
-    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
-    sql.append(" AS hr JOIN ");
-    sql.append(getFullTableName(ITEM_TABLE));
-    sql.append(" ON item.holdingsRecordId = hr.id AND hr.instanceId = inventory_view.id ");
-    return sql;
-  }
-
-  private StringBuilder selectBoundedItems() {
-    var sql = new StringBuilder("SELECT item.jsonb FROM ");
-    sql.append(getFullTableName(ITEM_TABLE));
-    sql.append(" JOIN ");
-    sql.append(getFullTableName(BOUND_WITH_TABLE));
-    sql.append(" AS bwp ON item.id = bwp.itemid ");
-    sql.append("JOIN ");
-    sql.append(getFullTableName(HOLDINGS_RECORD_TABLE));
-    sql.append(" AS hr ON hr.id = bwp.holdingsrecordid AND hr.instanceId = inventory_view.id");
-    return sql;
-  }
-
-  private JsonObject filterNullFields(JsonObject rowJsonValue) {
-    return rowJsonValue
-      .stream()
-      .filter(field -> field.getValue() != null)
-      .collect(
-        Collectors.collectingAndThen(
-          Collectors.toMap(Entry::getKey, Entry::getValue),
-          JsonObject::new
-        )
-      );
+  private String unlinkInstanceFromSubjectSql(String table, String id, String tenantId) {
+    return String.format("DELETE FROM %s WHERE instance_id = '%s'; ", getFullTableName(table, tenantId), id);
   }
 }

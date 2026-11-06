@@ -17,54 +17,50 @@ public class InstanceStatusApi extends BaseApi<InstanceStatus, InstanceStatuses>
   @Validate
   @Override
   public void getInstanceStatuses(String query, String totalRecords, int offset, int limit,
-                                  Map<String, String> okapiHeaders,
+                                  Map<String, String> headers,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceStatusesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postInstanceStatuses(InstanceStatus entity, Map<String, String> okapiHeaders,
+  public void postInstanceStatuses(InstanceStatus entity, Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostInstanceStatusesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteInstanceStatuses(Map<String, String> okapiHeaders,
+  public void deleteInstanceStatuses(Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
+    deleteEntities(headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getInstanceStatusesByInstanceStatusId(String instanceStatusId,
-                                                    Map<String, String> okapiHeaders,
+                                                    Map<String, String> headers,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
-    getEntityById(instanceStatusId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceStatusesByInstanceStatusIdResponse.class);
+    getEntityById(instanceStatusId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteInstanceStatusesByInstanceStatusId(String instanceStatusId,
-                                                       Map<String, String> okapiHeaders,
+                                                       Map<String, String> headers,
                                                        Handler<AsyncResult<Response>> asyncResultHandler,
                                                        Context vertxContext) {
-    deleteEntityById(instanceStatusId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteInstanceStatusesByInstanceStatusIdResponse.class);
+    deleteEntityById(instanceStatusId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putInstanceStatusesByInstanceStatusId(String instanceStatusId, InstanceStatus entity,
-                                                    Map<String, String> okapiHeaders,
+                                                    Map<String, String> headers,
                                                     Handler<AsyncResult<Response>> asyncResultHandler,
                                                     Context vertxContext) {
-    putEntityById(instanceStatusId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutInstanceStatusesByInstanceStatusIdResponse.class);
+    putEntityById(instanceStatusId, entity, headers, asyncResultHandler);
   }
 
   @Override

@@ -14,6 +14,7 @@ import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaConsumerWrapper;
 import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
+import org.folio.persist.InstanceRepository;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.utils.Environment;
 
@@ -26,17 +27,21 @@ public class ShadowInstanceSynchronizationVerticle extends AbstractVerticle {
   private static final String TENANT_PATTERN = "\\w{1,}";
 
   private final ConsortiumDataCache consortiumDataCache;
+  private final InstanceRepository instanceRepository;
+  private final HttpClient httpClient;
 
-  public ShadowInstanceSynchronizationVerticle(ConsortiumDataCache consortiumDataCache) {
+  public ShadowInstanceSynchronizationVerticle(ConsortiumDataCache consortiumDataCache, HttpClient httpClient,
+                                               InstanceRepository instanceRepository) {
+    this.instanceRepository = instanceRepository;
     this.consortiumDataCache = consortiumDataCache;
+    this.httpClient = httpClient;
   }
 
   @Override
   public void start(Promise<Void> startPromise) {
     log.info("start:: Starting ShadowInstanceSynchronizationVerticle");
-    HttpClient httpClient = vertx.createHttpClient();
     ShadowInstanceSynchronizationHandler handler =
-      new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, vertx);
+      new ShadowInstanceSynchronizationHandler(consortiumDataCache, httpClient, instanceRepository);
 
     createKafkaConsumerWrapper(handler).onComplete(startPromise);
   }

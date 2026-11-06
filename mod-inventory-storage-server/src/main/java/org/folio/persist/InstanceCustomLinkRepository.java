@@ -1,6 +1,5 @@
 package org.folio.persist;
 
-import static org.folio.rest.persist.PgUtil.postgresClient;
 import static org.folio.services.instance.InstanceCustomLinkService.INSTANCE_CUSTOM_LINK_TABLE;
 
 import io.vertx.core.Context;
@@ -9,14 +8,15 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstanceCustomLink;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.persist.Conn;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCustomLink> {
   private static final int MAXIMUM_LINK_COUNT = 10;
 
@@ -26,8 +26,8 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
       COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'name')) = lower(f_unaccent($1))) AS name_count,
       COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'linkText')) = lower(f_unaccent($2))) AS linktext_count,
       COUNT(*) FILTER (WHERE lower(f_unaccent(jsonb ->> 'link')) = lower(f_unaccent($3))) AS link_count
-    FROM
-      """ + INSTANCE_CUSTOM_LINK_TABLE;
+    FROM %s;
+    """.formatted(INSTANCE_CUSTOM_LINK_TABLE);
 
   private static final String ON_MODIFY_QUERY = """
     SELECT
@@ -40,11 +40,11 @@ public class InstanceCustomLinkRepository extends AbstractRepository<InstanceCus
         lower(f_unaccent(jsonb ->> 'link')) = lower(f_unaccent($3))
         AND id != $4
       ) AS link_count
-    FROM
-      """ + INSTANCE_CUSTOM_LINK_TABLE;
+    FROM %s;
+    """.formatted(INSTANCE_CUSTOM_LINK_TABLE);
 
-  public InstanceCustomLinkRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), INSTANCE_CUSTOM_LINK_TABLE, InstanceCustomLink.class);
+  public InstanceCustomLinkRepository(Context context) {
+    super(context, INSTANCE_CUSTOM_LINK_TABLE, InstanceCustomLink.class);
   }
 
   public Future<String> create(Conn conn, InstanceCustomLink entity) {

@@ -1,16 +1,15 @@
 package org.folio.services.instance;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
 import io.vertx.core.Future;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,16 +20,14 @@ import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.domainevent.InstanceDateTypeDomainEventPublisher;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * InstanceDateTypeService's constructor self-constructs its repository/publisher from a real
- * Context, so this uses the same constructor-bypass-plus-field-injection approach as
- * HoldingsServiceTest. patchInstanceDateTypes's consortium routing is the one real branch in an
+ * patchInstanceDateTypes's consortium routing is the one real branch in an
  * otherwise thin CRUD-passthrough class - doUpdate is left to reach only as far as
- * repository.getById (stubbed to fail fast) so the test doesn't need to also mock PgUtil.put's
- * static, handler-based machinery.
+ * repository.getById (stubbed to fail fast).
  */
 class InstanceDateTypeServiceTest {
 
@@ -40,64 +37,61 @@ class InstanceDateTypeServiceTest {
   @Test
   @DisplayName("should proceed to update when there is no consortium data")
   void shouldProceedToUpdate_whenNoConsortiumData() {
-    var repository = mock(InstanceDateTypeRepository.class);
-    var service = serviceWith(repository, CENTRAL_TENANT, Optional.empty());
-    when(repository.getById(anyString())).thenReturn(Future.failedFuture("stub"));
+    var headers = headers(CENTRAL_TENANT);
+    var repository = failingRepository();
+    var service = serviceWith(headers, Optional.empty(), repository);
 
-    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest());
+    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest(), headers);
 
     assertThat(result.failed()).isTrue();
-    verify(repository).getById("id-1");
+    verify(repository).getById("id-1", tenantId(headers));
   }
 
   @Test
   @DisplayName("should proceed to update when the tenant is the central tenant")
   void shouldProceedToUpdate_whenTenantIsCentralTenant() {
-    var repository = mock(InstanceDateTypeRepository.class);
+    var headers = headers(CENTRAL_TENANT);
     var consortiumData = new ConsortiumData(CENTRAL_TENANT, "consortium-1", List.of(MEMBER_TENANT));
-    var service = serviceWith(repository, CENTRAL_TENANT, Optional.of(consortiumData));
-    when(repository.getById(anyString())).thenReturn(Future.failedFuture("stub"));
+    var repository = failingRepository();
+    var service = serviceWith(headers, Optional.of(consortiumData), repository);
 
-    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest());
+    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest(), headers);
 
     assertThat(result.failed()).isTrue();
-    verify(repository).getById("id-1");
+    verify(repository).getById("id-1", tenantId(headers));
   }
 
   @Test
   @DisplayName("should reject the update when the tenant is a consortium member tenant")
   void shouldRejectUpdate_whenTenantIsMemberTenant() {
-    var repository = mock(InstanceDateTypeRepository.class);
+    var headers = headers(MEMBER_TENANT);
     var consortiumData = new ConsortiumData(CENTRAL_TENANT, "consortium-1", List.of(MEMBER_TENANT));
-    var service = serviceWith(repository, MEMBER_TENANT, Optional.of(consortiumData));
+    var repository = failingRepository();
+    var service = serviceWith(headers, Optional.of(consortiumData), repository);
 
-    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest());
+    var result = service.patchInstanceDateTypes("id-1", new InstanceDateTypePatchRequest(), headers);
 
     assertThat(result.failed()).isTrue();
     assertThat(result.cause()).isInstanceOf(BadRequestException.class);
-    verify(repository, never()).getById(anyString());
+    verify(repository, never()).getById(anyString(), any());
   }
 
-  private static InstanceDateTypeService serviceWith(InstanceDateTypeRepository repository, String tenant,
-                                                      Optional<ConsortiumData> consortiumData) {
+  private static InstanceDateTypeRepository failingRepository() {
+    var repository = mock(InstanceDateTypeRepository.class);
+    when(repository.getById(anyString(), any())).thenReturn(Future.failedFuture("stub"));
+    return repository;
+  }
+
+  private static Map<String, String> headers(String tenant) {
+    return new CaseInsensitiveMap<>(Map.of(XOkapiHeaders.TENANT, tenant));
+  }
+
+  private static InstanceDateTypeService serviceWith(Map<String, String> headers,
+                                                      Optional<ConsortiumData> consortiumData,
+                                                      InstanceDateTypeRepository repository) {
     var consortiumDataCache = mock(ConsortiumDataCache.class);
-    Map<String, String> okapiHeaders = new CaseInsensitiveMap<>(Map.of(XOkapiHeaders.TENANT, tenant));
-    when(consortiumDataCache.getConsortiumData(okapiHeaders)).thenReturn(Future.succeededFuture(consortiumData));
-
-    var service = mock(InstanceDateTypeService.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
-    setField(service, "repository", repository);
-    setField(service, "consortiumDataCache", consortiumDataCache);
-    setField(service, "okapiHeaders", okapiHeaders);
-    return service;
-  }
-
-  private static void setField(Object target, String fieldName, Object value) {
-    try {
-      Field field = target.getClass().getDeclaredField(fieldName);
-      field.setAccessible(true);
-      field.set(target, value);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
+    when(consortiumDataCache.getConsortiumData(headers)).thenReturn(Future.succeededFuture(consortiumData));
+    return new InstanceDateTypeService(consortiumDataCache,
+      mock(InstanceDateTypeDomainEventPublisher.class), repository);
   }
 }

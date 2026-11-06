@@ -4,121 +4,65 @@ import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
-import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
-import static org.folio.rest.support.ResponseUtil.isUpdateSuccessResponse;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import java.util.Collection;
 import java.util.List;
-import javax.ws.rs.core.Response;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.AbstractRepository;
-import org.folio.rest.support.CollectionUtil;
 import org.folio.services.batch.BatchOperationContext;
+import org.folio.utils.CollectionUtil;
 
 abstract class AbstractDomainEventPublisher<D, E> {
   private static final Logger log = getLogger(AbstractDomainEventPublisher.class);
 
-  protected final AbstractRepository<D> repository;
   protected final CommonDomainEventPublisher<E> domainEventService;
 
-  protected AbstractDomainEventPublisher(AbstractRepository<D> repository,
-                                         CommonDomainEventPublisher<E> domainEventService) {
-
-    this.repository = repository;
+  protected AbstractDomainEventPublisher(CommonDomainEventPublisher<E> domainEventService) {
     this.domainEventService = domainEventService;
   }
 
-  static <L, R> Pair<L, R> pair(L left, R right) {
-    return new ImmutablePair<>(left, right);
+  public Future<Void> publishRecordCreated(D newRecord, Map<String, String> headers) {
+    return publishRecordsCreated(singletonList(newRecord), headers);
   }
 
-  static <L, M, R> Triple<L, M, R> triple(L left, M middle, R right) {
-    return new ImmutableTriple<>(left, middle, right);
+  public Future<Void> publishRecordsCreatedOrUpdated(BatchOperationContext<D> batchOperation,
+                                                     Map<String, String> headers) {
+    log.info("Records created {}, records updated {}", batchOperation.recordsToBeCreated().size(),
+      batchOperation.existingRecords().size());
+    if (!batchOperation.publishEvents()) {
+      return succeededFuture();
+    }
+    return publishRecordsCreated(batchOperation.recordsToBeCreated(), headers)
+      .compose(notUsed -> publishUpdated(batchOperation.existingRecords(), headers));
   }
 
-  @SuppressWarnings("unchecked")
-  public Handler<Response> publishCreated() {
-    return response -> {
-      if (!isCreateSuccessResponse(response)) {
-        log.warn("Record create failed, skipping event publishing");
-        return;
-      }
-
-      publishRecordsCreated(singletonList((D) response.getEntity()));
-    };
+  public Future<Void> publishRecordUpdated(D oldRecord, Map<String, String> headers) {
+    return publishUpdated(singletonList(oldRecord), headers);
   }
 
-  public Handler<Response> publishCreatedOrUpdated(BatchOperationContext<D> batchOperation) {
-
-    return response -> {
-      if (!isCreateSuccessResponse(response)) {
-        log.warn("Records create/update failed, skipping event publishing");
-        return;
-      }
-
-      log.info("Records created {}, records updated {}", batchOperation.recordsToBeCreated().size(),
-        batchOperation.existingRecords().size());
-
-      if (batchOperation.publishEvents()) {
-        publishRecordsCreated(batchOperation.recordsToBeCreated()).compose(
-          notUsed -> publishUpdated(batchOperation.existingRecords()));
-      }
-    };
+  public Future<Void> publishRecordRemoved(D removedRecord, Map<String, String> headers) {
+    return getInstanceId(removedRecord, headers).compose(instanceId -> domainEventService.publishRecordRemoved(
+      instanceId, convertDomainToEvent(instanceId, removedRecord), headers));
   }
 
-  public Handler<Response> publishRemoved(D removedRecord) {
-    return response -> {
-      if (!isDeleteSuccessResponse(response)) {
-        log.warn("Record removal failed, no event will be sent");
-        return;
-      }
-
-      getInstanceId(removedRecord).compose(instanceId -> domainEventService.publishRecordRemoved(instanceId,
-        convertDomainToEvent(instanceId, removedRecord)));
-    };
+  public void publishRemoved(String instanceId, String rawRecord, Map<String, String> headers) {
+    domainEventService.publishRecordRemoved(instanceId, rawRecord, headers);
   }
 
-  public void publishRemoved(String instanceId, String rawRecord) {
-    domainEventService.publishRecordRemoved(instanceId, rawRecord);
+  public Future<Void> publishAllRemoved(Map<String, String> headers) {
+    return domainEventService.publishAllRecordsRemoved(headers);
   }
 
-  public Future<Void> publishAllRemoved() {
-    return domainEventService.publishAllRecordsRemoved();
-  }
+  protected abstract AbstractRepository<D> repository();
 
-  public Handler<Response> publishUpdated(D oldRecord) {
-    return response -> {
-      if (!isUpdateSuccessResponse(response)) {
-        log.warn("Record update failed, skipping event publishing");
-        return;
-      }
-
-      publishUpdated(singletonList(oldRecord));
-    };
-  }
-
-  public Handler<Response> publishUpdated(BatchOperationContext<D> batchOperation) {
-    return response -> {
-      if (!isUpdateSuccessResponse(response)) {
-        log.warn("Records update failed, skipping event publishing");
-        return;
-      }
-      log.info("Records updated {}", batchOperation.existingRecords().size());
-
-      if (batchOperation.publishEvents()) {
-        publishUpdated(batchOperation.existingRecords());
-      }
-    };
-  }
-
-  protected Future<Void> publishUpdated(Collection<D> oldRecords) {
+  protected Future<Void> publishUpdated(Collection<D> oldRecords, Map<String, String> headers) {
     if (oldRecords.isEmpty()) {
       log.info("No records were updated, skipping event sending");
       return succeededFuture();
@@ -126,12 +70,13 @@ abstract class AbstractDomainEventPublisher<D, E> {
 
     log.info("[{}] records were updated, sending events for them", oldRecords.size());
 
-    return repository.getByIds(oldRecords, this::getId)
-      .compose(updatedItems -> convertDomainsToEvents(updatedItems.values(), oldRecords))
-      .compose(domainEventService::publishRecordsUpdated);
+    return repository().getByIds(oldRecords, this::getId, tenantId(headers))
+      .compose(updatedItems -> convertDomainsToEvents(updatedItems.values(), oldRecords, headers))
+      .compose(events -> domainEventService.publishRecordsUpdated(events, headers));
   }
 
-  protected abstract Future<List<Pair<String, D>>> getRecordIds(Collection<D> domainTypes);
+  protected abstract Future<List<Pair<String, D>>> getRecordIds(Collection<D> domainTypes,
+                                                                Map<String, String> headers);
 
   protected abstract E convertDomainToEvent(String instanceId, D domain);
 
@@ -149,24 +94,36 @@ abstract class AbstractDomainEventPublisher<D, E> {
     }).toList();
   }
 
-  private Future<Void> publishRecordsCreated(Collection<D> records) {
-    return convertDomainsToEvents(records).compose(domainEventService::publishRecordsCreated);
-  }
-
-  protected Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains) {
-    return getRecordIds(domains).map(pairs -> pairs.stream()
+  protected Future<List<Pair<String, E>>> convertDomainsToEvents(Collection<D> domains,
+                                                                 Map<String, String> headers) {
+    return getRecordIds(domains, headers).map(pairs -> pairs.stream()
       .map(pair -> pair(pair.getKey(), convertDomainToEvent(pair.getKey(), pair.getValue())))
       .toList());
   }
 
   protected Future<List<Triple<String, E, E>>> convertDomainsToEvents(Collection<D> newRecords,
-                                                                    Collection<D> oldRecords) {
+                                                                      Collection<D> oldRecords,
+                                                                      Map<String, String> headers) {
 
-    return getRecordIds(oldRecords).compose(oldRecordsInstanceIds -> getRecordIds(newRecords).map(
-      newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
+    return getRecordIds(oldRecords, headers).compose(oldRecordsInstanceIds ->
+      getRecordIds(newRecords, headers).map(
+        newRecordsInstanceIds -> mapOldRecordsToNew(oldRecordsInstanceIds, newRecordsInstanceIds)));
   }
 
-  private Future<String> getInstanceId(D domainType) {
-    return getRecordIds(List.of(domainType)).map(CollectionUtil::getFirst).map(Pair::getKey);
+  static <L, R> Pair<L, R> pair(L left, R right) {
+    return new ImmutablePair<>(left, right);
+  }
+
+  static <L, M, R> Triple<L, M, R> triple(L left, M middle, R right) {
+    return new ImmutableTriple<>(left, middle, right);
+  }
+
+  private Future<Void> publishRecordsCreated(Collection<D> records, Map<String, String> headers) {
+    return convertDomainsToEvents(records, headers)
+      .compose(events -> domainEventService.publishRecordsCreated(events, headers));
+  }
+
+  private Future<String> getInstanceId(D domainType, Map<String, String> headers) {
+    return getRecordIds(List.of(domainType), headers).map(CollectionUtil::getFirst).map(Pair::getKey);
   }
 }

@@ -1,18 +1,20 @@
 package org.folio.services.consortium.processor;
 
-import static org.folio.services.domainevent.DomainEvent.createEvent;
-import static org.folio.services.domainevent.DomainEvent.deleteEvent;
-import static org.folio.services.domainevent.DomainEvent.updateEvent;
+import static org.folio.services.domainevent.model.DomainEvent.createEvent;
+import static org.folio.services.domainevent.model.DomainEvent.deleteEvent;
+import static org.folio.services.domainevent.model.DomainEvent.updateEvent;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.rest.jaxrs.model.TimePeriod;
+import org.folio.services.servicepoint.ServicePointService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,18 +24,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 @ExtendWith(VertxExtension.class)
 class ServicePointSynchronizationEventProcessorTest {
   private static final String TENANT = "tenant";
+  private static final ServicePointService NO_SERVICE = null;
 
   @Test
   void shouldFailToUpdateEventDueToProcessEventException(VertxTestContext testContext) {
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(new ServicePoint(), new ServicePoint(), TENANT));
+      updateEvent(new ServicePoint(), new ServicePoint(), TENANT), NO_SERVICE);
     processEventToThrowException(updateEventProcessor, testContext);
   }
 
   @Test
   void shouldFailToCreateEventDueToProcessEventException(VertxTestContext testContext) {
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
-      createEvent(new ServicePoint(), TENANT));
+      createEvent(new ServicePoint(), TENANT), NO_SERVICE);
     processEventToThrowException(createEventProcessor, testContext);
   }
 
@@ -42,7 +45,7 @@ class ServicePointSynchronizationEventProcessorTest {
   void shouldReturnFalseIfServicePointsAreNull(ServicePoint oldServicepoint, ServicePoint newServicepoint) {
     String tenant = "tenant";
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(oldServicepoint, newServicepoint, tenant));
+      updateEvent(oldServicepoint, newServicepoint, tenant), NO_SERVICE);
 
     assertFalse(updateEventProcessor.validateEventEntity());
   }
@@ -50,9 +53,9 @@ class ServicePointSynchronizationEventProcessorTest {
   @Test
   void shouldReturnFalseIfServicePointIsNull() {
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
-      createEvent(null, TENANT));
+      createEvent(null, TENANT), NO_SERVICE);
     var deleteEventProcessor = new ServicePointSynchronizationDeleteEventProcessor(
-      deleteEvent(null, TENANT));
+      deleteEvent(null, TENANT), NO_SERVICE);
 
     assertFalse(createEventProcessor.validateEventEntity());
     assertFalse(deleteEventProcessor.validateEventEntity());
@@ -62,7 +65,7 @@ class ServicePointSynchronizationEventProcessorTest {
   void shouldReturnFalseIfServicePointsAreIdentical() {
     var servicepoint = new ServicePoint();
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(servicepoint, servicepoint, TENANT));
+      updateEvent(servicepoint, servicepoint, TENANT), NO_SERVICE);
 
     assertFalse(updateEventProcessor.validateEventEntity());
   }
@@ -73,7 +76,7 @@ class ServicePointSynchronizationEventProcessorTest {
     var newServicepoint = new ServicePoint().withId(UUID.randomUUID().toString());
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(oldServicepoint, newServicepoint, TENANT));
+      updateEvent(oldServicepoint, newServicepoint, TENANT), NO_SERVICE);
 
     assertTrue(updateEventProcessor.validateEventEntity());
   }
@@ -82,9 +85,9 @@ class ServicePointSynchronizationEventProcessorTest {
   void shouldReturnTrueForCreateAndDeleteIfServicePointIsValid() {
     var servicepoint = new ServicePoint().withId(UUID.randomUUID().toString());
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
-      createEvent(servicepoint, TENANT));
+      createEvent(servicepoint, TENANT), NO_SERVICE);
     var deleteEventProcessor = new ServicePointSynchronizationDeleteEventProcessor(
-      deleteEvent(servicepoint, TENANT));
+      deleteEvent(servicepoint, TENANT), NO_SERVICE);
 
     assertTrue(createEventProcessor.validateEventEntity());
     assertTrue(deleteEventProcessor.validateEventEntity());
@@ -97,9 +100,9 @@ class ServicePointSynchronizationEventProcessorTest {
       .withHoldShelfExpiryPeriod(new TimePeriod());
 
     var updateEventProcessor = new ServicePointSynchronizationUpdateEventProcessor(
-      updateEvent(oldServicepoint, newServicepoint, TENANT));
+      updateEvent(oldServicepoint, newServicepoint, TENANT), NO_SERVICE);
     var createEventProcessor = new ServicePointSynchronizationCreateEventProcessor(
-      createEvent(newServicepoint, TENANT));
+      createEvent(newServicepoint, TENANT), NO_SERVICE);
 
     assertFalse(updateEventProcessor.validateEventEntity());
     assertFalse(createEventProcessor.validateEventEntity());
@@ -115,7 +118,7 @@ class ServicePointSynchronizationEventProcessorTest {
   private void processEventToThrowException(ServicePointSynchronizationEventProcessor processor,
                                             VertxTestContext testContext) {
 
-    processor.processEvent(null, "")
+    processor.processEvent(null, "", Map.of())
       .onComplete(ar ->
         testContext.verify(() -> {
           assertInstanceOf(RuntimeException.class, ar.cause());

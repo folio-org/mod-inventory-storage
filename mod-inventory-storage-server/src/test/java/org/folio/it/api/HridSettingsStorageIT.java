@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 import org.folio.it.BaseIntegrationTest;
+import org.folio.persist.HridSettingsRepository;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.HridSetting;
@@ -21,7 +22,7 @@ import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.HridManager;
+import org.folio.services.HridManager;
 import org.folio.support.ResourcePaths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,9 +53,9 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   @BeforeEach
   void resetHridSettings(Vertx vertx) {
     var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    hridManager = new HridManager(postgresClient);
+    hridManager = new HridManager(new HridSettingsRepository(vertx.getOrCreateContext()));
 
-    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS));
+    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS, TENANT_ID));
     await(postgresClient.selectSingle("select setval('hrid_instances_seq',1,FALSE)"));
     await(postgresClient.selectSingle("select setval('hrid_holdings_seq',1,FALSE)"));
     await(postgresClient.selectSingle("select setval('hrid_items_seq',1,FALSE)"));
@@ -145,7 +146,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should get the next instance hrid without leading zeroes when disabled")
   void shouldGetNextInstanceHrid_whenLeadingZeroesDisabled() {
-    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS_WITHOUT_LEADING_ZEROES));
+    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS_WITHOUT_LEADING_ZEROES, TENANT_ID));
 
     assertThat(await(nextInstanceHrid())).isEqualTo("in1");
   }
@@ -157,7 +158,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(250L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
       .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextInstanceHrid())).isEqualTo("in00000000250");
   }
@@ -170,7 +171,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
       .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
       .withCommonRetainLeadingZeroes(false);
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextInstanceHrid())).isEqualTo("in250");
   }
@@ -178,13 +179,13 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should get the next holding hrid")
   void shouldGetNextHoldingHrid() {
-    assertThat(await(hridManager.populateHrid(new HoldingsRecord())).getHrid()).isEqualTo("ho00000000001");
+    assertThat(await(hridManager.populateHrid(new HoldingsRecord(), TENANT_ID)).getHrid()).isEqualTo("ho00000000001");
   }
 
   @Test
   @DisplayName("should get the next holding hrid without leading zeroes when disabled")
   void shouldGetNextHoldingHrid_whenLeadingZeroesDisabled() {
-    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS_WITHOUT_LEADING_ZEROES));
+    await(hridManager.updateHridSettings(INITIAL_HRID_SETTINGS_WITHOUT_LEADING_ZEROES, TENANT_ID));
 
     assertThat(await(nextHoldingsHrid())).isEqualTo("ho1");
   }
@@ -196,7 +197,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
       .withItems(new HridSetting().withPrefix("it").withStartNumber(1L));
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextHoldingsHrid())).isEqualTo("ho00000007890");
   }
@@ -209,7 +210,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(7890L))
       .withItems(new HridSetting().withPrefix("it").withStartNumber(1L))
       .withCommonRetainLeadingZeroes(false);
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextHoldingsHrid())).isEqualTo("ho7890");
   }
@@ -227,7 +228,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withInstances(new HridSetting().withPrefix("in").withStartNumber(1L))
       .withHoldings(new HridSetting().withPrefix("ho").withStartNumber(1L))
       .withItems(new HridSetting().withPrefix("it").withStartNumber(87654321L));
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextItemHrid())).isEqualTo("it00087654321");
   }
@@ -249,7 +250,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withInstances(new HridSetting().withStartNumber(100L))
       .withHoldings(new HridSetting().withStartNumber(200L))
       .withItems(new HridSetting().withStartNumber(300L));
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextItemHrid())).isEqualTo("00000000300");
   }
@@ -257,16 +258,16 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   @Test
   @DisplayName("should roll back the hrid settings when the update transaction fails")
   void shouldRollBackHridSettings_whenUpdateTransactionFails() {
-    var originalHridSettings = await(hridManager.getHridSettings());
+    var originalHridSettings = await(hridManager.getHridSettings(TENANT_ID));
     var newHridSettings = new HridSettings()
       .withInstances(new HridSetting().withStartNumber(111L))
       .withHoldings(new HridSetting().withStartNumber(200L))
       .withItems(new HridSetting().withStartNumber(999_999_999_999L));
 
-    var future = hridManager.updateHridSettings(newHridSettings);
+    var future = hridManager.updateHridSettings(newHridSettings, TENANT_ID);
     assertThatThrownBy(() -> await(future)).isInstanceOf(IllegalStateException.class);
 
-    var currentHridSettings = await(hridManager.getHridSettings());
+    var currentHridSettings = await(hridManager.getHridSettings(TENANT_ID));
     assertThat(currentHridSettings.getId()).isEqualTo(originalHridSettings.getId());
     assertThat(currentHridSettings.getInstances().getPrefix())
       .isEqualTo(originalHridSettings.getInstances().getPrefix());
@@ -289,7 +290,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withInstances(new HridSetting().withStartNumber(9_999_999_997L))
       .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
       .withItems(new HridSetting().withStartNumber(9_999_999_999L));
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextInstanceHrid())).isEqualTo("09999999997");
     assertThat(await(nextHoldingsHrid())).isEqualTo("09999999998");
@@ -304,7 +305,7 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
       .withHoldings(new HridSetting().withStartNumber(9_999_999_998L))
       .withItems(new HridSetting().withStartNumber(9_999_999_999L))
       .withCommonRetainLeadingZeroes(false);
-    await(hridManager.updateHridSettings(newHridSettings));
+    await(hridManager.updateHridSettings(newHridSettings, TENANT_ID));
 
     assertThat(await(nextInstanceHrid())).isEqualTo("9999999997");
     assertThat(await(nextHoldingsHrid())).isEqualTo("9999999998");
@@ -346,15 +347,15 @@ class HridSettingsStorageIT extends BaseIntegrationTest {
   }
 
   private Future<String> nextInstanceHrid() {
-    return hridManager.populateHrid(new Instance()).map(Instance::getHrid);
+    return hridManager.populateHrid(new Instance(), TENANT_ID).map(Instance::getHrid);
   }
 
   private Future<String> nextHoldingsHrid() {
-    return hridManager.populateHrid(new HoldingsRecord()).map(HoldingsRecord::getHrid);
+    return hridManager.populateHrid(new HoldingsRecord(), TENANT_ID).map(HoldingsRecord::getHrid);
   }
 
   private Future<String> nextItemHrid() {
-    return hridManager.populateHrid(new Item()).map(Item::getHrid);
+    return hridManager.populateHrid(new Item(), TENANT_ID).map(Item::getHrid);
   }
 
   private TestResponse updateHridSettings(HridSettings hridSettings) {

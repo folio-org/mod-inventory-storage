@@ -30,27 +30,27 @@ class ReindexFileReadyEventPublisherTest {
 
   @Test
   void publish_success_eventSentToKafka() {
-    final var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
+    final var publisher = new ReindexFileReadyEventPublisher(producerManager);
     when(producerManager.createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenReturn(succeededFuture());
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.close()).thenReturn(succeededFuture());
 
-    await(publisher.publish(buildEvent()));
+    await(publisher.publish(buildEvent(), okapiHeaders()));
 
     verify(producer).send(any());
   }
 
   @Test
   void publish_kafkaSendFails_futureFailedWithCause() {
-    final var publisher = new ReindexFileReadyEventPublisher(okapiHeaders(), producerManager);
+    final var publisher = new ReindexFileReadyEventPublisher(producerManager);
     var cause = new RuntimeException("Kafka down");
     when(producerManager.createShared(any())).thenReturn(producer);
     when(producer.send(any())).thenReturn(failedFuture(cause));
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.close()).thenReturn(succeededFuture());
 
-    var publishResult = publisher.publish(buildEvent());
+    var publishResult = publisher.publish(buildEvent(), okapiHeaders());
     assertThrows(RuntimeException.class, () -> await(publishResult));
   }
 

@@ -30,6 +30,7 @@
     <aspectj.version>1.9.26</aspectj.version>
     <folio-kafka-wrapper.version>4.1.0-SNAPSHOT</folio-kafka-wrapper.version>
     <folio-liquibase-util.version>1.12.0-SNAPSHOT</folio-liquibase-util.version>
+    <folio-di-support.version>4.1.0-SNAPSHOT</folio-di-support.version>
     <caffeine.version>3.3.1</caffeine.version>
     <lombok.version>1.18.48</lombok.version>
     <commons-lang3.version>3.21.0</commons-lang3.version>

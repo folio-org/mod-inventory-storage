@@ -1,95 +1,64 @@
 package org.folio.services.location;
 
 import static org.folio.rest.impl.StorageHelper.logAndSaveError;
-import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.folio.persist.LocationRepository;
-import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Location;
 import org.folio.rest.jaxrs.model.Locations;
 import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.jaxrs.resource.Locations.DeleteLocationsByIdResponse;
-import org.folio.rest.jaxrs.resource.Locations.DeleteLocationsResponse;
-import org.folio.rest.jaxrs.resource.Locations.GetLocationsByIdResponse;
-import org.folio.rest.jaxrs.resource.Locations.PostLocationsResponse;
-import org.folio.rest.jaxrs.resource.Locations.PutLocationsByIdResponse;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.services.domainevent.LocationDomainEventPublisher;
+import org.springframework.stereotype.Service;
 
+@Service
 public class LocationService {
 
-  public static final String LOCATION_TABLE = "location";
+  private final LocationDomainEventPublisher locationDomainEventPublisher;
+  private final LocationRepository locationRepository;
 
-  private final Context context;
-  private final Map<String, String> okapiHeaders;
-  private final LocationRepository repository;
-  private final LocationDomainEventPublisher domainEventService;
-
-  public LocationService(Context context, Map<String, String> okapiHeaders) {
-    this.context = context;
-    this.okapiHeaders = okapiHeaders;
-
-    this.repository = new LocationRepository(context, okapiHeaders);
-    this.domainEventService = new LocationDomainEventPublisher(context, okapiHeaders);
+  public LocationService(LocationDomainEventPublisher locationDomainEventPublisher,
+                         LocationRepository locationRepository) {
+    this.locationRepository = locationRepository;
+    this.locationDomainEventPublisher = locationDomainEventPublisher;
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit, String totalRecords,
-                                     boolean includeShadowLocations) {
-    try {
-      return repository.getByQuery(cql, offset, limit, totalRecords, includeShadowLocations)
-        .map(results -> {
-          var collection = new Locations();
-          collection.setLocations(results.getResults());
-          collection.setTotalRecords(results.getResultInfo().getTotalRecords());
-          return Response.ok(collection, MediaType.APPLICATION_JSON_TYPE).build();
-        });
-    } catch (CQLQueryValidationException e) {
-      return Future.failedFuture(new BadRequestException(e.getMessage()));
-    } catch (Exception e) {
-      return Future.failedFuture(e);
-    }
+  public Future<Locations> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                      boolean includeShadowLocations, Map<String, String> headers) {
+    var additionalCql = includeShadowLocations ? null : "isShadow=false";
+    return locationRepository
+      .query(cql, additionalCql, offset, limit, totalRecords, tenantId(headers))
+      .map(results -> new Locations()
+        .withLocations(results.getResults())
+        .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
-  public Future<Response> getById(String id) {
-    return PgUtil.getById(LOCATION_TABLE, Location.class, id, okapiHeaders, context,
-      GetLocationsByIdResponse.class);
+  public Future<Location> getById(String id, Map<String, String> headers) {
+    return locationRepository.findById(id, tenantId(headers));
   }
 
-  public Future<Response> create(Location location) {
+  public Future<Location> create(Location location, Map<String, String> headers) {
     var checks = List.of(checkAtLeastOneServicePoint(location),
       checkForDuplicateServicePoints(location),
       checkPrimaryServicePointRelationship(location));
     return doLocationChecks(checks)
       .compose(exceptions -> {
         if (exceptions.isEmpty()) {
-          return post(LOCATION_TABLE, location, okapiHeaders, context, PostLocationsResponse.class)
-            .onSuccess(domainEventService.publishCreated());
-        } else {
-          var errors = toErrors(exceptions);
-          return Future.succeededFuture(PostLocationsResponse
-            .respond422WithApplicationJson(errors));
+          return locationRepository.create(location, tenantId(headers))
+            .onSuccess(created -> locationDomainEventPublisher.publishRecordCreated(created, headers));
         }
+        return Future.failedFuture(new ValidationException(toErrors(exceptions)));
       });
   }
 
-  public Future<Response> update(String id, Location location) {
+  public Future<Void> update(String id, Location location, Map<String, String> headers) {
     if (location.getId() == null) {
       location.setId(id);
     }
@@ -100,30 +69,24 @@ public class LocationService {
     return doLocationChecks(checks)
       .compose(exceptions -> {
         if (exceptions.isEmpty()) {
-          return repository.getById(id)
-            .compose(
-              oldLocation -> put(LOCATION_TABLE, location, id, okapiHeaders, context, PutLocationsByIdResponse.class)
-                .onSuccess(domainEventService.publishUpdated(oldLocation))
-            );
-        } else {
-          return Future.succeededFuture(PostLocationsResponse
-            .respond422WithApplicationJson(toErrors(exceptions)));
+          return locationRepository.getById(id, tenantId(headers))
+            .compose(oldLocation -> locationRepository.replace(id, location, tenantId(headers))
+              .onSuccess(notUsed -> locationDomainEventPublisher.publishRecordUpdated(oldLocation, headers)));
         }
+        return Future.failedFuture(new ValidationException(toErrors(exceptions)));
       });
   }
 
-  public Future<Response> delete(String id) {
-    return repository.getById(id)
-      .compose(oldLocation -> deleteById(LOCATION_TABLE, id, okapiHeaders, context,
-        DeleteLocationsByIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldLocation))
-      );
+  public Future<Void> delete(String id, Map<String, String> headers) {
+    return locationRepository.getById(id, tenantId(headers))
+      .compose(oldLocation -> locationRepository.remove(id, tenantId(headers))
+        .onSuccess(notUsed -> locationDomainEventPublisher.publishRecordRemoved(oldLocation, headers)));
   }
 
-  public Future<Response> deleteAll() {
-    return repository.deleteAll()
-      .transform(prepareDeleteAllResponse())
-      .onSuccess(response -> domainEventService.publishAllRemoved());
+  public Future<Void> deleteAll(Map<String, String> headers) {
+    return locationRepository.deleteAll(tenantId(headers))
+      .onSuccess(notUsed -> locationDomainEventPublisher.publishAllRemoved(headers))
+      .mapEmpty();
   }
 
   private Errors toErrors(List<LocationCheckException> exceptions) {
@@ -131,14 +94,6 @@ public class LocationService {
       .map(LocationCheckException::toError)
       .toList();
     return new Errors().withErrors(errorList);
-  }
-
-  private Function<AsyncResult<RowSet<Row>>, Future<Response>> prepareDeleteAllResponse() {
-    return reply -> reply.succeeded()
-                    ? Future.succeededFuture(DeleteLocationsResponse.respond204())
-                    : Future.succeededFuture(
-                      DeleteLocationsResponse.respond500WithTextPlain(reply.cause().getMessage())
-                    );
   }
 
   private Future<List<LocationCheckException>> doLocationChecks(List<Optional<LocationCheckException>> optionals) {

@@ -10,7 +10,7 @@ import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
 
 import io.vertx.core.json.JsonObject;
 import org.folio.it.BaseIntegrationTest;
-import org.folio.services.domainevent.SettingEvent;
+import org.folio.services.domainevent.model.SettingEvent;
 import org.folio.support.ResourcePaths;
 import org.folio.support.messages.SettingEventMessageChecks;
 import org.junit.jupiter.api.AfterEach;

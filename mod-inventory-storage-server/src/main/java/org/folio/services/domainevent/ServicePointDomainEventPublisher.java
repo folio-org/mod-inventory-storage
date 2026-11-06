@@ -1,28 +1,31 @@
 package org.folio.services.domainevent;
 
 import static org.folio.InventoryKafkaTopic.SERVICE_POINT;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
 import org.folio.rest.jaxrs.model.ServicePoint;
+import org.springframework.stereotype.Component;
 
-public class ServicePointDomainEventPublisher extends CommonDomainEventPublisher<ServicePoint> {
+@Component
+public class ServicePointDomainEventPublisher {
 
-  public ServicePointDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
-    super(context, okapiHeaders, SERVICE_POINT.fullTopicName(tenantId(okapiHeaders)));
+  private final CommonDomainEventPublisher<ServicePoint> publisher;
+
+  public ServicePointDomainEventPublisher(DomainEventPublisherFactory publisherFactory) {
+    this.publisher = publisherFactory.publisher(SERVICE_POINT);
   }
 
-  public Future<Void> publishUpdated(ServicePoint servicePoint, ServicePoint updatedServicePoint) {
-    return publishRecordUpdated(servicePoint.getId(), servicePoint, updatedServicePoint);
+  public Future<Void> publishUpdated(ServicePoint servicePoint, ServicePoint updatedServicePoint,
+                                     Map<String, String> headers) {
+    return publisher.publishRecordUpdated(servicePoint.getId(), servicePoint, updatedServicePoint, headers);
   }
 
-  public Future<Void> publishDeleted(ServicePoint servicePoint) {
-    return publishRecordRemoved(servicePoint.getId(), servicePoint);
+  public Future<Void> publishDeleted(ServicePoint servicePoint, Map<String, String> headers) {
+    return publisher.publishRecordRemoved(servicePoint.getId(), servicePoint, headers);
   }
 
-  public Future<Void> publishCreated(ServicePoint servicePoint) {
-    return publishRecordCreated(servicePoint.getId(), servicePoint);
+  public Future<Void> publishCreated(ServicePoint servicePoint, Map<String, String> headers) {
+    return publisher.publishRecordCreated(servicePoint.getId(), servicePoint, headers);
   }
 }

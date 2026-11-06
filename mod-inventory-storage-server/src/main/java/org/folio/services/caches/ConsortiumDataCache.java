@@ -28,14 +28,16 @@ import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.utils.Environment;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ConsortiumDataCache {
 
   private static final Logger LOG = LogManager.getLogger(ConsortiumDataCache.class);
   private static final String EXPIRATION_TIME_PARAM = "cache.consortium-data.expiration.time.seconds";
   private static final int DEFAULT_EXPIRATION_TIME_SECONDS = 300;
-  private static final String USER_TENANTS_PATH = "/user-tenants?limit=1";
-  private static final String CONSORTIUM_TENANTS_PATH = "/consortia/%s/tenants";
+  private static final String USER_TENANTS_URI = "/user-tenants?limit=1";
+  private static final String CONSORTIUM_TENANTS_URI = "/consortia/%s/tenants";
   private static final String USER_TENANTS_FIELD = "userTenants";
   private static final String CONSORTIUM_TENANTS_FIELD = "tenants";
   private static final String CENTRAL_TENANT_ID_FIELD = "centralTenantId";
@@ -84,7 +86,7 @@ public class ConsortiumDataCache {
   }
 
   private CompletableFuture<Optional<ConsortiumData>> loadConsortiumData(String tenantId, Map<String, String> headers) {
-    var request = getHttpRequest(headers, USER_TENANTS_PATH);
+    var request = getHttpRequest(headers, USER_TENANTS_URI);
 
     return getResponse(request)
       .compose(responseBody -> {
@@ -112,7 +114,7 @@ public class ConsortiumDataCache {
 
   private Future<List<String>> loadConsortiumTenants(String consortiumId,
                                                      Map<String, String> headers) {
-    var request = getHttpRequest(headers, CONSORTIUM_TENANTS_PATH.formatted(consortiumId));
+    var request = getHttpRequest(headers, CONSORTIUM_TENANTS_URI.formatted(consortiumId));
     return getResponse(request)
       .map(responseBody -> responseBody.map(entries -> entries.getJsonArray(CONSORTIUM_TENANTS_FIELD)
         .stream()

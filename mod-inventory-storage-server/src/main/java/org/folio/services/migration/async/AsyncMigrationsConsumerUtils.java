@@ -3,7 +3,6 @@ package org.folio.services.migration.async;
 import static org.folio.services.migration.async.AbstractAsyncMigrationJobRunner.ASYNC_MIGRATION_JOB_NAME;
 
 import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -33,27 +32,25 @@ public final class AsyncMigrationsConsumerUtils {
 
   public static Handler<KafkaConsumerRecords<String, JsonObject>> pollAsyncMigrationsMessages(
     KafkaConsumer<String, JsonObject> consumer,
-    Context vertxContext) {
+    AsyncMigrationJobService jobService,
+    List<AsyncBaseMigrationService> migrationServices) {
     return records -> {
       var eventsByTenant = buildTenantRecords(records);
       eventsByTenant.entrySet().parallelStream()
-        .forEach(v -> processTenantMigrations(v, vertxContext, consumer));
+        .forEach(v -> processTenantMigrations(v, consumer, jobService, migrationServices));
     };
   }
 
   private static void processTenantMigrations(Map.Entry<String, Set<ConsumerRecord<String, JsonObject>>> tenantEntry,
-                                              Context vertxContext,
-                                              KafkaConsumer<String, JsonObject> consumer) {
+                                              KafkaConsumer<String, JsonObject> consumer,
+                                              AsyncMigrationJobService jobService,
+                                              List<AsyncBaseMigrationService> migrationServices) {
     var tenantId = tenantEntry.getKey();
     var headers = new CaseInsensitiveMap<String, String>();
     headers.put(TENANT_HEADER, tenantId);
 
-    var availableMigrations = Set.<AsyncBaseMigrationService>of(
-      new ItemOrderMigrationService(vertxContext, headers));
-    var jobService = new AsyncMigrationJobService(vertxContext, headers);
-
     var migrationEvents = buildIdsForMigrations(tenantEntry.getValue());
-    var migrations = processMigrationEvents(migrationEvents, availableMigrations, jobService);
+    var migrations = processMigrationEvents(migrationEvents, migrationServices, jobService, headers);
 
     Future.all(new ArrayList<>(migrations))
       .onSuccess(composite -> consumer.commit())
@@ -62,8 +59,9 @@ public final class AsyncMigrationsConsumerUtils {
 
   private static List<CompositeFuture> processMigrationEvents(
     Map<MigrationContext, Set<String>> migrationEvents,
-    Set<AsyncBaseMigrationService> availableMigrations,
-    AsyncMigrationJobService jobService) {
+    List<AsyncBaseMigrationService> availableMigrations,
+    AsyncMigrationJobService jobService,
+    Map<String, String> headers) {
     return migrationEvents.entrySet().stream()
       .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
       .map(entry -> {
@@ -72,9 +70,9 @@ public final class AsyncMigrationsConsumerUtils {
         var ids = entry.getValue();
         var startedMigrations = availableMigrations.stream()
           .filter(javaMigration -> shouldProcessIdsForJob(javaMigration, migrationJob, migrationName))
-          .map(javaMigration -> javaMigration.runMigrationForIds(ids)
-            .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size()))
-            .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId())))
+          .map(javaMigration -> javaMigration.runMigrationForIds(ids, headers)
+            .onSuccess(notUsed -> jobService.logJobProcessed(migrationName, migrationJob.getId(), ids.size(), headers))
+            .onFailure(notUsed -> jobService.logJobFail(migrationJob.getId(), headers)))
           .toList();
         return Future.all(new ArrayList<>(startedMigrations));
       }).toList();
@@ -143,8 +141,7 @@ public final class AsyncMigrationsConsumerUtils {
 
   private static AsyncMigrationJob getMigrationJobFromMessage(ConsumerRecord<String, JsonObject> message) {
     final JsonObject payload = message.value();
-    final var oldOrNew = payload.containsKey("new")
-                         ? payload.getJsonObject("new") : payload.getJsonObject("old");
+    final var oldOrNew = payload.getJsonObject(payload.containsKey("new") ? "new" : "old");
     return oldOrNew != null ? oldOrNew.mapTo(AsyncMigrationJob.class) : null;
   }
 
@@ -156,12 +153,13 @@ public final class AsyncMigrationsConsumerUtils {
         return true;
       }
 
-      if (!(o instanceof MigrationContext)) {
+      if (!(o instanceof MigrationContext(String name, AsyncMigrationJob job1))) {
         return false;
       }
-      MigrationContext that = (MigrationContext) o;
-      return new EqualsBuilder().append(migrationName, that.migrationName)
-        .append(job, that.job).isEquals();
+      return new EqualsBuilder()
+        .append(migrationName, name)
+        .append(job, job1)
+        .isEquals();
     }
 
     @Override

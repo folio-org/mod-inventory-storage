@@ -1,7 +1,7 @@
 package org.folio.services.migration.async;
 
 import static java.lang.String.format;
-import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.persist.ItemRepository.ITEM_TABLE;
 import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
 
 import io.vertx.core.Future;

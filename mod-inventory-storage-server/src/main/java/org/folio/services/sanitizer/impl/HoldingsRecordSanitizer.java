@@ -3,12 +3,17 @@ package org.folio.services.sanitizer.impl;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.services.sanitizer.Sanitizer;
-import org.folio.services.sanitizer.SanitizerFactory;
 import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Component;
 
+@Component
 public final class HoldingsRecordSanitizer implements Sanitizer<HoldingsRecord> {
 
-  private Sanitizer<Tags> tagsSanitizer;
+  private final Sanitizer<Tags> tagsSanitizer;
+
+  public HoldingsRecordSanitizer(Sanitizer<Tags> tagsSanitizer) {
+    this.tagsSanitizer = tagsSanitizer;
+  }
 
   @Override
   public void sanitize(@Nullable HoldingsRecord holdings) {
@@ -20,14 +25,7 @@ public final class HoldingsRecordSanitizer implements Sanitizer<HoldingsRecord> 
     holdings.setFormerIds(cleanSet(holdings.getFormerIds()));
 
     var tags = holdings.getTags();
-    getTagsSanitizer().sanitize(tags);
+    tagsSanitizer.sanitize(tags);
     holdings.setTags(tags);
-  }
-
-  private Sanitizer<Tags> getTagsSanitizer() {
-    if (tagsSanitizer == null) {
-      tagsSanitizer = SanitizerFactory.getSanitizer(Tags.class);
-    }
-    return tagsSanitizer;
   }
 }

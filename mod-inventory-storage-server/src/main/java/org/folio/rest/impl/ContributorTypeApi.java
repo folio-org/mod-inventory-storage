@@ -20,47 +20,43 @@ public class ContributorTypeApi extends BaseApi<ContributorType, ContributorType
   @Validate
   @Override
   public void getContributorTypes(String query, String totalRecords, int offset, int limit,
-                                  Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                  Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetContributorTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postContributorTypes(ContributorType entity, Map<String, String> okapiHeaders,
+  public void postContributorTypes(ContributorType entity, Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostContributorTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getContributorTypesByContributorTypeId(String contributorTypeId,
-                                                     Map<String, String> okapiHeaders,
+                                                     Map<String, String> headers,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    getEntityById(contributorTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetContributorTypesByContributorTypeIdResponse.class);
+    getEntityById(contributorTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteContributorTypesByContributorTypeId(String contributorTypeId,
-                                                        Map<String, String> okapiHeaders,
+                                                        Map<String, String> headers,
                                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                                         Context vertxContext) {
-    deleteEntityById(contributorTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteContributorTypesByContributorTypeIdResponse.class);
+    deleteEntityById(contributorTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putContributorTypesByContributorTypeId(String contributorTypeId, ContributorType entity,
-                                                     Map<String, String> okapiHeaders,
+                                                     Map<String, String> headers,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    putEntityById(contributorTypeId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutContributorTypesByContributorTypeIdResponse.class);
+    putEntityById(contributorTypeId, entity, headers, asyncResultHandler);
   }
 
   @Override

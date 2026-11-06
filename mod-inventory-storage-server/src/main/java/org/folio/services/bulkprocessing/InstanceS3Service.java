@@ -1,12 +1,11 @@
 package org.folio.services.bulkprocessing;
 
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static org.folio.rest.support.InstanceBulkProcessingUtil.mapBulkInstanceRecordToInstance;
-import static org.folio.rest.support.ResponseUtil.isCreateSuccessResponse;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.services.bulkprocessing.InstanceBulkProcessingUtil.mapBulkInstanceRecordToInstance;
 
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,13 +24,14 @@ import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitle;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.support.InstanceBulkProcessingUtil;
 import org.folio.services.instance.InstanceService;
+import org.springframework.stereotype.Service;
 
 /**
  * The service that interacts with S3-compatible storage to perform upsert operations on instances retrieved
  * from external file. The file to be processed is specified through {@link BulkUpsertRequest}.
  */
+@Service
 public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service.InstanceWrapper, Instance> {
 
   private static final Logger log = LogManager.getLogger(InstanceS3Service.class);
@@ -50,10 +50,10 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   private final InstanceService instanceService;
   private final InstanceRepository instanceRepository;
 
-  public InstanceS3Service(Vertx vertx, Map<String, String> okapiHeaders) {
+  public InstanceS3Service(Vertx vertx, InstanceService instanceService, InstanceRepository instanceRepository) {
     super(vertx);
-    this.instanceService = new InstanceService(vertx.getOrCreateContext(), okapiHeaders);
-    this.instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), okapiHeaders);
+    this.instanceService = instanceService;
+    this.instanceRepository = instanceRepository;
   }
 
   @Override
@@ -81,10 +81,11 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   }
 
   @Override
-  protected Future<Void> ensureEntitiesWithNonMarcControlledFieldsData(List<InstanceWrapper> instanceWrappers) {
+  protected Future<Void> ensureEntitiesWithNonMarcControlledFieldsData(List<InstanceWrapper> instanceWrappers,
+                                                                           Map<String, String> headers) {
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
-    return instanceRepository.getByIds(instances, Instance::getId).compose(existingInstances -> {
+    return instanceRepository.getByIds(instances, Instance::getId, tenantId(headers)).compose(existingInstances -> {
       instances.forEach(instance -> {
         if (existingInstances.get(instance.getId()) != null) {
           InstanceBulkProcessingUtil.copyNonMarcControlledFields(instance, existingInstances.get(instance.getId()));
@@ -95,19 +96,12 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
   }
 
   @Override
-  protected Future<Void> upsert(List<InstanceWrapper> instanceWrappers, boolean publishEvents) {
+  protected Future<Void> upsert(List<InstanceWrapper> instanceWrappers, boolean publishEvents,
+                                 Map<String, String> headers) {
     List<Instance> instances = instanceWrappers.stream().map(InstanceWrapper::instance).toList();
 
     return instanceService.createInstances(instances, APPLY_UPSERT, APPLY_OPTIMISTIC_LOCKING, publishEvents,
-        conn -> updatePrecedingSucceedingTitles(conn, instanceWrappers))
-      .compose(response -> {
-        if (!isCreateSuccessResponse(response)) {
-          String msg = String.format("Failed to update instances, status: '%s', message: '%s'",
-            response.getStatus(), Json.encode(response.getEntity()));
-          return Future.failedFuture(msg);
-        }
-        return Future.succeededFuture();
-      });
+        conn -> updatePrecedingSucceedingTitles(conn, instanceWrappers), headers);
   }
 
   private Future<Void> updatePrecedingSucceedingTitles(Conn conn, List<InstanceWrapper> instances) {
@@ -151,5 +145,5 @@ public class InstanceS3Service extends AbstractEntityS3Service<InstanceS3Service
     return instance.getId();
   }
 
-  record InstanceWrapper(Instance instance, List<InstancePrecedingSucceedingTitle> precedingSucceedingTitles) {}
+  public record InstanceWrapper(Instance instance, List<InstancePrecedingSucceedingTitle> precedingSucceedingTitles) {}
 }

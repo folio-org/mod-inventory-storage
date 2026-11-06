@@ -1,5 +1,6 @@
 package org.folio.persist;
 
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -7,8 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
@@ -23,19 +25,18 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.rest.jaxrs.model.Setting;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SettingsRepositoryTest {
 
   private static final String TENANT_ID = "test";
+  private static final Map<String, String> HEADERS = Map.of("X-Okapi-Tenant", TENANT_ID);
   private static final String TEST_KEY = "test_key";
   private static final String USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -46,15 +47,10 @@ class SettingsRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
-
     Vertx vertx = Vertx.vertx();
     Context context = vertx.getOrCreateContext();
-    try (MockedStatic<PgUtil> mockedPgUtil = mockStatic(PgUtil.class)) {
-      mockedPgUtil.when(() -> PgUtil.postgresClient(any(Context.class), any()))
-        .thenReturn(postgresClient);
-      repository = new SettingsRepository(context, Map.of("X-Okapi-Tenant", TENANT_ID));
-    }
+    repository = spy(new SettingsRepository(context));
+    doReturn(postgresClient).when(repository).postgresClient(any());
   }
 
   @Test
@@ -76,9 +72,8 @@ class SettingsRepositoryTest {
     when(iterator.next()).thenReturn(row);
     when(rowSet.iterator()).thenReturn(iterator);
     when(postgresClient.execute(anyString(), any(Tuple.class))).thenReturn(Future.succeededFuture(rowSet));
-    when(postgresClient.getTenantId()).thenReturn(TENANT_ID);
 
-    var result = repository.findByKey(TEST_KEY);
+    var result = repository.findByKey(TEST_KEY, tenantId(HEADERS));
 
     assertTrue(result.succeeded());
     assertNotNull(result.result());
@@ -93,7 +88,7 @@ class SettingsRepositoryTest {
     when(postgresClient.execute(anyString(), any(Tuple.class)))
       .thenReturn(Future.succeededFuture(rowSet));
 
-    var result = repository.findByKey(TEST_KEY);
+    var result = repository.findByKey(TEST_KEY, tenantId(HEADERS));
 
     assertTrue(result.succeeded());
     assertNull(result.result());
@@ -121,7 +116,7 @@ class SettingsRepositoryTest {
     when(rowSet.iterator()).thenReturn(iterator);
     when(postgresClient.execute(anyString(), any(Tuple.class))).thenReturn(Future.succeededFuture(rowSet));
 
-    var result = repository.update(setting);
+    var result = repository.update(setting, tenantId(HEADERS));
 
     assertTrue(result.succeeded());
     assertEquals("true", result.result().getValue());
@@ -129,14 +124,15 @@ class SettingsRepositoryTest {
 
   @Test
   void findByKey_nullKey_throwsException() {
-    assertThrows(RuntimeException.class,
-      () -> repository.findByKey(null));
+    var tenantId = tenantId(HEADERS);
+    assertThrows(RuntimeException.class, () -> repository.findByKey(null, tenantId));
   }
 
   @Test
   void update_nullSetting_throwsException() {
     var setting = new Setting();
-    assertThrows(RuntimeException.class, () -> repository.update(setting));
+    var tenantId = tenantId(HEADERS);
+    assertThrows(RuntimeException.class, () -> repository.update(setting, tenantId));
   }
 
   private Setting createSetting() {

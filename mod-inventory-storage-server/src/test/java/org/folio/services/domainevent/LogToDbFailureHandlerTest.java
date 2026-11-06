@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import java.util.Date;
+import java.util.Map;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
 import org.hamcrest.Matchers;
@@ -29,10 +30,10 @@ class LogToDbFailureHandlerTest {
   void canHandleFailure() {
     var handler = new LogToDbFailureHandler(repository);
     handler.handleFailure(new IllegalArgumentException("null"),
-      new KafkaProducerRecordImpl<>("topic", "key", "value"));
+      new KafkaProducerRecordImpl<>("topic", "key", "value"), Map.of());
 
     var errorArgumentCaptor = ArgumentCaptor.forClass(NotificationSendingError.class);
-    verify(repository).save(any(), errorArgumentCaptor.capture());
+    verify(repository).save(any(), errorArgumentCaptor.capture(), any());
 
     var notificationSendingError = errorArgumentCaptor.getValue();
     assertThat(notificationSendingError.getId(), not(blankOrNullString()));

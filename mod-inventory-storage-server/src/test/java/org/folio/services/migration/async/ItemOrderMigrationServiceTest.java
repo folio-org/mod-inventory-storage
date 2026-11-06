@@ -11,44 +11,44 @@ import static org.mockito.Mockito.when;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
+import java.util.Map;
 import java.util.Set;
 import org.folio.persist.ItemRepository;
-import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ItemOrderMigrationServiceTest {
 
-  private PostgresClient postgresClient;
+  private ItemRepository itemRepository;
   private ItemOrderMigrationService migrationService;
 
   @BeforeEach
   void setUp() {
-    postgresClient = mock(PostgresClient.class);
-    migrationService = new ItemOrderMigrationService(postgresClient, mock(ItemRepository.class));
+    itemRepository = mock(ItemRepository.class);
+    migrationService = new ItemOrderMigrationService(itemRepository);
   }
 
   @Test
   void runMigrationForIds() {
     Set<String> ids = Set.of("holdingsId1", "holdingsId2");
-    when(postgresClient.withTrans(any())).thenReturn(Future.succeededFuture());
+    when(itemRepository.inTransaction(any(), any())).thenReturn(Future.succeededFuture());
 
-    Future<Void> result = migrationService.runMigrationForIds(ids);
+    Future<Void> result = migrationService.runMigrationForIds(ids, Map.of());
 
     assertTrue(result.succeeded());
-    verify(postgresClient, times(ids.size())).withTrans(any());
+    verify(itemRepository, times(ids.size())).inTransaction(any(), any());
   }
 
   @Test
   void processItemsForHoldings() {
     String holdingsId = "holdingsId1";
     RowSet<Row> mockRowSet = mock(RowSet.class);
-    when(postgresClient.withTrans(any())).thenReturn(Future.succeededFuture(mockRowSet));
+    when(itemRepository.inTransaction(any(), any())).thenReturn(Future.succeededFuture(mockRowSet));
 
-    Future<Void> result = migrationService.runMigrationForIds(Set.of(holdingsId));
+    Future<Void> result = migrationService.runMigrationForIds(Set.of(holdingsId), Map.of());
 
     assertTrue(result.succeeded());
-    verify(postgresClient).withTrans(any());
+    verify(itemRepository).inTransaction(any(), any());
   }
 
   @Test

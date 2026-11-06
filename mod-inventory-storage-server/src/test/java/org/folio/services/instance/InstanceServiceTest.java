@@ -3,7 +3,6 @@ package org.folio.services.instance;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.withSettings;
 
 import io.vertx.core.json.JsonObject;
@@ -12,13 +11,14 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.core.Response;
+import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.RequestEntityTooLargeException;
 import org.folio.rest.impl.StorageHelper;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.Metadata;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
 import org.folio.services.caches.ConsortiumData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -112,47 +112,7 @@ class InstanceServiceTest {
 
     var result = validateInstancesSize(instances);
 
-    assertThat(result).isNotNull();
-    assertThat(result.result().getStatus()).isEqualTo(413);
-  }
-
-  @Test
-  @DisplayName("should unset the placeholder version when optimistic locking is requested")
-  void shouldUnsetPlaceholderVersion_whenOptimisticLockingRequested() {
-    var instance = new Instance().withVersion(-1);
-
-    var result = handleInstanceOptimisticLocking(List.of(instance), true);
-
-    assertThat(result).isNull();
-    assertThat(instance.getVersion()).isNull();
-  }
-
-  @Test
-  @DisplayName("should mark every instance with the suppression sentinel when locking is disabled and allowed")
-  void shouldMarkSuppressionSentinel_whenLockingDisabledAndAllowed() {
-    var instance = new Instance();
-    try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
-      lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(true);
-
-      var result = handleInstanceOptimisticLocking(List.of(instance), false);
-
-      assertThat(result).isNull();
-      lockingUtil.verify(() -> OptimisticLockingUtil.setVersionToMinusOne(List.of(instance)));
-    }
-  }
-
-  @Test
-  @DisplayName("should reject the request when locking is disabled but suppression is not allowed")
-  void shouldRejectRequest_whenLockingDisabledButSuppressionNotAllowed() {
-    var instance = new Instance();
-    try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
-      lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(false);
-
-      var result = handleInstanceOptimisticLocking(List.of(instance), false);
-
-      assertThat(result).isNotNull();
-      assertThat(result.result().getStatus()).isEqualTo(413);
-    }
+    assertThat(result).isInstanceOf(RequestEntityTooLargeException.class);
   }
 
   @Test
@@ -173,9 +133,9 @@ class InstanceServiceTest {
   void shouldRejectBlankCql_whenDeletingInstancesByQuery() {
     var service = mock(InstanceService.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
 
-    var result = service.deleteInstances("   ");
+    var result = service.deleteInstances("   ", Map.of());
 
-    assertThat(result.result().getStatus()).isEqualTo(400);
+    assertThat(result.cause()).isInstanceOf(BadRequestException.class);
   }
 
   private static io.vertx.core.Future<Instance> validateHridChange(Instance oldInstance, Instance newInstance) {
@@ -192,14 +152,8 @@ class InstanceServiceTest {
     invokePrivate(uninitializedService(), "setMissingInstanceIds", new Class<?>[] {List.class}, instances);
   }
 
-  private static io.vertx.core.Future<Response> validateInstancesSize(List<Instance> instances) {
+  private static Throwable validateInstancesSize(List<Instance> instances) {
     return invokePrivate(uninitializedService(), "validateInstancesSize", new Class<?>[] {List.class}, instances);
-  }
-
-  private static io.vertx.core.Future<Response> handleInstanceOptimisticLocking(
-    List<Instance> instances, boolean optimisticLocking) {
-    return invokePrivate(uninitializedService(), "handleInstanceOptimisticLocking",
-      new Class<?>[] {List.class, boolean.class}, instances, optimisticLocking);
   }
 
   private static io.vertx.core.Future<Instance> applyPatch(

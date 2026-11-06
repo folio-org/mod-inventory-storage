@@ -9,13 +9,16 @@ import io.vertx.sqlclient.RowStream;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.persist.AbstractRepository;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.services.s3storage.FolioS3ClientFactory;
 import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * Orchestrates the reindex export flow shared by all record types:
@@ -27,34 +30,29 @@ import org.folio.services.s3storage.FolioS3ClientFactory.S3ConfigType;
  * Callers supply only the record-type-specific stream via a {@link Function} over {@link Conn},
  * keeping all infrastructure concerns in one place.
  */
+@Service
 public class ReindexExportOrchestrator {
 
   private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final PostgresClient postgresClient;
-  private final FolioS3Client s3Client;
-  private final String bucketName;
+  private final Supplier<FolioS3Client> s3ClientSupplier;
+  private final Supplier<String> bucketNameSupplier;
   private final ReindexFileReadyEventPublisher eventPublisher;
 
-  public ReindexExportOrchestrator(Context vertxContext, Map<String, String> okapiHeaders,
-                                   PostgresClient postgresClient) {
-    this(vertxContext, okapiHeaders, postgresClient,
-      FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX),
-      FolioS3ClientFactory.getBucketName(S3ConfigType.REINDEX),
-      new ReindexFileReadyEventPublisher(vertxContext, okapiHeaders));
+  @Autowired
+  public ReindexExportOrchestrator(Context vertxContext, ReindexFileReadyEventPublisher eventPublisher) {
+    // S3 is optional at startup, so the client and bucket are resolved when an export runs.
+    this(vertxContext, () -> FolioS3ClientFactory.getFolioS3Client(S3ConfigType.REINDEX),
+      () -> FolioS3ClientFactory.getBucketName(S3ConfigType.REINDEX), eventPublisher);
   }
 
   /**
    * Package-private constructor for testing with injected dependencies.
    */
-  ReindexExportOrchestrator(Context vertxContext, Map<String, String> okapiHeaders,
-                            PostgresClient postgresClient, FolioS3Client s3Client,
-                            String bucketName, ReindexFileReadyEventPublisher eventPublisher) {
+  ReindexExportOrchestrator(Context vertxContext, Supplier<FolioS3Client> s3ClientSupplier,
+                            Supplier<String> bucketNameSupplier, ReindexFileReadyEventPublisher eventPublisher) {
     this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-    this.postgresClient = postgresClient;
-    this.s3Client = s3Client;
-    this.bucketName = bucketName;
+    this.s3ClientSupplier = s3ClientSupplier;
+    this.bucketNameSupplier = bucketNameSupplier;
     this.eventPublisher = eventPublisher;
   }
 
@@ -63,11 +61,15 @@ public class ReindexExportOrchestrator {
    * The exported file will be named according to the pattern: {tenantId}/{recordType}/{traceId}/{rangeId}.ndjson.
    *
    * @param request        the range/job details from the HTTP request
+   * @param headers   the okapi headers of the request
+   * @param repository     the repository whose table is exported
    * @param streamProvider function that, given a DB {@link Conn}, returns the row stream to export
    */
-  public Future<Void> export(ReindexRecordsRequest request,
+  public Future<Void> export(ReindexRecordsRequest request, Map<String, String> headers,
+                             AbstractRepository<?> repository,
                              Function<Conn, Future<RowStream<Row>>> streamProvider) {
-    var tenantId = okapiHeaders.get(TENANT);
+    var s3Client = s3ClientSupplier.get();
+    var tenantId = headers.get(TENANT);
     var traceId = StringUtils.isBlank(request.getTraceId()) ? UUID.randomUUID().toString() : request.getTraceId();
     var recordType = request.getRecordType().value();
     var s3Key = tenantId + "/" + recordType + "/" + traceId + "/" + request.getId() + ".ndjson";
@@ -75,7 +77,7 @@ public class ReindexExportOrchestrator {
     var rangeTo = request.getRecordIdsRange().getTo();
     var exportService = new ReindexS3ExportService(vertxContext, s3Client);
 
-    return postgresClient.withTrans(conn -> streamProvider.apply(conn)
+    return repository.inTransaction(tenantId, conn -> streamProvider.apply(conn)
         .compose(rowStream -> exportService.exportToS3(rowStream, s3Key)))
       .compose(v -> {
         var event = ReindexFileReadyEvent.builder()
@@ -84,10 +86,10 @@ public class ReindexExportOrchestrator {
           .range(rangeFrom, rangeTo)
           .rangeId(request.getId())
           .traceId(traceId)
-          .bucket(bucketName)
+          .bucket(bucketNameSupplier.get())
           .objectKey(s3Key)
           .build();
-        return eventPublisher.publish(event);
+        return eventPublisher.publish(event, headers);
       });
   }
 }

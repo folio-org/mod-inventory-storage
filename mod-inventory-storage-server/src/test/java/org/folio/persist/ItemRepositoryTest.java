@@ -1,5 +1,6 @@
 package org.folio.persist;
 
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -11,12 +12,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -34,7 +34,7 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
-import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +47,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ItemRepositoryTest {
 
+  private static final Map<String, String> OKAPI_HEADERS = Map.of(XOkapiHeaders.TENANT, "test_tenant");
+
   private @Mock PostgresClient postgresClient;
 
   private ItemRepository itemRepository;
@@ -56,13 +58,8 @@ class ItemRepositoryTest {
   void setUp() {
     lenient().when(postgresClient.getTenantId()).thenReturn("test_tenant");
     var context = Vertx.vertx().getOrCreateContext();
-    var okapiHeaders = Map.of(XOkapiHeaders.TENANT, "test_tenant");
-
-    try (var pgUtilMock = mockStatic(PgUtil.class)) {
-      pgUtilMock.when(() -> PgUtil.postgresClient(any(Context.class), any(Map.class)))
-        .thenReturn(postgresClient);
-      itemRepository = new ItemRepository(context, okapiHeaders);
-    }
+    itemRepository = spy(new ItemRepository(context));
+    lenient().doReturn(postgresClient).when(itemRepository).postgresClient(any());
   }
 
   @ParameterizedTest
@@ -78,7 +75,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(mockRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -107,7 +104,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(mockRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -124,7 +121,7 @@ class ItemRepositoryTest {
     var items = createItemPatchRequests(10001);
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.failed());
@@ -149,7 +146,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.failedFuture(dbError));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.failed());
@@ -166,7 +163,7 @@ class ItemRepositoryTest {
     when(pgConnection.preparedQuery(anyString())).thenThrow(new RuntimeException("Unexpected error"));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.failed());
@@ -186,7 +183,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(mockRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -212,7 +209,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(emptyRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -231,7 +228,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(mockRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -264,7 +261,7 @@ class ItemRepositoryTest {
     when(preparedQuery.executeBatch(anyList())).thenReturn(Future.succeededFuture(mockRowSet));
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.succeeded());
@@ -279,7 +276,7 @@ class ItemRepositoryTest {
     var items = createItemPatchRequests(10001);
 
     // When
-    var result = itemRepository.updateItems(pgConnection, items);
+    var result = itemRepository.updateItems(connOf(pgConnection), items, tenantId(OKAPI_HEADERS));
 
     // Then
     assertTrue(result.failed());
@@ -444,6 +441,12 @@ class ItemRepositoryTest {
         return iterator.next();
       }
     };
+  }
+
+  private static Conn connOf(PgConnection pgConnection) {
+    var conn = mock(Conn.class);
+    lenient().when(conn.getPgConnection()).thenReturn(pgConnection);
+    return conn;
   }
 
   private void verifySql(PgConnection pgConnection) {

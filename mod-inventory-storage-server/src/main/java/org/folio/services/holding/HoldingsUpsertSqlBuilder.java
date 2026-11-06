@@ -1,13 +1,16 @@
 package org.folio.services.holding;
 
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+
 import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
+import org.folio.persist.helper.EntityJson;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.persist.PostgresClient;
 
 class HoldingsUpsertSqlBuilder {
   private final HoldingsRepository holdingsRepository;
@@ -18,7 +21,8 @@ class HoldingsUpsertSqlBuilder {
     this.itemRepository = itemRepository;
   }
 
-  Pair<Pair<String, Tuple>, Exception> buildUpsertSqlWithParams(List<HoldingsRecord> holdings) {
+  Pair<Pair<String, Tuple>, Exception> buildUpsertSqlWithParams(List<HoldingsRecord> holdings,
+                                                                          Map<String, String> headers) {
     var sqlBuilder = new StringBuilder();
     var params = new ArrayList<>();
 
@@ -28,8 +32,8 @@ class HoldingsUpsertSqlBuilder {
       return Pair.of(null, buildError);
     }
 
-    var holdingsTableName = holdingsRepository.getFullTableName();
-    var itemsTableName = itemRepository.getFullTableName();
+    var holdingsTableName = holdingsRepository.getFullTableName(tenantId(headers));
+    var itemsTableName = itemRepository.getFullTableName(tenantId(headers));
 
     sqlBuilder.append("), ")
       .append(buildOldDataQueries(holdingsTableName, itemsTableName))
@@ -54,7 +58,7 @@ class HoldingsUpsertSqlBuilder {
       var holding = holdings.get(i);
       params.add(holding.getId());
       try {
-        params.add(PostgresClient.pojo2JsonObject(holding));
+        params.add(EntityJson.toJsonObject(holding));
       } catch (Exception e) {
         return e;
       }
