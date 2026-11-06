@@ -32,6 +32,11 @@
       <version>${folio-kafka-wrapper.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-di-support</artifactId>
+      <version>${folio-di-support.version}</version>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-kafka-client</artifactId>
     </dependency>

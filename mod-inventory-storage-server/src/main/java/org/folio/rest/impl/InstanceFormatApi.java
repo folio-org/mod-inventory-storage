@@ -20,44 +20,43 @@ public class InstanceFormatApi extends BaseApi<InstanceFormat, InstanceFormats>
   @Validate
   @Override
   public void getInstanceFormats(String query, String totalRecords, int offset, int limit,
-                                 Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceFormatsResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postInstanceFormats(InstanceFormat entity, Map<String, String> okapiHeaders,
+  public void postInstanceFormats(InstanceFormat entity, Map<String, String> headers,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostInstanceFormatsResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getInstanceFormatsById(String id,
-                                     Map<String, String> okapiHeaders,
+                                     Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                      Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetInstanceFormatsByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteInstanceFormatsById(String id,
-                                        Map<String, String> okapiHeaders,
+                                        Map<String, String> headers,
                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                         Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteInstanceFormatsByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putInstanceFormatsById(String id, InstanceFormat entity,
-                                     Map<String, String> okapiHeaders,
+                                     Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                      Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext, PutInstanceFormatsByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

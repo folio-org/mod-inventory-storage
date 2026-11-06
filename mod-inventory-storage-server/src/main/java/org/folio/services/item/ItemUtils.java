@@ -3,7 +3,7 @@ package org.folio.services.item;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.persist.ItemRepository.ITEM_TABLE;
 import static org.folio.validator.CommonValidators.normalizeProperty;
 
 import io.vertx.core.Future;
@@ -11,15 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.helper.PgViolationMapper;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
-import org.folio.rest.jaxrs.resource.ItemStorage;
-import org.folio.rest.persist.PgUtil;
 
 public final class ItemUtils {
 
@@ -30,6 +28,10 @@ public final class ItemUtils {
   private static final String NOTES = "notes";
   private static final String CIRCULATION_NOTES = "circulationNotes";
   private static final String STAFF_ONLY = "staffOnly";
+  private static final String MATERIAL_TYPE_ID = "materialTypeId";
+  private static final String PERMANENT_LOAN_TYPE_ID = "permanentLoanTypeId";
+  private static final String HOLDINGS_RECORD_ID = "holdingsRecordId";
+  private static final String STATUS = "status";
 
   private ItemUtils() {
     throw new UnsupportedOperationException("Utility class");
@@ -58,48 +60,16 @@ public final class ItemUtils {
     return Future.succeededFuture();
   }
 
-  private static List<String> collectMissingFields(Map<String, Object> additionalProperties) {
-    var missingFields = new ArrayList<String>();
-
-    if (additionalProperties.containsKey("materialTypeId")
-        && isNullOrBlank(additionalProperties.get("materialTypeId"))) {
-      missingFields.add("materialTypeId");
-    }
-
-    if (additionalProperties.containsKey("permanentLoanTypeId")
-        && isNullOrBlank(additionalProperties.get("permanentLoanTypeId"))) {
-      missingFields.add("permanentLoanTypeId");
-    }
-
-    if (additionalProperties.containsKey("holdingsRecordId")
-        && isNullOrBlank(additionalProperties.get("holdingsRecordId"))) {
-      missingFields.add("holdingsRecordId");
-    }
-
-    // Check status object and its required name field
-    if (additionalProperties.containsKey("status")) {
-      var status = additionalProperties.get("status");
-      if (status == null) {
-        missingFields.add("status");
-      } else if (status instanceof Map<?, ?> statusMap
-          && isNullOrBlank(statusMap.get("name"))) {
-        missingFields.add("status.name");
-      }
-    }
-
-    return missingFields;
-  }
-
   public static boolean isNullOrBlank(Object value) {
     return value == null || isBlank(String.valueOf(value));
   }
 
   public static Error requiredFieldsError(String itemId, List<String> fieldNames) {
     var parameters = fieldNames.stream()
-        .map(fieldName -> new org.folio.rest.jaxrs.model.Parameter()
-            .withKey("field")
-            .withValue(fieldName))
-        .toList();
+      .map(fieldName -> new org.folio.rest.jaxrs.model.Parameter()
+        .withKey("field")
+        .withValue(fieldName))
+      .toList();
 
     return new Error()
       .withMessage("Required fields cannot be removed. ItemId: " + itemId)
@@ -123,21 +93,8 @@ public final class ItemUtils {
     }
   }
 
-  public static Future<Response> handleUpdateItemsError(Throwable throwable) {
-    var responseClass = ItemStorage.PatchItemStorageItemsResponse.class;
-    try {
-      var respond500 = responseClass.getMethod("respond500WithTextPlain", Object.class);
-      return PgUtil.response(ITEM_TABLE, "", throwable, responseClass, respond500, respond500)
-        .compose(response -> {
-          if (response.getEntity() instanceof Errors errors) {
-            return Future.failedFuture(new ValidationException(errors));
-          }
-          return Future.failedFuture(throwable);
-        });
-    } catch (NoSuchMethodException e) {
-      log.error("handleUpdateItemsError:: Failed to get respond500WithTextPlain method", e);
-      return Future.failedFuture(throwable);
-    }
+  public static <T> Future<T> handleUpdateItemsError(Throwable throwable) {
+    return Future.failedFuture(PgViolationMapper.map(ITEM_TABLE, "", throwable));
   }
 
   public static void normalizeItemFields(List<ItemPatchRequest> items) {
@@ -152,6 +109,38 @@ public final class ItemUtils {
       // normalize "staffOnly" property in notes and circulationNotes lists
       normalizeStaffOnlyInNestedLists(additionalProperties, NOTES, CIRCULATION_NOTES);
     }
+  }
+
+  private static List<String> collectMissingFields(Map<String, Object> additionalProperties) {
+    var missingFields = new ArrayList<String>();
+
+    if (additionalProperties.containsKey(MATERIAL_TYPE_ID)
+        && isNullOrBlank(additionalProperties.get(MATERIAL_TYPE_ID))) {
+      missingFields.add(MATERIAL_TYPE_ID);
+    }
+
+    if (additionalProperties.containsKey(PERMANENT_LOAN_TYPE_ID)
+        && isNullOrBlank(additionalProperties.get(PERMANENT_LOAN_TYPE_ID))) {
+      missingFields.add(PERMANENT_LOAN_TYPE_ID);
+    }
+
+    if (additionalProperties.containsKey(HOLDINGS_RECORD_ID)
+        && isNullOrBlank(additionalProperties.get(HOLDINGS_RECORD_ID))) {
+      missingFields.add(HOLDINGS_RECORD_ID);
+    }
+
+    // Check status object and its required name field
+    if (additionalProperties.containsKey(STATUS)) {
+      var status = additionalProperties.get(STATUS);
+      if (status == null) {
+        missingFields.add(STATUS);
+      } else if (status instanceof Map<?, ?> statusMap
+                 && isNullOrBlank(statusMap.get("name"))) {
+        missingFields.add("status.name");
+      }
+    }
+
+    return missingFields;
   }
 
   private static void normalizeStaffOnlyInNestedLists(Map<String, Object> props, String... fields) {

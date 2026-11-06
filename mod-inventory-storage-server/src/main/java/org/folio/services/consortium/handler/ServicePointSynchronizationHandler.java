@@ -18,21 +18,23 @@ import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.SynchronizationContext;
 import org.folio.services.consortium.processor.ServicePointSynchronizationEventProcessor;
-import org.folio.services.domainevent.DomainEvent;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.servicepoint.ServicePointService;
 
 public abstract class ServicePointSynchronizationHandler
   implements AsyncRecordHandler<String, String> {
 
-  private static final Logger log = LogManager.getLogger(
-    ServicePointSynchronizationHandler.class);
+  private static final Logger log = LogManager.getLogger(ServicePointSynchronizationHandler.class);
 
+  protected final ServicePointService servicePointService;
   private final ConsortiumDataCache consortiumDataCache;
   private final HttpClient httpClient;
   private final Vertx vertx;
 
   protected ServicePointSynchronizationHandler(ConsortiumDataCache consortiumDataCache,
-    HttpClient httpClient, Vertx vertx) {
-
+                                               HttpClient httpClient, Vertx vertx,
+                                               ServicePointService servicePointService) {
+    this.servicePointService = servicePointService;
     this.consortiumDataCache = consortiumDataCache;
     this.httpClient = httpClient;
     this.vertx = vertx;
@@ -48,25 +50,25 @@ public abstract class ServicePointSynchronizationHandler
         headers));
   }
 
-  private Future<String> processConsortiumData(
-    KafkaConsumerRecord<String, String> kafkaConsumerRecord,
-    Optional<ConsortiumData> consortiumData, CaseInsensitiveMap<String, String> headers) {
+  protected abstract ServicePointSynchronizationEventProcessor getServicePointSynchronizationProcessor(
+    DomainEvent<ServicePoint> domainEvent);
+
+  private Future<String> processConsortiumData(KafkaConsumerRecord<String, String> kafkaConsumerRecord,
+                                               Optional<ConsortiumData> consortiumData,
+                                               CaseInsensitiveMap<String, String> headers) {
 
     log.info("processConsortiumData:: {}", consortiumData);
     return consortiumData.map(data -> processConsortiumDataByEvent(data, kafkaConsumerRecord,
-        headers)).orElseGet(() -> succeededFuture(kafkaConsumerRecord.key()));
+      headers)).orElseGet(() -> succeededFuture(kafkaConsumerRecord.key()));
   }
 
   private Future<String> processConsortiumDataByEvent(ConsortiumData data,
-    KafkaConsumerRecord<String, String> kafkaConsumerRecord,
-    CaseInsensitiveMap<String, String> headers) {
+                                                      KafkaConsumerRecord<String, String> kafkaConsumerRecord,
+                                                      CaseInsensitiveMap<String, String> headers) {
 
     var event = Json.decodeValue(kafkaConsumerRecord.value(), DomainEvent.class);
     var servicePointSynchronizationProcessor = getServicePointSynchronizationProcessor(event);
     return servicePointSynchronizationProcessor.process(kafkaConsumerRecord.key(),
       new SynchronizationContext(data, headers, vertx, httpClient));
   }
-
-  protected abstract ServicePointSynchronizationEventProcessor getServicePointSynchronizationProcessor(
-    DomainEvent<ServicePoint> domainEvent);
 }

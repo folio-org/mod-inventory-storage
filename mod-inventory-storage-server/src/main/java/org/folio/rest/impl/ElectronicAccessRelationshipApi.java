@@ -18,48 +18,44 @@ public class ElectronicAccessRelationshipApi
   @Validate
   @Override
   public void getElectronicAccessRelationships(String query, String totalRecords, int offset, int limit,
-                                               Map<String, String> okapiHeaders,
+                                               Map<String, String> headers,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetElectronicAccessRelationshipsResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void postElectronicAccessRelationships(ElectronicAccessRelationship entity,
-                                                Map<String, String> okapiHeaders,
+                                                Map<String, String> headers,
                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                 Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostElectronicAccessRelationshipsResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getElectronicAccessRelationshipsById(String id, Map<String, String> okapiHeaders,
+  public void getElectronicAccessRelationshipsById(String id, Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
-      GetElectronicAccessRelationshipsByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteElectronicAccessRelationshipsById(String id, Map<String, String> okapiHeaders,
+  public void deleteElectronicAccessRelationshipsById(String id, Map<String, String> headers,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteElectronicAccessRelationshipsByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putElectronicAccessRelationshipsById(String id, ElectronicAccessRelationship entity,
-                                                   Map<String, String> okapiHeaders,
+                                                   Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutElectronicAccessRelationshipsByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

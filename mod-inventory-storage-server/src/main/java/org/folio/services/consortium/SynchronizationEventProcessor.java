@@ -1,7 +1,7 @@
 package org.folio.services.consortium;
 
 import io.vertx.core.Future;
-import org.folio.services.domainevent.DomainEvent;
+import org.folio.services.domainevent.model.DomainEvent;
 
 public interface SynchronizationEventProcessor {
 

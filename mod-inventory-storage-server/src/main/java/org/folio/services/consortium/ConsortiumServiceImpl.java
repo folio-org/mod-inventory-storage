@@ -22,9 +22,13 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.consortium.entities.SharingStatus;
 import org.folio.services.consortium.exceptions.ConsortiumException;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ConsortiumServiceImpl implements ConsortiumService {
-  private static final Logger LOGGER = LogManager.getLogger(ConsortiumServiceImpl.class);
+
+  private static final Logger log = LogManager.getLogger(ConsortiumServiceImpl.class);
+
   private static final String SHARE_INSTANCE_ENDPOINT = "/consortia/%s/sharing/instances";
   private static final String SHARING_INSTANCE_ERROR = "Error during sharing Instance for sourceTenantId:"
                                                        + " %s, targetTenantId: %s, instanceIdentifier: %s, "
@@ -40,8 +44,8 @@ public class ConsortiumServiceImpl implements ConsortiumService {
   @Override
   public Future<SharingInstance> createShadowInstance(String instanceId, ConsortiumData consortiumData,
                                                       Map<String, String> headers) {
-    LOGGER.info("createShadowInstance:: instance with id: {} is not found in local tenant."
-                + " Trying to create a shadow instance", instanceId);
+    log.info("createShadowInstance:: instance with id: {} is not found in local tenant."
+             + " Trying to create a shadow instance", instanceId);
     SharingInstance sharingInstance = new SharingInstance();
     String centralTenantId = consortiumData.centralTenantId();
     sharingInstance.setSourceTenantId(centralTenantId);
@@ -69,14 +73,14 @@ public class ConsortiumServiceImpl implements ConsortiumService {
         if (httpResponse.statusCode() == HTTP_CREATED
             && !SharingStatus.ERROR.toString().equals(httpResponse.bodyAsJsonObject().getString("status"))) {
           SharingInstance response = Json.decodeValue(httpResponse.body(), SharingInstance.class);
-          LOGGER.debug("shareInstance:: Successfully sharedInstance with id: {}, sharedInstance: {}",
+          log.debug("shareInstance:: Successfully sharedInstance with id: {}, sharedInstance: {}",
             response.getInstanceIdentifier(), httpResponse.bodyAsString());
           return Future.succeededFuture(response);
         } else {
           String message = String.format(SHARING_INSTANCE_ERROR, sharingInstance.getSourceTenantId(),
             sharingInstance.getTargetTenantId(), sharingInstance.getInstanceIdentifier(),
             httpResponse.statusCode(), httpResponse.bodyAsString());
-          LOGGER.warn("shareInstance:: {}", message);
+          log.warn("shareInstance:: {}", message);
           return Future.failedFuture(new ConsortiumException(message));
         }
       });

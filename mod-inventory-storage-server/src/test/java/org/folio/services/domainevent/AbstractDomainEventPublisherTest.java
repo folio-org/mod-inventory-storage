@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -15,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.folio.persist.AbstractRepository;
@@ -30,9 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AbstractDomainEventPublisherTest {
 
-  private static final int CREATED = 201;
-  private static final int NO_CONTENT = 204;
-  private static final int BAD_REQUEST = 400;
+  private static final Map<String, String> HEADERS = Map.of();
 
   private @Mock AbstractRepository<String> repository;
   private @Mock CommonDomainEventPublisher<TestEvent> domainEventService;
@@ -40,33 +36,13 @@ class AbstractDomainEventPublisherTest {
   private @InjectMocks TestPublisher publisher;
 
   @Test
-  @DisplayName("should skip publishing when the create response is not a success")
-  void shouldSkipPublishing_whenCreateResponseIsNotSuccess() {
-    publisher.publishCreated().handle(responseWithStatus(BAD_REQUEST));
+  @DisplayName("should publish the created record")
+  void shouldPublishCreatedRecord() {
+    when(domainEventService.publishRecordsCreated(any(), any())).thenReturn(succeededFuture());
 
-    verifyNoInteractions(domainEventService);
-  }
+    publisher.publishRecordCreated("record-1", HEADERS);
 
-  @Test
-  @DisplayName("should publish the created record when the create response is a success")
-  void shouldPublishCreatedRecord_whenCreateResponseIsSuccess() {
-    when(domainEventService.publishRecordsCreated(any())).thenReturn(succeededFuture());
-    var response = responseWithStatus(CREATED);
-    when(response.getEntity()).thenReturn("record-1");
-
-    publisher.publishCreated().handle(response);
-
-    verify(domainEventService).publishRecordsCreated(List.of(Pair.of("record-1", event("record-1"))));
-  }
-
-  @Test
-  @DisplayName("should skip publishing when the create-or-update response is not a success")
-  void shouldSkipPublishing_whenCreateOrUpdateResponseIsNotSuccess() {
-    var batch = new BatchOperationContext<>(List.of("new-1"), List.of("old-1"), true);
-
-    publisher.publishCreatedOrUpdated(batch).handle(responseWithStatus(BAD_REQUEST));
-
-    verifyNoInteractions(domainEventService);
+    verify(domainEventService).publishRecordsCreated(List.of(Pair.of("record-1", event("record-1"))), HEADERS);
   }
 
   @Test
@@ -74,7 +50,7 @@ class AbstractDomainEventPublisherTest {
   void shouldSkipPublishing_whenBatchOperationDisablesEvents() {
     var batch = new BatchOperationContext<>(List.of("new-1"), List.of("old-1"), false);
 
-    publisher.publishCreatedOrUpdated(batch).handle(responseWithStatus(CREATED));
+    publisher.publishRecordsCreatedOrUpdated(batch, HEADERS);
 
     verifyNoInteractions(domainEventService);
     verifyNoInteractions(repository);
@@ -83,96 +59,59 @@ class AbstractDomainEventPublisherTest {
   @Test
   @DisplayName("should publish created and updated records when the batch operation enables events")
   void shouldPublishCreatedAndUpdated_whenBatchOperationEnablesEvents() {
-    when(domainEventService.publishRecordsCreated(any())).thenReturn(succeededFuture());
-    when(repository.getByIds(anyCollection(), ArgumentMatcherHelper.<String>anyFunction()))
+    when(domainEventService.publishRecordsCreated(any(), any())).thenReturn(succeededFuture());
+    when(repository.getByIds(anyCollection(), ArgumentMatcherHelper.<String>anyFunction(), any()))
       .thenReturn(succeededFuture(Map.of("old-1", "old-1")));
-    when(domainEventService.publishRecordsUpdated(any())).thenReturn(succeededFuture());
+    when(domainEventService.publishRecordsUpdated(any(), any())).thenReturn(succeededFuture());
     var batch = new BatchOperationContext<>(List.of("new-1"), List.of("old-1"), true);
 
-    publisher.publishCreatedOrUpdated(batch).handle(responseWithStatus(CREATED));
+    publisher.publishRecordsCreatedOrUpdated(batch, HEADERS);
 
-    verify(domainEventService).publishRecordsCreated(List.of(Pair.of("new-1", event("new-1"))));
+    verify(domainEventService).publishRecordsCreated(List.of(Pair.of("new-1", event("new-1"))), HEADERS);
     verify(domainEventService).publishRecordsUpdated(
-      List.of(Triple.of("old-1", event("old-1"), event("old-1"))));
+      List.of(Triple.of("old-1", event("old-1"), event("old-1"))), HEADERS);
   }
 
   @Test
-  @DisplayName("should skip publishing when the remove response is not a success")
-  void shouldSkipPublishing_whenRemoveResponseIsNotSuccess() {
-    publisher.publishRemoved("record-1").handle(responseWithStatus(BAD_REQUEST));
-
-    verifyNoInteractions(domainEventService);
-  }
-
-  @Test
-  @DisplayName("should publish the removed record when the remove response is a success")
-  void shouldPublishRemovedRecord_whenRemoveResponseIsSuccess() {
-    when(domainEventService.publishRecordRemoved(eq("record-1"), any(TestEvent.class)))
+  @DisplayName("should publish the removed record")
+  void shouldPublishRemovedRecord() {
+    when(domainEventService.publishRecordRemoved(eq("record-1"), any(TestEvent.class), any()))
       .thenReturn(succeededFuture());
 
-    publisher.publishRemoved("record-1").handle(responseWithStatus(NO_CONTENT));
+    publisher.publishRecordRemoved("record-1", HEADERS);
 
-    verify(domainEventService).publishRecordRemoved("record-1", event("record-1"));
+    verify(domainEventService).publishRecordRemoved("record-1", event("record-1"), HEADERS);
   }
 
   @Test
   @DisplayName("should delegate to the domain event service when removing a raw record")
   void shouldDelegateToDomainEventService_whenRemovingRawRecord() {
-    publisher.publishRemoved("instance-1", "raw-record");
+    publisher.publishRemoved("instance-1", "raw-record", HEADERS);
 
-    verify(domainEventService).publishRecordRemoved("instance-1", "raw-record");
+    verify(domainEventService).publishRecordRemoved("instance-1", "raw-record", HEADERS);
   }
 
   @Test
   @DisplayName("should delegate to the domain event service when removing all records")
   void shouldDelegateToDomainEventService_whenRemovingAllRecords() {
-    when(domainEventService.publishAllRecordsRemoved()).thenReturn(succeededFuture());
+    when(domainEventService.publishAllRecordsRemoved(any())).thenReturn(succeededFuture());
 
-    publisher.publishAllRemoved();
+    publisher.publishAllRemoved(HEADERS);
 
-    verify(domainEventService).publishAllRecordsRemoved();
+    verify(domainEventService).publishAllRecordsRemoved(HEADERS);
   }
 
   @Test
-  @DisplayName("should skip publishing when the update response is not a success")
-  void shouldSkipPublishing_whenUpdateResponseIsNotSuccess() {
-    publisher.publishUpdated("old-1").handle(responseWithStatus(BAD_REQUEST));
-
-    verifyNoInteractions(domainEventService);
-  }
-
-  @Test
-  @DisplayName("should publish the updated record when the update response is a success")
-  void shouldPublishUpdatedRecord_whenUpdateResponseIsSuccess() {
-    when(repository.getByIds(anyCollection(), ArgumentMatcherHelper.<String>anyFunction()))
+  @DisplayName("should publish the updated record")
+  void shouldPublishUpdatedRecord() {
+    when(repository.getByIds(anyCollection(), ArgumentMatcherHelper.<String>anyFunction(), any()))
       .thenReturn(succeededFuture(Map.of("old-1", "old-1")));
-    when(domainEventService.publishRecordsUpdated(any())).thenReturn(succeededFuture());
+    when(domainEventService.publishRecordsUpdated(any(), any())).thenReturn(succeededFuture());
 
-    publisher.publishUpdated("old-1").handle(responseWithStatus(NO_CONTENT));
+    publisher.publishRecordUpdated("old-1", HEADERS);
 
     verify(domainEventService).publishRecordsUpdated(
-      List.of(Triple.of("old-1", event("old-1"), event("old-1"))));
-  }
-
-  @Test
-  @DisplayName("should skip publishing when the batch update response is not a success")
-  void shouldSkipPublishing_whenBatchUpdateResponseIsNotSuccess() {
-    var batch = new BatchOperationContext<>(List.of(), List.of("old-1"), true);
-
-    publisher.publishUpdated(batch).handle(responseWithStatus(BAD_REQUEST));
-
-    verifyNoInteractions(domainEventService);
-  }
-
-  @Test
-  @DisplayName("should skip publishing when the batch update disables events")
-  void shouldSkipPublishing_whenBatchUpdateDisablesEvents() {
-    var batch = new BatchOperationContext<>(List.of(), List.of("old-1"), false);
-
-    publisher.publishUpdated(batch).handle(responseWithStatus(NO_CONTENT));
-
-    verifyNoInteractions(domainEventService);
-    verifyNoInteractions(repository);
+      List.of(Triple.of("old-1", event("old-1"), event("old-1"))), HEADERS);
   }
 
   @Test
@@ -200,12 +139,6 @@ class AbstractDomainEventPublisherTest {
     return new TestEvent("event:" + domain);
   }
 
-  private static Response responseWithStatus(int status) {
-    var response = mock(Response.class);
-    when(response.getStatus()).thenReturn(status);
-    return response;
-  }
-
   private record TestEvent(String value) { }
 
   /**
@@ -215,12 +148,21 @@ class AbstractDomainEventPublisherTest {
    */
   private static final class TestPublisher extends AbstractDomainEventPublisher<String, TestEvent> {
 
+    private final AbstractRepository<String> repository;
+
     TestPublisher(AbstractRepository<String> repository, CommonDomainEventPublisher<TestEvent> service) {
-      super(repository, service);
+      super(service);
+      this.repository = repository;
     }
 
     @Override
-    protected Future<List<Pair<String, String>>> getRecordIds(Collection<String> domainTypes) {
+    protected AbstractRepository<String> repository() {
+      return repository;
+    }
+
+    @Override
+    protected Future<List<Pair<String, String>>> getRecordIds(Collection<String> domainTypes,
+                                                              Map<String, String> headers) {
       return succeededFuture(domainTypes.stream().map(domain -> Pair.of(domain, domain)).toList());
     }
 
@@ -235,7 +177,7 @@ class AbstractDomainEventPublisherTest {
     }
 
     private Future<Void> callPublishUpdated(Collection<String> oldRecords) {
-      return publishUpdated(oldRecords);
+      return publishUpdated(oldRecords, HEADERS);
     }
 
     private List<Triple<String, TestEvent, TestEvent>> callMapOldRecordsToNew(

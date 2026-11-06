@@ -17,38 +17,37 @@ public class ItemNoteTypeApi extends BaseApi<ItemNoteType, ItemNoteTypes>
   @Validate
   @Override
   public void getItemNoteTypes(String query, String totalRecords, int offset, int limit,
-                               Map<String, String> okapiHeaders,
+                               Map<String, String> headers,
                                Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetItemNoteTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postItemNoteTypes(ItemNoteType entity, Map<String, String> okapiHeaders,
+  public void postItemNoteTypes(ItemNoteType entity, Map<String, String> headers,
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostItemNoteTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getItemNoteTypesById(String id, Map<String, String> okapiHeaders,
+  public void getItemNoteTypesById(String id, Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetItemNoteTypesByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteItemNoteTypesById(String id, Map<String, String> okapiHeaders,
+  public void deleteItemNoteTypesById(String id, Map<String, String> headers,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteItemNoteTypesByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void putItemNoteTypesById(String id, ItemNoteType entity, Map<String, String> okapiHeaders,
+  public void putItemNoteTypesById(String id, ItemNoteType entity, Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext, PutItemNoteTypesByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

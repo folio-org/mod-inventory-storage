@@ -30,14 +30,10 @@ class HttpClientCreationTest {
   );
 
   /**
-   * Classes that create a client once at startup. Do not add request-scoped classes here.
-   * Remove entries as they move to the Spring configuration (see docs/tech-debt/introduce-dependency-injection.md).
+   * Spring configuration classes, which own every shared client. Nothing else may create one.
    */
   private static final Set<String> ALLOWED_CREATORS = Set.of(
-    "org.folio.rest.impl.InitApiImpl",
-    "org.folio.services.consortium.SynchronizationVerticle",
-    "org.folio.services.consortium.ShadowInstanceSynchronizationVerticle",
-    "org.folio.services.consortium.ServicePointSynchronizationVerticle"
+    "org.folio.config.ApplicationConfig"
   );
 
   @Test

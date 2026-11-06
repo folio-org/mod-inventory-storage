@@ -5,12 +5,12 @@ import static java.lang.String.format;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
-import static org.folio.services.domainevent.DomainEventType.UPDATE;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.services.domainevent.model.DomainEventType.UPDATE;
 
 import com.google.common.collect.Lists;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.Json;
@@ -30,11 +30,11 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
 import org.folio.persist.InstanceRepository;
+import org.folio.persist.helper.EntityJson;
 import org.folio.rest.jaxrs.model.Instance;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
-import org.folio.services.domainevent.DomainEvent;
+import org.folio.services.domainevent.model.DomainEvent;
 import org.folio.utils.Environment;
 
 public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<String, String> {
@@ -55,16 +55,17 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
   private static final String SOURCE_TENANT_ID_FIELD = "sourceTenantId";
 
   private final ConsortiumDataCache consortiaDataCache;
-  private final Vertx vertx;
   private final HttpClient httpClient;
+  private final InstanceRepository instanceRepository;
   private final int instancesParallelUpdatesLimit;
 
   public ShadowInstanceSynchronizationHandler(ConsortiumDataCache consortiaDataCache,
-                                              HttpClient httpClient, Vertx vertx) {
+                                              HttpClient httpClient,
+                                              InstanceRepository instanceRepository) {
+    this.instanceRepository = instanceRepository;
     this.instancesParallelUpdatesLimit = Environment.getIntValue(INSTANCES_PARALLEL_UPDATES_COUNT_PARAM,
       DEFAULT_INSTANCES_PARALLEL_UPDATES_COUNT);
     this.consortiaDataCache = consortiaDataCache;
-    this.vertx = vertx;
     this.httpClient = httpClient;
   }
 
@@ -140,7 +141,7 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
                                              Map<String, String> headers) {
     try {
       LOG.info("updateShadowInstances:: Trying to update shadow instances in the following tenants: {} ", tenantIds);
-      Instance instance = PostgresClient.pojo2JsonObject(event.getNewEntity()).mapTo(Instance.class);
+      Instance instance = EntityJson.toJsonObject(event.getNewEntity()).mapTo(Instance.class);
       prepareInstanceForUpdate(instance);
       List<List<String>> tenantsChunks = Lists.partition(tenantIds, instancesParallelUpdatesLimit);
 
@@ -167,19 +168,19 @@ public class ShadowInstanceSynchronizationHandler implements AsyncRecordHandler<
     instance.setSource(format(CONSORTIUM_SOURCE_TEMPLATE, instance.getSource()));
   }
 
-  private Future<Void> updateShadowInstance(Instance instance, String tenantId, Map<String, String> okapiHeaders) {
+  private Future<Void> updateShadowInstance(Instance instance, String tenantId, Map<String, String> headers) {
     LOG.debug("updateShadowInstance:: Trying to update shadow instance, tenantId: '{}', instanceId: '{}'",
       tenantId, instance.getId());
-    HashMap<String, String> headers = new HashMap<>(okapiHeaders);
-    headers.put(TENANT, tenantId);
-    InstanceRepository instanceRepository = new InstanceRepository(vertx.getOrCreateContext(), headers);
+    HashMap<String, String> memberHeaders = new HashMap<>(headers);
+    memberHeaders.put(TENANT, tenantId);
     // Creates a copy of the instance to prevent side effects during instance version population
     Instance instanceToUpdate = JsonObject.mapFrom(instance).mapTo(Instance.class);
 
-    return instanceRepository.getById(instance.getId())
+    return instanceRepository.getById(instance.getId(), tenantId(memberHeaders))
       .map(Instance::getVersion)
       .compose(currentVersion ->
-        instanceRepository.update(instanceToUpdate.getId(), instanceToUpdate.withVersion(currentVersion)))
+        instanceRepository.update(instanceToUpdate.getId(), instanceToUpdate.withVersion(currentVersion),
+          tenantId(memberHeaders)))
       .onFailure(e -> LOG.warn(
         "updateShadowInstance:: Error during shadow instance update, tenantId: '{}', instanceId: '{}'",
         tenantId, instance.getId(), e))

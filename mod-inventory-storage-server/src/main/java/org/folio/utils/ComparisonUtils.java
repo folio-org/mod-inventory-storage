@@ -1,6 +1,6 @@
 package org.folio.utils;
 
-import static org.folio.rest.persist.PostgresClient.pojo2JsonObject;
+import static org.folio.persist.helper.EntityJson.toJsonObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.json.JsonObject;
@@ -27,8 +27,8 @@ public final class ComparisonUtils {
   }
 
   public static boolean equalsIgnoringMetadata(Object o1, Object o2) throws JsonProcessingException {
-    var o1json = pojo2JsonObject(o1);
-    var o2json = pojo2JsonObject(o2);
+    var o1json = toJsonObject(o1);
+    var o2json = toJsonObject(o2);
     o1json.remove(METADATA_FIELD);
     o2json.remove(METADATA_FIELD);
 

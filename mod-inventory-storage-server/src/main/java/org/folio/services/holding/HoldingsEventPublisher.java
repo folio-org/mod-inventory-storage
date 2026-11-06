@@ -1,90 +1,94 @@
 package org.folio.services.holding;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.batch.BatchOperationContext;
 import org.folio.services.domainevent.HoldingDomainEventPublisher;
 import org.folio.services.domainevent.ItemDomainEventPublisher;
+import org.springframework.stereotype.Component;
 
+@Component
 class HoldingsEventPublisher {
   private final HoldingDomainEventPublisher holdingEventPublisher;
   private final ItemDomainEventPublisher itemEventPublisher;
 
-  HoldingsEventPublisher(Context context, Map<String, String> okapiHeaders) {
-    this.holdingEventPublisher = new HoldingDomainEventPublisher(context, okapiHeaders);
-    this.itemEventPublisher = new ItemDomainEventPublisher(context, okapiHeaders);
+  HoldingsEventPublisher(HoldingDomainEventPublisher holdingEventPublisher,
+                         ItemDomainEventPublisher itemEventPublisher) {
+    this.holdingEventPublisher = holdingEventPublisher;
+    this.itemEventPublisher = itemEventPublisher;
   }
 
   void publishHoldingsAndItemEvents(List<HoldingsRecord> newHoldings,
                                     Map<String, HoldingsRecord> oldHoldings,
-                                    Map<String, List<Item>> itemsBeforeUpdate) {
+                                    Map<String, List<Item>> itemsBeforeUpdate,
+                                    Map<String, String> headers) {
 
-    publishItemEvents(newHoldings, oldHoldings, itemsBeforeUpdate);
-    publishHoldingsEvents(newHoldings, oldHoldings);
+    publishItemEvents(newHoldings, oldHoldings, itemsBeforeUpdate, headers);
+    publishHoldingsEvents(newHoldings, oldHoldings, headers);
   }
 
   void publishUpdatedItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings,
-                           List<Item> itemsBeforeUpdate) {
-    itemEventPublisher.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate);
+                           List<Item> itemsBeforeUpdate, Map<String, String> headers) {
+    itemEventPublisher.publishUpdated(oldHoldings, newHoldings, itemsBeforeUpdate, headers);
   }
 
-  void publishAllRemoved() {
-    holdingEventPublisher.publishAllRemoved();
+  void publishAllRemoved(Map<String, String> headers) {
+    holdingEventPublisher.publishAllRemoved(headers);
   }
 
-  Handler<Response> publishCreated() {
-    return holdingEventPublisher.publishCreated();
+  Future<Void> publishRecordCreated(HoldingsRecord hr, Map<String, String> headers) {
+    return holdingEventPublisher.publishRecordCreated(hr, headers);
   }
 
-  Handler<Response> publishRemoved(HoldingsRecord hr) {
-    return holdingEventPublisher.publishRemoved(hr);
+  Future<Void> publishRecordRemoved(HoldingsRecord hr, Map<String, String> headers) {
+    return holdingEventPublisher.publishRecordRemoved(hr, headers);
   }
 
-  void publishRemoved(String holdingId, String rawRemoved) {
-    holdingEventPublisher.publishRemoved(holdingId, rawRemoved);
+  void publishRemoved(String holdingId, String rawRemoved, Map<String, String> headers) {
+    holdingEventPublisher.publishRemoved(holdingId, rawRemoved, headers);
   }
 
-  Handler<Response> publishCreatedOrUpdated(BatchOperationContext<HoldingsRecord> batchOperation) {
-    return holdingEventPublisher.publishCreatedOrUpdated(batchOperation);
+  Future<Void> publishCreatedOrUpdated(BatchOperationContext<HoldingsRecord> batchOperation,
+                                       Map<String, String> headers) {
+    return holdingEventPublisher.publishRecordsCreatedOrUpdated(batchOperation, headers);
   }
 
-  Future<Void> publishReindexHoldings(String rangeId, List<Map<String, Object>> holdings) {
-    return holdingEventPublisher.publishReindexHoldings(rangeId, holdings);
+  Future<Void> publishReindexHoldings(String rangeId, List<Map<String, Object>> holdings,
+                                      Map<String, String> headers) {
+    return holdingEventPublisher.publishReindexHoldings(rangeId, holdings, headers);
   }
 
-  Handler<Response> publishUpdated(HoldingsRecord oldHoldings) {
-    return holdingEventPublisher.publishUpdated(oldHoldings);
+  Future<Void> publishRecordUpdated(HoldingsRecord oldHoldings, Map<String, String> headers) {
+    return holdingEventPublisher.publishRecordUpdated(oldHoldings, headers);
   }
 
   private void publishItemEvents(List<HoldingsRecord> newHoldings,
                                  Map<String, HoldingsRecord> oldHoldings,
-                                 Map<String, List<Item>> itemsBeforeUpdate) {
+                                 Map<String, List<Item>> itemsBeforeUpdate,
+                                 Map<String, String> headers) {
     for (var newHolding : newHoldings) {
       var holdingsId = newHolding.getId();
       var oldHolding = oldHoldings.get(holdingsId);
       var itemsBefore = itemsBeforeUpdate.get(holdingsId);
 
       if (oldHolding != null && itemsBefore != null) {
-        itemEventPublisher.publishUpdated(oldHolding, newHolding, itemsBefore);
+        itemEventPublisher.publishUpdated(oldHolding, newHolding, itemsBefore, headers);
       }
     }
   }
 
-  private void publishHoldingsEvents(List<HoldingsRecord> newHoldings, Map<String, HoldingsRecord> oldHoldingsMap) {
+  private void publishHoldingsEvents(List<HoldingsRecord> newHoldings, Map<String, HoldingsRecord> oldHoldingsMap,
+                                     Map<String, String> headers) {
     var oldHoldings = new ArrayList<>(oldHoldingsMap.values());
     var createdHoldings = newHoldings.stream()
       .filter(entity -> !oldHoldingsMap.containsKey(entity.getId()))
       .toList();
 
     var batchContext = new BatchOperationContext<>(createdHoldings, oldHoldings, true);
-    holdingEventPublisher.publishCreatedOrUpdated(batchContext)
-      .handle(Response.status(201).build());
+    holdingEventPublisher.publishRecordsCreatedOrUpdated(batchContext, headers);
   }
 }

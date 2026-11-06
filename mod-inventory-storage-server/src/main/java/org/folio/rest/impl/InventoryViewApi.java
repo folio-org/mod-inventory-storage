@@ -1,41 +1,51 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.persist.PgUtil.streamGet;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import java.util.Map;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.InstanceView;
 import org.folio.rest.jaxrs.resource.InventoryViewInstances;
-import org.folio.rest.support.EndpointHandler;
-import org.folio.services.instance.InstanceService;
-import org.folio.services.instance.InventoryViewHridQuery;
+import org.folio.rest.support.ResponseHandlerUtil;
+import org.folio.rest.support.StreamingJsonResponse;
+import org.folio.services.inventoryview.InventoryViewService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class InventoryViewApi implements InventoryViewInstances {
+
+  @Autowired
+  private InventoryViewService inventoryViewService;
+
+  public InventoryViewApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
+  }
+
   @Validate
   @Override
   public void getInventoryViewInstances(boolean withBoundedItems,
-    String totalRecords, int offset, int limit,
-    String query, RoutingContext routingContext,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    var instanceService = new InstanceService(vertxContext, okapiHeaders);
-    var hrid = InventoryViewHridQuery.extractHrid(query);
+                                        String totalRecords, int offset, int limit,
+                                        String query, RoutingContext routingContext,
+                                        Map<String, String> headers,
+                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    var hrid = inventoryViewService.extractHrid(query);
     if (hrid.isPresent()) {
-      instanceService
-        .getInventoryViewInstancesByHrid(hrid.get(), withBoundedItems, offset, limit)
-        .onComplete(EndpointHandler.handle(asyncResultHandler));
+      inventoryViewService.getInstancesByHrid(hrid.get(), withBoundedItems, offset, limit, headers)
+        .map(json -> Response.ok(json, MediaType.APPLICATION_JSON_TYPE).build())
+        .onComplete(ResponseHandlerUtil.handle(asyncResultHandler));
     } else if (withBoundedItems) {
-      instanceService
-        .getInventoryViewInstancesWithBoundedItems(offset, limit, query)
-        .onComplete(EndpointHandler.handle(asyncResultHandler));
+      inventoryViewService.getInstancesWithBoundedItems(offset, limit, query, headers)
+        .map(json -> Response.ok(json, MediaType.APPLICATION_JSON_TYPE).build())
+        .onComplete(ResponseHandlerUtil.handle(asyncResultHandler));
     } else {
-      streamGet("instance_holdings_item_view", InstanceView.class, query,
-        offset, limit, null, "instances", routingContext, okapiHeaders, vertxContext);
+      inventoryViewService.streamInstances(query, offset, limit, headers)
+        .onSuccess(result -> StreamingJsonResponse.write(result, "instances", routingContext.response()))
+        .onFailure(e -> StreamingJsonResponse.writeFailure(e, routingContext.response()));
     }
   }
 }

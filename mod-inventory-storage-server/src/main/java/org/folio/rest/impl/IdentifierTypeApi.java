@@ -17,47 +17,43 @@ public class IdentifierTypeApi extends BaseApi<IdentifierType, IdentifierTypes>
   @Validate
   @Override
   public void getIdentifierTypes(String query, String totalRecords, int offset, int limit,
-                                 Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetIdentifierTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postIdentifierTypes(IdentifierType entity, Map<String, String> okapiHeaders,
+  public void postIdentifierTypes(IdentifierType entity, Map<String, String> headers,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostIdentifierTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getIdentifierTypesByIdentifierTypeId(String identifierTypeId,
-                                                   Map<String, String> okapiHeaders,
+                                                   Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    getEntityById(identifierTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetIdentifierTypesByIdentifierTypeIdResponse.class);
+    getEntityById(identifierTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteIdentifierTypesByIdentifierTypeId(String identifierTypeId,
-                                                      Map<String, String> okapiHeaders,
+                                                      Map<String, String> headers,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
-    deleteEntityById(identifierTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteIdentifierTypesByIdentifierTypeIdResponse.class);
+    deleteEntityById(identifierTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putIdentifierTypesByIdentifierTypeId(String identifierTypeId, IdentifierType entity,
-                                                   Map<String, String> okapiHeaders,
+                                                   Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    putEntityById(identifierTypeId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutIdentifierTypesByIdentifierTypeIdResponse.class);
+    putEntityById(identifierTypeId, entity, headers, asyncResultHandler);
   }
 
   @Override

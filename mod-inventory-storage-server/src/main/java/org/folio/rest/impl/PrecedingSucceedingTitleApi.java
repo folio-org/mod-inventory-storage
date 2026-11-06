@@ -1,67 +1,89 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.support.ResponseHandlerUtil.firstErrorMessage;
+import static org.folio.rest.support.ResponseHandlerUtil.handleFailure;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitle;
 import org.folio.rest.jaxrs.model.InstancePrecedingSucceedingTitles;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.tools.utils.MetadataUtil;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.services.referencedata.ReferenceDataService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resource.PrecedingSucceedingTitles {
 
-  private static final String PRECEDING_SUCCEEDING_TITLE_TABLE = "preceding_succeeding_title";
+  private static final String TABLE = "preceding_succeeding_title";
+  private static final Class<InstancePrecedingSucceedingTitle> TITLE = InstancePrecedingSucceedingTitle.class;
+
+  @Autowired
+  private ReferenceDataService referenceDataService;
+
+  public PrecedingSucceedingTitleApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
+  }
 
   @Validate
   @Override
   public void getPrecedingSucceedingTitles(String totalRecords, int offset, int limit, String query,
-                                           Map<String, String> okapiHeaders,
+                                           Map<String, String> headers,
                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.get(PRECEDING_SUCCEEDING_TITLE_TABLE, InstancePrecedingSucceedingTitle.class,
-      InstancePrecedingSucceedingTitles.class, query,      offset, limit,
-      okapiHeaders, vertxContext, GetPrecedingSucceedingTitlesResponse.class, asyncResultHandler);
+    referenceDataService.query(TABLE, TITLE, query, offset, limit, totalRecords, headers)
+      .map(results -> new InstancePrecedingSucceedingTitles()
+        .withPrecedingSucceedingTitles(results.getResults())
+        .withTotalRecords(results.getResultInfo().getTotalRecords()))
+      .map(GetPrecedingSucceedingTitlesResponse::respond200WithApplicationJson)
+      .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void postPrecedingSucceedingTitles(InstancePrecedingSucceedingTitle entity,
-                                            Map<String, String> okapiHeaders,
+                                            Map<String, String> headers,
                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
     if (precedingAndSucceedingInstanceEmpty(entity)) {
       handlePrecedingAndSucceedingEmptyError(asyncResultHandler);
       return;
     }
-    PgUtil.post(PRECEDING_SUCCEEDING_TITLE_TABLE, entity, okapiHeaders, vertxContext,
-      PostPrecedingSucceedingTitlesResponse.class, asyncResultHandler);
+    referenceDataService.create(TABLE, TITLE, entity, headers)
+      .map(created -> PostPrecedingSucceedingTitlesResponse.respond201WithApplicationJson(created,
+        PostPrecedingSucceedingTitlesResponse.headersFor201().withLocation(created.getId())))
+      .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void getPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
-                                                                       Map<String, String> okapiHeaders,
+                                                                       Map<String, String> headers,
                                                                        Handler<AsyncResult<Response>> resultHandler,
                                                                        Context vertxContext) {
-    PgUtil.getById(PRECEDING_SUCCEEDING_TITLE_TABLE, InstancePrecedingSucceedingTitle.class, precedingSucceedingTitleId,
-      okapiHeaders, vertxContext, GetPrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.class,
-      resultHandler);
+    referenceDataService.getById(TABLE, TITLE, precedingSucceedingTitleId, headers)
+      .map(GetPrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse::respond200WithApplicationJson)
+      .onSuccess(response -> resultHandler.handle(Future.succeededFuture(response)))
+      .onFailure(handleFailure(resultHandler));
   }
 
   @Validate
   @Override
   public void putPrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
                                                                        InstancePrecedingSucceedingTitle entity,
-                                                                       Map<String, String> okapiHeaders,
+                                                                       Map<String, String> headers,
                                                                        Handler<AsyncResult<Response>> resultHandler,
                                                                        Context vertxContext) {
 
@@ -69,35 +91,41 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
       handlePrecedingAndSucceedingEmptyError(resultHandler);
       return;
     }
-    PgUtil.put(PRECEDING_SUCCEEDING_TITLE_TABLE, entity, precedingSucceedingTitleId, okapiHeaders, vertxContext,
-      PutPrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.class, resultHandler);
+    referenceDataService.update(TABLE, TITLE, precedingSucceedingTitleId, entity, headers)
+      .map(notUsed -> PutPrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.respond204())
+      .onSuccess(response -> resultHandler.handle(Future.succeededFuture(response)))
+      .onFailure(handleFailure(resultHandler));
   }
 
   @Validate
   @Override
   public void deletePrecedingSucceedingTitlesByPrecedingSucceedingTitleId(String precedingSucceedingTitleId,
-                                                                          Map<String, String> okapiHeaders,
+                                                                          Map<String, String> headers,
                                                                           Handler<AsyncResult<Response>> resultHandler,
                                                                           Context vertxContext) {
-    PgUtil.deleteById(PRECEDING_SUCCEEDING_TITLE_TABLE, precedingSucceedingTitleId, okapiHeaders, vertxContext,
-      DeletePrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.class, resultHandler);
+    referenceDataService.delete(TABLE, TITLE, precedingSucceedingTitleId, headers)
+      .map(notUsed -> DeletePrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.respond204())
+      .onSuccess(response -> resultHandler.handle(Future.succeededFuture(response)))
+      .onFailure(handleFailure(resultHandler, errors ->
+        DeletePrecedingSucceedingTitlesByPrecedingSucceedingTitleIdResponse.respond400WithTextPlain(
+          firstErrorMessage(errors))));
   }
 
   @Validate
   @Override
   public void putPrecedingSucceedingTitlesInstancesByInstanceId(String instanceId,
                                                                 InstancePrecedingSucceedingTitles entity,
-                                                                Map<String, String> okapiHeaders,
+                                                                Map<String, String> headers,
                                                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                                                 Context vertxContext) {
     var titles = entity.getPrecedingSucceedingTitles();
     boolean areValidTitles = validatePrecedingSucceedingTitles(titles, instanceId, asyncResultHandler);
     if (areValidTitles) {
       var cqlQuery = String.format("succeedingInstanceId==(%s) or precedingInstanceId==(%s)", instanceId, instanceId);
-      PgUtil.delete(PRECEDING_SUCCEEDING_TITLE_TABLE, cqlQuery, okapiHeaders, vertxContext,
-          PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.class)
-        .compose(response -> saveCollection(titles, okapiHeaders, vertxContext))
-        .onComplete(asyncResultHandler);
+      referenceDataService.deleteByQuery(TABLE, TITLE, cqlQuery, headers)
+        .compose(notUsed -> saveCollection(titles, headers))
+        .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(response)))
+        .onFailure(handleFailure(asyncResultHandler));
     }
   }
 
@@ -125,16 +153,15 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
   }
 
   private Future<Response> saveCollection(List<InstancePrecedingSucceedingTitle> entities,
-                                          Map<String, String> okapiHeaders,
-                                          Context vertxContext) {
+                                          Map<String, String> headers) {
     try {
-      MetadataUtil.populateMetadata(entities, okapiHeaders);
-      return postgresClient(vertxContext, okapiHeaders)
-        .saveBatch(PRECEDING_SUCCEEDING_TITLE_TABLE, entities)
+      MetadataUtil.populateMetadata(entities, headers);
+      return referenceDataService.saveBatch(TABLE, TITLE,
+          entities, headers)
         .<Response>map(x -> PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond204())
         .otherwise(cause -> {
           var errorMessage = cause.getMessage();
-          if (ValidationHelper.isFKViolation(errorMessage)) {
+          if (isMissingInstance(cause) || ValidationHelper.isFKViolation(errorMessage)) {
             return PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond404WithTextPlain(
               "Instance not found");
           } else {
@@ -145,6 +172,11 @@ public class PrecedingSucceedingTitleApi implements org.folio.rest.jaxrs.resourc
       return Future.succeededFuture(
         PutPrecedingSucceedingTitlesInstancesByInstanceIdResponse.respond500WithTextPlain(e.getMessage()));
     }
+  }
+
+  private static boolean isMissingInstance(Throwable cause) {
+    return cause instanceof ValidationException validationException
+      && firstErrorMessage(validationException.getErrors()).contains("does not exist in");
   }
 
   private boolean precedingAndSucceedingInstanceEmpty(InstancePrecedingSucceedingTitle entity) {

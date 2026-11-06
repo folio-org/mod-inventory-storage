@@ -4,12 +4,12 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.lang3.StringUtils.isAllBlank;
 import static org.apache.commons.lang3.StringUtils.isAnyBlank;
-import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder;
-import static org.folio.rest.support.EffectiveCallNumberComponentsUtil.setCallNumberComponents;
-import static org.folio.rest.support.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.rest.tools.utils.ValidationHelper.createValidationErrorMessage;
+import static org.folio.services.EffectiveCallNumberComponentsUtil.calculateAndSetEffectiveShelvingOrder;
+import static org.folio.services.EffectiveCallNumberComponentsUtil.setCallNumberComponents;
+import static org.folio.services.ItemEffectiveLocationUtil.updateItemEffectiveLocation;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collections;
 import java.util.List;
@@ -21,23 +21,25 @@ import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.services.item.PatchData;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ItemEffectiveValuesService {
   private final HoldingsRepository holdingsRepository;
 
-  public ItemEffectiveValuesService(Context context, Map<String, String> okapiHeaders) {
-    this.holdingsRepository = new HoldingsRepository(context, okapiHeaders);
+  public ItemEffectiveValuesService(HoldingsRepository holdingsRepository) {
+    this.holdingsRepository = holdingsRepository;
   }
 
-  public Future<List<Item>> populateEffectiveValues(List<Item> items) {
-    return getHoldingsRecordsForItems(items)
+  public Future<List<Item>> populateEffectiveValues(List<Item> items, Map<String, String> headers) {
+    return getHoldingsRecordsForItems(items, headers)
       .map(holdingsRecordMap -> items.stream()
         .map(item -> populateEffectiveValues(item, holdingsRecordMap.get(item.getHoldingsRecordId())))
         .toList());
   }
 
-  public Future<Item> populateEffectiveValues(Item item) {
-    return populateEffectiveValues(Collections.singletonList(item))
+  public Future<Item> populateEffectiveValues(Item item, Map<String, String> headers) {
+    return populateEffectiveValues(Collections.singletonList(item), headers)
       // item is stateful - ok to return the passed object
       .map(items -> item);
   }
@@ -55,13 +57,14 @@ public class ItemEffectiveValuesService {
     calculateAndSetEffectiveShelvingOrder(newItem);
   }
 
-  private Future<Map<String, HoldingsRecord>> getHoldingsRecordsForItems(List<Item> items) {
+  private Future<Map<String, HoldingsRecord>> getHoldingsRecordsForItems(List<Item> items,
+                                                                         Map<String, String> headers) {
     final Set<String> holdingsIds = items.stream()
       .filter(this::shouldRetrieveHoldingsRecord)
       .map(Item::getHoldingsRecordId)
       .collect(Collectors.toSet());
 
-    return holdingsRepository.getByIds(holdingsIds)
+    return holdingsRepository.getByIds(holdingsIds, tenantId(headers))
       .compose(holdingsRecordMap -> {
         if (holdingsRecordMap.keySet().containsAll(holdingsIds)) {
           return succeededFuture(holdingsRecordMap);
@@ -82,7 +85,7 @@ public class ItemEffectiveValuesService {
       item.getItemLevelCallNumberPrefix(),
       item.getItemLevelCallNumberSuffix(),
       item.getItemLevelCallNumberTypeId())
-      || isAllBlank(item.getPermanentLocationId(), item.getTemporaryLocationId());
+           || isAllBlank(item.getPermanentLocationId(), item.getTemporaryLocationId());
   }
 
   private ValidationException holdingsRecordNotFoundException(String id) {

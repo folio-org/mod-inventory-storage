@@ -3,12 +3,14 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+import static org.folio.rest.support.ResponseHandlerUtil.firstErrorMessage;
+import static org.folio.rest.support.ResponseHandlerUtil.handleFailure;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.core.Response;
@@ -16,13 +18,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.ServicePoint;
-import org.folio.rest.jaxrs.model.ServicePoints;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.folio.services.servicepoint.ServicePointService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoints {
   public static final String SERVICE_POINT_TABLE = "service_point";
   public static final String LOCATION_PREFIX = "/service-points/";
@@ -32,6 +33,13 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     "Hold shelf expiry period cannot be specified when service point cannot be used for pickup";
   private static final String ECS_ROUTING_QUERY_FILTER = "cql.allRecords=1 NOT ecsRequestRouting=true";
   private static final Logger logger = LogManager.getLogger();
+
+  @Autowired
+  private ServicePointService servicePointService;
+
+  public ServicePointApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
+  }
 
   public static String validateServicePoint(ServicePoint svcpt) {
 
@@ -50,38 +58,112 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   @Override
   public void getServicePoints(boolean includeRoutingServicePoints, String query,
                                String totalRecords, int offset, int limit,
-                               Map<String, String> okapiHeaders,
+                               Map<String, String> headers,
                                Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
 
     query = updateGetServicePointsQuery(query, includeRoutingServicePoints);
-    PgUtil.get(SERVICE_POINT_TABLE, ServicePoint.class, ServicePoints.class,
-      query, offset, limit, okapiHeaders, vertxContext, GetServicePointsResponse.class, asyncResultHandler);
+    servicePointService.getByQuery(query, offset, limit, totalRecords, headers)
+      .map(GetServicePointsResponse::respond200WithApplicationJson)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
   public void postServicePoints(ServicePoint entity,
-                                Map<String, String> okapiHeaders,
+                                Map<String, String> headers,
                                 Handler<AsyncResult<Response>> asyncResultHandler,
                                 Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        if (!validateAndPrepareEntity(entity, asyncResultHandler)) {
-          return;
-        }
-
-        new ServicePointService(vertxContext, okapiHeaders)
-          .createServicePoint(entity.getId(), entity)
-          .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-          .onFailure(throwable -> handlePostServicePointFailure(throwable, entity, asyncResultHandler));
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PostServicePointsResponse.respond500WithTextPlain(
-            getErrorResponse(message))));
+    try {
+      if (!validateAndPrepareEntity(entity, asyncResultHandler)) {
+        return;
       }
-    });
+
+      servicePointService.createServicePoint(entity.getId(), entity, headers)
+        .map(created -> PostServicePointsResponse.respond201WithApplicationJson(created,
+          PostServicePointsResponse.headersFor201().withLocation(LOCATION_PREFIX + created.getId())))
+        .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+        .onFailure(throwable -> handlePostServicePointFailure(throwable, entity, asyncResultHandler));
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        PostServicePointsResponse.respond500WithTextPlain(
+          getErrorResponse(message))));
+    }
+  }
+
+  @Validate
+  @Override
+  public void deleteServicePoints(Map<String, String> headers,
+                                  Handler<AsyncResult<Response>> asyncResultHandler,
+                                  Context vertxContext) {
+    servicePointService.deleteAll(headers)
+      .onSuccess(notUsed -> asyncResultHandler.handle(succeededFuture(DeleteServicePointsResponse.respond204())))
+      .onFailure(cause -> {
+        String message = logAndSaveError(cause);
+        asyncResultHandler.handle(succeededFuture(
+          DeleteServicePointsResponse.respond500WithTextPlain(getErrorResponse(message))));
+      });
+  }
+
+  @Validate
+  @Override
+  public void putServicePointsByServicepointId(String servicepointId,
+                                               ServicePoint entity, Map<String, String> headers,
+                                               Handler<AsyncResult<Response>> asyncResultHandler,
+                                               Context vertxContext) {
+
+    try {
+      String validateSvcptResult = validateServicePoint(entity);
+      if (validateSvcptResult != null) {
+        asyncResultHandler.handle(Future.succeededFuture(
+          PutServicePointsByServicepointIdResponse
+            .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
+              entity.getName(), validateSvcptResult))));
+        return;
+      }
+      servicePointService.updateServicePoint(servicepointId, entity, headers)
+        .map(notUsed -> PutServicePointsByServicepointIdResponse.respond204())
+        .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+        .onFailure(handleFailure(asyncResultHandler));
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        PutServicePointsByServicepointIdResponse
+          .respond500WithTextPlain(getErrorResponse(message))));
+    }
+  }
+
+  @Validate
+  @Override
+  public void getServicePointsByServicepointId(String servicepointId,
+                                               Map<String, String> headers,
+                                               Handler<AsyncResult<Response>> asyncResultHandler,
+                                               Context vertxContext) {
+
+    servicePointService.getById(servicepointId, headers)
+      .map(GetServicePointsByServicepointIdResponse::respond200WithApplicationJson)
+      .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
+      .onFailure(handleFailure(asyncResultHandler, errors ->
+        GetServicePointsByServicepointIdResponse.respond404WithTextPlain(firstErrorMessage(errors))));
+  }
+
+  @Validate
+  @Override
+  public void deleteServicePointsByServicepointId(String servicepointId,
+                                                  Map<String, String> headers,
+                                                  Handler<AsyncResult<Response>> asyncResultHandler,
+                                                  Context vertxContext) {
+    try {
+      checkServicePointInUse().onComplete(inUseRes ->
+        handleServicePointInUseCheck(inUseRes, servicepointId, headers, asyncResultHandler));
+    } catch (Exception e) {
+      String message = logAndSaveError(e);
+      asyncResultHandler.handle(Future.succeededFuture(
+        DeleteServicePointsByServicepointIdResponse
+          .respond500WithTextPlain(getErrorResponse(message))));
+    }
   }
 
   private boolean validateAndPrepareEntity(ServicePoint entity,
@@ -102,7 +184,7 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
   }
 
   private void handlePostServicePointFailure(Throwable throwable, ServicePoint entity,
-                                              Handler<AsyncResult<Response>> asyncResultHandler) {
+                                             Handler<AsyncResult<Response>> asyncResultHandler) {
     String message = logAndSaveError(throwable);
     if (isDuplicate(message)) {
       asyncResultHandler.handle(Future.succeededFuture(
@@ -116,96 +198,9 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
     }
   }
 
-  @Validate
-  @Override
-  public void deleteServicePoints(Map<String, String> okapiHeaders,
-                                  Handler<AsyncResult<Response>> asyncResultHandler,
-                                  Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
-          .delete(SERVICE_POINT_TABLE, new Criterion(), mutateReply -> {
-            if (mutateReply.failed()) {
-              String message = logAndSaveError(mutateReply.cause());
-              asyncResultHandler.handle(Future.succeededFuture(
-                DeleteServicePointsResponse.respond500WithTextPlain(getErrorResponse(message))));
-            } else {
-              asyncResultHandler.handle(Future.succeededFuture(DeleteServicePointsResponse.respond204()));
-            }
-          });
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteServicePointsResponse.respond500WithTextPlain(
-            getErrorResponse(message))));
-      }
-    });
-  }
-
-  @Validate
-  @Override
-  public void putServicePointsByServicepointId(String servicepointId,
-                                               ServicePoint entity, Map<String, String> okapiHeaders,
-                                               Handler<AsyncResult<Response>> asyncResultHandler,
-                                               Context vertxContext) {
-
-    vertxContext.runOnContext(v -> {
-      try {
-        String validateSvcptResult = validateServicePoint(entity);
-        if (validateSvcptResult != null) {
-          asyncResultHandler.handle(Future.succeededFuture(
-            PutServicePointsByServicepointIdResponse
-              .respond422WithApplicationJson(ValidationHelper.createValidationErrorMessage("name",
-                entity.getName(), validateSvcptResult))));
-          return;
-        }
-        new ServicePointService(vertxContext, okapiHeaders)
-          .updateServicePoint(servicepointId, entity)
-          .onSuccess(response -> asyncResultHandler.handle(succeededFuture(response)))
-          .onFailure(handleFailure(asyncResultHandler));
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          PutServicePointsByServicepointIdResponse
-            .respond500WithTextPlain(getErrorResponse(message))));
-      }
-    });
-  }
-
-  @Validate
-  @Override
-  public void getServicePointsByServicepointId(String servicepointId,
-                                               Map<String, String> okapiHeaders,
-                                               Handler<AsyncResult<Response>> asyncResultHandler,
-                                               Context vertxContext) {
-
-    PgUtil.getById(SERVICE_POINT_TABLE, ServicePoint.class, servicepointId, okapiHeaders, vertxContext,
-      GetServicePointsByServicepointIdResponse.class, asyncResultHandler);
-  }
-
-  @Validate
-  @Override
-  public void deleteServicePointsByServicepointId(String servicepointId,
-                                                  Map<String, String> okapiHeaders,
-                                                  Handler<AsyncResult<Response>> asyncResultHandler,
-                                                  Context vertxContext) {
-    vertxContext.runOnContext(v -> {
-      try {
-        checkServicePointInUse().onComplete(inUseRes ->
-          handleServicePointInUseCheck(inUseRes, servicepointId, okapiHeaders, asyncResultHandler, vertxContext));
-      } catch (Exception e) {
-        String message = logAndSaveError(e);
-        asyncResultHandler.handle(Future.succeededFuture(
-          DeleteServicePointsByServicepointIdResponse
-            .respond500WithTextPlain(getErrorResponse(message))));
-      }
-    });
-  }
-
   private void handleServicePointInUseCheck(AsyncResult<Boolean> inUseRes, String servicepointId,
-                                             Map<String, String> okapiHeaders,
-                                             Handler<AsyncResult<Response>> asyncResultHandler,
-                                             Context vertxContext) {
+                                            Map<String, String> headers,
+                                            Handler<AsyncResult<Response>> asyncResultHandler) {
     if (inUseRes.failed()) {
       String message = logAndSaveError(inUseRes.cause());
       asyncResultHandler.handle(Future.succeededFuture(
@@ -216,15 +211,13 @@ public class ServicePointApi implements org.folio.rest.jaxrs.resource.ServicePoi
         DeleteServicePointsByServicepointIdResponse
           .respond400WithTextPlain("Cannot delete service point, as it is in use")));
     } else {
-      performServicePointDeletion(servicepointId, okapiHeaders, asyncResultHandler, vertxContext);
+      performServicePointDeletion(servicepointId, headers, asyncResultHandler);
     }
   }
 
-  private void performServicePointDeletion(String servicepointId, Map<String, String> okapiHeaders,
-                                            Handler<AsyncResult<Response>> asyncResultHandler,
-                                            Context vertxContext) {
-    new ServicePointService(vertxContext, okapiHeaders)
-      .deleteServicePoint(servicepointId)
+  private void performServicePointDeletion(String servicepointId, Map<String, String> headers,
+                                           Handler<AsyncResult<Response>> asyncResultHandler) {
+    servicePointService.deleteServicePoint(servicepointId, headers)
       .onSuccess(deleted -> {
         if (TRUE.equals(deleted)) {
           asyncResultHandler.handle(Future.succeededFuture(

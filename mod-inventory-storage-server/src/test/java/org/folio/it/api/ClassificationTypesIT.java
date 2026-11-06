@@ -1,6 +1,6 @@
 package org.folio.it.api;
 
-import static org.folio.services.classification.ClassificationTypeService.CLASSIFICATION_TYPE_TABLE;
+import static org.folio.persist.ClassificationTypeRepository.CLASSIFICATION_TYPE_TABLE;
 
 import java.util.List;
 import java.util.function.Function;

@@ -1,51 +1,54 @@
 package org.folio.services.instance;
 
-import static org.folio.rest.impl.BoundWithPartApi.BOUND_WITH_TABLE;
-import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.persist.BoundWithRepository;
 import org.folio.rest.jaxrs.model.BoundWithPart;
-import org.folio.rest.jaxrs.resource.InventoryStorageBoundWithParts;
+import org.folio.rest.jaxrs.model.BoundWithParts;
 import org.folio.services.domainevent.BoundWithDomainEventPublisher;
 import org.folio.validator.CommonValidators;
+import org.springframework.stereotype.Service;
 
+@Service
 public class BoundWithPartService {
 
-  private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final BoundWithDomainEventPublisher domainEventPublisher;
+  private final BoundWithDomainEventPublisher boundWithDomainEventPublisher;
   private final BoundWithRepository boundWithRepository;
 
-  public BoundWithPartService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-    domainEventPublisher = new BoundWithDomainEventPublisher(vertxContext, okapiHeaders);
-    boundWithRepository = new BoundWithRepository(vertxContext, okapiHeaders);
+  public BoundWithPartService(BoundWithDomainEventPublisher boundWithDomainEventPublisher,
+                              BoundWithRepository boundWithRepository) {
+    this.boundWithRepository = boundWithRepository;
+    this.boundWithDomainEventPublisher = boundWithDomainEventPublisher;
   }
 
-  public Future<Response> create(BoundWithPart entity) {
-    return post(BOUND_WITH_TABLE, entity, okapiHeaders, vertxContext,
-      InventoryStorageBoundWithParts.PostInventoryStorageBoundWithPartsResponse.class)
-      .onSuccess(domainEventPublisher.publishCreated());
+  public Future<BoundWithParts> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                           Map<String, String> headers) {
+    return boundWithRepository.query(cql, offset, limit, totalRecords, tenantId(headers))
+      .map(results -> new BoundWithParts()
+        .withBoundWithParts(results.getResults())
+        .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
-  public Future<Response> update(BoundWithPart entity, String id) {
-    return put(BOUND_WITH_TABLE, entity, id, okapiHeaders, vertxContext,
-      InventoryStorageBoundWithParts.PutInventoryStorageBoundWithPartsByIdResponse.class)
-      .onSuccess(domainEventPublisher.publishUpdated(entity));
+  public Future<BoundWithPart> getById(String id, Map<String, String> headers) {
+    return boundWithRepository.findById(id, tenantId(headers));
   }
 
-  public Future<Response> delete(String id) {
-    return boundWithRepository.getById(id)
+  public Future<BoundWithPart> create(BoundWithPart entity, Map<String, String> headers) {
+    return boundWithRepository.create(entity, tenantId(headers))
+      .onSuccess(created -> boundWithDomainEventPublisher.publishRecordCreated(created, headers));
+  }
+
+  public Future<Void> update(BoundWithPart entity, String id, Map<String, String> headers) {
+    return boundWithRepository.replace(id, entity, tenantId(headers))
+      .onSuccess(notUsed -> boundWithDomainEventPublisher.publishRecordUpdated(entity, headers));
+  }
+
+  public Future<Void> delete(String id, Map<String, String> headers) {
+    return boundWithRepository.getById(id, tenantId(headers))
       .compose(CommonValidators::refuseIfNotFound)
-      .compose(item -> deleteById(BOUND_WITH_TABLE, id, okapiHeaders, vertxContext,
-        InventoryStorageBoundWithParts.DeleteInventoryStorageBoundWithPartsByIdResponse.class)
-        .onSuccess(domainEventPublisher.publishRemoved(item)));
+      .compose(item -> boundWithRepository.remove(id, tenantId(headers))
+        .onSuccess(notUsed -> boundWithDomainEventPublisher.publishRecordRemoved(item, headers)));
   }
 }

@@ -17,55 +17,51 @@ public class ModeOfIssuanceApi extends BaseApi<IssuanceMode, IssuanceModes> impl
   @Validate
   @Override
   public void getModesOfIssuance(String query, String totalRecords, int offset, int limit,
-                                 Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetModesOfIssuanceResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postModesOfIssuance(IssuanceMode entity, Map<String, String> okapiHeaders,
+  public void postModesOfIssuance(IssuanceMode entity, Map<String, String> headers,
                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostModesOfIssuanceResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteModesOfIssuance(Map<String, String> okapiHeaders,
+  public void deleteModesOfIssuance(Map<String, String> headers,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
+    deleteEntities(headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId,
-                                                   Map<String, String> okapiHeaders,
+                                                   Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    getEntityById(modeOfIssuanceId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetModesOfIssuanceByModeOfIssuanceIdResponse.class);
+    getEntityById(modeOfIssuanceId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId,
-                                                      Map<String, String> okapiHeaders,
+                                                      Map<String, String> headers,
                                                       Handler<AsyncResult<Response>> asyncResultHandler,
                                                       Context vertxContext) {
-    deleteEntityById(modeOfIssuanceId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteModesOfIssuanceByModeOfIssuanceIdResponse.class);
+    deleteEntityById(modeOfIssuanceId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putModesOfIssuanceByModeOfIssuanceId(String modeOfIssuanceId, IssuanceMode entity,
-                                                   Map<String, String> okapiHeaders,
+                                                   Map<String, String> headers,
                                                    Handler<AsyncResult<Response>> asyncResultHandler,
                                                    Context vertxContext) {
-    putEntityById(modeOfIssuanceId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutModesOfIssuanceByModeOfIssuanceIdResponse.class);
+    putEntityById(modeOfIssuanceId, entity, headers, asyncResultHandler);
   }
 
   @Override

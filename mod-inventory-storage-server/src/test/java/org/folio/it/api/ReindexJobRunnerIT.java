@@ -1,6 +1,5 @@
 package org.folio.it.api;
 
-import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.folio.HttpStatus.SC_NO_CONTENT;
@@ -8,25 +7,16 @@ import static org.folio.InventoryKafkaTopic.INSTANCE;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANCELLED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.IN_PROGRESS;
-import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
+import static org.folio.support.sql.StreamingTransactions.streamRowsInTransaction;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
-import io.vertx.sqlclient.Tuple;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
 import org.folio.it.BaseIntegrationTest;
@@ -35,10 +25,9 @@ import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
 import org.folio.rest.jaxrs.model.ReindexJobs;
-import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.folio.services.reindex.ReindexJobRunner;
+import org.folio.support.DomainEventPublisherFactories;
 import org.folio.support.ResourcePaths;
 import org.folio.support.messages.InstanceEventMessageChecks;
 import org.folio.support.sql.TestRowStream;
@@ -57,11 +46,10 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
     var reindexJob = instanceReindexJob();
     postReindexJob(reindexJob);
 
-    var repository = repository(vertx);
-    var mockPostgresClient = mockPostgresClient(vertx, rowStream);
-    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob));
+    var repository = repositoryStreaming(vertx, rowStream);
+    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob, tenantId(okapiHeaders())));
 
-    jobRunner(vertx, mockPostgresClient, repository).startReindex(reindexJob);
+    jobRunner(vertx, repository).startReindex(reindexJob);
 
     await().until(() -> getReindexJob(reindexJob.getId()).getJobStatus() == IDS_PUBLISHED);
 
@@ -85,11 +73,10 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
     var reindexJob = instanceReindexJob();
     postReindexJob(reindexJob);
 
-    var repository = repository(vertx);
-    var mockPostgresClient = mockPostgresClient(vertx, rowStream);
-    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob));
+    var repository = repositoryStreaming(vertx, rowStream);
+    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob, tenantId(okapiHeaders())));
 
-    jobRunner(vertx, mockPostgresClient, repository).startReindex(reindexJob);
+    jobRunner(vertx, repository).startReindex(reindexJob);
 
     await().until(() -> getReindexJob(reindexJob.getId()).getJobStatus() == IDS_PUBLISHED);
 
@@ -116,11 +103,10 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
     var rowStream = new TestRowStream(10_000_000);
     var reindexJob = instanceReindexJob();
 
-    var repository = repository(vertx);
-    var mockPostgresClient = mockPostgresClient(vertx, rowStream);
-    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob));
+    var repository = repositoryStreaming(vertx, rowStream);
+    VertxTestUtil.await(repository.save(reindexJob.getId(), reindexJob, tenantId(okapiHeaders())));
 
-    jobRunner(vertx, mockPostgresClient, repository).startReindex(reindexJob);
+    jobRunner(vertx, repository).startReindex(reindexJob);
 
     cancelReindexJob(reindexJob.getId());
 
@@ -132,32 +118,23 @@ class ReindexJobRunnerIT extends BaseIntegrationTest {
     assertThat(job.getPublished()).isGreaterThanOrEqualTo(1000);
   }
 
-  private static PostgresClient mockPostgresClient(Vertx vertx, TestRowStream rowStream) {
-    var postgresClient = spy(postgresClient(getContext(vertx), okapiHeaders()));
-    var connection = mock(Conn.class);
+  private static ReindexJobRepository repositoryStreaming(Vertx vertx, TestRowStream rowStream) {
+    var repository = spy(repository(vertx));
 
-    when(postgresClient.withTrans(any()))
-      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
-        .apply(connection));
+    streamRowsInTransaction(repository, vertx, rowStream);
 
-    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
-      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
-      return succeededFuture();
-    });
-
-    return postgresClient;
+    return repository;
   }
 
-  private static ReindexJobRunner jobRunner(Vertx vertx, PostgresClient postgresClient,
-                                            ReindexJobRepository repository) {
-    var eventPublisher = new CommonDomainEventPublisher<Instance>(getContext(vertx), okapiHeaders(),
-      INSTANCE.fullTopicName(TENANT_ID));
+  private static ReindexJobRunner jobRunner(Vertx vertx, ReindexJobRepository repository) {
+    CommonDomainEventPublisher<Instance> eventPublisher =
+      DomainEventPublisherFactories.create(getContext(vertx)).publisher(INSTANCE);
 
-    return new ReindexJobRunner(postgresClient, repository, getContext(vertx), eventPublisher, TENANT_ID);
+    return new ReindexJobRunner(repository, getContext(vertx), eventPublisher, okapiHeaders());
   }
 
   private static ReindexJobRepository repository(Vertx vertx) {
-    return new ReindexJobRepository(getContext(vertx), okapiHeaders());
+    return new ReindexJobRepository(getContext(vertx));
   }
 
   private static ReindexJob getReindexJob(String id) {

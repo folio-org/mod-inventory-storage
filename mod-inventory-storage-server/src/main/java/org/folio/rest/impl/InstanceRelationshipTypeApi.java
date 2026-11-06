@@ -17,50 +17,46 @@ public class InstanceRelationshipTypeApi extends BaseApi<InstanceRelationshipTyp
   @Validate
   @Override
   public void getInstanceRelationshipTypes(String query, String totalRecords, int offset, int limit,
-                                           Map<String, String> okapiHeaders,
+                                           Map<String, String> headers,
                                            Handler<AsyncResult<Response>> asyncResultHandler,
                                            Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceRelationshipTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void postInstanceRelationshipTypes(InstanceRelationshipType entity,
-                                            Map<String, String> okapiHeaders,
+                                            Map<String, String> headers,
                                             Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostInstanceRelationshipTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
-                                                               Map<String, String> okapiHeaders,
+                                                               Map<String, String> headers,
                                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                                Context vertxContext) {
-    getEntityById(relationshipTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceRelationshipTypesByRelationshipTypeIdResponse.class);
+    getEntityById(relationshipTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
-                                                                  Map<String, String> okapiHeaders,
+                                                                  Map<String, String> headers,
                                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                                   Context vertxContext) {
-    deleteEntityById(relationshipTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteInstanceRelationshipTypesByRelationshipTypeIdResponse.class);
+    deleteEntityById(relationshipTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putInstanceRelationshipTypesByRelationshipTypeId(String relationshipTypeId,
                                                                InstanceRelationshipType entity,
-                                                               Map<String, String> okapiHeaders,
+                                                               Map<String, String> headers,
                                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                                Context vertxContext) {
-    putEntityById(relationshipTypeId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutInstanceRelationshipTypesByRelationshipTypeIdResponse.class);
+    putEntityById(relationshipTypeId, entity, headers, asyncResultHandler);
   }
 
   @Override

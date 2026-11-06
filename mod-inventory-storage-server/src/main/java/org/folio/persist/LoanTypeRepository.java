@@ -1,15 +1,15 @@
 package org.folio.persist;
 
-import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.services.loantype.LoanTypeService.LOAN_TYPE_TABLE;
-
 import io.vertx.core.Context;
-import java.util.Map;
 import org.folio.rest.jaxrs.model.LoanType;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class LoanTypeRepository extends AbstractRepository<LoanType> {
 
-  public LoanTypeRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), LOAN_TYPE_TABLE, LoanType.class);
+  public static final String LOAN_TYPE_TABLE = "loan_type";
+
+  public LoanTypeRepository(Context context) {
+    super(context, LOAN_TYPE_TABLE, LoanType.class);
   }
 }

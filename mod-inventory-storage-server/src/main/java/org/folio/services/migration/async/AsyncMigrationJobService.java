@@ -3,10 +3,12 @@ package org.folio.services.migration.async;
 import static io.vertx.core.Future.succeededFuture;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IDS_PUBLISHED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.ID_PUBLISHING_FAILED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.PENDING_CANCEL;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -24,21 +26,30 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJobCounts;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.AsyncMigrations;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.support.PostgresClientFactory;
+import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.domainevent.DomainEventPublisherFactory;
+import org.springframework.stereotype.Service;
 
+@Service
 public final class AsyncMigrationJobService {
   private static final List<AsyncMigrationJobRunner> MIGRATION_JOB_RUNNERS = List
     .of(new ItemOrderMigrationJobRunner());
   private static final List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
     .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
-  private final AsyncMigrationJobRepository migrationJobRepository;
-  private final AsyncMigrationContext migrationContext;
+  private final Context vertxContext;
+  private final CommonDomainEventPublisher<AsyncMigrationJob> eventPublisher;
+  private final AsyncMigrationJobRepository asyncMigrationJobRepository;
 
-  public AsyncMigrationJobService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.migrationJobRepository = new AsyncMigrationJobRepository(vertxContext, okapiHeaders);
-    var postgresClient = PostgresClientFactory.getInstance(vertxContext, okapiHeaders);
-    this.migrationContext = new AsyncMigrationContext(vertxContext, okapiHeaders, postgresClient);
+  public AsyncMigrationJobService(Context vertxContext, DomainEventPublisherFactory publisherFactory,
+                                  AsyncMigrationJobRepository asyncMigrationJobRepository) {
+    this.asyncMigrationJobRepository = asyncMigrationJobRepository;
+    this.vertxContext = vertxContext;
+    this.eventPublisher = publisherFactory.publisher(ASYNC_MIGRATION);
+  }
+
+  public CommonDomainEventPublisher<AsyncMigrationJob> getEventPublisher() {
+    return eventPublisher;
   }
 
   public static AsyncMigrations getAvailableMigrations() {
@@ -54,17 +65,25 @@ public final class AsyncMigrationJobService {
     return migrations;
   }
 
-  public Future<AsyncMigrationJobCollection> getAllAsyncJobs() {
-    return migrationJobRepository.get(new Criterion())
+  public Future<AsyncMigrationJob> getAsyncJob(String id, Map<String, String> headers) {
+    return asyncMigrationJobRepository.findById(id, tenantId(headers));
+  }
+
+  public Future<AsyncMigrationJobCollection> getAllAsyncJobs(Map<String, String> headers) {
+    return asyncMigrationJobRepository.get(new Criterion(), tenantId(headers))
       .map(list -> new AsyncMigrationJobCollection()
         .withJobs(list)
         .withTotalRecords(list.size()));
   }
 
-  public Future<AsyncMigrationJob> submitAsyncMigration(AsyncMigrationJobRequest jobRequest) {
+  public Future<AsyncMigrationJob> submitAsyncMigration(AsyncMigrationJobRequest jobRequest,
+                                                        Map<String, String> headers) {
     var migrationJobResponse = buildInitialJob(jobRequest);
     if (isJobAvailable(jobRequest)) {
-      return migrationJobRepository.save(migrationJobResponse.getId(), migrationJobResponse)
+      var migrationContext = new AsyncMigrationContext(vertxContext, headers,
+        asyncMigrationJobRepository, this);
+      return asyncMigrationJobRepository
+        .save(migrationJobResponse.getId(), migrationJobResponse, tenantId(headers))
         .map(notUsed -> {
           MIGRATION_JOB_RUNNERS.stream()
             .filter(v -> jobRequest.getMigrations().contains(v.getMigrationName()))
@@ -79,22 +98,23 @@ public final class AsyncMigrationJobService {
     }
   }
 
-  public Future<AsyncMigrationJob> cancelAsyncMigration(String jobId) {
-    return migrationJobRepository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(AsyncMigrationJob.JobStatus.PENDING_CANCEL));
+  public Future<AsyncMigrationJob> cancelAsyncMigration(String jobId, Map<String, String> headers) {
+    return asyncMigrationJobRepository.fetchAndUpdate(jobId,
+      resp -> resp.withJobStatus(AsyncMigrationJob.JobStatus.PENDING_CANCEL), tenantId(headers));
   }
 
-  public void logJobFail(String jobId) {
-    migrationJobRepository.fetchAndUpdate(jobId,
+  public void logJobFail(String jobId, Map<String, String> headers) {
+    asyncMigrationJobRepository.fetchAndUpdate(jobId,
       resp -> {
         var finalStatus = resp.getJobStatus() == PENDING_CANCEL
                           ? CANCELLED : ID_PUBLISHING_FAILED;
         return resp.withJobStatus(finalStatus).withFinishedDate(new Date());
-      });
+      }, tenantId(headers));
   }
 
-  public void logPublishingCompleted(String migrationName, Long recordsPublished, String jobId) {
-    migrationJobRepository
+  public void logPublishingCompleted(String migrationName, Long recordsPublished, String jobId,
+                                     Map<String, String> headers) {
+    asyncMigrationJobRepository
       .fetchAndUpdate(jobId, job -> {
         job.getPublished().stream()
           .filter(p -> migrationName.equals(p.getMigrationName()))
@@ -104,14 +124,15 @@ public final class AsyncMigrationJobService {
               .withCount(recordsPublished.intValue())));
         job.withJobStatus(IDS_PUBLISHED);
         return job;
-      });
+      }, tenantId(headers));
   }
 
-  public Future<AsyncMigrationJob> logJobDetails(String migrationName, AsyncMigrationJob migrationJob, Long records) {
+  public Future<AsyncMigrationJob> logJobDetails(String migrationName, AsyncMigrationJob migrationJob, Long records,
+                                                  Map<String, String> headers) {
     if (!shouldLogJobDetails(records)) {
       return succeededFuture(migrationJob);
     }
-    return migrationJobRepository
+    return asyncMigrationJobRepository
       .fetchAndUpdate(migrationJob.getId(), job -> {
         job.getPublished().stream()
           .filter(p -> migrationName.equals(p.getMigrationName()))
@@ -120,7 +141,7 @@ public final class AsyncMigrationJobService {
               .withMigrationName(migrationName)
               .withCount(records.intValue())));
         return job;
-      })
+      }, tenantId(headers))
       .map(job -> {
         if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");
@@ -129,9 +150,10 @@ public final class AsyncMigrationJobService {
       });
   }
 
-  public Future<AsyncMigrationJob> logJobProcessed(String migrationName, String jobId, Integer records) {
-    return migrationJobRepository
-      .fetchAndUpdate(jobId, job -> updateJobProgress(job, migrationName, records))
+  public Future<AsyncMigrationJob> logJobProcessed(String migrationName, String jobId, Integer records,
+                                                    Map<String, String> headers) {
+    return asyncMigrationJobRepository
+      .fetchAndUpdate(jobId, job -> updateJobProgress(job, migrationName, records), tenantId(headers))
       .map(job -> {
         if (job.getJobStatus() == AsyncMigrationJob.JobStatus.PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");

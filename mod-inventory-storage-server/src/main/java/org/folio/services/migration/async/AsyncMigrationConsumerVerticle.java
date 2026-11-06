@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.serialization.JsonObjectDeserializer;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -21,6 +22,15 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
   private static final Logger log = LogManager.getLogger(AsyncMigrationConsumerVerticle.class);
   private static final String TENANT_FOR_MIGRATION = "\\w{1,}";
   private static final Long PERIOD = 1000L;
+
+  private final AsyncMigrationJobService migrationJobService;
+  private final List<AsyncBaseMigrationService> migrationServices;
+
+  public AsyncMigrationConsumerVerticle(AsyncMigrationJobService migrationJobService,
+                                        List<AsyncBaseMigrationService> migrationServices) {
+    this.migrationJobService = migrationJobService;
+    this.migrationServices = migrationServices;
+  }
 
   public static Map<String, String> getKafkaConsumerProperties(String groupId) {
     var kafkaConfig = KafkaConfig.builder()
@@ -52,6 +62,6 @@ public class AsyncMigrationConsumerVerticle extends AbstractVerticle {
 
     vertx.setPeriodic(PERIOD, v ->
       consumer.poll(Duration.ofMillis(100))
-        .onSuccess(pollAsyncMigrationsMessages(consumer, vertx.getOrCreateContext())));
+        .onSuccess(pollAsyncMigrationsMessages(consumer, migrationJobService, migrationServices)));
   }
 }

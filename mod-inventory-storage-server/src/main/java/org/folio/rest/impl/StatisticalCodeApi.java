@@ -17,45 +17,41 @@ public class StatisticalCodeApi extends BaseApi<StatisticalCode, StatisticalCode
   @Validate
   @Override
   public void getStatisticalCodes(String query, String totalRecords, int offset, int limit,
-                                  Map<String, String> okapiHeaders,
+                                  Map<String, String> headers,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetStatisticalCodesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postStatisticalCodes(StatisticalCode entity, Map<String, String> okapiHeaders,
+  public void postStatisticalCodes(StatisticalCode entity, Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostStatisticalCodesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
+  public void getStatisticalCodesByStatisticalCodeId(String id, Map<String, String> headers,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
-      GetStatisticalCodesByStatisticalCodeIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteStatisticalCodesByStatisticalCodeId(String id, Map<String, String> okapiHeaders,
+  public void deleteStatisticalCodesByStatisticalCodeId(String id, Map<String, String> headers,
                                                         Handler<AsyncResult<Response>> asyncResultHandler,
                                                         Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteStatisticalCodesByStatisticalCodeIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putStatisticalCodesByStatisticalCodeId(String id, StatisticalCode entity,
-                                                     Map<String, String> okapiHeaders,
+                                                     Map<String, String> headers,
                                                      Handler<AsyncResult<Response>> asyncResultHandler,
                                                      Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutStatisticalCodesByStatisticalCodeIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

@@ -7,7 +7,7 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
-import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,6 +26,7 @@ import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
 import org.folio.services.iteration.IterationJobRunner;
+import org.folio.support.DomainEventPublisherFactories;
 import org.folio.support.ResourcePaths;
 import org.folio.support.messages.InstanceEventMessageChecks;
 import org.folio.support.sql.TestRowStream;
@@ -48,12 +49,13 @@ class IterationJobRunnerIT extends BaseIntegrationTest {
     var rowStream = new TestRowStream(numberOfRecords);
     var iterationJob = iterationJob();
     var instanceRepository = mock(InstanceRepository.class);
-    when(instanceRepository.getAllIds(any())).thenReturn(succeededFuture(rowStream));
-    var jobRepository = new IterationJobRepository(getContext(vertx), okapiHeaders());
-    var jobRunner = new IterationJobRunner(postgresClient(getContext(vertx), okapiHeaders()),
-      jobRepository, instanceRepository, getContext(vertx), okapiHeaders());
+    when(instanceRepository.getAllIds(any(), any())).thenReturn(succeededFuture(rowStream));
+    var jobRepository = new IterationJobRepository(getContext(vertx));
+    var jobRunner = new IterationJobRunner(
+      jobRepository, instanceRepository, getContext(vertx), okapiHeaders(),
+      DomainEventPublisherFactories.create(getContext(vertx)));
 
-    VertxTestUtil.await(jobRepository.save(iterationJob.getId(), iterationJob));
+    VertxTestUtil.await(jobRepository.save(iterationJob.getId(), iterationJob, tenantId(okapiHeaders())));
 
     jobRunner.startIteration(iterationJob);
 
@@ -75,12 +77,13 @@ class IterationJobRunnerIT extends BaseIntegrationTest {
     var rowStream = new TestRowStream(10_000_000);
     var iterationJob = iterationJob();
     var instanceRepository = mock(InstanceRepository.class);
-    when(instanceRepository.getAllIds(any())).thenReturn(succeededFuture(rowStream));
-    var jobRepository = new IterationJobRepository(getContext(vertx), okapiHeaders());
-    var jobRunner = new IterationJobRunner(postgresClient(getContext(vertx), okapiHeaders()),
-      jobRepository, instanceRepository, getContext(vertx), okapiHeaders());
+    when(instanceRepository.getAllIds(any(), any())).thenReturn(succeededFuture(rowStream));
+    var jobRepository = new IterationJobRepository(getContext(vertx));
+    var jobRunner = new IterationJobRunner(
+      jobRepository, instanceRepository, getContext(vertx), okapiHeaders(),
+      DomainEventPublisherFactories.create(getContext(vertx)));
 
-    VertxTestUtil.await(jobRepository.save(iterationJob.getId(), iterationJob));
+    VertxTestUtil.await(jobRepository.save(iterationJob.getId(), iterationJob, tenantId(okapiHeaders())));
 
     jobRunner.startIteration(iterationJob);
 

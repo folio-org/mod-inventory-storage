@@ -1,30 +1,26 @@
 package org.folio.services.migration.async;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.persist.ItemRepository.ITEM_TABLE;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.logging.log4j.Logger;
 import org.folio.persist.ItemRepository;
-import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-public class ItemOrderMigrationService extends AsyncBaseMigrationService {
+@Service
+public class ItemOrderMigrationService implements AsyncBaseMigrationService {
 
   private static final Logger log = getLogger(ItemOrderMigrationService.class);
-
-  private static final String FROM_VERSION = "29.1.0";
 
   private static final String ITEM_QUERY = """
     SELECT jsonb FROM %s
@@ -36,23 +32,17 @@ public class ItemOrderMigrationService extends AsyncBaseMigrationService {
 
   private static final String ORDER_FIELD = "order";
 
-  protected final PostgresClient postgresClient;
-  protected final ItemRepository itemRepository;
+  private final ItemRepository itemRepository;
 
-  public ItemOrderMigrationService(PostgresClient postgresClient, ItemRepository itemRepository) {
-    super(FROM_VERSION, postgresClient);
-    this.postgresClient = postgresClient;
+  @Autowired
+  public ItemOrderMigrationService(ItemRepository itemRepository) {
     this.itemRepository = itemRepository;
   }
 
-  public ItemOrderMigrationService(Context context, Map<String, String> headers) {
-    this(PgUtil.postgresClient(context, headers), new ItemRepository(context, headers));
-  }
-
   @Override
-  public Future<Void> runMigrationForIds(Set<String> ids) {
+  public Future<Void> runMigrationForIds(Set<String> ids, Map<String, String> headers) {
     var futures = ids.stream()
-      .map(this::processItemsForHoldings)
+      .map(holdingsId -> processItemsForHoldings(holdingsId, headers))
       .toList();
     return Future.all(futures).mapEmpty();
   }
@@ -62,19 +52,9 @@ public class ItemOrderMigrationService extends AsyncBaseMigrationService {
     return ITEM_ORDER_MIGRATION.getValue();
   }
 
-  @Override
-  protected Future<RowStream<Row>> openStream(Conn connection) {
-    throw new UnsupportedOperationException("This method is not supported in ItemOrderMigrationService");
-  }
-
-  @Override
-  protected Future<Integer> updateBatch(List<Row> batch, Conn connection) {
-    throw new UnsupportedOperationException("This method is not supported in ItemOrderMigrationService");
-  }
-
-  private Future<Void> processItemsForHoldings(String holdingsId) {
-    var sql = ITEM_QUERY.formatted(itemRepository.getFullTableName());
-    return postgresClient.withTrans(conn -> conn.execute(sql, Tuple.of(holdingsId))
+  private Future<Void> processItemsForHoldings(String holdingsId, Map<String, String> headers) {
+    var sql = ITEM_QUERY.formatted(itemRepository.getFullTableName(tenantId(headers)));
+    return itemRepository.inTransaction(tenantId(headers), conn -> conn.execute(sql, Tuple.of(holdingsId))
         .map(this::mapAndUpdateItems)
         .compose(items -> {
           log.info("Migration: {} :: Updating items for holdings ID: {}", getMigrationName(), holdingsId);

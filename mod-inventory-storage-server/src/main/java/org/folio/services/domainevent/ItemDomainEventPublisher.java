@@ -6,52 +6,52 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.ITEM;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.jaxrs.model.ReindexRecordsRequest.RecordType;
-import static org.folio.rest.support.ResponseUtil.isDeleteSuccessResponse;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.utils.Environment.getKafkaProducerMaxRequestSize;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.AbstractRepository;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.support.CollectionUtil;
+import org.folio.services.domainevent.model.ItemWithInstanceId;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item, ItemWithInstanceId> {
   private static final Logger log = getLogger(ItemDomainEventPublisher.class);
 
-  private final HoldingsRepository holdingsRepository;
   private final CommonDomainEventPublisher<Map<String, Object>> itemReindexPublisher;
+  private final HoldingsRepository holdingsRepository;
+  private final ItemRepository itemRepository;
 
-  public ItemDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
-    super(new ItemRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders,
-        ITEM.fullTopicName(tenantId(okapiHeaders))));
-
-    holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    itemReindexPublisher = new CommonDomainEventPublisher<>(context, okapiHeaders,
-      REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders)), getKafkaProducerMaxRequestSize());
+  public ItemDomainEventPublisher(DomainEventPublisherFactory publisherFactory,
+                                  HoldingsRepository holdingsRepository,
+                                  ItemRepository itemRepository) {
+    super(publisherFactory.publisher(ITEM));
+    this.itemRepository = itemRepository;
+    this.holdingsRepository = holdingsRepository;
+    this.itemReindexPublisher = publisherFactory.reindexPublisher(REINDEX_RECORDS);
   }
 
   public Future<Void> publishUpdated(Item newItem, Item oldItem, HoldingsRecord newHoldings,
-                                     HoldingsRecord oldHoldings) {
+                                     HoldingsRecord oldHoldings, Map<String, String> headers) {
     ItemWithInstanceId oldItemWithId = new ItemWithInstanceId(oldItem, oldHoldings.getInstanceId());
     ItemWithInstanceId newItemWithId = new ItemWithInstanceId(newItem, newHoldings.getInstanceId());
 
-    return domainEventService.publishRecordUpdated(newItem.getId(), oldItemWithId, newItemWithId);
+    return domainEventService.publishRecordUpdated(newItem.getId(), oldItemWithId, newItemWithId,
+      headers);
   }
 
-  public Future<Void> publishUpdated(HoldingsRecord oldHoldings, HoldingsRecord newHoldings, List<Item> oldItems) {
+  public Future<Void> publishUpdated(HoldingsRecord oldHoldings, HoldingsRecord newHoldings, List<Item> oldItems,
+                                     Map<String, String> headers) {
     if (oldItems.isEmpty()) {
       log.info("No items were updated, skipping event sending");
       return succeededFuture();
@@ -59,37 +59,29 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
 
     log.info("[{}] items were updated, sending events for them", oldItems.size());
 
-    return repository.getByIds(oldItems, Item::getId)
+    return repository().getByIds(oldItems, Item::getId, tenantId(headers))
       .map(updatedItems -> mapOldItemsToNew(oldHoldings, newHoldings, oldItems, updatedItems.values()))
-      .compose(domainEventService::publishRecordsUpdated);
+      .compose(events -> domainEventService.publishRecordsUpdated(events, headers));
   }
 
-  public Future<Void> publishReindexItems(String key, List<Map<String, Object>> items) {
+  public Future<Void> publishReindexItems(String key, List<Map<String, Object>> items,
+                                          Map<String, String> headers) {
     if (StringUtils.isBlank(key)) {
       return succeededFuture();
     }
 
-    return itemReindexPublisher.publishReindexRecords(key, RecordType.ITEM, items);
+    return itemReindexPublisher.publishReindexRecords(key, RecordType.ITEM, items, headers);
   }
 
   @Override
-  public Handler<Response> publishRemoved(Item removedRecord) {
-    return response -> {
-      if (!isDeleteSuccessResponse(response)) {
-        log.warn("Item record removal failed, no event will be sent");
-        return;
-      }
-      getRecordIds(List.of(removedRecord))
-        .map(CollectionUtil::getFirst)
-        .map(Pair::getKey)
-        .compose(instanceId -> domainEventService.publishRecordRemoved(
-          removedRecord.getId(), convertDomainToEvent(instanceId, removedRecord)));
-    };
+  protected AbstractRepository<Item> repository() {
+    return itemRepository;
   }
 
   @Override
-  protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items) {
-    return holdingsRepository.getByIds(items, Item::getHoldingsRecordId)
+  protected Future<List<Pair<String, Item>>> getRecordIds(Collection<Item> items,
+                                                          Map<String, String> headers) {
+    return holdingsRepository.getByIds(items, Item::getHoldingsRecordId, tenantId(headers))
       .map(holdings -> items.stream()
         .map(item -> pair(getInstanceId(holdings, item), item))
         .toList());
@@ -120,8 +112,9 @@ public class ItemDomainEventPublisher extends AbstractDomainEventPublisher<Item,
   }
 
   @Override
-  protected Future<List<Pair<String, ItemWithInstanceId>>> convertDomainsToEvents(Collection<Item> domains) {
-    return getRecordIds(domains)
+  protected Future<List<Pair<String, ItemWithInstanceId>>> convertDomainsToEvents(Collection<Item> domains,
+                                                                                  Map<String, String> headers) {
+    return getRecordIds(domains, headers)
       .map(pairs -> pairs.stream()
         .map(pair -> pair(pair.getValue().getId(), convertDomainToEvent(pair.getKey(), pair.getValue())))
         .toList());

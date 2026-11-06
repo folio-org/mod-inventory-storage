@@ -33,12 +33,12 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
   private static final String CONSORTIUM_ID_FIELD = "consortiumId";
 
   private ConsortiumDataCache consortiumDataCache;
-  private Map<String, String> okapiHeaders;
+  private Map<String, String> headers;
 
   @BeforeEach
   void setUp(Vertx vertx) {
     consortiumDataCache = new ConsortiumDataCache(vertx, vertx.createHttpClient());
-    okapiHeaders = Map.of(
+    headers = Map.of(
       XOkapiHeaders.TENANT, TENANT_ID,
       XOkapiHeaders.TOKEN, "token",
       XOkapiHeaders.URL, WIRE_MOCK.baseUrl());
@@ -64,7 +64,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
     WIRE_MOCK.stubFor(get(USER_TENANTS_PATH)
       .willReturn(WireMock.ok().withBody(userTenantsCollection.encodePrettily())));
 
-    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders);
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, headers);
 
     future.onComplete(ar -> {
       context.verify(() -> {
@@ -86,7 +86,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
     WIRE_MOCK.stubFor(get(USER_TENANTS_PATH)
       .willReturn(WireMock.ok().withBody(emptyUserTenantsCollection.encodePrettily())));
 
-    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders);
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, headers);
 
     future.onComplete(ar -> {
       context.verify(() -> {
@@ -101,7 +101,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
   void shouldReturnFailedFutureWhenGetServerErrorOnConsortiumDataLoading(VertxTestContext context) {
     WIRE_MOCK.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.serverError()));
 
-    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders);
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, headers);
 
     future.onComplete(ar -> {
       context.verify(() -> assertTrue(ar.failed()));
@@ -113,7 +113,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
   void shouldReturnFailedFutureWhenSpecifiedTenantIdIsNull(VertxTestContext context) {
     WIRE_MOCK.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.serverError()));
 
-    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(null, okapiHeaders);
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(null, headers);
 
     future.onComplete(ar -> {
       context.verify(() -> assertTrue(ar.failed()));
@@ -125,7 +125,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
   void shouldFailWhenGetForbiddenErrorOnConsortiumDataLoading(VertxTestContext context) {
     WIRE_MOCK.stubFor(get(USER_TENANTS_PATH).willReturn(WireMock.forbidden()));
 
-    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders);
+    Future<Optional<ConsortiumData>> future = consortiumDataCache.getConsortiumData(TENANT_ID, headers);
 
     future.onComplete(ar -> {
       context.verify(() -> assertTrue(ar.failed()));
@@ -151,7 +151,7 @@ class ConsortiumDataCacheTest extends BaseWireMockTest {
           .add(new JsonObject().put("id", "memberA").put("isCentral", false))
           .add(new JsonObject().put("id", "memberB").put("isCentral", false))).encodePrettily())));
 
-    consortiumDataCache.getConsortiumData(TENANT_ID, okapiHeaders).onComplete(ar -> {
+    consortiumDataCache.getConsortiumData(TENANT_ID, headers).onComplete(ar -> {
       context.verify(() -> {
         assertTrue(ar.succeeded(), "load should succeed when call uses central tenant header");
         ConsortiumData data = ar.result().orElseThrow();

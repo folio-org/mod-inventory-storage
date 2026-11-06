@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class InstanceSanitizerTest {
 
-  private final InstanceSanitizer sanitizer = new InstanceSanitizer();
+  private final InstanceSanitizer sanitizer = new InstanceSanitizer(new TagsSanitizer());
 
   @Test
   void sanitizeShouldHandleNullInstance() {

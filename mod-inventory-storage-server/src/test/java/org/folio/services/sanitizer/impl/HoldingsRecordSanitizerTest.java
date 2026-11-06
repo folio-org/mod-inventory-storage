@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class HoldingsRecordSanitizerTest {
 
-  private final HoldingsRecordSanitizer sanitizer = new HoldingsRecordSanitizer();
+  private final HoldingsRecordSanitizer sanitizer = new HoldingsRecordSanitizer(new TagsSanitizer());
 
   @Test
   void sanitizeShouldHandleNullHoldingsRecord() {

@@ -19,42 +19,41 @@ public class HoldingsRecordsSourceApi extends BaseApi<HoldingsRecordsSource, Hol
   @Validate
   @Override
   public void getHoldingsSources(String query, String totalRecords, int offset, int limit,
-                                 Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                 Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                  Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetHoldingsSourcesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void postHoldingsSources(HoldingsRecordsSource entity,
-                                  Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                                  Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                   Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostHoldingsSourcesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getHoldingsSourcesById(String id,
-                                     Map<String, String> okapiHeaders,
+                                     Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetHoldingsSourcesByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteHoldingsSourcesById(String id,
-                                        Map<String, String> okapiHeaders,
+                                        Map<String, String> headers,
                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteHoldingsSourcesByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putHoldingsSourcesById(String id,
-                                     HoldingsRecordsSource entity, Map<String, String> okapiHeaders,
+                                     HoldingsRecordsSource entity, Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext, PutHoldingsSourcesByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

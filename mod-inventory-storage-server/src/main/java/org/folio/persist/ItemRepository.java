@@ -1,10 +1,8 @@
 package org.folio.persist;
 
 import static org.folio.dbschema.ObjectMapperTool.readValue;
-import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
-import static org.folio.rest.impl.ItemStorageApi.ITEM_TABLE;
+import static org.folio.persist.HoldingsRepository.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
-import static org.folio.rest.persist.PgUtil.postgresClient;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -14,32 +12,46 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.persist.entity.DeletedRecord;
+import org.folio.persist.entity.ItemWithHoldings;
+import org.folio.persist.helper.EntityAccessor;
+import org.folio.persist.helper.EntityAccessors;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.ItemPatchRequest;
 import org.folio.rest.persist.Conn;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.rest.persist.PostgresClient;
 import org.folio.utils.DatabaseUtils;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class ItemRepository extends AbstractRepository<Item> {
 
+  public static final String ITEM_TABLE = "item";
+
   private static final Logger logger = LogManager.getLogger(ItemRepository.class);
+
+  private static final EntityAccessor<ItemPatchRequest> PATCH_REQUEST_ACCESSOR =
+    EntityAccessors.of(ItemPatchRequest.class);
+
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
 
-  public ItemRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), ITEM_TABLE, Item.class);
+  public ItemRepository(Context context) {
+    super(context, ITEM_TABLE, Item.class);
   }
 
   public Future<List<Item>> getItemsForHoldingRecord(Conn connection, String holdingRecordId) {
@@ -50,62 +62,137 @@ public class ItemRepository extends AbstractRepository<Item> {
   }
 
   /**
-   * Delete by CQL. For each deleted record return a {@link Row} with the instance id String
-   * and with the item's jsonb String.
+   * Delete by CQL. For each deleted record return a {@link DeletedRecord} with the instance id
+   * and  the item's jsonb String.
    */
-  public Future<RowSet<Row>> delete(String cql) {
+  public Future<List<DeletedRecord>> delete(String cql, String tenantId) {
     try {
-      CQLWrapper cqlWrapper = new CQLWrapper(new CQL2PgJSON(tableName + ".jsonb"), cql, -1, -1);
-      String sql = "DELETE FROM " + getFullTableName(tableName)
-        + " " + cqlWrapper.getWhereClause()
-        + " RETURNING (SELECT instanceId::text FROM holdings_record WHERE id = holdingsRecordId), jsonb::text";
-      return postgresClient.execute(sql);
+      var fullTableName = getFullTableName(tenantId);
+      var whereClause = cqlWrapper(cql).getWhereClause();
+      String sql = "DELETE FROM " + fullTableName + " " + whereClause
+                   + " RETURNING (SELECT instanceId::text FROM holdings_record"
+                   + " WHERE id = holdingsRecordId), jsonb::text";
+      return postgresClient(tenantId).execute(sql)
+        .map(rows -> {
+          var deleted = new ArrayList<DeletedRecord>(rows.size());
+          rows.forEach(row -> deleted.add(new DeletedRecord(row.getString(0), row.getString(1))));
+          return deleted;
+        });
     } catch (Exception e) {
       return Future.failedFuture(e);
     }
   }
 
-  public Future<List<Map<String, Object>>> getReindexItemRecords(String fromId, String toId) {
-    return postgresClient.select(buildReindexItemsSql(fromId, toId)).map(rows -> {
-      var resultList = new LinkedList<Map<String, Object>>();
-      for (var row : rows) {
-        resultList.add(row.getJsonObject(0).getMap());
-      }
-      return resultList;
-    });
+  public Future<List<Map<String, Object>>> getReindexItemRecords(String fromId, String toId, String tenantId) {
+    return postgresClient(tenantId).select(buildReindexItemsSql(fromId, toId, tenantId))
+      .map(rows -> rows.stream()
+        .map(row -> row.getJsonObject(0).getMap())
+        .collect(Collectors.toCollection(LinkedList::new)));
   }
 
-  public Future<RowStream<Row>> streamReindexItemRecords(Conn conn, String fromId, String toId) {
-    return DatabaseUtils.selectStream(conn, buildReindexItemsSql(fromId, toId));
+  public Future<RowStream<Row>> streamReindexItemRecords(Conn conn, String fromId, String toId, String tenantId) {
+    return DatabaseUtils.selectStream(conn, buildReindexItemsSql(fromId, toId, tenantId));
   }
 
-  private String buildReindexItemsSql(String fromId, String toId) {
-    return "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
-      + " FROM " + getFullTableName(ITEM_TABLE) + " i"
-      + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE)
-      + " hr ON i.holdingsrecordid = hr.id"
-      + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
+  /**
+   * Returns the item and the holdings record with the given id, empty if there is no such item.
+   * The holdings of the result is null if there is no such holdings record.
+   */
+  public Future<Optional<ItemWithHoldings>> getItemAndHolding(String itemId, String holdingsId, String tenantId) {
+    var sql = "SELECT item.jsonb::text, holdings_record.jsonb::text "
+              + "FROM " + getFullTableName(tenantId) + " "
+              + "LEFT JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE, tenantId)
+              + "  ON holdings_record.id = $2 "
+              + "WHERE item.id = $1";
+    return postgresClient(tenantId).execute(sql, Tuple.of(itemId, holdingsId))
+      .map(rowSet -> {
+        if (rowSet.size() == 0) {
+          return Optional.empty();
+        }
+        var row = rowSet.iterator().next();
+        return Optional.of(new ItemWithHoldings(readValue(row.getString(0), Item.class),
+          toHoldings(row.getString(1))));
+      });
   }
 
-  public Future<List<Item>> updateItems(PgConnection conn, List<ItemPatchRequest> items) {
+  /**
+   * Updates the item and returns the stored item, empty if there is no item with the id.
+   */
+  public Future<Optional<Item>> updateReturning(Item item, String tenantId) {
+    JsonObject itemJson;
+    try {
+      itemJson = PostgresClient.pojo2JsonObject(item);
+    } catch (Exception e) {
+      return Future.failedFuture(e);
+    }
+    return postgresClient(tenantId)
+      .execute("UPDATE " + getFullTableName(tenantId) + " SET jsonb=$1 WHERE id=$2 RETURNING jsonb::text",
+        Tuple.of(itemJson, item.getId()))
+      .map(rowSet -> rowSet.size() == 1
+                     ? Optional.of(readValue(rowSet.iterator().next().getString(0), Item.class))
+                     : Optional.empty());
+  }
+
+  public Future<List<Item>> updateItems(Conn conn, List<ItemPatchRequest> items, String tenantId) {
     try {
       if (items.size() > MAX_ENTITIES) {
         return Future.failedFuture(buildItemsSizeException(items.size()));
       }
 
-      OptimisticLockingUtil.unsetVersionIfMinusOne(items);
+      items.forEach(PATCH_REQUEST_ACCESSOR::unsetVersionIfMinusOne);
 
       var tuples = items.stream()
         .map(item -> Tuple.of(JsonObject.mapFrom(item), item.getId()))
         .toList();
       var sql = "UPDATE %s SET jsonb = jsonb || $1 WHERE id = $2 RETURNING jsonb::text"
-        .formatted(getFullTableName(ITEM_TABLE));
+        .formatted(getFullTableName(tenantId));
 
-      return executeBatchUpdate(conn, sql, tuples);
+      return executeBatchUpdate(conn.getPgConnection(), sql, tuples);
     } catch (Exception e) {
       logger.error("Failed to update items batch", e);
       return Future.failedFuture(e);
     }
+  }
+
+  /**
+   * Returns the existing items of the ids, each with its current holdings record, null if it has none.
+   */
+  public Future<List<ItemWithHoldings>> getItemsWithCurrentHoldings(List<String> itemIds, String tenantId) {
+    if (itemIds.isEmpty()) {
+      return Future.succeededFuture(List.of());
+    }
+
+    var itemIdsArray = String.join("','", itemIds);
+    var sql = """
+      SELECT item.jsonb::text, current_holdings.jsonb::text
+      FROM %s item
+      LEFT JOIN %s current_holdings ON current_holdings.id = (item.jsonb->>'holdingsRecordId')::uuid
+      WHERE item.id = ANY(ARRAY['%s']::uuid[])
+      """.formatted(
+      getFullTableName(tenantId),
+      getFullTableName(HOLDINGS_RECORD_TABLE, tenantId),
+      itemIdsArray
+    );
+
+    return postgresClient(tenantId).execute(sql)
+      .map(rowSet -> {
+        var result = new ArrayList<ItemWithHoldings>(rowSet.size());
+        rowSet.forEach(row -> result.add(new ItemWithHoldings(
+          readValue(row.getString(0), Item.class), toHoldings(row.getString(1)))));
+        return result;
+      });
+  }
+
+  private HoldingsRecord toHoldings(String json) {
+    return json == null ? null : readValue(json, HoldingsRecord.class);
+  }
+
+  private String buildReindexItemsSql(String fromId, String toId, String tenantId) {
+    return "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
+           + " FROM " + getFullTableName(tenantId) + " i"
+           + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE, tenantId)
+           + " hr ON i.holdingsrecordid = hr.id"
+           + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
   }
 
   private ValidationException buildItemsSizeException(int actualSize) {
@@ -137,29 +224,5 @@ public class ItemRepository extends AbstractRepository<Item> {
         logger.error("Failed to update items batch", throwable);
         return Future.failedFuture(throwable);
       });
-  }
-
-  public Future<RowSet<Row>> getItemsWithCurrentHoldings(List<String> itemIds) {
-    if (itemIds.isEmpty()) {
-      return Future.succeededFuture();
-    }
-
-    var itemIdsArray = String.join("','", itemIds);
-    var sql = """
-      SELECT
-        item.id::text as item_id,
-        item.jsonb::text as item_json,
-        current_holdings.jsonb::text as current_holdings_json,
-        (item.jsonb->>'holdingsRecordId')::text as current_holdings_id
-      FROM %s item
-      LEFT JOIN %s current_holdings ON current_holdings.id = (item.jsonb->>'holdingsRecordId')::uuid
-      WHERE item.id = ANY(ARRAY['%s']::uuid[])
-      """.formatted(
-      getFullTableName(ITEM_TABLE),
-      getFullTableName(HOLDINGS_RECORD_TABLE),
-      itemIdsArray
-    );
-
-    return postgresClient.execute(sql);
   }
 }

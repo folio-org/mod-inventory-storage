@@ -2,6 +2,7 @@ package org.folio.it.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Vertx;
 import java.util.Date;
@@ -12,11 +13,13 @@ import org.folio.it.BaseIntegrationTest;
 import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.NotificationSendingErrorRepository;
 import org.folio.persist.entity.NotificationSendingError;
-import org.folio.rest.persist.PgUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class NotificationSendingErrorRepositoryIT extends BaseIntegrationTest {
+
+  private static final Map<String, String> HEADERS =
+    new CaseInsensitiveMap<>(Map.of(XOkapiHeaders.TENANT, TENANT_ID));
 
   @Test
   @DisplayName("should save and retrieve a notification sending error")
@@ -25,9 +28,9 @@ class NotificationSendingErrorRepositoryIT extends BaseIntegrationTest {
     var originalError = new NotificationSendingError(UUID.randomUUID().toString(),
       "topic", "key", "value", "error\nerror2", new Date());
 
-    await(repository.save(originalError.getId(), originalError));
+    await(repository.save(originalError.getId(), originalError, tenantId(HEADERS)));
 
-    var savedNotification = await(repository.getById(originalError.getId()));
+    var savedNotification = await(repository.getById(originalError.getId(), tenantId(HEADERS)));
     assertThat(savedNotification.getTopicName()).isEqualTo("topic");
     assertThat(savedNotification.getPartitionKey()).isEqualTo("key");
     assertThat(savedNotification.getPayload()).isEqualTo("value");
@@ -36,9 +39,6 @@ class NotificationSendingErrorRepositoryIT extends BaseIntegrationTest {
   }
 
   private static NotificationSendingErrorRepository createRepository(Vertx vertx) {
-    var postgresClient = PgUtil.postgresClient(vertx.getOrCreateContext(),
-      new CaseInsensitiveMap<>(Map.of(XOkapiHeaders.TENANT, TENANT_ID)));
-
-    return new NotificationSendingErrorRepository(postgresClient);
+    return new NotificationSendingErrorRepository(vertx.getOrCreateContext());
   }
 }

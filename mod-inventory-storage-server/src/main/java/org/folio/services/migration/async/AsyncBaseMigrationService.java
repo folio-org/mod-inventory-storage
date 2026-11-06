@@ -1,24 +1,16 @@
 package org.folio.services.migration.async;
 
 import io.vertx.core.Future;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.services.migration.BaseMigrationService;
 
-public abstract class AsyncBaseMigrationService extends BaseMigrationService {
-  private Set<String> idsForMigration = new HashSet<>();
+/**
+ * Processes the records of one asynchronous migration. Implementations are stateless beans: the tenant comes from
+ * the {@code headers} of each call.
+ */
+public interface AsyncBaseMigrationService {
 
-  protected AsyncBaseMigrationService(String fromVersion, PostgresClient client) {
-    super(fromVersion, client);
-  }
+  String getMigrationName();
 
-  public Future<Void> runMigrationForIds(Set<String> ids) {
-    this.idsForMigration = ids;
-    return runMigration();
-  }
-
-  protected Set<String> getIdsForMigration() {
-    return idsForMigration;
-  }
+  Future<Void> runMigrationForIds(Set<String> ids, Map<String, String> headers);
 }

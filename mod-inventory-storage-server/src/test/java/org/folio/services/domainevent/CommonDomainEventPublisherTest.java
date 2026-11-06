@@ -47,10 +47,9 @@ class CommonDomainEventPublisherTest {
   @BeforeEach
   void setUpPublisher() {
     eventPublisher = new CommonDomainEventPublisher<>(
-      Map.of(),
-      INSTANCE.fullTopicName(TENANT_ID),
       producerManager,
-      failureHandler
+      failureHandler,
+      headers -> INSTANCE.fullTopicName(TENANT_ID)
     );
   }
 
@@ -64,7 +63,7 @@ class CommonDomainEventPublisherTest {
     when(producer.drainHandler(any())).thenAnswer(this::drainHandler);
 
     var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
-      row -> builderWithValue(), notUsed -> Future.succeededFuture()));
+      row -> builderWithValue(), notUsed -> Future.succeededFuture(), Map.of()));
 
     assertThat(recordsPublished, is(6L));
 
@@ -82,7 +81,7 @@ class CommonDomainEventPublisherTest {
 
     var future = eventPublisher.publishStream(stream,
       row -> builderWithValue(),
-      records -> records > 3 ? failedFuture("stream failed") : succeededFuture());
+      records -> records > 3 ? failedFuture("stream failed") : succeededFuture(), Map.of());
 
     await().until(future::isComplete);
 
@@ -104,10 +103,10 @@ class CommonDomainEventPublisherTest {
       .thenReturn(succeededFuture(), failedFuture(""), succeededFuture(), failedFuture(""));
 
     var recordsPublished = VertxTestUtil.await(eventPublisher.publishStream(stream,
-      row -> builderWithValue(), records -> Future.succeededFuture()));
+      row -> builderWithValue(), records -> Future.succeededFuture(), Map.of()));
 
     assertThat(recordsPublished, is(2L));
-    verify(failureHandler, times(2)).handleFailure(any(), any());
+    verify(failureHandler, times(2)).handleFailure(any(), any(), any());
   }
 
   @Test
@@ -118,7 +117,7 @@ class CommonDomainEventPublisherTest {
     when(producer.send(any())).thenThrow(new IllegalStateException("server error"));
 
     var future = eventPublisher.publishStream(stream,
-      row -> builderWithValue(), records -> succeededFuture());
+      row -> builderWithValue(), records -> succeededFuture(), Map.of());
 
     await().until(future::isComplete);
 
@@ -137,11 +136,11 @@ class CommonDomainEventPublisherTest {
     when(producer.flush()).thenReturn(succeededFuture());
     when(producer.send(any())).thenReturn(failedFuture(causeError));
 
-    var future = eventPublisher.publishAllRecordsRemoved();
+    var future = eventPublisher.publishAllRecordsRemoved(Map.of());
     var e = assertThrows(RuntimeException.class, () -> VertxTestUtil.await(future));
     assertInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
 
-    verify(failureHandler, times(1)).handleFailure(eq(causeError), any());
+    verify(failureHandler, times(1)).handleFailure(eq(causeError), any(), any());
   }
 
   @SuppressWarnings("unchecked")

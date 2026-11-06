@@ -20,7 +20,6 @@ import io.vertx.sqlclient.RowIterator;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.util.List;
-import java.util.Map;
 import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.InstanceCustomLink;
 import org.folio.rest.persist.Conn;
@@ -28,13 +27,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class InstanceCustomLinkRepositoryTest {
-  private static String MOCK_ID = "aaaa-bbbb";
 
-  Conn conn;
+  private static final String MOCK_ID = "aaaa-bbbb";
 
-  InstanceCustomLink entity;
-
-  InstanceCustomLinkRepository repository;
+  private Conn conn;
+  private InstanceCustomLink entity;
+  private InstanceCustomLinkRepository repository;
 
   @BeforeEach
   @SuppressWarnings("unchecked")
@@ -42,8 +40,7 @@ class InstanceCustomLinkRepositoryTest {
     conn = mock(Conn.class);
     entity = mock(InstanceCustomLink.class);
     var context = Vertx.vertx().getOrCreateContext();
-    var headers = Map.of("X-Okapi-Tenant", "diku");
-    repository = new InstanceCustomLinkRepository(context, headers);
+    repository = new InstanceCustomLinkRepository(context);
     lenient().when(conn.execute(argThat(sql -> sql.startsWith("LOCK TABLE"))))
       .thenReturn(Future.succeededFuture(mock(RowSet.class)));
     lenient().when(conn.save(eq(INSTANCE_CUSTOM_LINK_TABLE), any(), any()))

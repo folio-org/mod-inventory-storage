@@ -1,6 +1,6 @@
 package org.folio.rest.support;
 
-import static org.folio.rest.support.InstanceBulkProcessingUtil.copyNonMarcControlledFields;
+import static org.folio.services.bulkprocessing.InstanceBulkProcessingUtil.copyNonMarcControlledFields;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.vertx.core.json.JsonObject;
@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.folio.rest.jaxrs.model.Instance;
+import org.folio.services.bulkprocessing.InstanceBulkProcessingUtil;
 import org.junit.jupiter.api.Test;
 
 class InstanceBulkProcessingUtilTest {

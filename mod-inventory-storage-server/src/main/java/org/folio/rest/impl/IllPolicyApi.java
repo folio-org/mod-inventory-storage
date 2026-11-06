@@ -16,38 +16,37 @@ public class IllPolicyApi extends BaseApi<IllPolicy, IllPolicies>
 
   @Validate
   @Override
-  public void getIllPolicies(String query, String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
+  public void getIllPolicies(String query, String totalRecords, int offset, int limit, Map<String, String> headers,
                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetIllPoliciesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postIllPolicies(IllPolicy entity, Map<String, String> okapiHeaders,
+  public void postIllPolicies(IllPolicy entity, Map<String, String> headers,
                               Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostIllPoliciesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getIllPoliciesById(String id, Map<String, String> okapiHeaders,
+  public void getIllPoliciesById(String id, Map<String, String> headers,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetIllPoliciesByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteIllPoliciesById(String id, Map<String, String> okapiHeaders,
+  public void deleteIllPoliciesById(String id, Map<String, String> headers,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteIllPoliciesByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void putIllPoliciesById(String id, IllPolicy entity, Map<String, String> okapiHeaders,
+  public void putIllPoliciesById(String id, IllPolicy entity, Map<String, String> headers,
                                  Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext, PutIllPoliciesByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

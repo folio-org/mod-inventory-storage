@@ -3,49 +3,60 @@ package org.folio.services.iteration;
 import static java.util.UUID.randomUUID;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.CANCELLATION_PENDING;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import org.folio.persist.InstanceRepository;
 import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.jaxrs.model.IterationJobParams;
+import org.folio.services.domainevent.DomainEventPublisherFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public final class IterationService {
 
-  private final IterationJobRepository repository;
-  private final IterationJobRunner jobRunner;
+  private final IterationJobRepository iterationJobRepository;
+  private final Function<Map<String, String>, IterationJobRunner> runnerFactory;
 
-  public IterationService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(new IterationJobRepository(vertxContext, okapiHeaders),
-      new IterationJobRunner(vertxContext, okapiHeaders));
+  @Autowired
+  public IterationService(Context vertxContext, DomainEventPublisherFactory publisherFactory,
+                          IterationJobRepository iterationJobRepository, InstanceRepository instanceRepository) {
+    this(iterationJobRepository, headers -> new IterationJobRunner(vertxContext, headers, publisherFactory,
+      iterationJobRepository, instanceRepository));
   }
 
-  public IterationService(IterationJobRepository repository, IterationJobRunner runner) {
-    this.repository = repository;
-    this.jobRunner = runner;
+  IterationService(IterationJobRepository iterationJobRepository,
+                   Function<Map<String, String>, IterationJobRunner> runnerFactory) {
+    this.iterationJobRepository = iterationJobRepository;
+    this.runnerFactory = runnerFactory;
   }
 
-  public Future<Optional<IterationJob>> getIteration(String jobId) {
-    return repository.getById(jobId).map(Optional::ofNullable);
+  public Future<Optional<IterationJob>> getIteration(String jobId, Map<String, String> headers) {
+    return iterationJobRepository.getById(jobId, tenantId(headers)).map(Optional::ofNullable);
   }
 
-  public Future<IterationJob> submitIteration(IterationJobParams jobParams) {
+  public Future<IterationJob> submitIteration(IterationJobParams jobParams,
+                                                 Map<String, String> headers) {
     var job = buildInitialJob(jobParams);
 
-    return repository.save(job.getId(), job)
+    return iterationJobRepository.save(job.getId(), job, tenantId(headers))
       .map(notUsed -> {
-        jobRunner.startIteration(job);
+        runnerFactory.apply(headers).startIteration(job);
 
         return job;
       });
   }
 
-  public Future<Void> cancelIteration(String jobId) {
-    return repository.fetchAndUpdate(jobId,
-      resp -> resp.withJobStatus(CANCELLATION_PENDING)).mapEmpty();
+  public Future<Void> cancelIteration(String jobId, Map<String, String> headers) {
+    return iterationJobRepository.fetchAndUpdate(jobId,
+      resp -> resp.withJobStatus(CANCELLATION_PENDING), tenantId(headers)).mapEmpty();
   }
 
   private IterationJob buildInitialJob(IterationJobParams jobParams) {

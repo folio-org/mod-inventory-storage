@@ -1,11 +1,12 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.support.PostgresClientFactory.getInstance;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
@@ -13,27 +14,31 @@ import org.apache.logging.log4j.Logger;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.HridSettings;
 import org.folio.rest.jaxrs.resource.HridSettingsStorage;
-import org.folio.rest.support.HridManager;
+import org.folio.services.HridManager;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class HridSettingsStorageApi implements HridSettingsStorage {
+
   private static final Logger log = LogManager.getLogger();
+
+  @Autowired
+  private HridManager hridManager;
+
+  public HridSettingsStorageApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
+  }
 
   @Validate
   @Override
-  public void getHridSettingsStorageHridSettings(Map<String, String> okapiHeaders,
+  public void getHridSettingsStorageHridSettings(Map<String, String> headers,
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                                  Context vertxContext) {
     try {
-      vertxContext.runOnContext(v -> {
-        try {
-          final HridManager hridManager = new HridManager(getInstance(vertxContext, okapiHeaders));
-          hridManager.getHridSettings()
-            .map(hridSettings -> successGet(asyncResultHandler, hridSettings))
-            .otherwise(error -> internalErrorGet(asyncResultHandler, error));
-        } catch (Exception e) {
-          internalErrorGet(asyncResultHandler, e);
-        }
-      });
+      hridManager.getHridSettings(tenantId(headers))
+        .map(hridSettings -> successGet(asyncResultHandler, hridSettings))
+        .otherwise(error -> internalErrorGet(asyncResultHandler, error));
     } catch (Exception e) {
       internalErrorGet(asyncResultHandler, e);
     }
@@ -42,20 +47,13 @@ public class HridSettingsStorageApi implements HridSettingsStorage {
   @Validate
   @Override
   public void putHridSettingsStorageHridSettings(HridSettings hridSettings,
-                                                 Map<String, String> okapiHeaders,
+                                                 Map<String, String> headers,
                                                  Handler<AsyncResult<Response>> asyncResultHandler,
                                                  Context vertxContext) {
     try {
-      vertxContext.runOnContext(v -> {
-        try {
-          final HridManager hridManager = new HridManager(getInstance(vertxContext, okapiHeaders));
-          hridManager.updateHridSettings(hridSettings)
-            .map(success -> successPut(asyncResultHandler))
-            .otherwise(error -> internalErrorPut(asyncResultHandler, error));
-        } catch (Exception e) {
-          internalErrorPut(asyncResultHandler, e);
-        }
-      });
+      hridManager.updateHridSettings(hridSettings, tenantId(headers))
+        .map(success -> successPut(asyncResultHandler))
+        .otherwise(error -> internalErrorPut(asyncResultHandler, error));
     } catch (Exception e) {
       internalErrorPut(asyncResultHandler, e);
     }

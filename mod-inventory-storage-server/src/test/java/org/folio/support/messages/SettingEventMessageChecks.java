@@ -8,7 +8,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasProperty;
 
 import io.vertx.core.json.JsonObject;
-import org.folio.services.domainevent.SettingEvent;
+import org.folio.services.domainevent.model.SettingEvent;
 import org.folio.support.kafka.FakeKafkaConsumer;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;

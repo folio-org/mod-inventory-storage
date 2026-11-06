@@ -6,6 +6,7 @@ import static org.folio.okapi.common.Config.getSysConfInteger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.folio.kafka.KafkaConsumerWrapper;
 import org.folio.kafka.SubscriptionDefinition;
 import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.services.caches.ConsortiumDataCache;
+import org.folio.services.instance.InstanceDateTypeService;
 
 public class SynchronizationVerticle extends AbstractVerticle {
   private static final Logger log = LogManager.getLogger(SynchronizationVerticle.class);
@@ -37,16 +39,21 @@ public class SynchronizationVerticle extends AbstractVerticle {
 
   private final List<KafkaConsumerWrapper<String, String>> consumerWrappers = new ArrayList<>();
   private final ConsortiumDataCache consortiumDataCache;
+  private final InstanceDateTypeService instanceDateTypeService;
+  private final HttpClient httpClient;
 
-  public SynchronizationVerticle(ConsortiumDataCache consortiumDataCache) {
+  public SynchronizationVerticle(ConsortiumDataCache consortiumDataCache, HttpClient httpClient,
+                                 InstanceDateTypeService instanceDateTypeService) {
+    this.instanceDateTypeService = instanceDateTypeService;
     this.consortiumDataCache = consortiumDataCache;
+    this.httpClient = httpClient;
   }
 
   @Override
   public void start(Promise<Void> startPromise) {
     log.info("start:: Starting SynchronizationVerticle");
-    var httpClient = vertx.createHttpClient();
-    var handler = new SynchronizationAsyncRecordHandler(consortiumDataCache, httpClient, vertx);
+    var handler = new SynchronizationAsyncRecordHandler(consortiumDataCache, httpClient, vertx,
+      instanceDateTypeService);
 
     var futures = TOPICS.stream()
       .map(kafkaTopic -> createKafkaConsumerWrapper(kafkaTopic, handler))
