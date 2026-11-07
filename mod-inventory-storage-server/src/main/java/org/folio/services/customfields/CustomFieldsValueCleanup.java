@@ -4,6 +4,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,9 +21,9 @@ import org.folio.services.record.RecordServiceFactoryImpl;
 import org.folio.utils.Environment;
 
 /**
- * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}, one batch per
- * transaction, so a cleanup of any size locks items for one batch at a time. A pass starts after each
- * field delete. Each {@code _timer} call starts one for the rows those passes leave behind: after a
+ * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}, one record per
+ * transaction, so a cleanup of any size locks no more rows at a time than a single-item write. A pass
+ * starts after each field delete. Each {@code _timer} call starts one for the rows those passes leave behind: after a
  * restart, after a failed row or pass, or when another instance held the tenant's lock.
  */
 public final class CustomFieldsValueCleanup {
@@ -85,6 +86,12 @@ public final class CustomFieldsValueCleanup {
    * Runs the pass under a session advisory lock on the tenant, held on this connection across the
    * pass's transactions, so one pass per tenant runs across all module instances. A pass that finds
    * the lock held leaves the queue to the holder; rows queued meanwhile wait for the next pass.
+   *
+   * <p>The pass also commits asynchronously, since it commits once per record and waiting for each commit
+   * to be flushed would make it several times slower. A crash can undo the latest removals, but only
+   * together with everything committed after them, including the deletion of their queue row, so the
+   * next pass removes them again. The pass resets the commit mode and releases the lock when it ends, before
+   * the connection returns to the pool.
    */
   private static Future<Void> processQueueLocked(Conn conn, String schema) {
     var lockKey = Tuple.of(schema);
@@ -94,8 +101,19 @@ public final class CustomFieldsValueCleanup {
           log.info("processQueueLocked:: custom field value cleanup runs on another instance [schema={}]", schema);
           return Future.succeededFuture();
         }
-        return processRows(conn, schema)
+        return conn.execute("SET synchronous_commit = off")
+          .compose(x -> processRows(conn, schema))
+          .eventually(() -> resetCommitMode(conn, schema))
           .eventually(() -> unlock(conn, lockKey, schema));
+      });
+  }
+
+  private static Future<Void> resetCommitMode(Conn conn, String schema) {
+    return conn.execute("RESET synchronous_commit")
+      .<Void>mapEmpty()
+      .recover(e -> {
+        log.warn("resetCommitMode:: resetting synchronous_commit failed [schema={}]", schema, e);
+        return Future.succeededFuture();
       });
   }
 
@@ -142,37 +160,49 @@ public final class CustomFieldsValueCleanup {
       .mapEmpty();
   }
 
+  /**
+   * Updates each record in a transaction of its own, as a single-item write does, so the removal locks the
+   * rows that the item triggers lock in the same order as any other item write and adds no deadlock that
+   * two item writes could not run into. The records are read in batches.
+   */
   private static Future<Void> removeFieldValues(Conn conn, String schema, String table, String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
     var fullTable = schema + "." + table;
-    var batch = removeValueBatch(fullTable);
+    var batch = "SELECT id FROM " + fullTable + " WHERE " + HOLDS_VALUE + " LIMIT $2";
     var batchParams = Tuple.of(refId, batchSize());
+    // a write after the read may have removed the value, or all of customFields, which would make the jsonb NULL
+    var removeValue = "UPDATE " + fullTable
+      + " SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
+      + " WHERE id = $2 AND " + HOLDS_VALUE;
     var records = new AtomicLong();
     var batches = new AtomicInteger();
     var start = System.nanoTime();
     return whileMore(() -> conn.execute(batch, batchParams)
-      .compose(result -> {
-        if (result.rowCount() == 0) {
-          return anyLeft(conn, fullTable, refId);
+      .compose(ids -> {
+        if (ids.rowCount() == 0) {
+          return Future.succeededFuture(false);
         }
         batches.incrementAndGet();
-        records.addAndGet(result.rowCount());
-        return Future.succeededFuture(true);
+        return removeValueOneByOne(conn, removeValue, refId, ids, records).map(true);
       }))
       .onSuccess(v -> log.info("removeFieldValues:: removed values of custom field "
           + "[refId={}, records={}, batches={}, durationMs={}]",
         refId, records.get(), batches.get(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)));
   }
 
-  /**
-   * The condition is repeated outside the subquery: a batch that waits for a concurrent write of its records
-   * re-checks only the outer condition when that write commits, and would otherwise rewrite records that no
-   * longer hold the value.
-   */
-  private static String removeValueBatch(String table) {
-    return "UPDATE " + table + " SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
-      + " WHERE " + HOLDS_VALUE
-      + " AND id IN (SELECT id FROM " + table + " WHERE " + HOLDS_VALUE + " LIMIT $2)";
+  private static Future<Void> removeValueOneByOne(Conn conn, String removeValue, String refId, RowSet<Row> ids,
+                                                  AtomicLong records) {
+    var remaining = ids.iterator();
+    return whileMore(() -> {
+      if (!remaining.hasNext()) {
+        return Future.succeededFuture(false);
+      }
+      return conn.execute(removeValue, Tuple.of(refId, remaining.next().getUUID(0)))
+        .map(result -> {
+          records.addAndGet(result.rowCount());
+          return true;
+        });
+    });
   }
 
   /**
@@ -196,15 +226,6 @@ public final class CustomFieldsValueCleanup {
         done.complete();
       }
     });
-  }
-
-  /**
-   * A batch whose records were all changed by concurrent writes updates none of them while others still
-   * hold the value, so an empty batch is confirmed with this query.
-   */
-  private static Future<Boolean> anyLeft(Conn conn, String table, String refId) {
-    return conn.execute("SELECT EXISTS (SELECT 1 FROM " + table + " WHERE " + HOLDS_VALUE + ")", Tuple.of(refId))
-      .map(rows -> rows.iterator().next().getBoolean(0));
   }
 
   /** Deletes the queue row and the placeholder of its refId in one statement, so neither outlives the other. */

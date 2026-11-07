@@ -8,10 +8,13 @@ import static org.folio.HttpStatus.SC_NO_CONTENT;
 import static org.folio.HttpStatus.SC_OK;
 import static org.folio.HttpStatus.SC_UNPROCESSABLE_CONTENT;
 import static org.folio.dataimport.testsupport.vertx.VertxTestUtil.await;
+import static org.folio.it.HoldingsStorageFixtures.createHolding;
+import static org.folio.it.InstanceStorageFixtures.createInstance;
 import static org.folio.rest.jaxrs.model.CustomField.Type.MULTI_SELECT_DROPDOWN;
 import static org.folio.rest.jaxrs.model.CustomField.Type.RADIO_BUTTON;
 import static org.folio.rest.jaxrs.model.CustomField.Type.SINGLE_SELECT_DROPDOWN;
 import static org.folio.rest.jaxrs.model.CustomField.Type.TEXTBOX_SHORT;
+import static org.folio.support.ResourcePaths.ITEMS;
 
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,6 +25,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import org.awaitility.Awaitility;
 import org.folio.rest.jaxrs.model.CustomField;
 import org.folio.rest.persist.PostgresClient;
@@ -408,51 +412,126 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   @Test
   @DisplayName("should go on removing values when a concurrent write leaves a batch with no record to update")
   void shouldContinueRemoval_whenConcurrentWriteEmptiesBatch() {
-    var batchSize = 2;
-    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, String.valueOf(batchSize));
-    try {
-      createCustomField(textboxField);
-      var items = new ArrayList<String>();
-      for (int i = 0; i < 5; i++) {
-        items.add(createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text" + i))).getString("id"));
-      }
+    createCustomField(textboxField);
+    var items = new ArrayList<String>();
+    for (int i = 0; i < 5; i++) {
+      items.add(createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text" + i))).getString("id"));
+    }
+    var target = createItem(itemWithCustomFields(new JsonObject())).getString("id");
+    items.add(target);
 
-      deleteFieldWhileFirstBatchIsWrittenConcurrently(textboxField, TEXTBOX, batchSize);
+    deleteFieldWhileConcurrentWriteMovesValue(textboxField, TEXTBOX, target);
 
-      awaitCleanupDone();
-      for (String itemId : items) {
-        assertThat(storedCustomFieldsOf(itemId)).isEqualTo(new JsonObject());
-      }
-      assertThat(placeholderCount()).isZero();
-    } finally {
-      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
+    awaitCleanupDone();
+    for (String itemId : items) {
+      assertThat(storedCustomFieldsOf(itemId)).isEqualTo(new JsonObject());
+    }
+    assertThat(placeholderCount()).isZero();
+  }
+
+  @Test
+  @DisplayName("should not deadlock with a write of an item that a batch has not locked yet, "
+    + "in a holdings record whose other items the batch holds")
+  void shouldNotDeadlock_withWriteOfItemNotYetLockedByBatch() {
+    createCustomField(textboxField);
+    final var first = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+    final var paused = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text2")));
+    final var written = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text3")));
+
+    inTransactionOfItsOwn(connection -> {
+      execute(connection, "SELECT 1 FROM item WHERE id = $1 FOR UPDATE", UUID.fromString(id(paused)));
+      deleteField(textboxField);
+      awaitWaitingLocks(1);
+      var write = doPut(client, ITEMS + "/" + id(written),
+        getItemJsonById(id(written)).put("itemLevelCallNumber", "written"));
+      Awaitility.await().atMost(Duration.ofSeconds(10)).until(write::isComplete);
+      assertThat(await(write).status()).isEqualTo(SC_NO_CONTENT);
+      return null;
+    });
+
+    awaitCleanupDone();
+    for (JsonObject item : List.of(first, paused, written)) {
+      assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
     }
   }
 
+  @Test
+  @DisplayName("should not deadlock with a write of an item outside a batch, "
+    + "in a holdings record of an instance the batch holds")
+  void shouldNotDeadlock_withWriteOfItemOutsideBatchOnBatchInstance() {
+    createCustomField(textboxField);
+    var instanceId = createInstance(client, "an instance " + UUID.randomUUID(), instanceTypeId);
+    var firstHoldingId = createHolding(client, instanceId, mainLibraryLocationId);
+    var secondHoldingId = createHolding(client, instanceId, mainLibraryLocationId);
+    final var first = createItem(minimalItemRequest(UUID.randomUUID(), firstHoldingId)
+      .put(CUSTOM_FIELDS, new JsonObject().put(TEXTBOX, "text1")));
+    final var second = createItem(minimalItemRequest(UUID.randomUUID(), secondHoldingId)
+      .put(CUSTOM_FIELDS, new JsonObject().put(TEXTBOX, "text2")));
+    final var written = createItem(minimalItemRequest(UUID.randomUUID(), secondHoldingId));
+
+    var write = inTransactionOfItsOwn(connection -> {
+      execute(connection, "SELECT 1 FROM item_order_tracker WHERE holdings_id = $1 FOR UPDATE",
+        UUID.fromString(secondHoldingId));
+      final var waitingWrite = doPut(client, ITEMS + "/" + id(written),
+        getItemJsonById(id(written)).put("itemLevelCallNumber", "written"));
+      awaitWaitingLocks(1);
+      deleteField(textboxField);
+      awaitWaitingLocks(2);
+      return waitingWrite;
+    });
+
+    assertThat(await(write).status()).isEqualTo(SC_NO_CONTENT);
+    awaitCleanupDone();
+    assertThat(storedCustomFieldsOf(first)).isEqualTo(new JsonObject());
+    assertThat(storedCustomFieldsOf(second)).isEqualTo(new JsonObject());
+  }
+
   /**
-   * Deletes the field while a transaction of its own removes the value from the records that the
-   * cleanup's first batch picks, and commits once that batch waits for it, so the batch updates none.
+   * Removes the value from every record holding it and stores it on the target record in a transaction on a
+   * connection of its own, deletes the field, and commits once the cleanup waits for one of those records.
+   * The cleanup then finds the value gone from every record of its first batch, which misses the target.
    */
-  private static void deleteFieldWhileFirstBatchIsWrittenConcurrently(JsonObject field, String refId,
-                                                                      int batchSize) {
-    var writer = openConnection();
+  private static void deleteFieldWhileConcurrentWriteMovesValue(JsonObject field, String refId, String targetId) {
+    inTransactionOfItsOwn(connection -> {
+      execute(connection, "UPDATE item SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
+        + " WHERE jsonb->'customFields' ? $1", refId);
+      execute(connection, "UPDATE item SET jsonb = jsonb_set(jsonb, '{customFields}',"
+        + " COALESCE(jsonb->'customFields', '{}') || jsonb_build_object($1::text, 'moved')) WHERE id = $2",
+        refId, UUID.fromString(targetId));
+      deleteField(field);
+      awaitWaitingLocks(1);
+      return null;
+    });
+  }
+
+  /**
+   * Runs the steps in a transaction on a connection of its own and commits it. If a step fails, the
+   * transaction is rolled back, since a pooled connection returned with an open transaction keeps its locks.
+   */
+  private static <T> T inTransactionOfItsOwn(Function<PgConnection, T> steps) {
+    var connection = openConnection();
     Transaction transaction = null;
     try {
-      transaction = await(writer.begin());
-      await(writer.query("UPDATE item SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - '"
-        + refId + "') WHERE id IN (SELECT id FROM item WHERE jsonb->'customFields' ? '" + refId + "' LIMIT "
-        + batchSize + ")").execute());
-      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(field)));
-      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-      awaitWaitingLock();
+      transaction = await(connection.begin());
+      var result = steps.apply(connection);
       await(transaction.commit());
       transaction = null;
+      return result;
     } finally {
       if (transaction != null) {
         await(transaction.rollback());
       }
-      await(writer.close());
+      await(connection.close());
     }
+  }
+
+  private static void execute(PgConnection connection, String sql, Object... params) {
+    await(connection.preparedQuery(sql).execute(Tuple.wrap(params)));
+  }
+
+  private static void deleteField(JsonObject field) {
+    var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(field)));
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
   }
 
   /** Takes the lock that a cleanup pass holds on the tenant, as a pass on another instance would. */
@@ -466,12 +545,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
   }
 
-  private static void awaitWaitingLock() {
+  private static void awaitWaitingLocks(long count) {
     Awaitility.await()
       .atMost(Duration.ofSeconds(15))
       .pollInterval(Duration.ofMillis(100))
       .untilAsserted(() -> assertThat(runQuery("SELECT count(*) FROM pg_locks WHERE NOT granted")
-        .iterator().next().getLong(0)).isPositive());
+        .iterator().next().getLong(0)).isGreaterThanOrEqualTo(count));
   }
 
   /** Makes every update of an item holding a value of the custom field fail, standing in for any failing removal. */
@@ -493,8 +572,13 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .untilAsserted(() -> assertThat(cleanupQueueSize()).isEqualTo(size));
   }
 
+  /**
+   * Counts the queue rows on the standby that serves the module's reads. The cleanup commits asynchronously,
+   * so the standby applies its removals after the primary shows them, and in commit order: once the standby
+   * shows a queue row gone, it shows that row's removals too.
+   */
   private static long cleanupQueueSize() {
-    return runQuery("SELECT count(*) FROM custom_fields_cleanup").iterator().next().getLong(0);
+    return runReadQuery("SELECT count(*) FROM custom_fields_cleanup").iterator().next().getLong(0);
   }
 
   private static long placeholderCount() {

@@ -204,7 +204,7 @@ These environment variables configure the module interaction with S3-compatible 
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
 This environment variable configures the background removal of the values of deleted custom fields:
-* `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` (default value - `1000`) - number of records updated per transaction; an unset, non-numeric or below-1 value falls back to `1000`
+* `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` (default value - `1000`) - number of records the custom fields cleanup reads per query; an unset, non-numeric or below-1 value falls back to `1000`
 
 # Local Deployment using Docker
 
@@ -414,10 +414,12 @@ items in the background:
   `POST /inventory-storage/custom-fields/cleanup` every 5 minutes to pick up pending removals,
   including those left after a restart, a failure, or an attempt that found another instance
   holding the tenant's cleanup lock.
-* Items are updated in batches of `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` per transaction. Each updated
-  item gets a new `_version`, so a client saving an item it read before the removal gets a 409.
-  No domain events are published for these updates, since mod-search and mod-audit ignore item
-  `customFields`.
+* Items are read in batches of `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` and updated one per transaction,
+  so the removal locks rows as a single item update does. Each updated item gets a new `_version`,
+  so a client saving an item it read before the removal gets a 409. No domain events are published
+  for these updates.
+* The removal commits asynchronously (`synchronous_commit` off for its connection). After a
+  database crash, the latest removals can be undone, and the next pass removes the values again.
 * Until the values are removed, the deleted field's `refId` stays reserved, so a new field with
   the same name gets the next `refId` (for example `textbox_2` instead of `textbox`).
 * Pending removals are rows of the tenant's `custom_fields_cleanup` table. A removal that failed
