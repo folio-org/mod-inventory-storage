@@ -77,7 +77,7 @@ public final class CustomFieldsValueCleanup {
     var lockKey = Tuple.of(schema);
     return conn.execute("SELECT pg_try_advisory_lock(" + LOCK_KEY + ")", lockKey)
       .compose(locked -> {
-        if (!locked.iterator().next().getBoolean(0)) {
+        if (!Boolean.TRUE.equals(locked.iterator().next().getBoolean(0))) {
           log.info("processQueueLocked:: custom field value cleanup already runs [schema={}]", schema);
           return Future.succeededFuture();
         }
@@ -130,9 +130,10 @@ public final class CustomFieldsValueCleanup {
   private static Future<Void> processRow(Conn conn, String schema, Row row) {
     var id = row.getUUID("id");
     var refId = row.getString("ref_id");
-    var table = RecordServiceFactoryImpl.ENTITY_TYPE_TABLES.get(row.getString("entity_type"));
+    var entityType = row.getString("entity_type");
+    var table = RecordServiceFactoryImpl.ENTITY_TYPE_TABLES.get(entityType);
     if (table == null) {
-      log.warn("processRow:: discarding cleanup row with unsupported entityType [{}]", row.getString("entity_type"));
+      log.warn("processRow:: discarding cleanup row with unsupported entityType [{}]", entityType);
       return deleteFieldRow(conn, schema, id, refId);
     }
     return removeFieldValues(conn, schema, table, refId)
