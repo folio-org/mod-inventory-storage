@@ -410,10 +410,11 @@ Deleting a field (`DELETE /custom-fields/{id}`, or a `PUT /custom-fields` that l
 responds once the definition is deleted. The module then removes the field's values from the
 items in the background:
 
-* After the delete, the module attempts to start a cleanup pass. The `_timer` interface calls
-  `POST /inventory-storage/custom-fields/cleanup` every 5 minutes to pick up pending removals,
-  including those left after a restart, a failure, or an attempt that found another instance
-  holding the tenant's cleanup lock.
+* After the delete, the module attempts to start a cleanup pass. One pass per tenant runs at a
+  time across the module's instances, and it also takes on removals queued while it runs. The
+  `_timer` interface calls `POST /inventory-storage/custom-fields/cleanup` every 5 minutes to pick
+  up pending removals, including those left after a restart, a failure, or a delete that came as
+  a pass was ending.
 * Items are read in batches of `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` and updated one per transaction,
   so the removal locks rows as a single item update does. Each updated item gets a new `_version`,
   so a client saving an item it read before the removal gets a 409. No domain events are published

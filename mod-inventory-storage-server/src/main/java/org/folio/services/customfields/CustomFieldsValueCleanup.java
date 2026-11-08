@@ -6,9 +6,10 @@ import io.vertx.core.Vertx;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -22,10 +23,10 @@ import org.folio.services.record.RecordServiceFactoryImpl;
 import org.folio.utils.Environment;
 
 /**
- * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}, one record per
- * transaction, so a cleanup of any size locks no more rows at a time than a single-item write. A pass
- * starts after each field delete. Each {@code _timer} call starts one for the rows those passes leave behind: after a
- * restart, after a failed row or pass, or when another instance held the tenant's lock.
+ * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}. A pass
+ * starts after each field delete and on each {@code _timer} call. The timer's passes pick up the rows that
+ * other passes leave behind: after a restart, after a failed row or pass, or a row queued after the running
+ * pass last read the queue.
  */
 public final class CustomFieldsValueCleanup {
 
@@ -41,40 +42,18 @@ public final class CustomFieldsValueCleanup {
 
   private static final Logger log = LogManager.getLogger(CustomFieldsValueCleanup.class);
 
-  private enum State { RUNNING, RERUN }
-
-  private static final Map<String, State> TENANTS = new HashMap<>();
-
   private CustomFieldsValueCleanup() {
   }
 
-  /** Starts processing the tenant's queue, or marks a running pass to run again. */
+  /**
+   * Starts a pass over the tenant's queue. It starts inside the future chain, so an exception thrown before
+   * {@code processQueue} returns a future (for example {@code PostgresClient.getInstance} for tenant
+   * {@code public}) is logged instead of thrown to the caller.
+   */
   public static void kick(Vertx vertx, String tenantId) {
-    synchronized (TENANTS) {
-      if (TENANTS.putIfAbsent(tenantId, State.RUNNING) != null) {
-        TENANTS.put(tenantId, State.RERUN);
-        return;
-      }
-    }
-    runPass(vertx, tenantId);
-  }
-
-  /** Starts the pass inside the future chain, so a pass that throws before it returns a future still ends. */
-  private static void runPass(Vertx vertx, String tenantId) {
     Future.<Void>succeededFuture()
       .compose(x -> processQueue(vertx, tenantId))
-      .onComplete(result -> {
-        if (result.failed()) {
-          log.error("runPass:: custom field value cleanup failed [tenant={}]", tenantId, result.cause());
-        }
-        boolean rerun;
-        synchronized (TENANTS) {
-          rerun = TENANTS.remove(tenantId) == State.RERUN;
-        }
-        if (rerun) {
-          kick(vertx, tenantId);
-        }
-      });
+      .onFailure(e -> log.error("kick:: custom field value cleanup failed [tenant={}]", tenantId, e));
   }
 
   private static Future<Void> processQueue(Vertx vertx, String tenantId) {
@@ -86,7 +65,7 @@ public final class CustomFieldsValueCleanup {
   /**
    * Runs the pass under a session advisory lock on the tenant, held on this connection across the
    * pass's transactions, so one pass per tenant runs across all module instances. A pass that finds
-   * the lock held leaves the queue to the holder; rows queued meanwhile wait for the next pass.
+   * the lock held leaves the queue to the holder, which reads the queue again before it ends.
    *
    * <p>The pass also commits asynchronously, since it commits once per record and waiting for each commit
    * to be flushed would make it several times slower. A crash can undo the latest removals, but only
@@ -99,7 +78,7 @@ public final class CustomFieldsValueCleanup {
     return conn.execute("SELECT pg_try_advisory_lock(" + LOCK_KEY + ")", lockKey)
       .compose(locked -> {
         if (!locked.iterator().next().getBoolean(0)) {
-          log.info("processQueueLocked:: custom field value cleanup runs on another instance [schema={}]", schema);
+          log.info("processQueueLocked:: custom field value cleanup already runs [schema={}]", schema);
           return Future.succeededFuture();
         }
         return conn.execute("SET synchronous_commit = off")
@@ -127,17 +106,25 @@ public final class CustomFieldsValueCleanup {
       });
   }
 
+  /**
+   * Processes the queue in order and reads it again until every row it holds has been attempted in this
+   * pass, so rows queued during the pass are processed too, and a failed row waits for the next pass.
+   */
   private static Future<Void> processRows(Conn conn, String schema) {
-    return conn.execute("SELECT id, entity_type, ref_id FROM " + schema
-        + ".custom_fields_cleanup ORDER BY created_date")
+    var queueRead = "SELECT id, entity_type, ref_id FROM " + schema
+      + ".custom_fields_cleanup WHERE id <> ALL($1) ORDER BY created_date";
+    Set<UUID> attempted = new HashSet<>();
+    return whileMore(() -> conn.execute(queueRead, Tuple.of(attempted.toArray(UUID[]::new)))
       .compose(queue -> {
         Future<Void> result = Future.succeededFuture();
         for (Row row : queue) {
+          var id = row.getUUID("id");
+          attempted.add(id);
           result = result.compose(x -> processRow(conn, schema, row)
-            .recover(e -> recordFailure(conn, schema, row.getUUID("id"), e)));
+            .recover(e -> recordFailure(conn, schema, id, e)));
         }
-        return result;
-      });
+        return result.map(queue.rowCount() > 0);
+      }));
   }
 
   private static Future<Void> processRow(Conn conn, String schema, Row row) {

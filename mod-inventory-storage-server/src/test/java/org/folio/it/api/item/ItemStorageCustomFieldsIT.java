@@ -441,6 +441,26 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
+  @DisplayName("should remove the values of a field queued while a pass runs in the same pass")
+  void shouldRemoveValuesOfFieldQueuedDuringPass_inSamePass() {
+    createCustomField(textboxField);
+    final var paused = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+    final var queuedLater = createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, "opt_0")));
+
+    inTransactionOfItsOwn(connection -> {
+      execute(connection, "SELECT 1 FROM item WHERE id = $1 FOR UPDATE", UUID.fromString(id(paused)));
+      deleteField(textboxField);
+      awaitWaitingLocks(1);
+      insertFieldCleanupRow(SINGLE_SELECT);
+      return null;
+    });
+
+    awaitCleanupDone();
+    assertThat(storedCustomFieldsOf(paused)).isEqualTo(new JsonObject());
+    assertThat(storedCustomFieldsOf(queuedLater)).isEqualTo(new JsonObject());
+  }
+
+  @Test
   @DisplayName("should go on removing values when a concurrent write leaves a batch with no record to update")
   void shouldContinueRemoval_whenConcurrentWriteEmptiesBatch() {
     createCustomField(textboxField);
@@ -601,8 +621,10 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       + " EXECUTE FUNCTION fail_cleanup()");
   }
 
+  /** Waits until the queue row has the attempts and keeps them for a second, as a pass that retries it would not. */
   private static void awaitCleanupAttempts(int attempts) {
     Awaitility.await()
+      .during(Duration.ofSeconds(1))
       .atMost(Duration.ofSeconds(15))
       .pollInterval(Duration.ofMillis(200))
       .untilAsserted(() -> assertThat(runReadQuery("SELECT attempts FROM custom_fields_cleanup")
