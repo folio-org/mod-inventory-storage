@@ -422,8 +422,10 @@ items in the background:
   database crash, the latest removals can be undone, and the next pass removes the values again.
 * Until the values are removed, the deleted field's `refId` stays reserved, so a new field with
   the same name gets the next `refId` (for example `textbox_2` instead of `textbox`).
-* Pending removals are rows of the tenant's `custom_fields_cleanup` table. A removal that failed
-  stays there with `attempts`, `last_error` and `last_attempt_date`, and the next pass retries it.
+* Pending removals are rows of the tenant's `custom_fields_cleanup` table. An item that cannot be
+  updated keeps the value, and the removal goes on with the other items. A removal that failed,
+  for example on such an item, stays there with `attempts`, `last_error` and `last_attempt_date`,
+  and the next pass retries it.
 * The reserved `refId`s are rows of the `custom_fields` table with `entityType`
   `pendingValueCleanup`. The API does not return them; code that reads the table directly has to
   filter them out.

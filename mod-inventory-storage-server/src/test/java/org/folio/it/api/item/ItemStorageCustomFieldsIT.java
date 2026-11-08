@@ -383,6 +383,37 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
+  @DisplayName("should remove the values of the items after one that cannot be updated and retry it in the next pass")
+  void shouldRemoveValuesAfterUnwritableItem_andRetryItInNextPass() {
+    createCustomField(textboxField);
+    final var first = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
+    final var unwritable = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text2")));
+    final var last = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text3")));
+    refuseUpdatesOfItem(id(unwritable));
+    try {
+      deleteField(textboxField);
+
+      awaitCleanupAttempts(1);
+      assertThat(runQuery("SELECT last_error FROM custom_fields_cleanup").iterator().next().getString(0))
+        .contains("1 of the records", id(unwritable), "cleanup refused");
+      assertThat(storedCustomFieldsOf(first)).isEqualTo(new JsonObject());
+      assertThat(storedCustomFieldsOf(last)).isEqualTo(new JsonObject());
+      assertThat(storedCustomFieldsOf(unwritable).getString(TEXTBOX)).isEqualTo("text2");
+      assertThat(placeholderCount()).isEqualTo(1);
+
+      runQuery("DROP TRIGGER fail_cleanup ON item");
+      await(doPost(client, CLEANUP_PATH, null));
+
+      awaitCleanupDone();
+      assertThat(storedCustomFieldsOf(unwritable)).isEqualTo(new JsonObject());
+      assertThat(placeholderCount()).isZero();
+    } finally {
+      runQuery("DROP TRIGGER IF EXISTS fail_cleanup ON item");
+      runQuery("DROP FUNCTION IF EXISTS fail_cleanup()");
+    }
+  }
+
+  @Test
   @DisplayName("should leave the queue to the instance holding the tenant's lock and process it once released")
   void shouldLeaveQueue_toInstanceHoldingCleanupLock() {
     final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
@@ -555,10 +586,27 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   /** Makes every update of an item holding a value of the custom field fail, standing in for any failing removal. */
   private static void refuseItemUpdatesRemoving(String refId) {
+    refuseItemUpdatesWhere("OLD.jsonb->'customFields' ? '" + refId + "'");
+  }
+
+  /** Makes every update of the item fail, as for an item whose instance no longer passes its own checks. */
+  private static void refuseUpdatesOfItem(String itemId) {
+    refuseItemUpdatesWhere("OLD.id = '" + itemId + "'");
+  }
+
+  private static void refuseItemUpdatesWhere(String condition) {
     runQuery("CREATE FUNCTION fail_cleanup() RETURNS trigger AS $$ BEGIN RAISE EXCEPTION 'cleanup refused'; END $$"
       + " LANGUAGE plpgsql");
-    runQuery("CREATE TRIGGER fail_cleanup BEFORE UPDATE ON item FOR EACH ROW"
-      + " WHEN (OLD.jsonb->'customFields' ? '" + refId + "') EXECUTE FUNCTION fail_cleanup()");
+    runQuery("CREATE TRIGGER fail_cleanup BEFORE UPDATE ON item FOR EACH ROW WHEN (" + condition + ")"
+      + " EXECUTE FUNCTION fail_cleanup()");
+  }
+
+  private static void awaitCleanupAttempts(int attempts) {
+    Awaitility.await()
+      .atMost(Duration.ofSeconds(15))
+      .pollInterval(Duration.ofMillis(200))
+      .untilAsserted(() -> assertThat(runReadQuery("SELECT attempts FROM custom_fields_cleanup")
+        .iterator().next().getInteger(0)).isEqualTo(attempts));
   }
 
   private static void awaitCleanupDone() {

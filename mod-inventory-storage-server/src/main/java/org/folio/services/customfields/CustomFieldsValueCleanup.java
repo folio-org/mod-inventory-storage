@@ -7,6 +7,7 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -164,43 +165,66 @@ public final class CustomFieldsValueCleanup {
    * Updates each record in a transaction of its own, as a single-item write does, so the removal locks the
    * rows that the item triggers lock in the same order as any other item write and adds no deadlock that
    * two item writes could not run into. The records are read in batches.
+   *
+   * <p>A record whose update fails keeps the value and is left out of the following batches, so it does not
+   * hold up the records after it. The removal then fails, which keeps the field queued for the next pass.
    */
   private static Future<Void> removeFieldValues(Conn conn, String schema, String table, String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
     var fullTable = schema + "." + table;
-    var batch = "SELECT id FROM " + fullTable + " WHERE " + HOLDS_VALUE + " LIMIT $2";
-    var batchParams = Tuple.of(refId, batchSize());
+    var batch = "SELECT id FROM " + fullTable + " WHERE " + HOLDS_VALUE + " AND id <> ALL($3) LIMIT $2";
+    var size = batchSize();
     // a write after the read may have removed the value, or all of customFields, which would make the jsonb NULL
     var removeValue = "UPDATE " + fullTable
       + " SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
       + " WHERE id = $2 AND " + HOLDS_VALUE;
     var records = new AtomicLong();
     var batches = new AtomicInteger();
+    Map<UUID, Throwable> failed = new LinkedHashMap<>();
     var start = System.nanoTime();
-    return whileMore(() -> conn.execute(batch, batchParams)
+    return whileMore(() -> conn.execute(batch, Tuple.of(refId, size, failed.keySet().toArray(UUID[]::new)))
       .compose(ids -> {
         if (ids.rowCount() == 0) {
           return Future.succeededFuture(false);
         }
         batches.incrementAndGet();
-        return removeValueOneByOne(conn, removeValue, refId, ids, records).map(true);
+        return removeValueOneByOne(conn, removeValue, refId, ids, records, failed).map(true);
       }))
-      .onSuccess(v -> log.info("removeFieldValues:: removed values of custom field "
-          + "[refId={}, records={}, batches={}, durationMs={}]",
-        refId, records.get(), batches.get(), TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)));
+      .compose(v -> endRemoval(refId, records.get(), batches.get(), failed, start));
+  }
+
+  private static Future<Void> endRemoval(String refId, long records, int batches, Map<UUID, Throwable> failed,
+                                         long start) {
+    log.info("endRemoval:: removed values of custom field [refId={}, records={}, failedRecords={}, batches={}, "
+        + "durationMs={}]",
+      refId, records, failed.size(), batches, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+    if (failed.isEmpty()) {
+      return Future.succeededFuture();
+    }
+    var first = failed.entrySet().iterator().next();
+    return Future.failedFuture(new IllegalStateException(failed.size() + " of the records holding the value could not "
+      + "be updated, first [id=" + first.getKey() + "]: " + first.getValue().getMessage(), first.getValue()));
   }
 
   private static Future<Void> removeValueOneByOne(Conn conn, String removeValue, String refId, RowSet<Row> ids,
-                                                  AtomicLong records) {
+                                                  AtomicLong records, Map<UUID, Throwable> failed) {
     var remaining = ids.iterator();
     return whileMore(() -> {
       if (!remaining.hasNext()) {
         return Future.succeededFuture(false);
       }
-      return conn.execute(removeValue, Tuple.of(refId, remaining.next().getUUID(0)))
+      var id = remaining.next().getUUID(0);
+      return conn.execute(removeValue, Tuple.of(refId, id))
         .map(result -> {
           records.addAndGet(result.rowCount());
           return true;
+        })
+        .recover(e -> {
+          var message = e.getMessage();
+          log.warn("removeValueOneByOne:: removing the custom field value failed, kept for the next pass "
+            + "[refId={}, id={}]: {}", refId, id, message);
+          failed.put(id, e);
+          return Future.succeededFuture(true);
         });
     });
   }
