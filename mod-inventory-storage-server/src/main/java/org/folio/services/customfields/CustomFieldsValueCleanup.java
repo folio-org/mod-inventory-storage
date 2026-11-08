@@ -36,8 +36,11 @@ public final class CustomFieldsValueCleanup {
    * {@code create_custom_fields_cleanup.sql} inserts them and explains what they are for.
    */
   public static final String PLACEHOLDER_ENTITY_TYPE = "pendingValueCleanup";
+  /**
+   * The key of the advisory lock that a pass holds on the tenant, with the schema name as {@code $1}.
+   */
+  public static final String LOCK_KEY = "hashtext('custom_fields_cleanup'), hashtext($1)";
   private static final int DEFAULT_BATCH_SIZE = 1000;
-  private static final String LOCK_KEY = "hashtext('custom_fields_cleanup'), hashtext($1)";
   private static final String HOLDS_VALUE = "jsonb->'customFields' ? $1";
 
   private static final Logger log = LogManager.getLogger(CustomFieldsValueCleanup.class);

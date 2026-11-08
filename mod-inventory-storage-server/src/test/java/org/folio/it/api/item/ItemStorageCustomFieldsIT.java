@@ -587,12 +587,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   /** Takes the lock that a cleanup pass holds on the tenant, as a pass on another instance would. */
   private static void holdCleanupLock(PgConnection connection) {
-    await(connection.preparedQuery("SELECT pg_advisory_lock(hashtext('custom_fields_cleanup'), hashtext($1))")
+    await(connection.preparedQuery("SELECT pg_advisory_lock(" + CustomFieldsValueCleanup.LOCK_KEY + ")")
       .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
   }
 
   private static void releaseCleanupLock(PgConnection connection) {
-    await(connection.preparedQuery("SELECT pg_advisory_unlock(hashtext('custom_fields_cleanup'), hashtext($1))")
+    await(connection.preparedQuery("SELECT pg_advisory_unlock(" + CustomFieldsValueCleanup.LOCK_KEY + ")")
       .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
   }
 
