@@ -257,6 +257,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
     var byQuery = await(doGet(client, CUSTOM_FIELDS_PATH + "?query=name==" + TEXTBOX));
     var byId = await(doGet(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
+    var updated = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + placeholderId, textboxField));
     var statistic = await(doGet(client, fieldStatisticPath(placeholderId)));
     var optionStatistic = await(doGet(client, optionStatisticPath(placeholderId, "opt_0")));
     var deleted = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
@@ -267,6 +268,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
     assertThat(byQuery.jsonBody().getJsonArray(CUSTOM_FIELDS)).isEmpty();
     assertThat(byId.status()).isEqualTo(SC_NOT_FOUND);
+    assertThat(updated.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(statistic.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(optionStatistic.status()).isEqualTo(SC_NOT_FOUND);
     assertThat(deleted.status()).isEqualTo(SC_NOT_FOUND);
