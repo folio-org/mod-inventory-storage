@@ -1802,8 +1802,7 @@
         "inventory-storage.custom-fields.item.delete",
         "inventory-storage.custom-fields.item.stats.get",
         "inventory-storage.custom-fields.item.option.stats.get"
-      ],
-      "visible": false
+      ]
     },
     {
       "permissionName": "inventory-storage.instances.preceding-succeeding-titles.collection.put",
@@ -3107,7 +3106,15 @@
         "inventory-storage.instance-custom-links.item.get",
         "inventory-storage.instance-custom-links.item.post",
         "inventory-storage.instance-custom-links.item.put",
-        "inventory-storage.instance-custom-links.item.delete"
+        "inventory-storage.instance-custom-links.item.delete",
+        "inventory-storage.custom-fields.collection.get",
+        "inventory-storage.custom-fields.collection.put",
+        "inventory-storage.custom-fields.item.post",
+        "inventory-storage.custom-fields.item.get",
+        "inventory-storage.custom-fields.item.put",
+        "inventory-storage.custom-fields.item.delete",
+        "inventory-storage.custom-fields.item.stats.get",
+        "inventory-storage.custom-fields.item.option.stats.get"
       ]
     }
   ],
