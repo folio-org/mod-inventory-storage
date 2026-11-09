@@ -174,6 +174,23 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
+  @DisplayName("should refuse changing the type of a select field whose option items hold as a type change")
+  void shouldRefuseTypeChange_ofSelectFieldInUse_asTypeChange() {
+    createCustomField(singleSelectField);
+    createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, "opt_0")));
+
+    var asTextbox = customField(SINGLE_SELECT, TEXTBOX_SHORT, null).put("id", id(singleSelectField));
+    var fieldResponse = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), asTextbox));
+    var collectionResponse = await(doPut(client, CUSTOM_FIELDS_PATH, collection(asTextbox)));
+
+    assertThat(fieldResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(fieldResponse.body().toString()).contains("The type of the custom field can not be changed");
+    assertThat(collectionResponse.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(collectionResponse.body().toString()).contains("The type of the custom field can not be changed");
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1", "opt_2");
+  }
+
+  @Test
   @DisplayName("should remove an option that no item holds")
   void shouldRemoveOption_whenNoItemHoldsIt() {
     createCustomField(singleSelectField);

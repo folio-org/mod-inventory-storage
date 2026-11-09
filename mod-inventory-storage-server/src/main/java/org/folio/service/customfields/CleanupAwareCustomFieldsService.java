@@ -151,9 +151,13 @@ public class CleanupAwareCustomFieldsService implements CustomFieldsService {
   /**
    * Compares the stored options with the ids as sent. The library numbers new options after the highest
    * remaining id, so a new option can take the id of a removed highest option, and after the numbering
-   * the removal no longer shows.
+   * the removal no longer shows. A request that changes the field's type is left to the library, which
+   * refuses it before writing anything.
    */
   private Future<Void> refuseRemovedOptionsInUse(CustomField stored, CustomField requested, String tenantId) {
+    if (stored.getType() != requested.getType()) {
+      return Future.succeededFuture();
+    }
     var keptOptionIds = new HashSet<>(optionIds(requested));
     Future<Void> result = Future.succeededFuture();
     for (var optionId : optionIds(stored)) {
