@@ -425,8 +425,9 @@ items in the background:
   the same name gets the next `refId` (for example `textbox_2` instead of `textbox`).
 * Pending removals are rows of the tenant's `custom_fields_cleanup` table. An item that cannot be
   updated keeps the value, and the removal goes on with the other items. A removal that failed,
-  for example on such an item, stays there with `attempts`, `last_error` and `last_attempt_date`,
-  and the next pass retries it.
+  for example on such an item, stays there with `attempts`, `last_error` and `last_attempt_date`.
+  The first pass after a wait retries it. The wait is 5 minutes after the first failure and
+  doubles with each further one, up to about 21 hours.
 * The reserved `refId`s are rows of the `custom_fields` table with `entityType`
   `pendingValueCleanup`. The API does not return them; code that reads the table directly has to
   filter them out.

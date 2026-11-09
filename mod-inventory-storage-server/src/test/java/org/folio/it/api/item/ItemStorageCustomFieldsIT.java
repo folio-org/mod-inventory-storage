@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
@@ -397,14 +398,14 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       deleteField(textboxField);
 
       awaitCleanupAttempts(1);
-      assertThat(runQuery("SELECT last_error FROM custom_fields_cleanup").iterator().next().getString(0))
-        .contains("1 of the records", id(unwritable), "cleanup refused");
+      assertThat(lastCleanupError()).contains("1 of the records", id(unwritable), "cleanup refused");
       assertThat(storedCustomFieldsOf(first)).isEqualTo(new JsonObject());
       assertThat(storedCustomFieldsOf(last)).isEqualTo(new JsonObject());
       assertThat(storedCustomFieldsOf(unwritable).getString(TEXTBOX)).isEqualTo("text2");
       assertThat(placeholderCount()).isEqualTo(1);
 
       runQuery("DROP TRIGGER fail_cleanup ON item");
+      runQuery("UPDATE custom_fields_cleanup SET last_attempt_date = last_attempt_date - interval '5 minutes'");
       await(doPost(client, CLEANUP_PATH, null));
 
       awaitCleanupDone();
@@ -414,6 +415,33 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       runQuery("DROP TRIGGER IF EXISTS fail_cleanup ON item");
       runQuery("DROP FUNCTION IF EXISTS fail_cleanup()");
     }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1, 4", "4, 39", "1000, 1279"})
+  @DisplayName("should not retry a failed removal while its wait lasts")
+  void shouldNotRetryFailedRemoval_whileItsWaitLasts(int attempts, int minutesSinceFailure) {
+    insertFailedCleanupRow(TEXTBOX, attempts, minutesSinceFailure);
+    insertFieldCleanupRow(SINGLE_SELECT);
+
+    await(doPost(client, CLEANUP_PATH, null));
+
+    // the failed row comes first in queue order, so a pass that retried it has removed it before the other row
+    Awaitility.await()
+      .atMost(Duration.ofSeconds(15))
+      .pollInterval(Duration.ofMillis(200))
+      .untilAsserted(() -> assertThat(queuedRefIds()).containsExactly(TEXTBOX));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"1, 6", "4, 41", "1000, 1281"})
+  @DisplayName("should retry a failed removal once its wait has passed")
+  void shouldRetryFailedRemoval_onceItsWaitHasPassed(int attempts, int minutesSinceFailure) {
+    insertFailedCleanupRow(TEXTBOX, attempts, minutesSinceFailure);
+
+    await(doPost(client, CLEANUP_PATH, null));
+
+    awaitCleanupDone();
   }
 
   @Test
@@ -654,6 +682,10 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     return runReadQuery("SELECT count(*) FROM custom_fields_cleanup").iterator().next().getLong(0);
   }
 
+  private static String lastCleanupError() {
+    return runQuery("SELECT last_error FROM custom_fields_cleanup").iterator().next().getString(0);
+  }
+
   private static long placeholderCount() {
     return runQuery("SELECT count(*) FROM custom_fields WHERE jsonb->>'entityType' = '"
       + CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE + "'").iterator().next().getLong(0);
@@ -674,6 +706,22 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   private static void insertFieldCleanupRow(String entityType, String refId) {
     runQuery("INSERT INTO custom_fields_cleanup (id, entity_type, ref_id) VALUES ('"
       + UUID.randomUUID() + "', '" + entityType + "', '" + refId + "')");
+  }
+
+  private static void insertFailedCleanupRow(String refId, int attempts, int minutesSinceFailure) {
+    runQuery("INSERT INTO custom_fields_cleanup (id, entity_type, ref_id, created_date, attempts, last_error,"
+      + " last_attempt_date) VALUES ('" + UUID.randomUUID() + "', '" + ENTITY_TYPE_ITEM + "', '" + refId
+      + "', now() - interval '2 days', " + attempts + ", 'failed', now() - interval '" + minutesSinceFailure
+      + " minutes')");
+  }
+
+  /**
+   * Lists the refIds of the queue rows on the standby, for the reason given at {@link #cleanupQueueSize()}.
+   */
+  private static List<String> queuedRefIds() {
+    var refIds = new ArrayList<String>();
+    runReadQuery("SELECT ref_id FROM custom_fields_cleanup").forEach(row -> refIds.add(row.getString(0)));
+    return refIds;
   }
 
   private JsonObject itemWithCustomFields(JsonObject values) {

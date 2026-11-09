@@ -3,11 +3,9 @@ package org.folio.services.customfields;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -93,16 +91,15 @@ public final class CustomFieldsValueCleanup {
   }
 
   /**
-   * Processes the queue in order and reads it again until every row it holds has been attempted in this
-   * pass, so rows queued during the pass are processed too, and a failed row waits for the next pass.
+   * Processes the queue's due rows in order and reads it again until none is due, so rows queued during the
+   * pass are processed too. A failed row is not due again until its wait has passed, so it does not keep the
+   * pass going.
    */
   private static Future<Void> processRows(CustomFieldsCleanupRepository repository) {
-    Set<UUID> attempted = new HashSet<>();
-    return whileMore(() -> repository.readQueue(attempted)
+    return whileMore(() -> repository.readQueue()
       .compose(queue -> {
         Future<Void> result = Future.succeededFuture();
         for (var removal : queue) {
-          attempted.add(removal.id());
           result = result.compose(x -> processRow(repository, removal)
             .recover(e -> recordFailure(repository, removal.id(), e)));
         }
@@ -120,9 +117,9 @@ public final class CustomFieldsValueCleanup {
       .compose(x -> repository.deleteQueueRow(removal.id(), removal.refId()));
   }
 
-  /** Keeps the row for the next pass with the cause; a failure to record it ends the pass. */
+  /** Keeps the row for a later pass with the cause; a failure to record it ends the pass. */
   private static Future<Void> recordFailure(CustomFieldsCleanupRepository repository, UUID id, Throwable cause) {
-    log.error("recordFailure:: removing custom field values failed, kept for the next pass [id={}]", id, cause);
+    log.error("recordFailure:: removing custom field values failed, kept for a later pass [id={}]", id, cause);
     return repository.recordFailure(id, String.valueOf(cause.getMessage()));
   }
 
@@ -132,7 +129,7 @@ public final class CustomFieldsValueCleanup {
    * two item writes could not run into. The records are read in batches.
    *
    * <p>A record whose update fails keeps the value and is left out of the following batches, so it does not
-   * hold up the records after it. The removal then fails, which keeps the field queued for the next pass.
+   * hold up the records after it. The removal then fails, which keeps the field queued for a later pass.
    */
   private static Future<Void> removeFieldValues(CustomFieldsCleanupRepository repository, String table,
                                                 String refId) {
@@ -182,7 +179,7 @@ public final class CustomFieldsValueCleanup {
         })
         .recover(e -> {
           var message = e.getMessage();
-          log.warn("removeValueOneByOne:: removing the custom field value failed, kept for the next pass "
+          log.warn("removeValueOneByOne:: removing the custom field value failed, kept for a later pass "
             + "[refId={}, id={}]: {}", refId, id, message);
           failed.put(id, e);
           return Future.succeededFuture(true);

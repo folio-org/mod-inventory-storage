@@ -76,10 +76,16 @@ public final class CustomFieldsCleanupRepository {
       .mapEmpty();
   }
 
-  /** Returns the queued removals in queue order, without the excluded ones. */
-  public Future<List<QueuedRemoval>> readQueue(Collection<UUID> excluded) {
+  /**
+   * Returns the queued removals in queue order, without the failed ones still waiting for their next attempt.
+   * The wait is 5 minutes after the first failure and doubles with each further one, up to 1280 minutes, so
+   * a removal that keeps failing is attempted about once a day.
+   */
+  public Future<List<QueuedRemoval>> readQueue() {
     return conn.execute("SELECT id, entity_type, ref_id FROM " + schema + ".custom_fields_cleanup"
-        + " WHERE id <> ALL($1) ORDER BY created_date", Tuple.of(excluded.toArray(UUID[]::new)))
+        + " WHERE last_attempt_date IS NULL"
+        + " OR last_attempt_date + interval '5 minutes' * 2 ^ least(attempts - 1, 8) <= now()"
+        + " ORDER BY created_date")
       .map(rows -> {
         var removals = new ArrayList<QueuedRemoval>(rows.rowCount());
         for (Row row : rows) {
