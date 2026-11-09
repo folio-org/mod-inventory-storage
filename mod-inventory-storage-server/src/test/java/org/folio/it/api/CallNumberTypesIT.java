@@ -1,6 +1,6 @@
 package org.folio.it.api;
 
-import static org.folio.services.callnumber.CallNumberTypeService.CALL_NUMBER_TYPE_TABLE;
+import static org.folio.persist.CallNumberTypeRepository.CALL_NUMBER_TYPE_TABLE;
 
 import java.util.List;
 import java.util.function.Function;

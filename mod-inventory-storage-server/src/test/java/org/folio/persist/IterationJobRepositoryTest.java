@@ -3,12 +3,13 @@ package org.folio.persist;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.IterationJob.JobStatus.IN_PROGRESS;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -22,7 +23,6 @@ import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,10 +41,8 @@ class IterationJobRepositoryTest {
 
   @BeforeEach
   void setUp(Vertx vertx) {
-    try (var pgUtilMock = mockStatic(PgUtil.class)) {
-      pgUtilMock.when(() -> PgUtil.postgresClient(any(), any())).thenReturn(postgresClient);
-      repository = spy(new IterationJobRepository(vertx.getOrCreateContext(), okapiHeaders()));
-    }
+    repository = spy(new IterationJobRepository(vertx.getOrCreateContext()));
+    doReturn(postgresClient).when(repository).postgresClient(any());
   }
 
   @Test
@@ -59,7 +57,7 @@ class IterationJobRepositoryTest {
       });
 
     // Act
-    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job);
+    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job, tenantId(okapiHeaders()));
 
     // Assert
     assertTrue(result.succeeded());
@@ -84,7 +82,7 @@ class IterationJobRepositoryTest {
       });
 
     // Act
-    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job);
+    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job, tenantId(okapiHeaders()));
 
     // Assert
     assertTrue(result.succeeded());
@@ -105,7 +103,7 @@ class IterationJobRepositoryTest {
       });
 
     // Act
-    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job);
+    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job, tenantId(okapiHeaders()));
 
     // Assert
     assertTrue(result.failed());
@@ -126,7 +124,7 @@ class IterationJobRepositoryTest {
       });
 
     // Act
-    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job);
+    var result = repository.fetchAndUpdateIterationJob(JOB_ID, job -> job, tenantId(okapiHeaders()));
 
     // Assert
     assertTrue(result.failed());

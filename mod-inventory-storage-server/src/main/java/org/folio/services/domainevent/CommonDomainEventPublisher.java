@@ -5,12 +5,11 @@ import static io.vertx.core.Future.succeededFuture;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.folio.InventoryKafkaTopic.REINDEX_RECORDS;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.createEvent;
-import static org.folio.services.domainevent.DomainEvent.deleteAllEvent;
-import static org.folio.services.domainevent.DomainEvent.deleteEvent;
-import static org.folio.services.domainevent.DomainEvent.updateEvent;
+import static org.folio.services.domainevent.model.DomainEvent.createEvent;
+import static org.folio.services.domainevent.model.DomainEvent.deleteAllEvent;
+import static org.folio.services.domainevent.model.DomainEvent.deleteEvent;
+import static org.folio.services.domainevent.model.DomainEvent.updateEvent;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.streams.ReadStream;
@@ -24,60 +23,39 @@ import java.util.function.LongFunction;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
-import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.KafkaProducerManager;
-import org.folio.kafka.SimpleKafkaProducerManager;
-import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.domainevent.model.DomainEventRaw;
+import org.folio.services.domainevent.model.ReindexRecordEvent;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
   private static final Logger log = getLogger(CommonDomainEventPublisher.class);
 
-  private final Map<String, String> okapiHeaders;
   private final KafkaProducerManager producerManager;
   private final FailureHandler failureHandler;
-  private final String kafkaTopic;
+  private final Function<Map<String, String>, String> topicResolver;
 
-  CommonDomainEventPublisher(Map<String, String> okapiHeaders, String kafkaTopic,
-                             KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler) {
-
-    this.okapiHeaders = okapiHeaders;
-    this.kafkaTopic = kafkaTopic;
+  /**
+   * Creates a publisher for the topic that {@code topicResolver} returns for the request's okapi headers.
+   */
+  public CommonDomainEventPublisher(KafkaProducerManager kafkaProducerManager, FailureHandler failureHandler,
+                                    Function<Map<String, String>, String> topicResolver) {
+    this.topicResolver = topicResolver;
     this.producerManager = kafkaProducerManager;
     this.failureHandler = failureHandler;
   }
 
-  public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
-                                    String kafkaTopic) {
-    this(vertxContext, okapiHeaders, kafkaTopic, 0);
-  }
-
-  public CommonDomainEventPublisher(Context vertxContext, Map<String, String> okapiHeaders,
-                                    String kafkaTopic, int maxRequestSize) {
-
-    this(okapiHeaders, kafkaTopic, createProducerManager(vertxContext, maxRequestSize),
-      new LogToDbFailureHandler(vertxContext, okapiHeaders));
-  }
-
-  private static KafkaProducerManager createProducerManager(Context vertxContext, int maxRequestSize) {
-    var kafkaConfig = KafkaConfig.builder()
-      .kafkaPort(KafkaEnvironmentProperties.port())
-      .kafkaHost(KafkaEnvironmentProperties.host())
-      .maxRequestSize(maxRequestSize)
-      .build();
-
-    return new SimpleKafkaProducerManager(vertxContext.owner(), kafkaConfig);
-  }
-
   public <R> Future<Long> publishStream(ReadStream<R> readStream,
                                         Function<R, KafkaProducerRecordBuilder<String, Object>> mapper,
-                                        LongFunction<Future<?>> progressHandler) {
+                                        LongFunction<Future<?>> progressHandler,
+                                        Map<String, String> headers) {
 
     var promise = Promise.<Long>promise();
-    var kafkaProducer = getOrCreateProducer(kafkaTopic, "stream_");
+    var kafkaProducer = getOrCreateProducer(kafkaTopic(headers), "stream_");
     var recordsProcessed = new AtomicLong(0);
 
     readStream.exceptionHandler(error -> {
@@ -85,7 +63,7 @@ public class CommonDomainEventPublisher<T> {
       promise.tryFail(error);
     }).endHandler(notUsed -> promise.tryComplete(recordsProcessed.get()))
       .handler(rec -> handleStreamRecord(rec, mapper, progressHandler, kafkaProducer,
-                                         readStream, promise, recordsProcessed));
+                                         readStream, promise, recordsProcessed, headers));
 
     return promise.future()
       .onSuccess(records -> log.info("Total records published from stream {}", records));
@@ -95,14 +73,14 @@ public class CommonDomainEventPublisher<T> {
                                        LongFunction<Future<?>> progressHandler,
                                        KafkaProducer<String, String> kafkaProducer,
                                        ReadStream<R> readStream, Promise<Long> promise,
-                                       AtomicLong recordsProcessed) {
+                                       AtomicLong recordsProcessed, Map<String, String> headers) {
     var producerRecord = mapper.apply(rec)
-      .topic(kafkaTopic).propagateOkapiHeaders(okapiHeaders).build();
+      .topic(kafkaTopic(headers)).propagateOkapiHeaders(headers).build();
 
     kafkaProducer.send(producerRecord)
       .onFailure(error -> {
         log.error("Unable to send event [{}]", producerRecord.value(), error);
-        failureHandler.handleFailure(error, producerRecord);
+        failureHandler.handleFailure(error, producerRecord, headers);
         recordsProcessed.decrementAndGet();
       });
 
@@ -123,88 +101,89 @@ public class CommonDomainEventPublisher<T> {
     }
   }
 
-  Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord) {
-    final DomainEvent<T> domainEvent = updateEvent(oldRecord, newRecord, tenantId(okapiHeaders));
+  Future<Void> publishRecordUpdated(String instanceId, T oldRecord, T newRecord, Map<String, String> headers) {
+    final DomainEvent<T> domainEvent = updateEvent(oldRecord, newRecord, tenantId(headers));
 
-    return publish(instanceId, domainEvent);
+    return publish(instanceId, domainEvent, headers);
   }
 
-  Future<Void> publishRecordsUpdated(Collection<Triple<String, T, T>> updatedRecords) {
+  Future<Void> publishRecordsUpdated(Collection<Triple<String, T, T>> updatedRecords,
+                                     Map<String, String> headers) {
     if (updatedRecords.isEmpty()) {
       return succeededFuture();
     }
 
     return all(updatedRecords.stream()
-      .map(triple -> publishRecordUpdated(triple.getLeft(), triple.getMiddle(), triple.getRight()))
+      .map(triple -> publishRecordUpdated(triple.getLeft(), triple.getMiddle(), triple.getRight(), headers))
       .toList())
       .map(notUsed -> null);
   }
 
-  Future<Void> publishRecordCreated(String instanceId, T newRecord) {
-    final DomainEvent<T> domainEvent = createEvent(newRecord, tenantId(okapiHeaders));
+  Future<Void> publishRecordCreated(String instanceId, T newRecord, Map<String, String> headers) {
+    final DomainEvent<T> domainEvent = createEvent(newRecord, tenantId(headers));
 
-    return publish(instanceId, domainEvent);
+    return publish(instanceId, domainEvent, headers);
   }
 
-  Future<Void> publishRecordsCreated(List<Pair<String, T>> records) {
+  Future<Void> publishRecordsCreated(List<Pair<String, T>> records, Map<String, String> headers) {
     if (records.isEmpty()) {
       return succeededFuture();
     }
 
     return all(records.stream()
-      .map(pair -> publishRecordCreated(pair.getKey(), pair.getValue()))
+      .map(pair -> publishRecordCreated(pair.getKey(), pair.getValue(), headers))
       .toList())
       .map(notUsed -> null);
   }
 
   public Future<Void> publishReindexRecords(String key,
                                             ReindexRecordsRequest.RecordType recordType,
-                                            List<T> records) {
-    var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(okapiHeaders), recordType, records);
-    return publish(reindexKafkaTopic(), key, domainEvent);
+                                            List<T> records, Map<String, String> headers) {
+    var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(headers), recordType, records);
+    return publish(reindexKafkaTopic(headers), key, domainEvent, headers);
   }
 
-  Future<Void> publishRecordRemoved(String instanceId, T oldEntity) {
-    final DomainEvent<T> domainEvent = deleteEvent(oldEntity, tenantId(okapiHeaders));
+  Future<Void> publishRecordRemoved(String instanceId, T oldEntity, Map<String, String> headers) {
+    final DomainEvent<T> domainEvent = deleteEvent(oldEntity, tenantId(headers));
 
-    return publish(instanceId, domainEvent);
+    return publish(instanceId, domainEvent, headers);
   }
 
-  Future<Void> publishRecordRemoved(String instanceId, String oldEntity) {
-    final DomainEventRaw domainEvent = DomainEventRaw.deleteEvent(oldEntity, tenantId(okapiHeaders));
+  Future<Void> publishRecordRemoved(String instanceId, String oldEntity, Map<String, String> headers) {
+    final DomainEventRaw domainEvent = DomainEventRaw.deleteEvent(oldEntity, tenantId(headers));
 
-    return publish(instanceId, domainEvent);
+    return publish(instanceId, domainEvent, headers);
   }
 
-  Future<Void> publishAllRecordsRemoved() {
-    return publish(NULL_ID, deleteAllEvent(tenantId(okapiHeaders)));
+  Future<Void> publishAllRecordsRemoved(Map<String, String> headers) {
+    return publish(NULL_ID, deleteAllEvent(tenantId(headers)), headers);
   }
 
-  private Future<Void> publish(String key, Object value) {
-    return publish(kafkaTopic, key, value);
+  private Future<Void> publish(String key, Object value, Map<String, String> headers) {
+    return publish(kafkaTopic(headers), key, value, headers);
   }
 
-  private Future<Void> publish(String topic, String key, Object value) {
+  private Future<Void> publish(String topic, String key, Object value, Map<String, String> headers) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
+    var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(headers))
       .key(key)
       .value(value)
       .topic(topic)
-      .propagateOkapiHeaders(okapiHeaders)
+      .propagateOkapiHeaders(headers)
       .build();
 
     KafkaProducer<String, String> producer = getOrCreateProducer(topic);
 
     return producer.send(producerRecord)
       .<Void>mapEmpty()
-      .eventually(() -> producer.flush())
-      .eventually(() -> producer.close())
+      .eventually(producer::flush)
+      .eventually(producer::close)
       .onFailure(cause -> {
         log.error("Unable to send domain event [{}], payload - [{}]",
           key, value, cause);
 
-        failureHandler.handleFailure(cause, producerRecord);
+        failureHandler.handleFailure(cause, producerRecord, headers);
       });
   }
 
@@ -216,7 +195,11 @@ public class CommonDomainEventPublisher<T> {
     return producerManager.createShared(prefix + topic);
   }
 
-  private String reindexKafkaTopic() {
-    return REINDEX_RECORDS.fullTopicName(tenantId(okapiHeaders));
+  private String kafkaTopic(Map<String, String> headers) {
+    return topicResolver.apply(headers);
+  }
+
+  private String reindexKafkaTopic(Map<String, String> headers) {
+    return REINDEX_RECORDS.fullTopicName(tenantId(headers));
   }
 }

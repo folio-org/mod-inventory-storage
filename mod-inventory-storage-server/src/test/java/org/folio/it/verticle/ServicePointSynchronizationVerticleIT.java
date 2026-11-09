@@ -14,9 +14,9 @@ import static org.folio.kafka.services.KafkaEnvironmentProperties.host;
 import static org.folio.kafka.services.KafkaEnvironmentProperties.port;
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_CREATED;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_DELETED;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_UPDATED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_CREATED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_DELETED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_UPDATED;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;

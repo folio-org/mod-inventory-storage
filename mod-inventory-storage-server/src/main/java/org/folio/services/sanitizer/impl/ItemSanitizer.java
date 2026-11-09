@@ -3,12 +3,17 @@ package org.folio.services.sanitizer.impl;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Tags;
 import org.folio.services.sanitizer.Sanitizer;
-import org.folio.services.sanitizer.SanitizerFactory;
 import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Component;
 
+@Component
 public final class ItemSanitizer implements Sanitizer<Item> {
 
-  private Sanitizer<Tags> tagsSanitizer;
+  private final Sanitizer<Tags> tagsSanitizer;
+
+  public ItemSanitizer(Sanitizer<Tags> tagsSanitizer) {
+    this.tagsSanitizer = tagsSanitizer;
+  }
 
   @Override
   public void sanitize(@Nullable Item item) {
@@ -21,14 +26,7 @@ public final class ItemSanitizer implements Sanitizer<Item> {
     item.setYearCaption(cleanSet(item.getYearCaption()));
 
     var tags = item.getTags();
-    getTagsSanitizer().sanitize(tags);
+    tagsSanitizer.sanitize(tags);
     item.setTags(tags);
-  }
-
-  private Sanitizer<Tags> getTagsSanitizer() {
-    if (tagsSanitizer == null) {
-      tagsSanitizer = SanitizerFactory.getSanitizer(Tags.class);
-    }
-    return tagsSanitizer;
   }
 }

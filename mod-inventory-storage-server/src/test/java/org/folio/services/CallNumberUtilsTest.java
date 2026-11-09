@@ -1,9 +1,9 @@
 package org.folio.services;
 
-import static org.folio.services.CallNumberConstants.DEWEY_CN_TYPE_ID;
-import static org.folio.services.CallNumberConstants.LC_CN_TYPE_ID;
-import static org.folio.services.CallNumberConstants.NLM_CN_TYPE_ID;
-import static org.folio.services.CallNumberConstants.SU_DOC_CN_TYPE_ID;
+import static org.folio.services.CallNumberUtils.DEWEY_CN_TYPE_ID;
+import static org.folio.services.CallNumberUtils.LC_CN_TYPE_ID;
+import static org.folio.services.CallNumberUtils.NLM_CN_TYPE_ID;
+import static org.folio.services.CallNumberUtils.SU_DOC_CN_TYPE_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Random;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
-import org.folio.rest.support.EffectiveCallNumberComponentsUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

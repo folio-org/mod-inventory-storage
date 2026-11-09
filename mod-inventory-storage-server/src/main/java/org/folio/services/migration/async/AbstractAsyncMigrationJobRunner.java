@@ -1,8 +1,7 @@
 package org.folio.services.migration.async;
 
-import static org.folio.InventoryKafkaTopic.ASYNC_MIGRATION;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.asyncMigrationEvent;
+import static org.folio.services.domainevent.model.DomainEvent.asyncMigrationEvent;
 
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -27,10 +26,8 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   }
 
   protected Future<Void> startMigration(AsyncMigrationJob migrationJob, AsyncMigrationContext context) {
-    var migrationService = new AsyncMigrationJobService(context.getVertxContext(), context.getOkapiHeaders());
-    var publisher =
-      new CommonDomainEventPublisher<AsyncMigrationJob>(context.getVertxContext(), context.getOkapiHeaders(),
-        ASYNC_MIGRATION.fullTopicName(tenantId(context.getOkapiHeaders())));
+    var migrationService = context.getMigrationService();
+    var publisher = migrationService.getEventPublisher();
     var streamingContext = new StreamingContext(migrationJob, context, migrationService, publisher);
 
     return streamIdsForMigration(streamingContext)
@@ -44,8 +41,9 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
   protected abstract Future<RowStream<Row>> openStream(String schemaName, Conn connection);
 
   private Future<Long> streamIdsForMigration(StreamingContext context) {
-    var postgresClient = context.getMigrationContext().getPostgresClient();
-    return postgresClient.withTrans(conn -> openStream(postgresClient.getSchemaName(), conn)
+    var repository = context.getMigrationContext().getRepository();
+    var tenantId = tenantId(context.getMigrationContext().getOkapiHeaders());
+    return repository.inTransaction(tenantId, conn -> openStream(repository.getSchemaName(tenantId), conn)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
@@ -53,12 +51,13 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
           .onFailure(error -> log.warn("Unable to commit transaction", error));
         if (recordsPublished.failed()) {
           log.warn("Unable to publish ids for async migration", recordsPublished.cause());
-          context.getAsyncMigrationService().logJobFail(context.getJobId());
+          context.getAsyncMigrationService()
+            .logJobFail(context.getJobId(), context.getMigrationContext().getOkapiHeaders());
         } else {
           log.info("Publishing records for migration completed");
           context.getAsyncMigrationService()
             .logPublishingCompleted(context.getMigrationContext().getMigrationName(), recordsPublished.result(),
-              context.getJobId());
+              context.getJobId(), context.getMigrationContext().getOkapiHeaders());
         }
       }));
   }
@@ -67,7 +66,9 @@ public abstract class AbstractAsyncMigrationJobRunner implements AsyncMigrationJ
     return context.getPublisher().publishStream(context.stream,
       row -> rowToProducerRecord(row, context),
       recordsPublished -> context.getAsyncMigrationService()
-        .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished));
+        .logJobDetails(context.getMigrationContext().getMigrationName(), context.getJob(), recordsPublished,
+          context.getMigrationContext().getOkapiHeaders()),
+      context.getMigrationContext().getOkapiHeaders());
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, StreamingContext context) {

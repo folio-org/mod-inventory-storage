@@ -2,9 +2,9 @@ package org.folio.services.consortium;
 
 import static org.folio.rest.tools.utils.ModuleName.getModuleName;
 import static org.folio.rest.tools.utils.ModuleName.getModuleVersion;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_CREATED;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_DELETED;
-import static org.folio.services.domainevent.ServicePointEventType.SERVICE_POINT_UPDATED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_CREATED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_DELETED;
+import static org.folio.services.domainevent.model.ServicePointEventType.SERVICE_POINT_UPDATED;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -25,7 +25,8 @@ import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.handler.ServicePointSynchronizationCreateHandler;
 import org.folio.services.consortium.handler.ServicePointSynchronizationDeleteHandler;
 import org.folio.services.consortium.handler.ServicePointSynchronizationUpdateHandler;
-import org.folio.services.domainevent.ServicePointEventType;
+import org.folio.services.domainevent.model.ServicePointEventType;
+import org.folio.services.servicepoint.ServicePointService;
 
 public class ServicePointSynchronizationVerticle extends AbstractVerticle {
 
@@ -34,33 +35,37 @@ public class ServicePointSynchronizationVerticle extends AbstractVerticle {
   private static final String MODULE_ID = getModuleId();
   private static final int DEFAULT_LOAD_LIMIT = 5;
   private final ConsortiumDataCache consortiumDataCache;
+  private final ServicePointService servicePointService;
+  private final HttpClient httpClient;
 
   private final List<KafkaConsumerWrapper<String, String>> consumers = new ArrayList<>();
 
-  public ServicePointSynchronizationVerticle(final ConsortiumDataCache consortiumDataCache) {
+  public ServicePointSynchronizationVerticle(ConsortiumDataCache consortiumDataCache, HttpClient httpClient,
+                                             ServicePointService servicePointService) {
+    this.servicePointService = servicePointService;
     this.consortiumDataCache = consortiumDataCache;
+    this.httpClient = httpClient;
   }
 
   @Override
   public void start(Promise<Void> startPromise) {
     log.info("start:: Starting ServicePointSynchronizationVerticle");
-    var httpClient = vertx.createHttpClient();
 
-    createConsumers(httpClient)
+    createConsumers()
       .onSuccess(v -> log.info("start:: verticle started"))
       .onFailure(t -> log.error("start:: verticle start failed", t))
       .onComplete(startPromise);
   }
 
-  private Future<Void> createConsumers(HttpClient httpClient) {
+  private Future<Void> createConsumers() {
     final var config = getKafkaConfig();
 
     return createEventConsumer(SERVICE_POINT_CREATED, config,
-      new ServicePointSynchronizationCreateHandler(consortiumDataCache, httpClient, vertx))
+      new ServicePointSynchronizationCreateHandler(consortiumDataCache, httpClient, vertx, servicePointService))
       .compose(r -> createEventConsumer(SERVICE_POINT_UPDATED, config,
-        new ServicePointSynchronizationUpdateHandler(consortiumDataCache, httpClient, vertx)))
+        new ServicePointSynchronizationUpdateHandler(consortiumDataCache, httpClient, vertx, servicePointService)))
       .compose(r -> createEventConsumer(SERVICE_POINT_DELETED, config,
-        new ServicePointSynchronizationDeleteHandler(consortiumDataCache, httpClient, vertx)))
+        new ServicePointSynchronizationDeleteHandler(consortiumDataCache, httpClient, vertx, servicePointService)))
       .mapEmpty();
   }
 

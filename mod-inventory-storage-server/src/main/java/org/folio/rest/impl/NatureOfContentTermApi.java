@@ -8,7 +8,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.NatureOfContentTerm;
 import org.folio.rest.jaxrs.model.NatureOfContentTerms;
-import org.folio.rest.persist.PgUtil;
 
 public class NatureOfContentTermApi extends BaseApi<NatureOfContentTerm, NatureOfContentTerms>
   implements org.folio.rest.jaxrs.resource.NatureOfContentTerms {
@@ -18,41 +17,38 @@ public class NatureOfContentTermApi extends BaseApi<NatureOfContentTerm, NatureO
   @Validate
   @Override
   public void getNatureOfContentTerms(String query, String totalRecords, int offset, int limit,
-                                      Map<String, String> okapiHeaders,
+                                      Map<String, String> headers,
                                       Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetNatureOfContentTermsResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postNatureOfContentTerms(NatureOfContentTerm entity, Map<String, String> okapiHeaders,
+  public void postNatureOfContentTerms(NatureOfContentTerm entity, Map<String, String> headers,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostNatureOfContentTermsResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getNatureOfContentTermsById(String id, Map<String, String> okapiHeaders,
+  public void getNatureOfContentTermsById(String id, Map<String, String> headers,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    PgUtil.getById(NATURE_OF_CONTENT_TERM_TABLE, NatureOfContentTerm.class, id, okapiHeaders,
-      vertxContext, GetNatureOfContentTermsByIdResponse.class, asyncResultHandler);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteNatureOfContentTermsById(String id, Map<String, String> okapiHeaders,
+  public void deleteNatureOfContentTermsById(String id, Map<String, String> headers,
                                              Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteNatureOfContentTermsByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putNatureOfContentTermsById(String id, NatureOfContentTerm entity,
-                                          Map<String, String> okapiHeaders,
+                                          Map<String, String> headers,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutNatureOfContentTermsByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

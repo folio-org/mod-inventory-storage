@@ -1,11 +1,12 @@
 package org.folio.rest.impl;
 
-import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.rest.support.ResponseHandlerUtil.handleFailure;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,15 +16,16 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.annotations.Validate;
-import org.folio.rest.exceptions.ValidationException;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.InstanceCustomLink;
 import org.folio.rest.jaxrs.model.InstanceCustomLinks;
 import org.folio.rest.jaxrs.model.Parameter;
-import org.folio.rest.persist.PgUtil;
 import org.folio.services.instance.InstanceCustomLinkService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceCustomLinks>
   implements org.folio.rest.jaxrs.resource.InstanceCustomLinks {
 
@@ -34,18 +36,25 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
   private static final String FIELD_LINK = "link";
   private static final List<String> QUERY_TOKENS = List.of("{{UUID}}", "{{HRID}}", "{{indexTitle}}");
 
-  @Validate
-  @Override
-  public void getInstanceCustomLinks(String query, String totalRecords, int offset, int limit, Map<String,
-      String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceCustomLinksResponse.class);
+  @Autowired
+  private InstanceCustomLinkService service;
+
+  public InstanceCustomLinkApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
   }
 
   @Validate
   @Override
-  public void postInstanceCustomLinks(InstanceCustomLink entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void getInstanceCustomLinks(String query, String totalRecords, int offset, int limit,
+                                     Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
+  }
+
+  @Validate
+  @Override
+  public void postInstanceCustomLinks(InstanceCustomLink entity, Map<String, String> headers,
+                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var errors = validate(entity);
     if (!errors.isEmpty()) {
       asyncResultHandler.handle(succeededFuture(
@@ -53,43 +62,16 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
       return;
     }
 
-    new InstanceCustomLinkService(vertxContext, okapiHeaders).create(entity)
+    service.create(entity, headers)
       .onSuccess(id -> asyncResultHandler.handle(succeededFuture(PostInstanceCustomLinksResponse
         .respond201WithApplicationJson(entity.withId(id), PostInstanceCustomLinksResponse.headersFor201()))))
-      .onFailure(cause -> {
-        if (cause instanceof ValidationException ve) {
-          asyncResultHandler.handle(succeededFuture(PostInstanceCustomLinksResponse
-            .respond422WithApplicationJson(ve.getErrors())));
-        } else {
-          try {
-            var respond500 = PostInstanceCustomLinksResponse.class.getMethod("respond500WithTextPlain", Object.class);
-            PgUtil.response(INSTANCE_CUSTOM_LINK_TYPE_TABLE, entity.getId(), cause,
-              PostInstanceCustomLinksResponse.class, respond500, respond500).onComplete(asyncResultHandler);
-          } catch (NoSuchMethodException ex) {
-            failedFuture(ex);
-          }
-        }
-      });
+      .onFailure(handleFailure(asyncResultHandler));
   }
 
   @Validate
   @Override
-  public void getInstanceCustomLinksById(String id, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetInstanceCustomLinksByIdResponse.class);
-  }
-
-  @Validate
-  @Override
-  public void deleteInstanceCustomLinksById(String id, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteInstanceCustomLinksByIdResponse.class);
-  }
-
-  @Validate
-  @Override
-  public void putInstanceCustomLinksById(String id, InstanceCustomLink entity, Map<String, String> okapiHeaders,
-      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void putInstanceCustomLinksById(String id, InstanceCustomLink entity, Map<String, String> headers,
+                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     var errors = validate(entity);
     if (!errors.isEmpty()) {
       asyncResultHandler.handle(succeededFuture(
@@ -97,23 +79,23 @@ public class InstanceCustomLinkApi extends BaseApi<InstanceCustomLink, InstanceC
       return;
     }
 
-    new InstanceCustomLinkService(vertxContext, okapiHeaders).modify(id, entity)
+    service.modify(id, entity, headers)
       .onSuccess(x -> asyncResultHandler.handle(succeededFuture(PutInstanceCustomLinksByIdResponse.respond204())))
-      .onFailure(cause -> {
-        if (cause instanceof ValidationException ve) {
-          asyncResultHandler.handle(succeededFuture(PutInstanceCustomLinksByIdResponse
-            .respond422WithApplicationJson(ve.getErrors())));
-        } else {
-          try {
-            var respond500 = PutInstanceCustomLinksByIdResponse.class.getMethod("respond500WithTextPlain",
-              Object.class);
-            PgUtil.response(INSTANCE_CUSTOM_LINK_TYPE_TABLE, entity.getId(), cause,
-              PutInstanceCustomLinksByIdResponse.class, respond500, respond500).onComplete(asyncResultHandler);
-          } catch (NoSuchMethodException ex) {
-            failedFuture(ex);
-          }
-        }
-      });
+      .onFailure(handleFailure(asyncResultHandler));
+  }
+
+  @Validate
+  @Override
+  public void getInstanceCustomLinksById(String id, Map<String, String> headers,
+                                         Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    getEntityById(id, headers, asyncResultHandler);
+  }
+
+  @Validate
+  @Override
+  public void deleteInstanceCustomLinksById(String id, Map<String, String> headers,
+                                            Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Override

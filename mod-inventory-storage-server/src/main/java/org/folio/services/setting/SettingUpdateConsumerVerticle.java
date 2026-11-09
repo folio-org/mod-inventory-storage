@@ -19,12 +19,15 @@ import org.folio.services.caches.SettingCache;
 import org.folio.utils.Environment;
 
 public class SettingUpdateConsumerVerticle extends AbstractVerticle {
+
   private static final Logger log = LogManager.getLogger(SettingUpdateConsumerVerticle.class);
+
   private static final String LOAD_LIMIT_PARAM = "consumer.setting-update.load-limit";
   private static final int DEFAULT_LOAD_LIMIT = 5;
   private static final String TENANT_PATTERN = "\\w{1,}";
   private static final String CONSUMER_GROUP_ID = InventoryKafkaTopic.SETTING.moduleName()
     + SettingUpdateConsumerVerticle.class.getName() + "_" + UUID.randomUUID();
+
   private final SettingCache cache;
 
   public SettingUpdateConsumerVerticle(SettingCache cache) {

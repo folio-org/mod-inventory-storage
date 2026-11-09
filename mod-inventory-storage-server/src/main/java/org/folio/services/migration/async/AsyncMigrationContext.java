@@ -2,26 +2,29 @@ package org.folio.services.migration.async;
 
 import io.vertx.core.Context;
 import java.util.Map;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.persist.AbstractRepository;
 
 public class AsyncMigrationContext {
   private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final PostgresClient postgresClient;
+  private final Map<String, String> headers;
+  private final AbstractRepository<?> repository;
+  private final AsyncMigrationJobService migrationService;
   private String migrationName;
 
   public AsyncMigrationContext(AsyncMigrationContext context, String migrationName) {
     this.vertxContext = context.getVertxContext();
-    this.okapiHeaders = context.getOkapiHeaders();
-    this.postgresClient = context.getPostgresClient();
+    this.headers = context.getOkapiHeaders();
+    this.repository = context.getRepository();
+    this.migrationService = context.getMigrationService();
     this.migrationName = migrationName;
   }
 
-  public AsyncMigrationContext(Context vertxContext, Map<String, String> okapiHeaders,
-                               PostgresClient postgresClient) {
+  public AsyncMigrationContext(Context vertxContext, Map<String, String> headers,
+                               AbstractRepository<?> repository, AsyncMigrationJobService migrationService) {
     this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-    this.postgresClient = postgresClient;
+    this.headers = headers;
+    this.repository = repository;
+    this.migrationService = migrationService;
   }
 
   public Context getVertxContext() {
@@ -29,11 +32,15 @@ public class AsyncMigrationContext {
   }
 
   public Map<String, String> getOkapiHeaders() {
-    return okapiHeaders;
+    return headers;
   }
 
-  public PostgresClient getPostgresClient() {
-    return postgresClient;
+  public AbstractRepository<?> getRepository() {
+    return repository;
+  }
+
+  public AsyncMigrationJobService getMigrationService() {
+    return migrationService;
   }
 
   public String getMigrationName() {

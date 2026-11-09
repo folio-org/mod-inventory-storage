@@ -17,10 +17,10 @@ import io.vertx.core.Future;
 import java.util.Map;
 import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.folio.persist.AbstractRepository;
 import org.folio.rest.jaxrs.model.RecordIdsRange;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.support.sql.TestRowStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,11 +38,12 @@ class ReindexExportOrchestratorTest {
   private static final String RANGE_ID = "550e8400-e29b-41d4-a716-446655440000";
   private static final String TRACE_ID = "660e8400-e29b-41d4-a716-446655440000";
   private static final String BUCKET = "test-bucket";
+  private static final Map<String, String> HEADERS = new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID));
 
   @Mock
   private Context vertxContext;
   @Mock
-  private PostgresClient postgresClient;
+  private AbstractRepository<Object> repository;
   @Mock
   private Conn conn;
   @Mock
@@ -54,11 +55,9 @@ class ReindexExportOrchestratorTest {
 
   @BeforeEach
   void setUp() {
-    orchestrator = new ReindexExportOrchestrator(vertxContext,
-      new CaseInsensitiveMap<>(Map.of(TENANT, TENANT_ID)),
-      postgresClient, s3Client, BUCKET, eventPublisher);
-    when(postgresClient.withTrans(any())).thenAnswer(inv -> {
-      var fn = inv.<Function<Conn, Future<?>>>getArgument(0);
+    orchestrator = new ReindexExportOrchestrator(vertxContext, () -> s3Client, () -> BUCKET, eventPublisher);
+    when(repository.inTransaction(eq(TENANT_ID), any())).thenAnswer(inv -> {
+      var fn = inv.<Function<Conn, Future<?>>>getArgument(1);
       return fn.apply(conn);
     });
   }
@@ -66,24 +65,24 @@ class ReindexExportOrchestratorTest {
   @Test
   void export_noRows_writesEmptyFileViaSinglePutAndPublishesEvent() {
     stubExecuteBlocking();
-    when(eventPublisher.publish(any())).thenReturn(succeededFuture());
+    when(eventPublisher.publish(any(), any())).thenReturn(succeededFuture());
 
-    await(orchestrator.export(buildRequest(TRACE_ID),
+    await(orchestrator.export(buildRequest(TRACE_ID), HEADERS, repository,
       c -> succeededFuture(new TestRowStream(0))));
 
     verify(s3Client).write(any(), any(), eq(0L));
     verify(s3Client, never()).initiateMultipartUpload(any());
     verify(s3Client, never()).abortMultipartUpload(any(), any());
     verify(s3Client, never()).completeMultipartUpload(any(), any(), any());
-    verify(eventPublisher).publish(any());
+    verify(eventPublisher).publish(any(), any());
   }
 
   @Test
   void export_rowsPresent_singlePutAndEventPublished() {
     stubExecuteBlocking();
-    when(eventPublisher.publish(any())).thenReturn(succeededFuture());
+    when(eventPublisher.publish(any(), any())).thenReturn(succeededFuture());
 
-    await(orchestrator.export(buildRequest(TRACE_ID),
+    await(orchestrator.export(buildRequest(TRACE_ID), HEADERS, repository,
       c -> succeededFuture(new TestRowStream(2))));
 
     // 2 rows produce well under the 16 MB part-size threshold, so the
@@ -92,27 +91,27 @@ class ReindexExportOrchestratorTest {
     verify(s3Client, never()).initiateMultipartUpload(any());
     verify(s3Client, never()).completeMultipartUpload(any(), any(), any());
     verify(s3Client, never()).abortMultipartUpload(any(), any());
-    verify(eventPublisher).publish(any());
+    verify(eventPublisher).publish(any(), any());
   }
 
   @Test
   void export_blankTraceId_eventStillPublished() {
     stubExecuteBlocking();
-    when(eventPublisher.publish(any())).thenReturn(succeededFuture());
+    when(eventPublisher.publish(any(), any())).thenReturn(succeededFuture());
 
-    await(orchestrator.export(buildRequest(""),
+    await(orchestrator.export(buildRequest(""), HEADERS, repository,
       c -> succeededFuture(new TestRowStream(0))));
 
-    verify(eventPublisher).publish(any());
+    verify(eventPublisher).publish(any(), any());
   }
 
   @Test
   void export_streamProviderFails_futureFailedAndEventNotPublished() {
-    var futureResult = orchestrator.export(buildRequest(TRACE_ID),
+    var futureResult = orchestrator.export(buildRequest(TRACE_ID), HEADERS, repository,
       c -> failedFuture("stream error"));
     assertThrows(RuntimeException.class, () -> await(futureResult));
 
-    verify(eventPublisher, never()).publish(any());
+    verify(eventPublisher, never()).publish(any(), any());
   }
 
   private void stubExecuteBlocking() {

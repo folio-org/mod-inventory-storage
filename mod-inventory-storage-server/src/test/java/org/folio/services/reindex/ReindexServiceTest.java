@@ -14,12 +14,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Future;
+import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,22 +29,21 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ReindexServiceTest {
 
   private @Mock ReindexJobRunner runner;
-  private @Mock PostgresClient postgresClient;
-  private @Mock Conn connection;
+  private @Mock ReindexJobRepository reindexJobRepository;
 
   private ReindexService reindexService;
 
   @BeforeEach
   void setUp() {
-    reindexService = new ReindexService(new ReindexJobRepository(postgresClient), runner);
+    reindexService = new ReindexService(reindexJobRepository, headers -> runner);
   }
 
   @Test
   void canSubmitReindex() {
-    when(postgresClient.save(any(), any(), any(ReindexJob.class)))
+    when(reindexJobRepository.save(any(), any(), any()))
       .thenReturn(Future.succeededFuture(UUID.randomUUID().toString()));
 
-    var reindexJob = await(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE));
+    var reindexJob = await(reindexService.submitReindex(ReindexJob.ResourceName.INSTANCE, Map.of()));
 
     assertThat(reindexJob.getJobStatus(), is(IN_PROGRESS));
     assertNotNull(reindexJob.getId());
@@ -57,17 +55,18 @@ class ReindexServiceTest {
 
   @Test
   void cannotCancelFinishedJob() {
+    var jobId = UUID.randomUUID().toString();
     var reindexJob = new ReindexJob();
-    reindexJob.withId(UUID.randomUUID().toString());
+    reindexJob.withId(jobId);
     reindexJob.withJobStatus(IDS_PUBLISHED);
-    when(postgresClient.withTrans(any()))
-      .thenAnswer(invocationOnMock -> {
-        var function = invocationOnMock.<Function<Conn, Future<ReindexJob>>>getArgument(0);
-        return function.apply(connection);
+    when(reindexJobRepository.fetchAndUpdate(eq(jobId), any(), any()))
+      .thenAnswer(invocation -> {
+        UnaryOperator<ReindexJob> updater = invocation.getArgument(1);
+        return Future.succeededFuture(updater.apply(reindexJob));
       });
-    when(connection.getByIdForUpdate(any(), eq(reindexJob.getId()), eq(ReindexJob.class)))
-      .thenReturn(Future.succeededFuture(reindexJob));
-    var reindexJobFuture = reindexService.cancelReindex(reindexJob.getId());
-    assertThrows(RuntimeException.class, () -> await(reindexJobFuture));
+
+    var headers = Map.<String, String>of();
+    assertThrows(IllegalStateException.class,
+      () -> reindexService.cancelReindex(jobId, headers));
   }
 }

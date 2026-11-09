@@ -15,13 +15,14 @@ import io.vertx.sqlclient.Row;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.PostgresClient;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,6 @@ class ReindexJobRunnerTest {
   private static final String JOB_ID = "job-1";
   private static final String TENANT_ID = "diku";
 
-  private @Mock PostgresClient postgresClient;
   private @Mock ReindexJobRepository reindexJobRepository;
   private @Mock CommonDomainEventPublisher<Instance> instanceEventPublisher;
   private @Captor ArgumentCaptor<UnaryOperator<ReindexJob>> reindexJobCaptor;
@@ -47,8 +47,9 @@ class ReindexJobRunnerTest {
 
   @BeforeEach
   void setUp() {
-    runner = new ReindexJobRunner(postgresClient, reindexJobRepository,
-      Vertx.vertx().getOrCreateContext(), instanceEventPublisher, TENANT_ID);
+    runner = new ReindexJobRunner(reindexJobRepository,
+      Vertx.vertx().getOrCreateContext(), instanceEventPublisher,
+      new CaseInsensitiveMap<>(Map.of("X-Okapi-Tenant", TENANT_ID)));
   }
 
   @Test
@@ -77,7 +78,7 @@ class ReindexJobRunnerTest {
     var result = logJobDetails(1L, context);
 
     assertThat(result.result()).isNotNull();
-    verify(reindexJobRepository, never()).fetchAndUpdate(any(), any());
+    verify(reindexJobRepository, never()).fetchAndUpdate(any(), any(), any());
   }
 
   @Test
@@ -85,7 +86,7 @@ class ReindexJobRunnerTest {
   void shouldPersistJobDetailsAndContinue_whenJobHasNotBeenCancelled() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var updatedJob = new ReindexJob().withId(JOB_ID).withJobStatus(ReindexJob.JobStatus.IN_PROGRESS);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any())).thenReturn(succeededFuture(updatedJob));
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any(), any())).thenReturn(succeededFuture(updatedJob));
 
     var result = logJobDetails(1000L, context);
 
@@ -97,7 +98,7 @@ class ReindexJobRunnerTest {
   void shouldFail_whenJobHasBeenCancelledWhileLoggingDetails() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var cancelledJob = new ReindexJob().withId(JOB_ID).withJobStatus(ReindexJob.JobStatus.PENDING_CANCEL);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any())).thenReturn(succeededFuture(cancelledJob));
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any(), any())).thenReturn(succeededFuture(cancelledJob));
 
     var result = logJobDetails(1000L, context);
 
@@ -110,14 +111,14 @@ class ReindexJobRunnerTest {
   void shouldMarkJobCancelled_whenFailedJobWasPendingCancellation() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var pendingCancel = new ReindexJob().withId(JOB_ID).withJobStatus(ReindexJob.JobStatus.PENDING_CANCEL);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any())).thenAnswer(invocation -> {
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), any(), any())).thenAnswer(invocation -> {
       UnaryOperator<ReindexJob> updater = invocation.getArgument(1);
       return succeededFuture(updater.apply(pendingCancel));
     });
 
     logFailedJob(context);
 
-    verify(reindexJobRepository).fetchAndUpdate(eq(JOB_ID), any());
+    verify(reindexJobRepository).fetchAndUpdate(eq(JOB_ID), any(), any());
   }
 
   @Test
@@ -125,7 +126,7 @@ class ReindexJobRunnerTest {
   void shouldMarkJobFailed_whenFailedJobWasNotPendingCancellation() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var inProgress = new ReindexJob().withId(JOB_ID).withJobStatus(ReindexJob.JobStatus.IN_PROGRESS);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture()))
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture(), any()))
       .thenReturn(succeededFuture(inProgress));
 
     logFailedJob(context);
@@ -139,7 +140,7 @@ class ReindexJobRunnerTest {
   void shouldMarkReindexCompleted_withPublishedCount() {
     var context = reindexContext(new ReindexJob().withId(JOB_ID));
     var updatedJob = new ReindexJob().withId(JOB_ID);
-    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture()))
+    when(reindexJobRepository.fetchAndUpdate(eq(JOB_ID), reindexJobCaptor.capture(), any()))
       .thenReturn(succeededFuture(updatedJob));
 
     logReindexCompleted(42L, context);

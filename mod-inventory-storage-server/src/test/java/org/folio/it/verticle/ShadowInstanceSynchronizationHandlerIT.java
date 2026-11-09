@@ -26,12 +26,13 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.InventoryKafkaTopic;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.it.InstanceStorageFixtures;
+import org.folio.persist.InstanceRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.services.caches.ConsortiumData;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ShadowInstanceSynchronizationHandler;
-import org.folio.services.domainevent.DomainEvent;
-import org.folio.services.domainevent.DomainEventType;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.domainevent.model.DomainEventType;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.InstanceRequestBuilder;
 import org.junit.jupiter.api.BeforeAll;
@@ -80,7 +81,8 @@ class ShadowInstanceSynchronizationHandlerIT extends BaseIntegrationTest {
   void setUp(Vertx vertx) {
     mockUserTenantsForNonConsortiumMember(CONSORTIUM_CENTRAL_TENANT);
     synchronizationHandler =
-      new ShadowInstanceSynchronizationHandler(consortiaDataCache, vertx.createHttpClient(), vertx);
+      new ShadowInstanceSynchronizationHandler(consortiaDataCache, vertx.createHttpClient(),
+        new InstanceRepository(vertx.getOrCreateContext()));
 
     var sharingCollection = new JsonObject()
       .put(SHARING_INSTANCES_FIELD, JsonArray.of(new JsonObject()

@@ -17,56 +17,52 @@ public class ServicePointsUserApi extends BaseApi<ServicePointsUser, ServicePoin
   @Validate
   @Override
   public void getServicePointsUsers(String query, String totalRecords, int offset, int limit,
-                                    Map<String, String> okapiHeaders,
+                                    Map<String, String> headers,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetServicePointsUsersResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void postServicePointsUsers(ServicePointsUser entity,
-                                     Map<String, String> okapiHeaders,
+                                     Map<String, String> headers,
                                      Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostServicePointsUsersResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteServicePointsUsers(Map<String, String> okapiHeaders,
+  public void deleteServicePointsUsers(Map<String, String> headers,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntities(okapiHeaders, asyncResultHandler, vertxContext);
+    deleteEntities(headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getServicePointsUsersByServicePointsUserId(String servicePointsUserId,
-                                                         Map<String, String> okapiHeaders,
+                                                         Map<String, String> headers,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
-    getEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
-      GetServicePointsUsersByServicePointsUserIdResponse.class);
+    getEntityById(servicePointsUserId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteServicePointsUsersByServicePointsUserId(String servicePointsUserId,
-                                                            Map<String, String> okapiHeaders,
+                                                            Map<String, String> headers,
                                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                                             Context vertxContext) {
-    deleteEntityById(servicePointsUserId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteServicePointsUsersByServicePointsUserIdResponse.class);
+    deleteEntityById(servicePointsUserId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putServicePointsUsersByServicePointsUserId(String servicePointsUserId,
                                                          ServicePointsUser entity,
-                                                         Map<String, String> okapiHeaders,
+                                                         Map<String, String> headers,
                                                          Handler<AsyncResult<Response>> asyncResultHandler,
                                                          Context vertxContext) {
-    putEntityById(servicePointsUserId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutServicePointsUsersByServicePointsUserIdResponse.class);
+    putEntityById(servicePointsUserId, entity, headers, asyncResultHandler);
   }
 
   @Override

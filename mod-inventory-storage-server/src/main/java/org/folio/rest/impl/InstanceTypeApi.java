@@ -8,7 +8,6 @@ import javax.ws.rs.core.Response;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.InstanceType;
 import org.folio.rest.jaxrs.model.InstanceTypes;
-import org.folio.rest.persist.PgUtil;
 
 public class InstanceTypeApi extends BaseApi<InstanceType, InstanceTypes>
   implements org.folio.rest.jaxrs.resource.InstanceTypes {
@@ -18,47 +17,43 @@ public class InstanceTypeApi extends BaseApi<InstanceType, InstanceTypes>
   @Validate
   @Override
   public void getInstanceTypes(String query, String totalRecords, int offset, int limit,
-                               Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+                               Map<String, String> headers, Handler<AsyncResult<Response>> asyncResultHandler,
                                Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postInstanceTypes(InstanceType entity, Map<String, String> okapiHeaders,
+  public void postInstanceTypes(InstanceType entity, Map<String, String> headers,
                                 Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostInstanceTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void getInstanceTypesByInstanceTypeId(String instanceTypeId,
-                                               Map<String, String> okapiHeaders,
+                                               Map<String, String> headers,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    PgUtil.getById(INSTANCE_TYPE_TABLE, InstanceType.class, instanceTypeId,
-      okapiHeaders, vertxContext, GetInstanceTypesByInstanceTypeIdResponse.class, asyncResultHandler);
+    getEntityById(instanceTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void deleteInstanceTypesByInstanceTypeId(String instanceTypeId,
-                                                  Map<String, String> okapiHeaders,
+                                                  Map<String, String> headers,
                                                   Handler<AsyncResult<Response>> asyncResultHandler,
                                                   Context vertxContext) {
-    deleteEntityById(instanceTypeId, okapiHeaders, asyncResultHandler, vertxContext,
-      DeleteInstanceTypesByInstanceTypeIdResponse.class);
+    deleteEntityById(instanceTypeId, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putInstanceTypesByInstanceTypeId(String instanceTypeId, InstanceType entity,
-                                               Map<String, String> okapiHeaders,
+                                               Map<String, String> headers,
                                                Handler<AsyncResult<Response>> asyncResultHandler,
                                                Context vertxContext) {
-    putEntityById(instanceTypeId, entity, okapiHeaders, asyncResultHandler, vertxContext,
-      PutInstanceTypesByInstanceTypeIdResponse.class);
+    putEntityById(instanceTypeId, entity, headers, asyncResultHandler);
   }
 
   @Override

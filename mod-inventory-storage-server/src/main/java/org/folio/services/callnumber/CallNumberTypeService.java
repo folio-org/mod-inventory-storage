@@ -1,78 +1,62 @@
 package org.folio.services.callnumber;
 
-import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.get;
-import static org.folio.rest.persist.PgUtil.getById;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.persist.CallNumberTypeRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.CallNumberType;
 import org.folio.rest.jaxrs.model.CallNumberTypes;
-import org.folio.rest.jaxrs.resource.CallNumberTypes.DeleteCallNumberTypesByIdResponse;
-import org.folio.rest.jaxrs.resource.CallNumberTypes.GetCallNumberTypesByIdResponse;
-import org.folio.rest.jaxrs.resource.CallNumberTypes.GetCallNumberTypesResponse;
-import org.folio.rest.jaxrs.resource.CallNumberTypes.PostCallNumberTypesResponse;
-import org.folio.rest.jaxrs.resource.CallNumberTypes.PutCallNumberTypesByIdResponse;
 import org.folio.services.domainevent.CallNumberTypeDomainEventPublisher;
+import org.springframework.stereotype.Service;
 
+@Service
 public class CallNumberTypeService {
-
-  public static final String CALL_NUMBER_TYPE_TABLE = "call_number_type";
 
   private static final String SYSTEM_CALL_NUMBER_TYPE_SOURCE = "system";
 
-  private final Context context;
-  private final Map<String, String> okapiHeaders;
-  private final CallNumberTypeRepository repository;
-  private final CallNumberTypeDomainEventPublisher domainEventService;
+  private final CallNumberTypeDomainEventPublisher callNumberTypeDomainEventPublisher;
+  private final CallNumberTypeRepository callNumberTypeRepository;
 
-  public CallNumberTypeService(Context context, Map<String, String> okapiHeaders) {
-    this.context = context;
-    this.okapiHeaders = okapiHeaders;
-
-    this.repository = new CallNumberTypeRepository(context, okapiHeaders);
-    this.domainEventService = new CallNumberTypeDomainEventPublisher(context, okapiHeaders);
+  public CallNumberTypeService(CallNumberTypeDomainEventPublisher callNumberTypeDomainEventPublisher,
+                               CallNumberTypeRepository callNumberTypeRepository) {
+    this.callNumberTypeRepository = callNumberTypeRepository;
+    this.callNumberTypeDomainEventPublisher = callNumberTypeDomainEventPublisher;
   }
 
-  public Future<Response> getByQuery(String cql, int offset, int limit) {
-    return get(CALL_NUMBER_TYPE_TABLE, CallNumberType.class, CallNumberTypes.class,
-      cql, offset, limit, okapiHeaders, context, GetCallNumberTypesResponse.class);
+  public Future<CallNumberTypes> getByQuery(String cql, int offset, int limit, String totalRecords,
+                                            Map<String, String> headers) {
+    return callNumberTypeRepository.query(cql, offset, limit, totalRecords, tenantId(headers))
+      .map(results -> new CallNumberTypes()
+        .withCallNumberTypes(results.getResults())
+        .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
-  public Future<Response> getByTypeId(String id) {
-    return getById(CALL_NUMBER_TYPE_TABLE, CallNumberType.class, id, okapiHeaders, context,
-      GetCallNumberTypesByIdResponse.class);
+  public Future<CallNumberType> getByTypeId(String id, Map<String, String> headers) {
+    return callNumberTypeRepository.findById(id, tenantId(headers));
   }
 
-  public Future<Response> create(CallNumberType type) {
-    return post(CALL_NUMBER_TYPE_TABLE, type, okapiHeaders, context, PostCallNumberTypesResponse.class)
-      .onSuccess(domainEventService.publishCreated());
+  public Future<CallNumberType> create(CallNumberType type, Map<String, String> headers) {
+    return callNumberTypeRepository.create(type, tenantId(headers))
+      .onSuccess(created -> callNumberTypeDomainEventPublisher.publishRecordCreated(created, headers));
   }
 
-  public Future<Response> update(String id, CallNumberType type) {
-    return getIfNotSystemCallNumberType(id, "System call number type couldn't be updated")
-      .compose(oldType -> put(CALL_NUMBER_TYPE_TABLE, type, id, okapiHeaders, context,
-        PutCallNumberTypesByIdResponse.class)
-        .onSuccess(domainEventService.publishUpdated(oldType))
-      );
+  public Future<Void> update(String id, CallNumberType type, Map<String, String> headers) {
+    return getIfNotSystemCallNumberType(id, "System call number type couldn't be updated", headers)
+      .compose(oldType -> callNumberTypeRepository.replace(id, type, tenantId(headers))
+        .onSuccess(notUsed -> callNumberTypeDomainEventPublisher.publishRecordUpdated(oldType, headers)));
   }
 
-  public Future<Response> delete(String id) {
-    return getIfNotSystemCallNumberType(id, "System call number type couldn't be deleted")
-      .compose(oldType -> deleteById(CALL_NUMBER_TYPE_TABLE, id, okapiHeaders, context,
-        DeleteCallNumberTypesByIdResponse.class)
-        .onSuccess(domainEventService.publishRemoved(oldType))
-      );
+  public Future<Void> delete(String id, Map<String, String> headers) {
+    return getIfNotSystemCallNumberType(id, "System call number type couldn't be deleted", headers)
+      .compose(oldType -> callNumberTypeRepository.remove(id, tenantId(headers))
+        .onSuccess(notUsed -> callNumberTypeDomainEventPublisher.publishRecordRemoved(oldType, headers)));
   }
 
-  private Future<CallNumberType> getIfNotSystemCallNumberType(String id, String errorMessage) {
-    return repository.getById(id)
+  private Future<CallNumberType> getIfNotSystemCallNumberType(String id, String errorMessage,
+                                                            Map<String, String> headers) {
+    return callNumberTypeRepository.getById(id, tenantId(headers))
       .compose(callNumberType -> {
         if (isSystemSource(callNumberType)) {
           return Future.failedFuture(new BadRequestException(errorMessage));

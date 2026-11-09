@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
 import org.folio.services.caches.SettingCache;
-import org.folio.services.domainevent.SettingEvent;
+import org.folio.services.domainevent.model.SettingEvent;
 
 public class SettingUpdateKafkaHandler implements AsyncRecordHandler<String, String> {
 

@@ -6,7 +6,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.core.Response;
@@ -19,7 +18,6 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
-import org.folio.services.migration.BaseMigrationService;
 import org.folio.utils.SampleDataIdRandomizer;
 import org.jspecify.annotations.NonNull;
 
@@ -91,10 +89,8 @@ public class TenantRefApi extends TenantAPI {
         log.info("Liquibase schema initialization completed for tenant {}", tenantId);
         return null;
       }))
-      .compose(integer -> loadReferenceData(attributes, headers, vertxContext)
-        .compose(integer1 -> loadSampleData(attributes, headers, vertxContext, integer1)))
-      .compose(result -> runJavaMigrations(attributes)
-        .map(result));
+      .compose(result -> loadReferenceData(attributes, headers, vertxContext))
+      .compose(result -> loadSampleData(attributes, headers, vertxContext, result));
   }
 
   private Future<Integer> loadReferenceData(TenantAttributes attributes, Map<String, String> headers,
@@ -166,25 +162,6 @@ public class TenantRefApi extends TenantAPI {
       .filter(parameter -> parameter.getKey().equalsIgnoreCase(paramName))
       .filter(parameter -> "true".equals(parameter.getValue()))
       .findAny();
-  }
-
-  private Future<Void> runJavaMigrations(TenantAttributes ta) {
-    var javaMigrations = List.<BaseMigrationService>of();
-
-    if (javaMigrations.isEmpty()) {
-      return Future.succeededFuture();
-    }
-
-    log.info("About to start java migrations...");
-    var startedMigrations = javaMigrations.stream()
-      .filter(javaMigration -> javaMigration.shouldExecuteMigration(ta))
-      .map(BaseMigrationService::runMigration)
-      .toList();
-
-    return Future.all(startedMigrations)
-      .onSuccess(notUsed -> log.info("Java migrations has been completed"))
-      .onFailure(error -> log.error("Some java migrations failed", error))
-      .mapEmpty();
   }
 
   private String randomizeInstance(SampleDataIdRandomizer idRandomizer, String json) {

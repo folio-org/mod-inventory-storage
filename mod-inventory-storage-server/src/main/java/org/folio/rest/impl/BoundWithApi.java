@@ -2,7 +2,8 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.rest.jaxrs.resource.InventoryStorageBoundWiths.PutInventoryStorageBoundWithsResponse.respond204;
-import static org.folio.rest.support.EndpointFailureHandler.handleFailure;
+import static org.folio.rest.support.ResponseHandlerUtil.handleFailure;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -10,6 +11,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import javax.ws.rs.core.Response;
 import org.folio.persist.BoundWithRepository;
 import org.folio.persist.HoldingsRepository;
@@ -28,103 +31,35 @@ import org.folio.rest.jaxrs.model.BoundWithContent;
 import org.folio.rest.jaxrs.model.BoundWithPart;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.Metadata;
 import org.folio.rest.jaxrs.model.Parameter;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.services.instance.BoundWithPartService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+@SuppressWarnings("java:S6813")
 public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStorageBoundWiths {
 
-  /**
-   * Bound-with parts not in incoming: Future deletes.
-   */
-  private static List<Future<Response>> getDeleteBoundWithPartFutures(
-    String mainHoldingsRecordId,
-    Map<String, BoundWithPart> existingParts,
-    Map<String, BoundWithContent> incomingParts,
-    Context vertxContext,
-    Map<String, String> okapiHeaders) {
+  @Autowired
+  private BoundWithPartService service;
+  @Autowired
+  private ItemRepository itemRepository;
+  @Autowired
+  private HoldingsRepository holdingsRepository;
+  @Autowired
+  private BoundWithRepository boundWithRepository;
 
-    List<Future<Response>> deleteFutures = new ArrayList<>();
-    BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
-    for (var part : existingParts.entrySet()) {
-      if (!incomingParts.containsKey(part.getKey())
-        && !part.getKey().equals(mainHoldingsRecordId)) {
-        deleteFutures.add(service.delete(part.getValue().getId()));
-      }
-    }
-    if (existingParts.containsKey(mainHoldingsRecordId)
-      && (incomingParts.size() == 1 && incomingParts.containsKey(mainHoldingsRecordId)
-      || incomingParts.isEmpty())) {
-      deleteFutures.add(service.delete(existingParts.get(mainHoldingsRecordId).getId()));
-    }
-    return deleteFutures;
-  }
-
-  /**
-   * Bound-with parts not existing: future creates.
-   */
-  private static List<Future<Response>> getCreateBoundWithPartFutures(
-    String itemId,
-    String mainHoldingsId,
-    Map<String, BoundWithContent> incomingParts,
-    Map<String, BoundWithPart> existingParts,
-    Map<String, String> okapiHeaders,
-    Context vertxContext) {
-
-    List<Future<Response>> createFutures = new ArrayList<>();
-    BoundWithPartService service = new BoundWithPartService(vertxContext, okapiHeaders);
-
-    createIncomingParts(itemId, mainHoldingsId, incomingParts, existingParts, service, createFutures);
-    createMainHoldingsPart(itemId, mainHoldingsId, incomingParts, existingParts, service, createFutures);
-
-    return createFutures;
-  }
-
-  private static void createIncomingParts(String itemId, String mainHoldingsId,
-                                          Map<String, BoundWithContent> incomingParts,
-                                          Map<String, BoundWithPart> existingParts,
-                                          BoundWithPartService service,
-                                          List<Future<Response>> createFutures) {
-    if (!incomingParts.containsKey(mainHoldingsId) || incomingParts.size() > 1) {
-      for (String holdingsId : incomingParts.keySet()) {
-        if (!existingParts.containsKey(holdingsId)) {
-          BoundWithPart part = new BoundWithPart()
-            .withItemId(itemId)
-            .withHoldingsRecordId(holdingsId)
-            .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
-          createFutures.add(service.create(part));
-        }
-      }
-    }
-  }
-
-  private static void createMainHoldingsPart(String itemId, String mainHoldingsId,
-                                              Map<String, BoundWithContent> incomingParts,
-                                              Map<String, BoundWithPart> existingParts,
-                                              BoundWithPartService service,
-                                              List<Future<Response>> createFutures) {
-    // Add main holdings ID, but only if it doesn't exist already,
-    // wasn't provided in the request (and thus added above),
-    // and would not become the only part.
-    if (!existingParts.containsKey(mainHoldingsId)
-      && !incomingParts.containsKey(mainHoldingsId)
-      && !incomingParts.isEmpty()) {
-      BoundWithPart part = new BoundWithPart()
-        .withItemId(itemId)
-        .withHoldingsRecordId(mainHoldingsId)
-        .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
-      createFutures.add(service.create(part));
-    }
+  public BoundWithApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
   }
 
   @Validate
   @Override
   public void putInventoryStorageBoundWiths(BoundWith entity,
-                                            Map<String, String> okapiHeaders,
+                                            Map<String, String> headers,
                                             Handler<AsyncResult<Response>> asyncResultHandler,
                                             Context vertxContext) {
 
@@ -132,21 +67,21 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
     AtomicReference<Map<String, BoundWithPart>> existingParts = new AtomicReference<>();
     AtomicReference<Item> boundWithItem = new AtomicReference<>();
 
-    validate(entity, vertxContext, okapiHeaders)
-      .compose(x -> getExistingParts(entity, vertxContext, okapiHeaders))
+    validate(entity, headers)
+      .compose(x -> getExistingParts(entity, headers))
       .onSuccess(existingParts::set)
-      .compose(x -> getMainPart(entity, vertxContext, okapiHeaders))
+      .compose(x -> getMainPart(entity, headers))
       .onSuccess(boundWithItem::set)
       .compose(x -> {
         var futures = getCreateBoundWithPartFutures(
           entity.getItemId(), boundWithItem.get().getHoldingsRecordId(),
-          incomingParts, existingParts.get(), okapiHeaders, vertxContext);
+          incomingParts, existingParts.get(), headers);
         return Future.all(futures);
       })
       .compose(x -> {
         var futures = getDeleteBoundWithPartFutures(
           boundWithItem.get().getHoldingsRecordId(),
-          existingParts.get(), incomingParts, vertxContext, okapiHeaders);
+          existingParts.get(), incomingParts, headers);
         return Future.all(futures);
       })
       .onSuccess(x -> asyncResultHandler.handle(succeededFuture(respond204())))
@@ -156,27 +91,113 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
   /**
    * Checks referential integrity for all involved records.
    */
-  Future<Void> validate(BoundWith requestEntity, Context vertxContext, Map<String, String> okapiHeaders) {
+  Future<Void> validate(BoundWith requestEntity, Map<String, String> headers) {
     Errors errors = new Errors();
-    ItemRepository items = new ItemRepository(vertxContext, okapiHeaders);
-    return items.getById(requestEntity.getItemId())
+    return itemRepository.getById(requestEntity.getItemId(), tenantId(headers))
       .compose(item -> {
         if (item == null) {
           addError(errors,
             "item.not-found", "Item not found.", "itemId", requestEntity.getItemId());
         }
-        return validateHoldings(requestEntity, vertxContext, okapiHeaders);
+        return validateHoldings(requestEntity, headers);
       })
       .compose(holdingsFound -> validateHoldingsResults(holdingsFound, requestEntity, errors));
   }
 
-  private Future<CompositeFuture> validateHoldings(BoundWith requestEntity, Context vertxContext,
-                                                    Map<String, String> okapiHeaders) {
-    HoldingsRepository holdings = new HoldingsRepository(vertxContext, okapiHeaders);
-    List<Future<HoldingsRecord>> holdingsFutures = new ArrayList<>();
-    for (BoundWithContent entry : requestEntity.getBoundWithContents()) {
-      holdingsFutures.add(holdings.getById(entry.getHoldingsRecordId()));
+  void addError(Errors errors, String code, String message, String key, String value) {
+    errors.getErrors().add(new Error()
+      .withCode(code)
+      .withMessage(message)
+      .withParameters(Collections.singletonList(new Parameter()
+        .withKey(key)
+        .withValue(value))));
+  }
+
+  /**
+   * Bound-with parts not in incoming: Future deletes.
+   */
+  private List<Future<?>> getDeleteBoundWithPartFutures(String mainHoldingsRecordId,
+                                                               Map<String, BoundWithPart> existingParts,
+                                                               Map<String, BoundWithContent> incomingParts,
+                                                               Map<String, String> headers) {
+
+    List<Future<?>> deleteFutures = existingParts.entrySet().stream()
+      .filter(part -> isForDeletion(mainHoldingsRecordId, incomingParts, part))
+      .<Future<?>>map(part -> service.delete(part.getValue().getId(), headers))
+      .collect(Collectors.toList());
+    if (existingParts.containsKey(mainHoldingsRecordId)
+        && (incomingParts.size() == 1 && incomingParts.containsKey(mainHoldingsRecordId) || incomingParts.isEmpty())) {
+      deleteFutures.add(service.delete(existingParts.get(mainHoldingsRecordId).getId(), headers));
     }
+    return deleteFutures;
+  }
+
+  private boolean isForDeletion(String mainHoldingsRecordId,
+                                Map<String, BoundWithContent> incomingParts,
+                                Map.Entry<String, BoundWithPart> part) {
+    return !incomingParts.containsKey(part.getKey())
+           && !part.getKey().equals(mainHoldingsRecordId);
+  }
+
+  /**
+   * Bound-with parts not existing: future creates.
+   */
+  private List<Future<?>> getCreateBoundWithPartFutures(String itemId,
+                                                               String mainHoldingsId,
+                                                               Map<String, BoundWithContent> incomingParts,
+                                                               Map<String, BoundWithPart> existingParts,
+                                                               Map<String, String> headers) {
+
+    List<Future<?>> createFutures = new ArrayList<>();
+
+    createIncomingParts(itemId, mainHoldingsId, incomingParts, existingParts, headers, createFutures);
+    createMainHoldingsPart(itemId, mainHoldingsId, incomingParts, existingParts, headers, createFutures);
+
+    return createFutures;
+  }
+
+  private void createIncomingParts(String itemId, String mainHoldingsId,
+                                   Map<String, BoundWithContent> incomingParts,
+                                   Map<String, BoundWithPart> existingParts,
+                                   Map<String, String> headers,
+                                   List<Future<?>> createFutures) {
+    if (!incomingParts.containsKey(mainHoldingsId) || incomingParts.size() > 1) {
+      for (String holdingsId : incomingParts.keySet()) {
+        if (!existingParts.containsKey(holdingsId)) {
+          BoundWithPart part = new BoundWithPart()
+            .withItemId(itemId)
+            .withHoldingsRecordId(holdingsId)
+            .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
+          createFutures.add(service.create(part, headers));
+        }
+      }
+    }
+  }
+
+  private void createMainHoldingsPart(String itemId, String mainHoldingsId,
+                                      Map<String, BoundWithContent> incomingParts,
+                                      Map<String, BoundWithPart> existingParts,
+                                      Map<String, String> headers,
+                                      List<Future<?>> createFutures) {
+    // Add main holdings ID, but only if it doesn't exist already,
+    // wasn't provided in the request (and thus added above),
+    // and would not become the only part.
+    if (!existingParts.containsKey(mainHoldingsId)
+        && !incomingParts.containsKey(mainHoldingsId)
+        && !incomingParts.isEmpty()) {
+      BoundWithPart part = new BoundWithPart()
+        .withItemId(itemId)
+        .withHoldingsRecordId(mainHoldingsId)
+        .withMetadata(new Metadata().withCreatedDate(new Date()).withUpdatedDate(new Date()));
+      createFutures.add(service.create(part, headers));
+    }
+  }
+
+  private Future<CompositeFuture> validateHoldings(BoundWith requestEntity,
+                                                   Map<String, String> headers) {
+    var holdingsFutures = requestEntity.getBoundWithContents().stream()
+      .map(entry -> holdingsRepository.getById(entry.getHoldingsRecordId(), tenantId(headers)))
+      .toList();
     return Future.all(holdingsFutures);
   }
 
@@ -195,15 +216,6 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
     }
   }
 
-  void addError(Errors errors, String code, String message, String key, String value) {
-    errors.getErrors().add(new Error()
-      .withCode(code)
-      .withMessage(message)
-      .withParameters(Collections.singletonList(new Parameter()
-        .withKey(key)
-        .withValue(value))));
-  }
-
   /**
    * Incoming BoundWithContent objects mapped by holdings record ID.
    */
@@ -218,28 +230,24 @@ public class BoundWithApi implements org.folio.rest.jaxrs.resource.InventoryStor
   /**
    * Get mandatory, main holdings record; the one directly linked to by the item.
    */
-  private Future<Item> getMainPart(
-    BoundWith entity, Context vertxContext, Map<String, String> okapiHeaders) {
+  private Future<Item> getMainPart(BoundWith entity, Map<String, String> headers) {
     Promise<Item> promise = Promise.promise();
-    return new ItemRepository(vertxContext, okapiHeaders)
-      .getById(entity.getItemId())
+    return itemRepository.getById(entity.getItemId(), tenantId(headers))
       .onComplete(item -> promise.complete(item.result()));
   }
 
   /**
    * Existing BoundWithPart entities mapped by holdings record ID.
    */
-  private Future<Map<String, BoundWithPart>> getExistingParts(
-    BoundWith entity, Context vertxContext, Map<String, String> okapiHeaders) {
-
+  private Future<Map<String, BoundWithPart>> getExistingParts(BoundWith entity, Map<String, String> headers) {
     Promise<Map<String, BoundWithPart>> promise = Promise.promise();
     Map<String, BoundWithPart> existingParts = new HashMap<>();
     Criterion criterion = new Criterion(new Criteria()
       .setJSONB(false).addField("itemId").setOperation("=")
       .setVal(entity.getItemId()));
 
-    new BoundWithRepository(vertxContext, okapiHeaders)
-      .get(criterion).onComplete(boundWithParts -> {
+    boundWithRepository.get(criterion, tenantId(headers))
+      .onComplete(boundWithParts -> {
         for (BoundWithPart boundWith : boundWithParts.result()) {
           existingParts.put(boundWith.getHoldingsRecordId(), boundWith);
         }

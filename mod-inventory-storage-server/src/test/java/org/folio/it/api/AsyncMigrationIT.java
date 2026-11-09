@@ -1,6 +1,5 @@
 package org.folio.it.api;
 
-import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.folio.it.HoldingsStorageFixtures.createHolding;
@@ -12,28 +11,19 @@ import static org.folio.it.LocationStorageFixtures.createLocation;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.CANCELLED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.COMPLETED;
 import static org.folio.rest.jaxrs.model.AsyncMigrationJob.JobStatus.IN_PROGRESS;
-import static org.folio.rest.persist.PgUtil.postgresClient;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.migration.MigrationName.ITEM_ORDER_MIGRATION;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
+import static org.folio.support.sql.StreamingTransactions.streamRowsInTransaction;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import io.vertx.core.Context;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowStream;
-import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.dataimport.testsupport.vertx.VertxTestUtil;
 import org.folio.it.BaseIntegrationTest;
@@ -43,9 +33,10 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCounts;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.model.EffectiveCallNumberComponents;
-import org.folio.rest.persist.Conn;
 import org.folio.services.migration.async.AsyncMigrationContext;
+import org.folio.services.migration.async.AsyncMigrationJobService;
 import org.folio.services.migration.async.ItemOrderMigrationJobRunner;
+import org.folio.support.DomainEventPublisherFactories;
 import org.folio.support.ResourcePaths;
 import org.folio.support.builders.ItemRequestBuilder;
 import org.folio.support.sql.TestRowStream;
@@ -108,21 +99,15 @@ class AsyncMigrationIT extends BaseIntegrationTest {
   void shouldCancelMigration_whenInProgress(Vertx vertx) {
     var rowStream = new TestRowStream(5_000_000);
     var migrationJob = migrationJob();
-    var repository = new AsyncMigrationJobRepository(getContext(vertx), okapiHeaders());
-    var mockPostgresClient = spy(postgresClient(getContext(vertx), okapiHeaders()));
-    var connection = mock(Conn.class);
+    var repository = spy(new AsyncMigrationJobRepository(getContext(vertx)));
 
-    when(mockPostgresClient.withTrans(any()))
-      .thenAnswer(invocation -> invocation.<Function<Conn, Future<Object>>>getArgument(0)
-        .apply(connection));
-    when(connection.selectStream(anyString(), any(Tuple.class), any())).thenAnswer(invocation -> {
-      invocation.<Handler<RowStream<Row>>>getArgument(2).handle(rowStream);
-      return succeededFuture();
-    });
+    streamRowsInTransaction(repository, vertx, rowStream);
 
-    VertxTestUtil.await(repository.save(migrationJob.getId(), migrationJob));
+    VertxTestUtil.await(repository.save(migrationJob.getId(), migrationJob, tenantId(okapiHeaders())));
 
-    var context = new AsyncMigrationContext(getContext(vertx), okapiHeaders(), mockPostgresClient);
+    var context = new AsyncMigrationContext(getContext(vertx), okapiHeaders(), repository,
+      new AsyncMigrationJobService(getContext(vertx),
+        DomainEventPublisherFactories.create(getContext(vertx)), repository));
     new ItemOrderMigrationJobRunner().startAsyncMigration(migrationJob,
       new AsyncMigrationContext(context, ITEM_ORDER_MIGRATION.getValue()));
 

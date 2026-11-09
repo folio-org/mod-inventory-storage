@@ -8,7 +8,7 @@ import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_CANC
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.ID_PUBLISHING_FAILED;
 import static org.folio.rest.jaxrs.model.ReindexJob.JobStatus.PENDING_CANCEL;
 import static org.folio.rest.tools.utils.TenantTool.tenantId;
-import static org.folio.services.domainevent.DomainEvent.reindexEvent;
+import static org.folio.services.domainevent.model.DomainEvent.reindexEvent;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -22,9 +22,8 @@ import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.persist.ReindexJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.ReindexJob;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.PostgresClientFactory;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
+import org.folio.services.domainevent.DomainEventPublisherFactory;
 import org.folio.utils.DatabaseUtils;
 
 public class ReindexJobRunner {
@@ -32,29 +31,28 @@ public class ReindexJobRunner {
   private static final Logger log = LogManager.getLogger(ReindexJobRunner.class);
   private static final int POOL_SIZE = 2;
 
-  private final PostgresClient postgresClient;
   private final ReindexJobRepository reindexJobRepository;
   private final CommonDomainEventPublisher<Instance> instanceEventPublisher;
+  private final Map<String, String> headers;
   private final String tenantId;
   private final WorkerExecutor workerExecutor;
 
-  public ReindexJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
-      new ReindexJobRepository(vertxContext, okapiHeaders),
+  public ReindexJobRunner(Context vertxContext, Map<String, String> headers,
+                          DomainEventPublisherFactory publisherFactory, ReindexJobRepository reindexJobRepository) {
+    this(reindexJobRepository,
       vertxContext,
-      new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-        INSTANCE.fullTopicName(tenantId(okapiHeaders))),
-      tenantId(okapiHeaders));
+      publisherFactory.publisher(INSTANCE),
+      headers);
   }
 
-  public ReindexJobRunner(PostgresClient postgresClient, ReindexJobRepository repository,
+  public ReindexJobRunner(ReindexJobRepository repository,
                           Context vertxContext, CommonDomainEventPublisher<Instance> domainEventPublisher,
-                          String tenantId) {
+                          Map<String, String> headers) {
 
-    this.postgresClient = postgresClient;
     this.reindexJobRepository = repository;
     this.instanceEventPublisher = domainEventPublisher;
-    this.tenantId = tenantId;
+    this.headers = headers;
+    this.tenantId = tenantId(headers);
     // createSharedWorkerExecutor already shares the underlying pool by name within one Vertx
     // instance's lifetime, so no extra caching is needed here - see IterationJobRunner for why
     // caching this in a static field (as this used to) is actively wrong across Vertx instances.
@@ -78,8 +76,8 @@ public class ReindexJobRunner {
   }
 
   private Future<Long> streamInstanceIds(ReindexContext context) {
-    var query = "SELECT id FROM " + postgresClient.getSchemaName() + '.' + INSTANCE_TABLE;
-    return postgresClient.withTrans(conn -> DatabaseUtils.selectStream(conn, query)
+    var query = "SELECT id FROM " + reindexJobRepository.getFullTableName(INSTANCE_TABLE, tenantId);
+    return reindexJobRepository.inTransaction(tenantId, conn -> DatabaseUtils.selectStream(conn, query)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
@@ -99,13 +97,13 @@ public class ReindexJobRunner {
   private void logReindexCompleted(Long recordsPublished, ReindexContext context) {
     reindexJobRepository.fetchAndUpdate(context.getJobId(),
       job -> job.withPublished(recordsPublished.intValue())
-        .withJobStatus(IDS_PUBLISHED));
+        .withJobStatus(IDS_PUBLISHED), tenantId(headers));
   }
 
   private Future<Long> processStream(ReindexContext context) {
     return instanceEventPublisher.publishStream(context.stream,
       row -> rowToInstanceProducerRecord(row, context),
-      recordsPublished -> logJobDetails(recordsPublished, context));
+      recordsPublished -> logJobDetails(recordsPublished, context), headers);
   }
 
   private Future<ReindexJob> logJobDetails(Long records, ReindexContext context) {
@@ -114,7 +112,7 @@ public class ReindexJobRunner {
     }
 
     return reindexJobRepository
-      .fetchAndUpdate(context.getJobId(), job -> job.withPublished(records.intValue()))
+      .fetchAndUpdate(context.getJobId(), job -> job.withPublished(records.intValue()), tenantId(headers))
       .map(job -> {
         if (job.getJobStatus() == PENDING_CANCEL) {
           throw new IllegalStateException("The job has been cancelled");
@@ -133,7 +131,7 @@ public class ReindexJobRunner {
         var finalStatus = resp.getJobStatus() == PENDING_CANCEL
                           ? ID_PUBLISHING_CANCELLED : ID_PUBLISHING_FAILED;
         return resp.withJobStatus(finalStatus);
-      });
+      }, tenantId(headers));
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToInstanceProducerRecord(Row row,

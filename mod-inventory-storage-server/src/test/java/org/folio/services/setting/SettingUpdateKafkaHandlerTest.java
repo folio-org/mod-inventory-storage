@@ -16,7 +16,7 @@ import io.vertx.kafka.client.producer.KafkaHeader;
 import java.util.List;
 import java.util.UUID;
 import org.folio.services.caches.SettingCache;
-import org.folio.services.domainevent.SettingEvent;
+import org.folio.services.domainevent.model.SettingEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

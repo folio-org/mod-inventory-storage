@@ -1,82 +1,67 @@
 package org.folio.services.instance;
 
-import static io.vertx.core.Promise.promise;
-import static org.folio.rest.persist.PgUtil.put;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.folio.persist.InstanceDateTypeRepository;
 import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.InstanceDateType;
 import org.folio.rest.jaxrs.model.InstanceDateTypePatchRequest;
 import org.folio.rest.jaxrs.model.InstanceDateTypes;
-import org.folio.rest.jaxrs.resource.InstanceDateTypes.GetInstanceDateTypesResponse;
-import org.folio.rest.persist.PgUtil;
 import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.domainevent.InstanceDateTypeDomainEventPublisher;
 import org.folio.utils.ConsortiumUtils;
+import org.springframework.stereotype.Service;
 
+@Service
 public class InstanceDateTypeService {
 
-  public static final String INSTANCE_DATE_TYPE_TABLE = "instance_date_type";
-
-  private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final InstanceDateTypeRepository repository;
-  private final InstanceDateTypeDomainEventPublisher eventPublisher;
   private final ConsortiumDataCache consortiumDataCache;
+  private final InstanceDateTypeDomainEventPublisher instanceDateTypeDomainEventPublisher;
+  private final InstanceDateTypeRepository instanceDateTypeRepository;
 
-  public InstanceDateTypeService(Context vertxContext, Map<String, String> okapiHeaders) {
-    this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-
-    this.repository = new InstanceDateTypeRepository(vertxContext, okapiHeaders);
-    this.eventPublisher = new InstanceDateTypeDomainEventPublisher(vertxContext, okapiHeaders);
-    this.consortiumDataCache = vertxContext.get(ConsortiumDataCache.class.getName());
+  public InstanceDateTypeService(ConsortiumDataCache consortiumDataCache,
+                                 InstanceDateTypeDomainEventPublisher instanceDateTypeDomainEventPublisher,
+                                 InstanceDateTypeRepository instanceDateTypeRepository) {
+    this.instanceDateTypeRepository = instanceDateTypeRepository;
+    this.instanceDateTypeDomainEventPublisher = instanceDateTypeDomainEventPublisher;
+    this.consortiumDataCache = consortiumDataCache;
   }
 
-  public Future<Response> getInstanceDateTypes(String query, int offset, int limit) {
-    return PgUtil.get(INSTANCE_DATE_TYPE_TABLE, InstanceDateType.class, InstanceDateTypes.class, query,
-      "exact", offset, limit, okapiHeaders, vertxContext, GetInstanceDateTypesResponse.class);
+  public Future<InstanceDateTypes> getInstanceDateTypes(String query, int offset, int limit,
+                                                        Map<String, String> headers) {
+    return instanceDateTypeRepository.query(query, offset, limit, "exact", tenantId(headers))
+      .map(results -> new InstanceDateTypes()
+        .withInstanceDateTypes(results.getResults())
+        .withTotalRecords(results.getResultInfo().getTotalRecords()));
   }
 
-  public Future<Response> patchInstanceDateTypes(String id, InstanceDateTypePatchRequest entity) {
-    return consortiumDataCache.getConsortiumData(okapiHeaders)
+  public Future<Void> patchInstanceDateTypes(String id, InstanceDateTypePatchRequest entity,
+                                             Map<String, String> headers) {
+    return consortiumDataCache.getConsortiumData(headers)
       .compose(consortiumData -> {
-        if (consortiumData.isEmpty() || ConsortiumUtils.isCentralTenant(okapiHeaders, consortiumData.get())) {
-          return doUpdate(id, entity);
+        if (consortiumData.isEmpty() || ConsortiumUtils.isCentralTenant(headers, consortiumData.get())) {
+          return doUpdate(id, entity, headers);
         } else {
           throw new BadRequestException("Action ‘UPDATE' is not supported for consortium member tenant.");
         }
       });
   }
 
-  public Future<Response> putInstanceDateType(String id, InstanceDateType entity) {
-    return repository.getById(id)
-      .compose(oldDateType -> {
-        final Promise<Response> putResult = promise();
-
-        put(INSTANCE_DATE_TYPE_TABLE, entity, id, okapiHeaders, vertxContext,
-          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult::handle);
-
-        return putResult.future()
-          .onSuccess(eventPublisher.publishUpdated(oldDateType));
-      });
+  public Future<Void> putInstanceDateType(String id, InstanceDateType entity, Map<String, String> headers) {
+    return instanceDateTypeRepository.getById(id, tenantId(headers))
+      .compose(oldDateType -> replace(id, entity, oldDateType, headers));
   }
 
-  private Future<Response> doUpdate(String id, InstanceDateTypePatchRequest entity) {
-    return repository.getById(id)
-      .compose(oldDateType -> {
-        final Promise<Response> putResult = promise();
+  private Future<Void> doUpdate(String id, InstanceDateTypePatchRequest entity, Map<String, String> headers) {
+    return instanceDateTypeRepository.getById(id, tenantId(headers))
+      .compose(oldDateType -> replace(id, oldDateType.withName(entity.getName()), oldDateType, headers));
+  }
 
-        put(INSTANCE_DATE_TYPE_TABLE, oldDateType.withName(entity.getName()), id, okapiHeaders, vertxContext,
-          org.folio.rest.jaxrs.resource.InstanceDateTypes.PatchInstanceDateTypesByIdResponse.class, putResult::handle);
-
-        return putResult.future()
-          .onSuccess(eventPublisher.publishUpdated(oldDateType));
-      });
+  private Future<Void> replace(String id, InstanceDateType entity, InstanceDateType oldDateType,
+                               Map<String, String> headers) {
+    return instanceDateTypeRepository.replace(id, entity, tenantId(headers))
+      .onSuccess(notUsed -> instanceDateTypeDomainEventPublisher.publishRecordUpdated(oldDateType, headers));
   }
 }

@@ -1,22 +1,12 @@
 package org.folio.services.instance;
 
 import static io.vertx.core.Future.failedFuture;
-import static io.vertx.core.Promise.promise;
-import static javax.ws.rs.core.Response.noContent;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesByInstanceIdResponse;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.DeleteInstanceStorageInstancesResponse;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.GetInstanceStorageInstancesByInstanceIdResponse;
-import static org.folio.rest.jaxrs.resource.InstanceStorage.PostInstanceStorageInstancesResponse.respond400WithTextPlain;
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse;
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond201;
-import static org.folio.rest.jaxrs.resource.InstanceStorageBatchSynchronous.PostInstanceStorageBatchSynchronousResponse.respond413WithTextPlain;
-import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.persist.PgUtil.put;
-import static org.folio.rest.support.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.services.instance.StatusUpdatedDateGenerator.generateStatusUpdatedDate;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.HridValidators.refuseWhenHridChanged;
@@ -24,12 +14,8 @@ import static org.folio.validator.NotesValidators.refuseLongNotes;
 
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import io.vertx.pgclient.PgException;
-import io.vertx.sqlclient.Tuple;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -40,7 +26,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -49,172 +34,107 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.InstanceMarcRepository;
 import org.folio.persist.InstanceRelationshipRepository;
 import org.folio.persist.InstanceRepository;
+import org.folio.persist.helper.PgViolationMapper;
+import org.folio.rest.exceptions.BadRequestException;
+import org.folio.rest.exceptions.NotFoundException;
+import org.folio.rest.exceptions.RequestEntityTooLargeException;
 import org.folio.rest.exceptions.ValidationException;
-import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.InstancePatchRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.jaxrs.model.Subject;
-import org.folio.rest.jaxrs.resource.InstanceStorage;
-import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.CqlQuery;
-import org.folio.rest.support.HridManager;
+import org.folio.rest.persist.PostgresClientStreamResult;
 import org.folio.rest.tools.utils.MetadataUtil;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
-import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.CqlQuery;
+import org.folio.services.HridManager;
 import org.folio.services.caches.ConsortiumData;
-import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
-import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.domainevent.InstanceDomainEventPublisher;
 import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
-import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.services.setting.SettingsService;
 import org.folio.util.StringUtil;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
+import org.springframework.stereotype.Service;
 
+@Service
 public class InstanceService {
+
   private static final Logger logger = LogManager.getLogger(InstanceService.class);
-  private static final String DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING =
-    "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking";
+
   private static final String EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY =
     "Expected a maximum of %s records to prevent out of memory but got %s";
-  private static final String RESPOND_500_WITH_TEXT_PLAIN = "respond500WithTextPlain";
-  private static final String GET_INSTANCE_SUMMARY_SQL = "SELECT get_instance_summary($1::uuid) AS summary";
   private static final String NOT_FOUND = "Not found";
-  private final HridManager hridManager;
+
   private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final PostgresClient postgresClient;
-  private final InstanceDomainEventPublisher domainEventPublisher;
-  private final InstanceRepository instanceRepository;
-  private final InstanceMarcRepository marcRepository;
-  private final InstanceRelationshipRepository relationshipRepository;
   private final ConsortiumService consortiumService;
   private final SettingsService settingsService;
   private final Sanitizer<Instance> sanitizer;
+  private final InstanceDomainEventPublisher instanceDomainEventPublisher;
+  private final ReindexExportOrchestrator reindexExportOrchestrator;
+  private final InstanceMarcRepository instanceMarcRepository;
+  private final InstanceRelationshipRepository instanceRelationshipRepository;
+  private final InstanceRepository instanceRepository;
+  private final HridManager hridManager;
 
-  public InstanceService(Context vertxContext, Map<String, String> okapiHeaders) {
+  public InstanceService(Context vertxContext, ConsortiumService consortiumService,
+                         SettingsService settingsService,
+                         InstanceDomainEventPublisher instanceDomainEventPublisher,
+                         ReindexExportOrchestrator reindexExportOrchestrator,
+                         InstanceMarcRepository instanceMarcRepository,
+                         InstanceRelationshipRepository instanceRelationshipRepository,
+                         InstanceRepository instanceRepository,
+                         HridManager hridManager,
+                         Sanitizer<Instance> sanitizer) {
+    this.hridManager = hridManager;
+    this.instanceRepository = instanceRepository;
+    this.instanceRelationshipRepository = instanceRelationshipRepository;
+    this.instanceMarcRepository = instanceMarcRepository;
+    this.reindexExportOrchestrator = reindexExportOrchestrator;
+    this.instanceDomainEventPublisher = instanceDomainEventPublisher;
     this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-
-    this.postgresClient = postgresClient(vertxContext, okapiHeaders);
-    this.hridManager = new HridManager(postgresClient);
-    this.domainEventPublisher = new InstanceDomainEventPublisher(vertxContext, okapiHeaders);
-    this.instanceRepository = new InstanceRepository(vertxContext, okapiHeaders);
-    this.marcRepository = new InstanceMarcRepository(vertxContext, okapiHeaders);
-    this.relationshipRepository = new InstanceRelationshipRepository(vertxContext, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(vertxContext.get(HttpClient.class.getName()),
-      vertxContext.get(ConsortiumDataCache.class.getName()));
-    this.settingsService = new SettingsService(vertxContext, okapiHeaders);
-    this.sanitizer = SanitizerFactory.getSanitizer(Instance.class);
+    this.consortiumService = consortiumService;
+    this.settingsService = settingsService;
+    this.sanitizer = sanitizer;
   }
 
-  public Future<Response> getInstance(String id) {
-    return instanceRepository.getById(id)
-      .map(instance -> {
-        if (instance == null) {
-          return GetInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain(null);
-        }
-        return GetInstanceStorageInstancesByInstanceIdResponse.respond200WithApplicationJson(instance);
-      });
+  public Future<Instance> getInstance(String id, Map<String, String> headers) {
+    return instanceRepository.getById(id, tenantId(headers))
+      .compose(instance -> instance == null
+                           ? Future.failedFuture(new NotFoundException(NOT_FOUND))
+                           : Future.succeededFuture(instance));
   }
 
-  public Future<Response> getInstanceSummary(String id) {
-    return postgresClient.execute(GET_INSTANCE_SUMMARY_SQL, Tuple.of(id))
-      .map(rows -> {
-        var iterator = rows.iterator();
-        if (!iterator.hasNext()) {
-          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
-        }
-
-        JsonObject summary = iterator.next().getJsonObject("summary");
-        if (summary == null) {
-          return Response.status(404).type("text/plain").entity(NOT_FOUND).build();
-        }
-
-        return Response.ok(summary.encode(), "application/json").build();
-      });
+  /**
+   * Returns the summary of the instance as JSON.
+   */
+  public Future<String> getInstanceSummary(String id, Map<String, String> headers) {
+    return instanceRepository.getInstanceSummary(id, tenantId(headers))
+      .compose(summary -> summary == null
+                          ? Future.failedFuture(new NotFoundException(NOT_FOUND))
+                          : Future.succeededFuture(summary.encode()));
   }
 
-  @SuppressWarnings("java:S107")
-  // suppress "Methods should not have too many parameters"
-  public Future<Response> getInstanceSet(boolean instance, boolean holdingsRecords, boolean items,
-                                         boolean precedingTitles, boolean succeedingTitles,
-                                         boolean superInstanceRelationships, boolean subInstanceRelationships,
-                                         int offset, int limit, String query) {
-
-    return instanceRepository.getInstanceSet(instance, holdingsRecords, items,
-      precedingTitles, succeedingTitles, superInstanceRelationships, subInstanceRelationships,
-      offset, limit, query);
-  }
-
-  public Future<Response> getInventoryViewInstancesWithBoundedItems(int offset, int limit, String query) {
-    return instanceRepository.getInventoryViewInstancesWithBoundedItems(offset, limit, query);
-  }
-
-  public Future<Response> getInventoryViewInstancesByHrid(String hrid, boolean withBoundedItems,
-                                                          int offset, int limit) {
-    return instanceRepository.getInventoryViewInstancesByHrid(hrid, withBoundedItems, offset, limit);
-  }
-
-  public Future<Response> createInstance(Instance entity) {
+  public Future<Instance> createInstance(Instance entity, Map<String, String> headers) {
     entity.setStatusUpdatedDate(generateStatusUpdatedDate());
     sanitizer.sanitize(entity);
     return validateUuidFormat(entity.getStatisticalCodeIds())
-      .compose(v -> hridManager.populateHrid(entity))
+      .compose(v -> hridManager.populateHrid(entity, tenantId(headers)))
       .compose(NotesValidators::refuseLongNotes)
-      .compose(this::performInstanceCreation)
-      .map(ResponseHandlerUtil::handleHridErrorInInstance);
+      .compose(x -> performInstanceCreation(x, headers));
   }
 
-  private Future<Response> performInstanceCreation(Instance instance) {
-    final Promise<Response> postResponse = promise();
-
-    postgresClient.withTrans(conn ->
-      instanceRepository.createInstance(conn, instance)
-        .compose(response -> {
-          if (response.getEntity() instanceof Instance instanceResp) {
-            return batchLinkSubjects(conn, instanceResp.getId(), instance.getSubjects())
-              .map(v -> response);
-          } else {
-            return Future.succeededFuture(respond400WithTextPlain(response.getEntity()));
-          }
-        })
-    )
-      .onSuccess(postResponse::complete)
-      .onFailure(throwable -> handleInstanceCreationFailure(throwable, postResponse));
-
-    return postResponse.future()
-        // Return the response without waiting for a domain event publish
-        // to complete. Units of work performed by this service is the same
-        // but the ordering of the units of work provides a benefit to the
-        // api client invoking this endpoint. The response is returned
-        // a little earlier so the api client can continue its processing
-        // while the domain event publish is satisfied.
-        .onSuccess(domainEventPublisher.publishCreated());
+  public Future<Void> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                      boolean publishEvents, Map<String, String> headers) {
+    return createInstances(instances, upsert, optimisticLocking, publishEvents, conn -> Future.succeededFuture(),
+      headers);
   }
 
-  private void handleInstanceCreationFailure(Throwable throwable, Promise<Response> postResponse) {
-    if (throwable instanceof PgException pgException) {
-      postResponse.complete(respond400WithTextPlain(pgException.getDetail()));
-    } else {
-      postResponse.complete(respond400WithTextPlain(throwable.getMessage()));
-    }
-  }
-
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
-                                          boolean publishEvents) {
-    return createInstances(instances, upsert, optimisticLocking, publishEvents, conn -> Future.succeededFuture());
-  }
-
-  public Future<Response> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
-                                          boolean publishEvents, Function<Conn, Future<?>> additionalOperations) {
+  public Future<Void> createInstances(List<Instance> instances, boolean upsert, boolean optimisticLocking,
+                                      boolean publishEvents, Function<Conn, Future<?>> additionalOperations,
+                                      Map<String, String> headers) {
     final String statusUpdatedDate = generateStatusUpdatedDate();
     instances.forEach(instance -> {
       instance.setStatusUpdatedDate(statusUpdatedDate);
@@ -222,38 +142,140 @@ public class InstanceService {
     });
     setMissingInstanceIds(instances);
 
-    return hridManager.populateHridForInstances(instances)
+    return hridManager.populateHridForInstances(instances, tenantId(headers))
       .compose(NotesValidators::refuseInstanceLongNotes)
       .compose(notUsed -> buildBatchOperationContext(upsert, instances,
-        instanceRepository, Instance::getId, publishEvents))
+        instanceRepository, Instance::getId, publishEvents, headers))
       .compose(batchOperation ->
-        postgresClient.withTrans(conn ->
-            postSyncInstance(conn, instances, upsert, optimisticLocking)
-              .compose(response -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated())
-                .compose(v -> additionalOperations.apply(conn)).map(response)))
-          .onSuccess(domainEventPublisher.publishCreatedOrUpdated(batchOperation)))
-      .map(ResponseHandlerUtil::handleHridError);
+        instanceRepository.inTransaction(tenantId(headers), conn ->
+            postSyncInstance(conn, instances, upsert, optimisticLocking, headers)
+              .compose(v -> batchLinkSubjects(conn, batchOperation.recordsToBeCreated(), headers))
+              .compose(v -> additionalOperations.apply(conn)))
+          .onSuccess(v -> instanceDomainEventPublisher.publishRecordsCreatedOrUpdated(batchOperation, headers)))
+      .mapEmpty();
   }
 
-  public Future<Response> updateInstance(String id, Instance newInstance) {
+  public Future<Void> updateInstance(String id, Instance newInstance, Map<String, String> headers) {
     sanitizer.sanitize(newInstance);
     return refuseLongNotes(newInstance)
-      .compose(notUsed -> instanceRepository.getById(id))
+      .compose(notUsed -> instanceRepository.getById(id, tenantId(headers)))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance -> validateHridChange(oldInstance, newInstance))
-      .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance));
+      .compose(oldInstance -> performInstanceUpdate(id, oldInstance, newInstance, headers));
   }
 
-  public Future<Response> patchInstance(String id, InstancePatchRequest patchRequest) {
-    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
+  public Future<Void> patchInstance(String id, InstancePatchRequest patchRequest,
+                                    Map<String, String> headers) {
+    String userId = headers.get(XOkapiHeaders.USER_ID);
     var patchJson = JsonObject.mapFrom(patchRequest);
-    return instanceRepository.getById(id)
+    return instanceRepository.getById(id, tenantId(headers))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(oldInstance ->
-         applyPatch(oldInstance, patchJson, userId)
+        applyPatch(oldInstance, patchJson, userId)
           .compose(newInstance -> validateHridChange(oldInstance, newInstance)
             .compose(ignored -> refuseLongNotes(newInstance))
-            .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance))));
+            .compose(ignored -> performInstanceUpdate(id, oldInstance, newInstance, headers))));
+  }
+
+  /**
+   * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",
+   * this is much faster than sending one message for each deleted instance.
+   */
+  public Future<Void> deleteAllInstances(Map<String, String> headers) {
+    return instanceMarcRepository.deleteAll(tenantId(headers))
+      .compose(notUsed -> instanceRelationshipRepository.deleteAll(tenantId(headers)))
+      .compose(notUsed -> instanceRepository.deleteAll(tenantId(headers)))
+      .onSuccess(notUsed -> instanceDomainEventPublisher.publishAllRemoved(headers))
+      .mapEmpty();
+  }
+
+  public Future<PostgresClientStreamResult<Instance>> streamInstances(String query, int offset, int limit,
+                                                                      Map<String, String> headers) {
+    return instanceRepository.stream(query, offset, limit, tenantId(headers));
+  }
+
+  public Future<Void> deleteInstance(String id, Map<String, String> headers) {
+    return instanceRepository.delete("id==" + StringUtil.cqlEncode(id), tenantId(headers))
+      .compose(deleted -> {
+        if (deleted.isEmpty()) {
+          return Future.failedFuture(new NotFoundException(NOT_FOUND));
+        }
+        deleted.forEach(deletedRecord ->
+          instanceDomainEventPublisher
+            .publishRemoved(deletedRecord.instanceId(), deletedRecord.json(), headers)
+        );
+        return Future.succeededFuture();
+      });
+  }
+
+  /**
+   * Delete instances, this also deletes connected marc records (ON DELETE CASCADE).
+   */
+  public Future<Void> deleteInstances(String cql, Map<String, String> headers) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.failedFuture(new BadRequestException("Expected CQL but query parameter is empty"));
+    }
+    if (new CqlQuery(cql).isMatchingAll()) {
+      return deleteAllInstances(headers);  // faster: sends only one domain event (Kafka) message
+    }
+    return instanceRepository.delete(cql, tenantId(headers))
+      .onSuccess(deleted -> vertxContext.runOnContext(runLater ->
+        deleted.forEach(deletedRecord ->
+          instanceDomainEventPublisher
+            .publishRemoved(deletedRecord.instanceId(), deletedRecord.json(), headers)
+        )
+      ))
+      .mapEmpty();
+  }
+
+  public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId,
+                                                    Map<String, String> headers) {
+    return isCentralTenant(headers)
+      .compose(isCentralTenant -> {
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        return instanceRepository
+          .getReindexInstances(fromId, toId, notConsortiumCentralTenant, tenantId(headers));
+      })
+      .onSuccess(instances -> instanceDomainEventPublisher
+        .publishReindexInstances(rangeId, instances, headers))
+      .map(notUsed -> null);
+  }
+
+  public Future<Void> exportReindexInstanceRecords(ReindexRecordsRequest request, Map<String, String> headers) {
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+
+    return isCentralTenant(headers)
+      .compose(isCentralTenant -> {
+        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
+        return reindexExportOrchestrator.export(request, headers,
+          instanceRepository,
+          conn -> instanceRepository
+            .streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant, tenantId(headers)));
+      });
+  }
+
+  private Future<Instance> performInstanceCreation(Instance instance, Map<String, String> headers) {
+    return instanceRepository.inTransaction(tenantId(headers), conn ->
+        instanceRepository.createInstance(conn, instance)
+          .compose(created -> batchLinkSubjects(conn, created.getId(), instance.getSubjects(), headers)
+            .map(v -> created)))
+      .recover(throwable -> Future.failedFuture(instanceCreationFailure(throwable)))
+      // Return without waiting for a domain event publish to complete. Units of work performed by this
+      // service is the same but the ordering of the units of work provides a benefit to the
+      // api client invoking this endpoint. The response is returned
+      // a little earlier so the api client can continue its processing
+      // while the domain event publish is satisfied.
+      .onSuccess(created -> instanceDomainEventPublisher.publishRecordCreated(created, headers));
+  }
+
+  private Throwable instanceCreationFailure(Throwable throwable) {
+    if (throwable instanceof PgException pgException) {
+      return new BadRequestException(pgException.getDetail() != null
+        ? pgException.getDetail()
+        : pgException.getMessage());
+    }
+    return new BadRequestException(throwable.getMessage());
   }
 
   private Future<Instance> applyPatch(Instance instance, JsonObject patchJson, String userId) {
@@ -278,91 +300,72 @@ public class InstanceService {
     return Future.succeededFuture(oldInstance);
   }
 
-  private Future<Response> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance) {
-    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+  private Future<Void> performInstanceUpdate(String id, Instance oldInstance, Instance newInstance,
+                                             Map<String, String> headers) {
+    return settingsService.isOptimizeUpdatesEnabled(headers)
       .compose(isOptimizeUpdatesEnabled -> {
         try {
-          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldInstance, newInstance)) {
-            return Future.succeededFuture(InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.respond204());
+          if (Boolean.TRUE.equals(isOptimizeUpdatesEnabled) && equalsIgnoringMetadata(oldInstance, newInstance)) {
+            return Future.<Void>succeededFuture();
           }
         } catch (Exception e) {
           return failedFuture(e);
         }
-        final Promise<Response> putResult = promise();
-        return postgresClient.withTrans(conn -> {
-          Promise<Response> putPromise = putInstance(newInstance, id);
-          return putPromise.future()
-            .compose(response -> linkOrUnlinkSubjects(conn, newInstance, oldInstance)
-              .map(v -> response));
-        }).onComplete(transactionResult -> {
-          if (transactionResult.succeeded()) {
-            putResult.complete(transactionResult.result());
-          } else {
-            putResult.fail(transactionResult.cause());
-          }
-        }).onSuccess(domainEventPublisher.publishUpdated(oldInstance));
+        return instanceRepository.inTransaction(tenantId(headers), conn ->
+            instanceRepository.replace(id, newInstance, tenantId(headers))
+              .recover(InstanceService::databaseViolationAsBadRequest)
+              .compose(v -> linkOrUnlinkSubjects(conn, newInstance, oldInstance, headers)))
+          .onSuccess(v -> instanceDomainEventPublisher.publishRecordUpdated(oldInstance, headers));
       });
   }
 
-  private Future<Response> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
-                                            boolean optimisticLocking) {
+  /**
+   * The instance PUT does not declare 422, so constraint violations of the database are reported as 400.
+   */
+  private static Future<Void> databaseViolationAsBadRequest(Throwable failure) {
+    if (failure instanceof ValidationException validationException) {
+      var message = validationException.getErrors().getErrors().getFirst().getMessage();
+      return failedFuture(new BadRequestException(message));
+    }
+    return failedFuture(failure);
+  }
+
+  private Future<Void> postSyncInstance(Conn conn, List<Instance> instances, boolean upsert,
+                                        boolean optimisticLocking, Map<String, String> headers) {
     try {
-      var sizeValidation = validateInstancesSize(instances);
-      if (sizeValidation != null) {
-        return sizeValidation;
+      var sizeFailure = validateInstancesSize(instances);
+      if (sizeFailure != null) {
+        return Future.failedFuture(sizeFailure);
       }
 
-      var lockingValidation = handleInstanceOptimisticLocking(instances, optimisticLocking);
-      if (lockingValidation != null) {
-        return lockingValidation;
-      }
+      instanceRepository.applyOptimisticLocking(instances, optimisticLocking);
 
-      MetadataUtil.populateMetadata(instances, okapiHeaders);
+      MetadataUtil.populateMetadata(instances, headers);
       return executeBatchOperation(conn, instances, upsert);
+    } catch (RequestEntityTooLargeException e) {
+      logger.warn("postSyncInstance:: {}", e.getMessage());
+      return Future.failedFuture(e);
     } catch (Exception e) {
       logger.warn("postSyncInstance:: Error during batch instance", e);
       return failedFuture(e.getMessage());
     }
   }
 
-  private Future<Response> executeBatchOperation(Conn conn, List<Instance> instances, boolean upsert) {
+  private Future<Void> executeBatchOperation(Conn conn, List<Instance> instances, boolean upsert) {
     var result = upsert
-      ? conn.upsertBatch(INSTANCE_TABLE, instances)
-      : conn.saveBatch(INSTANCE_TABLE, instances);
+                 ? conn.upsertBatch(INSTANCE_TABLE, instances)
+                 : conn.saveBatch(INSTANCE_TABLE, instances);
 
     return result
-      .map((Response) respond201())
-      .recover(throwable ->
-        respondFailure(INSTANCE_TABLE, throwable, PostInstanceStorageBatchSynchronousResponse.class)
-          .compose(response -> {
-            if (response.getEntity() instanceof Errors errors) {
-              return failedFuture(new ValidationException(errors));
-            }
-            return failedFuture(throwable);
-          }));
+      .<Void>mapEmpty()
+      .recover(throwable -> failedFuture(PgViolationMapper.map(INSTANCE_TABLE, "", throwable)));
   }
 
-  private Future<Response> validateInstancesSize(List<Instance> instances) {
+  private Throwable validateInstancesSize(List<Instance> instances) {
     if (instances != null && instances.size() > MAX_ENTITIES) {
       String message = EXPECTED_A_MAXIMUM_RECORDS_TO_PREVENT_OUT_OF_MEMORY.formatted(MAX_ENTITIES, instances.size());
       logger.warn("validateInstancesSize:: {}", message);
-      return Future.succeededFuture(respond413WithTextPlain(message));
-    }
-    return null;
-  }
-
-  private Future<Response> handleInstanceOptimisticLocking(List<Instance> instances, boolean optimisticLocking)
-    throws ReflectiveOperationException {
-    if (optimisticLocking) {
-      logger.debug("handleInstanceOptimisticLocking:: Unsetting version to -1 for instances");
-      OptimisticLockingUtil.unsetVersionIfMinusOne(instances);
-    } else {
-      if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
-        logger.warn("handleInstanceOptimisticLocking:: {}", DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING);
-        return Future.succeededFuture(respond413WithTextPlain(DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING));
-      }
-      logger.debug("handleInstanceOptimisticLocking:: Setting version to -1 for instances");
-      OptimisticLockingUtil.setVersionToMinusOne(instances);
+      return new RequestEntityTooLargeException(message);
     }
     return null;
   }
@@ -373,30 +376,18 @@ public class InstanceService {
     }
 
     instances.forEach(instance -> instance.setId(instance.getId() == null
-      ? UUID.randomUUID().toString()
-      : instance.getId()));
+                                                 ? UUID.randomUUID().toString()
+                                                 : instance.getId()));
   }
 
-  private Promise<Response> putInstance(Instance newInstance, String instanceId) {
-    Promise<Response> promise = Promise.promise();
-    put(INSTANCE_TABLE, newInstance, instanceId, okapiHeaders, vertxContext,
-      InstanceStorage.PutInstanceStorageInstancesByInstanceIdResponse.class, reply -> {
-        if (reply.succeeded()) {
-          promise.complete(reply.result());
-        } else {
-          promise.fail(reply.cause());
-        }
-      });
-    return promise;
-  }
-
-  private Future<Void> linkOrUnlinkSubjects(Conn conn, Instance newInstance, Instance oldInstance) {
+  private Future<Void> linkOrUnlinkSubjects(Conn conn, Instance newInstance, Instance oldInstance,
+                                            Map<String, String> headers) {
     var instanceId = newInstance.getId();
 
     if (newInstance.getSubjects() == null || newInstance.getSubjects().isEmpty()) {
       return Future.all(
-        instanceRepository.unlinkInstanceFromSubjectSource(conn, instanceId),
-        instanceRepository.unlinkInstanceFromSubjectType(conn, instanceId)
+        instanceRepository.unlinkInstanceFromSubjectSource(conn, instanceId, tenantId(headers)),
+        instanceRepository.unlinkInstanceFromSubjectType(conn, instanceId, tenantId(headers))
       ).mapEmpty();
     }
     // Identify the differences between old and new subjects
@@ -411,11 +402,12 @@ public class InstanceService {
       .filter(subject -> !oldSubjects.contains(subject))
       .collect(Collectors.toSet());
 
-    return batchUnlinkSubjects(conn, instanceId, subjectsToRemove)
-      .compose(v -> batchLinkSubjects(conn, instanceId, subjectsToAdd));
+    return batchUnlinkSubjects(conn, instanceId, subjectsToRemove, headers)
+      .compose(v -> batchLinkSubjects(conn, instanceId, subjectsToAdd, headers));
   }
 
-  private Future<Void> batchUnlinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToRemove) {
+  private Future<Void> batchUnlinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToRemove,
+                                           Map<String, String> headers) {
     if (subjectsToRemove.isEmpty()) {
       return Future.succeededFuture();
     }
@@ -432,13 +424,14 @@ public class InstanceService {
 
     return Future.all(
       sourceIds.isEmpty() ? Future.succeededFuture() :
-        instanceRepository.batchUnlinkSubjectSource(conn, instanceId, sourceIds),
+      instanceRepository.batchUnlinkSubjectSource(conn, instanceId, sourceIds, tenantId(headers)),
       typeIds.isEmpty() ? Future.succeededFuture() :
-        instanceRepository.batchUnlinkSubjectType(conn, instanceId, typeIds)
+      instanceRepository.batchUnlinkSubjectType(conn, instanceId, typeIds, tenantId(headers))
     ).mapEmpty();
   }
 
-  private Future<Void> batchLinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToAdd) {
+  private Future<Void> batchLinkSubjects(Conn conn, String instanceId, Set<Subject> subjectsToAdd,
+                                         Map<String, String> headers) {
     var sourcePairs = subjectsToAdd.stream()
       .filter(subject -> subject.getSourceId() != null)
       .map(subject -> Pair.of(instanceId, subject.getSourceId()))
@@ -449,10 +442,11 @@ public class InstanceService {
       .map(subject -> Pair.of(instanceId, subject.getTypeId()))
       .toList();
 
-    return batchLinkSubjects(conn, sourcePairs, typePairs);
+    return batchLinkSubjects(conn, sourcePairs, typePairs, headers);
   }
 
-  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstances) {
+  private Future<Void> batchLinkSubjects(Conn conn, Collection<Instance> batchInstances,
+                                         Map<String, String> headers) {
     var sourcePairs = batchInstances.stream()
       .flatMap(instance -> instance.getSubjects().stream()
         .filter(subject -> subject.getSourceId() != null)
@@ -465,11 +459,11 @@ public class InstanceService {
         .map(subject -> Pair.of(instance.getId(), subject.getTypeId())))
       .toList();
 
-    return batchLinkSubjects(conn, sourcePairs, typePairs);
+    return batchLinkSubjects(conn, sourcePairs, typePairs, headers);
   }
 
   private Future<Void> batchLinkSubjects(Conn conn, List<Pair<String, String>> sourcePairs,
-                                         List<Pair<String, String>> typePairs) {
+                                         List<Pair<String, String>> typePairs, Map<String, String> headers) {
     if (sourcePairs.isEmpty() && typePairs.isEmpty()) {
       return Future.succeededFuture();
     }
@@ -477,107 +471,20 @@ public class InstanceService {
     // Combine both operations into a single future
     return Future.all(
       sourcePairs.isEmpty() ? Future.succeededFuture() :
-        instanceRepository.batchLinkSubjectSource(conn, sourcePairs),
+      instanceRepository.batchLinkSubjectSource(conn, sourcePairs, tenantId(headers)),
       typePairs.isEmpty() ? Future.succeededFuture() :
-        instanceRepository.batchLinkSubjectType(conn, typePairs)
+      instanceRepository.batchLinkSubjectType(conn, typePairs, tenantId(headers))
     ).mapEmpty();
   }
 
-  /**
-   * Deletes all instances but sends only a single domain event (Kafka) message "all records removed",
-   * this is much faster than sending one message for each deleted instance.
-   */
-  public Future<Response> deleteAllInstances() {
-    return marcRepository.deleteAll()
-      .compose(notUsed -> relationshipRepository.deleteAll())
-      .compose(notUsed -> instanceRepository.deleteAll())
-      .onSuccess(notUsed -> domainEventPublisher.publishAllRemoved())
-      .map(noContent().build());
-  }
-
-  /**
-   * Delete instance, this also deletes connected marc records (ON DELETE CASCADE).
-   */
-  public Future<Response> deleteInstance(String id) {
-    return instanceRepository.delete("id==" + StringUtil.cqlEncode(id))
-      .map(rowSet -> {
-        if (!rowSet.iterator().hasNext()) {
-          return DeleteInstanceStorageInstancesByInstanceIdResponse.respond404WithTextPlain("Not found");
-        }
-        // do not add curly braces for readability, this is to comply with
-        // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
-        );
-        return noContent().build();
-      });
-  }
-
-  /**
-   * Delete instances, this also deletes connected marc records (ON DELETE CASCADE).
-   */
-  public Future<Response> deleteInstances(String cql) {
-    if (StringUtils.isBlank(cql)) {
-      return Future.succeededFuture(
-        DeleteInstanceStorageInstancesResponse.respond400WithTextPlain(
-          "Expected CQL but query parameter is empty"));
-    }
-    if (new CqlQuery(cql).isMatchingAll()) {
-      return deleteAllInstances();  // faster: sends only one domain event (Kafka) message
-    }
-    // do not add curly braces for readability, this is to comply with
-    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
-    return instanceRepository.delete(cql)
-      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row ->
-          domainEventPublisher.publishRemoved(row.getString(0), row.getString(1))
-        )
-      ))
-      .map(noContent().build());
-  }
-
-  public Future<Void> publishReindexInstanceRecords(String rangeId, String fromId, String toId) {
-    return isCentralTenant()
-      .compose(isCentralTenant -> {
-        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
-        return instanceRepository.getReindexInstances(fromId, toId, notConsortiumCentralTenant);
-      })
-      .onSuccess(instances -> domainEventPublisher.publishReindexInstances(rangeId, instances))
-      .map(notUsed -> null);
-  }
-
-  public Future<Void> exportReindexInstanceRecords(ReindexRecordsRequest request) {
-    var orchestrator = new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient);
-    var rangeFrom = request.getRecordIdsRange().getFrom();
-    var rangeTo = request.getRecordIdsRange().getTo();
-
-    return isCentralTenant()
-      .compose(isCentralTenant -> {
-        var notConsortiumCentralTenant = Boolean.FALSE.equals(isCentralTenant);
-        return orchestrator.export(request,
-          conn -> instanceRepository.streamReindexInstances(conn, rangeFrom, rangeTo, notConsortiumCentralTenant));
-      });
-  }
-
-  private Future<Boolean> isCentralTenant() {
-    return consortiumService.getConsortiumData(okapiHeaders)
+  private Future<Boolean> isCentralTenant(Map<String, String> headers) {
+    return consortiumService.getConsortiumData(headers)
       .map(consortiumDataOptional -> consortiumDataOptional
-        .map(consortiumData -> isCentralTenantId(okapiHeaders.get(TENANT), consortiumData))
+        .map(consortiumData -> isCentralTenantId(headers.get(TENANT), consortiumData))
         .orElse(false));
   }
 
   private boolean isCentralTenantId(String tenantId, ConsortiumData consortiumData) {
     return tenantId.equals(consortiumData.centralTenantId());
-  }
-
-  private Future<Response> respondFailure(String table, Throwable throwable,
-                                          Class<? extends ResponseDelegate> responseClass) {
-    try {
-      Method respond500 = responseClass.getMethod(RESPOND_500_WITH_TEXT_PLAIN, Object.class);
-      return PgUtil.response(table, "", throwable, responseClass, respond500, respond500);
-    } catch (Exception e) {
-      logger.debug("respondFailure:: Error during respond", e);
-      return failedFuture(e.getMessage());
-    }
   }
 }

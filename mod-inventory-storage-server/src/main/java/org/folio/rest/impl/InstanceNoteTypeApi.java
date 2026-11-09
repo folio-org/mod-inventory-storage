@@ -17,39 +17,38 @@ public class InstanceNoteTypeApi extends BaseApi<InstanceNoteType, InstanceNoteT
   @Validate
   @Override
   public void getInstanceNoteTypes(String query, String totalRecords, int offset, int limit,
-                                   Map<String, String> okapiHeaders,
+                                   Map<String, String> headers,
                                    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntities(query, totalRecords, offset, limit, okapiHeaders, asyncResultHandler, vertxContext,
-      GetInstanceNoteTypesResponse.class);
+    getEntities(query, totalRecords, offset, limit, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void postInstanceNoteTypes(InstanceNoteType entity, Map<String, String> okapiHeaders,
+  public void postInstanceNoteTypes(InstanceNoteType entity, Map<String, String> headers,
                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    postEntity(entity, okapiHeaders, asyncResultHandler, vertxContext, PostInstanceNoteTypesResponse.class);
+    postEntity(entity, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void getInstanceNoteTypesById(String id, Map<String, String> okapiHeaders,
+  public void getInstanceNoteTypesById(String id, Map<String, String> headers,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    getEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, GetInstanceNoteTypesByIdResponse.class);
+    getEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
-  public void deleteInstanceNoteTypesById(String id, Map<String, String> okapiHeaders,
+  public void deleteInstanceNoteTypesById(String id, Map<String, String> headers,
                                           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    deleteEntityById(id, okapiHeaders, asyncResultHandler, vertxContext, DeleteInstanceNoteTypesByIdResponse.class);
+    deleteEntityById(id, headers, asyncResultHandler);
   }
 
   @Validate
   @Override
   public void putInstanceNoteTypesById(String id, InstanceNoteType entity,
-                                       Map<String, String> okapiHeaders,
+                                       Map<String, String> headers,
                                        Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    putEntityById(id, entity, okapiHeaders, asyncResultHandler, vertxContext, PutInstanceNoteTypesByIdResponse.class);
+    putEntityById(id, entity, headers, asyncResultHandler);
   }
 
   @Override

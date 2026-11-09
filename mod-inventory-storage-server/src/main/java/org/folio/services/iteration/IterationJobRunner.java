@@ -23,12 +23,11 @@ import org.folio.persist.IterationJobRepository;
 import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.IterationJob;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.PostgresClientFactory;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.services.domainevent.CommonDomainEventPublisher;
-import org.folio.services.domainevent.DomainEvent;
-import org.folio.services.domainevent.DomainEventType;
+import org.folio.services.domainevent.DomainEventPublisherFactory;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.domainevent.model.DomainEventType;
 
 public class IterationJobRunner {
 
@@ -38,28 +37,28 @@ public class IterationJobRunner {
   private static final int POOL_SIZE = 2;
   private static final int UPDATE_PUBLISHED_EVERY = 1000;
 
-  private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final PostgresClient postgresClient;
+  private final Map<String, String> headers;
   private final IterationJobRepository jobRepository;
   private final InstanceRepository instanceRepository;
   private final WorkerExecutor workerExecutor;
+  private final DomainEventPublisherFactory publisherFactory;
   private CommonDomainEventPublisher<Instance> eventPublisher;
 
-  public IterationJobRunner(Context vertxContext, Map<String, String> okapiHeaders) {
-    this(PostgresClientFactory.getInstance(vertxContext, okapiHeaders),
-      new IterationJobRepository(vertxContext, okapiHeaders),
-      new InstanceRepository(vertxContext, okapiHeaders),
+  public IterationJobRunner(Context vertxContext, Map<String, String> headers,
+                            DomainEventPublisherFactory publisherFactory, IterationJobRepository jobRepository,
+                            InstanceRepository instanceRepository) {
+    this(jobRepository,
+      instanceRepository,
       vertxContext,
-      okapiHeaders);
+      headers,
+      publisherFactory);
   }
 
-  public IterationJobRunner(PostgresClient postgresClient, IterationJobRepository repository,
+  public IterationJobRunner(IterationJobRepository repository,
                             InstanceRepository instanceRepository, Context vertxContext,
-                            Map<String, String> okapiHeaders) {
-    this.vertxContext = vertxContext;
-    this.okapiHeaders = okapiHeaders;
-    this.postgresClient = postgresClient;
+                            Map<String, String> headers, DomainEventPublisherFactory publisherFactory) {
+    this.publisherFactory = publisherFactory;
+    this.headers = headers;
     this.jobRepository = repository;
     this.instanceRepository = instanceRepository;
     // createSharedWorkerExecutor already shares the underlying pool by name within one Vertx
@@ -73,10 +72,9 @@ public class IterationJobRunner {
 
   public void startIteration(IterationJob job) {
     String fullTopicName = KafkaTopicNameHelper.formatTopicName(environment(),
-      tenantId(okapiHeaders),
+      tenantId(headers),
       job.getJobParams().getTopicName());
-    eventPublisher = new CommonDomainEventPublisher<>(vertxContext, okapiHeaders,
-      fullTopicName);
+    eventPublisher = publisherFactory.publisher(m -> fullTopicName);
 
     workerExecutor.executeBlocking(() -> streamInstanceIds(new IterationContext(job)))
       .flatMap(future -> future)
@@ -84,7 +82,7 @@ public class IterationJobRunner {
   }
 
   private Future<Long> streamInstanceIds(IterationContext context) {
-    return postgresClient.withTrans(conn -> selectInstanceIds(conn)
+    return jobRepository.inTransaction(tenantId(headers), conn -> selectInstanceIds(conn)
       .map(context::withStream)
       .compose(this::processStream)
       .onComplete(recordsPublished -> {
@@ -105,19 +103,19 @@ public class IterationJobRunner {
   }
 
   private Future<RowStream<Row>> selectInstanceIds(Conn connection) {
-    return instanceRepository.getAllIds(connection);
+    return instanceRepository.getAllIds(connection, tenantId(headers));
   }
 
   private void logIterationCompleted(Long recordsPublished, IterationContext context) {
     jobRepository.fetchAndUpdate(context.getJobId(),
       job -> job.withMessagesPublished(recordsPublished.intValue())
-        .withJobStatus(COMPLETED));
+        .withJobStatus(COMPLETED), tenantId(headers));
   }
 
   private Future<Long> processStream(IterationContext context) {
     return eventPublisher.publishStream(context.stream,
       row -> rowToProducerRecord(row, context),
-      recordsPublished -> logJobDetails(recordsPublished, context));
+      recordsPublished -> logJobDetails(recordsPublished, context), headers);
   }
 
   private Future<IterationJob> logJobDetails(Long records, IterationContext context) {
@@ -125,8 +123,8 @@ public class IterationJobRunner {
       return succeededFuture(context.job);
     }
 
-    return jobRepository
-      .fetchAndUpdateIterationJob(context.getJobId(), job -> job.withMessagesPublished(records.intValue()))
+    return jobRepository.fetchAndUpdateIterationJob(context.getJobId(),
+        job -> job.withMessagesPublished(records.intValue()), tenantId(headers))
       .map(job -> {
         if (job.getJobStatus() == CANCELLATION_PENDING) {
           throw new IllegalStateException("The job has been cancelled");
@@ -147,18 +145,18 @@ public class IterationJobRunner {
                           : FAILED;
 
         return resp.withJobStatus(finalStatus);
-      });
+      }, tenantId(headers));
   }
 
   private KafkaProducerRecordBuilder<String, Object> rowToProducerRecord(Row row, IterationContext context) {
-    return new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
+    return new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(headers))
       .key(row.getUUID("id").toString())
       .value(iterationEvent(context.getEventType()))
       .header(ITERATION_JOB_ID_HEADER, context.getJobId());
   }
 
   private DomainEvent<Object> iterationEvent(String eventType) {
-    return new DomainEvent<>(null, null, DomainEventType.valueOf(eventType), tenantId(okapiHeaders));
+    return new DomainEvent<>(null, null, DomainEventType.valueOf(eventType), tenantId(headers));
   }
 
   private static final class IterationContext {

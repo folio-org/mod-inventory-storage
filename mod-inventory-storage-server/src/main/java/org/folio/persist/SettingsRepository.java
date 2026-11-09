@@ -1,7 +1,5 @@
 package org.folio.persist;
 
-import static org.folio.rest.persist.PgUtil.postgresClient;
-
 import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
@@ -9,21 +7,22 @@ import io.vertx.sqlclient.Tuple;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
-import java.util.Map;
 import java.util.UUID;
 import org.folio.rest.jaxrs.model.Setting;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public class SettingsRepository extends AbstractRepository<Setting> {
 
   private static final String SETTINGS_TABLE = "settings";
 
-  public SettingsRepository(Context context, Map<String, String> okapiHeaders) {
-    super(postgresClient(context, okapiHeaders), SETTINGS_TABLE, Setting.class);
+  public SettingsRepository(Context context) {
+    super(context, SETTINGS_TABLE, Setting.class);
   }
 
-  public Future<Setting> findByKey(String key) {
-    var sql = "SELECT * FROM %s WHERE key = $1".formatted(getFullTableName(SETTINGS_TABLE));
-    return postgresClient.execute(sql, Tuple.of(key))
+  public Future<Setting> findByKey(String key, String tenantId) {
+    var sql = "SELECT * FROM %s WHERE key = $1".formatted(getFullTableName(tenantId));
+    return postgresClient(tenantId).execute(sql, Tuple.of(key))
       .map(rowSet -> {
         var iterator = rowSet.iterator();
         if (!iterator.hasNext()) {
@@ -33,10 +32,10 @@ public class SettingsRepository extends AbstractRepository<Setting> {
       });
   }
 
-  public Future<Setting> update(Setting setting) {
+  public Future<Setting> update(Setting setting, String tenantId) {
     var sql = "UPDATE %s SET value = $1, updated_date = now(), updated_by_user_id = $2 WHERE key = $3 RETURNING *"
-      .formatted(getFullTableName(SETTINGS_TABLE));
-    return postgresClient.execute(sql, Tuple.of(
+      .formatted(getFullTableName(tenantId));
+    return postgresClient(tenantId).execute(sql, Tuple.of(
         setting.getValue(),
         setting.getUpdatedByUserId(),
         setting.getKey()))

@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
-import javax.ws.rs.core.Response;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.CirculationNote;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -93,16 +93,16 @@ class ItemServiceTest {
   }
 
   @Test
-  @DisplayName("should respond with a conflict when the failure is a version conflict")
-  void shouldRespondWithConflict_whenFailureIsVersionConflict() {
+  @DisplayName("should keep the failure as it is when it is a version conflict")
+  void shouldKeepFailure_whenFailureIsVersionConflict() {
     try (var pgExceptionUtil = mockStatic(PgExceptionUtil.class)) {
       var cause = new RuntimeException("version conflict");
       pgExceptionUtil.when(() -> PgExceptionUtil.badRequestMessage(cause)).thenReturn("Optimistic locking failed");
       pgExceptionUtil.when(() -> PgExceptionUtil.isVersionConflict(cause)).thenReturn(true);
 
-      var response = putFailure(cause);
+      var failure = putFailure(cause);
 
-      assertThat(response.getStatus()).isEqualTo(409);
+      assertThat(failure).isSameAs(cause);
     }
   }
 
@@ -115,10 +115,10 @@ class ItemServiceTest {
         "insert or update: Key (materialtypeid)=(bad-id) is not present in table \"material_type\".");
       pgExceptionUtil.when(() -> PgExceptionUtil.isVersionConflict(cause)).thenReturn(false);
 
-      var response = putFailure(cause);
+      var failure = putFailure(cause);
 
-      assertThat(response.getStatus()).isEqualTo(400);
-      assertThat((String) response.getEntity())
+      assertThat(failure).isInstanceOf(BadRequestException.class);
+      assertThat(failure.getMessage())
         .isEqualTo("Cannot set item materialtypeid = bad-id because it does not exist in material_type.id.");
     }
   }
@@ -132,10 +132,11 @@ class ItemServiceTest {
         "insert: Key (hrid)=(it0001) already exists.");
       pgExceptionUtil.when(() -> PgExceptionUtil.isVersionConflict(cause)).thenReturn(false);
 
-      var response = putFailure(cause);
+      var failure = putFailure(cause);
 
-      assertThat(response.getStatus()).isEqualTo(400);
-      assertThat((String) response.getEntity()).isEqualTo("hrid value already exists in table item: it0001");
+      assertThat(failure).isInstanceOf(BadRequestException.class);
+      assertThat(failure.getMessage())
+        .isEqualTo("hrid value already exists in table item: it0001");
     }
   }
 
@@ -147,10 +148,11 @@ class ItemServiceTest {
       pgExceptionUtil.when(() -> PgExceptionUtil.badRequestMessage(cause)).thenReturn(null);
       pgExceptionUtil.when(() -> PgExceptionUtil.isVersionConflict(cause)).thenReturn(false);
 
-      var response = putFailure(cause);
+      var failure = putFailure(cause);
 
-      assertThat(response.getStatus()).isEqualTo(400);
-      assertThat((String) response.getEntity()).isEqualTo("plain failure");
+      assertThat(failure).isInstanceOf(BadRequestException.class);
+      assertThat(failure.getMessage())
+        .isEqualTo("plain failure");
     }
   }
 
@@ -228,7 +230,7 @@ class ItemServiceTest {
       new Class<?>[] {HoldingsRecord.class, Item.class}, holdings, item);
   }
 
-  private static Response putFailure(Throwable throwable) {
+  private static Throwable putFailure(Throwable throwable) {
     return invokeStaticPrivate("putFailure", new Class<?>[] {Throwable.class}, throwable);
   }
 

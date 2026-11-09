@@ -15,25 +15,26 @@ import org.folio.InventoryKafkaTopic;
 import org.folio.kafka.AsyncRecordHandler;
 import org.folio.kafka.KafkaHeaderUtils;
 import org.folio.services.caches.ConsortiumDataCache;
-import org.folio.services.domainevent.DomainEvent;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.instance.InstanceDateTypeService;
 
 public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<String, String> {
 
   private static final Logger LOG = LogManager.getLogger(SynchronizationAsyncRecordHandler.class);
 
-  private static final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor>> PROCESSORS = Map.of(
-    InventoryKafkaTopic.INSTANCE_DATE_TYPE, InstanceDateTypeSynchronizationEventProcessor::new
-  );
-
   private final ConsortiumDataCache consortiaDataCache;
   private final HttpClient httpClient;
   private final Vertx vertx;
+  private final Map<InventoryKafkaTopic, Supplier<SynchronizationEventProcessor>> processors;
 
   public SynchronizationAsyncRecordHandler(ConsortiumDataCache consortiaDataCache,
-                                           HttpClient httpClient, Vertx vertx) {
+                                           HttpClient httpClient, Vertx vertx,
+                                           InstanceDateTypeService instanceDateTypeService) {
     this.consortiaDataCache = consortiaDataCache;
     this.httpClient = httpClient;
     this.vertx = vertx;
+    this.processors = Map.of(InventoryKafkaTopic.INSTANCE_DATE_TYPE,
+      () -> new InstanceDateTypeSynchronizationEventProcessor(instanceDateTypeService));
   }
 
   @Override
@@ -42,7 +43,7 @@ public class SynchronizationAsyncRecordHandler implements AsyncRecordHandler<Str
     LOG.info("handle:: Processing event={}", topic);
     var kafkaTopic = getKafkaTopic(kafkaRecord);
 
-    var processor = Optional.ofNullable(PROCESSORS.get(kafkaTopic))
+    var processor = Optional.ofNullable(processors.get(kafkaTopic))
       .map(Supplier::get)
       .orElseThrow(() -> new IllegalStateException("Synchronization is unsupported. Topic:" + kafkaTopic.topicName()));
 

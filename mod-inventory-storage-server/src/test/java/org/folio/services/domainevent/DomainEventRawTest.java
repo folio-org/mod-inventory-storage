@@ -2,6 +2,7 @@ package org.folio.services.domainevent;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.folio.services.domainevent.model.DomainEventRaw;
 import org.junit.jupiter.api.Test;
 
 class DomainEventRawTest {

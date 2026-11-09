@@ -3,6 +3,7 @@ package org.folio.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.folio.rest.jaxrs.model.BulkUpsertRequest;
+import org.folio.services.bulkprocessing.BulkProcessingContext;
 import org.junit.jupiter.api.Test;
 
 class BulkProcessingContextTest {

@@ -3,17 +3,14 @@ package org.folio.services.holding;
 import static io.vertx.core.Future.succeededFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.jaxrs.model.Item;
@@ -36,12 +33,12 @@ class HoldingsEventPublisherTest {
     var itemsBefore = List.of(new Item().withId("i-1"));
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      mockResponseHandler(holdingPublisher);
+      mockBatchPublishing(holdingPublisher);
 
       publisher.publishHoldingsAndItemEvents(
-        List.of(newHolding), Map.of("h-1", oldHolding), Map.of("h-1", itemsBefore));
+        List.of(newHolding), Map.of("h-1", oldHolding), Map.of("h-1", itemsBefore), OKAPI_HEADERS);
 
-      verify(itemPublisher).publishUpdated(oldHolding, newHolding, itemsBefore);
+      verify(itemPublisher).publishUpdated(oldHolding, newHolding, itemsBefore, OKAPI_HEADERS);
     });
   }
 
@@ -51,11 +48,11 @@ class HoldingsEventPublisherTest {
     var newHolding = new HoldingsRecord().withId("h-1");
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      mockResponseHandler(holdingPublisher);
+      mockBatchPublishing(holdingPublisher);
 
-      publisher.publishHoldingsAndItemEvents(List.of(newHolding), Map.of(), Map.of());
+      publisher.publishHoldingsAndItemEvents(List.of(newHolding), Map.of(), Map.of(), OKAPI_HEADERS);
 
-      verify(itemPublisher, never()).publishUpdated(any(), any(), any());
+      verify(itemPublisher, never()).publishUpdated(any(), any(), any(), any());
     });
   }
 
@@ -66,11 +63,12 @@ class HoldingsEventPublisherTest {
     var newHolding = new HoldingsRecord().withId("h-1");
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      mockResponseHandler(holdingPublisher);
+      mockBatchPublishing(holdingPublisher);
 
-      publisher.publishHoldingsAndItemEvents(List.of(newHolding), Map.of("h-1", oldHolding), Map.of());
+      publisher.publishHoldingsAndItemEvents(List.of(newHolding), Map.of("h-1", oldHolding), Map.of(),
+        OKAPI_HEADERS);
 
-      verify(itemPublisher, never()).publishUpdated(any(), any(), any());
+      verify(itemPublisher, never()).publishUpdated(any(), any(), any(), any());
     });
   }
 
@@ -83,14 +81,13 @@ class HoldingsEventPublisherTest {
     var createdNew = new HoldingsRecord().withId("h-2");
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      var handler = mockResponseHandler(holdingPublisher);
+      mockBatchPublishing(holdingPublisher);
 
       publisher.publishHoldingsAndItemEvents(
-        List.of(updatedNew, createdNew), Map.of("h-1", existingOld), Map.of());
+        List.of(updatedNew, createdNew), Map.of("h-1", existingOld), Map.of(), OKAPI_HEADERS);
 
-      verify(handler).handle(any(Response.class));
       var captor = ArgumentCaptor.forClass(BatchOperationContext.class);
-      verify(holdingPublisher).publishCreatedOrUpdated(captor.capture());
+      verify(holdingPublisher).publishRecordsCreatedOrUpdated(captor.capture(), eq(OKAPI_HEADERS));
       var batch = (BatchOperationContext<HoldingsRecord>) captor.getValue();
       assertThat(batch.recordsToBeCreated()).containsExactly(createdNew);
       assertThat(batch.existingRecords()).containsExactly(existingOld);
@@ -106,9 +103,9 @@ class HoldingsEventPublisherTest {
     var items = List.of(new Item().withId("i-1"));
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishUpdatedItems(oldHolding, newHolding, items);
+      publisher.publishUpdatedItems(oldHolding, newHolding, items, OKAPI_HEADERS);
 
-      verify(itemPublisher).publishUpdated(oldHolding, newHolding, items);
+      verify(itemPublisher).publishUpdated(oldHolding, newHolding, items, OKAPI_HEADERS);
     });
   }
 
@@ -116,19 +113,21 @@ class HoldingsEventPublisherTest {
   @DisplayName("should delegate to the holding publisher when publishing all removed")
   void shouldDelegateToHoldingPublisher_whenPublishingAllRemoved() {
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishAllRemoved();
+      publisher.publishAllRemoved(OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishAllRemoved();
+      verify(holdingPublisher).publishAllRemoved(OKAPI_HEADERS);
     });
   }
 
   @Test
-  @DisplayName("should delegate to the holding publisher when publishing created")
+  @DisplayName("should delegate to the holding publisher when publishing a created record")
   void shouldDelegateToHoldingPublisher_whenPublishingCreated() {
-    withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishCreated();
+    var holding = new HoldingsRecord().withId("h-1");
 
-      verify(holdingPublisher).publishCreated();
+    withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
+      publisher.publishRecordCreated(holding, OKAPI_HEADERS);
+
+      verify(holdingPublisher).publishRecordCreated(holding, OKAPI_HEADERS);
     });
   }
 
@@ -138,9 +137,9 @@ class HoldingsEventPublisherTest {
     var holding = new HoldingsRecord().withId("h-1");
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishRemoved(holding);
+      publisher.publishRecordRemoved(holding, OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishRemoved(holding);
+      verify(holdingPublisher).publishRecordRemoved(holding, OKAPI_HEADERS);
     });
   }
 
@@ -148,9 +147,9 @@ class HoldingsEventPublisherTest {
   @DisplayName("should delegate to the holding publisher when publishing a raw removed record")
   void shouldDelegateToHoldingPublisher_whenPublishingRawRemovedRecord() {
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishRemoved("h-1", "raw");
+      publisher.publishRemoved("h-1", "raw", OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishRemoved("h-1", "raw");
+      verify(holdingPublisher).publishRemoved("h-1", "raw", OKAPI_HEADERS);
     });
   }
 
@@ -160,9 +159,9 @@ class HoldingsEventPublisherTest {
     var batch = new BatchOperationContext<>(List.of(), List.<HoldingsRecord>of(), true);
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishCreatedOrUpdated(batch);
+      publisher.publishCreatedOrUpdated(batch, OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishCreatedOrUpdated(batch);
+      verify(holdingPublisher).publishRecordsCreatedOrUpdated(batch, OKAPI_HEADERS);
     });
   }
 
@@ -170,11 +169,12 @@ class HoldingsEventPublisherTest {
   @DisplayName("should delegate to the holding publisher when publishing reindex holdings")
   void shouldDelegateToHoldingPublisher_whenPublishingReindexHoldings() {
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      when(holdingPublisher.publishReindexHoldings("range-1", List.of())).thenReturn(succeededFuture());
+      when(holdingPublisher.publishReindexHoldings("range-1", List.of(), OKAPI_HEADERS))
+        .thenReturn(succeededFuture());
 
-      publisher.publishReindexHoldings("range-1", List.of());
+      publisher.publishReindexHoldings("range-1", List.of(), OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishReindexHoldings("range-1", List.of());
+      verify(holdingPublisher).publishReindexHoldings("range-1", List.of(), OKAPI_HEADERS);
     });
   }
 
@@ -184,27 +184,21 @@ class HoldingsEventPublisherTest {
     var holding = new HoldingsRecord().withId("h-1");
 
     withMockedPublishers((publisher, holdingPublisher, itemPublisher) -> {
-      publisher.publishUpdated(holding);
+      publisher.publishRecordUpdated(holding, OKAPI_HEADERS);
 
-      verify(holdingPublisher).publishUpdated(holding);
+      verify(holdingPublisher).publishRecordUpdated(holding, OKAPI_HEADERS);
     });
   }
 
-  @SuppressWarnings("unchecked")
-  private static Handler<Response> mockResponseHandler(HoldingDomainEventPublisher holdingPublisher) {
-    var handler = (Handler<Response>) mock(Handler.class);
-    when(holdingPublisher.publishCreatedOrUpdated(any())).thenReturn(handler);
-    return handler;
+  private static void mockBatchPublishing(HoldingDomainEventPublisher holdingPublisher) {
+    when(holdingPublisher.publishRecordsCreatedOrUpdated(any(), any())).thenReturn(succeededFuture());
   }
 
   private static void withMockedPublishers(TestBody body) {
-    try (var holdingCtor = mockConstruction(HoldingDomainEventPublisher.class);
-         var itemCtor = mockConstruction(ItemDomainEventPublisher.class)) {
-      var context = Vertx.vertx().getOrCreateContext();
-      var publisher = new HoldingsEventPublisher(context, OKAPI_HEADERS);
+    var holdingPublisher = mock(HoldingDomainEventPublisher.class);
+    var itemPublisher = mock(ItemDomainEventPublisher.class);
 
-      body.run(publisher, holdingCtor.constructed().getFirst(), itemCtor.constructed().getFirst());
-    }
+    body.run(new HoldingsEventPublisher(holdingPublisher, itemPublisher), holdingPublisher, itemPublisher);
   }
 
   private interface TestBody {

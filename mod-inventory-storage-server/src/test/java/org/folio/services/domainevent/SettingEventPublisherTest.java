@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.folio.kafka.KafkaProducerManager;
+import org.folio.services.domainevent.model.SettingEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,15 +36,15 @@ class SettingEventPublisherTest {
 
   private @Mock KafkaProducerManager producerManager;
   private @Mock KafkaProducer<String, String> kafkaProducer;
-  private Map<String, String> okapiHeaders;
+  private Map<String, String> headers;
 
   @BeforeEach
   void setUp() {
     lenient().when(producerManager.<String, String>createShared(anyString())).thenReturn(kafkaProducer);
 
-    okapiHeaders = new HashMap<>();
-    okapiHeaders.put(TENANT, TENANT_ID);
-    okapiHeaders.put(USER_ID, "00000000-0000-0000-0000-000000000000");
+    headers = new HashMap<>();
+    headers.put(TENANT, TENANT_ID);
+    headers.put(USER_ID, "00000000-0000-0000-0000-000000000000");
   }
 
   @Test
@@ -66,7 +67,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
     verify(producerManager).createShared(anyString());
@@ -85,7 +86,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.failed(), is(true));
     assertThat(result.cause().getMessage(), is("Kafka send failed"));
@@ -103,7 +104,7 @@ class SettingEventPublisherTest {
     var event = new SettingEvent(eventId, SETTING_KEY, SETTING_VALUE, TENANT_ID);
     var publisher = new SettingEventPublisher(producerManager);
 
-    publisher.publish(event, eventId, okapiHeaders);
+    publisher.publish(event, eventId, headers);
 
     verify(producerManager).createShared(anyString());
   }
@@ -120,7 +121,7 @@ class SettingEventPublisherTest {
     var event = new SettingEvent(eventId, SETTING_KEY, SETTING_VALUE, TENANT_ID);
     var publisher = new SettingEventPublisher(producerManager);
 
-    publisher.publish(event, eventId, okapiHeaders);
+    publisher.publish(event, eventId, headers);
 
     verify(kafkaProducer).flush();
   }
@@ -137,7 +138,7 @@ class SettingEventPublisherTest {
     var eventId = UUID.randomUUID().toString();
     var event = new SettingEvent(eventId, SETTING_KEY, SETTING_VALUE, TENANT_ID);
 
-    publisher.publish(event, eventId, okapiHeaders);
+    publisher.publish(event, eventId, headers);
 
     verify(kafkaProducer).close();
   }
@@ -155,7 +156,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
   }
@@ -173,7 +174,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
   }
@@ -191,7 +192,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
   }
@@ -209,7 +210,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.succeededFuture());
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
     verify(kafkaProducer).send(any(KafkaProducerRecord.class));
@@ -228,7 +229,7 @@ class SettingEventPublisherTest {
     when(kafkaProducer.flush()).thenReturn(Future.failedFuture(new RuntimeException("Flush failed")));
     when(kafkaProducer.close()).thenReturn(Future.succeededFuture());
 
-    var result = publisher.publish(event, eventId, okapiHeaders);
+    var result = publisher.publish(event, eventId, headers);
 
     assertThat(result.succeeded(), is(true));
   }

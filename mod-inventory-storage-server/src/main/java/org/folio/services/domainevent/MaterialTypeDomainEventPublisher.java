@@ -2,26 +2,36 @@ package org.folio.services.domainevent;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.folio.InventoryKafkaTopic.MATERIAL_TYPE;
-import static org.folio.rest.tools.utils.TenantTool.tenantId;
 
-import io.vertx.core.Context;
 import io.vertx.core.Future;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
+import org.folio.persist.AbstractRepository;
 import org.folio.persist.MaterialTypeRepository;
 import org.folio.rest.jaxrs.model.MaterialType;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MaterialTypeDomainEventPublisher extends AbstractDomainEventPublisher<MaterialType, MaterialType> {
 
-  public MaterialTypeDomainEventPublisher(Context context, Map<String, String> okapiHeaders) {
-    super(new MaterialTypeRepository(context, okapiHeaders),
-      new CommonDomainEventPublisher<>(context, okapiHeaders, MATERIAL_TYPE.fullTopicName(tenantId(okapiHeaders))));
+  private final MaterialTypeRepository materialTypeRepository;
+
+  public MaterialTypeDomainEventPublisher(DomainEventPublisherFactory publisherFactory,
+                                          MaterialTypeRepository materialTypeRepository) {
+    super(publisherFactory.publisher(MATERIAL_TYPE));
+    this.materialTypeRepository = materialTypeRepository;
   }
 
   @Override
-  protected Future<List<Pair<String, MaterialType>>> getRecordIds(Collection<MaterialType> materialTypes) {
+  protected AbstractRepository<MaterialType> repository() {
+    return materialTypeRepository;
+  }
+
+  @Override
+  protected Future<List<Pair<String, MaterialType>>> getRecordIds(Collection<MaterialType> materialTypes,
+                                                                  Map<String, String> headers) {
     return succeededFuture(materialTypes.stream()
       .map(materialType -> pair(materialType.getId(), materialType))
       .toList()

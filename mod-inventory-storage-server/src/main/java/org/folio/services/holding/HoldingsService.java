@@ -2,20 +2,10 @@ package org.folio.services.holding;
 
 import static java.util.stream.Collectors.toMap;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.folio.okapi.common.XOkapiHeaders.TENANT;
-import static org.folio.rest.impl.HoldingsStorageApi.HOLDINGS_RECORD_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
-import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse;
-import static org.folio.rest.jaxrs.resource.HoldingsStorage.DeleteHoldingsStorageHoldingsResponse;
-import static org.folio.rest.jaxrs.resource.HoldingsStorage.PostHoldingsStorageHoldingsResponse;
-import static org.folio.rest.jaxrs.resource.HoldingsStorage.PutHoldingsStorageHoldingsByHoldingsRecordIdResponse;
-import static org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse;
-import static org.folio.rest.persist.PgUtil.deleteById;
-import static org.folio.rest.persist.PgUtil.post;
-import static org.folio.rest.persist.PgUtil.postSync;
-import static org.folio.rest.persist.PgUtil.postgresClient;
-import static org.folio.rest.support.CollectionUtil.deepCopy;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.folio.services.batch.BatchOperationContextFactory.buildBatchOperationContext;
+import static org.folio.utils.CollectionUtil.deepCopy;
 import static org.folio.utils.ComparisonUtils.equalsIgnoringMetadata;
 import static org.folio.validator.CommonValidators.validateUuidFormat;
 import static org.folio.validator.CommonValidators.validateUuidFormatForList;
@@ -26,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
@@ -46,33 +33,35 @@ import org.folio.okapi.common.XOkapiHeaders;
 import org.folio.persist.HoldingsRepository;
 import org.folio.persist.InstanceRepository;
 import org.folio.persist.ItemRepository;
+import org.folio.rest.exceptions.BadRequestException;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.HoldingsRecordView;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.PatchRequest;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.support.CqlQuery;
-import org.folio.rest.support.HridManager;
+import org.folio.rest.persist.PostgresClientStreamResult;
 import org.folio.rest.tools.utils.MetadataUtil;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.services.CqlQuery;
+import org.folio.services.HridManager;
 import org.folio.services.ItemEffectiveValuesService;
-import org.folio.services.ResponseHandlerUtil;
+import org.folio.services.batch.BatchPersistence;
 import org.folio.services.caches.ConsortiumData;
-import org.folio.services.caches.ConsortiumDataCache;
 import org.folio.services.consortium.ConsortiumService;
-import org.folio.services.consortium.ConsortiumServiceImpl;
 import org.folio.services.consortium.entities.SharingInstance;
 import org.folio.services.item.ItemService;
 import org.folio.services.reindex.ReindexExportOrchestrator;
 import org.folio.services.sanitizer.Sanitizer;
-import org.folio.services.sanitizer.SanitizerFactory;
 import org.folio.services.setting.SettingsService;
 import org.folio.validator.CommonValidators;
 import org.folio.validator.NotesValidators;
+import org.springframework.stereotype.Service;
 
+@Service
 public class HoldingsService {
+
   private static final Logger log = getLogger(HoldingsService.class);
+
   private static final ObjectMapper OBJECT_MAPPER = ObjectMapperTool.getMapper();
   private static final Pattern INSTANCEID_PATTERN = Pattern.compile(
     "^ *instanceId *== *\"?("
@@ -85,43 +74,56 @@ public class HoldingsService {
   private static final Pattern SPACE_REGEX = Pattern.compile(" +");
 
   private final Context vertxContext;
-  private final Map<String, String> okapiHeaders;
-  private final PostgresClient postgresClient;
-  private final HridManager hridManager;
   private final ItemService itemService;
-  private final HoldingsRepository holdingsRepository;
-  private final InstanceRepository instanceRepository;
   private final ConsortiumService consortiumService;
   private final ItemEffectiveValuesService effectiveValuesService;
   private final SettingsService settingsService;
-  private final HoldingsUpsertSqlBuilder upsertSqlBuilder;
-  private final HoldingsEventPublisher eventPublisher;
   private final Sanitizer<HoldingsRecord> sanitizer;
+  private final HoldingsEventPublisher eventPublisher;
+  private final ReindexExportOrchestrator reindexExportOrchestrator;
+  private final HoldingsRepository holdingsRepository;
+  private final InstanceRepository instanceRepository;
+  private final ItemRepository itemRepository;
+  private final HridManager hridManager;
 
-  public HoldingsService(Context context, Map<String, String> okapiHeaders) {
-    this.vertxContext = context;
-    this.okapiHeaders = okapiHeaders;
-
-    this.itemService = new ItemService(context, okapiHeaders);
-    this.postgresClient = postgresClient(context, okapiHeaders);
-    this.hridManager = new HridManager(postgresClient);
-    this.holdingsRepository = new HoldingsRepository(context, okapiHeaders);
-    this.instanceRepository = new InstanceRepository(context, okapiHeaders);
-    this.consortiumService = new ConsortiumServiceImpl(context.get(HttpClient.class.getName()),
-      context.get(ConsortiumDataCache.class.getName()));
-    this.effectiveValuesService = new ItemEffectiveValuesService(context, okapiHeaders);
-    this.settingsService = new SettingsService(context, okapiHeaders);
-    this.upsertSqlBuilder = new HoldingsUpsertSqlBuilder(holdingsRepository, new ItemRepository(context, okapiHeaders));
-    this.eventPublisher = new HoldingsEventPublisher(context, okapiHeaders);
-    this.sanitizer = SanitizerFactory.getSanitizer(HoldingsRecord.class);
+  public HoldingsService(Context vertxContext, ItemService itemService, ConsortiumService consortiumService,
+                         ItemEffectiveValuesService effectiveValuesService, SettingsService settingsService,
+                         HoldingsEventPublisher eventPublisher,
+                         ReindexExportOrchestrator reindexExportOrchestrator,
+                         HoldingsRepository holdingsRepository,
+                         InstanceRepository instanceRepository,
+                         ItemRepository itemRepository,
+                         HridManager hridManager,
+                         Sanitizer<HoldingsRecord> sanitizer) {
+    this.hridManager = hridManager;
+    this.itemRepository = itemRepository;
+    this.instanceRepository = instanceRepository;
+    this.holdingsRepository = holdingsRepository;
+    this.reindexExportOrchestrator = reindexExportOrchestrator;
+    this.eventPublisher = eventPublisher;
+    this.vertxContext = vertxContext;
+    this.itemService = itemService;
+    this.consortiumService = consortiumService;
+    this.effectiveValuesService = effectiveValuesService;
+    this.settingsService = settingsService;
+    this.sanitizer = sanitizer;
   }
 
   /**
-   * Returns Response if the query is supported by instanceId query, null otherwise.
+   * Returns the JSON of the holdings records if the query is supported by instanceId query, null otherwise.
    *
    * <p>
    */
-  public Future<Response> getByInstanceId(int offset, int limit, String query) {
+  public Future<HoldingsRecord> getHoldings(String holdingsRecordId, Map<String, String> headers) {
+    return holdingsRepository.findById(holdingsRecordId, tenantId(headers));
+  }
+
+  public Future<PostgresClientStreamResult<HoldingsRecordView>> streamHoldings(String query, int offset, int limit,
+                                                                               Map<String, String> headers) {
+    return holdingsRepository.stream(HoldingsRecordView.class, query, offset, limit, tenantId(headers));
+  }
+
+  public Future<String> getByInstanceId(int offset, int limit, String query, Map<String, String> headers) {
     if (query == null) {
       return Future.succeededFuture();
     }
@@ -131,16 +133,15 @@ public class HoldingsService {
     }
     var instanceId = matcher.group(1);
     var sortBy = SPACE_REGEX.split(matcher.group(2));
-    return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit)
+    return holdingsRepository.getByInstanceId(instanceId, sortBy, offset, limit, tenantId(headers))
       .map(row -> {
-        var json = "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
-                   + "  \"totalRecords\": " + row.getLong("total_records") + ",\n"
-                   + "  \"resultInfo\": { \n"
-                   + "    \"totalRecords\": " + row.getLong("total_records") + ",\n"
-                   + "    \"totalRecordsEstimated\": false\n"
-                   + "  }\n"
-                   + "}";
-        return Response.ok(json, MediaType.APPLICATION_JSON).build();
+        return "{ \"holdingsRecords\": " + row.getString("holdings") + ",\n"
+               + "  \"totalRecords\": " + row.getLong("total_records") + ",\n"
+               + "  \"resultInfo\": { \n"
+               + "    \"totalRecords\": " + row.getLong("total_records") + ",\n"
+               + "    \"totalRecordsEstimated\": false\n"
+               + "  }\n"
+               + "}";
       })
       .onFailure(e -> log.error("getByInstanceId:: {}", e.getMessage(), e));
   }
@@ -149,33 +150,121 @@ public class HoldingsService {
    * Deletes all holdings but sends only a single domain event (Kafka) message "all records removed",
    * this is much faster than sending one message for each deleted holding.
    */
-  public Future<Response> deleteAllHoldings() {
-    return holdingsRepository.deleteAll()
-      .onSuccess(notUsed -> eventPublisher.publishAllRemoved())
-      .map(Response.noContent().build());
+  public Future<Void> deleteAllHoldings(Map<String, String> headers) {
+    return holdingsRepository.deleteAll(tenantId(headers))
+      .onSuccess(notUsed -> eventPublisher.publishAllRemoved(headers))
+      .mapEmpty();
   }
 
-  public Future<Response> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord) {
+  public Future<Void> updateHoldingRecord(String holdingId, HoldingsRecord holdingsRecord,
+                                          Map<String, String> headers) {
     sanitizer.sanitize(holdingsRecord);
-    return holdingsRepository.getById(holdingId)
+    return holdingsRepository.getById(holdingId, tenantId(headers))
       .compose(existingHoldingsRecord -> {
         if (holdingsRecordFound(existingHoldingsRecord)) {
-          return updateHolding(existingHoldingsRecord, holdingsRecord);
+          return updateHolding(existingHoldingsRecord, holdingsRecord, headers);
         } else {
-          return createHolding(holdingsRecord);
+          return createHolding(holdingsRecord, headers).mapEmpty();
         }
       });
   }
 
-  public Future<Response> patchHoldingRecord(String holdingId, PatchRequest patchRequest) {
-    String userId = okapiHeaders.get(XOkapiHeaders.USER_ID);
+  public Future<Void> patchHoldingRecord(String holdingId, PatchRequest patchRequest,
+                                         Map<String, String> headers) {
+    String userId = headers.get(XOkapiHeaders.USER_ID);
     var patchJson = JsonObject.mapFrom(patchRequest);
-    return holdingsRepository.getById(holdingId)
+    return holdingsRepository.getById(holdingId, tenantId(headers))
       .compose(CommonValidators::refuseIfNotFound)
       .compose(existingHoldingsRecord ->
         refuseNullValueInRequiredFields(patchJson)
           .compose(json -> applyPatch(existingHoldingsRecord, json, userId)
-          .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord))));
+            .compose(newHoldingsRecord -> updateHolding(existingHoldingsRecord, newHoldingsRecord, headers))));
+  }
+
+  public Future<HoldingsRecord> createHolding(HoldingsRecord entity, Map<String, String> headers) {
+    entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
+    sanitizer.sanitize(entity);
+
+    return validateUuidFormat(entity.getStatisticalCodeIds())
+      .compose(v -> createShadowInstancesIfNeeded(List.of(entity), headers))
+      .compose(v -> hridManager.populateHrid(entity, tenantId(headers)))
+      .compose(NotesValidators::refuseLongNotes)
+      .compose(hr -> holdingsRepository.create(hr, tenantId(headers)))
+      .onSuccess(created -> eventPublisher.publishRecordCreated(created, headers));
+  }
+
+  public Future<Void> deleteHolding(String hrId, Map<String, String> headers) {
+    return holdingsRepository.getById(hrId, tenantId(headers))
+      .compose(CommonValidators::refuseIfNotFound)
+      .compose(hr -> holdingsRepository.remove(hrId, tenantId(headers))
+        .onSuccess(notUsed -> eventPublisher.publishRecordRemoved(hr, headers)));
+  }
+
+  public Future<Void> deleteHoldings(String cql, Map<String, String> headers) {
+    if (StringUtils.isBlank(cql)) {
+      return Future.failedFuture(new BadRequestException("Expected CQL but query parameter is empty"));
+    }
+    if (new CqlQuery(cql).isMatchingAll()) {
+      return deleteAllHoldings(headers);  // faster: sends only one domain event (Kafka) message
+    }
+    // do not add curly braces for readability, this is to comply with
+    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
+    return holdingsRepository.delete(cql, tenantId(headers))
+      .onSuccess(deleted -> vertxContext.runOnContext(runLater ->
+        deleted.forEach(deletedRecord -> {
+            try {
+              var holdingId = OBJECT_MAPPER.readTree(deletedRecord.json()).get("id").textValue();
+              eventPublisher.publishRemoved(holdingId, deletedRecord.json(), headers);
+            } catch (JsonProcessingException ex) {
+              log.error("deleteHoldings:: Failed to parse json : {}", ex.getMessage(), ex);
+              throw new IllegalArgumentException(ex.getCause());
+            }
+          }
+        )
+      ))
+      .mapEmpty();
+  }
+
+  public Future<Void> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking,
+                                     Map<String, String> headers) {
+    for (var holdingsRecord : holdings) {
+      holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
+      sanitizer.sanitize(holdingsRecord);
+    }
+
+    return validateUuidFormatForList(holdings, HoldingsRecord::getStatisticalCodeIds)
+      .compose(v -> createShadowInstancesIfNeeded(holdings, headers))
+      .compose(ar -> hridManager.populateHridForHoldings(holdings, tenantId(headers))
+        .compose(NotesValidators::refuseHoldingLongNotes))
+      .compose(validatedHoldings -> {
+        if (!upsert) {
+          // For create-only operations, use existing logic
+          return buildBatchOperationContext(false, validatedHoldings,
+            holdingsRepository, HoldingsRecord::getId, true, headers)
+            .compose(batchOperation -> BatchPersistence.save(holdingsRepository, validatedHoldings,
+                MAX_ENTITIES, false, optimisticLocking, headers)
+              .onSuccess(notUsed -> eventPublisher.publishCreatedOrUpdated(batchOperation, headers)));
+        }
+
+        // For upsert operations, use the new transaction-based approach
+        return performUpsertWithItemUpdates(validatedHoldings, optimisticLocking, headers);
+      });
+  }
+
+  public Future<Void> publishReindexHoldingsRecords(String rangeId, String fromId, String toId,
+                                                    Map<String, String> headers) {
+    return holdingsRepository.getReindexHoldingsRecords(fromId, toId, tenantId(headers))
+      .compose(holdings -> eventPublisher
+        .publishReindexHoldings(rangeId, holdings, headers));
+  }
+
+  public Future<Void> exportReindexHoldingsRecords(ReindexRecordsRequest request, Map<String, String> headers) {
+    var rangeFrom = request.getRecordIdsRange().getFrom();
+    var rangeTo = request.getRecordIdsRange().getTo();
+    return reindexExportOrchestrator
+      .export(request, headers, holdingsRepository,
+        conn -> holdingsRepository
+          .streamReindexHoldingsRecords(conn, rangeFrom, rangeTo, tenantId(headers)));
   }
 
   private Future<HoldingsRecord> applyPatch(HoldingsRecord holdingsRecord, JsonObject patchJson, String userId) {
@@ -193,107 +282,21 @@ public class HoldingsService {
     }
   }
 
-  public Future<Response> createHolding(HoldingsRecord entity) {
-    entity.setEffectiveLocationId(calculateEffectiveLocation(entity));
-    sanitizer.sanitize(entity);
-
-    return validateUuidFormat(entity.getStatisticalCodeIds())
-      .compose(v -> createShadowInstancesIfNeeded(List.of(entity)))
-      .compose(v -> hridManager.populateHrid(entity))
-      .compose(NotesValidators::refuseLongNotes)
-      .compose(hr -> post(HOLDINGS_RECORD_TABLE, hr, okapiHeaders, vertxContext,
-        PostHoldingsStorageHoldingsResponse.class)
-        .onSuccess(eventPublisher.publishCreated()))
-      .map(ResponseHandlerUtil::handleHridError);
-  }
-
-  public Future<Response> deleteHolding(String hrId) {
-    return holdingsRepository.getById(hrId)
-      .compose(CommonValidators::refuseIfNotFound)
-      .compose(hr -> deleteById(HOLDINGS_RECORD_TABLE, hrId, okapiHeaders, vertxContext,
-        DeleteHoldingsStorageHoldingsByHoldingsRecordIdResponse.class)
-        .onSuccess(eventPublisher.publishRemoved(hr)));
-  }
-
-  public Future<Response> deleteHoldings(String cql) {
-    if (StringUtils.isBlank(cql)) {
-      return Future.succeededFuture(
-        DeleteHoldingsStorageHoldingsResponse.respond400WithTextPlain(
-          "Expected CQL but query parameter is empty"));
-    }
-    if (new CqlQuery(cql).isMatchingAll()) {
-      return deleteAllHoldings();  // faster: sends only one domain event (Kafka) message
-    }
-    // do not add curly braces for readability, this is to comply with
-    // https://sonarcloud.io/organizations/folio-org/rules?open=java%3AS1602&rule_key=java%3AS1602
-    return holdingsRepository.delete(cql)
-      .onSuccess(rowSet -> vertxContext.runOnContext(runLater ->
-        rowSet.iterator().forEachRemaining(row -> {
-            try {
-              var holdingId = OBJECT_MAPPER.readTree(row.getString(1)).get("id").textValue();
-              eventPublisher.publishRemoved(holdingId, row.getString(1));
-            } catch (JsonProcessingException ex) {
-              log.error("deleteHoldings:: Failed to parse json : {}", ex.getMessage(), ex);
-              throw new IllegalArgumentException(ex.getCause());
-            }
-          }
-        )
-      ))
-      .map(Response.noContent().build());
-  }
-
-  public Future<Response> createHoldings(List<HoldingsRecord> holdings, boolean upsert, boolean optimisticLocking) {
-    for (var holdingsRecord : holdings) {
-      holdingsRecord.setEffectiveLocationId(calculateEffectiveLocation(holdingsRecord));
-      sanitizer.sanitize(holdingsRecord);
-    }
-
-    return validateUuidFormatForList(holdings, HoldingsRecord::getStatisticalCodeIds)
-      .compose(v -> createShadowInstancesIfNeeded(holdings))
-      .compose(ar -> hridManager.populateHridForHoldings(holdings)
-        .compose(NotesValidators::refuseHoldingLongNotes))
-      .compose(validatedHoldings -> {
-        if (!upsert) {
-          // For create-only operations, use existing logic
-          return buildBatchOperationContext(false, validatedHoldings,
-            holdingsRepository, HoldingsRecord::getId, true)
-            .compose(batchOperation -> postSync(HOLDINGS_RECORD_TABLE, validatedHoldings, MAX_ENTITIES,
-              false, optimisticLocking, okapiHeaders, vertxContext, PostHoldingsStorageBatchSynchronousResponse.class)
-              .onSuccess(eventPublisher.publishCreatedOrUpdated(batchOperation)));
-        }
-
-        // For upsert operations, use the new transaction-based approach
-        return performUpsertWithItemUpdates(validatedHoldings, optimisticLocking);
-      })
-      .map(ResponseHandlerUtil::handleHridError);
-  }
-
-  public Future<Void> publishReindexHoldingsRecords(String rangeId, String fromId, String toId) {
-    return holdingsRepository.getReindexHoldingsRecords(fromId, toId)
-      .compose(holdings -> eventPublisher.publishReindexHoldings(rangeId, holdings));
-  }
-
-  public Future<Void> exportReindexHoldingsRecords(ReindexRecordsRequest request) {
-    var rangeFrom = request.getRecordIdsRange().getFrom();
-    var rangeTo = request.getRecordIdsRange().getTo();
-    return new ReindexExportOrchestrator(vertxContext, okapiHeaders, postgresClient)
-      .export(request, conn -> holdingsRepository.streamReindexHoldingsRecords(conn, rangeFrom, rangeTo));
-  }
-
-  private Future<Response> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+  private Future<Void> updateHolding(HoldingsRecord oldHoldings, HoldingsRecord newHoldings,
+                                     Map<String, String> headers) {
     newHoldings.setEffectiveLocationId(calculateEffectiveLocation(newHoldings));
 
-    return createShadowInstancesIfNeeded(List.of(newHoldings))
-      .compose(v -> checkAndPerformUpdate(oldHoldings, newHoldings));
+    return createShadowInstancesIfNeeded(List.of(newHoldings), headers)
+      .compose(v -> checkAndPerformUpdate(oldHoldings, newHoldings, headers));
   }
 
-  private Future<Response> checkAndPerformUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
-    return settingsService.isOptimizeUpdatesEnabled(okapiHeaders.get(TENANT))
+  private Future<Void> checkAndPerformUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings,
+                                             Map<String, String> headers) {
+    return settingsService.isOptimizeUpdatesEnabled(headers)
       .compose(isOptimizeUpdatesEnabled -> {
         try {
-          if (isOptimizeUpdatesEnabled.booleanValue() && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
-            return Future.succeededFuture()
-              .map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204());
+          if (Boolean.TRUE.equals(isOptimizeUpdatesEnabled) && equalsIgnoringMetadata(oldHoldings, newHoldings)) {
+            return Future.succeededFuture();
           }
         } catch (Exception e) {
           return Future.failedFuture(e);
@@ -305,45 +308,52 @@ public class HoldingsService {
 
         return refuseWhenHridChanged(oldHoldings, newHoldings)
           .compose(notUsed -> NotesValidators.refuseLongNotes(newHoldings))
-          .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings));
+          .compose(notUsed -> performHoldingsUpdate(oldHoldings, newHoldings, headers));
       });
   }
 
-  private Future<Response> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
+  private Future<Void> performHoldingsUpdate(HoldingsRecord oldHoldings, HoldingsRecord newHoldings,
+                                             Map<String, String> headers) {
     if (shouldUpdateItems(oldHoldings, newHoldings)) {
-      return postgresClient
-        .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings)
-          .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings)))
+      return holdingsRepository.inTransaction(tenantId(headers), conn -> holdingsRepository
+          .update(oldHoldings.getId(), newHoldings, conn)
+          .compose(updateRes -> itemService.updateItemsOnHoldingChanged(conn, newHoldings, headers)))
         .onSuccess(itemsBeforeUpdate ->
-          eventPublisher.publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate))
-        .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-        .onSuccess(eventPublisher.publishUpdated(oldHoldings));
+          eventPublisher
+            .publishUpdatedItems(oldHoldings, newHoldings, itemsBeforeUpdate, headers))
+        .onSuccess(notUsed -> eventPublisher.publishRecordUpdated(oldHoldings, headers))
+        .mapEmpty();
     }
-    return postgresClient
-      .withTrans(conn -> holdingsRepository.update(conn, oldHoldings.getId(), newHoldings))
-      .<Response>map(res -> PutHoldingsStorageHoldingsByHoldingsRecordIdResponse.respond204())
-      .onSuccess(eventPublisher.publishUpdated(oldHoldings));
+    return holdingsRepository.inTransaction(tenantId(headers), conn -> holdingsRepository
+        .update(oldHoldings.getId(), newHoldings, conn))
+      .onSuccess(notUsed -> eventPublisher.publishRecordUpdated(oldHoldings, headers))
+      .mapEmpty();
   }
 
   private boolean shouldUpdateItems(HoldingsRecord oldHoldings, HoldingsRecord newHoldings) {
     return oldHoldings == null
-      || !Objects.equals(oldHoldings.getInstanceId(), newHoldings.getInstanceId())
-      || !Objects.equals(oldHoldings.getPermanentLocationId(), newHoldings.getPermanentLocationId())
-      || !Objects.equals(oldHoldings.getTemporaryLocationId(), newHoldings.getTemporaryLocationId())
-      || !Objects.equals(oldHoldings.getCallNumber(), newHoldings.getCallNumber())
-      || !Objects.equals(oldHoldings.getCallNumberPrefix(), newHoldings.getCallNumberPrefix())
-      || !Objects.equals(oldHoldings.getCallNumberSuffix(), newHoldings.getCallNumberSuffix())
-      || !Objects.equals(oldHoldings.getCallNumberTypeId(), newHoldings.getCallNumberTypeId());
+           || !Objects.equals(oldHoldings.getInstanceId(), newHoldings.getInstanceId())
+           || !Objects.equals(oldHoldings.getPermanentLocationId(), newHoldings.getPermanentLocationId())
+           || !Objects.equals(oldHoldings.getTemporaryLocationId(), newHoldings.getTemporaryLocationId())
+           || !Objects.equals(oldHoldings.getCallNumber(), newHoldings.getCallNumber())
+           || !Objects.equals(oldHoldings.getCallNumberPrefix(), newHoldings.getCallNumberPrefix())
+           || !Objects.equals(oldHoldings.getCallNumberSuffix(), newHoldings.getCallNumberSuffix())
+           || !Objects.equals(oldHoldings.getCallNumberTypeId(), newHoldings.getCallNumberTypeId());
   }
 
-  private Future<Response> performUpsertWithItemUpdates(List<HoldingsRecord> holdings, boolean optimisticLocking) {
-    Future<Response> validationResult = handleOptimisticLocking(holdings, optimisticLocking);
-    if (validationResult != null) {
-      return validationResult;
+  private Future<Void> performUpsertWithItemUpdates(List<HoldingsRecord> holdings, boolean optimisticLocking,
+                                                    Map<String, String> headers) {
+    if (holdings == null || holdings.isEmpty()) {
+      return Future.succeededFuture();
+    }
+    try {
+      holdingsRepository.applyOptimisticLocking(holdings, optimisticLocking);
+    } catch (RuntimeException e) {
+      return Future.failedFuture(e);
     }
 
     try {
-      MetadataUtil.populateMetadata(holdings, okapiHeaders);
+      MetadataUtil.populateMetadata(holdings, headers);
     } catch (ReflectiveOperationException e) {
       log.warn("performUpsertWithItemUpdates:: Error during metadata population", e);
       return Future.failedFuture(e.getMessage());
@@ -351,27 +361,14 @@ public class HoldingsService {
 
     ensureHoldingsHaveIds(holdings);
 
-    return postgresClient.withTrans(conn -> upsertHoldingsAndGetOldContent(conn, holdings)
-        .compose(upsertResult -> updateItemsForHoldingsChange(conn, holdings, upsertResult)
-          .map(itemsBeforeUpdate -> Pair.of(upsertResult.getLeft(), itemsBeforeUpdate))))
+    return holdingsRepository.inTransaction(tenantId(headers), conn ->
+        upsertHoldingsAndGetOldContent(conn, holdings, headers)
+          .compose(upsertResult -> updateItemsForHoldingsChange(conn, holdings, upsertResult, headers)
+            .map(itemsBeforeUpdate -> Pair.of(upsertResult.getLeft(), itemsBeforeUpdate))))
       .onSuccess(oldData ->
-        eventPublisher.publishHoldingsAndItemEvents(holdings, oldData.getLeft(), oldData.getRight()))
-      .map(v -> PostHoldingsStorageBatchSynchronousResponse.respond201());
-  }
-
-  private Future<Response> handleOptimisticLocking(List<HoldingsRecord> holdings, boolean optimisticLocking) {
-    if (optimisticLocking) {
-      holdings.stream().filter(holding -> Objects.equals(-1, holding.getVersion()))
-        .forEach(holding -> holding.setVersion(null));
-      return null;
-    } else {
-      if (!OptimisticLockingUtil.isSuppressingOptimisticLockingAllowed()) {
-        return Future.succeededFuture(PostHoldingsStorageBatchSynchronousResponse.respond413WithTextPlain(
-          "DB_ALLOW_SUPPRESS_OPTIMISTIC_LOCKING environment variable doesn't allow to disable optimistic locking"));
-      }
-      holdings.forEach(holding -> holding.setVersion(-1));
-      return null;
-    }
+        eventPublisher
+          .publishHoldingsAndItemEvents(holdings, oldData.getLeft(), oldData.getRight(), headers))
+      .mapEmpty();
   }
 
   private void ensureHoldingsHaveIds(List<HoldingsRecord> holdings) {
@@ -381,12 +378,13 @@ public class HoldingsService {
   }
 
   private Future<Pair<Map<String, HoldingsRecord>, Map<String, List<Item>>>> upsertHoldingsAndGetOldContent(
-    Conn conn, List<HoldingsRecord> holdings) {
+    Conn conn, List<HoldingsRecord> holdings, Map<String, String> headers) {
     if (holdings.isEmpty()) {
       return Future.succeededFuture(Pair.of(Map.of(), Map.of()));
     }
 
-    var sqlAndParamsResult = upsertSqlBuilder.buildUpsertSqlWithParams(holdings);
+    var sqlAndParamsResult = new HoldingsUpsertSqlBuilder(holdingsRepository, itemRepository)
+      .buildUpsertSqlWithParams(holdings, headers);
     if (sqlAndParamsResult.getLeft() == null) {
       return Future.failedFuture(sqlAndParamsResult.getRight());
     }
@@ -399,7 +397,8 @@ public class HoldingsService {
   private Future<Map<String, List<Item>>> updateItemsForHoldingsChange(
     Conn conn,
     List<HoldingsRecord> newHoldings,
-    Pair<Map<String, HoldingsRecord>, Map<String, List<Item>>> upsertResult) {
+    Pair<Map<String, HoldingsRecord>, Map<String, List<Item>>> upsertResult,
+    Map<String, String> headers) {
 
     var oldHoldingsMap = upsertResult.getLeft();
     var oldItemsMap = upsertResult.getRight();
@@ -412,7 +411,7 @@ public class HoldingsService {
 
     try {
       processItemsForHoldingsUpdate(oldItemsMap, holdingsMap, oldHoldingsMap,
-                                     itemsBeforeUpdate, allItemsToUpdate);
+        itemsBeforeUpdate, allItemsToUpdate, headers);
     } catch (JsonProcessingException ex) {
       return Future.failedFuture(ex);
     }
@@ -426,10 +425,11 @@ public class HoldingsService {
   }
 
   private void processItemsForHoldingsUpdate(Map<String, List<Item>> oldItemsMap,
-                                              Map<String, HoldingsRecord> holdingsMap,
-                                              Map<String, HoldingsRecord> oldHoldingsMap,
-                                              Map<String, List<Item>> itemsBeforeUpdate,
-                                              List<Item> allItemsToUpdate) throws JsonProcessingException {
+                                             Map<String, HoldingsRecord> holdingsMap,
+                                             Map<String, HoldingsRecord> oldHoldingsMap,
+                                             Map<String, List<Item>> itemsBeforeUpdate,
+                                             List<Item> allItemsToUpdate,
+                                             Map<String, String> headers) throws JsonProcessingException {
     for (var entry : oldItemsMap.entrySet()) {
       var holdingsId = entry.getKey();
       var items = entry.getValue();
@@ -442,7 +442,7 @@ public class HoldingsService {
           var itemsCopy = (List<Item>) deepCopy(items, Item.class);
           itemsBeforeUpdate.put(holdingsId, itemsCopy);
           for (var item : items) {
-            itemService.populateItemFromHoldings(item, newHolding, effectiveValuesService);
+            itemService.populateItemFromHoldings(item, newHolding, effectiveValuesService, headers);
             allItemsToUpdate.add(item);
           }
         }
@@ -461,32 +461,35 @@ public class HoldingsService {
     }
   }
 
-  private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords) {
-    return consortiumService.getConsortiumData(okapiHeaders)
+  private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
+                                                     Map<String, String> headers) {
+    return consortiumService.getConsortiumData(headers)
       .compose(consortiumDataOptional -> {
         if (consortiumDataOptional.isPresent()) {
-          return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get());
+          return createShadowInstancesIfNeeded(holdingsRecords, consortiumDataOptional.get(), headers);
         }
         return Future.succeededFuture();
       });
   }
 
   private Future<Void> createShadowInstancesIfNeeded(List<HoldingsRecord> holdingsRecords,
-                                                     ConsortiumData consortiumData) {
+                                                     ConsortiumData consortiumData, Map<String, String> headers) {
     Map<String, Future<SharingInstance>> instanceFuturesMap = new HashMap<>();
 
     for (HoldingsRecord holdingRecord : holdingsRecords) {
       String instanceId = holdingRecord.getInstanceId();
-      instanceFuturesMap.computeIfAbsent(instanceId, v -> createShadowInstanceIfNeeded(instanceId, consortiumData));
+      instanceFuturesMap.computeIfAbsent(instanceId,
+        v -> createShadowInstanceIfNeeded(instanceId, consortiumData, headers));
     }
     return Future.all(new ArrayList<>(instanceFuturesMap.values()))
       .mapEmpty();
   }
 
-  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData) {
-    return instanceRepository.exists(instanceId)
+  private Future<SharingInstance> createShadowInstanceIfNeeded(String instanceId, ConsortiumData consortiumData,
+                                                               Map<String, String> headers) {
+    return instanceRepository.exists(instanceId, tenantId(headers))
       .compose(exists -> Boolean.TRUE.equals(exists) ? Future.succeededFuture() :
-                         consortiumService.createShadowInstance(instanceId, consortiumData, okapiHeaders)
+                         consortiumService.createShadowInstance(instanceId, consortiumData, headers)
       );
   }
 

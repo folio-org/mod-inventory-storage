@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class ItemSanitizerTest {
 
-  private final ItemSanitizer sanitizer = new ItemSanitizer();
+  private final ItemSanitizer sanitizer = new ItemSanitizer(new TagsSanitizer());
 
   @Test
   void sanitizeShouldHandleNullItem() {

@@ -1,104 +1,115 @@
 package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
+import static org.folio.rest.support.ResponseHandlerUtil.failureResponse;
+import static org.folio.rest.support.ResponseHandlerUtil.firstErrorMessage;
 import static org.folio.rest.tools.messages.Messages.DEFAULT_LANGUAGE;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.jaxrs.resource.support.ResponseDelegate;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.support.PostgresClientFactory;
+import org.folio.persist.helper.EntityAccessors;
+import org.folio.rest.persist.interfaces.Results;
+import org.folio.rest.support.ResponseHandlerUtil;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
+import org.folio.services.referencedata.ReferenceDataService;
+import org.folio.spring.SpringContextUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Base for the endpoints of simple reference data. It builds the same responses as the RMB generated
+ * response classes do: POST reports validation failures as 422, the other methods as 400, except
+ * GET by id which reports them as 404.
+ */
+@SuppressWarnings("java:S6813")
 public abstract class BaseApi<E, C> {
 
   protected static final Logger log = LogManager.getLogger();
   protected static final Messages MESSAGES = Messages.getInstance();
 
-  public void getEntities(String query, String totalRecords, int offset, int limit, Map<String, String> okapiHeaders,
-                          Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                          Class<? extends ResponseDelegate> responseType) {
-    runInContext(vertxContext, responseHandler,
-      v -> PgUtil.get(getReferenceTable(), getEntityClass(), getEntityCollectionClass(), query, totalRecords,
-        offset, limit, okapiHeaders, vertxContext, responseType, responseHandler));
+  @Autowired
+  private ReferenceDataService referenceDataService;
+
+  protected BaseApi() {
+    SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
   }
 
-  public void getEntityById(String id, Map<String, String> okapiHeaders,
-                            Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                            Class<? extends ResponseDelegate> responseType) {
-    runInContext(vertxContext, responseHandler,
-      v -> PgUtil.getById(getReferenceTable(), getEntityClass(), id, okapiHeaders, vertxContext, responseType,
-        responseHandler));
+  public void getEntities(String query, String totalRecords, int offset, int limit, Map<String, String> headers,
+                          Handler<AsyncResult<Response>> responseHandler) {
+    respond(responseHandler, ResponseHandlerUtil::failureResponse,
+      () -> referenceDataService.query(getReferenceTable(), getEntityClass(),
+          query, offset, limit, totalRecords, headers)
+        .map(results -> jsonResponse(200, collection(results))));
   }
 
-  public void postEntity(E entity, Map<String, String> okapiHeaders,
-                         Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                         Class<? extends ResponseDelegate> responseType) {
-    postEntity(entity, okapiHeaders, responseHandler, vertxContext, responseType, UnaryOperator.identity());
+  public void getEntityById(String id, Map<String, String> headers,
+                            Handler<AsyncResult<Response>> responseHandler) {
+    respond(responseHandler,
+      failure -> failureResponse(failure, errors -> response404WithTextPlain(firstErrorMessage(errors))),
+      () -> referenceDataService.getById(getReferenceTable(), getEntityClass(), id, headers)
+        .map(entity -> jsonResponse(200, entity)));
   }
 
-  public void postEntity(E entity, Map<String, String> okapiHeaders,
-                         Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                         Class<? extends ResponseDelegate> responseType,
+  public void postEntity(E entity, Map<String, String> headers,
+                         Handler<AsyncResult<Response>> responseHandler) {
+    postEntity(entity, headers, responseHandler, UnaryOperator.identity());
+  }
+
+  public void postEntity(E entity, Map<String, String> headers,
+                         Handler<AsyncResult<Response>> responseHandler,
                          UnaryOperator<Response> responseMapper) {
-    runInContext(vertxContext, responseHandler,
-      v -> PgUtil.post(getReferenceTable(), entity, okapiHeaders, vertxContext, responseType)
-        .map(responseMapper)
-        .onComplete(responseHandler));
+    respond(responseHandler,
+      failure -> responseMapper.apply(failureResponse(failure, errors -> jsonResponse(422, errors))),
+      () -> referenceDataService.create(getReferenceTable(), getEntityClass(), entity, headers)
+        .map(created -> responseMapper.apply(createdResponse(created))));
   }
 
-  public void deleteEntities(Map<String, String> okapiHeaders,
-                             Handler<AsyncResult<Response>> responseHandler, Context vertxContext) {
-    runInContext(vertxContext, responseHandler,
-      v -> PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
-        .delete(getReferenceTable(), new Criterion(),
-          reply -> {
-            if (reply.succeeded()) {
-              responseHandler.handle(succeededFuture(Response.status(Response.Status.NO_CONTENT).build()));
-            } else {
-              respond500WithTextPlain(responseHandler, reply.cause());
-            }
-          }));
+  public void deleteEntities(Map<String, String> headers,
+                             Handler<AsyncResult<Response>> responseHandler) {
+    respond(responseHandler, this::internalServerError,
+      () -> referenceDataService.deleteAll(getReferenceTable(), getEntityClass(), headers)
+        .map(notUsed -> Response.status(Response.Status.NO_CONTENT).build()));
   }
 
-  public void deleteEntityById(String id, Map<String, String> okapiHeaders,
-                               Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                               Class<? extends ResponseDelegate> responseType) {
-    runInContext(vertxContext, responseHandler,
-      v -> {
-        if (deleteValidationPredicates() == null || deleteValidationPredicates().isEmpty()) {
-          PgUtil.deleteById(getReferenceTable(), id, okapiHeaders, vertxContext, responseType, responseHandler);
-        } else {
-          deleteWithValidation(id, okapiHeaders, responseHandler, vertxContext, responseType);
-        }
+  public void deleteEntityById(String id, Map<String, String> headers,
+                               Handler<AsyncResult<Response>> responseHandler) {
+    respond(responseHandler,
+      failure -> failureResponse(failure, errors -> response400WithTextPlain(firstErrorMessage(errors))),
+      () -> {
+        var conditions = deleteValidationPredicates();
+        var deleted = conditions == null || conditions.isEmpty()
+                      ? referenceDataService.delete(getReferenceTable(), getEntityClass(), id, headers)
+                      : referenceDataService.delete(getReferenceTable(), getEntityClass(), id, conditions, headers);
+        return deleted.map(notUsed -> Response.status(Response.Status.NO_CONTENT).build());
       });
   }
 
-  public void putEntityById(String id, E entity, Map<String, String> okapiHeaders,
-                            Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                            Class<? extends ResponseDelegate> responseType) {
-    putEntityById(id, entity, okapiHeaders, responseHandler, vertxContext, responseType, UnaryOperator.identity());
+  public void putEntityById(String id, E entity, Map<String, String> headers,
+                            Handler<AsyncResult<Response>> responseHandler) {
+    putEntityById(id, entity, headers, responseHandler, UnaryOperator.identity());
   }
 
-  public void putEntityById(String id, E entity, Map<String, String> okapiHeaders,
-                            Handler<AsyncResult<Response>> responseHandler, Context vertxContext,
-                            Class<? extends ResponseDelegate> responseType,
+  public void putEntityById(String id, E entity, Map<String, String> headers,
+                            Handler<AsyncResult<Response>> responseHandler,
                             UnaryOperator<Response> responseMapper) {
-    runInContext(vertxContext, responseHandler,
-      v -> PgUtil.put(getReferenceTable(), entity, id, okapiHeaders, vertxContext, responseType)
-        .map(responseMapper)
-        .onComplete(responseHandler));
+    respond(responseHandler, failure -> responseMapper.apply(failureResponse(failure,
+        errors -> response400WithTextPlain(firstErrorMessage(errors)))),
+      () -> referenceDataService.update(getReferenceTable(), getEntityClass(), id, entity, headers)
+        .map(notUsed -> responseMapper.apply(Response.status(Response.Status.NO_CONTENT).build())));
   }
 
   protected abstract String getReferenceTable();
@@ -112,80 +123,77 @@ public abstract class BaseApi<E, C> {
   }
 
   protected Response response400WithTextPlain(String message) {
-    var responseBuilder = Response.status(Response.Status.BAD_REQUEST)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(message);
-    return responseBuilder.build();
+    return Response.status(Response.Status.BAD_REQUEST)
+      .header(CONTENT_TYPE, TEXT_PLAIN)
+      .entity(message)
+      .build();
   }
 
   protected Response response404WithTextPlain(String message) {
-    var responseBuilder = Response.status(Response.Status.NOT_FOUND)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(message);
-    return responseBuilder.build();
+    return Response.status(Response.Status.NOT_FOUND)
+      .header(CONTENT_TYPE, TEXT_PLAIN)
+      .entity(message)
+      .build();
   }
 
   protected Response response500WithTextPlain() {
-    var responseBuilder = Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-      .header(CONTENT_TYPE.toString(), TEXT_PLAIN)
-      .entity(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError));
-    return responseBuilder.build();
+    return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+      .header(CONTENT_TYPE, TEXT_PLAIN)
+      .entity(MESSAGES.getMessage(DEFAULT_LANGUAGE, MessageConsts.InternalServerError))
+      .build();
   }
 
-  private void deleteWithValidation(String id, Map<String, String> okapiHeaders,
-                                    Handler<AsyncResult<Response>> responseHandler,
-                                    Context vertxContext, Class<? extends ResponseDelegate> responseType) {
-    PostgresClientFactory.getInstance(vertxContext, okapiHeaders)
-      .getById(getReferenceTable(), id, getEntityClass(),
-        reply -> handleDeleteValidation(id, reply, okapiHeaders, responseHandler, vertxContext, responseType));
-  }
-
-  private void handleDeleteValidation(String id, AsyncResult<E> reply, Map<String, String> okapiHeaders,
-                                       Handler<AsyncResult<Response>> responseHandler,
-                                       Context vertxContext, Class<? extends ResponseDelegate> responseType) {
-    if (!reply.succeeded()) {
-      log.error("Failed to fetch entity for deletion: {}", reply.cause().getMessage(), reply.cause());
-      respond400WithTextPlain(responseHandler, "Failed to fetch entity: " + reply.cause().getMessage());
+  private void respond(Handler<AsyncResult<Response>> responseHandler, Function<Throwable, Response> failureMapper,
+                       java.util.function.Supplier<Future<Response>> action) {
+    Future<Response> result;
+    try {
+      result = action.get();
+    } catch (Exception e) {
+      responseHandler.handle(succeededFuture(failureMapper.apply(e)));
       return;
     }
-    E entity = reply.result();
-    if (entity == null) {
-      var msg = "Entity with id '%s' not found for deletion".formatted(id);
-      log.warn(msg);
-      respond404WithTextPlain(responseHandler, msg);
-      return;
-    }
-    for (var predicateEntry : deleteValidationPredicates().entrySet()) {
-      if (!predicateEntry.getValue().test(entity)) {
-        log.warn("Delete validation failed for id {}: {}", id, predicateEntry.getKey());
-        respond400WithTextPlain(responseHandler, predicateEntry.getKey());
-        return;
+    result
+      .onSuccess(response -> responseHandler.handle(succeededFuture(response)))
+      .onFailure(failure -> responseHandler.handle(succeededFuture(failureMapper.apply(failure))));
+  }
+
+  private Response internalServerError(Throwable failure) {
+    log.error(failure.getMessage(), failure);
+    return response500WithTextPlain();
+  }
+
+  private Response createdResponse(E created) {
+    return Response.status(201)
+      .header(CONTENT_TYPE, APPLICATION_JSON)
+      .header("Location", EntityAccessors.of(getEntityClass()).id(created))
+      .entity(created)
+      .build();
+  }
+
+  private static Response jsonResponse(int status, Object entity) {
+    return Response.status(status).header(CONTENT_TYPE, APPLICATION_JSON).entity(entity).build();
+  }
+
+  private C collection(Results<E> results) {
+    try {
+      Method listSetter = null;
+      for (Method method : getEntityCollectionClass().getMethods()) {
+        if (method.getName().startsWith("set") && method.getParameterCount() == 1
+            && List.class.equals(method.getParameterTypes()[0])) {
+          listSetter = method;
+          break;
+        }
       }
-    }
-    PgUtil.deleteById(getReferenceTable(), id, okapiHeaders, vertxContext, responseType, responseHandler);
-  }
-
-  private void respond400WithTextPlain(Handler<AsyncResult<Response>> responseHandler, String message) {
-    responseHandler.handle(succeededFuture(response400WithTextPlain(message)));
-  }
-
-  private void respond404WithTextPlain(Handler<AsyncResult<Response>> responseHandler, String message) {
-    responseHandler.handle(succeededFuture(response404WithTextPlain(message)));
-  }
-
-  private void respond500WithTextPlain(Handler<AsyncResult<Response>> responseHandler, Throwable e) {
-    log.error(e.getMessage(), e);
-    var response = response500WithTextPlain();
-    responseHandler.handle(succeededFuture(response));
-  }
-
-  private void runInContext(Context context, Handler<AsyncResult<Response>> responseHandler, Handler<Void> action) {
-    context.runOnContext(v -> {
-      try {
-        action.handle(v);
-      } catch (Exception e) {
-        respond500WithTextPlain(responseHandler, e);
+      if (listSetter == null) {
+        throw new NoSuchMethodException(getEntityCollectionClass().getName() + " has no set...(List) method");
       }
-    });
+      var collection = getEntityCollectionClass().getDeclaredConstructor().newInstance();
+      listSetter.invoke(collection, results.getResults());
+      getEntityCollectionClass().getMethod("setTotalRecords", Integer.class)
+        .invoke(collection, results.getResultInfo().getTotalRecords());
+      return collection;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

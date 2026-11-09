@@ -1,21 +1,29 @@
 package org.folio.services.holding;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.rest.tools.utils.TenantTool.tenantId;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-import java.lang.reflect.Field;
+import io.vertx.core.Context;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.folio.persist.HoldingsRepository;
+import org.folio.persist.InstanceRepository;
+import org.folio.persist.ItemRepository;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
-import org.folio.rest.jaxrs.resource.HoldingsStorageBatchSynchronous.PostHoldingsStorageBatchSynchronousResponse;
-import org.folio.rest.tools.utils.OptimisticLockingUtil;
+import org.folio.services.HridManager;
+import org.folio.services.ItemEffectiveValuesService;
+import org.folio.services.consortium.ConsortiumService;
+import org.folio.services.item.ItemService;
+import org.folio.services.reindex.ReindexExportOrchestrator;
+import org.folio.services.sanitizer.Sanitizer;
+import org.folio.services.setting.SettingsService;
 import org.folio.support.integration.TestRailCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -113,55 +121,11 @@ class HoldingsServiceTest {
   }
 
   @Test
-  @DisplayName("should clear the placeholder version and keep locking enabled when optimistic locking is requested")
-  void shouldClearPlaceholderVersion_whenOptimisticLockingRequested() {
-    var placeholder = new HoldingsRecord().withVersion(-1);
-    var untouched = new HoldingsRecord().withVersion(3);
-
-    var result = handleOptimisticLocking(List.of(placeholder, untouched), true);
-
-    assertThat(result).isNull();
-    assertThat(placeholder.getVersion()).isNull();
-    assertThat(untouched.getVersion()).isEqualTo(3);
-  }
-
-  @Test
-  @DisplayName("should mark every holding with the suppression sentinel when locking is disabled and allowed")
-  void shouldMarkSuppressionSentinel_whenLockingDisabledAndAllowed() {
-    var holding = new HoldingsRecord();
-    try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
-      lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(true);
-
-      var result = handleOptimisticLocking(List.of(holding), false);
-
-      assertThat(result).isNull();
-      assertThat(holding.getVersion()).isEqualTo(-1);
-    }
-  }
-
-  @Test
-  @DisplayName("should reject the request when locking is disabled but suppression is not allowed")
-  void shouldRejectRequest_whenLockingDisabledButSuppressionNotAllowed() {
-    var holding = new HoldingsRecord();
-    try (var lockingUtil = mockStatic(OptimisticLockingUtil.class)) {
-      lockingUtil.when(OptimisticLockingUtil::isSuppressingOptimisticLockingAllowed).thenReturn(false);
-
-      var result = handleOptimisticLocking(List.of(holding), false);
-
-      assertThat(result).isNotNull();
-      var response = result.result();
-      assertThat(response.getStatus())
-        .isEqualTo(PostHoldingsStorageBatchSynchronousResponse.respond413WithTextPlain("x").getStatus());
-      assertThat(holding.getVersion()).isNull();
-    }
-  }
-
-  @Test
   @DisplayName("should return an empty result when the query is null")
   void shouldReturnEmptyResult_whenQueryIsNull() {
     var service = uninitializedService();
 
-    var result = service.getByInstanceId(0, 10, null);
+    var result = service.getByInstanceId(0, 10, null, Map.of());
 
     assertThat(result.result()).isNull();
   }
@@ -171,31 +135,37 @@ class HoldingsServiceTest {
   void shouldReturnEmptyResult_whenQueryDoesNotMatch() {
     var service = uninitializedService();
 
-    var result = service.getByInstanceId(0, 10, "title == foo");
+    var result = service.getByInstanceId(0, 10, "title == foo", Map.of());
 
     assertThat(result.result()).isNull();
   }
 
   @Test
   @DisplayName("should extract the instance id and sort fields when the query matches")
-  void shouldExtractInstanceIdAndSortFields_whenQueryMatches() throws Exception {
-    var service = uninitializedService();
+  void shouldExtractInstanceIdAndSortFields_whenQueryMatches() {
     var holdingsRepository = mock(HoldingsRepository.class);
-    injectRepository(service, holdingsRepository);
+    var service = serviceWith(holdingsRepository);
     var row = mock(io.vertx.sqlclient.Row.class);
     when(row.getString("holdings")).thenReturn("[]");
     when(row.getLong("total_records")).thenReturn(0L);
     // The sortBy capture group includes its own leading space before the first field, so
     // splitting on runs of spaces yields a leading empty element - documenting current
     // behavior, not asserting it's ideal.
-    when(holdingsRepository.getByInstanceId(
-      "11111111-1111-1111-1111-111111111111", new String[] {"", "callNumber", "callNumberSuffix"}, 0, 10))
+    when(holdingsRepository.getByInstanceId("11111111-1111-1111-1111-111111111111",
+      new String[] {"", "callNumber", "callNumberSuffix"}, 0, 10, tenantId(Map.of())))
       .thenReturn(io.vertx.core.Future.succeededFuture(row));
 
     var result = service.getByInstanceId(0, 10,
-      "instanceId == \"11111111-1111-1111-1111-111111111111\" sortBy callNumber callNumberSuffix");
+      "instanceId == \"11111111-1111-1111-1111-111111111111\" sortBy callNumber callNumberSuffix", Map.of());
 
-    assertThat(result.result().getStatus()).isEqualTo(200);
+    assertThat(result.result()).contains("\"holdingsRecords\": []");
+  }
+
+  private static HoldingsService serviceWith(HoldingsRepository holdingsRepository) {
+    return new HoldingsService(mock(Context.class), mock(ItemService.class), mock(ConsortiumService.class),
+      mock(ItemEffectiveValuesService.class), mock(SettingsService.class), mock(HoldingsEventPublisher.class),
+      mock(ReindexExportOrchestrator.class), holdingsRepository, mock(InstanceRepository.class),
+      mock(ItemRepository.class), mock(HridManager.class), mock(Sanitizer.class));
   }
 
   private static HoldingsRecord identicalHoldingPair() {
@@ -227,12 +197,6 @@ class HoldingsServiceTest {
     invokePrivate(uninitializedService(), "ensureHoldingsHaveIds", new Class<?>[] {List.class}, holdings);
   }
 
-  private static io.vertx.core.Future<javax.ws.rs.core.Response> handleOptimisticLocking(
-    List<HoldingsRecord> holdings, boolean optimisticLocking) {
-    return invokePrivate(uninitializedService(), "handleOptimisticLocking",
-      new Class<?>[] {List.class, boolean.class}, holdings, optimisticLocking);
-  }
-
   @SuppressWarnings("unchecked")
   private static <T> T invokePrivate(Object target, String methodName, Class<?>[] paramTypes, Object... args) {
     try {
@@ -244,11 +208,5 @@ class HoldingsServiceTest {
     } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  private static void injectRepository(Object target, Object value) throws ReflectiveOperationException {
-    Field field = target.getClass().getDeclaredField("holdingsRepository");
-    field.setAccessible(true);
-    field.set(target, value);
   }
 }

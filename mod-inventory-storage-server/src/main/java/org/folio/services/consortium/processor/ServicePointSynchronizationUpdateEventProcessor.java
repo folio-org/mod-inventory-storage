@@ -3,30 +3,32 @@ package org.folio.services.consortium.processor;
 import static io.vertx.core.Future.failedFuture;
 
 import io.vertx.core.Future;
+import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.persist.helper.EntityJson;
 import org.folio.rest.impl.ServicePointApi;
 import org.folio.rest.jaxrs.model.ServicePoint;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.services.domainevent.DomainEvent;
-import org.folio.services.domainevent.ServicePointEventType;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.domainevent.model.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
 
 public class ServicePointSynchronizationUpdateEventProcessor
   extends ServicePointSynchronizationEventProcessor {
 
-  private static final Logger log = LogManager.getLogger(
-    ServicePointSynchronizationUpdateEventProcessor.class);
+  private static final Logger log = LogManager.getLogger(ServicePointSynchronizationUpdateEventProcessor.class);
 
-  public ServicePointSynchronizationUpdateEventProcessor(DomainEvent<ServicePoint> domainEvent) {
-    super(ServicePointEventType.SERVICE_POINT_UPDATED, domainEvent);
+  public ServicePointSynchronizationUpdateEventProcessor(DomainEvent<ServicePoint> domainEvent,
+                                                         ServicePointService servicePointService) {
+    super(ServicePointEventType.SERVICE_POINT_UPDATED, domainEvent, servicePointService);
   }
 
   @Override
-  protected Future<String> processEvent(ServicePointService servicePointService, String servicePointId) {
+  protected Future<String> processEvent(ServicePointService servicePointService, String servicePointId,
+                                        Map<String, String> headers) {
     try {
-      var servicepoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity()).mapTo(ServicePoint.class);
-      return servicePointService.updateServicePoint(servicePointId, servicepoint)
+      var servicepoint = EntityJson.toJsonObject(domainEvent.getNewEntity()).mapTo(ServicePoint.class);
+      return servicePointService.updateServicePoint(servicePointId, servicepoint, headers)
         .map(servicePointId);
     } catch (Exception e) {
       log.warn("processEvent:: failed due to {}", e.getMessage(), e);
@@ -37,9 +39,9 @@ public class ServicePointSynchronizationUpdateEventProcessor
   @Override
   protected boolean validateEventEntity() {
     try {
-      var oldServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getOldEntity())
+      var oldServicePoint = EntityJson.toJsonObject(domainEvent.getOldEntity())
         .mapTo(ServicePoint.class);
-      var newServicePoint = PostgresClient.pojo2JsonObject(domainEvent.getNewEntity())
+      var newServicePoint = EntityJson.toJsonObject(domainEvent.getNewEntity())
         .mapTo(ServicePoint.class);
 
       return validateServicePoints(oldServicePoint, newServicePoint);

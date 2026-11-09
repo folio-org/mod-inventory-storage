@@ -12,21 +12,23 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.jaxrs.model.ServicePoint;
 import org.folio.services.consortium.SynchronizationContext;
-import org.folio.services.domainevent.DomainEvent;
-import org.folio.services.domainevent.ServicePointEventType;
+import org.folio.services.domainevent.model.DomainEvent;
+import org.folio.services.domainevent.model.ServicePointEventType;
 import org.folio.services.servicepoint.ServicePointService;
 import org.folio.utils.Environment;
 
 public abstract class ServicePointSynchronizationEventProcessor {
 
-  private static final Logger log = LogManager.getLogger(
-    ServicePointSynchronizationEventProcessor.class);
+  private static final Logger log = LogManager.getLogger(ServicePointSynchronizationEventProcessor.class);
   private static final String ECS_TLR_FEATURE_ENABLED = "ECS_TLR_FEATURE_ENABLED";
   protected final DomainEvent<ServicePoint> domainEvent;
   private final ServicePointEventType servicePointEventType;
+  private final ServicePointService servicePointService;
 
   protected ServicePointSynchronizationEventProcessor(ServicePointEventType eventType,
-                                                      DomainEvent<ServicePoint> domainEvent) {
+                                                      DomainEvent<ServicePoint> domainEvent,
+                                                      ServicePointService servicePointService) {
+    this.servicePointService = servicePointService;
     this.servicePointEventType = eventType;
     this.domainEvent = domainEvent;
   }
@@ -46,7 +48,7 @@ public abstract class ServicePointSynchronizationEventProcessor {
   }
 
   protected abstract Future<String> processEvent(ServicePointService servicePointService,
-                                                 String servicePointId);
+                                                 String servicePointId, Map<String, String> headers);
 
   protected abstract boolean validateEventEntity();
 
@@ -58,14 +60,12 @@ public abstract class ServicePointSynchronizationEventProcessor {
 
   private Future<String> processMemberTenants(String eventKey, SynchronizationContext context,
                                               Future<String> future) {
-    var vertxContext = context.vertx().getOrCreateContext();
     var headers = context.headers();
     for (String memberTenant : context.consortiaData().memberTenants()) {
       log.info("process:: tenant {} servicePointId {}", memberTenant, eventKey);
       future = future.eventually(() -> prepareHeaders(headers, memberTenant)
         .compose(lendingTenantHeader -> {
-          var servicePointService = new ServicePointService(vertxContext, lendingTenantHeader);
-          return processEvent(servicePointService, eventKey);
+          return processEvent(servicePointService, eventKey, lendingTenantHeader);
         })
         .onFailure(e ->
           log.warn("process:: tenant {} servicePointId {} failed", memberTenant, eventKey, e)));

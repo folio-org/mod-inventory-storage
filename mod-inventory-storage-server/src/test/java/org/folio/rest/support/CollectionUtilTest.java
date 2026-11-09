@@ -1,6 +1,6 @@
 package org.folio.rest.support;
 
-import static org.folio.rest.support.CollectionUtil.deepCopy;
+import static org.folio.utils.CollectionUtil.deepCopy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
