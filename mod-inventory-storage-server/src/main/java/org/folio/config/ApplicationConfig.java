@@ -14,6 +14,7 @@ import org.folio.utils.Environment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
 /**
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.Primary;
  */
 @Configuration
 @ComponentScan({"org.folio.services", "org.folio.persist", "org.folio.rest.support"})
+@Import(org.folio.spring.ApplicationConfig.class)
 public class ApplicationConfig {
 
   @Bean(destroyMethod = "close")
