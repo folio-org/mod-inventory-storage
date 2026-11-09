@@ -1,8 +1,8 @@
 package org.folio.service.customfields;
 
 import static java.util.stream.Collectors.toMap;
+import static org.folio.persist.CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE;
 import static org.folio.service.CustomFieldUtils.extractOptionIds;
-import static org.folio.services.customfields.CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE;
 import static org.folio.services.record.RecordServiceFactoryImpl.ENTITY_TYPE_TABLES;
 
 import io.vertx.core.Future;

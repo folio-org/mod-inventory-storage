@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import org.awaitility.Awaitility;
+import org.folio.persist.CustomFieldsCleanupRepository;
 import org.folio.rest.jaxrs.model.CustomField;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.services.customfields.CustomFieldsValueCleanup;
@@ -261,7 +262,7 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
     var deleted = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + placeholderId));
     var replaced = await(doPut(client, CUSTOM_FIELDS_PATH, new JsonObject()
       .put(CUSTOM_FIELDS, new JsonArray())
-      .put(ENTITY_TYPE, CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE)));
+      .put(ENTITY_TYPE, CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE)));
     var created = createCustomField(textboxField);
 
     assertThat(byQuery.jsonBody().getJsonArray(CUSTOM_FIELDS)).isEmpty();
@@ -587,12 +588,12 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   /** Takes the lock that a cleanup pass holds on the tenant, as a pass on another instance would. */
   private static void holdCleanupLock(PgConnection connection) {
-    await(connection.preparedQuery("SELECT pg_advisory_lock(" + CustomFieldsValueCleanup.LOCK_KEY + ")")
+    await(connection.preparedQuery("SELECT pg_advisory_lock(" + CustomFieldsCleanupRepository.LOCK_KEY + ")")
       .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
   }
 
   private static void releaseCleanupLock(PgConnection connection) {
-    await(connection.preparedQuery("SELECT pg_advisory_unlock(" + CustomFieldsValueCleanup.LOCK_KEY + ")")
+    await(connection.preparedQuery("SELECT pg_advisory_unlock(" + CustomFieldsCleanupRepository.LOCK_KEY + ")")
       .execute(Tuple.of(PostgresClient.convertToPsqlStandard(TENANT_ID))));
   }
 
@@ -653,14 +654,14 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   private static long placeholderCount() {
     return runQuery("SELECT count(*) FROM custom_fields WHERE jsonb->>'entityType' = '"
-      + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "'").iterator().next().getLong(0);
+      + CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE + "'").iterator().next().getLong(0);
   }
 
   private static String insertPlaceholder(String refId) {
     var id = UUID.randomUUID().toString();
     runQuery("INSERT INTO custom_fields (id, jsonb) VALUES ('" + id + "', jsonb_build_object('id', '" + id
       + "', 'name', '" + refId + "', 'refId', '" + refId + "', 'type', '" + TEXTBOX_SHORT.value() + "', 'entityType', '"
-      + CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE + "', 'visible', false, 'order', 1))");
+      + CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE + "', 'visible', false, 'order', 1))");
     return id;
   }
 

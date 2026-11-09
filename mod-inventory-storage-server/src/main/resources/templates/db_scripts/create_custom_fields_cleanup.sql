@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS ${myuniversity}_${mymodule}.custom_fields_cleanup (
 -- A deleted field leaves a placeholder holding its refId until CustomFieldsValueCleanup has removed
 -- the values. The library then gives a recreated field the next refId suffix, so the new field does
 -- not show the old values, and the queued removal does not delete values saved for the new field.
--- The placeholder entityType must match CustomFieldsValueCleanup.PLACEHOLDER_ENTITY_TYPE.
+-- The placeholder entityType must match CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE.
 CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.queue_custom_field_cleanup()
     RETURNS TRIGGER AS $$
 DECLARE

@@ -3,11 +3,9 @@ package org.folio.services.customfields;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -17,8 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.rest.persist.Conn;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.persist.CustomFieldsCleanupRepository;
+import org.folio.persist.CustomFieldsCleanupRepository.QueuedRemoval;
 import org.folio.services.record.RecordServiceFactoryImpl;
 import org.folio.utils.Environment;
 
@@ -31,17 +29,7 @@ import org.folio.utils.Environment;
 public final class CustomFieldsValueCleanup {
 
   public static final String BATCH_SIZE_KEY = "CUSTOM_FIELDS_CLEANUP_BATCH_SIZE";
-  /**
-   * The entityType of the refId placeholders, which no client uses. The trigger in
-   * {@code create_custom_fields_cleanup.sql} inserts them and explains what they are for.
-   */
-  public static final String PLACEHOLDER_ENTITY_TYPE = "pendingValueCleanup";
-  /**
-   * The key of the advisory lock that a pass holds on the tenant, with the schema name as {@code $1}.
-   */
-  public static final String LOCK_KEY = "hashtext('custom_fields_cleanup'), hashtext($1)";
   private static final int DEFAULT_BATCH_SIZE = 1000;
-  private static final String HOLDS_VALUE = "jsonb->'customFields' ? $1";
 
   private static final Logger log = LogManager.getLogger(CustomFieldsValueCleanup.class);
 
@@ -60,14 +48,12 @@ public final class CustomFieldsValueCleanup {
   }
 
   private static Future<Void> processQueue(Vertx vertx, String tenantId) {
-    var pg = PostgresClient.getInstance(vertx, tenantId);
-    var schema = PostgresClient.convertToPsqlStandard(tenantId);
-    return pg.withConn(conn -> processQueueLocked(conn, schema));
+    return CustomFieldsCleanupRepository.withConnection(vertx, tenantId, CustomFieldsValueCleanup::processQueueLocked);
   }
 
   /**
-   * Runs the pass under a session advisory lock on the tenant, held on this connection across the
-   * pass's transactions, so one pass per tenant runs across all module instances. A pass that finds
+   * Runs the pass under a session advisory lock on the tenant, held on the repository's connection across
+   * the pass's transactions, so one pass per tenant runs across all module instances. A pass that finds
    * the lock held leaves the queue to the holder, which reads the queue again before it ends.
    *
    * <p>The pass also commits asynchronously, since it commits once per record and waiting for each commit
@@ -76,35 +62,32 @@ public final class CustomFieldsValueCleanup {
    * next pass removes them again. The pass resets the commit mode and releases the lock when it ends, before
    * the connection returns to the pool.
    */
-  private static Future<Void> processQueueLocked(Conn conn, String schema) {
-    var lockKey = Tuple.of(schema);
-    return conn.execute("SELECT pg_try_advisory_lock(" + LOCK_KEY + ")", lockKey)
+  private static Future<Void> processQueueLocked(CustomFieldsCleanupRepository repository) {
+    return repository.tryLock()
       .compose(locked -> {
-        if (!Boolean.TRUE.equals(locked.iterator().next().getBoolean(0))) {
-          log.info("processQueueLocked:: custom field value cleanup already runs [schema={}]", schema);
+        if (!Boolean.TRUE.equals(locked)) {
+          log.info("processQueueLocked:: custom field value cleanup already runs [schema={}]", repository.schema());
           return Future.succeededFuture();
         }
-        return conn.execute("SET synchronous_commit = off")
-          .compose(x -> processRows(conn, schema))
-          .eventually(() -> resetCommitMode(conn, schema))
-          .eventually(() -> unlock(conn, lockKey, schema));
+        return repository.commitAsynchronously()
+          .compose(x -> processRows(repository))
+          .eventually(() -> resetCommitMode(repository))
+          .eventually(() -> unlock(repository));
       });
   }
 
-  private static Future<Void> resetCommitMode(Conn conn, String schema) {
-    return conn.execute("RESET synchronous_commit")
-      .<Void>mapEmpty()
+  private static Future<Void> resetCommitMode(CustomFieldsCleanupRepository repository) {
+    return repository.resetCommitMode()
       .recover(e -> {
-        log.warn("resetCommitMode:: resetting synchronous_commit failed [schema={}]", schema, e);
+        log.warn("resetCommitMode:: resetting synchronous_commit failed [schema={}]", repository.schema(), e);
         return Future.succeededFuture();
       });
   }
 
-  private static Future<Void> unlock(Conn conn, Tuple lockKey, String schema) {
-    return conn.execute("SELECT pg_advisory_unlock(" + LOCK_KEY + ")", lockKey)
-      .<Void>mapEmpty()
+  private static Future<Void> unlock(CustomFieldsCleanupRepository repository) {
+    return repository.unlock()
       .recover(e -> {
-        log.warn("unlock:: releasing the custom field value cleanup lock failed [schema={}]", schema, e);
+        log.warn("unlock:: releasing the custom field value cleanup lock failed [schema={}]", repository.schema(), e);
         return Future.succeededFuture();
       });
   }
@@ -113,43 +96,34 @@ public final class CustomFieldsValueCleanup {
    * Processes the queue in order and reads it again until every row it holds has been attempted in this
    * pass, so rows queued during the pass are processed too, and a failed row waits for the next pass.
    */
-  private static Future<Void> processRows(Conn conn, String schema) {
-    var queueRead = "SELECT id, entity_type, ref_id FROM " + schema
-      + ".custom_fields_cleanup WHERE id <> ALL($1) ORDER BY created_date";
+  private static Future<Void> processRows(CustomFieldsCleanupRepository repository) {
     Set<UUID> attempted = new HashSet<>();
-    return whileMore(() -> conn.execute(queueRead, Tuple.of(attempted.toArray(UUID[]::new)))
+    return whileMore(() -> repository.readQueue(attempted)
       .compose(queue -> {
         Future<Void> result = Future.succeededFuture();
-        for (Row row : queue) {
-          var id = row.getUUID("id");
-          attempted.add(id);
-          result = result.compose(x -> processRow(conn, schema, row)
-            .recover(e -> recordFailure(conn, schema, id, e)));
+        for (var removal : queue) {
+          attempted.add(removal.id());
+          result = result.compose(x -> processRow(repository, removal)
+            .recover(e -> recordFailure(repository, removal.id(), e)));
         }
-        return result.map(queue.rowCount() > 0);
+        return result.map(!queue.isEmpty());
       }));
   }
 
-  private static Future<Void> processRow(Conn conn, String schema, Row row) {
-    var id = row.getUUID("id");
-    var refId = row.getString("ref_id");
-    var entityType = row.getString("entity_type");
-    var table = RecordServiceFactoryImpl.ENTITY_TYPE_TABLES.get(entityType);
+  private static Future<Void> processRow(CustomFieldsCleanupRepository repository, QueuedRemoval removal) {
+    var table = RecordServiceFactoryImpl.ENTITY_TYPE_TABLES.get(removal.entityType());
     if (table == null) {
-      log.warn("processRow:: discarding cleanup row with unsupported entityType [{}]", entityType);
-      return deleteFieldRow(conn, schema, id, refId);
+      log.warn("processRow:: discarding cleanup row with unsupported entityType [{}]", removal.entityType());
+      return repository.deleteQueueRow(removal.id(), removal.refId());
     }
-    return removeFieldValues(conn, schema, table, refId)
-      .compose(x -> deleteFieldRow(conn, schema, id, refId));
+    return removeFieldValues(repository, table, removal.refId())
+      .compose(x -> repository.deleteQueueRow(removal.id(), removal.refId()));
   }
 
   /** Keeps the row for the next pass with the cause; a failure to record it ends the pass. */
-  private static Future<Void> recordFailure(Conn conn, String schema, UUID id, Throwable cause) {
+  private static Future<Void> recordFailure(CustomFieldsCleanupRepository repository, UUID id, Throwable cause) {
     log.error("recordFailure:: removing custom field values failed, kept for the next pass [id={}]", id, cause);
-    return conn.execute("UPDATE " + schema + ".custom_fields_cleanup"
-        + " SET attempts = attempts + 1, last_error = $2, last_attempt_date = now() WHERE id = $1",
-        Tuple.of(id, String.valueOf(cause.getMessage())))
-      .mapEmpty();
+    return repository.recordFailure(id, String.valueOf(cause.getMessage()));
   }
 
   /**
@@ -160,26 +134,21 @@ public final class CustomFieldsValueCleanup {
    * <p>A record whose update fails keeps the value and is left out of the following batches, so it does not
    * hold up the records after it. The removal then fails, which keeps the field queued for the next pass.
    */
-  private static Future<Void> removeFieldValues(Conn conn, String schema, String table, String refId) {
+  private static Future<Void> removeFieldValues(CustomFieldsCleanupRepository repository, String table,
+                                                String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
-    var fullTable = schema + "." + table;
-    var batch = "SELECT id FROM " + fullTable + " WHERE " + HOLDS_VALUE + " AND id <> ALL($3) LIMIT $2";
     var size = batchSize();
-    // a write after the read may have removed the value, or all of customFields, which would make the jsonb NULL
-    var removeValue = "UPDATE " + fullTable
-      + " SET jsonb = jsonb_set(jsonb, '{customFields}', (jsonb->'customFields') - $1)"
-      + " WHERE id = $2 AND " + HOLDS_VALUE;
     var records = new AtomicLong();
     var batches = new AtomicInteger();
     Map<UUID, Throwable> failed = new LinkedHashMap<>();
     var start = System.nanoTime();
-    return whileMore(() -> conn.execute(batch, Tuple.of(refId, size, failed.keySet().toArray(UUID[]::new)))
+    return whileMore(() -> repository.readHolders(table, refId, size, failed.keySet())
       .compose(ids -> {
-        if (ids.rowCount() == 0) {
+        if (ids.isEmpty()) {
           return Future.succeededFuture(false);
         }
         batches.incrementAndGet();
-        return removeValueOneByOne(conn, removeValue, refId, ids, records, failed).map(true);
+        return removeValueOneByOne(repository, table, refId, ids, records, failed).map(true);
       }))
       .compose(v -> endRemoval(refId, records.get(), batches.get(), failed, start));
   }
@@ -197,17 +166,18 @@ public final class CustomFieldsValueCleanup {
       + "be updated, first [id=" + first.getKey() + "]: " + first.getValue().getMessage(), first.getValue()));
   }
 
-  private static Future<Void> removeValueOneByOne(Conn conn, String removeValue, String refId, RowSet<Row> ids,
-                                                  AtomicLong records, Map<UUID, Throwable> failed) {
+  private static Future<Void> removeValueOneByOne(CustomFieldsCleanupRepository repository, String table,
+                                                  String refId, List<UUID> ids, AtomicLong records,
+                                                  Map<UUID, Throwable> failed) {
     var remaining = ids.iterator();
     return whileMore(() -> {
       if (!remaining.hasNext()) {
         return Future.succeededFuture(false);
       }
-      var id = remaining.next().getUUID(0);
-      return conn.execute(removeValue, Tuple.of(refId, id))
-        .map(result -> {
-          records.addAndGet(result.rowCount());
+      var id = remaining.next();
+      return repository.removeValue(table, refId, id)
+        .map(removed -> {
+          records.addAndGet(removed);
           return true;
         })
         .recover(e -> {
@@ -241,14 +211,6 @@ public final class CustomFieldsValueCleanup {
         done.complete();
       }
     });
-  }
-
-  /** Deletes the queue row and the placeholder of its refId in one statement, so neither outlives the other. */
-  private static Future<Void> deleteFieldRow(Conn conn, String schema, Object id, String refId) {
-    return conn.execute("WITH queue_row AS (DELETE FROM " + schema + ".custom_fields_cleanup WHERE id = $1)"
-        + " DELETE FROM " + schema + ".custom_fields WHERE jsonb->>'entityType' = $2 AND jsonb->>'refId' = $3",
-        Tuple.of(id, PLACEHOLDER_ENTITY_TYPE, refId))
-      .mapEmpty();
   }
 
   private static int batchSize() {
