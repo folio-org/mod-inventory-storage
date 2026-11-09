@@ -203,9 +203,6 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
-This environment variable configures the background removal of the values of deleted custom fields:
-* `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` (default value - `1000`) - number of records the custom fields cleanup reads per query; an unset, non-numeric or below-1 value falls back to `1000`
-
 # Local Deployment using Docker
 
 ## Preparation
@@ -415,7 +412,7 @@ items in the background:
   `_timer` interface calls `POST /inventory-storage/custom-fields/cleanup` every 5 minutes to pick
   up pending removals, including those left after a restart, a failure, or a delete that came as
   a pass was ending.
-* Items are read in batches of `CUSTOM_FIELDS_CLEANUP_BATCH_SIZE` and updated one per transaction,
+* Items are read in batches of 1000 and updated one per transaction,
   so the removal locks rows as a single item update does. Each updated item gets a new `_version`,
   so a client saving an item it read before the removal gets a 409. No domain events are published
   for these updates.

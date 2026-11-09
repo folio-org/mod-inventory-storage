@@ -16,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.persist.CustomFieldsCleanupRepository;
 import org.folio.persist.CustomFieldsCleanupRepository.QueuedRemoval;
 import org.folio.services.record.RecordServiceFactoryImpl;
-import org.folio.utils.Environment;
 
 /**
  * Removes the values of deleted custom fields queued in {@code custom_fields_cleanup}. A pass
@@ -26,8 +25,7 @@ import org.folio.utils.Environment;
  */
 public final class CustomFieldsValueCleanup {
 
-  public static final String BATCH_SIZE_KEY = "CUSTOM_FIELDS_CLEANUP_BATCH_SIZE";
-  private static final int DEFAULT_BATCH_SIZE = 1000;
+  public static final int READ_SIZE = 1000;
 
   private static final Logger log = LogManager.getLogger(CustomFieldsValueCleanup.class);
 
@@ -134,12 +132,11 @@ public final class CustomFieldsValueCleanup {
   private static Future<Void> removeFieldValues(CustomFieldsCleanupRepository repository, String table,
                                                 String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
-    var size = batchSize();
     var records = new AtomicLong();
     var batches = new AtomicInteger();
     Map<UUID, Throwable> failed = new LinkedHashMap<>();
     var start = System.nanoTime();
-    return whileMore(() -> repository.readHolders(table, refId, size, failed.keySet())
+    return whileMore(() -> repository.readHolders(table, refId, READ_SIZE, failed.keySet())
       .compose(ids -> {
         if (ids.isEmpty()) {
           return Future.succeededFuture(false);
@@ -208,26 +205,5 @@ public final class CustomFieldsValueCleanup {
         done.complete();
       }
     });
-  }
-
-  private static int batchSize() {
-    var value = Environment.getValue(BATCH_SIZE_KEY);
-    if (value == null) {
-      return DEFAULT_BATCH_SIZE;
-    }
-    var size = parseOrZero(value);
-    if (size < 1) {
-      log.warn("batchSize:: invalid {} [{}], using {}", BATCH_SIZE_KEY, value, DEFAULT_BATCH_SIZE);
-      return DEFAULT_BATCH_SIZE;
-    }
-    return size;
-  }
-
-  private static int parseOrZero(String value) {
-    try {
-      return Integer.parseInt(value.trim());
-    } catch (NumberFormatException e) {
-      return 0;
-    }
   }
 }

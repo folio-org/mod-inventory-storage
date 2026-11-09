@@ -36,7 +36,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Custom field definitions ({@code /custom-fields}, provided by folio-custom-fields) and the
@@ -209,46 +208,27 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
       .put(MULTI_SELECT, new JsonArray().add("opt_1").add("opt_2")));
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"0", "-1", "x"})
-  @DisplayName("should fall back to the default batch size when the configured one is not a positive number")
-  void shouldUseDefaultBatchSize_whenConfiguredOneIsInvalid(String batchSize) {
-    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, batchSize);
-    try {
-      createCustomField(textboxField);
-      final var item = createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text1")));
-
-      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
-
-      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-      awaitCleanupDone();
-      assertThat(storedCustomFieldsOf(item)).isEqualTo(new JsonObject());
-    } finally {
-      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
-    }
-  }
-
   @Test
   @DisplayName("should remove the values of a deleted custom field in batches")
   void shouldRemoveValuesInBatches() {
-    System.setProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY, "2");
-    try {
-      createCustomField(textboxField);
-      var items = new ArrayList<String>();
-      for (int i = 0; i < 5; i++) {
-        items.add(createItem(itemWithCustomFields(new JsonObject().put(TEXTBOX, "text" + i))).getString("id"));
-      }
+    createCustomField(textboxField);
+    var count = CustomFieldsValueCleanup.READ_SIZE + 1;
+    // not through runQuery: RMB runs a statement that took over a second again as EXPLAIN ANALYZE
+    inTransactionOfItsOwn(connection -> {
+      execute(connection, "INSERT INTO item (id, jsonb) SELECT id, jsonb_build_object('id', id, 'hrid', 'cf' || n,"
+        + " 'status', jsonb_build_object('name', 'Available'), 'holdingsRecordId', '" + holdingId + "',"
+        + " 'materialTypeId', '" + materialTypeId + "', 'permanentLoanTypeId', '" + loanTypeId + "',"
+        + " 'customFields', jsonb_build_object('" + TEXTBOX + "', 'text' || n))"
+        + " FROM (SELECT gen_random_uuid() AS id, n FROM generate_series(1, " + count + ") n) i");
+      return null;
+    });
 
-      var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
+    var response = await(doDelete(client, CUSTOM_FIELDS_PATH + "/" + id(textboxField)));
 
-      assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
-      awaitCleanupDone();
-      for (String itemId : items) {
-        assertThat(storedCustomFieldsOf(itemId)).isEqualTo(new JsonObject());
-      }
-    } finally {
-      System.clearProperty(CustomFieldsValueCleanup.BATCH_SIZE_KEY);
-    }
+    assertThat(response.status()).isEqualTo(SC_NO_CONTENT);
+    awaitCleanupDone();
+    assertThat(itemCount("jsonb->'customFields' ? '" + TEXTBOX + "'")).isZero();
+    assertThat(itemCount("jsonb->'customFields' = '{}'")).isEqualTo(count);
   }
 
   @Test
@@ -684,6 +664,10 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
 
   private static String lastCleanupError() {
     return runQuery("SELECT last_error FROM custom_fields_cleanup").iterator().next().getString(0);
+  }
+
+  private static long itemCount(String condition) {
+    return runQuery("SELECT count(*) FROM item WHERE " + condition).iterator().next().getLong(0);
   }
 
   private static long placeholderCount() {
