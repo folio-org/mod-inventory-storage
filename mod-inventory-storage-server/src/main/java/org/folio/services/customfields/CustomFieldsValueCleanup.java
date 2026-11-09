@@ -188,6 +188,9 @@ public final class CustomFieldsValueCleanup {
    * Runs the step until it yields false. Each step starts the next from its callback, and the last one
    * completes the returned future. Composing the steps instead would chain one future per step, and
    * completing that chain on long runs would overflow the stack and leave the future incomplete.
+   *
+   * <p>A step that throws instead of returning a future fails the returned future. Thrown inside the
+   * callback, the exception would otherwise only be logged, and the future would never complete.
    */
   static Future<Void> whileMore(Supplier<Future<Boolean>> step) {
     Promise<Void> done = Promise.promise();
@@ -196,7 +199,14 @@ public final class CustomFieldsValueCleanup {
   }
 
   private static void runStep(Supplier<Future<Boolean>> step, Promise<Void> done) {
-    step.get().onComplete(more -> {
+    Future<Boolean> next;
+    try {
+      next = step.get();
+    } catch (RuntimeException e) {
+      done.fail(e);
+      return;
+    }
+    next.onComplete(more -> {
       if (more.failed()) {
         done.fail(more.cause());
       } else if (Boolean.TRUE.equals(more.result())) {

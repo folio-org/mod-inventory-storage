@@ -37,6 +37,27 @@ class CustomFieldsValueCleanupTest {
   }
 
   @Test
+  @DisplayName("should fail the loop when a later step throws instead of returning a future")
+  void shouldFailLoop_whenLaterStepThrows(Vertx vertx, VertxTestContext testContext) {
+    var taken = new AtomicInteger();
+    var context = vertx.getOrCreateContext();
+    Supplier<Future<Boolean>> step = () -> {
+      if (taken.incrementAndGet() == 2) {
+        throw new IllegalStateException("step failed");
+      }
+      var next = Promise.<Boolean>promise();
+      context.runOnContext(x -> next.complete(true));
+      return next.future();
+    };
+
+    context.runOnContext(v -> CustomFieldsValueCleanup.whileMore(step)
+      .onComplete(testContext.failing(e -> testContext.verify(() -> {
+        assertThat(e).hasMessage("step failed");
+        testContext.completeNow();
+      }))));
+  }
+
+  @Test
   @DisplayName("should end a pass that fails before it starts without throwing to the caller")
   void shouldEndPass_whenItFailsToStart(Vertx vertx) {
     // PostgresClient refuses the default schema as a tenant before any database access
