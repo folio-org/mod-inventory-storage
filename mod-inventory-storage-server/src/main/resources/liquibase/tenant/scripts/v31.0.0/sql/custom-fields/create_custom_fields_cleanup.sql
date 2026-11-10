@@ -1,6 +1,6 @@
 -- Queue of deferred custom field value removals: deleting a field only records what has to go,
--- CustomFieldsValueCleanup removes the values in batches afterwards.
-CREATE TABLE IF NOT EXISTS ${myuniversity}_${mymodule}.custom_fields_cleanup (
+-- CustomFieldsValueCleanup removes the values afterwards.
+CREATE TABLE IF NOT EXISTS custom_fields_cleanup (
   id uuid PRIMARY KEY,
   entity_type text NOT NULL,
   ref_id text NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS ${myuniversity}_${mymodule}.custom_fields_cleanup (
 -- the values. The library then gives a recreated field the next refId suffix, so the new field does
 -- not show the old values, and the queued removal does not delete values saved for the new field.
 -- The placeholder entityType must match CustomFieldsCleanupRepository.PLACEHOLDER_ENTITY_TYPE.
-CREATE OR REPLACE FUNCTION ${myuniversity}_${mymodule}.queue_custom_field_cleanup()
+CREATE OR REPLACE FUNCTION queue_custom_field_cleanup()
     RETURNS TRIGGER AS $$
 DECLARE
   placeholder_id uuid := gen_random_uuid();
@@ -24,15 +24,15 @@ BEGIN
   IF OLD.jsonb->>'entityType' = 'pendingValueCleanup' THEN
     RETURN OLD;
   END IF;
-  INSERT INTO ${myuniversity}_${mymodule}.custom_fields_cleanup (id, entity_type, ref_id)
+  INSERT INTO ${database.defaultSchemaName}.custom_fields_cleanup (id, entity_type, ref_id)
     VALUES (gen_random_uuid(), OLD.jsonb->>'entityType', OLD.jsonb->>'refId');
-  INSERT INTO ${myuniversity}_${mymodule}.custom_fields (id, jsonb)
+  INSERT INTO ${database.defaultSchemaName}.custom_fields (id, jsonb)
     VALUES (placeholder_id, OLD.jsonb || jsonb_build_object(
       'id', placeholder_id, 'entityType', 'pendingValueCleanup', 'visible', false));
   RETURN OLD;
 END;
 $$ language 'plpgsql';
-DROP TRIGGER IF EXISTS queue_custom_field_cleanup ON ${myuniversity}_${mymodule}.custom_fields CASCADE;
+DROP TRIGGER IF EXISTS queue_custom_field_cleanup ON custom_fields CASCADE;
 CREATE TRIGGER queue_custom_field_cleanup
-    AFTER DELETE ON ${myuniversity}_${mymodule}.custom_fields
-    FOR EACH ROW EXECUTE PROCEDURE ${myuniversity}_${mymodule}.queue_custom_field_cleanup();
+    AFTER DELETE ON custom_fields
+    FOR EACH ROW EXECUTE PROCEDURE queue_custom_field_cleanup();

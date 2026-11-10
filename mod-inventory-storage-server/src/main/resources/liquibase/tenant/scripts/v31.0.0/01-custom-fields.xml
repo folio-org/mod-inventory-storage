@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <!-- The script comes from the folio-custom-fields jar. runOnChange applies it again when a library
+       upgrade changes it, where Liquibase would otherwise refuse the changed checksum.
+       CustomFieldsLibraryDbScriptsTest fails on such a change, so that the migrations coming with it
+       get added as changesets. -->
+  <changeSet id="MODINVSTOR-1445@@create-table-custom-fields" author="folio" runOnChange="true">
+    <comment>Create the custom_fields table of folio-custom-fields with the library's script</comment>
+    <sqlFile path="templates/db_scripts/create_custom_fields_table.sql" relativeToChangelogFile="false"
+             splitStatements="false"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1446@@create-index-item-custom-fields" author="folio">
+    <comment>Create the GIN index on the custom field values of items</comment>
+    <sqlFile path="sql/custom-fields/create_custom_fields_indexes.sql" relativeToChangelogFile="true"
+             splitStatements="false"/>
+  </changeSet>
+
+  <changeSet id="MODINVSTOR-1446@@create-custom-fields-cleanup" author="folio">
+    <comment>Create the custom field value cleanup queue and the trigger that fills it</comment>
+    <sqlFile path="sql/custom-fields/create_custom_fields_cleanup.sql" relativeToChangelogFile="true"
+             splitStatements="false"/>
+  </changeSet>
+
+</databaseChangeLog>
