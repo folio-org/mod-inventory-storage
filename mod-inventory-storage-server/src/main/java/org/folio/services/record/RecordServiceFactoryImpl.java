@@ -2,6 +2,7 @@ package org.folio.services.record;
 
 import io.vertx.core.Vertx;
 import java.util.Map;
+import org.folio.persist.CustomFieldValueRepository;
 import org.folio.service.RecordService;
 import org.folio.service.RecordServiceImpl;
 import org.folio.service.spi.RecordServiceFactory;
@@ -16,6 +17,7 @@ public class RecordServiceFactoryImpl implements RecordServiceFactory {
 
   @Override
   public RecordService create(Vertx vertx) {
-    return new DeferredCleanupRecordService(RecordServiceImpl.createForSingleTable(vertx, ENTITY_TYPE_TABLES));
+    return new DeferredCleanupRecordService(RecordServiceImpl.createForSingleTable(vertx, ENTITY_TYPE_TABLES),
+      new CustomFieldValueRepository(vertx));
   }
 }

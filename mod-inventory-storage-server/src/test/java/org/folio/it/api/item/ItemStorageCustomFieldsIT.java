@@ -174,6 +174,41 @@ class ItemStorageCustomFieldsIT extends ItemStorageTestBase {
   }
 
   @Test
+  @DisplayName("should count and refuse removing an option that items hold in the list of a repeatable single select")
+  void shouldRefuseOptionRemoval_whenRepeatableSingleSelectListHoldsOption() {
+    singleSelectField.put("isRepeatable", true);
+    createCustomField(singleSelectField);
+    createItem(itemWithCustomFields(new JsonObject().put(SINGLE_SELECT, new JsonArray().add("opt_0").add("opt_2"))));
+
+    assertThat(optionStatisticCount(singleSelectField, "opt_2")).isEqualTo(1);
+
+    var reduced = singleSelectField.copy().put(SELECT_FIELD, selectField(2, false));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(singleSelectField), reduced));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(response.body().toString())
+      .contains("Option 'opt2' of custom field 'singleselect' is used by 1 item(s) and cannot be removed");
+    assertThat(storedOptionIdsOf(singleSelectField)).containsExactly("opt_0", "opt_1", "opt_2");
+  }
+
+  @Test
+  @DisplayName("should count and refuse removing an option that items hold as the single value of a multi select")
+  void shouldRefuseOptionRemoval_whenMultiSelectSingleValueIsOption() {
+    createCustomField(multiSelectField);
+    createItem(itemWithCustomFields(new JsonObject().put(MULTI_SELECT, "opt_3")));
+
+    assertThat(optionStatisticCount(multiSelectField, "opt_3")).isEqualTo(1);
+
+    var reduced = multiSelectField.copy().put(SELECT_FIELD, selectField(3, true));
+    var response = await(doPut(client, CUSTOM_FIELDS_PATH + "/" + id(multiSelectField), reduced));
+
+    assertThat(response.status()).isEqualTo(SC_UNPROCESSABLE_CONTENT);
+    assertThat(response.body().toString())
+      .contains("Option 'opt3' of custom field 'multiselect' is used by 1 item(s) and cannot be removed");
+    assertThat(storedOptionIdsOf(multiSelectField)).containsExactly("opt_0", "opt_1", "opt_2", "opt_3");
+  }
+
+  @Test
   @DisplayName("should refuse changing the type of a select field whose option items hold as a type change")
   void shouldRefuseTypeChange_ofSelectFieldInUse_asTypeChange() {
     createCustomField(singleSelectField);
