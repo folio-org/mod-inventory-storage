@@ -3,9 +3,9 @@ package org.folio.services.customfields;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,6 +26,8 @@ import org.folio.services.record.RecordServiceFactoryImpl;
 public final class CustomFieldsValueCleanup {
 
   public static final int READ_SIZE = 1000;
+  static final int MAX_FAILED_RECORDS = 10_000;
+  private static final int LOGGED_FAILURES = 10;
 
   private static final Logger log = LogManager.getLogger(CustomFieldsValueCleanup.class);
 
@@ -128,44 +130,50 @@ public final class CustomFieldsValueCleanup {
    *
    * <p>A record whose update fails keeps the value and is left out of the following batches, so it does not
    * hold up the records after it. The removal then fails, which keeps the field queued for a later pass.
+   * It stops after {@value #MAX_FAILED_RECORDS} failed records, so a cause that fails every update costs a
+   * bounded number of attempts per pass, and each read sends a bounded list of records to leave out.
    */
-  private static Future<Void> removeFieldValues(CustomFieldsCleanupRepository repository, String table,
-                                                String refId) {
+  static Future<Void> removeFieldValues(CustomFieldsCleanupRepository repository, String table, String refId) {
     log.info("removeFieldValues:: removing values of custom field [refId={}]", refId);
     var records = new AtomicLong();
     var batches = new AtomicInteger();
-    Map<UUID, Throwable> failed = new LinkedHashMap<>();
+    var failures = new Failures();
     var start = System.nanoTime();
-    return whileMore(() -> repository.readHolders(table, refId, READ_SIZE, failed.keySet())
-      .compose(ids -> {
-        if (ids.isEmpty()) {
-          return Future.succeededFuture(false);
-        }
-        batches.incrementAndGet();
-        return removeValueOneByOne(repository, table, refId, ids, records, failed).map(true);
-      }))
-      .compose(v -> endRemoval(refId, records.get(), batches.get(), failed, start));
+    return whileMore(() -> {
+      if (failures.limitReached()) {
+        return Future.succeededFuture(false);
+      }
+      return repository.readHolders(table, refId, READ_SIZE, failures.ids)
+        .compose(ids -> {
+          if (ids.isEmpty()) {
+            return Future.succeededFuture(false);
+          }
+          batches.incrementAndGet();
+          return removeValueOneByOne(repository, table, refId, ids, records, failures).map(true);
+        });
+    })
+      .compose(v -> endRemoval(refId, records.get(), batches.get(), failures, start));
   }
 
-  private static Future<Void> endRemoval(String refId, long records, int batches, Map<UUID, Throwable> failed,
-                                         long start) {
+  private static Future<Void> endRemoval(String refId, long records, int batches, Failures failures, long start) {
     log.info("endRemoval:: removed values of custom field [refId={}, records={}, failedRecords={}, batches={}, "
         + "durationMs={}]",
-      refId, records, failed.size(), batches, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
-    if (failed.isEmpty()) {
+      refId, records, failures.ids.size(), batches, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start));
+    if (failures.firstCause == null) {
       return Future.succeededFuture();
     }
-    var first = failed.entrySet().iterator().next();
-    return Future.failedFuture(new IllegalStateException(failed.size() + " of the records holding the value could not "
-      + "be updated, first [id=" + first.getKey() + "]: " + first.getValue().getMessage(), first.getValue()));
+    var stopped = failures.limitReached() ? " and the removal stopped" : "";
+    return Future.failedFuture(new IllegalStateException(failures.ids.size() + " of the records holding the value "
+      + "could not be updated" + stopped + ", first [id=" + failures.firstId + "]: " + failures.firstCause.getMessage(),
+      failures.firstCause));
   }
 
   private static Future<Void> removeValueOneByOne(CustomFieldsCleanupRepository repository, String table,
                                                   String refId, List<UUID> ids, AtomicLong records,
-                                                  Map<UUID, Throwable> failed) {
+                                                  Failures failures) {
     var remaining = ids.iterator();
     return whileMore(() -> {
-      if (!remaining.hasNext()) {
+      if (!remaining.hasNext() || failures.limitReached()) {
         return Future.succeededFuture(false);
       }
       var id = remaining.next();
@@ -175,10 +183,11 @@ public final class CustomFieldsValueCleanup {
           return true;
         })
         .recover(e -> {
-          var message = e.getMessage();
-          log.warn("removeValueOneByOne:: removing the custom field value failed, kept for a later pass "
-            + "[refId={}, id={}]: {}", refId, id, message);
-          failed.put(id, e);
+          if (failures.ids.size() < LOGGED_FAILURES) {
+            log.warn("removeValueOneByOne:: removing the custom field value failed, kept for a later pass "
+              + "[refId={}, id={}]: {}", refId, id, e.getMessage());
+          }
+          failures.add(id, e);
           return Future.succeededFuture(true);
         });
     });
@@ -215,5 +224,23 @@ public final class CustomFieldsValueCleanup {
         done.complete();
       }
     });
+  }
+
+  private static final class Failures {
+    private final Set<UUID> ids = new HashSet<>();
+    private UUID firstId;
+    private Throwable firstCause;
+
+    void add(UUID id, Throwable cause) {
+      if (firstCause == null) {
+        firstId = id;
+        firstCause = cause;
+      }
+      ids.add(id);
+    }
+
+    boolean limitReached() {
+      return ids.size() >= MAX_FAILED_RECORDS;
+    }
   }
 }
