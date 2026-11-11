@@ -39,6 +39,7 @@ Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
     * [Query form](#query-form)
     * [`=` or `==`?](#-or-)
     * [When the fast path is NOT used](#when-the-fast-path-is-not-used)
+* [Custom fields](#custom-fields)
 * [Domain event pattern](#domain-event-pattern)
   * [Domain events for items](#domain-events-for-items)
   * [Domain events for delete all APIs](#domain-events-for-delete-all-apis)
@@ -394,6 +395,42 @@ The query is processed as before (generic CQL on the view, slow on large tenants
 Queries on other instance fields still scan the whole view. To look up many instances, query
 `id==(<id1> or <id2> ...)`, or use `/inventory-view/instance-set`, whose filters run against
 the indexed `instance` table.
+
+# Custom fields
+
+Items can hold custom field values in `customFields`, keyed by the `refId` of the field
+definition. The definitions are managed through the `custom-fields` interface, provided by the
+[folio-custom-fields](https://github.com/folio-org/folio-custom-fields) library; `item` is the
+only supported entity type.
+
+Deleting a field (`DELETE /custom-fields/{id}`, or a `PUT /custom-fields` that leaves it out)
+responds once the definition is deleted. The module then removes the field's values from the
+items in the background:
+
+* After the delete, the module attempts to start a cleanup pass. One pass per tenant runs at a
+  time across the module's instances, and it also takes on removals queued while it runs. The
+  `_timer` interface calls `POST /inventory-storage/custom-fields/cleanup` every 5 minutes to pick
+  up pending removals, including those left after a restart, a failure, or a delete that came as
+  a pass was ending.
+* Items are read in batches of 1000 and updated one per transaction,
+  so the removal locks rows as a single item update does. Each updated item gets a new `_version`,
+  so a client saving an item it read before the removal gets a 409. No domain events are published
+  for these updates.
+* The removal commits asynchronously (`synchronous_commit` off for its connection). After a
+  database crash, the latest removals can be undone, and the next pass removes the values again.
+* Until the values are removed, the deleted field's `refId` stays reserved, so a new field with
+  the same name gets the next `refId` (for example `textbox_2` instead of `textbox`).
+* Pending removals are rows of the tenant's `custom_fields_cleanup` table. An item that cannot be
+  updated keeps the value, and the removal goes on with the other items until 10,000 items have
+  failed in one pass. A removal that failed, for example on such an item, stays there with
+  `attempts`, `last_error` and `last_attempt_date`. The first pass after a wait retries it. The
+  wait is 5 minutes after the first failure and doubles with each further one, up to about 21
+  hours.
+* The reserved `refId`s are rows of the `custom_fields` table with `entityType`
+  `pendingValueCleanup`. The API does not return them; code that reads the table directly has to
+  filter them out.
+
+Removing an option from a select field is refused with 422 while items hold it.
 
 # Domain event pattern
 

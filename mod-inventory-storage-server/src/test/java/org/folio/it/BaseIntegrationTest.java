@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import io.vertx.pgclient.PgConnection;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import java.net.URI;
@@ -257,6 +258,23 @@ public abstract class BaseIntegrationTest {
    */
   protected static RowSet<Row> runQuery(String sql) {
     return await(PostgresClient.getInstance(SHARED_VERTICLE.shared.getVertx(), TENANT_ID).select(sql));
+  }
+
+  /**
+   * Runs a raw SQL query like {@link #runQuery(String)}, but on the read-only standby of the test database,
+   * which serves the module's reads.
+   */
+  protected static RowSet<Row> runReadQuery(String sql) {
+    return await(PostgresClient.getInstance(SHARED_VERTICLE.shared.getVertx(), TENANT_ID)
+      .withReadConn(conn -> conn.execute(sql)));
+  }
+
+  /**
+   * Opens a connection to the default tenant's schema of its own, for a session or transaction that has
+   * to stay open while requests run. Close it when done.
+   */
+  protected static PgConnection openConnection() {
+    return await(PostgresClient.getInstance(SHARED_VERTICLE.shared.getVertx(), TENANT_ID).getConnection());
   }
 
   @BeforeAll
