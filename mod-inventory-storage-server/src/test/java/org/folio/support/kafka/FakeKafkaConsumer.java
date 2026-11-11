@@ -86,6 +86,14 @@ public final class FakeKafkaConsumer {
     return messagesFor(InventoryKafkaTopic.ITEM, message -> key.equals(instanceAndIdKey(message)));
   }
 
+  /**
+   * Returns the item events published with {@code key} as the message key, such as the instance id of a delete event.
+   */
+  public Collection<EventMessage> getMessagesForItem(String key, String itemId) {
+    final var expected = instanceAndIdKey(key, itemId);
+    return messagesFor(InventoryKafkaTopic.ITEM, message -> expected.equals(instanceAndIdKey(message)));
+  }
+
   public Collection<EventMessage> getMessagesForLoanType(String loanTypeId) {
     return messagesFor(InventoryKafkaTopic.LOAN_TYPE, message -> loanTypeId.equals(message.key()));
   }

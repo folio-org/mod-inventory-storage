@@ -661,7 +661,7 @@ class HoldingsItemPropagationIT extends BaseIntegrationTest {
 
     var updatedHolding = getHoldingById(holdingId);
     if (locationsChanged) {
-      itemMessageChecks.updatedMessagePublished(item, updatedItem, instanceId, instanceId);
+      itemMessageChecks.updatedMessagePublished(item, updatedItem, instanceId, instanceId, "TEST");
     }
     holdingsMessageChecks.updatedMessagePublished(holding, updatedHolding);
   }

@@ -1,6 +1,7 @@
 package org.folio.persist;
 
 import static org.folio.dbschema.ObjectMapperTool.readValue;
+import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.persist.LocationRepository.LOCATION_TABLE;
 
 import io.vertx.core.Context;
@@ -9,11 +10,16 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.folio.persist.entity.DeletedRecord;
+import org.folio.persist.entity.HoldingsInstance;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
 import org.folio.rest.persist.Conn;
 import org.folio.utils.DatabaseUtils;
@@ -70,6 +76,27 @@ public class HoldingsRepository extends AbstractRepository<HoldingsRecord> {
 
   public Future<RowStream<Row>> streamReindexHoldingsRecords(Conn conn, String fromId, String toId, String tenantId) {
     return DatabaseUtils.selectStream(conn, buildReindexHoldingsSql(fromId, toId, tenantId));
+  }
+
+  /**
+   * Returns the instance of each existing holdings record of the ids, keyed by holdings record id.
+   */
+  public Future<Map<String, HoldingsInstance>> getInstancesByHoldingsIds(Collection<String> holdingsIds,
+                                                                         String tenantId) {
+    var ids = holdingsIds.stream().filter(Objects::nonNull).distinct().map(UUID::fromString).toArray(UUID[]::new);
+    if (ids.length == 0) {
+      return Future.succeededFuture(Map.of());
+    }
+    var sql = "SELECT hr.id::text, hr.instanceId::text, inst.jsonb->>'source'"
+              + " FROM " + getFullTableName(tenantId) + " hr"
+              + " JOIN " + getFullTableName(INSTANCE_TABLE, tenantId) + " inst ON inst.id = hr.instanceId"
+              + " WHERE hr.id = ANY($1)";
+    return postgresClient(tenantId).execute(sql, Tuple.tuple().addArrayOfUUID(ids))
+      .map(rows -> {
+        var instances = new HashMap<String, HoldingsInstance>();
+        rows.forEach(row -> instances.put(row.getString(0), new HoldingsInstance(row.getString(1), row.getString(2))));
+        return instances;
+      });
   }
 
   public Future<List<HoldingsRecord>> getHoldingsByIds(List<String> holdingsIds, String tenantId) {

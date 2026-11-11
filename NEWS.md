@@ -5,10 +5,12 @@
 ### New APIs versions
 * Provides `settings v1.0`
 * Provides `instance-storage v11.5`
+* Provides `inventory-reindex-records v1.2`
 * Removed `oaipmhview`
 * Requires `API_NAME vX.Y`
 
 ### Features
+* Add `instanceSource` to item domain events and item reindex records ([MODINVSTOR-1628](https://folio-org.atlassian.net/browse/MODINVSTOR-1628))
 * Introduce dependency injection ([MODINVSTOR-1626](https://folio-org.atlassian.net/browse/MODINVSTOR-1626))
 * Delete unimplemented `GET /instance-storage/instances/{id}/source-record/mods` and `PUT /instance-storage/instances/{id}/source-record/mods` endpoint definitions ([MODINVSTOR-1609](https://folio-org.atlassian.net/browse/MODINVSTOR-1609))
 * Create feature flag for enabling optimization to prevent redundant updates in Inventory (Instance,Holding,Item) ([MODINVSTOR-1577](https://folio-org.atlassian.net/browse/MODINVSTOR-1577))

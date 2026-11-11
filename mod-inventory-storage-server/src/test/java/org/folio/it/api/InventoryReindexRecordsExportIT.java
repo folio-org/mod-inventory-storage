@@ -1,5 +1,6 @@
 package org.folio.it.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.HttpStatus.HTTP_OK;
 import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.support.AwaitConfiguration.awaitAtMost;
@@ -56,7 +57,7 @@ class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
     var item2Id = UUID.randomUUID().toString();
     var rangeId = UUID.randomUUID().toString();
 
-    var instance = new Instance().withId(instanceId);
+    var instance = new Instance().withId(instanceId).withSource("MARC");
     var holding = new HoldingsRecord().withId(holdingId).withInstanceId(instanceId);
     var item1 = new Item().withId(item1Id).withHoldingsRecordId(holdingId);
     var item2 = new Item().withId(item2Id).withHoldingsRecordId(holdingId);
@@ -69,6 +70,11 @@ class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
 
     triggerExport(vertx, ctx, saveFuture, request);
     verifyExportEvent(rangeId, RecordType.ITEM, List.of(item1Id, item2Id));
+    assertThat(readExportedRecords(rangeId))
+      .hasSize(2)
+      .allSatisfy(rec -> assertThat(rec.getMap())
+        .containsEntry("instanceId", instanceId)
+        .containsEntry("instanceSource", "MARC"));
   }
 
   @Test
@@ -152,6 +158,20 @@ class InventoryReindexRecordsExportIT extends BaseIntegrationTest {
     var objectKey = event.getString("objectKey");
     assertNotNull(objectKey);
     verifyS3NdjsonContainsIds(objectKey, expectedIds);
+  }
+
+  /**
+   * Reads the records of the NDJSON file exported for {@code rangeId}.
+   */
+  private static List<JsonObject> readExportedRecords(String rangeId) {
+    var event = KAFKA_CONSUMER.getMessagesForReindexFileReady(rangeId).stream().toList().getFirst().getBody();
+    var objectKey = event.getString("objectKey");
+    try (var reader = new BufferedReader(
+      new InputStreamReader(s3Client.read(objectKey), StandardCharsets.UTF_8))) {
+      return reader.lines().map(JsonObject::new).toList();
+    } catch (Exception e) {
+      throw new AssertionError("Failed to read S3 object: " + objectKey, e);
+    }
   }
 
   /**

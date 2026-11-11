@@ -420,14 +420,18 @@ associated holding record).
 
 ## Domain events for items
 
-The `new` and `old` records also includes `instanceId` property,
-on the same level with other item properties, which defined in the schema:
+The `new` and `old` records also include the `instanceId` and `instanceSource` properties,
+on the same level with other item properties, which defined in the schema.
+`instanceSource` is the `source` of the item's instance, for example `MARC` or `CONSORTIUM-MARC`:
 ```javascript
 {
   "instanceId": "<the instance id>",
+  "instanceSource": "<the instance source>",
   // all other properties that defined in the schema
 }
 ```
+
+Item records published or exported by `/inventory-reindex-records` have the same two properties.
 
 ## Domain events for delete all APIs
 
