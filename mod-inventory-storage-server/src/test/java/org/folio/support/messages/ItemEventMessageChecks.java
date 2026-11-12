@@ -27,26 +27,27 @@ public class ItemEventMessageChecks {
    * Same, but with both
    * instance ids supplied explicitly rather than resolved via {@code holdingsClient} - which is
    * only initialized on the legacy {@code rest.api} stack, not the shared {@code *IT} verticle.
+   * Both instances are expected to have {@code instanceSource} as their source.
    */
-  public void updatedMessagePublished(JsonObject oldItem,
-                                      JsonObject newItem, String oldInstanceId, String newInstanceId) {
+  public void updatedMessagePublished(JsonObject oldItem, JsonObject newItem,
+                                      String oldInstanceId, String newInstanceId, String instanceSource) {
 
     final var itemId = getId(newItem);
 
     awaitAtMost().until(() -> kafkaConsumer.getMessagesForItem(itemId),
       eventMessageMatchers.hasUpdateEventMessageFor(
-        addInstanceIdToItem(oldItem, oldInstanceId),
-        addInstanceIdToItem(newItem, newInstanceId)));
+        addInstanceToItem(oldItem, oldInstanceId, instanceSource),
+        addInstanceToItem(newItem, newInstanceId, instanceSource)));
   }
 
   private static String getId(JsonObject item) {
     return item.getString("id");
   }
 
-  private static JsonObject addInstanceIdToItem(JsonObject item, String instanceId) {
-    // Event for item has an extra 'instanceId' property for
-    // old/new object, the property does not exist in schema,
-    // so we have to add it manually
-    return item.copy().put("instanceId", instanceId);
+  private static JsonObject addInstanceToItem(JsonObject item, String instanceId, String instanceSource) {
+    // Event for item has extra 'instanceId' and 'instanceSource' properties for
+    // old/new object, the properties do not exist in schema,
+    // so we have to add them manually
+    return item.copy().put("instanceId", instanceId).put("instanceSource", instanceSource);
   }
 }

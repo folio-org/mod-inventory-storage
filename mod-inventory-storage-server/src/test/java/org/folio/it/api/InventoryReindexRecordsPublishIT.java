@@ -22,12 +22,14 @@ import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.folio.it.BaseIntegrationTest;
 import org.folio.rest.jaxrs.model.HoldingsRecord;
+import org.folio.rest.jaxrs.model.Instance;
 import org.folio.rest.jaxrs.model.Item;
 import org.folio.rest.jaxrs.model.RecordIdsRange;
 import org.folio.rest.jaxrs.model.ReindexRecordsRequest;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.support.builders.ItemRequestBuilder;
 import org.folio.support.messages.matchers.EventMessageMatchers;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -85,6 +87,39 @@ class InventoryReindexRecordsPublishIT extends BaseIntegrationTest {
       .onComplete(ctx.succeeding(response -> ctx.completeNow()));
 
     verifyKafkaEventForInstanceReindex(testData);
+  }
+
+  @Test
+  @DisplayName("should add the instance id and source to published item records")
+  void shouldAddInstanceIdAndSource_whenPublishingItemsForReindex(Vertx vertx, VertxTestContext ctx) {
+    // given
+    var postgresClient = PostgresClient.getInstance(vertx, TENANT_ID);
+    var instanceId = UUID.randomUUID().toString();
+    var holdingsId = UUID.randomUUID().toString();
+    var itemId = UUID.randomUUID().toString();
+    var rangeId = UUID.randomUUID().toString();
+    var request = new ReindexRecordsRequest()
+      .withId(rangeId)
+      .withRecordType(ReindexRecordsRequest.RecordType.ITEM)
+      .withRecordIdsRange(new RecordIdsRange().withFrom(itemId).withTo(itemId));
+
+    // when
+    postgresClient.save(INSTANCE_TABLE, instanceId, new Instance().withId(instanceId).withSource("CONSORTIUM-MARC"))
+      .compose(r -> postgresClient.save(HOLDING_TABLE, holdingsId,
+        new HoldingsRecord().withId(holdingsId).withInstanceId(instanceId)))
+      .compose(r -> postgresClient.save(ITEM_TABLE, itemId, new Item().withId(itemId).withHoldingsRecordId(holdingsId)))
+      .compose(r -> doPost(vertx.createHttpClient(), "/inventory-reindex-records/publish", pojo2JsonObject(request)))
+      .onComplete(ctx.succeeding(response -> ctx.verify(() -> assertEquals(HTTP_CREATED.toInt(), response.status()))))
+      .onComplete(ctx.succeeding(response -> ctx.completeNow()));
+
+    // then
+    awaitAtMost().until(() -> KAFKA_CONSUMER.getMessagesForReindexRecord(rangeId), hasSize(1));
+    var event = KAFKA_CONSUMER.getMessagesForReindexRecord(rangeId).stream().toList().getFirst().getBody();
+    Assertions.assertThat(event.getJsonArray("records")).singleElement()
+      .satisfies(rec -> Assertions.assertThat(JsonObject.mapFrom(rec).getMap())
+        .containsEntry("id", itemId)
+        .containsEntry("instanceId", instanceId)
+        .containsEntry("instanceSource", "CONSORTIUM-MARC"));
   }
 
   private InstanceReindexTestData prepareInstanceReindexTestData() {

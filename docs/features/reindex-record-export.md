@@ -22,6 +22,7 @@ Reindex workflows need a file-based handoff for record ranges so downstream proc
 - Supported `recordType` values are `instance`, `item`, and `holdings`.
 - Record selection uses inclusive range boundaries (`id >= from` and `id <= to`).
 - For instance exports in non-central consortium tenants, records with `source` matching `CONSORTIUM-%` are excluded.
+- Item records include `instanceId` and `instanceSource` (the `source` of the item's instance).
 - Exported object key format is `{tenantId}/{recordType}/{traceId}/{rangeId}.ndjson`; when `traceId` is missing, it is generated.
 - Export completion triggers a `reindex.file-ready` Kafka publish with tenant, record type, range, range id, trace id, bucket, and object key.
 

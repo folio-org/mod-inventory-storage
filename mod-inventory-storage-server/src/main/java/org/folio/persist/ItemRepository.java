@@ -2,6 +2,7 @@ package org.folio.persist;
 
 import static org.folio.dbschema.ObjectMapperTool.readValue;
 import static org.folio.persist.HoldingsRepository.HOLDINGS_RECORD_TABLE;
+import static org.folio.persist.InstanceRepository.INSTANCE_TABLE;
 import static org.folio.rest.impl.StorageHelper.MAX_ENTITIES;
 
 import io.vertx.core.Context;
@@ -63,7 +64,7 @@ public class ItemRepository extends AbstractRepository<Item> {
 
   /**
    * Delete by CQL. For each deleted record return a {@link DeletedRecord} with the instance id
-   * and  the item's jsonb String.
+   * and the item's jsonb String, extended with the {@code instanceSource} of the item's instance.
    */
   public Future<List<DeletedRecord>> delete(String cql, String tenantId) {
     try {
@@ -71,7 +72,11 @@ public class ItemRepository extends AbstractRepository<Item> {
       var whereClause = cqlWrapper(cql).getWhereClause();
       String sql = "DELETE FROM " + fullTableName + " " + whereClause
                    + " RETURNING (SELECT instanceId::text FROM holdings_record"
-                   + " WHERE id = holdingsRecordId), jsonb::text";
+                   + " WHERE id = holdingsRecordId),"
+                   + " (jsonb || jsonb_build_object('instanceSource',"
+                   + " (SELECT inst.jsonb->>'source' FROM " + getFullTableName(INSTANCE_TABLE, tenantId) + " inst"
+                   + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE, tenantId) + " hr ON inst.id = hr.instanceId"
+                   + " WHERE hr.id = holdingsRecordId)))::text";
       return postgresClient(tenantId).execute(sql)
         .map(rows -> {
           var deleted = new ArrayList<DeletedRecord>(rows.size());
@@ -188,10 +193,13 @@ public class ItemRepository extends AbstractRepository<Item> {
   }
 
   private String buildReindexItemsSql(String fromId, String toId, String tenantId) {
-    return "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId)"
+    return "SELECT i.jsonb || jsonb_build_object('instanceId', hr.instanceId,"
+           + " 'instanceSource', inst.jsonb->>'source')"
            + " FROM " + getFullTableName(tenantId) + " i"
            + " JOIN " + getFullTableName(HOLDINGS_RECORD_TABLE, tenantId)
            + " hr ON i.holdingsrecordid = hr.id"
+           + " JOIN " + getFullTableName(INSTANCE_TABLE, tenantId)
+           + " inst ON hr.instanceid = inst.id"
            + " WHERE i.id >= '" + fromId + "' AND i.id <= '" + toId + "';";
   }
 

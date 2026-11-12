@@ -11,9 +11,13 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowStream;
 import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.persist.entity.DeletedRecord;
@@ -136,6 +140,23 @@ public class InstanceRepository extends AbstractRepository<Instance> {
     } catch (PgException e) {
       return Future.failedFuture(new BadRequestException(e.getMessage()));
     }
+  }
+
+  /**
+   * Returns the {@code source} of each existing instance of the ids, keyed by instance id.
+   */
+  public Future<Map<String, String>> getSourcesByIds(Collection<String> instanceIds, String tenantId) {
+    var ids = instanceIds.stream().filter(Objects::nonNull).distinct().map(UUID::fromString).toArray(UUID[]::new);
+    if (ids.length == 0) {
+      return Future.succeededFuture(Map.of());
+    }
+    var sql = "SELECT id::text, jsonb->>'source' FROM " + getFullTableName(tenantId) + " WHERE id = ANY($1)";
+    return postgresClient(tenantId).execute(sql, Tuple.tuple().addArrayOfUUID(ids))
+      .map(rows -> {
+        var sources = new HashMap<String, String>();
+        rows.forEach(row -> sources.put(row.getString(0), row.getString(1)));
+        return sources;
+      });
   }
 
   public Future<RowStream<Row>> getAllIds(Conn connection, String tenantId) {
