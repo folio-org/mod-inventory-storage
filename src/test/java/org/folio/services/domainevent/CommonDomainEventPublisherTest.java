@@ -17,16 +17,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.vertx.core.Handler;
+import io.vertx.kafka.client.producer.KafkaHeader;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.folio.kafka.KafkaProducerManager;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.api.entities.Instance;
+import org.folio.rest.jaxrs.model.PublishReindexRecords;
 import org.folio.rest.support.sql.TestRowStream;
+import org.folio.services.reindex.ReindexJobIdHeader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -138,6 +144,28 @@ public class CommonDomainEventPublisherTest {
     assertThat(e.getCause().getCause(), is(instanceOf(IllegalArgumentException.class)));
 
     verify(failureHandler, times(1)).handleFailure(eq(causeError), any());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void publishReindexRecords_propagatesReindexJobIdHeader() {
+    var headers = new CaseInsensitiveMap<String, String>(Map.of(ReindexJobIdHeader.NAME, "job-id-1"));
+    final var publisher = new CommonDomainEventPublisher<Instance>(headers, INSTANCE.fullTopicName(TENANT_ID),
+      producerManager, failureHandler);
+    when(producerManager.<String, String>createShared(any())).thenReturn(producer);
+    when(producer.close()).thenReturn(succeededFuture());
+    when(producer.flush()).thenReturn(succeededFuture());
+    when(producer.send(any())).thenReturn(succeededFuture());
+
+    get(publisher.publishReindexRecords("range-id", PublishReindexRecords.RecordType.INSTANCE, List.of()));
+
+    var captor = ArgumentCaptor.forClass(KafkaProducerRecord.class);
+    verify(producer).send(captor.capture());
+    var jobIdHeaders = ((List<KafkaHeader>) captor.getValue().headers()).stream()
+      .filter(header -> ReindexJobIdHeader.NAME.equals(header.key()))
+      .map(header -> header.value().toString())
+      .toList();
+    assertThat(jobIdHeaders, is(List.of("job-id-1")));
   }
 
   @SuppressWarnings("unchecked")

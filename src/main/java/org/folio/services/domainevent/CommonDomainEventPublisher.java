@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.LongFunction;
+import java.util.function.UnaryOperator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +32,7 @@ import org.folio.kafka.services.KafkaEnvironmentProperties;
 import org.folio.kafka.services.KafkaProducerRecordBuilder;
 import org.folio.rest.jaxrs.model.PublishReindexRecords;
 import org.folio.rest.tools.utils.TenantTool;
+import org.folio.services.reindex.ReindexJobIdHeader;
 
 public class CommonDomainEventPublisher<T> {
   public static final String NULL_ID = "00000000-0000-0000-0000-000000000000";
@@ -156,7 +158,8 @@ public class CommonDomainEventPublisher<T> {
                                             PublishReindexRecords.RecordType recordType,
                                             List<T> records) {
     var domainEvent = ReindexRecordEvent.reindexEvent(tenantId(okapiHeaders), recordType, records);
-    return publish(reindexKafkaTopic(), key, domainEvent);
+    return publish(reindexKafkaTopic(), key, domainEvent,
+      builder -> ReindexJobIdHeader.propagate(builder, okapiHeaders));
   }
 
   Future<Void> publishRecordRemoved(String instanceId, T oldEntity) {
@@ -180,13 +183,19 @@ public class CommonDomainEventPublisher<T> {
   }
 
   private Future<Void> publish(String topic, String key, Object value) {
+    return publish(topic, key, value, UnaryOperator.identity());
+  }
+
+  private Future<Void> publish(String topic, String key, Object value,
+                               UnaryOperator<KafkaProducerRecordBuilder<String, Object>> recordCustomizer) {
     log.debug("Sending domain event [{}], payload [{}]", key, value);
 
-    var producerRecord = new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
-      .key(key)
-      .value(value)
-      .topic(topic)
-      .propagateOkapiHeaders(okapiHeaders)
+    var producerRecord = recordCustomizer.apply(
+        new KafkaProducerRecordBuilder<String, Object>(TenantTool.tenantId(okapiHeaders))
+          .key(key)
+          .value(value)
+          .topic(topic)
+          .propagateOkapiHeaders(okapiHeaders))
       .build();
 
     KafkaProducer<String, String> producer = getOrCreateProducer(topic);
