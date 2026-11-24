@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.persist.AsyncMigrationJobRepository;
 import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobCollection;
@@ -27,9 +29,11 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.support.PostgresClientFactory;
 
 public final class AsyncMigrationJobService {
+  private static final Logger log = LogManager.getLogger(AsyncMigrationJobService.class);
   private static final List<AsyncMigrationJobRunner> MIGRATION_JOB_RUNNERS = List
     .of(new ShelvingOrderMigrationJobRunner(),
-      new ItemOrderMigrationJobRunner());
+      new ItemOrderMigrationJobRunner(),
+      new StateTableMigrationJobRunner(StateTableMigrationConfig.INSTANCE_STATISTICAL_CODES_CONFIG));
   private static final List<AsyncMigrationJob.JobStatus> ACCEPTABLE_STATUSES = List
     .of(AsyncMigrationJob.JobStatus.IN_PROGRESS, IDS_PUBLISHED);
 
@@ -63,6 +67,10 @@ public final class AsyncMigrationJobService {
   }
 
   public Future<AsyncMigrationJob> submitAsyncMigration(AsyncMigrationJobRequest jobRequest) {
+    var stateTableRunners = getStateTableRunners(jobRequest.getMigrations());
+    if (!stateTableRunners.isEmpty()) {
+      return submitStateTableMigration(jobRequest, stateTableRunners.get(0));
+    }
     var migrationJobResponse = buildInitialJob(jobRequest);
     if (isJobAvailable(jobRequest)) {
       return migrationJobRepository.save(migrationJobResponse.getId(), migrationJobResponse)
@@ -78,6 +86,31 @@ public final class AsyncMigrationJobService {
         new IllegalArgumentException(format("One or more migrations are not available. Migrations: %s",
           String.join(" ", jobRequest.getMigrations()))));
     }
+  }
+
+  private Future<AsyncMigrationJob> submitStateTableMigration(AsyncMigrationJobRequest jobRequest,
+                                                              StateTableMigrationJobRunner runner) {
+    if (jobRequest.getMigrations().size() > 1) {
+      return Future.failedFuture(new InvalidMigrationRequestException(
+        "A state-table migration cannot be combined with other migrations"));
+    }
+    return runner.submit(jobRequest, new AsyncMigrationContext(migrationContext, runner.getMigrationName()));
+  }
+
+  /**
+   * Starts the state-table migrations that have no state row yet. Never fails, errors are only logged.
+   */
+  public Future<Void> autoStartStateTableMigrations() {
+    var starts = MIGRATION_JOB_RUNNERS.stream()
+      .filter(StateTableMigrationJobRunner.class::isInstance)
+      .map(StateTableMigrationJobRunner.class::cast)
+      .map(runner -> runner.autoStart(new AsyncMigrationContext(migrationContext, runner.getMigrationName()))
+        .recover(error -> {
+          log.error("Unable to auto-start background migration [migration={}]", runner.getMigrationName(), error);
+          return succeededFuture();
+        }))
+      .toList();
+    return Future.join(starts).<Void>mapEmpty().recover(error -> succeededFuture());
   }
 
   public Future<AsyncMigrationJob> cancelAsyncMigration(String jobId) {
@@ -170,6 +203,14 @@ public final class AsyncMigrationJobService {
     job.setJobStatus(totalProcessed >= totalPublished
                      ? AsyncMigrationJob.JobStatus.COMPLETED
                      : AsyncMigrationJob.JobStatus.IN_PROGRESS);
+  }
+
+  private List<StateTableMigrationJobRunner> getStateTableRunners(List<String> migrationNames) {
+    return MIGRATION_JOB_RUNNERS.stream()
+      .filter(StateTableMigrationJobRunner.class::isInstance)
+      .filter(runner -> migrationNames.contains(runner.getMigrationName()))
+      .map(StateTableMigrationJobRunner.class::cast)
+      .toList();
   }
 
   private List<AsyncMigrationJobRunner> getMigrationJobRunnersByName(List<String> migrationNames) {

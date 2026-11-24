@@ -87,7 +87,15 @@ public class AsyncMigrationTest extends TestBaseWithInventoryUtil {
   public void canGetAvailableMigrations() {
     AsyncMigrations migrations = asyncMigration.getMigrations();
     assertNotNull(migrations);
-    assertEquals(Integer.valueOf(2), migrations.getTotalRecords());
+    assertEquals(Integer.valueOf(3), migrations.getTotalRecords());
+  }
+
+  @Test
+  public void stateRowExistsAfterTenantInit() {
+    var rows = get(getPostgresClient().execute("SELECT status FROM "
+      + getPostgresClient().getSchemaName() + ".background_migration_state WHERE name = '"
+      + MigrationName.INSTANCE_STATISTICAL_CODES.getValue() + "'"));
+    assertThat(rows.rowCount(), is(1));
   }
 
   @Test

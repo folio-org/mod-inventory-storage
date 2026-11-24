@@ -57,6 +57,11 @@ traits:
           body:
             application/json:
               type: asyncMigrationJob
+        400:
+          description: Bad request
+          body:
+            text/plain:
+              example: Bad request
         500:
           description: Internal server error
           body:

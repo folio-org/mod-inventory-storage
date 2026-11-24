@@ -26,6 +26,7 @@ import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.tools.utils.TenantLoading;
 import org.folio.services.migration.BaseMigrationService;
+import org.folio.services.migration.async.AsyncMigrationJobService;
 import org.folio.services.migration.item.ItemShelvingOrderMigrationService;
 import org.folio.utils.SampleDataIdRandomizer;
 
@@ -117,7 +118,16 @@ public class TenantRefApi extends TenantAPI {
     }
 
     return future.compose(result -> runJavaMigrations(attributes, vertxContext, headers)
-      .map(result));
+        .map(result))
+      .onSuccess(result -> startBackgroundMigrations(vertxContext, headers));
+  }
+
+  private void startBackgroundMigrations(Context vertxContext, Map<String, String> headers) {
+    try {
+      new AsyncMigrationJobService(vertxContext, headers).autoStartStateTableMigrations();
+    } catch (Exception e) {
+      log.error("Unable to auto-start background migrations", e);
+    }
   }
 
   private Future<Integer> loadDataForVersion20(TenantAttributes attributes, Map<String, String> headers,

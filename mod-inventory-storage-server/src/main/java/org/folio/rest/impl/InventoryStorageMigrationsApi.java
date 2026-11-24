@@ -14,6 +14,7 @@ import org.folio.rest.jaxrs.model.AsyncMigrationJob;
 import org.folio.rest.jaxrs.model.AsyncMigrationJobRequest;
 import org.folio.rest.jaxrs.resource.InventoryStorageMigrations;
 import org.folio.services.migration.async.AsyncMigrationJobService;
+import org.folio.services.migration.async.InvalidMigrationRequestException;
 
 public class InventoryStorageMigrationsApi implements InventoryStorageMigrations {
 
@@ -48,7 +49,9 @@ public class InventoryStorageMigrationsApi implements InventoryStorageMigrations
       .onSuccess(response -> asyncResultHandler.handle(Future.succeededFuture(
         PostInventoryStorageMigrationsJobsResponse.respond200WithApplicationJson(response))))
       .onFailure(error -> asyncResultHandler.handle(Future.succeededFuture(
-        PostInventoryStorageMigrationsJobsResponse.respond500WithTextPlain(error.getMessage()))));
+        error instanceof InvalidMigrationRequestException
+        ? PostInventoryStorageMigrationsJobsResponse.respond400WithTextPlain(error.getMessage())
+        : PostInventoryStorageMigrationsJobsResponse.respond500WithTextPlain(error.getMessage()))));
   }
 
   @Override

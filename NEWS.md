@@ -1,3 +1,12 @@
+## v30.0.11 IN PROGRESS
+### New APIs versions
+* Provides `async-migration 1.1`
+
+### Features
+* Add background migration `instanceStatisticalCodes` that populates `instance_statistical_code` from `statisticalCodeIds` in chunks with a resumable state table, auto-started on tenant upgrade ([MODINVSTOR-1634](https://folio-org.atlassian.net/browse/MODINVSTOR-1634))
+
+---
+
 ## v30.0.10 2026-11-06
 ### Bug fixes
 * Fix HttpClient memory leak in `SettingsService`: reuse shared client instead of creating one per request ([MODINVSTOR-1620](https://folio-org.atlassian.net/browse/MODINVSTOR-1620))

@@ -39,6 +39,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
   AbstractInstanceRecordsApiTest.class,
   AsyncMigrationTest.class,
+  InstanceStatisticalCodesMigrationTest.class,
   AuditDeleteTest.class,
   BoundWithStorageTest.class,
   DereferencedItemStorageTest.class,

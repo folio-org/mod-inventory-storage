@@ -18,6 +18,16 @@
         "type": "string",
         "enum": ["INSTANCE", "ITEM"]
       }
+    },
+    "resume": {
+      "description": "Continue a state-table migration from the last processed id even if it is marked as started",
+      "type": "boolean",
+      "default": false
+    },
+    "restart": {
+      "description": "Reset the progress of a state-table migration and start from the beginning",
+      "type": "boolean",
+      "default": false
     }
   },
   "additionalProperties": false,

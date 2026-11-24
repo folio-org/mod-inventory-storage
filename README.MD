@@ -216,6 +216,13 @@ These environment variables configure the module interaction with S3-compatible 
 * `S3_LOCAL_SUB_PATH` (default value - `mod-inventory-storage`)
 * `ECS_TLR_FEATURE_ENABLED` (default value - `false`)
 
+These environment variables configure background migrations that keep their progress in the
+`background_migration_state` table (for example `instanceStatisticalCodes`). The values apply to every such migration:
+* `BACKGROUND_MIGRATION_CHUNK_SIZE` (default value - `1000`) - number of records processed in one chunk transaction
+* `BACKGROUND_MIGRATION_WORK_MEM_MB` (default value - `64`) - `work_mem` in MB set locally for the chunk transaction
+* `BACKGROUND_MIGRATION_PAUSE_MS` (default value - `1000`) - pause between chunks and between retries in milliseconds
+* `BACKGROUND_MIGRATION_RETRIES` (default value - `2`) - number of retries of a failed chunk before the migration is marked `FAILED`
+
 # Local Deployment using Docker
 
 ## Preparation
