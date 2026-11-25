@@ -10,6 +10,7 @@
 * Requires `API_NAME vX.Y`
 
 ### Features
+* Remove Interim service point from reference data; provisioning moves to `mod-requests-mediated` ([MODINVSTOR-1613](https://folio-org.atlassian.net/browse/MODINVSTOR-1613))
 * Add `instanceSource` to item domain events and item reindex records ([MODINVSTOR-1628](https://folio-org.atlassian.net/browse/MODINVSTOR-1628))
 * Introduce dependency injection ([MODINVSTOR-1626](https://folio-org.atlassian.net/browse/MODINVSTOR-1626))
 * Delete unimplemented `GET /instance-storage/instances/{id}/source-record/mods` and `PUT /instance-storage/instances/{id}/source-record/mods` endpoint definitions ([MODINVSTOR-1609](https://folio-org.atlassian.net/browse/MODINVSTOR-1609))
