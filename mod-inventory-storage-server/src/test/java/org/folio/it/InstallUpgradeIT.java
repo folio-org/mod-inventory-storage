@@ -254,7 +254,7 @@ class InstallUpgradeIT {
       .get("/service-points")
       .then()
       .statusCode(200)
-      .body("servicepoints.size()", is(4));
+      .body("servicepoints.size()", is(3));
 
     when()
       .get("/location-units/institutions")
